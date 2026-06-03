@@ -2,12 +2,17 @@
 
 Este repositorio contiene accesos HTML cortos para abrir la app privada de Club Pádel 04.
 
-## Archivos principales
+## Estado actual
+
+- Sitio servido desde GitHub Pages.
+- Rama principal: `main`.
+- Acceso actual funcional: `index.html` y `a/index.html`.
+- Objetivo pendiente: añadir `landing-a/index.html` y `landing-b/index.html`.
+
+## Archivos principales actuales
 
 - `index.html`: página principal con botones de acceso.
 - `a/index.html`: enlace corto general para abrir la app.
-- `m/index.html`: enlace corto pensado para móvil.
-- `pc/index.html`: enlace corto pensado para Windows/PC.
 - `manifest.webmanifest`: configuración para instalar como app/PWA desde el navegador.
 - `icon.svg`: icono de Club Pádel 04.
 - `cp04-app.url`: acceso directo para Windows.
