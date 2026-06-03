@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101827" />
+  <title>Club Pádel 04 · Accesos rápidos</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <style>
+    :root{--bg:#08111f;--card:#111c2e;--card2:#0f172a;--text:#f8fafc;--muted:#b7c2d6;--line:rgba(255,255,255,.12);--brand:#22c55e;--brand2:#38bdf8;}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(circle at top,#17345a 0,#08111f 42%,#050914 100%);color:var(--text);display:grid;place-items:center;padding:24px}
+    .wrap{width:min(920px,100%)} .card{background:linear-gradient(145deg,rgba(17,28,46,.96),rgba(15,23,42,.92));border:1px solid var(--line);border-radius:30px;padding:28px;box-shadow:0 28px 80px rgba(0,0,0,.35)}
+    .badge{display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.12);color:#bbf7d0;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px}
+    h1{font-size:clamp(32px,6vw,58px);line-height:.96;margin:20px 0 14px;letter-spacing:-.05em} p{color:var(--muted);font-size:18px;line-height:1.6;margin:0 0 22px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}.btn{display:flex;justify-content:center;align-items:center;min-height:64px;text-decoration:none;border-radius:18px;font-weight:900;color:#06121f;background:linear-gradient(135deg,var(--brand),var(--brand2));box-shadow:0 14px 30px rgba(34,197,94,.18)}.btn.secondary{background:#17243a;color:var(--text);border:1px solid var(--line);box-shadow:none}.note{margin-top:18px;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:14px;color:#dbe7ff}.mini{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.mini a{color:#93c5fd;text-decoration:none;font-weight:800}@media(max-width:760px){.grid{grid-template-columns:1fr}.card{padding:22px;border-radius:24px}p{font-size:16px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <span class="badge">🎾 Club Pádel 04 · Launcher</span>
+      <h1>Acceso rápido a tu app</h1>
+      <p>Estos accesos abren tu aplicación privada en el navegador. Para que funcione fuera del PC principal, el dispositivo debe tener Tailscale activo y estar dentro de tu misma red privada.</p>
+      <div class="grid">
+        <a class="btn" href="a/">Abrir app</a>
+        <a class="btn secondary" href="m/">Móvil</a>
+        <a class="btn secondary" href="pc/">Windows / PC</a>
+      </div>
+      <div class="note">URL interna de destino: <strong>https://padel04-app.tailbecacd.ts.net/</strong></div>
+      <div class="mini">
+        <a href="a/">/a/</a>
+        <a href="m/">/m/</a>
+        <a href="pc/">/pc/</a>
+        <a href="cp04-app.url">Acceso directo Windows</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
