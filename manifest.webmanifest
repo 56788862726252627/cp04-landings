@@ -1,0 +1,18 @@
+{
+  "name": "Club Pádel 04",
+  "short_name": "CP04",
+  "description": "Acceso rápido a la app privada Club Pádel 04",
+  "start_url": "./a/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#08111f",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
