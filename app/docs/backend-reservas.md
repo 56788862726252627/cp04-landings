@@ -83,6 +83,8 @@ Airtable variables are documented and detected by the Worker, but writes are int
 
 Before enabling Airtable writes, define the exact fields, expected types, duplicate handling and error behavior.
 
+See `docs/integraciones.md` for the full SaaS integration map and proposed Airtable tables.
+
 ## Response Shape
 
 Successful response:
