@@ -27,6 +27,12 @@ Do not put Make, Airtable, Stripe, WhatsApp, Google or other private credentials
 
 See `SECURITY.md` for the current security baseline and required backend protections before production.
 
+## Booking Backend
+
+The Vite frontend cannot securely serve `/api/reservas` by itself in production. A Cloudflare Worker proxy is prepared in `worker-reservas/`.
+
+See `docs/backend-reservas.md` for deployment, Make webhook setup and required environment variables.
+
 ## Phase 1 Notes
 
 See `docs/phase-1-audit.md` for the initial secret scan result and files that look like Vite template leftovers or archive candidates.

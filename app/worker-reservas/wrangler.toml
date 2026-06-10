@@ -1,0 +1,13 @@
+name = "cp04-reservas-proxy"
+main = "src/index.js"
+compatibility_date = "2026-06-10"
+
+# Public/non-secret Worker variables. Override per environment in Cloudflare if needed.
+[vars]
+ALLOWED_ORIGIN = "http://localhost:5173"
+
+# Configure secrets with Wrangler or the Cloudflare dashboard, never in this file:
+# wrangler secret put MAKE_RESERVAS_WEBHOOK
+# wrangler secret put AIRTABLE_API_KEY
+# wrangler secret put AIRTABLE_BASE_ID
+# wrangler secret put AIRTABLE_RESERVAS_TABLE
