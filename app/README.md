@@ -1,16 +1,32 @@
-# React + Vite
+# Club Padel 04 App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React/Vite for the Club Padel 04 prototype. This repository currently contains the browser app only; private integrations must be implemented behind a backend/API route.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19
+- Vite 8
+- ESLint 10
 
-## React Compiler
+## Commands
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+npm run lint
+npm run build
+```
 
-## Expanding the ESLint configuration
+## Environment
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Copy `.env.example` to a local env file when needed. Only public `VITE_` values may be used by the frontend.
+
+Do not put Make, Airtable, Stripe, WhatsApp, Google or other private credentials in frontend environment variables. Keep those values in backend-only configuration.
+
+## Security
+
+See `SECURITY.md` for the current security baseline and required backend protections before production.
+
+## Phase 1 Notes
+
+See `docs/phase-1-audit.md` for the initial secret scan result and files that look like Vite template leftovers or archive candidates.
