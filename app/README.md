@@ -33,6 +33,15 @@ The Vite frontend cannot securely serve `/api/reservas` by itself in production.
 
 See `docs/backend-reservas.md` for deployment, Make webhook setup and required environment variables.
 
+## Project Docs
+
+- `SECURITY.md`: security baseline.
+- `docs/backend-reservas.md`: booking Worker/proxy.
+- `docs/integraciones.md`: SaaS integrations map.
+- `docs/auth-roles.md`: planned auth roles and permissions.
+- `docs/seo.md`: SEO placeholders and production values.
+- `docs/gallery-assets.md`: gallery configuration and unused asset notes.
+
 ## Phase 1 Notes
 
 See `docs/phase-1-audit.md` for the initial secret scan result and files that look like Vite template leftovers or archive candidates.
