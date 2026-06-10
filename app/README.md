@@ -41,6 +41,8 @@ See `docs/backend-reservas.md` for deployment, Make webhook setup and required e
 - `docs/auth-roles.md`: planned auth roles and permissions.
 - `docs/seo.md`: SEO placeholders and production values.
 - `docs/gallery-assets.md`: gallery configuration and unused asset notes.
+- `docs/deployment.md`: deployment steps for frontend and Worker.
+- `docs/production-checklist.md`: pre-production checklist.
 
 ## Phase 1 Notes
 
