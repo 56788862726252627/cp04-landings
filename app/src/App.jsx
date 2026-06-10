@@ -42,6 +42,11 @@ const COURTS = [
   { id: 4, name: "Pista 4", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
 ];
 
+const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+const BOOKING_DURATIONS = [60, 90, 120];
+const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
+const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
+
 const BOOKINGS = [
   { id: "RES-001", player: "Jugador Demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
   { id: "RES-002", player: "Jugadora Demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
@@ -81,6 +86,75 @@ function priceFor(courtName, duration) {
   return court?.[`price${duration}`] || 0;
 }
 
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function cleanText(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function validateBooking(form, courtName) {
+  const errors = {};
+  const duration = Number(form.duracion_minutos);
+  const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
+  const today = new Date(`${todayISO()}T00:00:00`);
+
+  if (cleanText(form.nombre).length < 2) errors.nombre = "Introduce un nombre válido.";
+  if (cleanText(form.apellidos).length < 2) errors.apellidos = "Introduce apellidos válidos.";
+  if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = "Introduce un email válido.";
+  if (form.telefono.replace(/\D/g, "").length < 9) errors.telefono = "Introduce un teléfono válido.";
+  if (!form.fecha) errors.fecha = "Selecciona una fecha.";
+  else if (selectedDate < today) errors.fecha = "La fecha no puede ser anterior a hoy.";
+  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = "Selecciona una hora disponible.";
+  if (!BOOKING_DURATIONS.includes(duration)) errors.duracion_minutos = "Selecciona una duración válida.";
+  if (!COURTS.some((court) => court.name === courtName)) errors.pista = "Selecciona una pista válida.";
+  if (!BOOKING_MODALITIES.includes(form.modalidad)) errors.modalidad = "Selecciona una modalidad válida.";
+  if (!BOOKING_LEVELS.includes(form.nivel)) errors.nivel = "Selecciona un nivel válido.";
+
+  return errors;
+}
+
+function prepareBookingPayload(form, courtName) {
+  const duration = Number(form.duracion_minutos);
+  const horaFin = calcTimeEnd(form.hora, duration);
+  const price = priceFor(courtName, duration);
+
+  return {
+    accion: "crear_reserva",
+    club: CONFIG.club,
+    origen: CONFIG.origen,
+    jugador: {
+      nombre: cleanText(form.nombre),
+      apellidos: cleanText(form.apellidos),
+      email: form.email.trim().toLowerCase(),
+      telefono: form.telefono.trim(),
+    },
+    reserva: {
+      fecha: form.fecha,
+      hora: form.hora,
+      hora_fin: horaFin,
+      duracion_minutos: duration,
+      pista: courtName,
+      modalidad: form.modalidad,
+      nivel: form.nivel,
+      precio_total: price,
+      comentarios: form.comentarios.trim(),
+    },
+  };
+}
+
+async function sendBooking(payload) {
+  const res = await fetch(CONFIG.bookingEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res;
+}
+
 function Card({ children, style = {} }) {
   return <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: 22, padding: 24, ...style }}>{children}</div>;
 }
@@ -104,6 +178,11 @@ function Badge({ status }) {
   return <span style={{ color, background: T.surface2, borderRadius: 999, padding: "5px 11px", fontSize: ".76rem", fontWeight: 900 }}>{label}</span>;
 }
 
+function FieldError({ children }) {
+  if (!children) return null;
+  return <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 6 }}>{children}</div>;
+}
+
 function Sidebar({ current, setCurrent }) {
   const items = [["inicio", "Inicio", "🏠"], ["reservas", "Reservar", "🎾"], ["gestion", "Reservas", "📅"], ["ranking", "Ranking", "🏆"], ["admin", "Admin", "📊"], ["soporte", "Soporte", "🛠️"]];
   return <aside className="cp04-sidebar" aria-label="Navegación principal"><div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 26 }}><span style={{ width: 12, height: 12, borderRadius: "50%", background: T.accent, boxShadow: `0 0 18px ${T.accent}` }} /><div><div style={{ fontFamily: T.fontDisplay, fontWeight: 900 }}>CLUB PÁDEL 04</div><div style={{ color: T.textDim, fontSize: ".78rem" }}>SaaS seguro</div></div></div><nav style={{ display: "grid", gap: 8 }}>{items.map(([id, label, icon]) => <button key={id} onClick={() => setCurrent(id)} aria-current={current === id ? "page" : undefined} style={{ display: "flex", gap: 10, width: "100%", background: current === id ? T.accent : "transparent", color: current === id ? "#07090e" : T.textDim, border: `1px solid ${current === id ? T.accent : T.line}`, borderRadius: 14, padding: "12px 14px", cursor: "pointer", fontWeight: 900 }}><span>{icon}</span><span>{label}</span></button>)}</nav><Card style={{ marginTop: 22, padding: 16 }}><strong style={{ color: T.accent }}>Modo seguro</strong><p style={{ color: T.textDim, fontSize: ".84rem", lineHeight: 1.5, marginBottom: 0 }}>Sin webhooks ni claves privadas en frontend.</p></Card></aside>;
@@ -115,17 +194,68 @@ function Inicio({ setCurrent }) {
 
 function Reservas() {
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [state, setState] = useState(null);
+  const [status, setStatus] = useState("pending");
+  const [errors, setErrors] = useState({});
   const [court, setCourt] = useState("Pista 1");
   const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
   const duration = Number(form.duracion_minutos);
   const horaFin = calcTimeEnd(form.hora, duration);
   const price = priceFor(court, duration);
-  const payload = useMemo(() => ({ accion: "crear_reserva", ...form, hora_fin: horaFin, pista: court, duracion_minutos: duration, precio_total: price, origen: CONFIG.origen, club: CONFIG.club }), [form, horaFin, court, duration, price]);
-  const valid = form.nombre && form.apellidos && /^\S+@\S+\.\S+$/.test(form.email) && form.telefono.replace(/\D/g, "").length >= 9 && form.fecha && form.hora;
-  async function send() { setLoading(true); setState(null); try { const res = await fetch(CONFIG.bookingEndpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error(`HTTP ${res.status}`); setState({ ok: true, text: "Reserva enviada correctamente." }); setStep(3); } catch (e) { console.error(e); setState({ ok: false, text: "No se pudo enviar. Configura /api/reservas en backend." }); } finally { setLoading(false); } }
-  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow="Reservas" title="Reservar pista" desc="Formulario preparado para backend seguro. No expone Make ni credenciales en el navegador." />{state && <Card style={{ marginBottom: 20, borderColor: state.ok ? T.accent : T.danger, color: state.ok ? T.accent : T.danger }}>{state.text}</Card>}{step === 1 && <div className="cp04-grid-2"><Card><h3>Datos del jugador</h3><input placeholder="Nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /><br /><br /><input placeholder="Apellidos" value={form.apellidos} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} /><br /><br /><input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /><br /><br /><input placeholder="Teléfono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} /><br /><br /><textarea placeholder="Comentarios" value={form.comentarios} onChange={(e) => setForm({ ...form, comentarios: e.target.value })} /></Card><Card><h3>Fecha, hora y pista</h3><input type="date" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} /><br /><br /><select value={form.hora} onChange={(e) => setForm({ ...form, hora: e.target.value })}>{["08:00","09:00","10:00","11:00","12:00","17:00","18:00","19:00","20:00","21:00","22:00"].map((h) => <option key={h}>{h}</option>)}</select><br /><br /><select value={form.duracion_minutos} onChange={(e) => setForm({ ...form, duracion_minutos: e.target.value })}><option value="60">60 minutos</option><option value="90">90 minutos</option><option value="120">120 minutos</option></select><br /><br /><div className="cp04-grid-2">{COURTS.map((c) => <Btn key={c.id} variant={court === c.name ? "primary" : "secondary"} onClick={() => setCourt(c.name)}>{c.name}</Btn>)}</div><Card style={{ background: T.bg, marginTop: 16 }}>Hora fin: <strong style={{ color: T.accent }}>{horaFin}</strong> · Total: <strong style={{ color: T.accent }}>{price}€</strong></Card><Btn disabled={!valid} onClick={() => setStep(2)} style={{ width: "100%", marginTop: 16 }}>Ver resumen</Btn></Card></div>}{step === 2 && <Card style={{ maxWidth: 560, margin: "0 auto" }}><h3>Resumen</h3><pre style={{ background: T.bg, color: T.textDim, padding: 16, borderRadius: 14, overflow: "auto" }}>{JSON.stringify(payload, null, 2)}</pre><div style={{ display: "flex", gap: 12 }}><Btn variant="secondary" onClick={() => setStep(1)}>Editar</Btn><Btn disabled={loading} onClick={send}>{loading ? "Enviando..." : "Confirmar"}</Btn></div></Card>}{step === 3 && <Card style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}><h3>Reserva registrada</h3><p style={{ color: T.textDim }}>La confirmación real dependerá del backend y de las integraciones configuradas.</p><Btn onClick={() => setStep(1)}>Nueva reserva</Btn></Card>}</div>;
+  const payload = useMemo(() => prepareBookingPayload(form, court), [form, court]);
+  const sending = status === "sending";
+  const statusMap = {
+    pending: ["Pendiente", "Completa los datos y revisa el resumen antes de confirmar.", T.warning],
+    sending: ["Enviando", "Estamos enviando la solicitud al endpoint seguro de reservas.", T.warning],
+    success: ["Éxito", "Reserva enviada correctamente. Queda pendiente de confirmación por backend.", T.accent],
+    error: ["Error", "No se pudo enviar. Revisa los datos o configura /api/reservas en backend.", T.danger],
+  };
+  const [statusTitle, statusText, statusColor] = statusMap[status];
+
+  function updateForm(field, value) {
+    setForm((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
+    if (status !== "sending") setStatus("pending");
+  }
+
+  function review() {
+    const nextErrors = validateBooking(form, court);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setStatus("error");
+      return;
+    }
+    setStatus("pending");
+    setStep(2);
+  }
+
+  async function send() {
+    if (sending) return;
+    const nextErrors = validateBooking(form, court);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setStatus("error");
+      setStep(1);
+      return;
+    }
+
+    setStatus("sending");
+    try {
+      await sendBooking(payload);
+      setStatus("success");
+      setStep(3);
+    } catch (e) {
+      console.error(e);
+      setStatus("error");
+    }
+  }
+
+  function newBooking() {
+    setStep(1);
+    setStatus("pending");
+    setErrors({});
+  }
+
+  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow="Reservas" title="Reservar pista" desc="Formulario preparado para backend seguro. No expone Make ni credenciales en el navegador." /><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step === 1 && <div className="cp04-grid-2"><Card><h3>Datos del jugador</h3><input placeholder="Nombre" value={form.nombre} onChange={(e) => updateForm("nombre", e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input placeholder="Apellidos" value={form.apellidos} onChange={(e) => updateForm("apellidos", e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input placeholder="Email" type="email" value={form.email} onChange={(e) => updateForm("email", e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input placeholder="Teléfono" value={form.telefono} onChange={(e) => updateForm("telefono", e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select value={form.modalidad} onChange={(e) => updateForm("modalidad", e.target.value)}>{BOOKING_MODALITIES.map((m) => <option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select value={form.nivel} onChange={(e) => updateForm("nivel", e.target.value)}>{BOOKING_LEVELS.map((n) => <option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea placeholder="Comentarios" value={form.comentarios} onChange={(e) => updateForm("comentarios", e.target.value)} /></Card><Card><h3>Fecha, hora y pista</h3><input type="date" min={todayISO()} value={form.fecha} onChange={(e) => updateForm("fecha", e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select value={form.hora} onChange={(e) => updateForm("hora", e.target.value)}>{BOOKING_HOURS.map((h) => <option key={h} value={h}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select value={form.duracion_minutos} onChange={(e) => updateForm("duracion_minutos", e.target.value)}>{BOOKING_DURATIONS.map((mins) => <option key={mins} value={mins}>{mins} minutos</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map((c) => <Btn key={c.id} variant={court === c.name ? "primary" : "secondary"} disabled={sending} onClick={() => setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background: T.bg, marginTop: 16 }}>Hora fin: <strong style={{ color: T.accent }}>{horaFin}</strong> · Total: <strong style={{ color: T.accent }}>{price}€</strong></Card><Btn disabled={sending} onClick={review} style={{ width: "100%", marginTop: 16 }}>Ver resumen</Btn></Card></div>}{step === 2 && <Card style={{ maxWidth: 620, margin: "0 auto" }}><h3>Resumen</h3><p style={{ color: T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{payload.reserva.fecha} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color: T.textDim }}>Modalidad: {payload.reserva.modalidad} · Nivel: {payload.reserva.nivel}</p><h2 style={{ color: T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}><Btn variant="secondary" disabled={sending} onClick={() => setStep(1)}>Editar</Btn><Btn disabled={sending} onClick={send}>{sending ? "Enviando..." : "Confirmar"}</Btn></div></Card>}{step === 3 && <Card style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}><h3>Reserva registrada</h3><p style={{ color: T.textDim }}>La confirmación real dependerá del backend y de las integraciones configuradas.</p><Btn onClick={newBooking}>Nueva reserva</Btn></Card>}</div>;
 }
 
 function Gestion() {
