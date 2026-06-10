@@ -30,6 +30,8 @@ These were not deleted in Phase 1 because removal should be reviewed separately:
 - `src/assets/hero.png`: not referenced by current source.
 - `public/icons.svg`: appears inherited from template social icons; verify before removing.
 
+See `docs/gallery-assets.md` for the current gallery image configuration and asset archive candidates.
+
 ## Notes
 
 - `dist/` is generated output and ignored by Git.
