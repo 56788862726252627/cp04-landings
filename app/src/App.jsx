@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Club Pádel 04 · SaaS App segura
@@ -65,14 +65,18 @@ const globalStyles = `
   body { margin: 0; background: ${T.bg}; color: ${T.text}; font-family: ${T.fontBody}; }
   input, select, textarea { background: ${T.bg}; border: 1px solid ${T.line}; color: ${T.text}; border-radius: 12px; padding: 12px 14px; width: 100%; outline: none; }
   input:focus, select:focus, textarea:focus { border-color: ${T.accent}; box-shadow: 0 0 0 3px rgba(182,255,0,.18); }
+  button:focus-visible { outline: 3px solid rgba(182,255,0,.9); outline-offset: 3px; }
   .cp04-layout { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr; }
   .cp04-sidebar { position: sticky; top: 0; height: 100vh; padding: 22px; border-right: 1px solid ${T.line}; background: rgba(7,10,14,.92); overflow: auto; }
+  .cp04-mobilebar { display: none; }
+  .cp04-overlay { display: none; }
+  .cp04-sidebar-close { display: none; }
   .cp04-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
   .cp04-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
   .cp04-table { width: 100%; border-collapse: collapse; }
   .cp04-table th, .cp04-table td { padding: 14px 16px; border-bottom: 1px solid ${T.line}; text-align: left; }
   .cp04-table th { color: ${T.textDim}; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
-  @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; } .cp04-sidebar { position: relative; height: auto; border-right: 0; border-bottom: 1px solid ${T.line}; } .cp04-grid-2, .cp04-grid-3 { grid-template-columns: 1fr; } }
+  @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.96); backdrop-filter: blur(14px); } .cp04-menu-button { background: ${T.accent}; color: #07090e; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(86vw, 330px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3 { grid-template-columns: 1fr; } }
 `;
 
 function calcTimeEnd(time, mins) {
@@ -183,9 +187,9 @@ function FieldError({ children }) {
   return <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 6 }}>{children}</div>;
 }
 
-function Sidebar({ current, setCurrent }) {
+function Sidebar({ current, mobileOpen, onNavigate, onClose }) {
   const items = [["inicio", "Inicio", "🏠"], ["reservas", "Reservar", "🎾"], ["gestion", "Reservas", "📅"], ["ranking", "Ranking", "🏆"], ["admin", "Admin", "📊"], ["soporte", "Soporte", "🛠️"]];
-  return <aside className="cp04-sidebar" aria-label="Navegación principal"><div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 26 }}><span style={{ width: 12, height: 12, borderRadius: "50%", background: T.accent, boxShadow: `0 0 18px ${T.accent}` }} /><div><div style={{ fontFamily: T.fontDisplay, fontWeight: 900 }}>CLUB PÁDEL 04</div><div style={{ color: T.textDim, fontSize: ".78rem" }}>SaaS seguro</div></div></div><nav style={{ display: "grid", gap: 8 }}>{items.map(([id, label, icon]) => <button key={id} onClick={() => setCurrent(id)} aria-current={current === id ? "page" : undefined} style={{ display: "flex", gap: 10, width: "100%", background: current === id ? T.accent : "transparent", color: current === id ? "#07090e" : T.textDim, border: `1px solid ${current === id ? T.accent : T.line}`, borderRadius: 14, padding: "12px 14px", cursor: "pointer", fontWeight: 900 }}><span>{icon}</span><span>{label}</span></button>)}</nav><Card style={{ marginTop: 22, padding: 16 }}><strong style={{ color: T.accent }}>Modo seguro</strong><p style={{ color: T.textDim, fontSize: ".84rem", lineHeight: 1.5, marginBottom: 0 }}>Sin webhooks ni claves privadas en frontend.</p></Card></aside>;
+  return <aside id="cp04-mobile-menu" className="cp04-sidebar" data-open={mobileOpen ? "true" : "false"} aria-label="Navegación principal"><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 26 }}><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 12, height: 12, borderRadius: "50%", background: T.accent, boxShadow: `0 0 18px ${T.accent}` }} /><div><div style={{ fontFamily: T.fontDisplay, fontWeight: 900 }}>CLUB PÁDEL 04</div><div style={{ color: T.textDim, fontSize: ".78rem" }}>SaaS seguro</div></div></div><button className="cp04-menu-button cp04-sidebar-close" type="button" onClick={onClose} aria-label="Cerrar menú">Cerrar</button></div><nav style={{ display: "grid", gap: 8 }}>{items.map(([id, label, icon]) => <button key={id} onClick={() => onNavigate(id)} aria-current={current === id ? "page" : undefined} aria-label={`Ir a ${label}`} style={{ display: "flex", gap: 10, width: "100%", background: current === id ? T.accent : "transparent", color: current === id ? "#07090e" : T.textDim, border: `1px solid ${current === id ? T.accent : T.line}`, borderRadius: 14, padding: "12px 14px", cursor: "pointer", fontWeight: 900 }}><span aria-hidden="true">{icon}</span><span>{label}</span></button>)}</nav><Card style={{ marginTop: 22, padding: 16 }}><strong style={{ color: T.accent }}>Modo seguro</strong><p style={{ color: T.textDim, fontSize: ".84rem", lineHeight: 1.5, marginBottom: 0 }}>Sin webhooks ni claves privadas en frontend.</p></Card></aside>;
 }
 
 function Inicio({ setCurrent }) {
@@ -276,6 +280,35 @@ function Soporte() {
 
 export default function ClubPadel04SaaSApp() {
   const [current, setCurrent] = useState("inicio");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuButtonRef = useRef(null);
   const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, gestion: <Gestion />, ranking: <Ranking />, admin: <Admin />, soporte: <Soporte /> };
-  return <><style>{globalStyles}</style><div className="cp04-layout"><Sidebar current={current} setCurrent={setCurrent} /><main>{modules[current]}</main></div></>;
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
+  function navigate(section) {
+    setCurrent(section);
+    setMobileMenuOpen(false);
+  }
+
+  return <><style>{globalStyles}</style><div className="cp04-mobilebar"><div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: T.accent }} /><strong style={{ fontFamily: T.fontDisplay }}>CLUB PÁDEL 04</strong></div><button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú de navegación" aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>Menú</button></div>{mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}<div className="cp04-layout"><Sidebar current={current} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} /><main>{modules[current]}</main></div></>;
 }
