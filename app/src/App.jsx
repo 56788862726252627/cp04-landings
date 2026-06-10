@@ -12,14 +12,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
  */
 
 const T = {
-  bg: "#070a0e",
-  surface: "#0e121e",
-  surface2: "#161c2e",
+  bg: "#05080d",
+  surface: "#0b111d",
+  surface2: "#111a2b",
+  surface3: "#18243a",
   accent: "#b6ff00",
-  primary: "#0052cc",
+  accent2: "#20e3b2",
+  primary: "#2f6bff",
   text: "#ffffff",
-  textDim: "#94a3b8",
-  line: "rgba(255,255,255,0.08)",
+  textDim: "#9aa8bd",
+  line: "rgba(255,255,255,0.10)",
   danger: "#ff5e3a",
   warning: "#ffad47",
   fontDisplay: "'Syne', sans-serif",
@@ -62,21 +64,38 @@ const RANKING = [
 const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;700;800&display=swap');
   * { box-sizing: border-box; }
-  body { margin: 0; background: ${T.bg}; color: ${T.text}; font-family: ${T.fontBody}; }
-  input, select, textarea { background: ${T.bg}; border: 1px solid ${T.line}; color: ${T.text}; border-radius: 12px; padding: 12px 14px; width: 100%; outline: none; }
-  input:focus, select:focus, textarea:focus { border-color: ${T.accent}; box-shadow: 0 0 0 3px rgba(182,255,0,.18); }
+  html { background: ${T.bg}; }
+  body { margin: 0; min-width: 320px; background: radial-gradient(circle at 20% 0%, rgba(182,255,0,.12), transparent 30%), radial-gradient(circle at 86% 12%, rgba(47,107,255,.22), transparent 36%), linear-gradient(145deg, #05080d 0%, #08111f 48%, #05080d 100%); color: ${T.text}; font-family: ${T.fontBody}; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 56px 56px; mask-image: linear-gradient(to bottom, rgba(0,0,0,.6), transparent 72%); }
+  input, select, textarea { background: rgba(5,8,13,.72); border: 1px solid ${T.line}; color: ${T.text}; border-radius: 14px; padding: 13px 15px; width: 100%; outline: none; min-height: 46px; box-shadow: inset 0 1px 0 rgba(255,255,255,.03); transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
+  textarea { min-height: 118px; resize: vertical; }
+  input::placeholder, textarea::placeholder { color: rgba(154,168,189,.72); }
+  input:focus, select:focus, textarea:focus { background: rgba(11,17,29,.94); border-color: ${T.accent}; box-shadow: 0 0 0 4px rgba(182,255,0,.16), 0 18px 40px rgba(0,0,0,.22); }
   button:focus-visible { outline: 3px solid rgba(182,255,0,.9); outline-offset: 3px; }
-  .cp04-layout { min-height: 100vh; display: grid; grid-template-columns: 280px 1fr; }
-  .cp04-sidebar { position: sticky; top: 0; height: 100vh; padding: 22px; border-right: 1px solid ${T.line}; background: rgba(7,10,14,.92); overflow: auto; }
+  h1, h2, h3 { text-wrap: balance; }
+  p { margin-top: 0; }
+  code { color: ${T.accent}; background: rgba(182,255,0,.08); border: 1px solid rgba(182,255,0,.18); border-radius: 8px; padding: 2px 7px; }
+  .cp04-layout { min-height: 100vh; display: grid; grid-template-columns: 292px minmax(0,1fr); }
+  .cp04-main { min-width: 0; }
+  .cp04-sidebar { position: sticky; top: 0; height: 100vh; padding: 24px; border-right: 1px solid ${T.line}; background: linear-gradient(180deg, rgba(10,16,28,.96), rgba(5,8,13,.90)); overflow: auto; backdrop-filter: blur(18px); }
   .cp04-mobilebar { display: none; }
   .cp04-overlay { display: none; }
   .cp04-sidebar-close { display: none; }
-  .cp04-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .cp04-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; }
   .cp04-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
-  .cp04-table { width: 100%; border-collapse: collapse; }
-  .cp04-table th, .cp04-table td { padding: 14px 16px; border-bottom: 1px solid ${T.line}; text-align: left; }
+  .cp04-card { position: relative; overflow: hidden; background: linear-gradient(150deg, rgba(17,26,43,.94), rgba(8,13,23,.94)); border: 1px solid rgba(255,255,255,.11); border-radius: 26px; padding: 24px; box-shadow: 0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05); }
+  .cp04-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 16% 0%, rgba(182,255,0,.08), transparent 32%); }
+  .cp04-card > * { position: relative; }
+  .cp04-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, border-color .18s ease; }
+  .cp04-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); box-shadow: 0 14px 32px rgba(0,0,0,.24); }
+  .cp04-badge { display: inline-flex; align-items: center; max-width: 100%; white-space: nowrap; line-height: 1; }
+  .cp04-table-wrap { overflow-x: auto; }
+  .cp04-table { width: 100%; min-width: 620px; border-collapse: collapse; }
+  .cp04-table th, .cp04-table td { padding: 16px 18px; border-bottom: 1px solid ${T.line}; text-align: left; }
   .cp04-table th { color: ${T.textDim}; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
-  @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.96); backdrop-filter: blur(14px); } .cp04-menu-button { background: ${T.accent}; color: #07090e; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(86vw, 330px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3 { grid-template-columns: 1fr; } }
+  @media (max-width: 1180px) { .cp04-grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.88); backdrop-filter: blur(18px); } .cp04-menu-button { background: linear-gradient(135deg, ${T.accent}, ${T.accent2}); color: #06100a; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(88vw, 340px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3 { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } }
 `;
 
 function calcTimeEnd(time, mins) {
@@ -160,26 +179,26 @@ async function sendBooking(payload) {
 }
 
 function Card({ children, style = {} }) {
-  return <div style={{ background: T.surface, border: `1px solid ${T.line}`, borderRadius: 22, padding: 24, ...style }}>{children}</div>;
+  return <div className="cp04-card" style={style}>{children}</div>;
 }
 
 function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {} }) {
   const map = {
-    primary: { background: T.accent, color: "#07090e", border: "none" },
-    secondary: { background: T.surface2, color: T.text, border: `1px solid ${T.line}` },
+    primary: { background: `linear-gradient(135deg, ${T.accent}, ${T.accent2})`, color: "#06100a", border: "none", boxShadow: "0 16px 36px rgba(182,255,0,.18)" },
+    secondary: { background: "rgba(255,255,255,.055)", color: T.text, border: `1px solid ${T.line}` },
     danger: { background: "rgba(255,94,58,.12)", color: T.danger, border: "1px solid rgba(255,94,58,.30)" },
   };
-  return <button type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 14, fontFamily: T.fontDisplay, fontWeight: 900, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }}>{children}</button>;
+  return <button className="cp04-btn" type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 15, fontFamily: T.fontDisplay, fontWeight: 900, letterSpacing: "-.01em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }}>{children}</button>;
 }
 
 function SectionTitle({ eyebrow, title, desc }) {
-  return <div style={{ marginBottom: 28 }}>{eyebrow && <div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".16em", fontSize: ".78rem", textTransform: "uppercase", marginBottom: 8 }}>{eyebrow}</div>}<h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.8rem,4vw,2.8rem)", margin: 0, letterSpacing: "-.04em" }}>{title}</h2>{desc && <p style={{ color: T.textDim, lineHeight: 1.7, maxWidth: 720 }}>{desc}</p>}</div>;
+  return <div style={{ marginBottom: 30 }}>{eyebrow && <div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".76rem", textTransform: "uppercase", marginBottom: 10 }}>{eyebrow}</div>}<h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(2rem,4vw,3.1rem)", lineHeight: .96, margin: 0, letterSpacing: "-.055em" }}>{title}</h2>{desc && <p style={{ color: T.textDim, lineHeight: 1.75, maxWidth: 760, marginTop: 14, fontSize: "1.02rem" }}>{desc}</p>}</div>;
 }
 
 function Badge({ status }) {
   const map = { confirmed: ["Confirmada", T.accent], pending: ["Pendiente", T.warning], completed: ["Completada", T.textDim] };
   const [label, color] = map[status] || map.pending;
-  return <span style={{ color, background: T.surface2, borderRadius: 999, padding: "5px 11px", fontSize: ".76rem", fontWeight: 900 }}>{label}</span>;
+  return <span className="cp04-badge" style={{ color, background: "rgba(255,255,255,.07)", border: `1px solid ${color}44`, borderRadius: 999, padding: "7px 11px", fontSize: ".74rem", fontWeight: 900 }}>{label}</span>;
 }
 
 function FieldError({ children }) {
@@ -193,7 +212,7 @@ function Sidebar({ current, mobileOpen, onNavigate, onClose }) {
 }
 
 function Inicio({ setCurrent }) {
-  return <div style={{ padding: "48px 24px", maxWidth: 1180, margin: "0 auto" }}><section style={{ minHeight: "65vh", display: "grid", alignItems: "center", gridTemplateColumns: "1.2fr .8fr", gap: 30 }}><div><div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".82rem", textTransform: "uppercase", marginBottom: 16 }}>SaaS premium · reservas inteligentes</div><h1 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(3rem,7vw,5.4rem)", lineHeight: .9, margin: 0, letterSpacing: "-.06em" }}>Club de pádel<br /><span style={{ color: T.accent }}>con IA</span></h1><p style={{ color: T.textDim, fontSize: "1.12rem", lineHeight: 1.75, maxWidth: 660 }}>Reservas, CRM, torneos, ranking ELO, automatizaciones, paneles internos e integraciones preparadas para Make, Airtable, Stripe, WhatsApp y Google Calendar.</p><div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 28 }}><Btn onClick={() => setCurrent("reservas")}>🎾 Reservar pista</Btn><Btn variant="secondary" onClick={() => setCurrent("admin")}>Ver panel SaaS</Btn></div></div><Card style={{ background: `linear-gradient(160deg,${T.surface},rgba(0,82,204,.10))` }}><Badge status="confirmed" /><h3 style={{ fontFamily: T.fontDisplay, fontSize: "1.7rem" }}>Reserva segura</h3><p style={{ color: T.textDim, lineHeight: 1.6 }}>El frontend envía a <code>/api/reservas</code>. Desde ahí conectas Make/Airtable sin exponer secretos.</p></Card></section><div className="cp04-grid-3"><Card><h3>4 pistas</h3><p style={{ color: T.textDim }}>Cristal Pro y Central.</p></Card><Card><h3>CRM + Ranking</h3><p style={{ color: T.textDim }}>Paneles preparados para datos reales.</p></Card><Card><h3>Integraciones</h3><p style={{ color: T.textDim }}>Make, Airtable, Stripe, WhatsApp y Google Calendar en backend.</p></Card></div></div>;
+  return <div style={{ padding: "clamp(30px,5vw,62px) 24px", maxWidth: 1220, margin: "0 auto" }}><section style={{ minHeight: "min(720px,72vh)", display: "grid", alignItems: "center", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,360px),1fr))", gap: "clamp(24px,4vw,54px)" }}><div><div style={{ display: "inline-flex", alignItems: "center", gap: 10, color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".78rem", textTransform: "uppercase", marginBottom: 18, padding: "8px 12px", border: `1px solid rgba(182,255,0,.22)`, borderRadius: 999, background: "rgba(182,255,0,.07)" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: T.accent }} />SaaS premium · reservas inteligentes</div><h1 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(3.1rem,8vw,6.4rem)", lineHeight: .86, margin: 0, letterSpacing: "-.075em" }}>Club de pádel<br /><span style={{ color: T.accent }}>con IA</span></h1><p style={{ color: T.textDim, fontSize: "clamp(1rem,2vw,1.18rem)", lineHeight: 1.78, maxWidth: 680, marginTop: 22 }}>Reservas, CRM, torneos, ranking ELO, automatizaciones, paneles internos e integraciones preparadas para Make, Airtable, Stripe, WhatsApp y Google Calendar.</p><div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 30 }}><Btn onClick={() => setCurrent("reservas")}>🎾 Reservar pista</Btn><Btn variant="secondary" onClick={() => setCurrent("admin")}>Ver panel SaaS</Btn></div></div><Card style={{ minHeight: 360, display: "grid", alignContent: "space-between", background: `linear-gradient(160deg,rgba(17,26,43,.96),rgba(47,107,255,.13)), radial-gradient(circle at 70% 0%, rgba(182,255,0,.22), transparent 34%)` }}><div><Badge status="confirmed" /><h3 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.8rem,4vw,2.55rem)", lineHeight: 1, letterSpacing: "-.05em", margin: "22px 0 14px" }}>Reserva segura</h3><p style={{ color: T.textDim, lineHeight: 1.72 }}>El frontend envía a <code>/api/reservas</code>. Desde ahí conectas Make/Airtable sin exponer secretos.</p></div><div style={{ height: 150, borderRadius: 24, border: `1px solid ${T.line}`, background: `linear-gradient(135deg,rgba(182,255,0,.22),rgba(47,107,255,.14)), repeating-linear-gradient(90deg,rgba(255,255,255,.13) 0 1px,transparent 1px 32px)`, boxShadow: "inset 0 1px 0 rgba(255,255,255,.08)" }} aria-label="Visual abstracto de pista de pádel" /></Card></section><div className="cp04-grid-3"><Card><h3 style={{ marginTop: 0 }}>4 pistas</h3><p style={{ color: T.textDim, lineHeight: 1.6 }}>Cristal Pro y Central.</p></Card><Card><h3 style={{ marginTop: 0 }}>CRM + Ranking</h3><p style={{ color: T.textDim, lineHeight: 1.6 }}>Paneles preparados para datos reales.</p></Card><Card><h3 style={{ marginTop: 0 }}>Integraciones</h3><p style={{ color: T.textDim, lineHeight: 1.6 }}>Make, Airtable, Stripe, WhatsApp y Google Calendar en backend.</p></Card></div></div>;
 }
 
 function Reservas() {
@@ -267,7 +286,7 @@ function Gestion() {
 }
 
 function Ranking() {
-  return <div style={{ padding: "42px 24px" }}><SectionTitle eyebrow="Ranking" title="Ranking ELO" desc="Preparado para resultados reales." /><Card><table className="cp04-table"><thead><tr><th>Pos</th><th>Jugador</th><th>ELO</th><th>Categoría</th><th>V</th><th>D</th></tr></thead><tbody>{RANKING.map((p) => <tr key={p.pos}><td>{p.pos}</td><td><strong>{p.name}</strong></td><td style={{ color: T.accent }}>{p.elo}</td><td>{p.cat}</td><td>{p.wins}</td><td>{p.losses}</td></tr>)}</tbody></table></Card></div>;
+  return <div style={{ padding: "42px 24px" }}><SectionTitle eyebrow="Ranking" title="Ranking ELO" desc="Preparado para resultados reales." /><Card><div className="cp04-table-wrap"><table className="cp04-table"><thead><tr><th>Pos</th><th>Jugador</th><th>ELO</th><th>Categoría</th><th>V</th><th>D</th></tr></thead><tbody>{RANKING.map((p) => <tr key={p.pos}><td>{p.pos}</td><td><strong>{p.name}</strong></td><td style={{ color: T.accent, fontWeight: 900 }}>{p.elo}</td><td>{p.cat}</td><td>{p.wins}</td><td>{p.losses}</td></tr>)}</tbody></table></div></Card></div>;
 }
 
 function Admin() {
@@ -310,5 +329,5 @@ export default function ClubPadel04SaaSApp() {
     setMobileMenuOpen(false);
   }
 
-  return <><style>{globalStyles}</style><div className="cp04-mobilebar"><div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: T.accent }} /><strong style={{ fontFamily: T.fontDisplay }}>CLUB PÁDEL 04</strong></div><button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú de navegación" aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>Menú</button></div>{mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}<div className="cp04-layout"><Sidebar current={current} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} /><main>{modules[current]}</main></div></>;
+  return <><style>{globalStyles}</style><div className="cp04-mobilebar"><div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: T.accent }} /><strong style={{ fontFamily: T.fontDisplay }}>CLUB PÁDEL 04</strong></div><button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú de navegación" aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>Menú</button></div>{mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}<div className="cp04-layout"><Sidebar current={current} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} /><main className="cp04-main">{modules[current]}</main></div></>;
 }
