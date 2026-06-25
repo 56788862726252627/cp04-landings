@@ -2175,8 +2175,6 @@ const TRANSLATIONS = {
     "login.error_rol":"Selecciona un rol válido.","login.error_pwd":"Contraseña incorrecta para este rol.",
     "login.sesion_label":"Club Pádel 04 · Inicio de sesión",
     "login.legal":"Acceso local protegido por contraseña. Puedes guardar sesión solo en este dispositivo. Para producción real, las credenciales deberán validarse desde backend/autenticación segura.",
-    "login.olvide_pwd":"¿Has olvidado tu contraseña?","login.recuperar_title":"Recuperar acceso","login.recuperar_desc":"Introduce tu correo electrónico y, si la cuenta existe, recibirás instrucciones para restablecer el acceso.","login.recuperar_email":"Correo electrónico","login.recuperar_btn":"Enviar instrucciones","login.recuperar_enviado":"Si esa dirección está registrada en el sistema, recibirás instrucciones en breve. Revisa también la carpeta de spam.","login.recuperar_volver":"Volver al inicio de sesión","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
-    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","nav.perfil":"Perfil y ajustes",
     "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
     "login.idioma":"Idioma",
     "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
@@ -2377,8 +2375,6 @@ const TRANSLATIONS = {
     "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
     "login.sesion_label":"Club Pádel 04 · Login",
     "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
-    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
-    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","nav.perfil":"Profile & settings",
     "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
     "login.idioma":"Language",
     "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, check bookings and ranking.",
@@ -2579,8 +2575,6 @@ const TRANSLATIONS = {
     "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
     "login.sesion_label":"Club Pádel 04 · Sign In",
     "login.legal":"Local access protected by password. Session can be saved on this device only.",
-    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
-    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","nav.perfil":"Profile & settings",
     "login.subtitle":"Select how you want to enter the app. Each role has an experience tailored to its permissions.",
     "login.idioma":"Language",
     "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, view bookings and ranking.",
@@ -2781,8 +2775,6 @@ const TRANSLATIONS = {
     "login.error_rol":"Veuillez sélectionner un rôle valide.","login.error_pwd":"Mot de passe incorrect.",
     "login.sesion_label":"Club Pádel 04 · Connexion",
     "login.legal":"Accès local protégé par mot de passe. Session sauvegardable sur cet appareil uniquement.",
-    "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password",
-    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","nav.perfil":"Profil et paramètres",
     "login.subtitle":"Sélectionnez comment vous souhaitez entrer dans l'application.",
     "login.idioma":"Langue",
     "role.PLAYER.label":"Joueur / client","role.PLAYER.desc":"Réserver des courts, consulter les réservations et le classement.",
@@ -2979,8 +2971,6 @@ const TRANSLATIONS = {
     "login.error_rol":"Seleziona un ruolo valido.","login.error_pwd":"Password errata per questo ruolo.",
     "login.sesion_label":"Club Pádel 04 · Accesso",
     "login.legal":"Accesso locale protetto da password. Sessione salvabile solo su questo dispositivo.",
-    "login.olvide_pwd":"Hai dimenticato la password?","login.recuperar_title":"Recupera l'accesso","login.recuperar_desc":"Inserisci il tuo indirizzo e-mail e, se l'account esiste, riceverai le istruzioni per reimpostare l'accesso.","login.recuperar_email":"Indirizzo e-mail","login.recuperar_btn":"Invia istruzioni","login.recuperar_enviado":"Se quell'indirizzo è registrato nel sistema, riceverai le istruzioni a breve. Controlla anche la cartella spam.","login.recuperar_volver":"Torna al login","login.recuperar_preparado":"Pronto per l'endpoint: /api/auth/forgot-password",
-    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","nav.perfil":"Profilo e impostazioni",
     "login.subtitle":"Seleziona come vuoi accedere all'applicazione.",
     "login.idioma":"Lingua",
     "role.PLAYER.label":"Giocatore / cliente","role.PLAYER.desc":"Prenota campi, consulta prenotazioni e classifica.",
@@ -3177,8 +3167,6 @@ const TRANSLATIONS = {
     "login.error_rol":"Selecione uma função válida.","login.error_pwd":"Palavra-passe incorreta.",
     "login.sesion_label":"Club Pádel 04 · Início de sessão",
     "login.legal":"Acesso local protegido por palavra-passe. Sessão guardável apenas neste dispositivo.",
-    "login.olvide_pwd":"Esqueceu a palavra-passe?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Introduza o seu e-mail e, se a conta existir, receberá instruções para repor o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver registado no sistema, receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao início de sessão","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
-    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","nav.perfil":"Perfil e definições",
     "login.subtitle":"Selecione como pretende entrar na aplicação.",
     "login.idioma":"Idioma",
     "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar campos, consultar reservas e classificação.",
@@ -3375,8 +3363,6 @@ const TRANSLATIONS = {
     "login.error_rol":"Selecione um perfil válido.","login.error_pwd":"Senha incorreta para este perfil.",
     "login.sesion_label":"Club Pádel 04 · Login",
     "login.legal":"Acesso local protegido por senha. Sessão salvável apenas neste dispositivo.",
-    "login.olvide_pwd":"Esqueceu a senha?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Insira seu e-mail e, se a conta existir, você receberá instruções para redefinir o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver cadastrado no sistema, você receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao login","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
-    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","nav.perfil":"Perfil e configurações",
     "login.subtitle":"Selecione como deseja entrar na aplicação.",
     "login.idioma":"Idioma",
     "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar quadras, consultar reservas e ranking.",
@@ -3573,8 +3559,6 @@ const TRANSLATIONS = {
     "login.error_rol":"Bitte wählen Sie eine gültige Rolle.","login.error_pwd":"Falsches Passwort für diese Rolle.",
     "login.sesion_label":"Club Pádel 04 · Anmeldung",
     "login.legal":"Lokaler Zugang durch Passwort geschützt. Sitzung nur auf diesem Gerät speicherbar.",
-    "login.olvide_pwd":"Passwort vergessen?","login.recuperar_title":"Zugang wiederherstellen","login.recuperar_desc":"Geben Sie Ihre E-Mail-Adresse ein und, wenn das Konto existiert, erhalten Sie Anweisungen zur Zurücksetzung.","login.recuperar_email":"E-Mail-Adresse","login.recuperar_btn":"Anweisungen senden","login.recuperar_enviado":"Wenn diese Adresse im System registriert ist, erhalten Sie in Kürze Anweisungen. Prüfen Sie auch Ihren Spam-Ordner.","login.recuperar_volver":"Zurück zum Login","login.recuperar_preparado":"Bereit für Endpunkt: /api/auth/forgot-password",
-    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","nav.perfil":"Profil und Einstellungen",
     "login.subtitle":"Wählen Sie aus, wie Sie die Anwendung betreten möchten.",
     "login.idioma":"Sprache",
     "role.PLAYER.label":"Spieler / Kunde","role.PLAYER.desc":"Plätze buchen, Buchungen und Rangliste einsehen.",
@@ -3908,13 +3892,13 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
     ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
     ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
     ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["admin","nav.admin","📊"],
-    ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
+    ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],
   ];
   const menuByRole = {
-    PLAYER: ["inicio","reservas","torneos","ranking","perfil"],
-    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
-    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
-    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+    PLAYER: ["inicio","reservas","torneos","ranking","soporte"],
+    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","soporte"],
+    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","soporte"],
+    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte"],
   };
   const allowedMenu = menuByRole[selectedRole] || menuByRole.PLAYER;
   const visibleItems = navKeys.filter(([id]) => allowedMenu.includes(id));
@@ -6521,71 +6505,6 @@ function Soporte() {
   return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.proteccion_h3")}</h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAYMENTS_SECRET_KEY=privado_en_backend\nPAYMENTS_WEBHOOK_SECRET=privado_en_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
 }
 
-function Perfil({ selectedRole, onClearRole }) {
-  const lang = useLang();
-  const tx = key => t(key, lang);
-  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
-  const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
-  const [pwdActual, setPwdActual] = useState("");
-  const [pwdNueva, setPwdNueva] = useState("");
-  const [pwdConfirmar, setPwdConfirmar] = useState("");
-  const [pwdMsg, setPwdMsg] = useState("");
-  const [pwdError, setPwdError] = useState("");
-
-  function handleChangePwd(e) {
-    e.preventDefault();
-    setPwdMsg(""); setPwdError("");
-    if (!pwdActual) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
-    if (pwdActual !== demoPwds[selectedRole]) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
-    const valid = /[A-Z]/.test(pwdNueva) && /[a-z]/.test(pwdNueva) && /[0-9]/.test(pwdNueva) && pwdNueva.length >= 8;
-    if (!valid) { setPwdError(tx("perfil.pwd_error_nueva")); return; }
-    if (pwdNueva !== pwdConfirmar) { setPwdError(tx("perfil.pwd_error_coincide")); return; }
-    setPwdMsg(tx("perfil.pwd_guardada"));
-    setPwdActual(""); setPwdNueva(""); setPwdConfirmar("");
-  }
-
-  return (
-    <div style={{ padding:"42px 24px", maxWidth:1180, margin:"0 auto" }}>
-      <SectionTitle eyebrow={tx("perfil.eyebrow")} title={tx("perfil.title")} desc={tx("perfil.info_demo")} />
-      <div className="cp04-grid-2" style={{ marginTop:24 }}>
-        <Card>
-          <h3 style={{ marginTop:0, color:T.accent }}>{tx("perfil.sesion")}</h3>
-          <p style={{ color:T.textDim, marginBottom:6 }}>{tx("perfil.rol_actual")}: <strong style={{ color:T.text }}>{roleLabels[selectedRole] || selectedRole}</strong></p>
-          <p style={{ color:T.textDim, marginBottom:20 }}>{tx("perfil.idioma")}: <strong style={{ color:T.text }}>{lang?.label || "Español"}</strong></p>
-          <div style={{ marginTop:8 }}><LanguageSelector /></div>
-          <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:18, width:"100%" }}>🚪 {tx("perfil.cerrar_sesion")}</Btn>
-        </Card>
-        <Card>
-          <h3 style={{ marginTop:0, color:T.accent }}>{tx("perfil.cambiar_pwd")}</h3>
-          <p style={{ color:T.textDim, fontSize:".88rem", marginBottom:14, lineHeight:1.5 }}>Modo demo local. En producción, el cambio de contraseña se validará desde el backend de autenticación.</p>
-          <form onSubmit={handleChangePwd} style={{ display:"grid", gap:10 }}>
-            <input type="password" placeholder={tx("perfil.pwd_actual")} value={pwdActual} onChange={e=>setPwdActual(e.target.value)} autoComplete="current-password" />
-            <input type="password" placeholder={tx("perfil.pwd_nueva")} value={pwdNueva} onChange={e=>setPwdNueva(e.target.value)} autoComplete="new-password" />
-            <input type="password" placeholder={tx("perfil.pwd_confirmar")} value={pwdConfirmar} onChange={e=>setPwdConfirmar(e.target.value)} autoComplete="new-password" />
-            {pwdError && <div style={{ color:T.danger, fontWeight:700, fontSize:".88rem" }}>{pwdError}</div>}
-            {pwdMsg && <div style={{ color:T.accent, fontWeight:700, fontSize:".88rem" }}>{pwdMsg}</div>}
-            <Btn type="submit" style={{ marginTop:4 }}>{tx("perfil.cambiar_pwd")}</Btn>
-          </form>
-        </Card>
-      </div>
-      <div className="cp04-grid-2" style={{ marginTop:20 }}>
-        <Card>
-          <h3 style={{ marginTop:0 }}>{tx("perfil.privacidad")}</h3>
-          <p style={{ color:T.textDim, lineHeight:1.6 }}>{tx("perfil.privacidad_desc")}</p>
-          <p style={{ color:T.textDim, fontSize:".84rem", lineHeight:1.5 }}>Los datos personales introducidos en esta versión de demostración no son transmitidos a servicios externos sin consentimiento explícito. En producción real se aplicará política de privacidad completa conforme a normativa.</p>
-        </Card>
-        <Card>
-          <h3 style={{ marginTop:0 }}>{tx("perfil.notificaciones")}</h3>
-          <p style={{ color:T.textDim, lineHeight:1.6 }}>{tx("perfil.notif_desc")}</p>
-          <div style={{ marginTop:12, padding:"12px 16px", border:`1px dashed ${T.line}`, borderRadius:14, color:T.textDim, fontSize:".84rem", lineHeight:1.5 }}>
-            Confirmaciones de reserva · recordatorios · cambios de horario · torneos — preparado para notificaciones por correo y mensajería desde backend real.
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
 export default function ClubPadel04SaaSApp() {
   const [current, setCurrent] = useState("inicio");
   const [selectedRole, setSelectedRole] = useState(() => localStorage.getItem("cp04_role") || "");
@@ -6595,11 +6514,8 @@ export default function ClubPadel04SaaSApp() {
   const [rememberRole, setRememberRole] = useState(true);
   const [roleError, setRoleError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [forgotPwdStep, setForgotPwdStep] = useState("idle");
-  const [forgotPwdEmail, setForgotPwdEmail] = useState("");
-  const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte /> };
 
   const roleConfig = {
     PLAYER: {
@@ -6673,26 +6589,6 @@ export default function ClubPadel04SaaSApp() {
     setCurrent("inicio");
   }
 
-  function openForgotPwd() {
-    setForgotPwdStep("form");
-    setForgotPwdEmail("");
-    setForgotPwdEmailError("");
-  }
-
-  function closeForgotPwd() {
-    setForgotPwdStep("idle");
-    setForgotPwdEmail("");
-    setForgotPwdEmailError("");
-  }
-
-  function handleForgotPwdSubmit(e) {
-    e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(forgotPwdEmail.trim())) {
-      setForgotPwdEmailError("Introduce un email válido.");
-      return;
-    }
-    setForgotPwdStep("sent");
-  }
 
   useEffect(() => {
     if (!mobileMenuOpen) return undefined;
@@ -6787,16 +6683,10 @@ export default function ClubPadel04SaaSApp() {
                   autoFocus
                   style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${roleError?"#ff6b6b":T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
                 />
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
-                  <button type="button" onClick={() => setShowRolePassword(v => !v)}
-                    style={{ border:"none", background:"transparent", color:T.accent, fontWeight:900, cursor:"pointer", padding:0 }}>
-                    {showRolePassword ? ltx("login.ocultar_pwd") : ltx("login.ver_pwd")}
-                  </button>
-                  <button type="button" onClick={openForgotPwd}
-                    style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}>
-                    {ltx("login.olvide_pwd")}
-                  </button>
-                </div>
+                <button type="button" onClick={() => setShowRolePassword(v => !v)}
+                  style={{ border:"none", background:"transparent", color:T.accent, fontWeight:900, cursor:"pointer", marginBottom:12, padding:0 }}>
+                  {showRolePassword ? ltx("login.ocultar_pwd") : ltx("login.ver_pwd")}
+                </button>
                 <label style={{ display:"flex", alignItems:"center", gap:10, color:T.textDim, marginBottom:12, cursor:"pointer", userSelect:"none" }}>
                   <input type="checkbox" checked={rememberRole} onChange={e => setRememberRole(e.target.checked)} style={{ width:18, height:18, accentColor:T.accent }} />
                   {ltx("login.guardar_sesion")}
@@ -6814,49 +6704,6 @@ export default function ClubPadel04SaaSApp() {
                   </button>
                 </div>
               </form>
-            )}
-
-            {forgotPwdStep !== "idle" && (
-              <div style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
-                {forgotPwdStep === "form" && (
-                  <>
-                    <strong style={{ display:"block", marginBottom:6 }}>{ltx("login.recuperar_title")}</strong>
-                    <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_desc")}</p>
-                    <form onSubmit={handleForgotPwdSubmit}>
-                      <input
-                        type="email"
-                        value={forgotPwdEmail}
-                        onChange={e => { setForgotPwdEmail(e.target.value); setForgotPwdEmailError(""); }}
-                        placeholder={ltx("login.recuperar_email")}
-                        autoFocus
-                        style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
-                      />
-                      {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
-                      <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
-                        <button type="submit" className="cp04-menu-button"
-                          style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
-                          {ltx("login.recuperar_btn")}
-                        </button>
-                        <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
-                          style={{ background:"transparent", border:`1px solid ${T.line}` }}>
-                          {ltx("login.recuperar_volver")}
-                        </button>
-                      </div>
-                    </form>
-                  </>
-                )}
-                {forgotPwdStep === "sent" && (
-                  <>
-                    <div style={{ color:T.accent, fontWeight:900, fontSize:"1.4rem", marginBottom:10 }}>✓</div>
-                    <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
-                    <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_enviado")}</p>
-                    <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
-                      style={{ background:"transparent", border:`1px solid ${T.line}` }}>
-                      {ltx("login.recuperar_volver")}
-                    </button>
-                  </>
-                )}
-              </div>
             )}
 
             <p style={{ color:T.textDim, marginTop:24, fontSize:".9rem" }}>
