@@ -1,0 +1,1192 @@
+/* CLUB PÁDEL 04 · Módulo Torneos premium */
+.cp04-tournaments {
+  display: grid;
+  gap: 24px;
+}
+
+.cp04-tournament-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.cp04-tournament-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cp04-tournament-action {
+  border: 1px solid rgba(255,255,255,.22);
+  background: linear-gradient(135deg, rgba(24,31,46,.86), rgba(8,13,25,.72));
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-radius: 14px;
+  padding: 11px 15px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+.cp04-tournament-summary {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(5, minmax(110px, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.cp04-tournament-summary-card,
+.cp04-tournament-panel,
+.cp04-tournament-ranking,
+.cp04-tournament-control,
+.cp04-tournament-podium {
+  border: 1px solid rgba(255,255,255,.14);
+  background: linear-gradient(135deg, rgba(8,13,25,.48), rgba(8,13,25,.28));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 24px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.cp04-tournament-summary-card {
+  padding: 18px;
+}
+
+.cp04-tournament-summary-card strong {
+  display: block;
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.cp04-tournament-summary-card span {
+  color: rgba(255,255,255,.72);
+  font-size: .88rem;
+}
+
+.cp04-tournament-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, .55fr);
+  gap: 24px;
+}
+
+.cp04-tournament-panel,
+.cp04-tournament-ranking,
+.cp04-tournament-control,
+.cp04-tournament-podium {
+  padding: 22px;
+}
+
+.cp04-tournament-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 24px;
+}
+
+.cp04-tournament-step {
+  border: 1px solid rgba(182,255,0,.24);
+  background: rgba(182,255,0,.08);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.cp04-tournament-step b {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  margin-right: 8px;
+  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  color: #06100a;
+  font-weight: 950;
+}
+
+.cp04-tournament-format {
+  display: grid;
+  grid-template-columns: .9fr 1.2fr .9fr;
+  gap: 18px;
+}
+
+.cp04-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cp04-group-box,
+.cp04-cross-box,
+.cp04-final-box {
+  border: 1px solid rgba(255,255,255,.13);
+  background: rgba(5,10,18,.38);
+  border-radius: 18px;
+  padding: 14px;
+  color: #fff;
+}
+
+.cp04-group-box small,
+.cp04-cross-box small,
+.cp04-final-box small {
+  color: rgba(255,255,255,.68);
+}
+
+.cp04-crosses {
+  display: grid;
+  gap: 10px;
+}
+
+.cp04-ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cp04-ranking-table th,
+.cp04-ranking-table td {
+  padding: 13px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+  text-align: left;
+  color: rgba(255,255,255,.86);
+}
+
+.cp04-ranking-table th {
+  color: rgba(255,255,255,.58);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.cp04-ranking-table strong {
+  color: #fff;
+}
+
+.cp04-format-selector {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.cp04-format-pill {
+  border: 1px solid rgba(182,255,0,.26);
+  background: rgba(182,255,0,.08);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 900;
+}
+
+.cp04-bracket-wrap {
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.cp04-bracket {
+  min-width: 920px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 16px;
+  align-items: center;
+}
+
+.cp04-bracket-col {
+  display: grid;
+  gap: 12px;
+}
+
+.cp04-match {
+  border: 1px solid rgba(182,255,0,.18);
+  background: rgba(5,10,18,.50);
+  border-radius: 16px;
+  padding: 10px;
+  min-height: 58px;
+  color: rgba(255,255,255,.82);
+}
+
+.cp04-match b {
+  color: #b6ff00;
+  margin-right: 8px;
+}
+
+.cp04-tournament-side {
+  display: grid;
+  gap: 18px;
+}
+
+.cp04-control-list {
+  display: grid;
+  gap: 10px;
+}
+
+.cp04-control-btn {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.16);
+  background: linear-gradient(135deg, rgba(24,31,46,.88), rgba(8,13,25,.76));
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 900;
+}
+
+.cp04-control-btn.primary {
+  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  color: #06100a !important;
+  -webkit-text-fill-color: #06100a !important;
+}
+
+.cp04-podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.cp04-podium-place {
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(5,10,18,.46);
+  border-radius: 18px;
+  padding: 14px 10px;
+  text-align: center;
+  color: #fff;
+}
+
+.cp04-podium-place.first {
+  min-height: 118px;
+  border-color: rgba(182,255,0,.35);
+}
+
+@media (max-width: 1100px) {
+  .cp04-tournament-summary,
+  .cp04-tournament-grid,
+  .cp04-tournament-format {
+    grid-template-columns: 1fr;
+  }
+
+  .cp04-tournament-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .cp04-tournament-steps,
+  .cp04-groups,
+  .cp04-podium {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CLUB PÁDEL 04 · Pulido bracket Torneos tablet/escritorio */
+.cp04-bracket-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 4px 14px;
+  scroll-padding-left: 0;
+}
+
+.cp04-bracket {
+  min-width: 760px;
+  width: max-content;
+  grid-template-columns: 170px 150px 150px 150px 150px;
+  align-items: center;
+}
+
+.cp04-bracket-col {
+  min-width: 0;
+}
+
+.cp04-bracket-col h4 {
+  color: #ffffff;
+  margin: 0 0 10px;
+  font-size: .92rem;
+  line-height: 1.25;
+}
+
+.cp04-match {
+  width: 100%;
+  min-width: 132px;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cp04-tournament-panel {
+  overflow: hidden;
+}
+
+@media (max-width: 1180px) {
+  .cp04-tournament-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cp04-bracket {
+    min-width: 720px;
+    grid-template-columns: 160px 140px 140px 140px 140px;
+  }
+}
+
+@media (max-width: 760px) {
+  .cp04-bracket {
+    min-width: 680px;
+    grid-template-columns: repeat(5, 132px);
+    gap: 10px;
+  }
+
+  .cp04-match {
+    min-height: 54px;
+    font-size: .82rem;
+  }
+}
+
+/* CLUB PÁDEL 04 · Ajuste final bracket dentro de tarjeta */
+.cp04-bracket-wrap {
+  overflow-x: hidden !important;
+}
+
+.cp04-bracket {
+  width: 100% !important;
+  min-width: 0 !important;
+  grid-template-columns: 1.25fr 1fr 1fr .9fr .8fr !important;
+  gap: 10px !important;
+}
+
+.cp04-match {
+  min-width: 0 !important;
+  padding: 9px 10px !important;
+  font-size: .82rem !important;
+  line-height: 1.25 !important;
+}
+
+.cp04-bracket-col h4 {
+  font-size: .82rem !important;
+}
+
+.cp04-bracket-col h4 small {
+  font-size: .72rem !important;
+}
+
+@media (max-width: 1180px) {
+  .cp04-bracket {
+    grid-template-columns: 1.2fr 1fr 1fr .88fr .78fr !important;
+    gap: 8px !important;
+  }
+
+  .cp04-match {
+    font-size: .78rem !important;
+    padding: 8px !important;
+  }
+}
+
+/* CLUB PÁDEL 04 · Estado activo selector formato torneo */
+.cp04-format-pill {
+  cursor: pointer;
+}
+
+.cp04-format-pill.is-active {
+  background: linear-gradient(135deg, #b6ff00, #31e89f) !important;
+  color: #06100a !important;
+  -webkit-text-fill-color: #06100a !important;
+  border-color: rgba(255,255,255,.35) !important;
+  box-shadow: 0 14px 34px rgba(182,255,0,.18), inset 0 1px 0 rgba(255,255,255,.22) !important;
+}
+
+/* CLUB PÁDEL 04 · Vistas internas Torneos: calendario, reglamento y exportar */
+.cp04-tournament-action {
+  cursor: pointer;
+}
+
+.cp04-tournament-action.is-active {
+  background: linear-gradient(135deg, #b6ff00, #31e89f) !important;
+  color: #06100a !important;
+  -webkit-text-fill-color: #06100a !important;
+  box-shadow: 0 14px 34px rgba(182,255,0,.16), inset 0 1px 0 rgba(255,255,255,.24) !important;
+}
+
+.cp04-tournament-extra-panel {
+  margin: 22px 0;
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.13);
+  background: linear-gradient(135deg, rgba(9,16,31,.82), rgba(11,24,42,.64));
+  box-shadow: 0 18px 44px rgba(0,0,0,.24);
+  backdrop-filter: blur(14px);
+}
+
+.cp04-extra-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.cp04-extra-head h3 {
+  margin: 0 0 6px;
+  color: #fff;
+}
+
+.cp04-extra-head p {
+  margin: 0;
+  color: rgba(255,255,255,.72);
+  line-height: 1.55;
+}
+
+.cp04-mini-status {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(182,255,0,.13);
+  color: #b6ff00;
+  border: 1px solid rgba(182,255,0,.26);
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+.cp04-calendar-grid,
+.cp04-rules-grid,
+.cp04-export-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.cp04-calendar-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.cp04-rules-grid,
+.cp04-export-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cp04-calendar-day,
+.cp04-rule-card,
+.cp04-export-card {
+  min-height: 112px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(4,10,20,.48);
+  color: #fff;
+}
+
+.cp04-calendar-day strong,
+.cp04-rule-card strong,
+.cp04-export-card strong {
+  display: block;
+  color: #fff;
+  margin-bottom: 7px;
+}
+
+.cp04-calendar-day span {
+  display: block;
+  color: #b6ff00;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.cp04-calendar-day small,
+.cp04-rule-card p,
+.cp04-export-card p {
+  color: rgba(255,255,255,.72);
+  line-height: 1.45;
+}
+
+@media (max-width: 1180px) {
+  .cp04-calendar-grid,
+  .cp04-rules-grid,
+  .cp04-export-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .cp04-extra-head {
+    flex-direction: column;
+  }
+
+  .cp04-calendar-grid,
+  .cp04-rules-grid,
+  .cp04-export-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CLUB PÁDEL 04 · Aviso funcional botones Torneos */
+.cp04-tournament-notice {
+  margin: 16px 0 20px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(182,255,0,.32);
+  background: linear-gradient(135deg, rgba(182,255,0,.16), rgba(49,232,159,.10));
+  color: #ffffff;
+  font-weight: 900;
+  box-shadow: 0 14px 34px rgba(0,0,0,.22);
+}
+
+/* CLUB PÁDEL 04 · Toast funcional definitivo para botones de Torneos */
+.cp04-tournament-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  z-index: 999999;
+  transform: translateX(-50%) translateY(24px);
+  opacity: 0;
+  pointer-events: none;
+  max-width: min(720px, calc(100vw - 32px));
+  padding: 15px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(182,255,0,.42);
+  background: linear-gradient(135deg, rgba(9,16,31,.96), rgba(20,38,27,.92));
+  color: #ffffff;
+  font-weight: 950;
+  box-shadow: 0 18px 44px rgba(0,0,0,.42), 0 0 34px rgba(182,255,0,.14);
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.cp04-tournament-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* CLUB PÁDEL 04 · Ranking completo por formato */
+.cp04-full-ranking-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.cp04-full-ranking-table {
+  min-width: 720px;
+}
+
+.cp04-full-ranking-table tbody tr:nth-child(odd) {
+  background: rgba(182,255,0,.035);
+}
+
+.cp04-full-ranking-table td,
+.cp04-full-ranking-table th {
+  white-space: nowrap;
+}
+
+/* CLUB PÁDEL 04 · Acciones reales locales de controles del torneo */
+.cp04-tournament-control-log {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(182,255,0,.22);
+  background: rgba(5,12,22,.46);
+}
+
+.cp04-control-log-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #ffffff;
+  font-size: .82rem;
+  margin-bottom: 10px;
+}
+
+.cp04-control-log-head span {
+  color: rgba(255,255,255,.58);
+  font-weight: 800;
+}
+
+.cp04-control-log-list {
+  display: grid;
+  gap: 8px;
+}
+
+.cp04-control-log-item {
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(182,255,0,.08);
+  color: #ffffff;
+  font-weight: 850;
+  font-size: .78rem;
+  border: 1px solid rgba(182,255,0,.16);
+}
+
+.cp04-added-pair-card {
+  margin-top: 10px;
+  max-width: 260px;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(182,255,0,.28);
+  background: rgba(182,255,0,.08);
+  color: #ffffff;
+}
+
+.cp04-added-pair-card strong {
+  color: #b6ff00;
+}
+
+.cp04-added-pair-card small {
+  grid-column: 2;
+  color: rgba(255,255,255,.62);
+}
+
+.cp04-autoassigned {
+  color: #b6ff00 !important;
+  font-weight: 950 !important;
+}
+
+.cp04-cross-reordered {
+  outline: 1px solid rgba(182,255,0,.45);
+  box-shadow: 0 0 18px rgba(182,255,0,.12);
+}
+
+.cp04-status-published {
+  background: linear-gradient(135deg, #b6ff00, #31e89f) !important;
+  color: #06100a !important;
+  font-weight: 950 !important;
+}
+
+/* CLUB PÁDEL 04 · Parejas editables y eliminables */
+.cp04-editable-pair {
+  position: relative !important;
+  cursor: pointer !important;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+
+.cp04-editable-pair:hover {
+  border-color: rgba(182,255,0,.48) !important;
+  box-shadow: 0 0 22px rgba(182,255,0,.12) !important;
+  transform: translateY(-1px);
+}
+
+.cp04-delete-pair-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,70,70,.18);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: .78;
+  z-index: 5;
+}
+
+.cp04-delete-pair-btn:hover {
+  background: rgba(255,70,70,.38);
+  opacity: 1;
+}
+
+.cp04-pair-deleted {
+  opacity: 0 !important;
+  transform: scale(.96) !important;
+  pointer-events: none !important;
+}
+
+/* CLUB PÁDEL 04 · Fix parejas añadidas nuevas */
+.cp04-added-pair-card.cp04-editable-pair {
+  position: relative !important;
+  padding-right: 44px !important;
+  cursor: pointer !important;
+}
+
+.cp04-added-pair-card.cp04-editable-pair:hover {
+  border-color: rgba(182,255,0,.55) !important;
+  box-shadow: 0 0 24px rgba(182,255,0,.16) !important;
+}
+
+/* CLUB PÁDEL 04 · Parejas editables + límites + custom players */
+.cp04-custom-players-box {
+  margin: 14px 0 22px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(182,255,0,.22);
+  background: rgba(9,16,31,.58);
+  color: #fff;
+  max-width: 520px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.18);
+}
+
+.cp04-custom-players-box label {
+  display: block;
+  color: #b6ff00;
+  font-weight: 900;
+  margin-bottom: 8px;
+  letter-spacing: .02em;
+}
+
+.cp04-custom-players-box div {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cp04-custom-players-input {
+  flex: 1;
+  min-width: 120px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  padding: 12px 14px;
+  font-weight: 900;
+}
+
+.cp04-custom-players-apply {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 950;
+  cursor: pointer;
+  color: #06100a;
+  background: linear-gradient(135deg, #b6ff00, #31e89f);
+}
+
+.cp04-custom-players-box small {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255,255,255,.62);
+}
+
+.cp04-pair-manager {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(182,255,0,.18);
+  background: rgba(2,8,18,.44);
+}
+
+.cp04-pair-manager-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.cp04-pair-manager-head strong {
+  color: #fff;
+  font-size: 1.05rem;
+}
+
+.cp04-pair-manager-head p {
+  margin: 5px 0 0;
+  color: rgba(255,255,255,.64);
+}
+
+.cp04-pair-manager-head span {
+  color: #06100a;
+  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.cp04-pair-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 10px;
+}
+
+.cp04-pair-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.cp04-pair-edit {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  text-align: left;
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.11);
+  background: rgba(255,255,255,.055);
+  color: #fff;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.cp04-pair-edit span {
+  color: #b6ff00;
+  font-weight: 950;
+}
+
+.cp04-pair-edit strong {
+  color: #fff;
+  font-weight: 950;
+}
+
+.cp04-pair-edit small {
+  grid-column: 2;
+  color: rgba(255,255,255,.58);
+}
+
+.cp04-pair-delete {
+  width: 42px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,90,90,.28);
+  background: rgba(255,70,70,.12);
+  color: #fff;
+  cursor: pointer;
+}
+
+.cp04-pair-delete:hover {
+  background: rgba(255,70,70,.32);
+}
+
+.cp04-tournament-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  z-index: 999999;
+  transform: translateX(-50%) translateY(24px);
+  opacity: 0;
+  pointer-events: none;
+  max-width: min(720px, calc(100vw - 32px));
+  padding: 15px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(182,255,0,.42);
+  background: linear-gradient(135deg, rgba(9,16,31,.96), rgba(20,38,27,.92));
+  color: #fff;
+  font-weight: 950;
+  box-shadow: 0 18px 44px rgba(0,0,0,.42), 0 0 34px rgba(182,255,0,.14);
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.cp04-tournament-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.cp04-full-ranking-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.cp04-full-ranking-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.cp04-full-ranking-table th,
+.cp04-full-ranking-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.cp04-full-ranking-table th {
+  color: rgba(255,255,255,.62);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .78rem;
+}
+
+.cp04-full-ranking-table tbody tr:nth-child(odd) {
+  background: rgba(182,255,0,.035);
+}
+
+.cp04-full-ranking-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.cp04-full-ranking-head h3 {
+  margin: 0 0 6px;
+  color: #fff;
+}
+
+.cp04-full-ranking-head p {
+  margin: 0;
+  color: rgba(255,255,255,.70);
+}
+
+.cp04-full-ranking-head span,
+.cp04-demo-pill {
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(182,255,0,.18);
+  border: 1px solid rgba(182,255,0,.24);
+  color: #fff;
+  font-weight: 900;
+}
+
+@media (max-width: 900px) {
+  .cp04-pair-list {
+    grid-template-columns: 1fr;
+  }
+
+  .cp04-custom-players-box div {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* CLUB PÁDEL 04 · Torneos personalizado real + parejas impares */
+
+.cp04-hide-internal-log {
+  display: none !important;
+}
+
+.cp04-custom-format-btn {
+  cursor: pointer !important;
+}
+
+.cp04-custom-real-panel,
+.cp04-real-pair-manager,
+.cp04-full-ranking-real-view,
+.cp04-export-real-view {
+  margin: 22px 0;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(9,16,31,.88), rgba(12,24,42,.78));
+  box-shadow: 0 22px 70px rgba(0,0,0,.28);
+  color: #fff;
+}
+
+.cp04-custom-real-head,
+.cp04-real-pair-head,
+.cp04-full-ranking-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.cp04-custom-real-head strong,
+.cp04-real-pair-head strong,
+.cp04-full-ranking-head h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.cp04-custom-real-head p,
+.cp04-real-pair-head p,
+.cp04-full-ranking-head p {
+  margin: 6px 0 0;
+  color: rgba(255,255,255,.72);
+  line-height: 1.45;
+}
+
+.cp04-custom-real-pill,
+.cp04-real-pair-head span,
+.cp04-full-ranking-head span {
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  color: #06100a;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.cp04-custom-real-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.cp04-custom-real-grid label {
+  display: grid;
+  gap: 7px;
+  color: #b6ff00;
+  font-weight: 900;
+}
+
+.cp04-custom-real-grid input,
+.cp04-custom-real-grid select {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.34);
+  color: #fff;
+  padding: 0 14px;
+  font-weight: 850;
+}
+
+.cp04-custom-real-grid button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  color: #06100a;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.cp04-custom-real-panel small {
+  display: block;
+  margin-top: 12px;
+  color: rgba(255,255,255,.68);
+}
+
+.cp04-bye-info {
+  color: #b6ff00 !important;
+  font-weight: 850;
+}
+
+.cp04-real-pair-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cp04-real-pair-card {
+  display: grid;
+  grid-template-columns: 1fr 48px;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.cp04-real-pair-edit {
+  text-align: left;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  cursor: pointer;
+}
+
+.cp04-real-pair-edit strong {
+  display: block;
+  font-weight: 950;
+}
+
+.cp04-real-pair-edit small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255,255,255,.62);
+}
+
+.cp04-real-pair-delete {
+  border: 1px solid rgba(255,90,90,.32);
+  border-radius: 16px;
+  background: rgba(255,70,70,.16);
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.05rem;
+}
+
+.cp04-full-ranking-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.cp04-full-ranking-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.cp04-full-ranking-table th,
+.cp04-full-ranking-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.cp04-full-ranking-table th {
+  color: rgba(255,255,255,.68);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .78rem;
+}
+
+.cp04-full-ranking-table tbody tr:nth-child(odd) {
+  background: rgba(182,255,0,.04);
+}
+
+.cp04-export-real-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cp04-export-real-grid article {
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05);
+}
+
+.cp04-export-real-grid strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.cp04-export-real-grid span {
+  color: rgba(255,255,255,.68);
+}
+
+.cp04-tournament-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  z-index: 999999;
+  transform: translateX(-50%) translateY(24px);
+  opacity: 0;
+  pointer-events: none;
+  max-width: min(760px, calc(100vw - 32px));
+  padding: 15px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(182,255,0,.42);
+  background: linear-gradient(135deg, rgba(9,16,31,.96), rgba(20,38,27,.92));
+  color: #fff;
+  font-weight: 950;
+  box-shadow: 0 18px 44px rgba(0,0,0,.42), 0 0 34px rgba(182,255,0,.14);
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.cp04-tournament-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 900px) {
+  .cp04-custom-real-grid,
+  .cp04-real-pair-grid,
+  .cp04-export-real-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cp04-custom-real-head,
+  .cp04-real-pair-head,
+  .cp04-full-ranking-head {
+    flex-direction: column;
+  }
+}

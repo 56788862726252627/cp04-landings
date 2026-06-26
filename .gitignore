@@ -1,42 +1,34 @@
-# Dependencias y build
+# Dependencias y builds
 node_modules/
 dist/
+*/dist/
 .env
 .env.*
 .DS_Store
 *.log
 
-# Carpetas de copias, auditorías, snapshots y versiones locales
+# Backups, snapshots, releases e importaciones
 backups/
+*/backups/
 backup*/
-audit/
-audits/
-snapshots/
-releases/
-importaciones/
-docs/comprobaciones-generales/
-
-# Backups fuera de la carpeta app
-../backups/
-../snapshots/
-../releases/
-../importaciones/
-
-# Copias manuales de App y otros archivos
-*.BACKUP*
-*.backup*
-*.bak*
-*.tmp
-*.old
-*.SEGURIDAD*
 *backup*
 *BACKUP*
 *SEGURIDAD*
 *checkpoint*
+snapshots/
+releases/
+importaciones/
+audit/
+audits/
 
-# JSON temporales, pruebas y comprobaciones locales
-backup_*.json
-backup-*.json
+# Copias manuales
+*.backup*
+*.BACKUP*
+*.bak*
+*.tmp
+*.old
+
+# Archivos temporales de pruebas y comprobaciones
 comprobacion-*.json
 comprobar-*.json
 prueba-*.json
@@ -55,7 +47,7 @@ tablas-airtable.json
 tablas-final.json
 plantilla_google_drive_backup_cp04.json
 
-# Scripts temporales usados para arreglos puntuales
+# Scripts temporales de reparación
 comprobar_*.py
 desplegar_*.py
 guardar_*.py
@@ -65,11 +57,14 @@ replace_*.py
 recortar_*.py
 aplicar_*.py
 
-# Carpetas de trabajo de Make / blueprints si no son parte del frontend limpio
+# Carpetas auxiliares
+prompts/
+scripts/
 make-blueprints/
 workflows/
+docs/comprobaciones-generales/
 
-# Worker local y backups del worker
+# Worker y copias locales del worker
 worker-reservas/backups/
 worker-reservas/*.BACKUP*
 worker-reservas/*.backup*
@@ -80,3 +75,15 @@ worker-reservas/src/*.bak*
 worker-reservas/src/index.js.BACKUP*
 worker-reservas/wrangler.toml.BACKUP*
 worker-reservas/ultima-alta-app.json
+
+# Errores por nombres raros o copias mal escritas
+*wr4 angler*
+*wrangler.toml0*
+
+# Archivos auxiliares restantes de auditorías y blueprints
+app/alta-jugador-*.json
+app/audit_workflows_*.py
+app/auditoria-terminal-*.txt
+app/resumen-modulos-clave.txt
+app/prompts/
+app/scripts/

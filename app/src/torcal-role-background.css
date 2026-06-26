@@ -1,0 +1,236 @@
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body.cp04-role-screen-active {
+  background: #020617 !important;
+  overflow-x: hidden;
+}
+
+body.cp04-role-screen-active::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.18) 0%,
+      rgba(2, 6, 23, 0.32) 45%,
+      rgba(2, 6, 23, 0.72) 100%
+    ),
+    url('/images/torcal-padel-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+body.cp04-role-screen-active #root {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+body.cp04-role-screen-active #root > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.cp04-role-screen-active main,
+body.cp04-role-screen-active .app,
+body.cp04-role-screen-active .App,
+body.cp04-role-screen-active .page,
+body.cp04-role-screen-active .screen,
+body.cp04-role-screen-active .min-h-screen,
+body.cp04-role-screen-active .bg-black,
+body.cp04-role-screen-active .bg-slate-950,
+body.cp04-role-screen-active .bg-gray-950,
+body.cp04-role-screen-active [class*="bg-slate-950"],
+body.cp04-role-screen-active [class*="bg-gray-950"],
+body.cp04-role-screen-active [class*="bg-black"] {
+  background-color: transparent !important;
+}
+
+/* Ajuste visual final: máxima visibilidad del fondo Torcal */
+body.cp04-role-screen-active .cp04-card {
+  background: linear-gradient(
+    135deg,
+    rgba(8, 13, 25, 0.46),
+    rgba(8, 13, 25, 0.28)
+  ) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+body.cp04-role-screen-active .cp04-card::before {
+  opacity: 0.18 !important;
+}
+
+body.cp04-role-screen-active [style*="background"] {
+  background-color: rgba(8, 13, 25, 0.24) !important;
+}
+
+/* Ocultar título grande y descripción en pantalla de inicio de sesión */
+body.cp04-role-screen-active h1,
+body.cp04-role-screen-active h1 + p {
+  display: none !important;
+}
+
+/* Compensar el espacio al ocultar el título */
+body.cp04-role-screen-active .cp04-card {
+  padding-top: 34px !important;
+}
+
+/* =========================================================
+   LOGIN PREMIUM · TORCAL BACKGROUND MAX VISIBILITY
+   Pantalla: Inicio de sesión por rol
+   ========================================================= */
+
+body.cp04-role-screen-active,
+body.cp04-role-screen-active html,
+body.cp04-role-screen-active #root,
+body.cp04-role-screen-active #root > div {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.00) 0%,
+      rgba(2, 6, 23, 0.06) 40%,
+      rgba(2, 6, 23, 0.18) 100%
+    ),
+    url('/images/torcal-padel-bg.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+/* Tarjeta principal más transparente */
+body.cp04-role-screen-active .cp04-card {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(8, 13, 25, 0.24),
+      rgba(8, 13, 25, 0.14)
+    ) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.20) !important;
+}
+
+/* Quitar oscurecimiento decorativo excesivo */
+body.cp04-role-screen-active .cp04-card::before {
+  opacity: 0.08 !important;
+}
+
+/* Tarjetas de rol más transparentes */
+body.cp04-role-screen-active .cp04-card .cp04-card,
+body.cp04-role-screen-active button,
+body.cp04-role-screen-active [role="button"] {
+  background-color: rgba(5, 10, 18, 0.22) !important;
+  background-image: none !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Formulario inferior más ligero */
+body.cp04-role-screen-active input,
+body.cp04-role-screen-active form,
+body.cp04-role-screen-active .cp04-card section,
+body.cp04-role-screen-active .cp04-card div[style*="background"] {
+  background-color: rgba(5, 10, 18, 0.18) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Mantener ocultos el título grande y la descripción */
+body.cp04-role-screen-active h1,
+body.cp04-role-screen-active h1 + p {
+  display: none !important;
+}
+
+/* Mantener el encabezado superior visible */
+body.cp04-role-screen-active .cp04-badge,
+body.cp04-role-screen-active code {
+  color: #baff00 !important;
+}
+
+/* Mejor integración visual en tablet */
+@media (max-width: 1180px) {
+  body.cp04-role-screen-active,
+  body.cp04-role-screen-active #root,
+  body.cp04-role-screen-active #root > div {
+    background-position: center center !important;
+  }
+
+  body.cp04-role-screen-active .cp04-card {
+    background: rgba(8, 13, 25, 0.20) !important;
+  }
+}
+
+/* LOGIN VISUAL FINAL · Fondo Torcal mucho más visible */
+body.cp04-role-screen-active,
+body.cp04-role-screen-active #root,
+body.cp04-role-screen-active #root > div {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.00) 0%,
+      rgba(2, 6, 23, 0.04) 42%,
+      rgba(2, 6, 23, 0.16) 100%
+    ),
+    url('/images/torcal-padel-bg.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-color: #020617 !important;
+}
+
+/* Ocultar título grande y descripción sin romper JSX */
+body.cp04-role-screen-active h1,
+body.cp04-role-screen-active h1 + p {
+  display: none !important;
+}
+
+/* Tarjeta principal más transparente */
+body.cp04-role-screen-active .cp04-card {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(8, 13, 25, 0.20),
+      rgba(8, 13, 25, 0.12)
+    ) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Quitar velos internos que oscurecen demasiado */
+body.cp04-role-screen-active .cp04-card::before {
+  opacity: 0.05 !important;
+}
+
+/* Tarjetas de roles y formulario más transparentes */
+body.cp04-role-screen-active .cp04-card [style*="background"] {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(5, 10, 18, 0.22),
+      rgba(5, 10, 18, 0.12)
+    ) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+  border-color: rgba(255, 255, 255, 0.13) !important;
+}
+
+/* Mantener textos legibles */
+body.cp04-role-screen-active,
+body.cp04-role-screen-active * {
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.38);
+}
