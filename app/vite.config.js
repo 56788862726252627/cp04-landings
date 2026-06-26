@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     proxy: {
-      '/api/reservas': {
+      '/api': {
         target: 'https://cp04-reservas-proxy.eduardorodriguezrodriguez24.workers.dev',
         changeOrigin: true,
         secure: true
