@@ -5336,7 +5336,7 @@ function AltaJugador() {
     setSuccess(false);
 
     try {
-      const response = await fetch("https://cp04-reservas-proxy.eduardorodriguezrodriguez24.workers.dev/api/jugadores/alta", {
+      const response = await fetch("/api/jugadores/alta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
