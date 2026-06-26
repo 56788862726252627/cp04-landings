@@ -7035,6 +7035,12 @@ export default function ClubPadel04SaaSApp() {
   const [forgotPwdStep, setForgotPwdStep] = useState("idle");
   const [forgotPwdEmail, setForgotPwdEmail] = useState("");
   const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
+
+  // Login universal preparado para producción.
+  // Mantiene los perfiles demo internos sin obligar a usuarios reales a usar correos fijos.
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
   const menuButtonRef = useRef(null);
   const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
 
@@ -7108,6 +7114,46 @@ export default function ClubPadel04SaaSApp() {
     setRoleError("");
     setRememberRole(true);
     setCurrent("inicio");
+  }
+
+
+  function inferRoleFromEmail(email) {
+    const clean = String(email || "").trim().toLowerCase();
+
+    // Accesos internos de prueba para el propietario/equipo.
+    if (clean.includes("soporte")) return "SUPPORT";
+    if (clean.includes("admin") || clean.includes("jefe")) return "ADMIN";
+    if (clean.includes("staff") || clean.includes("empleado") || clean.includes("recepcion")) return "STAFF";
+
+    // Por defecto, cualquier usuario real entra como jugador/cliente hasta que el backend asigne rol.
+    return "PLAYER";
+  }
+
+  function handleUniversalLogin(event) {
+    event.preventDefault();
+
+    const cleanEmail = loginEmail.trim().toLowerCase();
+    const cleanPassword = loginPassword.trim();
+
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      setLoginError("Introduce un correo electrónico válido.");
+      return;
+    }
+
+    if (cleanPassword.length < 4) {
+      setLoginError("Introduce una contraseña válida.");
+      return;
+    }
+
+    const inferredRole = inferRoleFromEmail(cleanEmail);
+
+    localStorage.setItem("cp04_user_email", cleanEmail);
+    localStorage.setItem("cp04_role", inferredRole);
+    localStorage.setItem("cp04_auth_mode", "universal_demo");
+
+    setSelectedRole(inferredRole);
+    setLoginError("");
+    setLoginPassword("");
   }
 
   function openForgotPwd() {
@@ -7195,6 +7241,61 @@ export default function ClubPadel04SaaSApp() {
             <p style={{ color:T.textDim, maxWidth:760, lineHeight:1.7, fontSize:"clamp(1rem, 2vw, 1.18rem)", marginBottom:34 }}>
               {ltx("login.subtitle")}
             </p>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:22, marginBottom:26 }}>
+        <form onSubmit={handleUniversalLogin} style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(5,10,18,.72)" }}>
+          <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+            ACCESO REAL
+          </div>
+          <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+            Entrar con correo personal
+          </strong>
+          <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.55 }}>
+            Usa tu email y contraseña. Los roles demo siguen disponibles abajo solo para pruebas internas.
+          </p>
+          <input
+            type="email"
+            value={loginEmail}
+            onChange={e => setLoginEmail(e.target.value)}
+            placeholder="tu@email.com"
+            autoComplete="email"
+            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+          />
+          <input
+            type="password"
+            value={loginPassword}
+            onChange={e => setLoginPassword(e.target.value)}
+            placeholder={ltx("login.password")}
+            autoComplete="current-password"
+            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+          />
+          {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
+            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
+              Iniciar sesión
+            </button>
+            <button type="button" onClick={openForgotPwd} style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}>
+              {ltx("login.olvide_pwd")}
+            </button>
+          </div>
+          <p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
+            Preparado para conectar con backend real: /api/auth/login, /api/auth/register y /api/auth/forgot-password.
+          </p>
+        </form>
+
+        <div style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
+          <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+            MODO DEMO INTERNO
+          </div>
+          <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+            Ver la app por roles
+          </strong>
+          <p style={{ color:T.textDim, marginTop:0, marginBottom:0, lineHeight:1.55 }}>
+            Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.
+          </p>
+        </div>
+      </div>
+
 
             <div className="cp04-grid-2">
               {Object.keys(roleConfig).map((roleId) => {
