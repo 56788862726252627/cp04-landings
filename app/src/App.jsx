@@ -2176,7 +2176,7 @@ const TRANSLATIONS = {
     "login.sesion_label":"Club Pádel 04 · Inicio de sesión",
     "login.legal":"Acceso local protegido por contraseña. Puedes guardar sesión solo en este dispositivo. Para producción real, las credenciales deberán validarse desde backend/autenticación segura.",
     "login.olvide_pwd":"¿Has olvidado tu contraseña?","login.recuperar_title":"Recuperar acceso","login.recuperar_desc":"Introduce tu correo electrónico y, si la cuenta existe, recibirás instrucciones para restablecer el acceso.","login.recuperar_email":"Correo electrónico","login.recuperar_btn":"Enviar instrucciones","login.recuperar_enviado":"Si esa dirección está registrada en el sistema, recibirás instrucciones en breve. Revisa también la carpeta de spam.","login.recuperar_volver":"Volver al inicio de sesión","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
-    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","nav.perfil":"Perfil y ajustes",
+    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
     "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
     "login.idioma":"Idioma",
     "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
@@ -2378,7 +2378,7 @@ const TRANSLATIONS = {
     "login.sesion_label":"Club Pádel 04 · Login",
     "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
     "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
-    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","nav.perfil":"Profile & settings",
+    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
     "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
     "login.idioma":"Language",
     "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, check bookings and ranking.",
@@ -2580,7 +2580,7 @@ const TRANSLATIONS = {
     "login.sesion_label":"Club Pádel 04 · Sign In",
     "login.legal":"Local access protected by password. Session can be saved on this device only.",
     "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
-    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","nav.perfil":"Profile & settings",
+    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
     "login.subtitle":"Select how you want to enter the app. Each role has an experience tailored to its permissions.",
     "login.idioma":"Language",
     "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, view bookings and ranking.",
@@ -2782,7 +2782,7 @@ const TRANSLATIONS = {
     "login.sesion_label":"Club Pádel 04 · Connexion",
     "login.legal":"Accès local protégé par mot de passe. Session sauvegardable sur cet appareil uniquement.",
     "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password",
-    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","nav.perfil":"Profil et paramètres",
+    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
     "login.subtitle":"Sélectionnez comment vous souhaitez entrer dans l'application.",
     "login.idioma":"Langue",
     "role.PLAYER.label":"Joueur / client","role.PLAYER.desc":"Réserver des courts, consulter les réservations et le classement.",
@@ -2980,7 +2980,7 @@ const TRANSLATIONS = {
     "login.sesion_label":"Club Pádel 04 · Accesso",
     "login.legal":"Accesso locale protetto da password. Sessione salvabile solo su questo dispositivo.",
     "login.olvide_pwd":"Hai dimenticato la password?","login.recuperar_title":"Recupera l'accesso","login.recuperar_desc":"Inserisci il tuo indirizzo e-mail e, se l'account esiste, riceverai le istruzioni per reimpostare l'accesso.","login.recuperar_email":"Indirizzo e-mail","login.recuperar_btn":"Invia istruzioni","login.recuperar_enviado":"Se quell'indirizzo è registrato nel sistema, riceverai le istruzioni a breve. Controlla anche la cartella spam.","login.recuperar_volver":"Torna al login","login.recuperar_preparado":"Pronto per l'endpoint: /api/auth/forgot-password",
-    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","nav.perfil":"Profilo e impostazioni",
+    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
     "login.subtitle":"Seleziona come vuoi accedere all'applicazione.",
     "login.idioma":"Lingua",
     "role.PLAYER.label":"Giocatore / cliente","role.PLAYER.desc":"Prenota campi, consulta prenotazioni e classifica.",
@@ -3178,7 +3178,7 @@ const TRANSLATIONS = {
     "login.sesion_label":"Club Pádel 04 · Início de sessão",
     "login.legal":"Acesso local protegido por palavra-passe. Sessão guardável apenas neste dispositivo.",
     "login.olvide_pwd":"Esqueceu a palavra-passe?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Introduza o seu e-mail e, se a conta existir, receberá instruções para repor o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver registado no sistema, receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao início de sessão","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
-    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","nav.perfil":"Perfil e definições",
+    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
     "login.subtitle":"Selecione como pretende entrar na aplicação.",
     "login.idioma":"Idioma",
     "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar campos, consultar reservas e classificação.",
@@ -3376,7 +3376,7 @@ const TRANSLATIONS = {
     "login.sesion_label":"Club Pádel 04 · Login",
     "login.legal":"Acesso local protegido por senha. Sessão salvável apenas neste dispositivo.",
     "login.olvide_pwd":"Esqueceu a senha?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Insira seu e-mail e, se a conta existir, você receberá instruções para redefinir o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver cadastrado no sistema, você receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao login","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
-    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","nav.perfil":"Perfil e configurações",
+    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
     "login.subtitle":"Selecione como deseja entrar na aplicação.",
     "login.idioma":"Idioma",
     "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar quadras, consultar reservas e ranking.",
@@ -3574,7 +3574,7 @@ const TRANSLATIONS = {
     "login.sesion_label":"Club Pádel 04 · Anmeldung",
     "login.legal":"Lokaler Zugang durch Passwort geschützt. Sitzung nur auf diesem Gerät speicherbar.",
     "login.olvide_pwd":"Passwort vergessen?","login.recuperar_title":"Zugang wiederherstellen","login.recuperar_desc":"Geben Sie Ihre E-Mail-Adresse ein und, wenn das Konto existiert, erhalten Sie Anweisungen zur Zurücksetzung.","login.recuperar_email":"E-Mail-Adresse","login.recuperar_btn":"Anweisungen senden","login.recuperar_enviado":"Wenn diese Adresse im System registriert ist, erhalten Sie in Kürze Anweisungen. Prüfen Sie auch Ihren Spam-Ordner.","login.recuperar_volver":"Zurück zum Login","login.recuperar_preparado":"Bereit für Endpunkt: /api/auth/forgot-password",
-    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","nav.perfil":"Profil und Einstellungen",
+    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
     "login.subtitle":"Wählen Sie aus, wie Sie die Anwendung betreten möchten.",
     "login.idioma":"Sprache",
     "role.PLAYER.label":"Spieler / Kunde","role.PLAYER.desc":"Plätze buchen, Buchungen und Rangliste einsehen.",
@@ -6526,15 +6526,117 @@ function Perfil({ selectedRole, onClearRole }) {
   const tx = key => t(key, lang);
   const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
   const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
+
+  // Avatar — persiste en localStorage (modo demo)
+  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+  const [avatarSrc, setAvatarSrc] = useState(() => { try { return localStorage.getItem("cp04_avatar") || null; } catch { return null; } });
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarMsg, setAvatarMsg] = useState("");
+  const [avatarError, setAvatarError] = useState("");
+  const [showDelConfirm, setShowDelConfirm] = useState(false);
+
+  // Bio — persiste en localStorage (modo demo)
+  // TODO: GET/PATCH /api/profile/me { bio }
+  const [bio, setBio] = useState(() => { try { return localStorage.getItem("cp04_bio") || ""; } catch { return ""; } });
+  const [bioEdit, setBioEdit] = useState(false);
+  const [bioDraft, setBioDraft] = useState("");
+  const [bioMsg, setBioMsg] = useState("");
+  const BIO_MAX = 220;
+
+  // Datos deportivos — persiste en localStorage (modo demo)
+  // TODO: GET/PATCH /api/profile/me { deporteData }
+  const [deporteData, setDeporteData] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_deporte") || "{}"); } catch { return {}; } });
+  const [deporteEditing, setDeporteEditing] = useState(false);
+  const [deporteDraft, setDeporteDraft] = useState({});
+  const [deporteMsg, setDeporteMsg] = useState("");
+
+  // Privacidad — persiste en localStorage (modo demo)
+  // TODO: GET/PATCH /api/profile/me { privacy }
+  const [privacidad, setPrivacidad] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_privacidad") || "{}"); } catch { return {}; } });
+  const [privMsg, setPrivMsg] = useState("");
+
+  // Contraseña
   const [pwdActual, setPwdActual] = useState("");
   const [pwdNueva, setPwdNueva] = useState("");
   const [pwdConfirmar, setPwdConfirmar] = useState("");
   const [pwdMsg, setPwdMsg] = useState("");
   const [pwdError, setPwdError] = useState("");
 
+  const roleInitials = { PLAYER:"JG", STAFF:"ST", ADMIN:"AD", SUPPORT:"SP" };
+  const initials = roleInitials[selectedRole] || "CP";
+
+  // Completitud del perfil
+  function computeCompleteness() {
+    let s = 0;
+    if (avatarSrc) s += 20;
+    if (bio && bio.trim().length > 10) s += 20;
+    if (deporteData.mano) s += 15;
+    if (deporteData.nivel) s += 15;
+    if (deporteData.disponibilidad) s += 15;
+    if (deporteData.objetivo) s += 15;
+    return Math.min(s, 100);
+  }
+  const completeness = computeCompleteness();
+
+  // Handlers avatar
+  function handleAvatarChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setAvatarError(""); setAvatarMsg("");
+    const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
+    if (!allowed.includes(file.type)) { setAvatarError(tx("perfil.avatar_error_tipo")); return; }
+    if (file.size > 5 * 1024 * 1024) { setAvatarError(tx("perfil.avatar_error_size")); return; }
+    const reader = new FileReader();
+    reader.onload = ev => setAvatarPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+  function handleAvatarSave() {
+    if (!avatarPreview) return;
+    try { localStorage.setItem("cp04_avatar", avatarPreview); } catch {}
+    setAvatarSrc(avatarPreview); setAvatarPreview(null);
+    setAvatarMsg(tx("perfil.avatar_guardada"));
+    setTimeout(() => setAvatarMsg(""), 3000);
+  }
+  function handleAvatarDelete() {
+    try { localStorage.removeItem("cp04_avatar"); } catch {}
+    setAvatarSrc(null); setAvatarPreview(null); setShowDelConfirm(false);
+    setAvatarMsg(tx("perfil.avatar_eliminada"));
+    setTimeout(() => setAvatarMsg(""), 3000);
+  }
+
+  // Handlers bio
+  function startBioEdit() { setBioDraft(bio); setBioEdit(true); setBioMsg(""); }
+  function cancelBioEdit() { setBioEdit(false); setBioDraft(""); }
+  function saveBio() {
+    if (!bioDraft.trim() || bioDraft.length > BIO_MAX) return;
+    const saved = bioDraft.trim();
+    setBio(saved); try { localStorage.setItem("cp04_bio", saved); } catch {}
+    setBioEdit(false); setBioMsg(tx("perfil.bio_guardada"));
+    setTimeout(() => setBioMsg(""), 3000);
+  }
+
+  // Handlers datos deportivos
+  function startDeporteEdit() { setDeporteDraft({...deporteData}); setDeporteEditing(true); }
+  function cancelDeporteEdit() { setDeporteEditing(false); }
+  function saveDeporte() {
+    const saved = {...deporteDraft};
+    setDeporteData(saved); try { localStorage.setItem("cp04_deporte", JSON.stringify(saved)); } catch {}
+    setDeporteEditing(false); setDeporteMsg(tx("perfil.deporte_guardados"));
+    setTimeout(() => setDeporteMsg(""), 3000);
+  }
+
+  // Handlers privacidad
+  function togglePriv(key, defaultOn) {
+    const current = privacidad[key] !== undefined ? privacidad[key] : defaultOn;
+    const updated = { ...privacidad, [key]: !current };
+    setPrivacidad(updated); try { localStorage.setItem("cp04_privacidad", JSON.stringify(updated)); } catch {}
+    setPrivMsg(tx("perfil.privacidad_guardada"));
+    setTimeout(() => setPrivMsg(""), 2000);
+  }
+
+  // Handler contraseña
   function handleChangePwd(e) {
-    e.preventDefault();
-    setPwdMsg(""); setPwdError("");
+    e.preventDefault(); setPwdMsg(""); setPwdError("");
     if (!pwdActual) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
     if (pwdActual !== demoPwds[selectedRole]) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
     const valid = /[A-Z]/.test(pwdNueva) && /[a-z]/.test(pwdNueva) && /[0-9]/.test(pwdNueva) && pwdNueva.length >= 8;
@@ -6542,49 +6644,384 @@ function Perfil({ selectedRole, onClearRole }) {
     if (pwdNueva !== pwdConfirmar) { setPwdError(tx("perfil.pwd_error_coincide")); return; }
     setPwdMsg(tx("perfil.pwd_guardada"));
     setPwdActual(""); setPwdNueva(""); setPwdConfirmar("");
+    // TODO: POST /api/auth/change-password
   }
+
+  // Métricas demo por rol
+  const demoMetrics = {
+    PLAYER:  { partidos:24, reservas:31, torneos:3,  ranking:12,  actividad:"Alta",     valoracion:4.2, fiabilidad:96, racha:5  },
+    STAFF:   { partidos:8,  reservas:187,torneos:1,  ranking:"—", actividad:"Muy alta", valoracion:4.8, fiabilidad:99, racha:12 },
+    ADMIN:   { partidos:4,  reservas:312,torneos:5,  ranking:"—", actividad:"Alta",     valoracion:5.0, fiabilidad:100,racha:21 },
+    SUPPORT: { partidos:2,  reservas:98, torneos:0,  ranking:"—", actividad:"Media",    valoracion:4.6, fiabilidad:98, racha:7  },
+  };
+  const metrics = demoMetrics[selectedRole] || demoMetrics.PLAYER;
+
+  // Insignias y logros
+  const allBadges = [
+    { id:"puntual",    icon:"⏱️",  label:"Jugador puntual",    desc:"Siempre en hora",          earned:true },
+    { id:"activo",     icon:"🔥",  label:"Participante activo",desc:"Alto nivel de actividad",  earned:metrics.actividad==="Alta"||metrics.actividad==="Muy alta" },
+    { id:"torneo",     icon:"🏆",  label:"Torneo completado",  desc:"Ha participado en torneos",earned:metrics.torneos>0 },
+    { id:"companero",  icon:"🤝",  label:"Buen compañero",     desc:"Valoración alta",          earned:metrics.valoracion>=4.0 },
+    { id:"racha",      icon:"📅",  label:"Racha semanal",      desc:"7+ días activo",           earned:metrics.racha>=7 },
+    { id:"completo",   icon:"✅",  label:"Perfil completo",    desc:"Perfil al 100%",           earned:completeness===100 },
+    { id:"verificado", icon:"🎖️", label:"Nivel verificado",   desc:"Nivel confirmado",         earned:!!deporteData.nivel },
+    { id:"frecuente",  icon:"📌",  label:"Reserva frecuente",  desc:"10+ reservas realizadas",  earned:metrics.reservas>=10 },
+  ];
+
+  // Actividad reciente demo
+  const recentActivity = [
+    { icon:"🎾", desc:"Pista 1 · 10:00 h · 90 min",       fecha:"Hoy" },
+    { icon:"🏆", desc:"Torneo interno · Semifinal",         fecha:"Hace 3 días" },
+    { icon:"🎾", desc:"Pista 3 · 18:00 h · 60 min",       fecha:"Hace 5 días" },
+    { icon:"🔥", desc:"Racha activa de "+metrics.racha+" días", fecha:"Esta semana" },
+  ];
+
+  const isPlayer  = selectedRole === "PLAYER";
+  const isStaff   = selectedRole === "STAFF";
+  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+  const sportLevel = deporteData.nivel || (selectedRole==="ADMIN"?"Directivo":selectedRole==="STAFF"?"Interno":selectedRole==="SUPPORT"?"Técnico":"Sin definir");
+
+  // Estilos reutilizables
+  const cs = { background:T.surface2, borderRadius:20, padding:"22px 24px", border:`1px solid ${T.line}` };
+  const ls = { color:T.textDim, fontWeight:700, fontSize:".8rem", letterSpacing:".06em", textTransform:"uppercase", marginBottom:6, display:"block" };
+  const ss = { background:T.surface3, border:`1px solid ${T.line}`, borderRadius:10, color:T.text, padding:"10px 14px", width:"100%", fontSize:".93rem" };
+  const hs = { margin:0, color:T.accent, fontFamily:T.fontDisplay, fontSize:"1rem", letterSpacing:".04em" };
+  const accentGlow = `0 0 20px ${T.accent}30`;
+
+  const complColor = completeness===100 ? T.accent : completeness>=60 ? T.warning : T.danger;
+  const complLabel = completeness===100 ? "✓ Perfil completo" : `${completeness}% completado`;
 
   return (
     <div style={{ padding:"42px 24px", maxWidth:1180, margin:"0 auto" }}>
-      <SectionTitle eyebrow={tx("perfil.eyebrow")} title={tx("perfil.title")} desc={tx("perfil.info_demo")} />
-      <div className="cp04-grid-2" style={{ marginTop:24 }}>
-        <Card>
-          <h3 style={{ marginTop:0, color:T.accent }}>{tx("perfil.sesion")}</h3>
-          <p style={{ color:T.textDim, marginBottom:6 }}>{tx("perfil.rol_actual")}: <strong style={{ color:T.text }}>{roleLabels[selectedRole] || selectedRole}</strong></p>
-          <p style={{ color:T.textDim, marginBottom:20 }}>{tx("perfil.idioma")}: <strong style={{ color:T.text }}>{lang?.label || "Español"}</strong></p>
-          <div style={{ marginTop:8 }}><LanguageSelector /></div>
-          <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:18, width:"100%" }}>🚪 {tx("perfil.cerrar_sesion")}</Btn>
-        </Card>
-        <Card>
-          <h3 style={{ marginTop:0, color:T.accent }}>{tx("perfil.cambiar_pwd")}</h3>
-          <p style={{ color:T.textDim, fontSize:".88rem", marginBottom:14, lineHeight:1.5 }}>Modo demo local. En producción, el cambio de contraseña se validará desde el backend de autenticación.</p>
+
+      {/* ── CABECERA DE PERFIL PREMIUM ── */}
+      <div style={{ background:`linear-gradient(135deg,${T.surface2} 0%,${T.surface3} 100%)`, borderRadius:24, padding:"32px 32px 28px", border:`1px solid ${T.line}`, marginBottom:28, position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", top:0, right:0, width:240, height:240, background:`radial-gradient(circle,${T.accent}15 0%,transparent 70%)`, pointerEvents:"none" }} />
+        <div style={{ display:"flex", alignItems:"flex-start", gap:24, flexWrap:"wrap", position:"relative", zIndex:1 }}>
+
+          {/* Avatar */}
+          <div style={{ position:"relative", flexShrink:0 }}>
+            {avatarSrc
+              ? <img src={avatarSrc} alt="Avatar" style={{ width:96, height:96, borderRadius:"50%", objectFit:"cover", border:`3px solid ${T.accent}`, boxShadow:accentGlow }} />
+              : <div style={{ width:96, height:96, borderRadius:"50%", background:`linear-gradient(135deg,${T.accent}30,${T.primary}40)`, border:`3px solid ${T.accent}55`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"2rem", fontWeight:900, color:T.accent, fontFamily:T.fontDisplay, boxShadow:accentGlow }}>
+                  {initials}
+                </div>
+            }
+            <div style={{ position:"absolute", bottom:3, right:3, width:16, height:16, borderRadius:"50%", background:T.accent, border:`2px solid ${T.surface2}` }} title="Activo" />
+          </div>
+
+          {/* Info principal */}
+          <div style={{ flex:1, minWidth:200 }}>
+            <div style={{ fontSize:".72rem", color:T.accent, fontWeight:800, letterSpacing:".12em", textTransform:"uppercase", marginBottom:4 }}>{roleProfileLabel}</div>
+            <h2 style={{ margin:"0 0 4px", fontSize:"1.5rem", fontFamily:T.fontDisplay, color:T.text, fontWeight:900 }}>
+              {roleLabels[selectedRole] || selectedRole}
+            </h2>
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center", marginTop:8 }}>
+              <span style={{ background:T.surface3, border:`1px solid ${T.line}`, borderRadius:8, padding:"3px 10px", fontSize:".78rem", color:T.textDim }}>
+                Nivel: <strong style={{ color:T.text }}>{sportLevel}</strong>
+              </span>
+              <span style={{ background:`${complColor}18`, border:`1px solid ${complColor}55`, borderRadius:8, padding:"3px 10px", fontSize:".78rem", color:complColor, fontWeight:700 }}>
+                {complLabel}
+              </span>
+            </div>
+            {bio && !bioEdit && (
+              <p style={{ color:T.textDim, fontSize:".86rem", lineHeight:1.6, margin:"12px 0 0", maxWidth:520, fontStyle:"italic" }}>"{bio}"</p>
+            )}
+          </div>
+
+          {/* Barra de completitud */}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:5, minWidth:130, flexShrink:0 }}>
+            <span style={{ color:T.textDim, fontSize:".72rem", fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{tx("perfil.completitud_titulo")}</span>
+            <div style={{ width:130, height:7, background:T.surface3, borderRadius:8, overflow:"hidden" }}>
+              <div style={{ width:`${completeness}%`, height:"100%", background:`linear-gradient(90deg,${T.primary},${T.accent})`, transition:"width .7s cubic-bezier(.4,0,.2,1)" }} />
+            </div>
+            <span style={{ color:complColor, fontSize:".85rem", fontWeight:800 }}>{completeness}%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── GRID PRINCIPAL ── */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(330px,1fr))", gap:20, marginBottom:20 }}>
+
+        {/* FOTO DE PERFIL */}
+        <div style={cs}>
+          <h3 style={hs}>📷 {tx("perfil.avatar_cambiar")}</h3>
+          <div style={{ display:"flex", flexDirection:"column", gap:12, marginTop:14 }}>
+            {avatarPreview ? (
+              <div style={{ textAlign:"center" }}>
+                <img src={avatarPreview} alt="Vista previa" style={{ width:80, height:80, borderRadius:"50%", objectFit:"cover", border:`2px solid ${T.warning}`, marginBottom:8 }} />
+                <div style={{ color:T.warning, fontSize:".75rem", marginBottom:10 }}>Vista previa — aún no guardada</div>
+                <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
+                  <Btn onClick={handleAvatarSave} style={{ fontSize:".82rem", padding:"7px 18px" }}>Guardar foto</Btn>
+                  <Btn variant="secondary" onClick={() => setAvatarPreview(null)} style={{ fontSize:".82rem", padding:"7px 18px" }}>Descartar</Btn>
+                </div>
+              </div>
+            ) : (
+              <>
+                <label style={{ cursor:"pointer", display:"block" }}>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarChange} style={{ display:"none" }} />
+                  <div
+                    style={{ border:`2px dashed ${T.line}`, borderRadius:14, padding:"18px 14px", textAlign:"center", color:T.textDim, fontSize:".86rem", cursor:"pointer", transition:"border-color .2s,color .2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor=T.accent; e.currentTarget.style.color=T.text; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=T.line; e.currentTarget.style.color=T.textDim; }}
+                  >
+                    📁 Seleccionar imagen &nbsp;·&nbsp; JPG, PNG, WEBP &nbsp;·&nbsp; máx 5 MB
+                  </div>
+                </label>
+                {avatarSrc && !showDelConfirm && (
+                  <Btn variant="secondary" onClick={() => setShowDelConfirm(true)} style={{ fontSize:".82rem" }}>{tx("perfil.avatar_eliminar")}</Btn>
+                )}
+                {showDelConfirm && (
+                  <div style={{ background:`${T.danger}18`, border:`1px solid ${T.danger}55`, borderRadius:12, padding:"12px 14px" }}>
+                    <div style={{ color:T.danger, fontWeight:700, fontSize:".85rem", marginBottom:10 }}>{tx("perfil.avatar_confirmar_del")}</div>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <Btn variant="danger" onClick={handleAvatarDelete} style={{ fontSize:".82rem", padding:"6px 16px" }}>Sí, eliminar</Btn>
+                      <Btn variant="secondary" onClick={() => setShowDelConfirm(false)} style={{ fontSize:".82rem", padding:"6px 16px" }}>Cancelar</Btn>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            {avatarError && <div style={{ color:T.danger, fontWeight:700, fontSize:".83rem" }}>{avatarError}</div>}
+            {avatarMsg  && <div style={{ color:T.accent, fontWeight:700, fontSize:".83rem" }}>{avatarMsg}</div>}
+          </div>
+        </div>
+
+        {/* SESIÓN Y ROL */}
+        <div style={cs}>
+          <h3 style={hs}>⚡ {tx("perfil.sesion")}</h3>
+          <div style={{ display:"flex", flexDirection:"column", gap:10, marginTop:14 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ color:T.textDim, fontSize:".86rem" }}>{tx("perfil.rol_actual")}</span>
+              <strong style={{ color:T.text, fontSize:".88rem" }}>{roleLabels[selectedRole]||selectedRole}</strong>
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ color:T.textDim, fontSize:".86rem" }}>{tx("perfil.idioma")}</span>
+              <strong style={{ color:T.text, fontSize:".88rem" }}>{lang && lang.label ? lang.label : "Español"}</strong>
+            </div>
+            <div style={{ borderTop:`1px solid ${T.line}`, paddingTop:12, marginTop:4 }}>
+              <LanguageSelector />
+            </div>
+            <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:8, width:"100%" }}>🚪 {tx("perfil.cerrar_sesion")}</Btn>
+          </div>
+        </div>
+
+        {/* PRESENTACIÓN / BIO — jugador y staff */}
+        {(isPlayer || isStaff) && (
+          <div style={cs}>
+            <h3 style={hs}>✍️ {tx("perfil.bio_titulo")}</h3>
+            <div style={{ marginTop:14 }}>
+              {!bioEdit ? (
+                <>
+                  {bio
+                    ? <p style={{ color:T.text, fontSize:".9rem", lineHeight:1.65, margin:"0 0 14px" }}>"{bio}"</p>
+                    : <p style={{ color:T.textDim, fontSize:".84rem", fontStyle:"italic", margin:"0 0 14px", lineHeight:1.6 }}>{tx("perfil.bio_placeholder")}</p>
+                  }
+                  {bioMsg && <div style={{ color:T.accent, fontWeight:700, fontSize:".82rem", marginBottom:8 }}>{bioMsg}</div>}
+                  <Btn onClick={startBioEdit} variant="secondary" style={{ fontSize:".82rem" }}>{tx("perfil.bio_editar")}</Btn>
+                </>
+              ) : (
+                <>
+                  <textarea
+                    value={bioDraft}
+                    onChange={e => setBioDraft(e.target.value.slice(0,BIO_MAX))}
+                    placeholder={tx("perfil.bio_placeholder")}
+                    rows={4}
+                    style={{ width:"100%", background:T.surface3, border:`1px solid ${T.line}`, borderRadius:10, color:T.text, padding:"10px 12px", fontSize:".9rem", resize:"vertical", lineHeight:1.6, boxSizing:"border-box", fontFamily:T.fontBody }}
+                    autoFocus
+                  />
+                  <div style={{ textAlign:"right", fontSize:".75rem", color:bioDraft.length>BIO_MAX*0.9?T.warning:T.textDim, marginTop:4 }}>
+                    {bioDraft.length}/{BIO_MAX} {tx("perfil.bio_chars")}
+                  </div>
+                  <div style={{ display:"flex", gap:8, marginTop:10 }}>
+                    <Btn onClick={saveBio} disabled={!bioDraft.trim()||bioDraft.length>BIO_MAX} style={{ fontSize:".82rem" }}>{tx("perfil.bio_guardar")}</Btn>
+                    <Btn variant="secondary" onClick={cancelBioEdit} style={{ fontSize:".82rem" }}>{tx("perfil.bio_cancelar")}</Btn>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* DATOS DEPORTIVOS — solo jugador */}
+        {isPlayer && (
+          <div style={cs}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+              <h3 style={hs}>🎾 {tx("perfil.deporte_titulo")}</h3>
+              {!deporteEditing && (
+                <Btn variant="secondary" onClick={startDeporteEdit} style={{ fontSize:".78rem", padding:"4px 12px" }}>Editar</Btn>
+              )}
+            </div>
+            {!deporteEditing ? (
+              <div style={{ display:"grid", gap:8 }}>
+                {[
+                  [tx("perfil.deporte_mano"),           deporteData.mano],
+                  [tx("perfil.deporte_posicion"),       deporteData.posicion],
+                  [tx("perfil.deporte_nivel"),          deporteData.nivel],
+                  [tx("perfil.deporte_disponibilidad"), deporteData.disponibilidad],
+                  [tx("perfil.deporte_objetivo"),       deporteData.objetivo],
+                  [tx("perfil.deporte_busqueda"),       deporteData.busqueda],
+                ].map(([label, val]) => (
+                  <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid ${T.line}` }}>
+                    <span style={{ color:T.textDim, fontSize:".82rem" }}>{label}</span>
+                    <strong style={{ color:val?T.text:T.textDim, fontSize:".85rem" }}>{val || "—"}</strong>
+                  </div>
+                ))}
+                {deporteMsg && <div style={{ color:T.accent, fontWeight:700, fontSize:".82rem", marginTop:4 }}>{deporteMsg}</div>}
+              </div>
+            ) : (
+              <div style={{ display:"grid", gap:10 }}>
+                {[
+                  { key:"mano",           label:tx("perfil.deporte_mano"),           opts:["Derecha","Izquierda","Ambas"] },
+                  { key:"posicion",       label:tx("perfil.deporte_posicion"),       opts:["Derecha","Revés","Ambas"] },
+                  { key:"nivel",          label:tx("perfil.deporte_nivel"),          opts:["Iniciación","Intermedio","Avanzado","Competición"] },
+                  { key:"disponibilidad", label:tx("perfil.deporte_disponibilidad"), opts:["Mañanas","Tardes","Noches","Fines de semana","Flexible"] },
+                  { key:"tipo_partida",   label:tx("perfil.deporte_tipo_partida"),   opts:["Amistosa","Competitiva","Torneo","Entrenamiento"] },
+                  { key:"objetivo",       label:tx("perfil.deporte_objetivo"),       opts:["Mejorar nivel","Competir","Jugar socialmente","Encontrar pareja"] },
+                  { key:"busqueda",       label:tx("perfil.deporte_busqueda"),       opts:["Disponible para partidos","No disponible","Solo torneos","Buscando pareja"] },
+                ].map(({ key, label, opts }) => (
+                  <div key={key}>
+                    <label style={ls}>{label}</label>
+                    <select value={deporteDraft[key]||""} onChange={e => setDeporteDraft(p => ({...p,[key]:e.target.value}))} style={ss}>
+                      <option value="">— Sin definir —</option>
+                      {opts.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                ))}
+                <div style={{ display:"flex", gap:8, marginTop:4 }}>
+                  <Btn onClick={saveDeporte} style={{ fontSize:".82rem" }}>{tx("perfil.deporte_guardar")}</Btn>
+                  <Btn variant="secondary" onClick={cancelDeporteEdit} style={{ fontSize:".82rem" }}>{tx("perfil.bio_cancelar")}</Btn>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CAMBIAR CONTRASEÑA */}
+        <div style={cs}>
+          <h3 style={hs}>🔐 {tx("perfil.cambiar_pwd")}</h3>
+          <p style={{ color:T.textDim, fontSize:".8rem", marginBottom:14, lineHeight:1.5, marginTop:10 }}>
+            Modo demo local. En producción se validará desde backend de autenticación segura.
+          </p>
           <form onSubmit={handleChangePwd} style={{ display:"grid", gap:10 }}>
             <input type="password" placeholder={tx("perfil.pwd_actual")} value={pwdActual} onChange={e=>setPwdActual(e.target.value)} autoComplete="current-password" />
             <input type="password" placeholder={tx("perfil.pwd_nueva")} value={pwdNueva} onChange={e=>setPwdNueva(e.target.value)} autoComplete="new-password" />
             <input type="password" placeholder={tx("perfil.pwd_confirmar")} value={pwdConfirmar} onChange={e=>setPwdConfirmar(e.target.value)} autoComplete="new-password" />
-            {pwdError && <div style={{ color:T.danger, fontWeight:700, fontSize:".88rem" }}>{pwdError}</div>}
-            {pwdMsg && <div style={{ color:T.accent, fontWeight:700, fontSize:".88rem" }}>{pwdMsg}</div>}
+            {pwdError && <div style={{ color:T.danger, fontWeight:700, fontSize:".85rem" }}>{pwdError}</div>}
+            {pwdMsg   && <div style={{ color:T.accent, fontWeight:700, fontSize:".85rem" }}>{pwdMsg}</div>}
             <Btn type="submit" style={{ marginTop:4 }}>{tx("perfil.cambiar_pwd")}</Btn>
           </form>
-        </Card>
+        </div>
       </div>
-      <div className="cp04-grid-2" style={{ marginTop:20 }}>
-        <Card>
-          <h3 style={{ marginTop:0 }}>{tx("perfil.privacidad")}</h3>
-          <p style={{ color:T.textDim, lineHeight:1.6 }}>{tx("perfil.privacidad_desc")}</p>
-          <p style={{ color:T.textDim, fontSize:".84rem", lineHeight:1.5 }}>Los datos personales introducidos en esta versión de demostración no son transmitidos a servicios externos sin consentimiento explícito. En producción real se aplicará política de privacidad completa conforme a normativa.</p>
-        </Card>
-        <Card>
-          <h3 style={{ marginTop:0 }}>{tx("perfil.notificaciones")}</h3>
-          <p style={{ color:T.textDim, lineHeight:1.6 }}>{tx("perfil.notif_desc")}</p>
-          <div style={{ marginTop:12, padding:"12px 16px", border:`1px dashed ${T.line}`, borderRadius:14, color:T.textDim, fontSize:".84rem", lineHeight:1.5 }}>
-            Confirmaciones de reserva · recordatorios · cambios de horario · torneos — preparado para notificaciones por correo y mensajería desde backend real.
+
+      {/* ── MÉTRICAS DEPORTIVAS ── */}
+      <div style={{ marginBottom:24 }}>
+        <h3 style={{ color:T.text, fontFamily:T.fontDisplay, fontSize:"1.05rem", marginBottom:14, letterSpacing:".04em" }}>📊 {tx("perfil.metricas_titulo")}</h3>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(145px,1fr))", gap:12 }}>
+          {[
+            { icon:"🎾", label:tx("perfil.metricas_partidos"),  value:metrics.partidos },
+            { icon:"📋", label:tx("perfil.metricas_reservas"),  value:metrics.reservas },
+            { icon:"🏆", label:tx("perfil.metricas_torneos"),   value:metrics.torneos },
+            { icon:"📈", label:tx("perfil.metricas_ranking"),   value:typeof metrics.ranking==="number"?"#"+metrics.ranking:metrics.ranking },
+            { icon:"⚡", label:tx("perfil.metricas_actividad"), value:metrics.actividad },
+            { icon:"⭐", label:tx("perfil.metricas_valoracion"),value:metrics.valoracion+"/5" },
+            { icon:"✅", label:tx("perfil.metricas_fiabilidad"),value:metrics.fiabilidad+"%" },
+            { icon:"🔥", label:tx("perfil.metricas_racha"),     value:metrics.racha+" días" },
+          ].map(({ icon, label, value }) => (
+            <div key={label} style={{ background:T.surface2, border:`1px solid ${T.line}`, borderRadius:16, padding:"16px 14px", textAlign:"center" }}>
+              <div style={{ fontSize:"1.4rem", marginBottom:6 }}>{icon}</div>
+              <div style={{ color:T.text, fontWeight:900, fontSize:"1.1rem", fontFamily:T.fontDisplay }}>{value}</div>
+              <div style={{ color:T.textDim, fontSize:".7rem", marginTop:4, letterSpacing:".03em", lineHeight:1.3 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── MOMENTOS DEL JUGADOR — solo jugador ── */}
+      {isPlayer && (
+        <div style={{ marginBottom:24 }}>
+          <h3 style={{ color:T.text, fontFamily:T.fontDisplay, fontSize:"1.05rem", marginBottom:14, letterSpacing:".04em" }}>🗓️ {tx("perfil.historial_titulo")}</h3>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:12 }}>
+            {recentActivity.map((act, i) => (
+              <div key={i} style={{ background:T.surface2, border:`1px solid ${T.line}`, borderRadius:14, padding:"14px 16px", display:"flex", gap:14, alignItems:"flex-start" }}>
+                <div style={{ fontSize:"1.4rem", flexShrink:0 }}>{act.icon}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ color:T.text, fontSize:".86rem", fontWeight:700, marginBottom:2 }}>{act.desc}</div>
+                  <div style={{ color:T.textDim, fontSize:".74rem" }}>{act.fecha}</div>
+                </div>
+              </div>
+            ))}
           </div>
-        </Card>
+        </div>
+      )}
+
+      {/* ── INSIGNIAS Y LOGROS ── */}
+      <div style={{ marginBottom:24 }}>
+        <h3 style={{ color:T.text, fontFamily:T.fontDisplay, fontSize:"1.05rem", marginBottom:14, letterSpacing:".04em" }}>🎖️ {tx("perfil.insignias_titulo")}</h3>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(138px,1fr))", gap:10 }}>
+          {allBadges.map(badge => (
+            <div key={badge.id} style={{ background:badge.earned?`${T.accent}12`:T.surface2, border:`1px solid ${badge.earned?T.accent+"44":T.line}`, borderRadius:14, padding:"14px 12px", textAlign:"center", opacity:badge.earned?1:0.4, transition:"all .2s" }}>
+              <div style={{ fontSize:"1.6rem", marginBottom:6 }}>{badge.icon}</div>
+              <div style={{ color:badge.earned?T.accent:T.textDim, fontWeight:800, fontSize:".77rem", lineHeight:1.35, marginBottom:4 }}>{badge.label}</div>
+              <div style={{ color:T.textDim, fontSize:".68rem", lineHeight:1.4 }}>{badge.desc}</div>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* ── PRIVACIDAD ── */}
+      <div style={{ marginBottom:24 }}>
+        <div style={cs}>
+          <h3 style={{ ...hs, marginBottom:10 }}>🔒 {tx("perfil.privacidad_config")}</h3>
+          <p style={{ color:T.textDim, fontSize:".82rem", marginBottom:18, lineHeight:1.5 }}>{tx("perfil.privacidad_desc")}</p>
+          <div style={{ display:"grid", gap:10 }}>
+            {[
+              { key:"perfil_visible",  label:tx("perfil.privacidad_perfil_visible"),  def:true  },
+              { key:"mostrar_nivel",   label:tx("perfil.privacidad_nivel"),            def:true  },
+              { key:"mostrar_disp",    label:tx("perfil.privacidad_disponibilidad"),   def:isPlayer },
+              { key:"mostrar_stats",   label:tx("perfil.privacidad_stats"),            def:true  },
+              { key:"invitaciones",    label:tx("perfil.privacidad_invitaciones"),     def:isPlayer },
+              { key:"recomendaciones", label:tx("perfil.privacidad_recomendaciones"), def:isPlayer },
+            ].map(({ key, label, def }) => {
+              const val = privacidad[key] !== undefined ? privacidad[key] : def;
+              return (
+                <div key={key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${T.line}` }}>
+                  <span style={{ color:T.text, fontSize:".86rem" }}>{label}</span>
+                  <button
+                    onClick={() => togglePriv(key, def)}
+                    style={{ background:val?T.accent:T.surface3, border:`1px solid ${val?T.accent:T.line}`, borderRadius:20, width:44, height:24, cursor:"pointer", position:"relative", transition:"all .2s", flexShrink:0 }}
+                    aria-label={label}
+                    type="button"
+                  >
+                    <div style={{ position:"absolute", top:3, left:val?22:3, width:16, height:16, borderRadius:"50%", background:val?T.surface:T.textDim, transition:"left .2s" }} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          {privMsg && <div style={{ color:T.accent, fontWeight:700, fontSize:".82rem", marginTop:12 }}>{privMsg}</div>}
+          <p style={{ color:T.textDim, fontSize:".76rem", lineHeight:1.6, marginTop:16, borderTop:`1px solid ${T.line}`, paddingTop:12 }}>
+            {tx("perfil.info_demo")} En producción real se aplicará política de privacidad completa conforme al RGPD / normativa aplicable.
+          </p>
+        </div>
+      </div>
+
+      {/* ── NOTIFICACIONES ── */}
+      <div style={cs}>
+        <h3 style={{ ...hs, marginBottom:10 }}>🔔 {tx("perfil.notificaciones")}</h3>
+        <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:14 }}>{tx("perfil.notif_desc")}</p>
+        <div style={{ padding:"12px 16px", border:`1px dashed ${T.line}`, borderRadius:14, color:T.textDim, fontSize:".84rem", lineHeight:1.7 }}>
+          Confirmaciones de reserva &nbsp;·&nbsp; recordatorios de partido &nbsp;·&nbsp; torneos &nbsp;·&nbsp; cambios de horario
+          <div style={{ marginTop:6, fontSize:".75rem", color:T.textDim }}>
+            Preparado para integración con correo y mensajería desde backend real.
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
+
 
 export default function ClubPadel04SaaSApp() {
   const [current, setCurrent] = useState("inicio");
