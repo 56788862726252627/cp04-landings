@@ -6527,6 +6527,51 @@ function Perfil({ selectedRole, onClearRole }) {
   const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
   const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
 
+  // Perfil preparado para backend real.
+  // Actualmente localStorage funciona como fallback local para no romper la demo.
+  // Endpoints recomendados:
+  // GET    /api/profile/me
+  // PATCH  /api/profile/me
+  // POST   /api/profile/avatar
+  // DELETE /api/profile/avatar
+  // GET    /api/profile/metrics
+  // POST   /api/auth/change-password
+  const PROFILE_BACKEND_ENDPOINTS = {
+    me: "/api/profile/me",
+    avatar: "/api/profile/avatar",
+    metrics: "/api/profile/metrics",
+    changePassword: "/api/auth/change-password",
+  };
+
+  function saveProfileFallback(key, value) {
+    try {
+      const serialized = typeof value === "string" ? value : JSON.stringify(value);
+      localStorage.setItem(key, serialized);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function saveProfileField(field, value) {
+    // Preparado para backend real. En esta fase solo persiste localmente.
+    // Futuro:
+    // await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+    //   method: "PATCH",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ [field]: value }),
+    // });
+    const storageMap = {
+      avatar: "cp04_avatar",
+      bio: "cp04_bio",
+      deporte: "cp04_deporte",
+      privacidad: "cp04_privacidad",
+    };
+    const storageKey = storageMap[field];
+    if (!storageKey) return false;
+    return saveProfileFallback(storageKey, value);
+  }
+
   // Avatar — persiste en localStorage (modo demo)
   // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
   const [avatarSrc, setAvatarSrc] = useState(() => { try { return localStorage.getItem("cp04_avatar") || null; } catch { return null; } });
@@ -6592,7 +6637,7 @@ function Perfil({ selectedRole, onClearRole }) {
   }
   function handleAvatarSave() {
     if (!avatarPreview) return;
-    try { localStorage.setItem("cp04_avatar", avatarPreview); } catch {}
+    saveProfileField("avatar", avatarPreview);
     setAvatarSrc(avatarPreview); setAvatarPreview(null);
     setAvatarMsg(tx("perfil.avatar_guardada"));
     setTimeout(() => setAvatarMsg(""), 3000);
@@ -6610,7 +6655,7 @@ function Perfil({ selectedRole, onClearRole }) {
   function saveBio() {
     if (!bioDraft.trim() || bioDraft.length > BIO_MAX) return;
     const saved = bioDraft.trim();
-    setBio(saved); try { localStorage.setItem("cp04_bio", saved); } catch {}
+    setBio(saved); saveProfileField("bio", saved);
     setBioEdit(false); setBioMsg(tx("perfil.bio_guardada"));
     setTimeout(() => setBioMsg(""), 3000);
   }
@@ -6620,7 +6665,7 @@ function Perfil({ selectedRole, onClearRole }) {
   function cancelDeporteEdit() { setDeporteEditing(false); }
   function saveDeporte() {
     const saved = {...deporteDraft};
-    setDeporteData(saved); try { localStorage.setItem("cp04_deporte", JSON.stringify(saved)); } catch {}
+    setDeporteData(saved); saveProfileField("deporte", saved);
     setDeporteEditing(false); setDeporteMsg(tx("perfil.deporte_guardados"));
     setTimeout(() => setDeporteMsg(""), 3000);
   }
@@ -6629,7 +6674,7 @@ function Perfil({ selectedRole, onClearRole }) {
   function togglePriv(key, defaultOn) {
     const current = privacidad[key] !== undefined ? privacidad[key] : defaultOn;
     const updated = { ...privacidad, [key]: !current };
-    setPrivacidad(updated); try { localStorage.setItem("cp04_privacidad", JSON.stringify(updated)); } catch {}
+    setPrivacidad(updated); saveProfileField("privacidad", updated);
     setPrivMsg(tx("perfil.privacidad_guardada"));
     setTimeout(() => setPrivMsg(""), 2000);
   }
