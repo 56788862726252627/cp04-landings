@@ -4642,6 +4642,7 @@ function Gestion() {
   useEffect(() => {
     try {
       const emailGuardado =
+        window.localStorage.getItem("cp04_user_email") ||
         window.localStorage.getItem("cp04-reservas-email");
 
       if (emailGuardado) {
