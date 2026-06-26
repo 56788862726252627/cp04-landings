@@ -505,7 +505,7 @@ function Btn({ children, onClick, variant = "primary", disabled = false, type = 
 }
 
 
-const DISPONIBILIDAD_ENDPOINT = "https://cp04-reservas-proxy.eduardorodriguezrodriguez24.workers.dev/api/disponibilidad";
+const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
 const DISPONIBILIDAD_UPDATE_EVENT = "cp04:disponibilidad-actualizar";
 
 async function readSafeResponse(res) {
