@@ -37,6 +37,9 @@ const GALLERY_REAL_IMAGE_STYLES = `
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
+import { LazyClubGallery } from "./components/lazy/lazyGallery.js";
+import CP04GuidedTutorial from "./components/CP04GuidedTutorial.jsx";
 /**
  * Club Pádel 04 · SaaS App segura
  *
@@ -79,31 +82,31 @@ const GALLERY = [
     key: "pistas",
     title: "Pistas",
     label: "Pistas Club Pádel 04",
-    src: "/gallery/cp04/pistas.png?v=cp04FotosSeparadasFinal2",
+    src: "/optimized/gallery/cp04/pistas.webp?v=cp04FotosSeparadasFinal2",
   },
   {
     key: "recepcion",
     title: "Recepción",
     label: "Recepción Club Pádel 04",
-    src: "/gallery/cp04/recepcion.png?v=cp04FotosSeparadasFinal2",
+    src: "/optimized/gallery/cp04/recepcion.webp?v=cp04FotosSeparadasFinal2",
   },
   {
     key: "cafeteria",
     title: "Cafetería",
     label: "Cafetería Club Pádel 04",
-    src: "/gallery/cp04/cafeteria.png?v=cp04FotosSeparadasFinal2",
+    src: "/optimized/gallery/cp04/cafeteria.webp?v=cp04FotosSeparadasFinal2",
   },
   {
     key: "torneos",
     title: "Torneos",
     label: "Torneos Club Pádel 04",
-    src: "/gallery/cp04/torneos.png?v=cp04FotosSeparadasFinal2",
+    src: "/optimized/gallery/cp04/torneos.webp?v=cp04FotosSeparadasFinal2",
   },
   {
     key: "instalaciones",
     title: "Instalaciones",
     label: "Instalaciones Club Pádel 04",
-    src: "/gallery/cp04/instalaciones.png?v=cp04FotosSeparadasFinal2",
+    src: "/optimized/gallery/cp04/instalaciones.webp?v=cp04FotosSeparadasFinal2",
   },
 ];
 
@@ -2161,6 +2164,67 @@ function useLang() {
   return lang;
 }
 
+
+/* AUDITORIA 20 · AUTH REAL HELPERS
+   Preparación para autenticación real sin romper modo demo/local.
+   El backend/Worker debe ser la autoridad final en producción. */
+
+const CP04_AUTH_MODES = {
+  DEMO: "demo",
+  LOCAL_DEMO: "universal_demo",
+  BACKEND_READY: "backend_ready",
+  PRODUCTION: "production"
+};
+
+const CP04_PROTECTED_SECTIONS = [
+  "gestion",
+  "admin",
+  "flujos_make",
+  "soporte"
+];
+
+const CP04_ROLE_PERMISSIONS = {
+  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
+  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"],
+};
+
+function cp04NormalizeRole(role) {
+  const value = String(role || "").trim().toUpperCase();
+  if (["PLAYER", "STAFF", "ADMIN", "SUPPORT"].includes(value)) return value;
+  return "PLAYER";
+}
+
+function cp04IsProtectedSection(section) {
+  return CP04_PROTECTED_SECTIONS.includes(String(section || "").trim());
+}
+
+function cp04CanAccessSection(role, section) {
+  const safeRole = cp04NormalizeRole(role);
+  const safeSection = String(section || "inicio").trim();
+  return (CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER).includes(safeSection);
+}
+
+function cp04GetSafeStartSection(role) {
+  const safeRole = cp04NormalizeRole(role);
+  const allowed = CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER;
+  return allowed[0] || "inicio";
+}
+
+function cp04RequiresBackendAuth(section) {
+  return cp04IsProtectedSection(section);
+}
+
+function cp04GetStoredAuthMode() {
+  try {
+    return localStorage.getItem("cp04_auth_mode") || CP04_AUTH_MODES.DEMO;
+  } catch {
+    return CP04_AUTH_MODES.DEMO;
+  }
+}
+
+
 const TRANSLATIONS = {
   "es-ES": {
     "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
@@ -3935,7 +3999,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
         {visibleItems.map(([id, key, icon]) => {
           const label = tx(key);
           return (
-            <button key={id} onClick={() => onNavigate(id)} aria-current={current === id ? "page" : undefined}
+            <button key={id} data-tour={`sidebar-${id}`} onClick={() => onNavigate(id)} aria-current={current === id ? "page" : undefined}
               aria-label={`${label}`}
               style={{ display:"flex", gap:10, width:"100%", background:current===id?T.accent:"transparent", color:current===id?"#07090e":T.textDim, border:`1px solid ${current===id?T.accent:T.line}`, borderRadius:14, padding:"12px 14px", cursor:"pointer", fontWeight:900 }}>
               <span aria-hidden="true">{icon}</span><span>{label}</span>
@@ -4166,7 +4230,7 @@ function Reservas() {
     setCourt(pista);
     setStep(1);
   }}
-/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label={tx("reservas.nivel_form")} placeholder={tx("reservas.nivel_form")} value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
 }
 
 function CancelarReserva({ setCurrent }) {
@@ -6516,13 +6580,47 @@ function Admin() {
   );
 }
 
+
+function AuthProductionStatusPanel() {
+  const mode = cp04GetStoredAuthMode();
+  const isDemo = mode === CP04_AUTH_MODES.DEMO || mode === CP04_AUTH_MODES.LOCAL_DEMO;
+
+  return (
+    <Card style={{ marginTop: 24, borderColor: isDemo ? "rgba(255,184,77,.34)" : "rgba(182,255,0,.34)" }}>
+      <h3 style={{ marginTop: 0, color: isDemo ? T.warning : T.accent }}>
+        Estado de autenticación
+      </h3>
+      <p style={{ color: T.textDim, lineHeight: 1.7 }}>
+        La app está preparada para conectar autenticación real mediante backend/Worker.
+        En local puede mantenerse el modo demo para pruebas, pero en producción las secciones sensibles
+        deben validarse desde servidor.
+      </p>
+      <PanelList
+        items={[
+          `Modo actual: ${mode}`,
+          `Secciones protegidas: ${CP04_PROTECTED_SECTIONS.join(", ")}`,
+          "Login real pendiente: /api/auth/login",
+          "Sesión real pendiente: /api/auth/me",
+          "Recuperación real pendiente: /api/auth/forgot-password",
+          "Roles reales pendientes de backend: PLAYER, STAFF, ADMIN, SUPPORT"
+        ]}
+      />
+      <p style={{ color: T.textDim, lineHeight: 1.7, marginBottom: 0 }}>
+        Regla de producción: el frontend solo debe mostrar la interfaz. La autorización final debe decidirla
+        el backend/Worker con sesión válida y rol real.
+      </p>
+    </Card>
+  );
+}
+
+
 function Soporte() {
   const lang = useLang();
   const tx = key => t(key, lang);
-  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.proteccion_h3")}</h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAYMENTS_SECRET_KEY=privado_en_backend\nPAYMENTS_WEBHOOK_SECRET=privado_en_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
 }
 
-function Perfil({ selectedRole, onClearRole }) {
+function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
@@ -6849,6 +6947,9 @@ function Perfil({ selectedRole, onClearRole }) {
               <LanguageSelector />
             </div>
             <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:8, width:"100%" }}>🚪 {tx("perfil.cerrar_sesion")}</Btn>
+            {onOpenTutorial && (
+              <Btn variant="secondary" data-tour="perfil-tutorial-btn" onClick={onOpenTutorial} style={{ marginTop:6, width:"100%", borderColor:"rgba(182,255,0,.32)", color:"#b6ff00" }}>🎯 Ver tutorial rápido</Btn>
+            )}
           </div>
         </div>
 
@@ -7078,6 +7179,7 @@ export default function ClubPadel04SaaSApp() {
   const [rememberRole, setRememberRole] = useState(true);
   const [roleError, setRoleError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tutorialRevision, setTutorialRevision] = useState(0);
   const [forgotPwdStep, setForgotPwdStep] = useState("idle");
   const [forgotPwdEmail, setForgotPwdEmail] = useState("");
   const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
@@ -7088,7 +7190,7 @@ export default function ClubPadel04SaaSApp() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
 
   const roleConfig = {
     PLAYER: {
@@ -7246,7 +7348,16 @@ export default function ClubPadel04SaaSApp() {
   }, [mobileMenuOpen]);
 
   function navigate(section) {
-    setCurrent(section);
+    const safeRole = cp04NormalizeRole(selectedRole);
+    const safeSection = String(section || "inicio").trim();
+
+    if (!cp04CanAccessSection(safeRole, safeSection)) {
+      setCurrent(cp04GetSafeStartSection(safeRole));
+      setMobileMenuOpen(false);
+      return;
+    }
+
+    setCurrent(safeSection);
     setMobileMenuOpen(false);
   }
 
@@ -7297,7 +7408,7 @@ export default function ClubPadel04SaaSApp() {
             Entrar con correo personal
           </strong>
           <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.55 }}>
-            Usa tu email y contraseña. Los roles demo siguen disponibles abajo solo para pruebas internas.
+            Usa tu email y contraseña. Los roles internos siguen disponibles abajo solo para validación interna.
           </p>
           <input
             type="email"
@@ -7317,7 +7428,7 @@ export default function ClubPadel04SaaSApp() {
           />
           {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
-            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
+            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#ffffff", fontWeight:900 }}>
               Iniciar sesión
             </button>
             <button type="button" onClick={openForgotPwd} style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}>
@@ -7331,7 +7442,7 @@ export default function ClubPadel04SaaSApp() {
 
         <div style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
           <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
-            MODO DEMO INTERNO
+            ACCESO POR ROLES
           </div>
           <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
             Ver la app por roles
@@ -7347,11 +7458,11 @@ export default function ClubPadel04SaaSApp() {
               {Object.keys(roleConfig).map((roleId) => {
                 const rl = roleLabels[roleId] || roleConfig[roleId];
                 return (
-                  <button key={roleId} type="button" onClick={() => selectRole(roleId)}
+                  <button key={roleId} type="button" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
                     style={{ textAlign:"left", border:`1px solid ${T.line}`, borderRadius:24, padding:22, background:"rgba(5,10,18,.72)", color:T.text, cursor:"pointer", minHeight:138 }}>
-                    <div style={{ color:T.accent, fontWeight:900, letterSpacing:".12em", fontSize:".78rem", marginBottom:8 }}>{roleId}</div>
+                    <div className={roleId==="PLAYER" ? "cp04-role-player-id" : undefined} style={{ color: roleId==="PLAYER" ? "#b6ff00" : T.accent, fontWeight:900, letterSpacing:".12em", fontSize:".78rem", marginBottom:8 }}>{roleId}</div>
                     <strong style={{ display:"block", fontSize:"1.1rem", marginBottom:8 }}>{rl.label}</strong>
-                    <span style={{ color:T.textDim, lineHeight:1.5 }}>{rl.desc}</span>
+                    <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>
                   </button>
                 );
               })}
@@ -7418,7 +7529,7 @@ export default function ClubPadel04SaaSApp() {
                       {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
                         <button type="submit" className="cp04-menu-button"
-                          style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
+                          style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
                           {ltx("login.recuperar_btn")}
                         </button>
                         <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
@@ -7468,8 +7579,13 @@ export default function ClubPadel04SaaSApp() {
       {mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}
       <div className="cp04-layout">
         <Sidebar current={current} selectedRole={selectedRole} onClearRole={clearRole} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} />
-        <main className="cp04-main">{modules[current]}</main>
+        <main className="cp04-main" data-tour="main-content">{modules[current] || modules.inicio}</main>
       </div>
+      <CP04GuidedTutorial
+        selectedRole={selectedRole}
+        onNavigate={navigate}
+        openRevision={tutorialRevision}
+      />
     </>
   );
 }

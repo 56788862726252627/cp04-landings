@@ -695,3 +695,448 @@ body.cp04-role-screen-active button.cp04-login-enter-white-final * {
   filter: none !important;
   text-shadow: 0 2px 12px rgba(0,0,0,.82) !important;
 }
+
+
+/* Post Auditoría 10 · ajuste visual específico tarjeta PLAYER login */
+body .cp04-role-player-id {
+  color: #b6ff00 !important;
+}
+
+body .cp04-role-player-desc {
+  color: rgba(226,232,240,.48) !important;
+}
+
+
+/* Post Auditoría 10 · forzado final tarjeta PLAYER completa */
+body button.cp04-player-role-card .cp04-role-player-id,
+body .cp04-player-role-card .cp04-role-player-id {
+  color: #b6ff00 !important;
+  -webkit-text-fill-color: #b6ff00 !important;
+  opacity: 1 !important;
+}
+
+body button.cp04-player-role-card .cp04-role-player-desc,
+body .cp04-player-role-card .cp04-role-player-desc {
+  color: rgba(226,232,240,.42) !important;
+  -webkit-text-fill-color: rgba(226,232,240,.42) !important;
+  opacity: 1 !important;
+}
+
+/* Auditoría 19 · Pulido visual premium del sidebar
+   Objetivo: unificar soporte/perfil/logout para que no queden verdes/rojos fijos.
+   Solo el botón activo debe destacar en verde. */
+
+/* Soporte: estado base neutro, sin verde permanente */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn {
+  background: rgba(5,10,18,.72) !important;
+  border-color: rgba(255,255,255,.11) !important;
+  color: rgba(255,255,255,.82) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+/* Perfil: estado base premium neutro, sin rojo permanente */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn {
+  background: rgba(5,10,18,.72) !important;
+  border-color: rgba(255,255,255,.11) !important;
+  color: rgba(255,255,255,.82) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+/* Cerrar sesión: diferenciado pero elegante, no rojo fuerte */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn {
+  background: rgba(255,255,255,.045) !important;
+  border-color: rgba(255,255,255,.13) !important;
+  color: rgba(255,255,255,.70) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+/* Hover común premium */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:hover,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:hover,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn:hover,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn:hover,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn:hover,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn:hover,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn:hover,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn:hover {
+  border-color: rgba(182,255,0,.34) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+/* Estado activo: solo el botón activo debe ser verde */
+body.cp04-module-screen-active .cp04-sidebar button[aria-current="page"],
+body.cp04-module-screen-active .cp04-sidebar button[data-active="true"],
+body.cp04-role-screen-active .cp04-sidebar button[aria-current="page"],
+body.cp04-role-screen-active .cp04-sidebar button[data-active="true"] {
+  background: linear-gradient(135deg, #b6ff00, #2ee59d) !important;
+  border-color: rgba(182,255,0,.55) !important;
+  color: #061006 !important;
+  box-shadow: 0 14px 34px rgba(182,255,0,.22) !important;
+}
+
+/* Texto interno del botón activo */
+body.cp04-module-screen-active .cp04-sidebar button[aria-current="page"] *,
+body.cp04-module-screen-active .cp04-sidebar button[data-active="true"] *,
+body.cp04-role-screen-active .cp04-sidebar button[aria-current="page"] *,
+body.cp04-role-screen-active .cp04-sidebar button[data-active="true"] * {
+  color: #061006 !important;
+}
+
+/* Auditoría 19 · Fix final sidebar
+   - Soporte/Centro técnico: texto blanco legible.
+   - Perfil y ajustes: sin rojo/burdeos permanente.
+*/
+
+/* Soporte y Centro técnico: texto blanco en estado base */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn *,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn * {
+  color: rgba(255,255,255,.86) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.86) !important;
+}
+
+/* Perfil y ajustes: quitar rojo/burdeos permanente */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn,
+body.cp04-module-screen-active .cp04-sidebar button[aria-label*="Perfil"],
+body.cp04-role-screen-active .cp04-sidebar button[aria-label*="Perfil"],
+body.cp04-module-screen-active .cp04-sidebar button[title*="Perfil"],
+body.cp04-role-screen-active .cp04-sidebar button[title*="Perfil"] {
+  background: rgba(5,10,18,.72) !important;
+  border-color: rgba(255,255,255,.11) !important;
+  color: rgba(255,255,255,.86) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+
+/* Perfil y ajustes: texto interno blanco/neutro */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn *,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn *,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn *,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn * {
+  color: rgba(255,255,255,.86) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.86) !important;
+}
+
+/* Reforzar que solo el botón activo sea verde */
+body.cp04-module-screen-active .cp04-sidebar button[aria-current="page"],
+body.cp04-module-screen-active .cp04-sidebar button[data-active="true"],
+body.cp04-role-screen-active .cp04-sidebar button[aria-current="page"],
+body.cp04-role-screen-active .cp04-sidebar button[data-active="true"] {
+  background: linear-gradient(135deg, #b6ff00, #2ee59d) !important;
+  border-color: rgba(182,255,0,.55) !important;
+  color: #061006 !important;
+}
+
+body.cp04-module-screen-active .cp04-sidebar button[aria-current="page"] *,
+body.cp04-module-screen-active .cp04-sidebar button[data-active="true"] *,
+body.cp04-role-screen-active .cp04-sidebar button[aria-current="page"] *,
+body.cp04-role-screen-active .cp04-sidebar button[data-active="true"] * {
+  color: #061006 !important;
+  -webkit-text-fill-color: #061006 !important;
+}
+
+
+/* === AUDITORIA 19.2 · soporte no activo sin filo verde === */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]),
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]) {
+  background: rgba(8,12,22,.78) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 0 transparent !important;
+  outline: none !important;
+  color: rgba(255,255,255,.92) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.92) !important;
+}
+
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]) *,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]) * {
+  color: rgba(255,255,255,.92) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.92) !important;
+  text-shadow: none !important;
+}
+
+
+/* AUDITORIA 20 · FIX DEFINITIVO SOPORTE SIDEBAR
+   Objetivo:
+   - Soporte con letras blancas.
+   - Soporte sin filo verde residual cuando no está activo.
+   - Mantener estilo premium neutro como el resto de módulos.
+*/
+
+/* Soporte base: neutralizar verde/borde/brillo */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn {
+  background: rgba(7,12,22,.82) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  outline: none !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important;
+  color: rgba(255,255,255,.94) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.94) !important;
+}
+
+/* Texto, icono y spans internos de Soporte en blanco */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn *,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn * {
+  color: rgba(255,255,255,.94) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.94) !important;
+  text-shadow: none !important;
+}
+
+/* Quitar filo verde también en focus/hover si no está activo */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):hover,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):hover,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([aria-current="page"]):not([data-active="true"]):hover,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([aria-current="page"]):not([data-active="true"]):hover,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):focus,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):focus,
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([aria-current="page"]):not([data-active="true"]):focus,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([aria-current="page"]):not([data-active="true"]):focus {
+  background: rgba(7,12,22,.84) !important;
+  border-color: rgba(255,255,255,.12) !important;
+  outline: none !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important;
+  color: rgba(255,255,255,.96) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.96) !important;
+}
+
+/* Soporte activo: solo si realmente está activo puede usar verde */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[aria-current="page"],
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[aria-current="page"],
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[aria-current="page"],
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[aria-current="page"],
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[data-active="true"],
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[data-active="true"],
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[data-active="true"],
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[data-active="true"] {
+  background: linear-gradient(135deg, #b6ff00, #2ee59d) !important;
+  border-color: rgba(182,255,0,.55) !important;
+  color: #061006 !important;
+  -webkit-text-fill-color: #061006 !important;
+}
+
+
+/* ================================================================
+   AUDITORÍA LEGIBILIDAD PREMIUM — Jerarquía de color y contraste
+   Texto principal:   #F8FFF5
+   Texto secundario:  #D7FBE8
+   Texto auxiliar:    #BFD7D0
+   Números/KPI:       #B6FF00
+   Avisos:            #FFE08A
+   Errores:           #FF6B6B
+   Deshabilitado mín: #8FA7A0
+   ================================================================ */
+
+/* ── Texto principal y encabezados ─────────────────────────── */
+body.cp04-module-screen-active h1,
+body.cp04-module-screen-active h2,
+body.cp04-module-screen-active h3,
+body.cp04-module-screen-active h4,
+body.cp04-role-screen-active h1,
+body.cp04-role-screen-active h2,
+body.cp04-role-screen-active h3,
+body.cp04-role-screen-active h4 {
+  color: #F8FFF5 !important;
+}
+
+/* ── Texto de párrafos y etiquetas ─────────────────────────── */
+body.cp04-module-screen-active p,
+body.cp04-module-screen-active label,
+body.cp04-role-screen-active p,
+body.cp04-role-screen-active label {
+  color: #D7FBE8 !important;
+}
+
+/* ── Textos auxiliares (subtítulos, meta, spans genéricos) ── */
+body.cp04-module-screen-active small,
+body.cp04-role-screen-active small {
+  color: #BFD7D0 !important;
+}
+
+/* ── Tablas: cabeceras y celdas ─────────────────────────────── */
+body.cp04-module-screen-active th,
+body.cp04-module-admin th {
+  color: #BFD7D0 !important;
+  font-size: 0.76rem !important;
+  letter-spacing: 0.08em !important;
+  font-weight: 800 !important;
+}
+
+body.cp04-module-screen-active td,
+body.cp04-module-admin td {
+  color: #F8FFF5 !important;
+}
+
+/* ── Números y KPI importantes ──────────────────────────────── */
+body.cp04-module-screen-active [data-kpi],
+body.cp04-module-admin [data-kpi] {
+  color: #B6FF00 !important;
+  font-weight: 900 !important;
+}
+
+/* ── Sidebar: textos pequeños y modo seguro ─────────────────── */
+body.cp04-module-screen-active .cp04-sidebar div,
+body.cp04-module-screen-active .cp04-sidebar p,
+body.cp04-module-screen-active .cp04-sidebar span,
+body.cp04-module-screen-active .cp04-sidebar small,
+body.cp04-role-screen-active .cp04-sidebar div,
+body.cp04-role-screen-active .cp04-sidebar p,
+body.cp04-role-screen-active .cp04-sidebar span,
+body.cp04-role-screen-active .cp04-sidebar small {
+  color: #D7FBE8 !important;
+}
+
+/* ── Selector de idioma ─────────────────────────────────────── */
+body.cp04-module-screen-active select,
+body.cp04-role-screen-active select {
+  color: #F8FFF5 !important;
+}
+
+/* ── Textos de perfil y ajustes ─────────────────────────────── */
+body.cp04-module-screen-active .cp04-card p,
+body.cp04-module-screen-active .cp04-card span,
+body.cp04-role-screen-active .cp04-card p,
+body.cp04-role-screen-active .cp04-card span {
+  color: #D7FBE8 !important;
+}
+
+/* ── Métricas admin ─────────────────────────────────────────── */
+body.cp04-module-admin p,
+body.cp04-module-admin li,
+body.cp04-module-admin span {
+  color: #D7FBE8 !important;
+}
+
+body.cp04-module-admin h1,
+body.cp04-module-admin h2,
+body.cp04-module-admin h3 {
+  color: #F8FFF5 !important;
+}
+
+/* ── Tutorial guiado: aislado del resto de !important ───────── */
+/* Tooltip card */
+.cp04-tour-tip p {
+  color: #D7FBE8 !important;
+}
+
+.cp04-tour-tip strong {
+  color: #F8FFF5 !important;
+}
+
+/* Botón Siguiente */
+.cp04-tour-tip button[aria-label*="siguiente"],
+.cp04-tour-tip button[aria-label*="Finalizar"] {
+  color: #071200 !important;
+  background: #B6FF00 !important;
+  font-weight: 900 !important;
+}
+
+/* Botón Atrás */
+.cp04-tour-tip button[aria-label*="anterior"] {
+  color: #F8FFF5 !important;
+}
+
+/* Saltar y No mostrar más */
+.cp04-tour-tip button[aria-label*="Saltar"] {
+  color: #D7FBE8 !important;
+  border-color: rgba(215,251,232,.25) !important;
+}
+
+.cp04-tour-tip button[aria-label*="mostrar"] {
+  color: #BFD7D0 !important;
+  border-color: rgba(191,215,208,.20) !important;
+}
+
+/* ── Texto deshabilitado mínimo visible ─────────────────────── */
+body.cp04-module-screen-active button:disabled,
+body.cp04-role-screen-active button:disabled {
+  color: #8FA7A0 !important;
+  opacity: 0.62 !important;
+}
+
+/* ── Avisos y advertencias ──────────────────────────────────── */
+body.cp04-module-screen-active [data-warning],
+body.cp04-role-screen-active [data-warning] {
+  color: #FFE08A !important;
+}
+
+/* ── Errores ────────────────────────────────────────────────── */
+body.cp04-module-screen-active [data-error],
+body.cp04-role-screen-active [data-error] {
+  color: #FF6B6B !important;
+}
+
+/* ── Textos del sidebar "Modo seguro" ───────────────────────── */
+body.cp04-module-screen-active .cp04-sidebar .cp04-card strong,
+body.cp04-role-screen-active .cp04-sidebar .cp04-card strong {
+  color: #B6FF00 !important;
+}
+
+body.cp04-module-screen-active .cp04-sidebar .cp04-card p,
+body.cp04-role-screen-active .cp04-sidebar .cp04-card p {
+  color: #BFD7D0 !important;
+  font-size: 0.84rem !important;
+}
+
+/* ── Nombres de jugadores en ranking ────────────────────────── */
+body.cp04-module-screen-active .cp04-table td:first-child,
+body.cp04-module-screen-active .cp04-table td:nth-child(2),
+body.cp04-module-admin .cp04-table td:first-child,
+body.cp04-module-admin .cp04-table td:nth-child(2) {
+  color: #F8FFF5 !important;
+  font-weight: 700 !important;
+}
+
+/* ── Horarios de reservas ────────────────────────────────────── */
+body.cp04-module-screen-active time,
+body.cp04-role-screen-active time,
+body.cp04-module-screen-active [data-time],
+body.cp04-role-screen-active [data-time] {
+  color: #B6FF00 !important;
+  font-weight: 800 !important;
+}
+
+/* ── Subtítulos de cards y eyebrow texts ─────────────────────── */
+body.cp04-module-screen-active .cp04-card h3,
+body.cp04-module-screen-active .cp04-card h4,
+body.cp04-role-screen-active .cp04-card h3,
+body.cp04-role-screen-active .cp04-card h4 {
+  color: #F8FFF5 !important;
+}
+
+/* ── Responsive: tutorial en tablet/móvil ─────────────────────
+   El posicionamiento JS ya maneja el clamping, pero estos estilos
+   evitan desbordamientos adicionales por bordes del viewport.    */
+@media (max-width: 768px) {
+  .cp04-tour-tip {
+    max-width: calc(100vw - 24px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .cp04-tour-tip {
+    max-width: calc(100vw - 40px) !important;
+  }
+}
