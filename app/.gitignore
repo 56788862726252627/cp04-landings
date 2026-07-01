@@ -80,3 +80,10 @@ worker-reservas/src/*.bak*
 worker-reservas/src/index.js.BACKUP*
 worker-reservas/wrangler.toml.BACKUP*
 worker-reservas/ultima-alta-app.json
+# CP04 generated/cache folders
+.cache/
+.vite/
+.wrangler/
+worker-reservas/.wrangler/
+backups/**/dist/
+backups/**/.wrangler/
