@@ -1415,6 +1415,10 @@ async function handleAuthRoute(request, env, url) {
         user: cp04SafeAuthUser(user),
         role: user.role,
         permissions: user.permissions,
+        access_token: result.data?.access_token || null,
+        refresh_token: result.data?.refresh_token || null,
+        expires_in: result.data?.expires_in || null,
+        token_type: result.data?.token_type || "bearer",
         session: "active"
       },
       200,
