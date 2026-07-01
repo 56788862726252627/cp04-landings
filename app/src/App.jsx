@@ -6636,7 +6636,8 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   // GET    /api/profile/metrics
   // POST   /api/auth/change-password
   const PROFILE_BACKEND_ENDPOINTS = {
-    me: "/api/profile/me",
+  login: "/api/auth/login",
+    me: "/api/auth/me",
     avatar: "/api/profile/avatar",
     metrics: "/api/profile/metrics",
     changePassword: "/api/auth/change-password",
@@ -7277,31 +7278,66 @@ export default function ClubPadel04SaaSApp() {
     return "PLAYER";
   }
 
-  function handleUniversalLogin(event) {
+  async function handleUniversalLogin(event) {
     event.preventDefault();
 
     const cleanEmail = loginEmail.trim().toLowerCase();
     const cleanPassword = loginPassword.trim();
 
-    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+    if (!cleanEmail || !/^\S+@\S+\.\S+$/.test(cleanEmail)) {
       setLoginError("Introduce un correo electrónico válido.");
       return;
     }
 
-    if (cleanPassword.length < 4) {
+    if (!cleanPassword || cleanPassword.length < 6) {
       setLoginError("Introduce una contraseña válida.");
       return;
     }
 
-    const inferredRole = inferRoleFromEmail(cleanEmail);
-
-    localStorage.setItem("cp04_user_email", cleanEmail);
-    localStorage.setItem("cp04_role", inferredRole);
-    localStorage.setItem("cp04_auth_mode", "universal_demo");
-
-    setSelectedRole(inferredRole);
     setLoginError("");
-    setLoginPassword("");
+
+    try {
+      const res = await fetch(PROFILE_BACKEND_ENDPOINTS.login, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: cleanEmail,
+          password: cleanPassword,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data?.ok) {
+        setLoginError(data?.message || data?.error || "No se pudo iniciar sesión.");
+        return;
+      }
+
+      const token = data.access_token || data.session?.access_token || "";
+      const refreshToken = data.refresh_token || data.session?.refresh_token || "";
+      const user = data.user || {};
+      const inferredRole = cp04NormalizeRole(data.role || user.role || selectedRole || "PLAYER");
+
+      if (token) {
+        localStorage.setItem("cp04_access_token", token);
+      }
+
+      if (refreshToken) {
+        localStorage.setItem("cp04_refresh_token", refreshToken);
+      }
+
+      localStorage.setItem("cp04_auth_mode", "supabase_real");
+      localStorage.setItem("cp04_user", JSON.stringify(user));
+      localStorage.setItem("cp04_role", inferredRole);
+      localStorage.setItem("cp04_user_email", cleanEmail);
+
+      setSelectedRole(inferredRole);
+      setLoginError("");
+      setLoginPassword("");
+      setMobileMenuOpen(false);
+    } catch (error) {
+      setLoginError("No se pudo conectar con el backend de autenticación.");
+    }
   }
 
   function openForgotPwd() {
