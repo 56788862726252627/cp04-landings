@@ -7189,6 +7189,7 @@ export default function ClubPadel04SaaSApp() {
   // Mantiene los perfiles demo internos sin obligar a usuarios reales a usar correos fijos.
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
 
   // AUDITORIA 24 · restaurar sesión Supabase real al recargar la app
@@ -7326,6 +7327,7 @@ export default function ClubPadel04SaaSApp() {
     setShowRolePassword(false);
     setLoginEmail("");
     setLoginPassword("");
+    setShowLoginPassword(false);
     setLoginError("");
     setMobileMenuOpen(false);
   }
