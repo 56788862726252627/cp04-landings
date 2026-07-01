@@ -4,6 +4,26 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    watch: {
+      ignored: [
+        "**/audit/**",
+        "**/benchmarks-capturas/**",
+        "**/benchmark*/**",
+        "**/playtomic/**",
+        "**/vola/**",
+        '**/audit/**',
+        '**/docs/**',
+        '**/benchmark*/**',
+        '**/benchmarks-capturas/**',
+        '**/playtomic/**',
+        '**/vola/**',
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.git/**'
+      ]
+    }
+  },
+  server: {
     host: '0.0.0.0',
     watch: {
       ignored: [
