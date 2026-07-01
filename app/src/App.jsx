@@ -7190,6 +7190,63 @@ export default function ClubPadel04SaaSApp() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+
+  // AUDITORIA 24 · restaurar sesión Supabase real al recargar la app
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreSupabaseSession() {
+      const token = localStorage.getItem("cp04_access_token");
+
+      if (!token) {
+        return;
+      }
+
+      try {
+        const res = await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data?.ok) {
+          localStorage.removeItem("cp04_access_token");
+          localStorage.removeItem("cp04_refresh_token");
+          localStorage.removeItem("cp04_auth_mode");
+          return;
+        }
+
+        const user = data.user || {};
+        const restoredRole = cp04NormalizeRole(data.role || user.role || localStorage.getItem("cp04_role") || "PLAYER");
+
+        localStorage.setItem("cp04_auth_mode", "supabase_real");
+        localStorage.setItem("cp04_user", JSON.stringify(user));
+        localStorage.setItem("cp04_role", restoredRole);
+
+        if (user.email) {
+          localStorage.setItem("cp04_user_email", user.email);
+        }
+
+        if (!cancelled) {
+          setSelectedRole(restoredRole);
+          setLoginError("");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoginError("");
+        }
+      }
+    }
+
+    restoreSupabaseSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const menuButtonRef = useRef(null);
   const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
 
