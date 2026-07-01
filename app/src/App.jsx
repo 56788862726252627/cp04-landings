@@ -7522,13 +7522,30 @@ export default function ClubPadel04SaaSApp() {
             style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
           />
           <input
-            type="password"
+            type={showLoginPassword ? "text" : "password"}
             value={loginPassword}
             onChange={e => setLoginPassword(e.target.value)}
             placeholder={ltx("login.password")}
             autoComplete="current-password"
             style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
           />
+
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(v => !v)}
+                  style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                >
+                  {showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                </button>
+                <button
+                  type="button"
+                  onClick={openForgotPwd}
+                  style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                >
+                  {ltx("login.olvide_pwd")}
+                </button>
+              </div>
           {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
             <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#ffffff", fontWeight:900 }}>
