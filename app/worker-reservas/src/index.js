@@ -1087,6 +1087,527 @@ async function handleAltaJugador(request, env) {
   );
 }
 
+
+
+
+
+// AUDITORIA 22 · SUPABASE AUTH HELPERS
+// Helpers para conectar Supabase Auth cuando existan credenciales reales.
+// Si faltan SUPABASE_URL o SUPABASE_ANON_KEY, el Worker mantiene modo backend_stub.
+
+function cp04SupabaseConfigured(env) {
+  return Boolean(env && env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
+}
+
+function cp04SupabaseBaseUrl(env) {
+  return String(env.SUPABASE_URL || "").replace(/\/+$/, "");
+}
+
+function cp04SupabaseHeaders(env, extra = {}) {
+  return {
+    apikey: String(env.SUPABASE_ANON_KEY || ""),
+    Authorization: `Bearer ${String(env.SUPABASE_ANON_KEY || "")}`,
+    "Content-Type": "application/json",
+    ...extra
+  };
+}
+
+function cp04GetBearerToken(request) {
+  const auth = request.headers.get("Authorization") || "";
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : "";
+}
+
+async function cp04SupabaseRequest(env, path, options = {}) {
+  const base = cp04SupabaseBaseUrl(env);
+  const response = await fetch(`${base}${path}`, {
+    ...options,
+    headers: cp04SupabaseHeaders(env, options.headers || {})
+  });
+
+  const text = await response.text();
+  let data = null;
+
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { raw: text };
+  }
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data
+  };
+}
+
+function cp04MapSupabaseUserToCp04(user, fallbackRole = "PLAYER") {
+  const meta = user?.user_metadata || {};
+  const appMeta = user?.app_metadata || {};
+  const role = cp04NormalizeAuthRole(
+    appMeta.role ||
+    meta.role ||
+    fallbackRole
+  );
+
+  return cp04SafeAuthUser({
+    id: user?.id || "supabase-user",
+    name: meta.nombre || meta.name || user?.email || "Usuario",
+    email: user?.email || "",
+    role
+  });
+}
+
+function cp04SupabaseErrorResponse(request, env, result, fallbackMessage = "Error de autenticación.") {
+  return jsonResponse(
+    {
+      ok: false,
+      auth_ready: true,
+      provider: "supabase",
+      error: result?.data?.error || result?.data?.error_description || "SUPABASE_AUTH_ERROR",
+      message: result?.data?.msg || result?.data?.message || fallbackMessage,
+      status: result?.status || 500
+    },
+    result?.status || 500,
+    corsHeaders(request, env)
+  );
+}
+
+// AUDITORIA 21 · AUTH BACKEND STUBS
+// Preparación segura de endpoints de autenticación real.
+// En producción, estos endpoints deben conectarse a proveedor real de auth,
+// base de usuarios y sesiones/tokens seguros.
+
+const CP04_AUTH_ROLES = ["PLAYER", "STAFF", "ADMIN", "SUPPORT"];
+
+const CP04_AUTH_PERMISSIONS = {
+  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
+  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
+};
+
+function cp04NormalizeAuthRole(role) {
+  const value = String(role || "").trim().toUpperCase();
+  return CP04_AUTH_ROLES.includes(value) ? value : "PLAYER";
+}
+
+function cp04SafeAuthUser(user = {}) {
+  const role = cp04NormalizeAuthRole(user.role);
+  return {
+    id: String(user.id || "demo-user"),
+    name: String(user.name || "Usuario demo"),
+    email: String(user.email || "demo@clubpadel04.local"),
+    role,
+    permissions: CP04_AUTH_PERMISSIONS[role] || CP04_AUTH_PERMISSIONS.PLAYER
+  };
+}
+
+async function cp04ReadJsonSafe(request) {
+  try {
+    return await request.json();
+  } catch {
+    return {};
+  }
+}
+
+function cp04AuthNotConfiguredResponse(request, env, extra = {}) {
+  return jsonResponse(
+    {
+      ok: false,
+      auth_ready: false,
+      mode: "backend_stub",
+      error: "AUTH_BACKEND_NOT_CONFIGURED",
+      message: "Autenticación backend preparada, pendiente de proveedor real y secrets de producción.",
+      required: [
+        "AUTH_PROVIDER",
+        "SESSION_SECRET",
+        "JWT_VERIFICATION_KEY",
+        "EMAIL_PROVIDER_TOKEN"
+      ],
+      ...extra
+    },
+    501,
+    corsHeaders(request, env)
+  );
+}
+
+async function handleAuthRoute(request, env, url) {
+  const headers = corsHeaders(request, env);
+  const path = url.pathname;
+  const method = request.method.toUpperCase();
+  const supabaseReady = cp04SupabaseConfigured(env);
+
+  if (method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (path === "/api/auth/me" && method === "GET") {
+    if (!supabaseReady) {
+      return jsonResponse(
+        {
+          ok: true,
+          auth_ready: false,
+          mode: "backend_stub",
+          user: cp04SafeAuthUser({ role: "PLAYER" }),
+          message: "Endpoint /api/auth/me preparado. Pendiente validar token real."
+        },
+        200,
+        headers
+      );
+    }
+
+    const token = cp04GetBearerToken(request);
+
+    if (!token) {
+      return jsonResponse(
+        {
+          ok: false,
+          auth_ready: true,
+          provider: "supabase",
+          error: "MISSING_BEARER_TOKEN",
+          message: "Falta Authorization Bearer token."
+        },
+        401,
+        headers
+      );
+    }
+
+    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+      method: "GET",
+      headers: {
+        apikey: String(env.SUPABASE_ANON_KEY || ""),
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    const text = await response.text();
+    let data = null;
+
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = { raw: text };
+    }
+
+    if (!response.ok) {
+      return cp04SupabaseErrorResponse(
+        request,
+        env,
+        { ok: false, status: response.status, data },
+        "No se pudo validar la sesión."
+      );
+    }
+
+    const user = cp04MapSupabaseUserToCp04(data, "PLAYER");
+
+    return jsonResponse(
+      {
+        ok: true,
+        auth_ready: true,
+        provider: "supabase",
+        user,
+        role: user.role,
+        permissions: user.permissions
+      },
+      200,
+      headers
+    );
+  }
+
+  if (path === "/api/auth/logout" && method === "POST") {
+    if (!supabaseReady) {
+      return jsonResponse(
+        {
+          ok: true,
+          auth_ready: false,
+          mode: "backend_stub",
+          message: "Logout preparado. Pendiente invalidar sesión real cuando exista backend auth."
+        },
+        200,
+        headers
+      );
+    }
+
+    const token = cp04GetBearerToken(request);
+
+    if (!token) {
+      return jsonResponse(
+        {
+          ok: true,
+          auth_ready: true,
+          provider: "supabase",
+          message: "Sesión local cerrada. No había token Bearer que invalidar."
+        },
+        200,
+        headers
+      );
+    }
+
+    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/logout`, {
+      method: "POST",
+      headers: {
+        apikey: String(env.SUPABASE_ANON_KEY || ""),
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    return jsonResponse(
+      {
+        ok: response.ok,
+        auth_ready: true,
+        provider: "supabase",
+        message: response.ok ? "Logout realizado." : "Logout solicitado, revisar proveedor."
+      },
+      response.ok ? 200 : response.status,
+      headers
+    );
+  }
+
+  if (path === "/api/auth/login" && method === "POST") {
+    const body = await cp04ReadJsonSafe(request);
+
+    if (!supabaseReady) {
+      return cp04AuthNotConfiguredResponse(request, env, {
+        endpoint: "/api/auth/login",
+        received: {
+          email: Boolean(body.email),
+          password: Boolean(body.password)
+        }
+      });
+    }
+
+    const email = String(body.email || "").trim().toLowerCase();
+    const password = String(body.password || "");
+
+    if (!email || !password) {
+      return jsonResponse(
+        {
+          ok: false,
+          auth_ready: true,
+          provider: "supabase",
+          error: "VALIDATION_ERROR",
+          message: "Email y contraseña son obligatorios."
+        },
+        400,
+        headers
+      );
+    }
+
+    const result = await cp04SupabaseRequest(env, "/auth/v1/token?grant_type=password", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!result.ok) {
+      return cp04SupabaseErrorResponse(request, env, result, "Login no válido.");
+    }
+
+    const user = cp04MapSupabaseUserToCp04(result.data?.user, "PLAYER");
+
+    return jsonResponse(
+      {
+        ok: true,
+        auth_ready: true,
+        provider: "supabase",
+        user: cp04SafeAuthUser(user),
+        role: user.role,
+        permissions: user.permissions,
+        session: "active"
+      },
+      200,
+      headers
+    );
+  }
+
+  if (path === "/api/auth/register" && method === "POST") {
+    const body = await cp04ReadJsonSafe(request);
+
+    if (!supabaseReady) {
+      return cp04AuthNotConfiguredResponse(request, env, {
+        endpoint: "/api/auth/register",
+        received: {
+          nombre: Boolean(body.nombre || body.name),
+          email: Boolean(body.email),
+          telefono: Boolean(body.telefono || body.phone),
+          password: Boolean(body.password)
+        }
+      });
+    }
+
+    const email = String(body.email || "").trim().toLowerCase();
+    const password = String(body.password || "");
+    const nombre = String(body.nombre || body.name || "").trim();
+    const telefono = String(body.telefono || body.phone || "").trim();
+
+    if (!email || !password) {
+      return jsonResponse(
+        {
+          ok: false,
+          auth_ready: true,
+          provider: "supabase",
+          error: "VALIDATION_ERROR",
+          message: "Email y contraseña son obligatorios."
+        },
+        400,
+        headers
+      );
+    }
+
+    const result = await cp04SupabaseRequest(env, "/auth/v1/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        password,
+        data: {
+          nombre,
+          telefono,
+          role: "PLAYER"
+        }
+      })
+    });
+
+    if (!result.ok) {
+      return cp04SupabaseErrorResponse(request, env, result, "No se pudo registrar el usuario.");
+    }
+
+    const user = cp04MapSupabaseUserToCp04(result.data?.user, "PLAYER");
+
+    return jsonResponse(
+      {
+        ok: true,
+        auth_ready: true,
+        provider: "supabase",
+        user,
+        role: user.role,
+        permissions: user.permissions,
+        message: "Registro creado. Puede requerir confirmación por email según configuración de Supabase."
+      },
+      200,
+      headers
+    );
+  }
+
+  if (path === "/api/auth/forgot-password" && method === "POST") {
+    const body = await cp04ReadJsonSafe(request);
+
+    if (!supabaseReady) {
+      return jsonResponse(
+        {
+          ok: true,
+          auth_ready: false,
+          mode: "backend_stub",
+          message: "Si el correo existe, se enviarán instrucciones de recuperación cuando el proveedor de email esté configurado."
+        },
+        200,
+        headers
+      );
+    }
+
+    const email = String(body.email || "").trim().toLowerCase();
+
+    if (email) {
+      await cp04SupabaseRequest(env, "/auth/v1/recover", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          redirect_to: String(env.APP_PUBLIC_URL || "").replace(/\/+$/, "") + "/"
+        })
+      });
+    }
+
+    return jsonResponse(
+      {
+        ok: true,
+        auth_ready: true,
+        provider: "supabase",
+        message: "Si el correo existe, se enviarán instrucciones de recuperación."
+      },
+      200,
+      headers
+    );
+  }
+
+  if (path === "/api/auth/change-password" && method === "POST") {
+    const body = await cp04ReadJsonSafe(request);
+
+    if (!supabaseReady) {
+      return cp04AuthNotConfiguredResponse(request, env, {
+        endpoint: "/api/auth/change-password"
+      });
+    }
+
+    const token = cp04GetBearerToken(request);
+    const password = String(body.newPassword || body.password || "");
+
+    if (!token || !password) {
+      return jsonResponse(
+        {
+          ok: false,
+          auth_ready: true,
+          provider: "supabase",
+          error: "VALIDATION_ERROR",
+          message: "Falta token Bearer o nueva contraseña."
+        },
+        400,
+        headers
+      );
+    }
+
+    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+      method: "PUT",
+      headers: {
+        apikey: String(env.SUPABASE_ANON_KEY || ""),
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ password })
+    });
+
+    const text = await response.text();
+    let data = null;
+
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = { raw: text };
+    }
+
+    if (!response.ok) {
+      return cp04SupabaseErrorResponse(
+        request,
+        env,
+        { ok: false, status: response.status, data },
+        "No se pudo cambiar la contraseña."
+      );
+    }
+
+    return jsonResponse(
+      {
+        ok: true,
+        auth_ready: true,
+        provider: "supabase",
+        message: "Contraseña actualizada."
+      },
+      200,
+      headers
+    );
+  }
+
+  return jsonResponse(
+    {
+      ok: false,
+      error: "Auth route not found",
+      path
+    },
+    404,
+    headers
+  );
+}
+
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -1099,7 +1620,11 @@ export default {
         return await handleAltaJugador(request, env);
       }
 
-      if (url.pathname === "/api/disponibilidad" || url.pathname === "/disponibilidad") {
+      if (url.pathname.startsWith("/api/auth/")) {
+      return handleAuthRoute(request, env, url);
+    }
+
+    if (url.pathname === "/api/disponibilidad" || url.pathname === "/disponibilidad") {
         return await handleDisponibilidad(request, env);
       }
 
