@@ -7313,13 +7313,21 @@ export default function ClubPadel04SaaSApp() {
 
   function clearRole() {
     localStorage.removeItem("cp04_role");
+    localStorage.removeItem("cp04_access_token");
+    localStorage.removeItem("cp04_refresh_token");
+    localStorage.removeItem("cp04_auth_mode");
+    localStorage.removeItem("cp04_user");
+    localStorage.removeItem("cp04_user_email");
+
     setSelectedRole("");
     setPendingRole("");
     setRolePassword("");
-    setShowRolePassword(false);
     setRoleError("");
-    setRememberRole(true);
-    setCurrent("inicio");
+    setShowRolePassword(false);
+    setLoginEmail("");
+    setLoginPassword("");
+    setLoginError("");
+    setMobileMenuOpen(false);
   }
 
 
