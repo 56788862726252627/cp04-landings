@@ -7353,7 +7353,7 @@ export default function ClubPadel04SaaSApp() {
     const cleanEmail = loginEmail.trim().toLowerCase();
     const cleanPassword = loginPassword.trim();
 
-    if (!/^\\S+@\\S+\\.\\S+$/.test(cleanEmail)) {
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
       setLoginError("Introduce un correo electrónico válido.");
       return;
     }
