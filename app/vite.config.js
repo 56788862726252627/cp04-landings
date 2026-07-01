@@ -5,6 +5,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
+    watch: {
+      ignored: [
+        "**/backups/**",
+        "**/deploy-pages/**",
+        "**/dist/**",
+        "**/node_modules/**",
+        "**/.git/**"
+      ],
+    },
     proxy: {
       '/api': {
         target: 'https://cp04-reservas-proxy.eduardorodriguezrodriguez24.workers.dev',
