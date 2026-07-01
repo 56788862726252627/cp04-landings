@@ -7554,7 +7554,7 @@ export default function ClubPadel04SaaSApp() {
             
           </div>
           <p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
-            Preparado para conectar con backend real: /api/auth/login, /api/auth/register y /api/auth/forgot-password.
+            Acceso seguro conectado al sistema de autenticación real.
           </p>
         </form>
 
