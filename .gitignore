@@ -87,3 +87,8 @@ app/auditoria-terminal-*.txt
 app/resumen-modulos-clave.txt
 app/prompts/
 app/scripts/
+
+# CP04 external final/export packs outside app
+ENTREGA_FINAL_CLUB_PADEL_04/
+REVISION_VISUAL_PACK_FINAL_CP04/
+USO_EXTERNO_PACK_FINAL_CP04/
