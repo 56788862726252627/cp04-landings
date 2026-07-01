@@ -6637,6 +6637,8 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   // POST   /api/auth/change-password
   const PROFILE_BACKEND_ENDPOINTS = {
   login: "/api/auth/login",
+  register: "/api/auth/register",
+  forgotPassword: "/api/auth/forgot-password",
     me: "/api/auth/me",
     avatar: "/api/profile/avatar",
     metrics: "/api/profile/metrics",
