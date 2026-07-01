@@ -7353,50 +7353,56 @@ export default function ClubPadel04SaaSApp() {
     const cleanEmail = loginEmail.trim().toLowerCase();
     const cleanPassword = loginPassword.trim();
 
-    if (!cleanEmail || !/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+    if (!/^\\S+@\\S+\\.\\S+$/.test(cleanEmail)) {
       setLoginError("Introduce un correo electrónico válido.");
       return;
     }
 
-    if (!cleanPassword || cleanPassword.length < 6) {
+    if (cleanPassword.length < 4) {
       setLoginError("Introduce una contraseña válida.");
       return;
     }
 
-    setLoginError("");
-
     try {
+      setLoginError("");
+
       const res = await fetch(PROFILE_BACKEND_ENDPOINTS.login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: cleanEmail,
-          password: cleanPassword,
-        }),
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data?.ok) {
-        setLoginError(data?.message || data?.error || "No se pudo iniciar sesión.");
+        setLoginError(data?.message || "No se pudo iniciar sesión.");
         return;
       }
 
-      const token = data.access_token || data.session?.access_token || "";
-      const refreshToken = data.refresh_token || data.session?.refresh_token || "";
-      const user = data.user || {};
-      const inferredRole = cp04NormalizeRole(data.role || user.role || selectedRole || "PLAYER");
+      const user = data.user || data.profile || null;
+      const accessToken =
+        data.access_token ||
+        data.token ||
+        data.session?.access_token ||
+        data.session?.token ||
+        "";
 
-      if (token) {
-        localStorage.setItem("cp04_access_token", token);
+      const refreshToken =
+        data.refresh_token ||
+        data.session?.refresh_token ||
+        "";
+
+      if (!accessToken) {
+        setLoginError("Login recibido, pero falta el token de sesión.");
+        return;
       }
 
-      if (refreshToken) {
-        localStorage.setItem("cp04_refresh_token", refreshToken);
-      }
+      const inferredRole = cp04NormalizeRole(user?.role || inferRoleFromEmail(cleanEmail));
 
+      localStorage.setItem("cp04_access_token", accessToken);
+      if (refreshToken) localStorage.setItem("cp04_refresh_token", refreshToken);
       localStorage.setItem("cp04_auth_mode", "supabase_real");
-      localStorage.setItem("cp04_user", JSON.stringify(user));
+      localStorage.setItem("cp04_user", JSON.stringify(user || { email: cleanEmail, role: inferredRole }));
       localStorage.setItem("cp04_role", inferredRole);
       localStorage.setItem("cp04_user_email", cleanEmail);
 
