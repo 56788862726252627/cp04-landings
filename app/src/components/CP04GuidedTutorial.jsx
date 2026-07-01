@@ -57,10 +57,16 @@ const TOUR_STEPS = {
   ],
   STAFF: [
     {
-      section: "gestion",
-      target: "[data-tour='sidebar-gestion']",
-      title: "Gestión de reservas",
-      body: "Panel central del staff. Todas las reservas activas del día con acciones directas desde recepción.",
+      section: "inicio",
+      target: "[data-tour='sidebar-inicio']",
+      title: "Bienvenido, equipo de recepción",
+      body: "Este es tu panel de inicio como staff. Verás un resumen del día: reservas activas y avisos del club.",
+    },
+    {
+      section: "reservas",
+      target: "[data-tour='sidebar-reservas']",
+      title: "Reservas del club",
+      body: "Consulta todas las reservas del club en un único listado. Útil para resolver dudas de jugadores en el mostrador.",
     },
     {
       section: "alta_jugador",
@@ -81,6 +87,12 @@ const TOUR_STEPS = {
       body: "Cancela una reserva con confirmación del jugador. El sistema notificará automáticamente.",
     },
     {
+      section: "gestion",
+      target: "[data-tour='sidebar-gestion']",
+      title: "Gestión de reservas",
+      body: "Panel central del staff. Todas las reservas activas del día con acciones directas desde recepción.",
+    },
+    {
       section: "torneos",
       target: "[data-tour='sidebar-torneos']",
       title: "Torneos activos",
@@ -95,16 +107,34 @@ const TOUR_STEPS = {
   ],
   ADMIN: [
     {
-      section: "admin",
-      target: "[data-tour='sidebar-admin']",
-      title: "Panel de administración",
-      body: "Vista ejecutiva del club: métricas, ocupación, ingresos y estado operativo en tiempo real.",
+      section: "inicio",
+      target: "[data-tour='sidebar-inicio']",
+      title: "Inicio · Visión general",
+      body: "Panel de bienvenida con el pulso del club: actividad reciente y accesos rápidos antes de entrar en el detalle de cada módulo.",
     },
     {
       section: "reservas",
       target: "[data-tour='sidebar-reservas']",
       title: "Reservas del club",
       body: "Vista completa de todas las reservas. Ideal para auditorías y control de disponibilidad.",
+    },
+    {
+      section: "alta_jugador",
+      target: "[data-tour='sidebar-alta_jugador']",
+      title: "Alta de jugadores",
+      body: "Da de alta nuevos jugadores desde administración, igual que lo haría recepción, con control total del proceso.",
+    },
+    {
+      section: "reprogramar",
+      target: "[data-tour='sidebar-reprogramar']",
+      title: "Reprogramar reservas",
+      body: "Cambia fecha, hora o pista de cualquier reserva del club con supervisión completa desde administración.",
+    },
+    {
+      section: "cancelar",
+      target: "[data-tour='sidebar-cancelar']",
+      title: "Cancelar reservas",
+      body: "Cancela cualquier reserva del club, incluidas las gestionadas por el staff, con trazabilidad total.",
     },
     {
       section: "gestion",
@@ -125,24 +155,66 @@ const TOUR_STEPS = {
       body: "Clasificación oficial para comunicación externa y motivación de jugadores.",
     },
     {
-      section: "flujos_make",
-      target: "[data-tour='sidebar-flujos_make']",
-      title: "Centro técnico",
-      body: "Integración con automatizaciones, pagos, CRM y notificaciones. El motor operativo del club.",
+      section: "admin",
+      target: "[data-tour='sidebar-admin']",
+      title: "Panel de administración",
+      body: "Vista ejecutiva del club: métricas, ocupación, ingresos y estado operativo en tiempo real.",
+    },
+    {
+      section: "perfil",
+      target: "[data-tour='sidebar-perfil']",
+      title: "Tu perfil de administración",
+      body: "Gestiona tus datos de acceso y preferencias. Puedes relanzar este tutorial cuando lo necesites.",
     },
   ],
   SUPPORT: [
     {
-      section: "soporte",
-      target: "[data-tour='sidebar-soporte']",
-      title: "Panel de soporte técnico",
-      body: "Vista técnica del sistema: estado de servicios, logs de actividad e integraciones activas.",
+      section: "inicio",
+      target: "[data-tour='sidebar-inicio']",
+      title: "Inicio · Vista técnica",
+      body: "Resumen general del club desde el que puedes saltar rápido a cualquier módulo técnico u operativo.",
     },
     {
-      section: "flujos_make",
-      target: "[data-tour='sidebar-flujos_make']",
-      title: "Centro técnico",
-      body: "Configuración de automatizaciones, webhooks y flujos internos. Zona de diagnóstico técnico.",
+      section: "reservas",
+      target: "[data-tour='sidebar-reservas']",
+      title: "Reservas (diagnóstico)",
+      body: "Verifica que el sistema de booking funciona correctamente y audita el estado de las reservas.",
+    },
+    {
+      section: "alta_jugador",
+      target: "[data-tour='sidebar-alta_jugador']",
+      title: "Alta de jugadores (verificación)",
+      body: "Revisa el flujo de alta de jugadores para confirmar que el registro funciona sin errores.",
+    },
+    {
+      section: "reprogramar",
+      target: "[data-tour='sidebar-reprogramar']",
+      title: "Reprogramar (verificación)",
+      body: "Comprueba que el cambio de fecha, hora o pista de una reserva se procesa correctamente.",
+    },
+    {
+      section: "cancelar",
+      target: "[data-tour='sidebar-cancelar']",
+      title: "Cancelar (verificación)",
+      body: "Verifica que las cancelaciones se procesan y notifican correctamente al jugador.",
+    },
+    {
+      section: "gestion",
+      target: "[data-tour='sidebar-gestion']",
+      title: "Gestión operativa (diagnóstico)",
+      body: "Supervisa el panel de gestión diaria del staff para detectar incidencias operativas.",
+    },
+    {
+      section: "torneos",
+      target: "[data-tour='sidebar-torneos']",
+      title: "Torneos (verificación)",
+      body: "Confirma que el módulo de torneos carga correctamente inscripciones y resultados.",
+    },
+    {
+      section: "ranking",
+      target: "[data-tour='sidebar-ranking']",
+      title: "Ranking (verificación)",
+      body: "Revisa que la clasificación del club se calcula y se muestra correctamente.",
     },
     {
       section: "admin",
@@ -151,10 +223,16 @@ const TOUR_STEPS = {
       body: "Acceso de revisión al panel de administración. Útil para diagnóstico de incidencias activas.",
     },
     {
-      section: "reservas",
-      target: "[data-tour='sidebar-reservas']",
-      title: "Reservas (diagnóstico)",
-      body: "Verifica que el sistema de booking funciona correctamente y audita el estado de las reservas.",
+      section: "flujos_make",
+      target: "[data-tour='sidebar-flujos_make']",
+      title: "Centro técnico",
+      body: "Configuración de automatizaciones, webhooks y flujos internos. Zona de diagnóstico técnico.",
+    },
+    {
+      section: "soporte",
+      target: "[data-tour='sidebar-soporte']",
+      title: "Panel de soporte técnico",
+      body: "Vista técnica del sistema: estado de servicios, logs de actividad e integraciones activas.",
     },
     {
       section: "perfil",
@@ -319,8 +397,8 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
   };
   const btnPrimary = {
     ...btnBase,
-    background: TC.accent,
-    color: "#071200",
+    background: `linear-gradient(135deg, #B6FF00, #9FE600)`,
+    color: "#0B1208",
     fontWeight: 900,
     boxShadow: "0 4px 18px rgba(182,255,0,.30)",
   };
@@ -367,7 +445,8 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
         .cp04-tour-tip    { animation: cp04tour-fadein .24s cubic-bezier(.4,0,.2,1) both; }
         .cp04-tour-cursor { animation: cp04tour-cursor 1.6s ease-in-out infinite; }
         .cp04-tour-ring   { animation: cp04tour-pulse  2s  ease-in-out infinite; }
-        .cp04-tour-btn:hover { filter: brightness(1.10); }
+        .cp04-tour-btn:hover:not(:disabled) { filter: brightness(1.10); }
+        .cp04-tour-btn:disabled { opacity: .55; cursor: not-allowed; filter: none; }
       `}</style>
 
       {/* ── Overlay con spotlight SVG ── */}

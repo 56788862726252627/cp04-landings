@@ -1140,3 +1140,124 @@ body.cp04-role-screen-active .cp04-card h4 {
     max-width: calc(100vw - 40px) !important;
   }
 }
+
+/* =========================================================
+   FIX FINAL · Tutorial guiado · Botón Siguiente visible
+   Corrige contraste en ADMIN / SUPPORT / cualquier rol
+   ========================================================= */
+
+/* Botón principal del tutorial: Siguiente */
+.cp04-tour-btn[aria-label="Siguiente"],
+.cp04-tour-btn-next,
+button[aria-label="Siguiente"] {
+  background: linear-gradient(135deg, #b6ff00 0%, #9eff00 45%, #d8ff4d 100%) !important;
+  color: #071000 !important;
+  -webkit-text-fill-color: #071000 !important;
+  font-weight: 950 !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  border: 1px solid rgba(214, 255, 79, 0.95) !important;
+  box-shadow:
+    0 12px 30px rgba(182, 255, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+}
+
+/* Aunque el botón quede disabled por lógica temporal, que nunca sea ilegible */
+.cp04-tour-btn[aria-label="Siguiente"]:disabled,
+.cp04-tour-btn-next:disabled,
+button[aria-label="Siguiente"]:disabled {
+  background: linear-gradient(135deg, #b6ff00 0%, #9eff00 45%, #d8ff4d 100%) !important;
+  color: #071000 !important;
+  -webkit-text-fill-color: #071000 !important;
+  opacity: 0.96 !important;
+  filter: none !important;
+  cursor: pointer !important;
+}
+
+/* Refuerzo general para textos del tutorial */
+.cp04-tour-tip,
+.cp04-tour-tip *,
+.cp04-guided-tutorial,
+.cp04-guided-tutorial * {
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Botones secundarios del tutorial siempre legibles */
+.cp04-tour-btn,
+.cp04-tour-tip button,
+button[aria-label="Atrás"],
+button[aria-label="Saltar"],
+button[aria-label="No mostrar más"] {
+  color: #f8fff5 !important;
+  -webkit-text-fill-color: #f8fff5 !important;
+  font-weight: 850 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,.55) !important;
+}
+
+/* Mantener Siguiente por encima de la regla general */
+.cp04-tour-btn[aria-label="Siguiente"],
+.cp04-tour-btn[aria-label="Siguiente"] *,
+.cp04-tour-btn-next,
+.cp04-tour-btn-next *,
+button[aria-label="Siguiente"],
+button[aria-label="Siguiente"] * {
+  color: #071000 !important;
+  -webkit-text-fill-color: #071000 !important;
+  text-shadow: none !important;
+}
+
+/* =========================================================
+   FIX FINAL 2 · Tutorial guiado · Siguiente verde neón real
+   Aplica también cuando el botón no tiene aria-label/clase exacta
+   ========================================================= */
+
+.cp04-tour-tip button:nth-of-type(2),
+.cp04-guided-tutorial button:nth-of-type(2),
+[class*="tour"] button:nth-of-type(2) {
+  background: linear-gradient(135deg, #b6ff00 0%, #9eff00 45%, #d8ff4d 100%) !important;
+  color: #071000 !important;
+  -webkit-text-fill-color: #071000 !important;
+  font-weight: 950 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  border: 1px solid rgba(214, 255, 79, 0.96) !important;
+  box-shadow:
+    0 14px 34px rgba(182, 255, 0, 0.30),
+    inset 0 1px 0 rgba(255,255,255,0.45) !important;
+}
+
+/* Si Siguiente queda marcado como disabled, mantenerlo visible */
+.cp04-tour-tip button:nth-of-type(2):disabled,
+.cp04-guided-tutorial button:nth-of-type(2):disabled,
+[class*="tour"] button:nth-of-type(2):disabled {
+  background: linear-gradient(135deg, #b6ff00 0%, #9eff00 45%, #d8ff4d 100%) !important;
+  color: #071000 !important;
+  -webkit-text-fill-color: #071000 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  cursor: pointer !important;
+}
+
+/* Refuerzo para texto interno de Siguiente */
+.cp04-tour-tip button:nth-of-type(2) *,
+.cp04-guided-tutorial button:nth-of-type(2) *,
+[class*="tour"] button:nth-of-type(2) * {
+  color: #071000 !important;
+  -webkit-text-fill-color: #071000 !important;
+  text-shadow: none !important;
+}
+
+/* Botones secundarios: mantener contraste premium */
+.cp04-tour-tip button:nth-of-type(1),
+.cp04-tour-tip button:nth-of-type(3),
+.cp04-guided-tutorial button:nth-of-type(1),
+.cp04-guided-tutorial button:nth-of-type(3),
+[class*="tour"] button:nth-of-type(1),
+[class*="tour"] button:nth-of-type(3) {
+  color: #f8fff5 !important;
+  -webkit-text-fill-color: #f8fff5 !important;
+  font-weight: 850 !important;
+}
