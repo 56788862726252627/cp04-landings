@@ -1,0 +1,1 @@
+src/components/ClubGallery.jsx:3:export default function ClubGallery() {

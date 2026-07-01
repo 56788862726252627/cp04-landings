@@ -1,0 +1,3 @@
+OK: paquete preview creado
+OK: index.html incluido
+OK: assets incluidos

@@ -1,0 +1,7 @@
+/ -> HTTP 200
+/reservar -> HTTP 200
+/alta-jugador -> HTTP 200
+/reservas -> HTTP 200
+/admin -> HTTP 200
+/soporte -> HTTP 200
+/perfil -> HTTP 200

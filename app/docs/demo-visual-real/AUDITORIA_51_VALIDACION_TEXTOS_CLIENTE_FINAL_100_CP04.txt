@@ -1,0 +1,29 @@
+src/App.jsx:166:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+src/App.jsx:167:  { id: "SUPPORT", label: "Soporte técnico", access: "Protegido", sections: "Soporte", permissions: ["Ver estado técnico", "Revisar configuración de conexiones", "Consultar registros del sistema", "Auditar integraciones"] },
+src/App.jsx:2247:    "role.ADMIN.label":"Administrador / jefe","role.ADMIN.desc":"Panel de dirección, métricas y control operativo.",
+src/App.jsx:2248:    "role.SUPPORT.label":"Soporte técnico","role.SUPPORT.desc":"Zona técnica, integraciones y diagnóstico interno.",
+src/App.jsx:2281:    "soporte.title":"Soporte técnico","soporte.desc":"Control técnico de la aplicación.",
+src/App.jsx:3249:    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controlo operacional.",
+src/App.jsx:3447:    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controle operacional.",
+src/App.jsx:6625:  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+src/App.jsx:6824:  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+src/App.jsx:7204:      label: "Administrador / jefe",
+src/App.jsx:7210:      label: "Soporte técnico",
+src/App.jsx:7403:            Entrar con correo personal
+src/App.jsx:7406:            Usa tu email y contraseña. Los roles internos siguen disponibles abajo solo para validación interna.
+src/App.jsx:7440:            ACCESO POR ROLES
+src/App.jsx:166:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+src/App.jsx:167:  { id: "SUPPORT", label: "Soporte técnico", access: "Protegido", sections: "Soporte", permissions: ["Ver estado técnico", "Revisar configuración de conexiones", "Consultar registros del sistema", "Auditar integraciones"] },
+src/App.jsx:2247:    "role.ADMIN.label":"Administrador / jefe","role.ADMIN.desc":"Panel de dirección, métricas y control operativo.",
+src/App.jsx:2248:    "role.SUPPORT.label":"Soporte técnico","role.SUPPORT.desc":"Zona técnica, integraciones y diagnóstico interno.",
+src/App.jsx:2281:    "soporte.title":"Soporte técnico","soporte.desc":"Control técnico de la aplicación.",
+src/App.jsx:3249:    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controlo operacional.",
+src/App.jsx:3447:    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controle operacional.",
+src/App.jsx:6625:  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+src/App.jsx:6824:  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+src/App.jsx:7204:      label: "Administrador / jefe",
+src/App.jsx:7210:      label: "Soporte técnico",
+src/App.jsx:7403:            Entrar con correo personal
+src/App.jsx:7406:            Usa tu email y contraseña. Los roles internos siguen disponibles abajo solo para validación interna.
+src/App.jsx:7440:            ACCESO POR ROLES
+src/data/demoSafeDataset.js:28:    { id: "user-demo-admin", role: "administrador", name: "Administrador Demo" },

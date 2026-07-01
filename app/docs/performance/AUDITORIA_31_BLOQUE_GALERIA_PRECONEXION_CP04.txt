@@ -1,0 +1,103 @@
+11:const GALLERY_REAL_IMAGE_STYLES = `
+12:  .cp04-gallery-card,
+13:  .cp04-gallery-main,
+14:  .cp04-gallery-side {
+22:  .cp04-gallery-card img,
+23:  .cp04-gallery-main img,
+24:  .cp04-gallery-side img {
+77:const GALLERY = [
+79:    key: "pistas",
+80:    title: "Pistas",
+81:    label: "Pistas Club Pádel 04",
+82:    src: "/optimized/gallery/cp04/pistas.webp?v=cp04FotosSeparadasFinal2",
+86:    title: "Recepción",
+87:    label: "Recepción Club Pádel 04",
+88:    src: "/optimized/gallery/cp04/recepcion.webp?v=cp04FotosSeparadasFinal2",
+92:    title: "Cafetería",
+93:    label: "Cafetería Club Pádel 04",
+94:    src: "/optimized/gallery/cp04/cafeteria.webp?v=cp04FotosSeparadasFinal2",
+100:    src: "/optimized/gallery/cp04/torneos.webp?v=cp04FotosSeparadasFinal2",
+103:    key: "instalaciones",
+104:    title: "Instalaciones",
+105:    label: "Instalaciones Club Pádel 04",
+106:    src: "/optimized/gallery/cp04/instalaciones.webp?v=cp04FotosSeparadasFinal2",
+163:  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+164:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+202:  .cp04-gallery { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: stretch; }
+203:  .cp04-gallery-side { display: grid; grid-template-columns: 1fr; gap: 20px; }
+204:  .cp04-gallery-item { min-height: 230px; border-radius: 28px; overflow: hidden; position: relative; border: 1px solid ${T.line}; background: radial-gradient(circle at 20% 18%, rgba(182,255,0,.26), transparent 28%), linear-gradient(135deg, rgba(47,107,255,.18), rgba(17,26,43,.96)); }
+205:  .cp04-gallery-item.featured { min-height: 480px; }
+206:  .cp04-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+207:  .cp04-gallery-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(182,255,0,.18), rgba(47,107,255,.12)), repeating-linear-gradient(90deg, rgba(255,255,255,.10) 0 1px, transparent 1px 34px); }
+208:  .cp04-gallery-caption { position: absolute; left: 18px; right: 18px; bottom: 18px; padding: 14px 16px; border-radius: 18px; background: rgba(5,8,13,.74); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(14px); }
+210:  @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.88); backdrop-filter: blur(18px); } .cp04-menu-button { background: linear-gradient(135deg, ${T.accent}, ${T.accent2}); color: #06100a; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(88vw, 340px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3, .cp04-gallery { grid-template-columns: 1fr; } .cp04-gallery-item.featured { min-height: 340px; } }
+211:  @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } .cp04-gallery-item, .cp04-gallery-item.featured { min-height: 245px; border-radius: 22px; } }
+215:const GALLERY_FORCE_STYLES = `
+216:.cp04-gallery-card {
+224:.cp04-gallery-card img,
+225:.cp04-gallery-img {
+235:.cp04-gallery-card::before {
+239:.cp04-gallery-card .cp04-gallery-label,
+240:.cp04-gallery-label {
+252:.cp04-gallery-label strong {
+259:.cp04-gallery-label span {
+559:  const pistas = COURTS.map((c) => c.name);
+687:        {pistas.map((pista) => (
+787:function GalleryItem({ item, featured = false }) {
+788:  return <div className={`cp04-gallery-item${featured ? " featured" : ""}`}>{item.src ? <img src={item.src} alt={`${item.title} de Club Pádel 04`} loading="lazy" /> : <div className="cp04-gallery-fallback" aria-hidden="true" />}<div className="cp04-gallery-caption"><strong style={{ display: "block", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>{item.title}</strong><span style={{ color: T.textDim, fontSize: ".88rem" }}>{item.src ? "" : item.label}</span></div></div>;
+791:function Gallery() {
+794:  const [featured, ...rest] = GALLERY;
+795:  return <section style={{ marginTop: 42 }}><SectionTitle eyebrow={tx("home.galeria_eyebrow")} title={tx("home.galeria")} desc={tx("home.galeria_desc")} /><div className="cp04-gallery"><GalleryItem item={featured} featured /><div className="cp04-gallery-side">{rest.map((item) => <GalleryItem key={item.key} item={item} />)}</div></div></section>;
+1137:const DEMO_OCUPACION_PISTAS = [
+1181:  { l:"Alerta Pistas", v:521, c:"#b6ff00" },
+1195:    "nombre": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+1196:    "nombre_final": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+1202:    "blueprint": "workflows/27-alerta-pistas-libres-flash-promo/final/Alerta_Pistas_Libres_Flash_Promo_Padel_04_DEFINITIVO.blueprint.json",
+1315:    "nombre": "🏟️ Cierre Temporal de Pistas · Pádel 04 · DEFINITIVO",
+1316:    "nombre_final": "🏟️ Cierre Temporal de Pistas · Pádel 04 · DEFINITIVO",
+1321:    "funcion": "Bloquea pistas temporalmente por mantenimiento, clima u otras incidencias.",
+1322:    "blueprint": "workflows/19-cierre-temporal-pistas/final/Cierre_Temporal_de_Pistas_Padel_04_DEFINITIVO.blueprint.json",
+1921:            { n:"Alerta Pistas", s:"ok" }, { n:"NPS Semanal", s:"warn" }, { n:"Recordatorio Pago", s:"error" },
+2241:    "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
+2243:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+2244:    "role.STAFF.label":"Staff / recepción","role.STAFF.desc":"Gestión diaria de reservas, altas y atención al jugador.",
+2253:    "home.vs_ayer":"vs ayer","home.pistas_activas":"4 pistas activas",
+2262:    "home.hero_subtitle":"SaaS separado por roles: jugador, recepción, administración y soporte.",
+2266:    "home.galeria":"Galería del club",
+2376:    "home.galeria_eyebrow":"Galería","home.galeria_desc":"Galería visual del club.","home.sistema":"Sistema",
+2400:    "admin.gestion_eyebrow":"Gestión","admin.gestion_title":"Pistas y clientes",
+2402:    "admin.gestion_item1":"Gestión de pistas","admin.gestion_item2":"Clientes y perfiles",
+2455:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2468:    "home.galeria":"Club gallery",
+2578:    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
+2657:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2670:    "home.galeria":"Club gallery",
+2780:    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
+2859:    "home.vs_ayer":"vs hier","home.pistas_activas":"4 courts actifs",
+2872:    "home.galeria":"Galerie du club",
+2978:    "home.galeria_eyebrow":"Galerie","home.galeria_desc":"Galerie visuelle du club.","home.sistema":"Système",
+3057:    "home.vs_ayer":"vs ieri","home.pistas_activas":"4 campi attivi",
+3070:    "home.galeria":"Galleria del club",
+3176:    "home.galeria_eyebrow":"Galleria","home.galeria_desc":"Galleria visiva del club.","home.sistema":"Sistema",
+3255:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 campos ativos",
+3268:    "home.galeria":"Galeria do clube",
+3374:    "home.galeria_eyebrow":"Galeria","home.galeria_desc":"Galeria visual do clube.","home.sistema":"Sistema",
+3453:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 quadras ativas",
+3466:    "home.galeria":"Galeria do clube",
+3572:    "home.galeria_eyebrow":"Galeria","home.galeria_desc":"Galeria visual do clube.","home.sistema":"Sistema",
+3651:    "home.vs_ayer":"vs gestern","home.pistas_activas":"4 aktive Plätze",
+3664:    "home.galeria":"Club-Galerie",
+3770:    "home.galeria_eyebrow":"Galerie","home.galeria_desc":"Bildergalerie des Clubs.","home.sistema":"System",
+4082:        <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
+4103:          <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} unit="%" />
+4130:      <Gallery />
+4880:  const pistasDisponibles = useMemo(
+5177:                  {pistasDisponibles.map((pista) => (
+6547:        <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
+6562:          <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} />
+6623:  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+6822:  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+7191:      desc: "Reservar pistas, consultar reservas y ranking.",
+7196:      label: "Staff / recepción",
+7562:      <style>{GALLERY_REAL_IMAGE_STYLES}</style>
+7563:      <style>{GALLERY_FORCE_STYLES}</style>

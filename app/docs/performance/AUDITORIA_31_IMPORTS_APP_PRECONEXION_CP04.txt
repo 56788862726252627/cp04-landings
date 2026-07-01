@@ -1,0 +1,80 @@
+import './cp04-login-enter-white-final.js';
+import './tournament-module.css';
+import './internal-background-detector';
+import './internal-module-backgrounds.css';
+import './cp04-two-buttons-fix';
+import './cp04-sidebar-fix';
+import './cp04-legibility-polish.css';
+import './torcal-role-background.css';
+import './role-background-detector';
+
+const GALLERY_REAL_IMAGE_STYLES = `
+  .cp04-gallery-card,
+  .cp04-gallery-main,
+  .cp04-gallery-side {
+    position: relative !important;
+    overflow: hidden !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  .cp04-gallery-card img,
+  .cp04-gallery-main img,
+  .cp04-gallery-side img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+`;
+
+
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+/**
+ * Club Pádel 04 · SaaS App segura
+ *
+ * Versión saneada para repositorio público:
+ * - No contiene webhooks reales de Make.
+ * - No contiene API keys, tokens ni credenciales.
+ * - un endpoint seguro propio: /api/reservas.
+ * - La integración con Make/Airtable/Stripe debe hacerse en backend, Edge Function,
+ *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
+ */
+
+const T = {
+  bg: "#05080d",
+  surface: "#0b111d",
+  surface2: "#111a2b",
+  surface3: "#18243a",
+  accent: "#b6ff00",
+  accent2: "#20e3b2",
+  primary: "#2f6bff",
+  text: "#ffffff",
+  textDim: "#9aa8bd",
+  line: "rgba(255,255,255,0.10)",
+  danger: "#ff5e3a",
+  warning: "#ffad47",
+  fontDisplay: "'Syne', sans-serif",
+  fontBody: "'DM Sans', sans-serif",
+};
+
+const CONFIG = {
+  appName: "Club Pádel 04",
+  club: "Club Pádel 04",
+  origen: "github_safe_frontend",
+  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+  contactEmail: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_EMAIL || "Pendiente de configurar",
+  contactPhone: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_PHONE || "Pendiente de configurar",
+};
+
+const GALLERY = [
+  {
+    key: "pistas",
+    title: "Pistas",
