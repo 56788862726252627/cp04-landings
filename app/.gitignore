@@ -87,3 +87,27 @@ worker-reservas/ultima-alta-app.json
 worker-reservas/.wrangler/
 backups/**/dist/
 backups/**/.wrangler/
+
+# CP04 generated/export packages
+/ENTREGA_FINAL_CLUB_PADEL_04/
+/REVISION_VISUAL_PACK_FINAL_CP04/
+/USO_EXTERNO_PACK_FINAL_CP04/
+../ENTREGA_FINAL_CLUB_PADEL_04/
+../REVISION_VISUAL_PACK_FINAL_CP04/
+../USO_EXTERNO_PACK_FINAL_CP04/
+
+# CP04 deploy/generated previews
+deploy-pages/
+deploy-preview/
+
+# CP04 generated commercial PDF/HTML exports
+pdf-comercial-antequera/
+docs/demo-para-ensenar/
+docs/deploy/
+docs/exportacion-pdf-antequera/
+docs/kit-comercial-activo/
+docs/pdf-comercial-antequera/
+docs/pdf-corto-premium-final/
+
+# CP04 experimental modules not used in production
+src/experimental/
