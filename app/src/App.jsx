@@ -7551,9 +7551,7 @@ export default function ClubPadel04SaaSApp() {
             <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#ffffff", fontWeight:900 }}>
               Iniciar sesión
             </button>
-            <button type="button" onClick={openForgotPwd} style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}>
-              {ltx("login.olvide_pwd")}
-            </button>
+            
           </div>
           <p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
             Preparado para conectar con backend real: /api/auth/login, /api/auth/register y /api/auth/forgot-password.
