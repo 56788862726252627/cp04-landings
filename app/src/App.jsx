@@ -7411,7 +7411,8 @@ export default function ClubPadel04SaaSApp() {
       setLoginPassword("");
       setMobileMenuOpen(false);
     } catch (error) {
-      setLoginError("No se pudo conectar con el backend de autenticación.");
+      console.error("CP04_LOGIN_FRONTEND_ERROR", error);
+      setLoginError(`No se pudo completar el inicio de sesión. Detalle: ${error?.message || "error desconocido"}`);
     }
   }
 
