@@ -7194,6 +7194,14 @@ export default function ClubPadel04SaaSApp() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
 
+  const [registerOpen, setRegisterOpen] = useState(() => localStorage.getItem("cp04_register_open") === "true");
+  const [registerName, setRegisterName] = useState(() => localStorage.getItem("cp04_register_name") || "");
+  const [registerEmail, setRegisterEmail] = useState(() => localStorage.getItem("cp04_register_email") || "");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerConfirm, setRegisterConfirm] = useState("");
+  const [registerError, setRegisterError] = useState("");
+  const [registerDone, setRegisterDone] = useState(() => localStorage.getItem("cp04_register_done") === "true");
+
   // AUDITORIA 24 · restaurar sesión Supabase real al recargar la app
   useEffect(() => {
     let cancelled = false;
@@ -7416,6 +7424,91 @@ export default function ClubPadel04SaaSApp() {
     }
   }
 
+  async function handleRegisterSubmit(event) {
+    event?.preventDefault?.();
+
+    const cleanName = registerName.trim();
+    const cleanEmail = registerEmail.trim().toLowerCase();
+    const cleanPassword = registerPassword.trim();
+    const cleanConfirm = registerConfirm.trim();
+
+    if (cleanName.length < 2) {
+      setRegisterError("Introduce tu nombre.");
+      return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      setRegisterError("Introduce un correo electrónico válido.");
+      return;
+    }
+
+    if (cleanPassword.length < 8) {
+      setRegisterError("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+
+    if (cleanPassword !== cleanConfirm) {
+      setRegisterError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    try {
+      setRegisterError("");
+      setRegisterDone(false);
+
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword, name: cleanName, role: "PLAYER" }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data?.ok) {
+        setRegisterError(data?.message || "No se pudo crear la cuenta.");
+        return;
+      }
+
+      localStorage.setItem("cp04_register_open", "true");
+      localStorage.setItem("cp04_register_done", "true");
+      setRegisterDone(true);
+      setLoginEmail(cleanEmail);
+      localStorage.setItem("cp04_register_name", cleanName);
+      localStorage.setItem("cp04_register_email", cleanEmail);
+      setRegisterPassword("");
+      setRegisterConfirm("");
+    } catch (error) {
+      console.error("CP04_REGISTER_FRONTEND_ERROR", error);
+      setRegisterError(`No se pudo completar el registro. Detalle: ${error?.message || "error desconocido"}`);
+    }
+  }
+
+  function openRegister() {
+    localStorage.setItem("cp04_register_open", "true");
+    localStorage.setItem("cp04_register_done", "false");
+    setRegisterOpen(true);
+    setRegisterDone(false);
+    setRegisterError("");
+
+    const savedName = localStorage.getItem("cp04_register_name") || "";
+    const savedEmail = localStorage.getItem("cp04_register_email") || loginEmail || "";
+
+    setRegisterName(savedName);
+    setRegisterEmail(savedEmail);
+    setRegisterPassword("");
+    setRegisterConfirm("");
+  }
+
+  function closeRegister() {
+    localStorage.setItem("cp04_register_open", "false");
+    localStorage.setItem("cp04_register_done", "false");
+    setRegisterOpen(false);
+    setRegisterDone(false);
+    setRegisterError("");
+    setRegisterPassword("");
+    setRegisterConfirm("");
+  }
+
   function openForgotPwd() {
     setForgotPwdStep("form");
     setForgotPwdEmail("");
@@ -7548,6 +7641,13 @@ export default function ClubPadel04SaaSApp() {
                   {showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"}
                 </button>
                 <button
+                    type="button"
+                    onClick={openRegister}
+                    style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                  >
+                    Crear cuenta
+                  </button>
+                  <button
                   type="button"
                   onClick={openForgotPwd}
                   style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
@@ -7562,7 +7662,79 @@ export default function ClubPadel04SaaSApp() {
             </button>
             
           </div>
-          <p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
+          
+              {registerOpen && (
+                <div style={{ marginTop:18, padding:18, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+                  {!registerDone ? (
+                    <div>
+                      <strong style={{ display:"block", marginBottom:6 }}>Crear cuenta</strong>
+                      <p style={{ color:T.textDim, marginTop:0, marginBottom:14, lineHeight:1.55, fontSize:".9rem" }}>
+                        Crea tu acceso como jugador para reservar pistas, consultar actividad y gestionar tu perfil.
+                      </p>
+
+                      <input
+                        type="text"
+                        value={registerName}
+                        onChange={e => { setRegisterName(e.target.value); localStorage.setItem("cp04_register_name", e.target.value); setRegisterError(""); }}
+                        placeholder="Nombre completo"
+                        autoComplete="name"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="email"
+                        value={registerEmail}
+                        onChange={e => { setRegisterEmail(e.target.value); localStorage.setItem("cp04_register_email", e.target.value); setRegisterError(""); }}
+                        placeholder="Correo electrónico"
+                        autoComplete="email"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="password"
+                        value={registerPassword}
+                        onChange={e => { setRegisterPassword(e.target.value); setRegisterError(""); }}
+                        placeholder="Contraseña"
+                        autoComplete="new-password"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="password"
+                        value={registerConfirm}
+                        onChange={e => { setRegisterConfirm(e.target.value); setRegisterError(""); }}
+                        placeholder="Confirmar contraseña"
+                        autoComplete="new-password"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      {registerError && <div style={{ color:"#ff8b8b", marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
+
+                      <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                        <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+                          Crear cuenta
+                        </button>
+                        <button type="button" className="cp04-menu-button" onClick={closeRegister} style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                          Volver
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ color:T.accent, fontSize:"1.4rem", marginBottom:8 }}>✓</div>
+                      <strong style={{ display:"block", marginBottom:8 }}>Cuenta creada correctamente</strong>
+                      <p style={{ color:T.textDim, lineHeight:1.55, marginTop:0, fontSize:".9rem" }}>
+                        Tu cuenta se ha creado. Puede requerir confirmación por email según la configuración de seguridad. Ya puedes intentar iniciar sesión.
+                      </p>
+                      <button type="button" className="cp04-menu-button" onClick={closeRegister}>
+                        Volver al inicio de sesión
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+<p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
             Acceso seguro conectado al sistema de autenticación real.
           </p>
         </form>
