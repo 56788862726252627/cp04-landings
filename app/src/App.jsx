@@ -6949,6 +6949,39 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
             <div style={{ borderTop:`1px solid ${T.line}`, paddingTop:12, marginTop:4 }}>
               <LanguageSelector />
             </div>
+            {localStorage.getItem("cp04_access_token") && (
+              <div style={{
+                marginTop:8,
+                marginBottom:6,
+                padding:"9px 10px",
+                borderRadius:12,
+                border:`1px solid rgba(182,255,0,.28)`,
+                background:"rgba(182,255,0,.07)",
+                color:T.text,
+                fontSize:".78rem",
+                lineHeight:1.45
+              }}>
+                <strong style={{ color:T.accent }}>Autenticación real:</strong> Supabase conectado
+                {localStorage.getItem("cp04_user_email") && (
+                  <div style={{ marginTop:6, maxWidth:"100%" }}>
+                    <div style={{ color:T.textDim, fontSize:".72rem", marginBottom:2 }}>
+                      Email:
+                    </div>
+                    <div style={{
+                      color:T.textDim,
+                      fontSize:".72rem",
+                      lineHeight:1.35,
+                      whiteSpace:"normal",
+                      wordBreak:"break-all",
+                      overflowWrap:"anywhere",
+                      maxWidth:"100%"
+                    }}>
+                      {localStorage.getItem("cp04_user_email")}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:8, width:"100%" }}>🚪 {tx("perfil.cerrar_sesion")}</Btn>
             {onOpenTutorial && (
               <Btn variant="secondary" data-tour="perfil-tutorial-btn" onClick={onOpenTutorial} style={{ marginTop:6, width:"100%", borderColor:"rgba(182,255,0,.32)", color:"#b6ff00" }}>🎯 Ver tutorial rápido</Btn>
