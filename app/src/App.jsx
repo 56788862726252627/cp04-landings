@@ -6980,6 +6980,53 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
                     </div>
                   </div>
                 )}
+
+                {localStorage.getItem("cp04_user") && (() => {
+                  let realUser = null;
+                  try {
+                    realUser = JSON.parse(localStorage.getItem("cp04_user") || "null");
+                  } catch {
+                    realUser = null;
+                  }
+
+                  const realRole = realUser?.role || "";
+                  const realPermissions = Array.isArray(realUser?.permissions) ? realUser.permissions : [];
+
+                  return (
+                    <div style={{ marginTop:8, maxWidth:"100%" }}>
+                      {realRole && (
+                        <div style={{ color:T.textDim, fontSize:".72rem", lineHeight:1.35 }}>
+                          <strong style={{ color:T.accent }}>Rol real:</strong> {realRole}
+                        </div>
+                      )}
+
+                      {realPermissions.length > 0 && (
+                        <div style={{ marginTop:5 }}>
+                          <div style={{ color:T.textDim, fontSize:".72rem", marginBottom:4 }}>
+                            Permisos reales:
+                          </div>
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                            {realPermissions.map((permission) => (
+                              <span key={permission} style={{
+                                padding:"3px 6px",
+                                borderRadius:999,
+                                border:"1px solid rgba(182,255,0,.22)",
+                                background:"rgba(0,0,0,.18)",
+                                color:T.textDim,
+                                fontSize:".68rem",
+                                lineHeight:1.2,
+                                maxWidth:"100%",
+                                overflowWrap:"anywhere"
+                              }}>
+                                {permission}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
             <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:8, width:"100%" }}>🚪 {tx("perfil.cerrar_sesion")}</Btn>
