@@ -3999,9 +3999,181 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
         {visibleItems.map(([id, key, icon]) => {
           const label = tx(key);
           return (
-            <button key={id} data-tour={`sidebar-${id}`} onClick={() => onNavigate(id)} aria-current={current === id ? "page" : undefined}
+            <button
+              key={id}
+              data-tour={`sidebar-${id}`}
+              onPointerDownCapture={(e) => {
+                if (id === "perfil") {
+                  e.currentTarget.dataset.cp04Pressing = "true";
+                  e.currentTarget.style.setProperty("transition", "none", "important");
+                  e.currentTarget.style.setProperty(
+                    "background",
+                    "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)",
+                    "important"
+                  );
+                  e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
+                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                  e.currentTarget.style.setProperty(
+                    "box-shadow",
+                    "0 0 0 1px rgba(182,255,0,.35), 0 0 24px rgba(182,255,0,.28), 0 12px 30px rgba(0,0,0,.28)",
+                    "important"
+                  );
+                }
+              }}
+              onMouseDownCapture={(e) => {
+                if (id === "perfil") {
+                  e.currentTarget.dataset.cp04Pressing = "true";
+                  e.currentTarget.style.setProperty("transition", "none", "important");
+                  e.currentTarget.style.setProperty(
+                    "background",
+                    "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)",
+                    "important"
+                  );
+                  e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
+                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                }
+              }}
+              onPointerUpCapture={(e) => {
+                if (id === "perfil") {
+                  setTimeout(() => {
+                    e.currentTarget?.style?.setProperty("transition", "background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, transform .1s ease", "important");
+                    delete e.currentTarget?.dataset?.cp04Pressing;
+                  }, 80);
+                }
+              }}
+              onPointerDown={(e) => {
+                if (id === "perfil") {
+                  e.currentTarget.style.setProperty(
+                    "background",
+                    "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)",
+                    "important"
+                  );
+                  e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
+                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                  e.currentTarget.style.setProperty(
+                    "box-shadow",
+                    "0 0 0 1px rgba(182,255,0,.35), 0 0 24px rgba(182,255,0,.28), 0 12px 30px rgba(0,0,0,.28)",
+                    "important"
+                  );
+                }
+              }}
+              onMouseDown={(e) => {
+                if (id === "perfil") {
+                  e.currentTarget.style.setProperty(
+                    "background",
+                    "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)",
+                    "important"
+                  );
+                  e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
+                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                }
+              }}
+              onTouchStart={(e) => {
+                if (id === "perfil") {
+                  e.currentTarget.style.setProperty(
+                    "background",
+                    "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)",
+                    "important"
+                  );
+                  e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
+                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                }
+              }}
+              onClick={() => onNavigate(id)}
+              onMouseEnter={(e) => {
+                const isActive = current === id;
+                e.currentTarget.style.setProperty(
+                  "background",
+                  isActive
+                    ? "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)"
+                    : "rgba(182,255,0,.13)",
+                  "important"
+                );
+                e.currentTarget.style.setProperty(
+                  "border-color",
+                  isActive ? "rgba(182,255,0,.96)" : "rgba(182,255,0,.58)",
+                  "important"
+                );
+                e.currentTarget.style.setProperty(
+                  "color",
+                  isActive ? "#ffffff" : "#ffffff",
+                  "important"
+                );
+                e.currentTarget.style.setProperty(
+                  "box-shadow",
+                  isActive
+                    ? "0 0 0 1px rgba(182,255,0,.35), 0 0 24px rgba(182,255,0,.28), 0 12px 30px rgba(0,0,0,.28)"
+                    : "0 0 0 1px rgba(182,255,0,.18), 0 0 16px rgba(182,255,0,.12)",
+                  "important"
+                );
+              }}
+              onMouseOver={(e) => {
+                const isActive = current === id;
+                e.currentTarget.style.setProperty(
+                  "background",
+                  isActive
+                    ? "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)"
+                    : "rgba(182,255,0,.13)",
+                  "important"
+                );
+                e.currentTarget.style.setProperty(
+                  "border-color",
+                  isActive ? "rgba(182,255,0,.96)" : "rgba(182,255,0,.58)",
+                  "important"
+                );
+                e.currentTarget.style.setProperty(
+                  "color",
+                  isActive ? "#ffffff" : "#ffffff",
+                  "important"
+                );
+              }}
+              onMouseLeave={(e) => {
+                const isActive = current === id;
+                e.currentTarget.style.setProperty(
+                  "background",
+                  isActive
+                    ? "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)"
+                    : "rgba(7,11,20,.72)",
+                  "important"
+                );
+                e.currentTarget.style.setProperty(
+                  "border-color",
+                  isActive ? "rgba(182,255,0,.92)" : T.line,
+                  "important"
+                );
+                e.currentTarget.style.setProperty(
+                  "color",
+                  isActive ? "#ffffff" : T.textDim,
+                  "important"
+                );
+                e.currentTarget.style.setProperty(
+                  "box-shadow",
+                  isActive
+                    ? "0 0 0 1px rgba(182,255,0,.28), 0 0 18px rgba(182,255,0,.18)"
+                    : "none",
+                  "important"
+                );
+              }}
+              aria-current={current === id ? "page" : undefined}
               aria-label={`${label}`}
-              style={{ display:"flex", gap:10, width:"100%", background:current===id?T.accent:"transparent", color:current===id?"#07090e":T.textDim, border:`1px solid ${current===id?T.accent:T.line}`, borderRadius:14, padding:"12px 14px", cursor:"pointer", fontWeight:900 }}>
+              className={`cp04-menu-button ${current===id ? "is-active" : ""}`}
+              style={{
+                display:"flex",
+                gap:10,
+                width:"100%",
+                background: current===id
+                  ? "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)"
+                  : "rgba(7,11,20,.72)",
+                color: current===id ? "#ffffff" : T.textDim,
+                border:`1px solid ${current===id ? "rgba(182,255,0,.92)" : T.line}`,
+                borderRadius:14,
+                padding:"12px 14px",
+                cursor:"pointer",
+                fontWeight:900,
+                WebkitTapHighlightColor:"rgba(182,255,0,.18)",
+                transition:"background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, transform .1s ease",
+                boxShadow: current===id ? "0 0 0 1px rgba(182,255,0,.28), 0 0 18px rgba(182,255,0,.18)" : "none"
+              }}>
               <span aria-hidden="true">{icon}</span><span>{label}</span>
             </button>
           );

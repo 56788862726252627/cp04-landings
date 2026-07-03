@@ -234,3 +234,145 @@ body.cp04-role-screen-active,
 body.cp04-role-screen-active * {
   text-shadow: 0 1px 14px rgba(0, 0, 0, 0.38);
 }
+
+/* ===== AUDITORIA 29 · FIX FINAL HOVER PERFIL NO ROJO ===== */
+/* Este archivo se carga sobre la pantalla Torcal/roles, por eso el override va aquí.
+   Objetivo: Perfil y ajustes nunca debe ponerse rojo/granate al pasar el cursor. */
+
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"],
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].cp04-menu-button {
+  background: rgba(7, 11, 20, .72) !important;
+  border-color: rgba(182, 255, 0, .32) !important;
+  color: rgba(245, 247, 250, .92) !important;
+  box-shadow: none !important;
+}
+
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"]:hover,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"]:focus,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"]:focus-visible,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"]:active,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].cp04-menu-button:hover,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].cp04-menu-button:focus,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].cp04-menu-button:focus-visible,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].cp04-menu-button:active {
+  background: rgba(182, 255, 0, .13) !important;
+  border-color: rgba(182, 255, 0, .78) !important;
+  color: #ffffff !important;
+  outline-color: rgba(182, 255, 0, .78) !important;
+  box-shadow:
+    0 0 0 1px rgba(182, 255, 0, .22),
+    0 0 18px rgba(182, 255, 0, .18) !important;
+}
+
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].is-active,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].active,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"][aria-current="page"],
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].cp04-menu-button.is-active,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].cp04-menu-button.active,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].cp04-menu-button[aria-current="page"],
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].is-active:hover,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].active:hover,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"][aria-current="page"]:hover {
+  background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  border-color: rgba(182, 255, 0, .96) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(182, 255, 0, .35),
+    0 0 24px rgba(182, 255, 0, .28),
+    0 12px 30px rgba(0, 0, 0, .28) !important;
+}
+
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].is-active *,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].active *,
+body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"][aria-current="page"] * {
+  color: #ffffff !important;
+}
+
+/* AUDITORIA 29 · REFUERZO FINAL ANTI-ROJO PERFIL + IDIOMA */
+html body .cp04-sidebar [data-tour="sidebar-perfil"],
+html body .cp04-sidebar [data-tour="sidebar-perfil"]:hover,
+html body .cp04-sidebar [data-tour="sidebar-perfil"]:focus,
+html body .cp04-sidebar [data-tour="sidebar-perfil"]:active,
+html body .cp04-sidebar [data-tour="sidebar-perfil"].is-active,
+html body .cp04-sidebar [data-tour="sidebar-perfil"][aria-current="page"] {
+  background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-color: #b6ff00 !important;
+  border-color: rgba(182,255,0,.98) !important;
+  color: #ffffff !important;
+  transition: none !important;
+  animation: none !important;
+  box-shadow: 0 0 0 1px rgba(182,255,0,.35), 0 0 22px rgba(182,255,0,.25) !important;
+}
+
+html body .cp04-sidebar [data-tour="sidebar-perfil"] * {
+  color: #ffffff !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+html body .cp04-sidebar select,
+html body .cp04-sidebar [data-tour*="idioma" i],
+html body .cp04-sidebar [data-tour*="language" i],
+html body .cp04-sidebar [aria-label*="idioma" i],
+html body .cp04-sidebar [aria-label*="language" i],
+html body .cp04-sidebar .cp04-language,
+html body .cp04-sidebar .cp04-language-select {
+  background: rgba(7,11,20,.82) !important;
+  background-color: rgba(7,11,20,.82) !important;
+  border-color: rgba(182,255,0,.34) !important;
+  color: rgba(245,247,250,.96) !important;
+  transition: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* AUDITORIA 29 · Refuerzo Torcal: Perfil con texto blanco */
+html body .cp04-sidebar [data-tour="sidebar-perfil"],
+html body .cp04-sidebar [data-tour="sidebar-perfil"] *,
+html body .cp04-sidebar [data-tour="sidebar-perfil"]:hover,
+html body .cp04-sidebar [data-tour="sidebar-perfil"]:hover *,
+html body .cp04-sidebar [data-tour="sidebar-perfil"].is-active,
+html body .cp04-sidebar [data-tour="sidebar-perfil"].is-active *,
+html body .cp04-sidebar [data-tour="sidebar-perfil"][aria-current="page"],
+html body .cp04-sidebar [data-tour="sidebar-perfil"][aria-current="page"] * {
+  color: #ffffff !important;
+}
+
+/* AUDITORIA 29 · Refuerzo Torcal: Idioma / Español verde neón */
+html body .cp04-sidebar select,
+html body .cp04-sidebar select:hover,
+html body .cp04-sidebar select:focus,
+html body .cp04-sidebar select:active,
+html body .cp04-sidebar [data-tour*="idioma" i],
+html body .cp04-sidebar [data-tour*="idioma" i]:hover,
+html body .cp04-sidebar [data-tour*="language" i],
+html body .cp04-sidebar [data-tour*="language" i]:hover,
+html body .cp04-sidebar [aria-label*="idioma" i],
+html body .cp04-sidebar [aria-label*="idioma" i]:hover,
+html body .cp04-sidebar [aria-label*="language" i],
+html body .cp04-sidebar [aria-label*="language" i]:hover,
+html body .cp04-sidebar .cp04-language,
+html body .cp04-sidebar .cp04-language:hover,
+html body .cp04-sidebar .cp04-language-select,
+html body .cp04-sidebar .cp04-language-select:hover {
+  background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-color: #b6ff00 !important;
+  border-color: rgba(182,255,0,.98) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(182,255,0,.35),
+    0 0 22px rgba(182,255,0,.22),
+    0 12px 30px rgba(0,0,0,.25) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+html body .cp04-sidebar select *,
+html body .cp04-sidebar [data-tour*="idioma" i] *,
+html body .cp04-sidebar [data-tour*="language" i] *,
+html body .cp04-sidebar [aria-label*="idioma" i] *,
+html body .cp04-sidebar [aria-label*="language" i] *,
+html body .cp04-sidebar .cp04-language *,
+html body .cp04-sidebar .cp04-language-select * {
+  color: #ffffff !important;
+}
