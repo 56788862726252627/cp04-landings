@@ -1,0 +1,79 @@
+271:function calcTimeEnd(time, mins) {
+277:function priceFor(courtName, duration) {
+285:function madridDateParts(date = new Date()) {
+299:function todayISO() {
+304:function parseISODateParts(value) {
+310:function isSundayISO(value) {
+316:function isPastDateISO(value) {
+320:function minutesFromTime(value) {
+326:function madridCurrentMinutes() {
+331:function getSlotStatus(fecha, hora, duration = 90) {
+350:function formatDateEs(value) {
+356:function cleanText(value) {
+360:function validateBooking(form, courtName, tx) {
+389:function prepareBookingPayload(form, courtName) {
+418:function validateReschedule(form, courtName, tx) {
+468:function prepareReschedulePayload(form, courtName) {
+497:function Card({ children, style = {} }) {
+501:function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {} }) {
+537:function emitDisponibilidadUpdate(fecha) {
+541:function refreshDisponibilidadAfterChange(fecha) {
+547:function CalendarioDisponibilidad({
+765:function SectionTitle({ eyebrow, title, desc }) {
+769:function Badge({ status }) {
+777:function FieldError({ children }) {
+782:function PanelList({ items }) {
+786:function RolePanel({ eyebrow, title, desc, items, action }) {
+790:function GalleryItem({ item, featured = false }) {
+794:function Gallery() {
+801:function IntegrationMatrix({ compact = false }) {
+806:function AuthStatusPanel({ compact = false }) {
+817:function useClock() {
+864:function ClockDisplay({ compact = false }) {
+888:function MetricCard({ label, value, sub, trend, color, icon }) {
+920:function ChartTooltip({ x, y, children, visible }) {
+929:function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
+965:function MiniLineChart({ data, height = 60, color, labels, unit = "" }) {
+1006:function DonutChart({ segments, size = 120, label }) {
+1057:function HorizontalBarChart({ data, color, unit = "" }) {
+1085:function FlowStatusBadge({ status }) {
+1102:function ChartCard({ title, sub, children, action, demo = false, style: cs = {} }) {
+1843:function FlujosMake() {
+1989:function normalizeSearchText(value) {
+2109:function sortLanguages(list) {
+2121:function loadSavedLanguage() {
+2151:function setGlobalLang(lang) {
+2157:function useLang() {
+2193:function cp04NormalizeRole(role) {
+2199:function cp04IsProtectedSection(section) {
+2203:function cp04CanAccessSection(role, section) {
+2209:function cp04GetSafeStartSection(role) {
+2215:function cp04RequiresBackendAuth(section) {
+2219:function cp04GetStoredAuthMode() {
+3827:function t(key, lang) {
+3841:function LanguageSelector() {
+3944:function LangOption({ lang, selected, onSelect }) {
+3968:function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, onClose }) {
+4197:function Inicio({ setCurrent }) {
+4310:function Reservas() {
+4408:function CancelarReserva({ setCurrent }) {
+4497:function ReprogramarReserva({ setCurrent }) {
+4863:function Gestion() {
+5496:function AltaJugador() {
+5709:function torneoLoadSaved() {
+5721:function torneoLoadHist() {
+5729:function torneoBuildEmptyPairs(count) {
+5738:function torneoBuildFullBracket(pairs, byeId) {
+5768:function torneoGetRoundLabel(rNum, total) {
+5778:function torneoAdvanceWinner(bracket, matchId, winnerId) {
+5791:function torneoGetMatchGap(round) {
+5795:function torneoGetRoundPadding(round) {
+5799:function Torneos() {
+6453:function RankingAvatar({ name, color = T.accent, size = 34 }) {
+6468:function MovArrow({ mov }) {
+6474:function RachaBadge({ racha }) {
+6480:function Ranking() {
+6704:function Admin() {
+6756:function AuthProductionStatusPanel() {
+6789:function Soporte() {
+6795:function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
