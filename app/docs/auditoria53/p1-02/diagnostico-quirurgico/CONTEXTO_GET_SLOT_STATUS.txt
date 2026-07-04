@@ -1,0 +1,156 @@
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+}
+
+function todayISO() {
+  const { year, month, day } = madridDateParts();
+  return `${year}-${month}-${day}`;
+}
+
+function parseISODateParts(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
+  if (!match) return null;
+  return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+}
+
+function isSundayISO(value) {
+  const parts = parseISODateParts(value);
+  if (!parts) return false;
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay() === 0;
+}
+
+function isPastDateISO(value) {
+  return Boolean(value) && value < todayISO();
+}
+
+function minutesFromTime(value) {
+  const match = /^(\d{2}):(\d{2})$/.exec(String(value || ""));
+  if (!match) return Number.NaN;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function madridCurrentMinutes() {
+  const { hour, minute } = madridDateParts();
+  return Number(hour) * 60 + Number(minute);
+}
+
+function getSlotStatus(fecha, hora, duration = 90) {
+  if (!fecha || !hora) return "invalid";
+  if (isSundayISO(fecha)) return "closed";
+  if (isPastDateISO(fecha)) return "past";
+
+  const startMinutes = minutesFromTime(hora);
+  if (!Number.isFinite(startMinutes)) return "invalid";
+
+  if (fecha === todayISO() && startMinutes <= madridCurrentMinutes()) {
+    return "past";
+  }
+
+  if (startMinutes + Number(duration || 0) > CLUB_CLOSING_MINUTES) {
+    return "outside_hours";
+  }
+
+  return "available";
+}
+
+function formatDateEs(value) {
+  const parts = parseISODateParts(value);
+  if (!parts) return value || "";
+  return `${String(parts.day).padStart(2, "0")}/${String(parts.month).padStart(2, "0")}/${parts.year}`;
+}
+
+function cleanText(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function validateBooking(form, courtName, tx) {
+  const errors = {};
+  const duration = Number(form.duracion_minutos);
+  const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
+  const today = new Date(`${todayISO()}T00:00:00`);
+
+  const _t = typeof tx === "function" ? tx : (k => k);
+  if (cleanText(form.nombre).length < 2) errors.nombre = _t("errors.nombre");
+  if (cleanText(form.apellidos).length < 2) errors.apellidos = _t("errors.apellidos");
+  if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = _t("errors.email");
+  if (form.telefono.replace(/\D/g, "").length < 9) errors.telefono = _t("errors.telefono");
+  if (!form.fecha) errors.fecha = _t("errors.fecha");
+  else if (selectedDate < today) errors.fecha = _t("errors.fecha_pasado");
+  else if (isSundayISO(form.fecha)) errors.fecha = _t("errors.fecha_domingo");
+  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = _t("errors.hora");
+  if (!BOOKING_DURATIONS.includes(duration)) errors.duracion_minutos = _t("errors.duracion");
+  if (!errors.fecha && !errors.hora && !errors.duracion_minutos) {
+    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+    if (slotStatus === "past") errors.hora = _t("errors.hora_pasada");
+    if (slotStatus === "outside_hours") errors.hora = _t("errors.hora_cierre");
+    if (slotStatus === "closed") errors.fecha = _t("errors.fecha_domingo");
+  }
+  if (!COURTS.some((court) => court.name === courtName)) errors.pista = _t("errors.pista");
+  if (!BOOKING_MODALITIES.includes(form.modalidad)) errors.modalidad = _t("errors.modalidad");
+  if (!BOOKING_LEVELS.includes(form.nivel)) errors.nivel = _t("errors.nivel");
+
+  return errors;
+}
+
+function prepareBookingPayload(form, courtName) {
+  const duration = Number(form.duracion_minutos);
+  const horaFin = calcTimeEnd(form.hora, duration);
+  const price = priceFor(courtName, duration);
+
+  return {
+    accion: "crear_reserva",
+    club: CONFIG.club,
+    origen: CONFIG.origen,
+    jugador: {
+      nombre: cleanText(form.nombre),
+      apellidos: cleanText(form.apellidos),
+      email: form.email.trim().toLowerCase(),
+      telefono: form.telefono.trim(),
+    },
+    reserva: {
+      fecha: form.fecha,
+      hora: form.hora,
+      hora_fin: horaFin,
+      duracion_minutos: duration,
+      pista: courtName,
+      modalidad: form.modalidad,
+      nivel: form.nivel,
+      precio_total: price,
+      comentarios: form.comentarios.trim(),
+    },
+  };
+}
+
+function validateReschedule(form, courtName, tx) {
+  const _t = typeof tx === "function" ? tx : (k => k);
+  const errors = {};
+  const cleanKey = form.clave_reserva.trim();
+  const duration = Number(form.duracion_minutos);
+  const selectedDate = form.nueva_fecha_reserva
+    ? new Date(`${form.nueva_fecha_reserva}T00:00:00`)
+    : null;
+  const today = new Date(`${todayISO()}T00:00:00`);
+
+  if (!cleanKey) {
+    errors.clave_reserva = _t("errors.clave");
+  } else if (cleanKey.length < 8) {
+    errors.clave_reserva = _t("errors.clave_incompleta");
+  }
+
+  if (!form.nueva_fecha_reserva) {
+    errors.nueva_fecha_reserva = _t("errors.nueva_fecha");
+  } else if (selectedDate < today) {
+    errors.nueva_fecha_reserva = _t("errors.nueva_fecha_pasado");
+  } else if (isSundayISO(form.nueva_fecha_reserva)) {
+    errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+  }
+
+  if (!BOOKING_HOURS.includes(form.nueva_hora_inicio)) {
+    errors.nueva_hora_inicio = _t("errors.hora");
+  }
+
+  if (!BOOKING_DURATIONS.includes(duration)) {
+    errors.duracion_minutos = _t("errors.duracion");
+  }
+
+  if (!errors.nueva_fecha_reserva && !errors.nueva_hora_inicio && !errors.duracion_minutos) {
+    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
