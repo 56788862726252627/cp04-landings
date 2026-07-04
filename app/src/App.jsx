@@ -706,17 +706,24 @@ function CalendarioDisponibilidad({
                 const cerrada = slotStatus === "closed";
                 const pasada = slotStatus === "past";
                 const fueraHorario = slotStatus === "outside_hours";
-                const bloqueada = cerrada || pasada || fueraHorario;
-                const disabled = ocupada || bloqueada || estado === "loading";
+                const disponibilidadNoVerificada =
+            estado === "loading" || estado === "error";
+          const bloqueada =
+            cerrada || pasada || fueraHorario || disponibilidadNoVerificada;
+                const disabled = ocupada || bloqueada;
                 const label = cerrada
                   ? "Cerrado"
                   : pasada
                     ? "Pasada"
                     : fueraHorario
                       ? "No disponible"
-                      : ocupada
-                        ? "Ocupado"
-                        : "Libre";
+                : estado === "loading"
+                  ? "Comprobando"
+                  : estado === "error"
+                    ? "No verificado"
+                    : ocupada
+                      ? "Ocupado"
+                      : "Libre";
                 const danger = ocupada || pasada;
                 const borderColor = cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent;
                 const background = cerrada || fueraHorario
