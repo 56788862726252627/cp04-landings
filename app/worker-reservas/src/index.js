@@ -1,3 +1,12 @@
+import {
+  CP04_AUTH_ROLES,
+  CP04_AUTH_PERMISSIONS,
+  parseAuthorizationHeader,
+  authorizeRole,
+  requireAuth,
+  requireRoles,
+} from "../auth/authorization.js";
+
 const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 const BOOKING_DURATIONS = [60, 90, 120];
 const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
@@ -31,8 +40,8 @@ const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
 
   return {
     "Access-Control-Allow-Origin": corsOrigin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Vary": "Origin",
   };
 }
@@ -461,6 +470,25 @@ async function handleReservas(request, env) {
     payload = await request.json();
   } catch {
     return jsonResponse({ ok: false, error: "Invalid JSON body" }, 400, headers);
+  }
+
+  // Cancelar/reprogramar son operaciones de staff según la matriz RBAC
+  // (CP04_AUTH_PERMISSIONS): PLAYER no las tiene. El gate está implementado
+  // y listo, pero permanece detrás de CP04_ENFORCE_ROLE_GATES porque el
+  // login demo por contraseña de rol no emite ningún token verificable en
+  // servidor todavía: activarlo hoy sin más rompería el tutorial guiado de
+  // STAFF/ADMIN/SUPPORT. Ver informe de auditoría para la decisión pendiente.
+  const accionSolicitada = cleanText(payload?.accion);
+  const esAccionDeStaff =
+    accionSolicitada === "cancelar_reserva" ||
+    accionSolicitada === "reprogramar_reserva";
+
+  if (esAccionDeStaff && env.CP04_ENFORCE_ROLE_GATES === "true") {
+    const gate = await requireRoles(request, env, ["STAFF", "ADMIN", "SUPPORT"]);
+
+    if (!gate.ok) {
+      return jsonResponse(gate.body, gate.status, headers);
+    }
   }
 
   const errors = validatePayload(payload);
@@ -1112,12 +1140,6 @@ function cp04SupabaseHeaders(env, extra = {}) {
   };
 }
 
-function cp04GetBearerToken(request) {
-  const auth = request.headers.get("Authorization") || "";
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1].trim() : "";
-}
-
 async function cp04SupabaseRequest(env, path, options = {}) {
   const base = cp04SupabaseBaseUrl(env);
   const response = await fetch(`${base}${path}`, {
@@ -1144,9 +1166,12 @@ async function cp04SupabaseRequest(env, path, options = {}) {
 function cp04MapSupabaseUserToCp04(user, fallbackRole = "PLAYER") {
   const meta = user?.user_metadata || {};
   const appMeta = user?.app_metadata || {};
+  // user_metadata es editable por el propio usuario (updateUser / signup data),
+  // por lo que NUNCA debe usarse como fuente de rol: sería una escalada de
+  // privilegios trivial. Solo app_metadata (escribible únicamente con
+  // service_role) es una fuente de rol de confianza.
   const role = cp04NormalizeAuthRole(
     appMeta.role ||
-    meta.role ||
     fallbackRole
   );
 
@@ -1177,15 +1202,9 @@ function cp04SupabaseErrorResponse(request, env, result, fallbackMessage = "Erro
 // Preparación segura de endpoints de autenticación real.
 // En producción, estos endpoints deben conectarse a proveedor real de auth,
 // base de usuarios y sesiones/tokens seguros.
-
-const CP04_AUTH_ROLES = ["PLAYER", "STAFF", "ADMIN", "SUPPORT"];
-
-const CP04_AUTH_PERMISSIONS = {
-  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
-  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
-  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
-  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
-};
+//
+// CP04_AUTH_ROLES y CP04_AUTH_PERMISSIONS viven en ../auth/authorization.js
+// (fuente única de la matriz RBAC, compartida con la capa de autorización).
 
 function cp04NormalizeAuthRole(role) {
   const value = String(role || "").trim().toUpperCase();
@@ -1257,7 +1276,7 @@ async function handleAuthRoute(request, env, url) {
       );
     }
 
-    const token = cp04GetBearerToken(request);
+    const token = parseAuthorizationHeader(request);
 
     if (!token) {
       return jsonResponse(
@@ -1330,7 +1349,7 @@ async function handleAuthRoute(request, env, url) {
       );
     }
 
-    const token = cp04GetBearerToken(request);
+    const token = parseAuthorizationHeader(request);
 
     if (!token) {
       return jsonResponse(
@@ -1345,23 +1364,92 @@ async function handleAuthRoute(request, env, url) {
       );
     }
 
-    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/logout`, {
-      method: "POST",
-      headers: {
-        apikey: String(env.SUPABASE_ANON_KEY || ""),
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
+    // scope="global" cierra TODAS las sesiones del usuario (todos los
+    // dispositivos), no solo la actual. Lo pide explícitamente el body;
+    // nunca se infiere de nada que envíe el cliente como "identidad".
+    const logoutBody = await cp04ReadJsonSafe(request);
+    const scope = logoutBody?.scope === "global" ? "global" : "local";
+
+    const response = await fetch(
+      `${cp04SupabaseBaseUrl(env)}/auth/v1/logout?scope=${scope}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: String(env.SUPABASE_ANON_KEY || ""),
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
       }
-    });
+    );
 
     return jsonResponse(
       {
         ok: response.ok,
         auth_ready: true,
         provider: "supabase",
-        message: response.ok ? "Logout realizado." : "Logout solicitado, revisar proveedor."
+        scope,
+        message: response.ok
+          ? (scope === "global" ? "Todas las sesiones cerradas." : "Logout realizado.")
+          : "Logout solicitado, revisar proveedor."
       },
       response.ok ? 200 : response.status,
+      headers
+    );
+  }
+
+  if (path === "/api/auth/refresh" && method === "POST") {
+    const body = await cp04ReadJsonSafe(request);
+
+    if (!supabaseReady) {
+      return cp04AuthNotConfiguredResponse(request, env, {
+        endpoint: "/api/auth/refresh",
+        received: {
+          refresh_token: Boolean(body.refresh_token)
+        }
+      });
+    }
+
+    const refreshToken = String(body.refresh_token || "");
+
+    if (!refreshToken) {
+      return jsonResponse(
+        {
+          ok: false,
+          auth_ready: true,
+          provider: "supabase",
+          error: "VALIDATION_ERROR",
+          message: "Falta refresh_token."
+        },
+        400,
+        headers
+      );
+    }
+
+    const result = await cp04SupabaseRequest(
+      env,
+      "/auth/v1/token?grant_type=refresh_token",
+      {
+        method: "POST",
+        body: JSON.stringify({ refresh_token: refreshToken })
+      }
+    );
+
+    if (!result.ok) {
+      return cp04SupabaseErrorResponse(request, env, result, "No se pudo renovar la sesión.");
+    }
+
+    return jsonResponse(
+      {
+        ok: true,
+        auth_ready: true,
+        provider: "supabase",
+        access_token: result.data?.access_token || null,
+        refresh_token: result.data?.refresh_token || null,
+        expires_in: result.data?.expires_in || null,
+        token_type: result.data?.token_type || "bearer",
+        session: "active"
+      },
+      200,
       headers
     );
   }
@@ -1543,7 +1631,7 @@ async function handleAuthRoute(request, env, url) {
       });
     }
 
-    const token = cp04GetBearerToken(request);
+    const token = parseAuthorizationHeader(request);
     const password = String(body.newPassword || body.password || "");
 
     if (!token || !password) {
@@ -1621,6 +1709,20 @@ export default {
         url.pathname === "/api/jugadores/alta" ||
         url.pathname === "/jugadores/alta"
       ) {
+        // Alta de jugador es operación de STAFF/ADMIN/SUPPORT en la matriz
+        // RBAC. Gate listo, detrás del mismo flag que cancelar/reprogramar
+        // y por el mismo motivo (ver comentario en handleReservas).
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["STAFF", "ADMIN", "SUPPORT"]);
+
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+
         return await handleAltaJugador(request, env);
       }
 
@@ -1638,12 +1740,43 @@ export default {
         url.pathname === "/reservas"
       ) {
         if (request.method === "GET") {
+          // El listado por email expone PII (nombre, teléfono, clave_reserva
+          // que permite cancelar). No es una ruta pública: requiere sesión
+          // real y, si el rol no es STAFF/ADMIN/SUPPORT, solo puede
+          // consultar el propio email autenticado.
+          const gate = await requireAuth(request, env);
+
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+
+          const requestedEmail = (
+            new URL(request.url).searchParams.get("email") || ""
+          ).trim().toLowerCase();
+
+          const isStaffTier = authorizeRole(
+            gate.auth.role,
+            ["STAFF", "ADMIN", "SUPPORT"]
+          );
+
+          if (!isStaffTier && requestedEmail !== gate.auth.email) {
+            return jsonResponse(
+              {
+                ok: false,
+                error: "FORBIDDEN",
+                message: "Solo puedes consultar tus propias reservas.",
+              },
+              403,
+              corsHeaders(request, env)
+            );
+          }
+
           return await cp04ListReservations(
             request,
             env
           );
         }
-      
+
         return await handleReservas(
           request,
           env

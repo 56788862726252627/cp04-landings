@@ -40,6 +40,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
 import { LazyClubGallery } from "./components/lazy/lazyGallery.js";
 import CP04GuidedTutorial from "./components/CP04GuidedTutorial.jsx";
+import { useAuth } from "./auth/AuthContext.jsx";
+import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 /**
  * Club Pádel 04 · SaaS App segura
  *
@@ -2246,7 +2248,7 @@ const TRANSLATIONS = {
     "login.error_rol":"Selecciona un rol válido.","login.error_pwd":"Contraseña incorrecta para este rol.",
     "login.sesion_label":"Club Pádel 04 · Inicio de sesión",
     "login.legal":"Acceso local protegido por contraseña. Puedes guardar sesión solo en este dispositivo. Para producción real, las credenciales deberán validarse desde backend/autenticación segura.",
-    "login.olvide_pwd":"¿Has olvidado tu contraseña?","login.recuperar_title":"Recuperar acceso","login.recuperar_desc":"Introduce tu correo electrónico y, si la cuenta existe, recibirás instrucciones para restablecer el acceso.","login.recuperar_email":"Correo electrónico","login.recuperar_btn":"Enviar instrucciones","login.recuperar_enviado":"Si esa dirección está registrada en el sistema, recibirás instrucciones en breve. Revisa también la carpeta de spam.","login.recuperar_volver":"Volver al inicio de sesión","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+    "login.olvide_pwd":"¿Has olvidado tu contraseña?","login.recuperar_title":"Recuperar acceso","login.recuperar_desc":"Introduce tu correo electrónico y, si la cuenta existe, recibirás instrucciones para restablecer el acceso.","login.recuperar_email":"Correo electrónico","login.recuperar_btn":"Enviar instrucciones","login.recuperar_enviado":"Si esa dirección está registrada en el sistema, recibirás instrucciones en breve. Revisa también la carpeta de spam.","login.recuperar_volver":"Volver al inicio de sesión","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"Recuperación de contraseña aún no disponible en este entorno: pendiente de activar el proveedor de autenticación.","login.recuperar_cargando":"Enviando instrucciones…",
     "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
     "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
     "login.idioma":"Idioma",
@@ -2448,7 +2450,7 @@ const TRANSLATIONS = {
     "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
     "login.sesion_label":"Club Pádel 04 · Login",
     "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
-    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"Password recovery is not available in this environment yet: pending activation of the authentication provider.","login.recuperar_cargando":"Sending instructions…",
     "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
     "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
     "login.idioma":"Language",
@@ -2650,7 +2652,7 @@ const TRANSLATIONS = {
     "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
     "login.sesion_label":"Club Pádel 04 · Sign In",
     "login.legal":"Local access protected by password. Session can be saved on this device only.",
-    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"Password recovery is not available in this environment yet: pending activation of the authentication provider.","login.recuperar_cargando":"Sending instructions…",
     "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
     "login.subtitle":"Select how you want to enter the app. Each role has an experience tailored to its permissions.",
     "login.idioma":"Language",
@@ -2852,7 +2854,7 @@ const TRANSLATIONS = {
     "login.error_rol":"Veuillez sélectionner un rôle valide.","login.error_pwd":"Mot de passe incorrect.",
     "login.sesion_label":"Club Pádel 04 · Connexion",
     "login.legal":"Accès local protégé par mot de passe. Session sauvegardable sur cet appareil uniquement.",
-    "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password",
+    "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password","login.recuperar_no_disponible":"La récupération de mot de passe n'est pas encore disponible dans cet environnement : en attente d'activation du fournisseur d'authentification.","login.recuperar_cargando":"Envoi des instructions…",
     "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
     "login.subtitle":"Sélectionnez comment vous souhaitez entrer dans l'application.",
     "login.idioma":"Langue",
@@ -3050,7 +3052,7 @@ const TRANSLATIONS = {
     "login.error_rol":"Seleziona un ruolo valido.","login.error_pwd":"Password errata per questo ruolo.",
     "login.sesion_label":"Club Pádel 04 · Accesso",
     "login.legal":"Accesso locale protetto da password. Sessione salvabile solo su questo dispositivo.",
-    "login.olvide_pwd":"Hai dimenticato la password?","login.recuperar_title":"Recupera l'accesso","login.recuperar_desc":"Inserisci il tuo indirizzo e-mail e, se l'account esiste, riceverai le istruzioni per reimpostare l'accesso.","login.recuperar_email":"Indirizzo e-mail","login.recuperar_btn":"Invia istruzioni","login.recuperar_enviado":"Se quell'indirizzo è registrato nel sistema, riceverai le istruzioni a breve. Controlla anche la cartella spam.","login.recuperar_volver":"Torna al login","login.recuperar_preparado":"Pronto per l'endpoint: /api/auth/forgot-password",
+    "login.olvide_pwd":"Hai dimenticato la password?","login.recuperar_title":"Recupera l'accesso","login.recuperar_desc":"Inserisci il tuo indirizzo e-mail e, se l'account esiste, riceverai le istruzioni per reimpostare l'accesso.","login.recuperar_email":"Indirizzo e-mail","login.recuperar_btn":"Invia istruzioni","login.recuperar_enviado":"Se quell'indirizzo è registrato nel sistema, riceverai le istruzioni a breve. Controlla anche la cartella spam.","login.recuperar_volver":"Torna al login","login.recuperar_preparado":"Pronto per l'endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"Il recupero della password non è ancora disponibile in questo ambiente: in attesa di attivazione del provider di autenticazione.","login.recuperar_cargando":"Invio delle istruzioni…",
     "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
     "login.subtitle":"Seleziona come vuoi accedere all'applicazione.",
     "login.idioma":"Lingua",
@@ -3248,7 +3250,7 @@ const TRANSLATIONS = {
     "login.error_rol":"Selecione uma função válida.","login.error_pwd":"Palavra-passe incorreta.",
     "login.sesion_label":"Club Pádel 04 · Início de sessão",
     "login.legal":"Acesso local protegido por palavra-passe. Sessão guardável apenas neste dispositivo.",
-    "login.olvide_pwd":"Esqueceu a palavra-passe?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Introduza o seu e-mail e, se a conta existir, receberá instruções para repor o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver registado no sistema, receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao início de sessão","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+    "login.olvide_pwd":"Esqueceu a palavra-passe?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Introduza o seu e-mail e, se a conta existir, receberá instruções para repor o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver registado no sistema, receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao início de sessão","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"A recuperação de palavra-passe ainda não está disponível neste ambiente: pendente de ativação do fornecedor de autenticação.","login.recuperar_cargando":"A enviar instruções…",
     "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
     "login.subtitle":"Selecione como pretende entrar na aplicação.",
     "login.idioma":"Idioma",
@@ -3446,7 +3448,7 @@ const TRANSLATIONS = {
     "login.error_rol":"Selecione um perfil válido.","login.error_pwd":"Senha incorreta para este perfil.",
     "login.sesion_label":"Club Pádel 04 · Login",
     "login.legal":"Acesso local protegido por senha. Sessão salvável apenas neste dispositivo.",
-    "login.olvide_pwd":"Esqueceu a senha?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Insira seu e-mail e, se a conta existir, você receberá instruções para redefinir o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver cadastrado no sistema, você receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao login","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+    "login.olvide_pwd":"Esqueceu a senha?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Insira seu e-mail e, se a conta existir, você receberá instruções para redefinir o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver cadastrado no sistema, você receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao login","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"A recuperação de senha ainda não está disponível neste ambiente: pendente de ativação do provedor de autenticação.","login.recuperar_cargando":"Enviando instruções…",
     "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
     "login.subtitle":"Selecione como deseja entrar na aplicação.",
     "login.idioma":"Idioma",
@@ -3644,7 +3646,7 @@ const TRANSLATIONS = {
     "login.error_rol":"Bitte wählen Sie eine gültige Rolle.","login.error_pwd":"Falsches Passwort für diese Rolle.",
     "login.sesion_label":"Club Pádel 04 · Anmeldung",
     "login.legal":"Lokaler Zugang durch Passwort geschützt. Sitzung nur auf diesem Gerät speicherbar.",
-    "login.olvide_pwd":"Passwort vergessen?","login.recuperar_title":"Zugang wiederherstellen","login.recuperar_desc":"Geben Sie Ihre E-Mail-Adresse ein und, wenn das Konto existiert, erhalten Sie Anweisungen zur Zurücksetzung.","login.recuperar_email":"E-Mail-Adresse","login.recuperar_btn":"Anweisungen senden","login.recuperar_enviado":"Wenn diese Adresse im System registriert ist, erhalten Sie in Kürze Anweisungen. Prüfen Sie auch Ihren Spam-Ordner.","login.recuperar_volver":"Zurück zum Login","login.recuperar_preparado":"Bereit für Endpunkt: /api/auth/forgot-password",
+    "login.olvide_pwd":"Passwort vergessen?","login.recuperar_title":"Zugang wiederherstellen","login.recuperar_desc":"Geben Sie Ihre E-Mail-Adresse ein und, wenn das Konto existiert, erhalten Sie Anweisungen zur Zurücksetzung.","login.recuperar_email":"E-Mail-Adresse","login.recuperar_btn":"Anweisungen senden","login.recuperar_enviado":"Wenn diese Adresse im System registriert ist, erhalten Sie in Kürze Anweisungen. Prüfen Sie auch Ihren Spam-Ordner.","login.recuperar_volver":"Zurück zum Login","login.recuperar_preparado":"Bereit für Endpunkt: /api/auth/forgot-password","login.recuperar_no_disponible":"Die Passwort-Wiederherstellung ist in dieser Umgebung noch nicht verfügbar: Aktivierung des Authentifizierungsanbieters ausstehend.","login.recuperar_cargando":"Anweisungen werden gesendet…",
     "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
     "login.subtitle":"Wählen Sie aus, wie Sie die Anwendung betreten möchten.",
     "login.idioma":"Sprache",
@@ -6801,29 +6803,21 @@ function Soporte() {
 }
 
 function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
+  const auth = useAuth();
   const lang = useLang();
   const tx = key => t(key, lang);
   const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
-  const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
 
   // Perfil preparado para backend real.
   // Actualmente localStorage funciona como fallback local para no romper la demo.
-  // Endpoints recomendados:
+  // Endpoints recomendados (todavía sin implementar en el Worker):
   // GET    /api/profile/me
   // PATCH  /api/profile/me
   // POST   /api/profile/avatar
   // DELETE /api/profile/avatar
   // GET    /api/profile/metrics
-  // POST   /api/auth/change-password
-  const PROFILE_BACKEND_ENDPOINTS = {
-  login: "/api/auth/login",
-  register: "/api/auth/register",
-  forgotPassword: "/api/auth/forgot-password",
-    me: "/api/auth/me",
-    avatar: "/api/profile/avatar",
-    metrics: "/api/profile/metrics",
-    changePassword: "/api/auth/change-password",
-  };
+  // Login/registro/recuperación/cambio de contraseña ya NO se referencian
+  // desde aquí: viven centralizados en src/auth/authService.js.
 
   function saveProfileFallback(key, value) {
     try {
@@ -6837,12 +6831,8 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
 
   async function saveProfileField(field, value) {
     // Preparado para backend real. En esta fase solo persiste localmente.
-    // Futuro:
-    // await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
-    //   method: "PATCH",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ [field]: value }),
-    // });
+    // Futuro: PATCH /api/profile/me { [field]: value } (endpoint aún no
+    // implementado en el Worker).
     const storageMap = {
       avatar: "cp04_avatar",
       bio: "cp04_bio",
@@ -6962,16 +6952,36 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   }
 
   // Handler contraseña
-  function handleChangePwd(e) {
+  async function handleChangePwd(e) {
     e.preventDefault(); setPwdMsg(""); setPwdError("");
     if (!pwdActual) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
-    if (pwdActual !== demoPwds[selectedRole]) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
+
     const valid = /[A-Z]/.test(pwdNueva) && /[a-z]/.test(pwdNueva) && /[0-9]/.test(pwdNueva) && pwdNueva.length >= 8;
     if (!valid) { setPwdError(tx("perfil.pwd_error_nueva")); return; }
     if (pwdNueva !== pwdConfirmar) { setPwdError(tx("perfil.pwd_error_coincide")); return; }
+
+    if (auth.isAuthenticated) {
+      // Sesión backend real: el cambio de contraseña es real (POST
+      // /api/auth/change-password vía authService), no un simulacro.
+      const result = await auth.updatePassword(pwdNueva);
+      if (!result.ok) {
+        setPwdError(result.message || "No se pudo actualizar la contraseña.");
+        return;
+      }
+      setPwdMsg(result.message || "Contraseña actualizada.");
+      setPwdActual(""); setPwdNueva(""); setPwdConfirmar("");
+      return;
+    }
+
+    // Sin sesión backend real (demo): la contraseña "actual" solo se valida
+    // contra la contraseña demo del rol, aislada en demoAuthAdapter. El
+    // éxito queda etiquetado como local (perfil.pwd_guardada) para no
+    // fingir un cambio de contraseña real.
+    const demoCheck = verifyDemoRolePassword(selectedRole, pwdActual);
+    if (!demoCheck.ok) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
+
     setPwdMsg(tx("perfil.pwd_guardada"));
     setPwdActual(""); setPwdNueva(""); setPwdConfirmar("");
-    // TODO: POST /api/auth/change-password
   }
 
   // Métricas demo por rol
@@ -7129,7 +7139,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
             <div style={{ borderTop:`1px solid ${T.line}`, paddingTop:12, marginTop:4 }}>
               <LanguageSelector />
             </div>
-            {localStorage.getItem("cp04_access_token") && (
+            {auth.isAuthenticated && (
               <div style={{
                 marginTop:8,
                 marginBottom:6,
@@ -7142,7 +7152,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
                 lineHeight:1.45
               }}>
                 <strong style={{ color:T.accent }}>Autenticación real:</strong> Supabase conectado
-                {localStorage.getItem("cp04_user_email") && (
+                {auth.user?.email && (
                   <div style={{ marginTop:6, maxWidth:"100%" }}>
                     <div style={{ color:T.textDim, fontSize:".72rem", marginBottom:2 }}>
                       Email:
@@ -7156,21 +7166,14 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
                       overflowWrap:"anywhere",
                       maxWidth:"100%"
                     }}>
-                      {localStorage.getItem("cp04_user_email")}
+                      {auth.user.email}
                     </div>
                   </div>
                 )}
 
-                {localStorage.getItem("cp04_user") && (() => {
-                  let realUser = null;
-                  try {
-                    realUser = JSON.parse(localStorage.getItem("cp04_user") || "null");
-                  } catch {
-                    realUser = null;
-                  }
-
-                  const realRole = realUser?.role || "";
-                  const realPermissions = Array.isArray(realUser?.permissions) ? realUser.permissions : [];
+                {auth.user && (() => {
+                  const realRole = auth.role || "";
+                  const realPermissions = Array.isArray(auth.user?.permissions) ? auth.user.permissions : [];
 
                   return (
                     <div style={{ marginTop:8, maxWidth:"100%" }}>
@@ -7434,6 +7437,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
 
 
 export default function ClubPadel04SaaSApp() {
+  const auth = useAuth();
   const [current, setCurrent] = useState("inicio");
   const [selectedRole, setSelectedRole] = useState(() => localStorage.getItem("cp04_role") || "");
   const [pendingRole, setPendingRole] = useState("");
@@ -7462,89 +7466,54 @@ export default function ClubPadel04SaaSApp() {
   const [registerError, setRegisterError] = useState("");
   const [registerDone, setRegisterDone] = useState(() => localStorage.getItem("cp04_register_done") === "true");
 
-  // AUDITORIA 24 · restaurar sesión Supabase real al recargar la app
+  // La restauración de sesión real (¿sigue siendo válido el token guardado?)
+  // ya no vive aquí: la posee AuthContext (src/auth/AuthContext.jsx), que la
+  // dispara una sola vez al montar la app completa. Este efecto solo hace de
+  // puente hacia el `selectedRole` heredado que usa el resto del componente
+  // para navegación/menús: si AuthContext confirma una sesión backend real,
+  // reflejamos su rol verificado aquí. Si no hay sesión real (auth.role es
+  // null, incluyendo todo el flujo de login demo), no tocamos selectedRole:
+  // ese caso lo sigue gestionando confirmRoleAccess/clearRole como hasta ahora.
   useEffect(() => {
-    let cancelled = false;
-
-    async function restoreSupabaseSession() {
-      const token = localStorage.getItem("cp04_access_token");
-
-      if (!token) {
-        return;
-      }
-
-      try {
-        const res = await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok || !data?.ok) {
-          localStorage.removeItem("cp04_access_token");
-          localStorage.removeItem("cp04_refresh_token");
-          localStorage.removeItem("cp04_auth_mode");
-          return;
-        }
-
-        const user = data.user || {};
-        const restoredRole = cp04NormalizeRole(data.role || user.role || localStorage.getItem("cp04_role") || "PLAYER");
-
-        localStorage.setItem("cp04_auth_mode", "supabase_real");
-        localStorage.setItem("cp04_user", JSON.stringify(user));
-        localStorage.setItem("cp04_role", restoredRole);
-
-        if (user.email) {
-          localStorage.setItem("cp04_user_email", user.email);
-        }
-
-        if (!cancelled) {
-          setSelectedRole(restoredRole);
-          setLoginError("");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setLoginError("");
-        }
-      }
+    if (auth.isAuthenticated && auth.role) {
+      setSelectedRole(auth.role);
+      setLoginError("");
     }
-
-    restoreSupabaseSession();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
   const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
+  // render nunca debe confiar únicamente en que `current` llegó por esa vía.
+  // Si en el futuro algo hace setCurrent() directo a una sección protegida,
+  // esto la bloquea igualmente en el último paso antes de pintar en pantalla.
+  const safeCurrentSection = cp04CanAccessSection(selectedRole, current)
+    ? current
+    : cp04GetSafeStartSection(selectedRole);
 
+  // Las contraseñas demo ya no viven aquí: están aisladas en
+  // src/auth/demoAuthAdapter.js, gateadas por isDemoAuthAllowed() (solo
+  // desarrollo). Este objeto solo guarda las etiquetas de UI del selector
+  // de rol, que no son sensibles.
   const roleConfig = {
     PLAYER: {
       label: "Jugador / cliente",
       desc: "Reservar pistas, consultar reservas y ranking.",
       start: "inicio",
-      password: "jugador04",
     },
     STAFF: {
       label: "Staff / recepción",
       desc: "Gestión diaria de reservas, altas y atención al jugador.",
       start: "gestion",
-      password: "staff04",
     },
     ADMIN: {
       label: "Administrador / jefe",
       desc: "Panel de dirección, métricas y control operativo.",
       start: "admin",
-      password: "admin04",
     },
     SUPPORT: {
       label: "Soporte técnico",
       desc: "Zona técnica, integraciones y diagnóstico interno.",
       start: "soporte",
-      password: "soporte04",
     },
   };
 
@@ -7564,8 +7533,13 @@ export default function ClubPadel04SaaSApp() {
       return;
     }
 
-    if (rolePassword.trim() !== role.password) {
-      setRoleError("Contraseña incorrecta para este rol.");
+    // La verificación de contraseña demo vive en demoAuthAdapter, aislada y
+    // gateada a solo-desarrollo: en un build de producción esto se deniega
+    // aunque la contraseña sea correcta (fail-closed, no fallback silencioso
+    // a demo).
+    const demoAuth = verifyDemoRolePassword(pendingRole, rolePassword);
+    if (!demoAuth.ok) {
+      setRoleError(demoAuth.message || "Contraseña incorrecta para este rol.");
       return;
     }
 
@@ -7583,12 +7557,13 @@ export default function ClubPadel04SaaSApp() {
   }
 
   function clearRole() {
+    // auth.logout() ya limpia la sesión backend real (token/user/rol,
+    // best-effort contra /api/auth/logout) a través de authService. Esto de
+    // aquí solo limpia lo que sigue siendo estado local de la demo/UI:
+    // el rol demo elegido (cp04_role, cuando no vino de un login real) y los
+    // formularios en curso. Ningún permiso del siguiente usuario puede
+    // heredar nada de esto: todo queda a cero.
     localStorage.removeItem("cp04_role");
-    localStorage.removeItem("cp04_access_token");
-    localStorage.removeItem("cp04_refresh_token");
-    localStorage.removeItem("cp04_auth_mode");
-    localStorage.removeItem("cp04_user");
-    localStorage.removeItem("cp04_user_email");
 
     setSelectedRole("");
     setPendingRole("");
@@ -7600,20 +7575,10 @@ export default function ClubPadel04SaaSApp() {
     setShowLoginPassword(false);
     setLoginError("");
     setMobileMenuOpen(false);
+
+    auth.logout().catch(() => {});
   }
 
-
-  function inferRoleFromEmail(email) {
-    const clean = String(email || "").trim().toLowerCase();
-
-    // Accesos internos de prueba para el propietario/equipo.
-    if (clean.includes("soporte")) return "SUPPORT";
-    if (clean.includes("admin") || clean.includes("jefe")) return "ADMIN";
-    if (clean.includes("staff") || clean.includes("empleado") || clean.includes("recepcion")) return "STAFF";
-
-    // Por defecto, cualquier usuario real entra como jugador/cliente hasta que el backend asigne rol.
-    return "PLAYER";
-  }
 
   async function handleUniversalLogin(event) {
     event.preventDefault();
@@ -7634,47 +7599,17 @@ export default function ClubPadel04SaaSApp() {
     try {
       setLoginError("");
 
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
-      });
+      // Toda la lógica de red/token/rol vive ahora en authService a través
+      // de AuthContext: el rol SOLO puede venir del backend autenticado
+      // (auth.login nunca deriva un rol de patrones en el email).
+      const result = await auth.login(cleanEmail, cleanPassword);
 
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok || !data?.ok) {
-        setLoginError(data?.message || "No se pudo iniciar sesión.");
+      if (!result.ok) {
+        setLoginError(result.message || "No se pudo iniciar sesión.");
         return;
       }
 
-      const user = data.user || data.profile || null;
-      const accessToken =
-        data.access_token ||
-        data.token ||
-        data.session?.access_token ||
-        data.session?.token ||
-        "";
-
-      const refreshToken =
-        data.refresh_token ||
-        data.session?.refresh_token ||
-        "";
-
-      if (!accessToken) {
-        setLoginError("Login recibido, pero falta el token de sesión.");
-        return;
-      }
-
-      const inferredRole = cp04NormalizeRole(user?.role || inferRoleFromEmail(cleanEmail));
-
-      localStorage.setItem("cp04_access_token", accessToken);
-      if (refreshToken) localStorage.setItem("cp04_refresh_token", refreshToken);
-      localStorage.setItem("cp04_auth_mode", "supabase_real");
-      localStorage.setItem("cp04_user", JSON.stringify(user || { email: cleanEmail, role: inferredRole }));
-      localStorage.setItem("cp04_role", inferredRole);
-      localStorage.setItem("cp04_user_email", cleanEmail);
-
-      setSelectedRole(inferredRole);
+      setSelectedRole(cp04NormalizeRole(result.role));
       setLoginError("");
       setLoginPassword("");
       setMobileMenuOpen(false);
@@ -7716,16 +7651,13 @@ export default function ClubPadel04SaaSApp() {
       setRegisterError("");
       setRegisterDone(false);
 
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail, password: cleanPassword, name: cleanName, role: "PLAYER" }),
-      });
+      // Misma capa que login/logout/cambio de contraseña: la red, el
+      // manejo de errores y la estructura de respuesta viven en
+      // authService, no en App.jsx.
+      const result = await auth.register({ name: cleanName, email: cleanEmail, password: cleanPassword });
 
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok || !data?.ok) {
-        setRegisterError(data?.message || "No se pudo crear la cuenta.");
+      if (!result.ok) {
+        setRegisterError(result.message || "No se pudo crear la cuenta.");
         return;
       }
 
@@ -7781,13 +7713,30 @@ export default function ClubPadel04SaaSApp() {
     setForgotPwdEmailError("");
   }
 
-  function handleForgotPwdSubmit(e) {
+  async function handleForgotPwdSubmit(e) {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(forgotPwdEmail.trim())) {
       setForgotPwdEmailError("Introduce un email válido.");
       return;
     }
-    setForgotPwdStep("sent");
+
+    setForgotPwdStep("loading");
+
+    // Llamada real a auth.recoverPassword (POST /api/auth/forgot-password).
+    // result.authReady distingue si el backend tiene proveedor configurado
+    // (Supabase) de si sigue en modo backend_stub: NUNCA se muestra el
+    // mismo mensaje de éxito en ambos casos, porque en el segundo no se ha
+    // enviado ningún email de verdad. Mostrar "sent" ahí sería seguridad de
+    // attrezzo (Fase 8 del prompt maestro).
+    const result = await auth.recoverPassword(forgotPwdEmail.trim().toLowerCase());
+
+    if (result.authReady) {
+      // Respuesta siempre neutra por diseño anti-enumeration: no revela si
+      // el email existe o no, tanto si el envío real fue posible como si no.
+      setForgotPwdStep("sent");
+    } else {
+      setForgotPwdStep("unavailable");
+    }
   }
 
   useEffect(() => {
@@ -8099,11 +8048,25 @@ export default function ClubPadel04SaaSApp() {
                     </form>
                   </>
                 )}
+                {forgotPwdStep === "loading" && (
+                  <p style={{ color:T.textDim, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_cargando")}</p>
+                )}
                 {forgotPwdStep === "sent" && (
                   <>
                     <div style={{ color:T.accent, fontWeight:900, fontSize:"1.4rem", marginBottom:10 }}>✓</div>
                     <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
                     <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_enviado")}</p>
+                    <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+                      style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                      {ltx("login.recuperar_volver")}
+                    </button>
+                  </>
+                )}
+                {forgotPwdStep === "unavailable" && (
+                  <>
+                    <div style={{ color:T.warning, fontWeight:900, fontSize:"1.4rem", marginBottom:10 }}>⚠</div>
+                    <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
+                    <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_no_disponible")}</p>
                     <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
                       style={{ background:"transparent", border:`1px solid ${T.line}` }}>
                       {ltx("login.recuperar_volver")}
@@ -8138,7 +8101,7 @@ export default function ClubPadel04SaaSApp() {
       {mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}
       <div className="cp04-layout">
         <Sidebar current={current} selectedRole={selectedRole} onClearRole={clearRole} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} />
-        <main className="cp04-main" data-tour="main-content">{modules[current] || modules.inicio}</main>
+        <main className="cp04-main" data-tour="main-content">{modules[safeCurrentSection] || modules.inicio}</main>
       </div>
       <CP04GuidedTutorial
         selectedRole={selectedRole}
