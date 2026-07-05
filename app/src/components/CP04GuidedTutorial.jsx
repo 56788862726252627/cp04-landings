@@ -296,7 +296,10 @@ function calcTooltipPos(targetRect) {
 }
 
 /* ── Componente ──────────────────────────────────────────────── */
-export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevision }) {
+const isMobileViewport = () =>
+  typeof window !== "undefined" && window.matchMedia("(max-width: 980px)").matches;
+
+export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevision, onSetMobileMenuOpen }) {
   const steps = TOUR_STEPS[selectedRole] || [];
   const [step, setStep]           = useState(0);
   const [visible, setVisible]     = useState(false);
@@ -341,6 +344,9 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
     const s = steps[step];
     if (!s) return;
     onNavigate(s.section);
+    if (onSetMobileMenuOpen && isMobileViewport()) {
+      onSetMobileMenuOpen(true);
+    }
 
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -374,6 +380,9 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
     setVisible(false);
     setTargetRect(null);
     setCursorPos({ x: -300, y: -300 });
+    if (onSetMobileMenuOpen && isMobileViewport()) {
+      onSetMobileMenuOpen(false);
+    }
   }
 
   if (!visible || steps.length === 0) return null;

@@ -4201,7 +4201,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
   );
 }
 
-function Inicio({ setCurrent }) {
+function Inicio({ navigate, selectedRole }) {
   const clk = useClock();
   const lang = useLang();
   const tx = key => t(key, lang);
@@ -4210,6 +4210,7 @@ function Inicio({ setCurrent }) {
   const makeStatus = kpi.makeErrores > 3 ? "error" : kpi.makeErrores > 0 ? "warn" : "ok";
   const diasCortos = tx("home.dias_semana").split(",");
   const diasLargo = tx("home.dias_largo").split(",");
+  const canAccess = (section) => cp04CanAccessSection(selectedRole, section);
 
   return (
     <div style={{ padding: "clamp(24px,4vw,48px) 24px clamp(60px,10vw,96px)", maxWidth: 1220, margin: "0 auto" }}>
@@ -4228,9 +4229,9 @@ function Inicio({ setCurrent }) {
             {tx("home.hero_subtitle")}
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Btn onClick={() => setCurrent("reservas")} style={{ color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
-            <Btn variant="secondary" onClick={() => setCurrent("torneos")}>🏆 {tx("home.btn_torneos")}</Btn>
-            <Btn variant="secondary" onClick={() => setCurrent("admin")}>📊 {tx("home.btn_admin")}</Btn>
+            <Btn onClick={() => navigate("reservas")}>🎾 {tx("home.reservar")}</Btn>
+            <Btn variant="secondary" onClick={() => navigate("torneos")}>🏆 {tx("home.btn_torneos")}</Btn>
+            {canAccess("admin") && <Btn variant="secondary" onClick={() => navigate("admin")}>📊 {tx("home.btn_admin")}</Btn>}
           </div>
         </div>
 
@@ -4244,10 +4245,10 @@ function Inicio({ setCurrent }) {
 
           {/* Acciones rápidas */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <Btn onClick={() => setCurrent("reservas")} style={{ padding: "10px 12px", fontSize: ".82rem", color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
-            <Btn variant="secondary" onClick={() => setCurrent("torneos")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>🏆 {tx("home.torneo")}</Btn>
-            <Btn variant="secondary" onClick={() => setCurrent("flujos_make")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>⚙️ {tx("home.procesos")}</Btn>
-            <Btn variant="secondary" onClick={() => setCurrent("alta_jugador")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>👤 {tx("home.alta")}</Btn>
+            <Btn onClick={() => navigate("reservas")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>🎾 {tx("home.reservar")}</Btn>
+            <Btn variant="secondary" onClick={() => navigate("torneos")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>🏆 {tx("home.torneo")}</Btn>
+            {canAccess("flujos_make") && <Btn variant="secondary" onClick={() => navigate("flujos_make")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>⚙️ {tx("home.procesos")}</Btn>}
+            {canAccess("alta_jugador") && <Btn variant="secondary" onClick={() => navigate("alta_jugador")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>👤 {tx("home.alta")}</Btn>}
           </div>
 
           {/* Estado operativo */}
@@ -4304,7 +4305,7 @@ function Inicio({ setCurrent }) {
               {kpi.incidenciasAbiertas > 0 && <span>{kpi.incidenciasAbiertas} {tx("home.incidencias_s")}</span>}
             </div>
           </div>
-          <Btn variant="secondary" onClick={() => setCurrent("flujos_make")} style={{ padding: "7px 14px", fontSize: ".8rem" }}>{tx("home.ver_procesos")}</Btn>
+          {canAccess("flujos_make") && <Btn variant="secondary" onClick={() => navigate("flujos_make")} style={{ padding: "7px 14px", fontSize: ".8rem" }}>{tx("home.ver_procesos")}</Btn>}
         </div>
       )}
 
@@ -7518,7 +7519,7 @@ export default function ClubPadel04SaaSApp() {
     };
   }, []);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
 
   const roleConfig = {
     PLAYER: {
@@ -7916,7 +7917,7 @@ export default function ClubPadel04SaaSApp() {
               </div>
           {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
-            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#ffffff", fontWeight:900 }}>
+            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
               Iniciar sesión
             </button>
             
@@ -7970,7 +7971,7 @@ export default function ClubPadel04SaaSApp() {
                       {registerError && <div style={{ color:"#ff8b8b", marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
 
                       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-                        <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+                        <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
                           Crear cuenta
                         </button>
                         <button type="button" className="cp04-menu-button" onClick={closeRegister} style={{ background:"transparent", border:`1px solid ${T.line}` }}>
@@ -8087,7 +8088,7 @@ export default function ClubPadel04SaaSApp() {
                       {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
                         <button type="submit" className="cp04-menu-button"
-                          style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+                          style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
                           {ltx("login.recuperar_btn")}
                         </button>
                         <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
@@ -8143,6 +8144,7 @@ export default function ClubPadel04SaaSApp() {
         selectedRole={selectedRole}
         onNavigate={navigate}
         openRevision={tutorialRevision}
+        onSetMobileMenuOpen={setMobileMenuOpen}
       />
     </>
   );
