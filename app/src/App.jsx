@@ -44,6 +44,16 @@ import { useAuth } from "./auth/AuthContext.jsx";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 import { authFetch } from "./auth/authService.js";
 import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
+import {
+  CP04_ROLE_PERMISSIONS,
+  CP04_PROTECTED_SECTIONS,
+  cp04NormalizeRole,
+  cp04IsProtectedSection,
+  cp04CanAccessSection,
+  cp04GetSafeStartSection,
+} from "./utils/rbac.js";
+import CentroTecnico from "./components/CentroTecnico.jsx";
+import { T } from "./theme.js";
 /**
  * Club Pádel 04 · SaaS App segura
  *
@@ -55,22 +65,9 @@ import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availabil
  *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
  */
 
-const T = {
-  bg: "#05080d",
-  surface: "#0b111d",
-  surface2: "#111a2b",
-  surface3: "#18243a",
-  accent: "#b6ff00",
-  accent2: "#20e3b2",
-  primary: "#2f6bff",
-  text: "#ffffff",
-  textDim: "#9aa8bd",
-  line: "rgba(255,255,255,0.10)",
-  danger: "#ff5e3a",
-  warning: "#ffad47",
-  fontDisplay: "'Syne', sans-serif",
-  fontBody: "'DM Sans', sans-serif",
-};
+// T (tokens de diseño) vive en ./theme.js: lo usan tanto App.jsx como
+// componentes externos (p. ej. CentroTecnico.jsx) sin crear un import
+// circular entre ambos.
 
 const CONFIG = {
   appName: "Club Pádel 04",
@@ -2263,41 +2260,8 @@ const CP04_AUTH_MODES = {
   PRODUCTION: "production"
 };
 
-const CP04_PROTECTED_SECTIONS = [
-  "gestion",
-  "admin",
-  "flujos_make",
-  "soporte"
-];
-
-const CP04_ROLE_PERMISSIONS = {
-  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
-  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
-  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
-  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"],
-};
-
-function cp04NormalizeRole(role) {
-  const value = String(role || "").trim().toUpperCase();
-  if (["PLAYER", "STAFF", "ADMIN", "SUPPORT"].includes(value)) return value;
-  return "PLAYER";
-}
-
-function cp04IsProtectedSection(section) {
-  return CP04_PROTECTED_SECTIONS.includes(String(section || "").trim());
-}
-
-function cp04CanAccessSection(role, section) {
-  const safeRole = cp04NormalizeRole(role);
-  const safeSection = String(section || "inicio").trim();
-  return (CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER).includes(safeSection);
-}
-
-function cp04GetSafeStartSection(role) {
-  const safeRole = cp04NormalizeRole(role);
-  const allowed = CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER;
-  return allowed[0] || "inicio";
-}
+// RBAC movido a src/utils/rbac.js (fuente única, testeada con node --test,
+// también consumida por Sidebar). Ver import al inicio del archivo.
 
 function cp04RequiresBackendAuth(section) {
   return cp04IsProtectedSection(section);
@@ -4061,13 +4025,12 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
     ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["admin","nav.admin","📊"],
     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
   ];
-  const menuByRole = {
-    PLAYER: ["inicio","reservas","torneos","ranking","perfil"],
-    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
-    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
-    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
-  };
-  const allowedMenu = menuByRole[selectedRole] || menuByRole.PLAYER;
+  // Antes había un mapa de permisos propio y duplicado aquí (menuByRole),
+  // mantenido a mano en paralelo a CP04_ROLE_PERMISSIONS. Se ha unificado:
+  // ahora la navegación y el guard final de render (más abajo, en
+  // ClubPadel04SaaSApp) leen exactamente la misma fuente, para que nunca
+  // puedan desincronizarse entre sí.
+  const allowedMenu = CP04_ROLE_PERMISSIONS[cp04NormalizeRole(selectedRole)] || CP04_ROLE_PERMISSIONS.PLAYER;
   const visibleItems = navKeys.filter(([id]) => allowedMenu.includes(id));
 
   return (
@@ -7569,7 +7532,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <CentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,
