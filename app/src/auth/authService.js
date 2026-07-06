@@ -375,6 +375,28 @@ export function getAccessToken() {
   return state.accessToken;
 }
 
+// authFetch: wrapper mínimo sobre fetch() que adjunta
+// `Authorization: Bearer <access_token>` cuando existe sesión, y no hace
+// nada más. No decide qué endpoints son públicos ni protegidos (eso lo
+// decide quien llama, usando fetch() normal para lo público y authFetch()
+// para lo protegido); no transforma la respuesta ni intercepta 401 (el
+// manejo de errores sigue en cada call site, igual que hoy). Así, en modo
+// demo (sin access_token real) el comportamiento es idéntico al actual:
+// la petición sale sin cabecera Authorization.
+export async function authFetch(url, options = {}) {
+  const token = getAccessToken();
+  const headers = { ...(options.headers || {}) };
+
+  // Nunca "Bearer " vacío/null/undefined: si no hay token, se omite la
+  // cabecera por completo y el backend responde su propio fail-closed
+  // (401 MISSING_TOKEN), igual que si se llamara sin este helper.
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return fetch(url, { ...options, headers });
+}
+
 export function getCurrentUser() {
   return { user: state.user, role: state.role };
 }

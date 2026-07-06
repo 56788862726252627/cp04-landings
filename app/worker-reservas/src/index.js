@@ -595,6 +595,7 @@ async function handleDisponibilidad(request, env) {
     `&fields%5B%5D=estado_reserva` +
     `&fields%5B%5D=fecha_reserva` +
     `&fields%5B%5D=hora_inicio` +
+    `&fields%5B%5D=hora_fin` +
     `&fields%5B%5D=Pista`;
 
   const airtableRes = await fetch(airtableUrl, {
@@ -624,11 +625,38 @@ async function handleDisponibilidad(request, env) {
     .map((record) => record.fields?.clave_slot)
     .filter(Boolean);
 
+  // ocupadas_detalle: además de la clave plana (solo hora de inicio, que ya
+  // usan otros consumidores), se expone hora_fin de cada reserva existente
+  // cuando Airtable la tiene rellena. Esto es lo mínimo necesario para que
+  // el frontend pueda detectar solapamientos por intervalo real (una
+  // reserva de 90/120 min ocupa más de un slot de una hora) en vez de por
+  // coincidencia exacta de hora de inicio. No añade ni modifica nada en
+  // Airtable: solo se lee un campo que ya existe (hora_fin, ya usado en
+  // cp04ListReservations más abajo).
+  const ocupadasDetalle = (data.records || [])
+    .map((record) => {
+      const fields = record.fields || {};
+      const pista = fields.Pista;
+      const horaInicio = fields.hora_inicio;
+      const horaFin = fields.hora_fin;
+
+      if (!pista || !horaInicio) return null;
+
+      return {
+        pista: Array.isArray(pista) ? pista[0] : pista,
+        fecha,
+        hora_inicio: horaInicio,
+        hora_fin: horaFin || null
+      };
+    })
+    .filter(Boolean);
+
   return jsonResponse(
     {
       ok: true,
       fecha,
       ocupadas,
+      ocupadas_detalle: ocupadasDetalle,
       total: ocupadas.length
     },
     200,

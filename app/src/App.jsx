@@ -42,6 +42,8 @@ import { LazyClubGallery } from "./components/lazy/lazyGallery.js";
 import CP04GuidedTutorial from "./components/CP04GuidedTutorial.jsx";
 import { useAuth } from "./auth/AuthContext.jsx";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
+import { authFetch } from "./auth/authService.js";
+import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
 /**
  * Club Pádel 04 · SaaS App segura
  *
@@ -330,23 +332,55 @@ function madridCurrentMinutes() {
   return Number(hour) * 60 + Number(minute);
 }
 
+// "Ahora" de Madrid, representado como un Date UTC cuyos campos coinciden
+// con la hora local de Madrid (mismo truco que ya usa isSundayISO con
+// Date.UTC): así evaluateSlotAvailability puede comparar por valores sin
+// preocuparse de zonas horarias reales.
+function madridNowAsUtcTrick() {
+  const { year, month, day, hour, minute } = madridDateParts();
+  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute)));
+}
+
+// Horario del club ya existente en el proyecto (BOOKING_HOURS/BOOKING_DURATIONS/
+// CLUB_CLOSING_MINUTES): no se inventa ninguna franja nueva, solo se agrupa
+// para pasarlo como config a evaluateSlotAvailability.
+const CLUB_OPENING_HOURS = {
+  closingMinutes: CLUB_CLOSING_MINUTES,
+  allowedStartTimes: BOOKING_HOURS,
+  allowedDurations: BOOKING_DURATIONS,
+};
+
+// Wrapper de compatibilidad: mantiene la firma y los valores de retorno que
+// ya consumían validateBooking/validateReschedule/Reservas
+// ("invalid"|"closed"|"past"|"outside_hours"|"available"), pero delega el
+// cálculo real en evaluateSlotAvailability (src/utils/availability.js) para
+// no duplicar las reglas de negocio. No comprueba ocupación (no recibe
+// courtId ni existingBookings): igual que antes, la ocupación se evalúa
+// aparte donde sí hay contexto de pista y reservas (CalendarioDisponibilidad).
 function getSlotStatus(fecha, hora, duration = 90) {
-  if (!fecha || !hora) return "invalid";
-  if (isSundayISO(fecha)) return "closed";
-  if (isPastDateISO(fecha)) return "past";
+  const { status, reason } = evaluateSlotAvailability({
+    date: fecha,
+    startTime: hora,
+    durationMinutes: Number(duration),
+    courtId: null,
+    existingBookings: [],
+    openingHours: CLUB_OPENING_HOURS,
+    currentDateTime: madridNowAsUtcTrick(),
+  });
 
-  const startMinutes = minutesFromTime(hora);
-  if (!Number.isFinite(startMinutes)) return "invalid";
+  if (status === AVAILABILITY_STATUS.AVAILABLE) return "available";
 
-  if (fecha === todayISO() && startMinutes <= madridCurrentMinutes()) {
-    return "past";
+  switch (reason) {
+    case "club_closed":
+      return "closed";
+    case "past_time":
+      return "past";
+    case "insufficient_remaining_time":
+    case "outside_opening_hours":
+      return "outside_hours";
+    default:
+      return "invalid";
   }
-
-  if (startMinutes + Number(duration || 0) > CLUB_CLOSING_MINUTES) {
-    return "outside_hours";
-  }
-
-  return "available";
 }
 
 function formatDateEs(value) {
@@ -556,6 +590,7 @@ function CalendarioDisponibilidad({
 }) {
   const [fecha, setFecha] = useState(initialDate || todayISO());
   const [ocupadas, setOcupadas] = useState([]);
+  const [ocupadasDetalle, setOcupadasDetalle] = useState([]);
   const [estado, setEstado] = useState("idle");
   const [mensaje, setMensaje] = useState("");
   const lastInitialDateRef = useRef(initialDate);
@@ -563,11 +598,40 @@ function CalendarioDisponibilidad({
   const ocupadasSet = useMemo(() => new Set(ocupadas), [ocupadas]);
   const pistas = COURTS.map((c) => c.name);
 
+  // existingBookings para evaluateSlotAvailability: se prefiere
+  // ocupadas_detalle (hora_inicio + hora_fin reales, cuando el Worker ya lo
+  // devuelve) para detectar solapamientos por intervalo real. Si el Worker
+  // desplegado todavía no lo incluye, se cae a una aproximación derivada de
+  // la lista plana `ocupadas` asumiendo que cada slot ocupado dura lo mismo
+  // que la duración seleccionada actualmente — la misma limitación que ya
+  // existía antes de este cambio, no una regresión nueva.
+  const existingBookings = useMemo(() => {
+    if (Array.isArray(ocupadasDetalle) && ocupadasDetalle.length > 0) {
+      return ocupadasDetalle.map((item) => ({
+        courtId: item.pista,
+        date: item.fecha,
+        startTime: item.hora_inicio,
+        endTime: item.hora_fin || calcTimeEnd(item.hora_inicio, duration),
+      }));
+    }
+
+    return ocupadas.map((clave) => {
+      const [claveFecha, clavePista, claveHora] = clave.split("|");
+      return {
+        courtId: clavePista,
+        date: claveFecha,
+        startTime: claveHora,
+        endTime: calcTimeEnd(claveHora, duration),
+      };
+    });
+  }, [ocupadasDetalle, ocupadas, duration]);
+
   const consultarDisponibilidad = useCallback(async (fechaConsulta) => {
     if (!fechaConsulta) return;
 
     if (isSundayISO(fechaConsulta)) {
       setOcupadas([]);
+      setOcupadasDetalle([]);
       setEstado("closed");
       setMensaje("Club cerrado los domingos · no se admiten reservas durante todo el día.");
       return;
@@ -575,6 +639,7 @@ function CalendarioDisponibilidad({
 
     if (isPastDateISO(fechaConsulta)) {
       setOcupadas([]);
+      setOcupadasDetalle([]);
       setEstado("past");
       setMensaje("La fecha seleccionada ya ha pasado.");
       return;
@@ -588,18 +653,21 @@ function CalendarioDisponibilidad({
 
       if (data.cerrado === true) {
         setOcupadas([]);
+        setOcupadasDetalle([]);
         setEstado("closed");
         setMensaje(data.motivo || "Club cerrado los domingos.");
         return;
       }
 
       setOcupadas(data.ocupadas || []);
+      setOcupadasDetalle(Array.isArray(data.ocupadas_detalle) ? data.ocupadas_detalle : []);
       setEstado("success");
       setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
     } catch {
       setEstado("error");
       setMensaje("No se pudo actualizar la disponibilidad. Inténtalo de nuevo.");
       setOcupadas([]);
+      setOcupadasDetalle([]);
     }
   }, []);
 
@@ -703,36 +771,46 @@ function CalendarioDisponibilidad({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))", gap: 8 }}>
               {BOOKING_HOURS.map((hora) => {
                 const clave = `${fecha}|${pista}|${hora}`;
-                const ocupada = ocupadasSet.has(clave);
-                const slotStatus = getSlotStatus(fecha, hora, duration);
-                const cerrada = slotStatus === "closed";
-                const pasada = slotStatus === "past";
-                const fueraHorario = slotStatus === "outside_hours";
-                const disponibilidadNoVerificada =
-            estado === "loading" || estado === "error";
-          const bloqueada =
-            cerrada || pasada || fueraHorario || disponibilidadNoVerificada;
-                const disabled = ocupada || bloqueada;
-                const label = cerrada
-                  ? "Cerrado"
-                  : pasada
-                    ? "Pasada"
-                    : fueraHorario
-                      ? "No disponible"
-                : estado === "loading"
-                  ? "Comprobando"
-                  : estado === "error"
-                    ? "No verificado"
-                    : ocupada
-                      ? "Ocupado"
-                      : "Libre";
-                const danger = ocupada || pasada;
-                const borderColor = cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent;
-                const background = cerrada || fueraHorario
+
+                // Mientras la disponibilidad se está consultando o falló al
+                // cargar, NUNCA se muestra un slot como si estuviera libre
+                // (fail-safe): se trata como no disponible y el aviso real
+                // ("Comprobando…" / error de red) vive en el banner
+                // `mensaje` de arriba, no en cada botón individual.
+                const datosNoVerificados = estado === "loading" || estado === "error";
+
+                const evaluacion = datosNoVerificados
+                  ? { status: AVAILABILITY_STATUS.UNAVAILABLE, reason: null }
+                  : evaluateSlotAvailability({
+                      date: fecha,
+                      startTime: hora,
+                      durationMinutes: Number(duration),
+                      courtId: pista,
+                      existingBookings,
+                      openingHours: CLUB_OPENING_HOURS,
+                      currentDateTime: madridNowAsUtcTrick(),
+                    });
+
+                const disabled = evaluacion.status !== AVAILABILITY_STATUS.AVAILABLE;
+                const occupiedLike = evaluacion.status === AVAILABILITY_STATUS.OCCUPIED;
+                const unavailableLike = evaluacion.status === AVAILABILITY_STATUS.UNAVAILABLE;
+
+                // El usuario solo ve estos tres estados. El motivo interno
+                // (reason) queda solo en el title/tooltip, para soporte.
+                const label = evaluacion.status === AVAILABILITY_STATUS.AVAILABLE
+                  ? "Libre"
+                  : occupiedLike
+                    ? "Ocupado"
+                    : "No disponible";
+
+                const borderColor = unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
+                const background = unavailableLike
                   ? "rgba(255,184,77,.12)"
-                  : danger
+                  : occupiedLike
                     ? "rgba(255,80,80,.13)"
                     : "rgba(185,245,0,.12)";
+                const textColor = unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
+                const tooltip = evaluacion.reason ? `${label} (${evaluacion.reason})` : label;
 
                 return (
                   <button
@@ -743,12 +821,12 @@ function CalendarioDisponibilidad({
                       if (disabled) return;
                       onSelectSlot({ fecha, pista, hora });
                     }}
-                    title={label}
+                    title={tooltip}
                     style={{
                       cursor: disabled ? "not-allowed" : "pointer",
                       border: `1px solid ${borderColor}`,
                       background,
-                      color: cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent,
+                      color: textColor,
                       borderRadius: 14,
                       padding: "10px 8px",
                       fontWeight: 900,
@@ -756,7 +834,7 @@ function CalendarioDisponibilidad({
                     }}
                   >
                     <div>{hora}</div>
-                    <small style={{ color: cerrada || fueraHorario ? T.warning : danger ? T.danger : T.textDim }}>
+                    <small style={{ color: unavailableLike ? T.warning : occupiedLike ? T.danger : T.textDim }}>
                       {label}
                     </small>
                   </button>
@@ -4466,7 +4544,11 @@ function CancelarReserva({ setCurrent }) {
     sendingRef.current = true;
 
     try {
-      const res = await fetch(CONFIG.bookingEndpoint, {
+      // Cancelar es operación de STAFF/ADMIN/SUPPORT en la matriz RBAC:
+      // adjunta el token real si existe sesión (preparado para cuando se
+      // active CP04_ENFORCE_ROLE_GATES). En demo, sin token, se comporta
+      // igual que antes.
+      const res = await authFetch(CONFIG.bookingEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -4577,7 +4659,9 @@ function ReprogramarReserva({ setCurrent }) {
         return;
       }
 
-      const res = await fetch(CONFIG.bookingEndpoint, {
+      // Reprogramar, igual que cancelar, es operación de STAFF/ADMIN/SUPPORT:
+      // adjunta el token real si existe sesión.
+      const res = await authFetch(CONFIG.bookingEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -5000,7 +5084,9 @@ function Gestion() {
         `email=${encodeURIComponent(emailLimpio)}` +
         `&limit=100&t=${Date.now()}`;
 
-      const response = await fetch(url, {
+      // GET /api/reservas ya exige sesión real en el Worker (protegido en una
+      // fase anterior): sin esta cabecera, esta búsqueda devuelve 401.
+      const response = await authFetch(url, {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -5582,7 +5668,9 @@ function AltaJugador() {
     setSuccess(false);
 
     try {
-      const response = await fetch("/api/jugadores/alta", {
+      // Alta de jugador es operación de STAFF/ADMIN/SUPPORT: adjunta el
+      // token real si existe sesión (preparado para CP04_ENFORCE_ROLE_GATES).
+      const response = await authFetch("/api/jugadores/alta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
