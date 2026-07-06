@@ -320,3 +320,85 @@ test("Integración: POST /api/auth/logout con scope=global no revienta sin token
   assert.equal(response.status, 200);
   assert.equal(body.ok, true);
 });
+
+// --- Centro Técnico: GET /api/support/make/scenarios (fase de refresco en vivo) ---
+// El propio handler solo llama a requireRoles(request, env, ["SUPPORT"]), así
+// que su contrato de autorización es exactamente el que ya prueba
+// requireRoles de forma genérica arriba. Aquí se deja explícito, con las 4
+// combinaciones de rol pedidas, para que quede documentado como el
+// contrato de ESTA ruta concreta.
+test("1/2/3/4. Centro Técnico: PLAYER y STAFF bloqueados, ADMIN bloqueado, SUPPORT permitido", async () => {
+  const allowedRoles = ["SUPPORT"];
+
+  const player = await requireRoles(
+    fakeRequest({ headers: { Authorization: "Bearer p" } }),
+    SUPABASE_ENV,
+    allowedRoles,
+    { verify: verifierFor({ ok: true, userId: "1", email: "jugador@demo.local", role: "PLAYER" }) }
+  );
+  assert.equal(player.ok, false);
+  assert.equal(player.status, 403);
+
+  const staff = await requireRoles(
+    fakeRequest({ headers: { Authorization: "Bearer s" } }),
+    SUPABASE_ENV,
+    allowedRoles,
+    { verify: verifierFor({ ok: true, userId: "2", email: "staff@demo.local", role: "STAFF" }) }
+  );
+  assert.equal(staff.ok, false);
+  assert.equal(staff.status, 403);
+
+  const admin = await requireRoles(
+    fakeRequest({ headers: { Authorization: "Bearer a" } }),
+    SUPABASE_ENV,
+    allowedRoles,
+    { verify: verifierFor({ ok: true, userId: "3", email: "admin@demo.local", role: "ADMIN" }) }
+  );
+  assert.equal(admin.ok, false);
+  assert.equal(admin.status, 403);
+
+  const support = await requireRoles(
+    fakeRequest({ headers: { Authorization: "Bearer sup" } }),
+    SUPABASE_ENV,
+    allowedRoles,
+    { verify: verifierFor({ ok: true, userId: "4", email: "soporte@demo.local", role: "SUPPORT" }) }
+  );
+  assert.equal(support.ok, true);
+  assert.equal(support.auth.role, "SUPPORT");
+});
+
+test("5. Integración: GET /api/support/make/scenarios sin Authorization se deniega en 401", async () => {
+  const env = { ALLOWED_ORIGIN: "http://localhost:5173" };
+  const request = new Request("https://worker.test/api/support/make/scenarios", {
+    method: "GET",
+    headers: { Origin: "http://localhost:5173" },
+  });
+
+  const response = await worker.fetch(request, env);
+  const body = await response.json();
+
+  assert.equal(response.status, 401);
+  assert.equal(body.error, "MISSING_TOKEN");
+});
+
+test("6. requireRoles: token que no verifica (INVALID_TOKEN) se deniega en 401, no en 403", async () => {
+  const gate = await requireRoles(
+    fakeRequest({ headers: { Authorization: "Bearer roto" } }),
+    SUPABASE_ENV,
+    ["SUPPORT"],
+    { verify: verifierFor({ ok: false, reason: "INVALID_TOKEN" }) }
+  );
+  assert.equal(gate.ok, false);
+  assert.equal(gate.status, 401);
+});
+
+test("Integración: preflight OPTIONS a /api/support/make/scenarios responde 204 sin exigir auth", async () => {
+  const env = { ALLOWED_ORIGIN: "http://localhost:5173" };
+  const request = new Request("https://worker.test/api/support/make/scenarios", {
+    method: "OPTIONS",
+    headers: { Origin: "http://localhost:5173" },
+  });
+
+  const response = await worker.fetch(request, env);
+  assert.equal(response.status, 204);
+});

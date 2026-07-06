@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { T } from "../theme.js";
 import {
   MAKE_INVENTORY,
@@ -10,6 +10,11 @@ import {
   getScenarioNote,
 } from "../data/makeInventory.js";
 import { cp04NormalizeRole } from "../utils/rbac.js";
+import { authFetch } from "../auth/authService.js";
+import { resolveMakeInventorySource, createSingleFlightGuard } from "../utils/makeLiveClient.js";
+
+export const CP04_MAKE_LIVE_ENDPOINT = "/api/support/make/scenarios";
+export const CP04_MAKE_LIVE_TIMEOUT_MS = 8000;
 
 // Club Pádel 04 · Centro Técnico (SUPPORT-only)
 //
@@ -132,12 +137,89 @@ export default function CentroTecnico({ selectedRole }) {
   const [orden, setOrden] = useState("errores");
   const [seleccionado, setSeleccionado] = useState(null);
 
-  const enriched = useMemo(() => MAKE_INVENTORY.map(enrich), []);
+  // Estado del refresco en vivo. La decisión de qué fuente mostrar (EN VIVO
+  // / SNAPSHOT / NO DISPONIBLE) vive en resolveMakeInventorySource (pura,
+  // testeada) para no mentir nunca sobre la frescura real de los datos: si
+  // "live" falla, se cae a "snapshot" y se etiqueta como tal.
+  const [liveOk, setLiveOk] = useState(false);
+  const [liveScenarios, setLiveScenarios] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [loadingLive, setLoadingLive] = useState(false);
+  const [liveError, setLiveError] = useState(null);
+  const guard = useRef(createSingleFlightGuard());
+  const hasFetchedOnce = useRef(false);
 
   // Tercera capa de protección RBAC: aunque nav y render-guard ya impiden
   // llegar aquí con otro rol, este componente nunca confía ciegamente en
   // haber sido montado correctamente.
   const safeRole = cp04NormalizeRole(selectedRole);
+
+  const loadLive = async () => {
+    // Guard anti doble-petición (single-flight): si ya hay una petición en
+    // curso, ignora la nueva llamada en lugar de encolarla o dispararla en
+    // paralelo (protege tanto contra el doble-efecto de StrictMode en
+    // desarrollo como contra un doble clic real en "Actualizar estado").
+    if (!guard.current.tryStart() || safeRole !== "SUPPORT") return;
+    setLoadingLive(true);
+    setLiveError(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CP04_MAKE_LIVE_TIMEOUT_MS);
+
+    try {
+      const response = await authFetch(CP04_MAKE_LIVE_ENDPOINT, { signal: controller.signal });
+      const body = await response.json().catch(() => null);
+
+      if (response.ok && body?.ok && Array.isArray(body.scenarios)) {
+        setLiveScenarios(body.scenarios);
+        setLiveOk(true);
+        setLastUpdated(body.capturedAt || new Date().toISOString());
+      } else {
+        // Fail-safe: cualquier respuesta que no sea exactamente un 200 con
+        // el contrato esperado se trata como "no disponible en vivo", nunca
+        // se usan datos parciales o con forma inesperada.
+        setLiveError(body?.error || `HTTP_${response.status}`);
+        setLiveOk(false);
+      }
+    } catch {
+      setLiveError("NETWORK_OR_TIMEOUT");
+      setLiveOk(false);
+    } finally {
+      clearTimeout(timeoutId);
+      setLoadingLive(false);
+      guard.current.finish();
+    }
+  };
+
+  useEffect(() => {
+    if (safeRole !== "SUPPORT" || hasFetchedOnce.current) return;
+    hasFetchedOnce.current = true;
+    loadLive();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeRole]);
+
+  const snapshotScenarios = useMemo(() => MAKE_INVENTORY.map(enrich), []);
+
+  const liveScenariosEnriched = useMemo(() => {
+    if (!Array.isArray(liveScenarios)) return null;
+    return liveScenarios.map((s) => ({
+      ...s,
+      ejecuciones: s.ejecuciones_acumuladas ?? 0,
+      operaciones: s.operaciones_acumuladas ?? 0,
+      errores: s.errores_acumulados ?? 0,
+      tasaError: s.tasa_error ?? 0,
+      salud: s.salud || "OK",
+      criticidad: s.criticidad || "BAJA",
+      ultimaModificacion: s.ultima_modificacion,
+      nota: s.recomendaciones || null,
+    }));
+  }, [liveScenarios]);
+
+  const { source: effectiveSource, scenarios: enriched } = useMemo(
+    () => resolveMakeInventorySource({ liveOk, liveScenarios: liveScenariosEnriched, snapshotScenarios }),
+    [liveOk, liveScenariosEnriched, snapshotScenarios]
+  );
+
   if (safeRole !== "SUPPORT") {
     return (
       <div style={{ padding: "60px 24px", textAlign: "center", color: T.textDim }}>
@@ -197,6 +279,57 @@ export default function CentroTecnico({ selectedRole }) {
           {new Date(MAKE_INVENTORY_META.capturedAt).toLocaleString("es-ES")} vía consulta de solo lectura (fuente:{" "}
           <code>{MAKE_INVENTORY_META.source}</code>). No es una conexión en vivo.
         </p>
+      </div>
+
+      {/* Indicador de frescura de datos del inventario de Make — independiente del estado de Airtable */}
+      <div
+        style={{
+          display: "flex",
+          gap: 14,
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          border: `1px solid ${T.line}`,
+          borderRadius: 16,
+          padding: "12px 18px",
+          marginBottom: 16,
+        }}
+      >
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          {effectiveSource === "live" && <Badge color={T.accent}>🟢 EN VIVO</Badge>}
+          {effectiveSource === "snapshot" && <Badge color={T.warning}>🟡 SNAPSHOT</Badge>}
+          {effectiveSource === "unavailable" && <Badge color={T.danger}>🔴 NO DISPONIBLE</Badge>}
+          <span style={{ color: T.textDim, fontSize: ".8rem" }}>
+            {effectiveSource === "live"
+              ? `Actualizado ${new Date(lastUpdated).toLocaleString("es-ES")} · fuente: API de Make en vivo`
+              : effectiveSource === "snapshot"
+              ? `Última instantánea conocida · capturada ${new Date(MAKE_INVENTORY_META.capturedAt).toLocaleString("es-ES")}`
+              : "Sin datos en vivo ni snapshot disponible."}
+          </span>
+          {liveError && (
+            <span title={liveError} style={{ color: T.textDim, fontSize: ".74rem" }}>
+              (en vivo no disponible: {liveError})
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={loadLive}
+          disabled={loadingLive}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 10,
+            border: `1px solid ${T.accent}66`,
+            background: loadingLive ? "transparent" : `${T.accent}18`,
+            color: T.accent,
+            fontWeight: 800,
+            fontSize: ".8rem",
+            cursor: loadingLive ? "wait" : "pointer",
+            opacity: loadingLive ? 0.6 : 1,
+          }}
+        >
+          {loadingLive ? "Actualizando…" : "Actualizar estado"}
+        </button>
       </div>
 
       {/* FASE 6 — banner de dependencia externa degradada */}

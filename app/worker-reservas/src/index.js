@@ -6,6 +6,10 @@ import {
   requireAuth,
   requireRoles,
 } from "../auth/authorization.js";
+import {
+  fetchLiveMakeInventory,
+  checkMakeRateLimit,
+} from "../support/makeLiveInventory.js";
 
 const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 const BOOKING_DURATIONS = [60, 90, 120];
@@ -1727,6 +1731,65 @@ async function handleAuthRoute(request, env, url) {
   );
 }
 
+// GET /api/support/make/scenarios — Centro Técnico, SUPPORT-only.
+//
+// Fail-closed en cada capa: sin token -> 401, token inválido -> 401, rol
+// distinto de SUPPORT -> 403, límite de peticiones superado -> 429, Make no
+// configurado/no disponible/respuesta inválida -> 503. Nunca se devuelve un
+// dato inventado: si no hay una fuente en vivo verificada, se responde con
+// un error explícito para que el frontend recurra a su propio snapshot
+// local, nunca al revés.
+async function handleSupportMakeScenarios(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (request.method !== "GET") {
+    return jsonResponse({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405, headers);
+  }
+
+  const gate = await requireRoles(request, env, ["SUPPORT"]);
+  if (!gate.ok) {
+    return jsonResponse(gate.body, gate.status, headers);
+  }
+
+  if (!checkMakeRateLimit()) {
+    return jsonResponse(
+      { ok: false, error: "RATE_LIMITED", message: "Demasiadas peticiones al inventario de Make. Espera un momento." },
+      429,
+      headers
+    );
+  }
+
+  const result = await fetchLiveMakeInventory(env);
+
+  if (!result.ok) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "MAKE_UNAVAILABLE",
+        reason: result.reason,
+        message: "El inventario en vivo de Make no está disponible ahora mismo. Usa el snapshot conocido.",
+      },
+      503,
+      headers
+    );
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      source: "live",
+      servedFromCache: Boolean(result.servedFromCache),
+      capturedAt: new Date().toISOString(),
+      scenarios: result.scenarios,
+    },
+    200,
+    headers
+  );
+}
 
 export default {
   async fetch(request, env) {
@@ -1756,6 +1819,10 @@ export default {
 
       if (url.pathname.startsWith("/api/auth/")) {
       return handleAuthRoute(request, env, url);
+    }
+
+    if (url.pathname === "/api/support/make/scenarios") {
+      return await handleSupportMakeScenarios(request, env);
     }
 
     if (url.pathname === "/api/disponibilidad" || url.pathname === "/disponibilidad") {
