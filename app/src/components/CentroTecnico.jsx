@@ -4,14 +4,17 @@ import {
   MAKE_INVENTORY,
   MAKE_INVENTORY_META,
   MAKE_SCENARIO_CATEGORIES,
-  computeErrorRate,
-  computeHealth,
-  computeCriticality,
-  getScenarioNote,
 } from "../data/makeInventory.js";
 import { cp04NormalizeRole } from "../utils/rbac.js";
 import { authFetch } from "../auth/authService.js";
 import { resolveMakeInventorySource, createSingleFlightGuard } from "../utils/makeLiveClient.js";
+import {
+  enrichSnapshotScenario,
+  enrichLiveScenario,
+  computeTotales,
+  filterScenarios,
+  sortScenarios,
+} from "../utils/makeCentroTecnicoLogic.js";
 
 export const CP04_MAKE_LIVE_ENDPOINT = "/api/support/make/scenarios";
 export const CP04_MAKE_LIVE_TIMEOUT_MS = 8000;
@@ -67,16 +70,6 @@ const INTEGRATIONS = [
   { sistema: "Stripe", uso: "Infraestructura preparada, no activada en la app" },
   { sistema: "Tally", uso: "Formularios externos (inactivo)" },
 ];
-
-function enrich(scenario) {
-  return {
-    ...scenario,
-    tasaError: computeErrorRate(scenario),
-    salud: computeHealth(scenario),
-    criticidad: computeCriticality(scenario),
-    nota: getScenarioNote(scenario),
-  };
-}
 
 function Badge({ children, color }) {
   return (
@@ -198,27 +191,29 @@ export default function CentroTecnico({ selectedRole }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeRole]);
 
-  const snapshotScenarios = useMemo(() => MAKE_INVENTORY.map(enrich), []);
+  const snapshotScenarios = useMemo(() => MAKE_INVENTORY.map(enrichSnapshotScenario), []);
 
   const liveScenariosEnriched = useMemo(() => {
     if (!Array.isArray(liveScenarios)) return null;
-    return liveScenarios.map((s) => ({
-      ...s,
-      ejecuciones: s.ejecuciones_acumuladas ?? 0,
-      operaciones: s.operaciones_acumuladas ?? 0,
-      errores: s.errores_acumulados ?? 0,
-      tasaError: s.tasa_error ?? 0,
-      salud: s.salud || "OK",
-      criticidad: s.criticidad || "BAJA",
-      ultimaModificacion: s.ultima_modificacion,
-      nota: s.recomendaciones || null,
-    }));
+    return liveScenarios.map(enrichLiveScenario);
   }, [liveScenarios]);
 
   const { source: effectiveSource, scenarios: enriched } = useMemo(
     () => resolveMakeInventorySource({ liveOk, liveScenarios: liveScenariosEnriched, snapshotScenarios }),
     [liveOk, liveScenariosEnriched, snapshotScenarios]
   );
+
+  // KPIs/rankings que solo dependen del inventario (no de filtro/búsqueda/orden
+  // de la tabla): memoizados para no recalcularlos en cada tecla de búsqueda.
+  const derived = useMemo(() => {
+    const totales = computeTotales(enriched);
+    const mayorVolumen = enriched.reduce((max, s) => (s.ejecuciones > (max?.ejecuciones || 0) ? s : max), null);
+    const conErrores = sortScenarios(enriched.filter((s) => s.errores > 0), "errores");
+    const topConsumo = sortScenarios(enriched, "operaciones").slice(0, 8);
+    const porSalud = { OK: 0, ATENCION: 0, CRITICO: 0 };
+    enriched.forEach((s) => { porSalud[s.salud] += 1; });
+    return { totales, mayorVolumen, conErrores, topConsumo, porSalud };
+  }, [enriched]);
 
   if (safeRole !== "SUPPORT") {
     return (
@@ -228,42 +223,10 @@ export default function CentroTecnico({ selectedRole }) {
     );
   }
 
-  const totales = {
-    total: enriched.length,
-    activos: enriched.filter((s) => s.activo).length,
-    inactivos: enriched.filter((s) => !s.activo).length,
-    conErrores: enriched.filter((s) => s.errores > 0).length,
-    ejecuciones: enriched.reduce((a, s) => a + s.ejecuciones, 0),
-    operaciones: enriched.reduce((a, s) => a + s.operaciones, 0),
-  };
-  const erroresTotales = enriched.reduce((a, s) => a + s.errores, 0);
-  const tasaErrorGlobal = totales.ejecuciones ? Math.round((erroresTotales / totales.ejecuciones) * 1000) / 10 : 0;
-  const mayorVolumen = enriched.reduce((max, s) => (s.ejecuciones > (max?.ejecuciones || 0) ? s : max), null);
+  const { totales, mayorVolumen, conErrores, topConsumo, porSalud } = derived;
+  const tasaErrorGlobal = totales.tasaErrorGlobal;
 
-  const filtrados = enriched
-    .filter((s) => {
-      if (busqueda.trim() && !s.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())) return false;
-      if (filtro === "todos") return true;
-      if (filtro === "activos") return s.activo;
-      if (filtro === "inactivos") return !s.activo;
-      if (filtro === "con_errores") return s.errores > 0;
-      if (filtro === "criticos") return s.salud === "CRITICO";
-      return s.categoria === filtro;
-    })
-    .sort((a, b) => {
-      if (orden === "errores") return b.errores - a.errores;
-      if (orden === "ejecuciones") return b.ejecuciones - a.ejecuciones;
-      if (orden === "operaciones") return b.operaciones - a.operaciones;
-      if (orden === "tasaError") return b.tasaError - a.tasaError;
-      if (orden === "ultimaModificacion") return new Date(b.ultimaModificacion) - new Date(a.ultimaModificacion);
-      if (orden === "criticidad") return String(b.criticidad).localeCompare(String(a.criticidad));
-      return 0;
-    });
-
-  const conErrores = enriched.filter((s) => s.errores > 0).sort((a, b) => b.errores - a.errores);
-  const topConsumo = [...enriched].sort((a, b) => b.operaciones - a.operaciones).slice(0, 8);
-  const porSalud = { OK: 0, ATENCION: 0, CRITICO: 0 };
-  enriched.forEach((s) => { porSalud[s.salud] += 1; });
+  const filtrados = sortScenarios(filterScenarios(enriched, { filtro, busqueda }), orden);
 
   return (
     <section style={{ padding: "clamp(18px,3vw,42px) 24px", maxWidth: 1280, margin: "0 auto" }}>
@@ -283,6 +246,8 @@ export default function CentroTecnico({ selectedRole }) {
 
       {/* Indicador de frescura de datos del inventario de Make — independiente del estado de Airtable */}
       <div
+        role="status"
+        aria-live="polite"
         style={{
           display: "flex",
           gap: 14,
@@ -442,6 +407,8 @@ export default function CentroTecnico({ selectedRole }) {
             <option value="tasaError">Ordenar: tasa de error</option>
             <option value="ultimaModificacion">Ordenar: última modificación</option>
             <option value="criticidad">Ordenar: criticidad</option>
+            <option value="nombre">Ordenar: nombre</option>
+            <option value="estado">Ordenar: estado</option>
           </select>
         </div>
 
@@ -450,6 +417,7 @@ export default function CentroTecnico({ selectedRole }) {
             <button
               key={f.id}
               type="button"
+              aria-pressed={filtro === f.id}
               onClick={() => setFiltro(f.id)}
               style={{
                 padding: "6px 14px",
@@ -472,7 +440,17 @@ export default function CentroTecnico({ selectedRole }) {
             {filtrados.map((s) => (
               <div
                 key={s.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={seleccionado === s.id}
+                aria-label={`${s.nombre} · ${s.activo ? "Activo" : "Inactivo"} · ${HEALTH_LABEL[s.salud]}`}
                 onClick={() => setSeleccionado(seleccionado === s.id ? null : s.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSeleccionado(seleccionado === s.id ? null : s.id);
+                  }
+                }}
                 title={s.nota || CATEGORY_LABEL[s.categoria]}
                 style={{
                   display: "grid",
@@ -514,8 +492,8 @@ export default function CentroTecnico({ selectedRole }) {
                 <div><span style={{ color: T.textDim }}>Salud:</span> {HEALTH_LABEL[s.salud]}</div>
                 <div><span style={{ color: T.textDim }}>Criticidad:</span> {s.criticidad}</div>
                 <div><span style={{ color: T.textDim }}>Última modificación:</span> {new Date(s.ultimaModificacion).toLocaleString("es-ES")}</div>
-                <div><span style={{ color: T.textDim }}>Usa Airtable:</span> {s.usaAirtable ? "Sí" : "No"}</div>
-                <div><span style={{ color: T.textDim }}>Fuente del dato:</span> confirmado_make_mcp</div>
+                <div><span style={{ color: T.textDim }}>Dependencia principal:</span> {s.dependenciaPrincipal}</div>
+                <div><span style={{ color: T.textDim }}>Fuente del dato:</span> {s.fuenteDeVerdadDato}</div>
               </div>
               {s.nota && (
                 <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.04)", color: T.textDim, fontSize: ".85rem", lineHeight: 1.5 }}>
