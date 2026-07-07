@@ -9,6 +9,8 @@ import {
   computeTotales,
   filterScenarios,
   sortScenarios,
+  formatMetric,
+  pickMayorVolumen,
 } from "./makeCentroTecnicoLogic.js";
 
 const enrichedSnapshot = MAKE_INVENTORY.map(enrichSnapshotScenario);
@@ -123,4 +125,108 @@ test("sortScenarios: no muta la lista original (copia defensiva)", () => {
 test("CP04_CRITICALITY_RANK: ALTA > MEDIA > BAJA", () => {
   assert.ok(CP04_CRITICALITY_RANK.ALTA > CP04_CRITICALITY_RANK.MEDIA);
   assert.ok(CP04_CRITICALITY_RANK.MEDIA > CP04_CRITICALITY_RANK.BAJA);
+});
+
+// --- Regresión: corrección de mapeo de métricas EN VIVO ---
+//
+// Fixture con la forma REAL confirmada del endpoint sanitizado del Worker
+// para el caso actual (Make no expone executions/errors en /scenarios):
+// operaciones_acumuladas viene siempre, ejecuciones/errores/tasa vienen null.
+function liveRawSinDatos(overrides = {}) {
+  return {
+    id: 1, nombre: "Sincronización Multi-Calendario", categoria: "INTERNAL_OPERATION", activo: true,
+    scheduling: "cada 1800s (30 min)", ultima_modificacion: "2026-07-06T14:32:29.507Z",
+    ejecuciones_acumuladas: null, operaciones_acumuladas: 1546, errores_acumulados: null,
+    tasa_error: null, criticidad: "MEDIA", salud: "SIN_DATOS",
+    dependencia_principal: "Airtable", funcion_afectada: null, recomendaciones: null,
+    fuente_de_verdad_dato: "confirmado_make_api_live",
+    ...overrides,
+  };
+}
+
+test("4. enrichLiveScenario: campo ausente (null) del Worker nunca se convierte en 0 en el frontend", () => {
+  const live = enrichLiveScenario(liveRawSinDatos());
+  assert.equal(live.ejecuciones, null);
+  assert.equal(live.errores, null);
+  assert.equal(live.tasaError, null);
+  assert.equal(live.operaciones, 1546, "operaciones sí viene real y no debe perderse");
+});
+
+test("1/2/13. computeTotales: 50 escenarios EN VIVO reales (sin executions/errors) — total/activos/inactivos/operaciones correctos, ejecuciones/errores/tasa honestamente null", () => {
+  const activos38 = Array.from({ length: 38 }, (_, i) => enrichLiveScenario(liveRawSinDatos({ id: i, activo: true, operaciones_acumuladas: 100 })));
+  const inactivos12 = Array.from({ length: 12 }, (_, i) => enrichLiveScenario(liveRawSinDatos({ id: 100 + i, activo: false, salud: "ATENCION", operaciones_acumuladas: 50 })));
+  const enriched = [...activos38, ...inactivos12];
+
+  const totales = computeTotales(enriched);
+  assert.equal(totales.total, 50);
+  assert.equal(totales.activos, 38);
+  assert.equal(totales.inactivos, 12);
+  assert.equal(totales.operaciones, 38 * 100 + 12 * 50, "operaciones sí se agregan (siempre reales)");
+  assert.equal(totales.ejecuciones, null, "ningún escenario reporta ejecuciones -> agregado null, no 0");
+  assert.equal(totales.erroresTotales, null, "ningún escenario reporta errores -> agregado null, no 0");
+  assert.equal(totales.conErrores, null, "no se puede afirmar '0 con errores' si no hay dato de ninguno");
+  assert.equal(totales.tasaErrorGlobal, null, "sin ejecuciones/errores reales no hay tasa 0% que mostrar");
+});
+
+test("15. computeTotales: mezcla de escenarios con y sin dato — solo suma los conocidos, sin contar doble ni inventar", () => {
+  const conDatos = enrichLiveScenario(liveRawSinDatos({ id: 1, ejecuciones_acumuladas: 100, errores_acumulados: 10, tasa_error: 10, salud: "ATENCION" }));
+  const sinDatos = enrichLiveScenario(liveRawSinDatos({ id: 2 }));
+  const totales = computeTotales([conDatos, sinDatos]);
+
+  assert.equal(totales.ejecuciones, 100, "solo se suma el escenario que sí reporta, no se inventa el que falta como 0");
+  assert.equal(totales.erroresTotales, 10);
+  assert.equal(totales.conErrores, 1, "cuenta exactamente 1, no 2 (el escenario sin dato no se cuenta como 'sin errores' ni como 'con errores')");
+});
+
+test("12. computeTotales: una actualización posterior con métricas reales reemplaza el estado anterior (sin quedarse stale)", () => {
+  const antes = computeTotales([enrichLiveScenario(liveRawSinDatos({ id: 1 }))]);
+  assert.equal(antes.ejecuciones, null);
+
+  const despues = computeTotales([enrichLiveScenario(liveRawSinDatos({ id: 1, ejecuciones_acumuladas: 500, errores_acumulados: 5, tasa_error: 1 }))]);
+  assert.equal(despues.ejecuciones, 500);
+  assert.equal(despues.erroresTotales, 5);
+});
+
+test("14. enrichLiveScenario: enriquecer 50 escenarios en vivo no genera IDs duplicados", () => {
+  const raws = Array.from({ length: 50 }, (_, i) => liveRawSinDatos({ id: i + 1 }));
+  const enriched = raws.map(enrichLiveScenario);
+  const ids = new Set(enriched.map((s) => s.id));
+  assert.equal(ids.size, 50);
+});
+
+test("6. pickMayorVolumen: selecciona el escenario con más operaciones, ignorando los que no reportan el dato", () => {
+  const lista = [
+    enrichLiveScenario(liveRawSinDatos({ id: 1, operaciones_acumuladas: 200 })),
+    enrichLiveScenario(liveRawSinDatos({ id: 2, operaciones_acumuladas: 1546 })),
+    enrichLiveScenario(liveRawSinDatos({ id: 3, operaciones_acumuladas: null })),
+  ];
+  const mayor = pickMayorVolumen(lista);
+  assert.equal(mayor.id, 2);
+});
+
+test("pickMayorVolumen: si ningún escenario reporta operaciones, no inventa un ganador (null, no el primero de la lista)", () => {
+  const lista = [
+    enrichLiveScenario(liveRawSinDatos({ id: 1, operaciones_acumuladas: null })),
+    enrichLiveScenario(liveRawSinDatos({ id: 2, operaciones_acumuladas: null })),
+  ];
+  assert.equal(pickMayorVolumen(lista), null);
+});
+
+test("formatMetric: número real se formatea con separador es-ES; dato ausente dice 'No disponible', nunca '0' ni 'null'", () => {
+  assert.equal(formatMetric(14394), "14.394");
+  assert.equal(formatMetric(30, "%"), "30%");
+  assert.equal(formatMetric(null), "No disponible");
+  assert.equal(formatMetric(undefined), "No disponible");
+  assert.equal(formatMetric(0), "0", "0 real confirmado sí debe mostrarse como 0, no como 'No disponible'");
+});
+
+test("sortScenarios: los escenarios sin dato numérico quedan al final al ordenar descendente, sin lanzar NaN", () => {
+  const muestra = [
+    enrichLiveScenario(liveRawSinDatos({ id: 1, ejecuciones_acumuladas: null })),
+    enrichLiveScenario(liveRawSinDatos({ id: 2, ejecuciones_acumuladas: 50 })),
+    enrichLiveScenario(liveRawSinDatos({ id: 3, ejecuciones_acumuladas: null })),
+  ];
+  const ordenado = sortScenarios(muestra, "ejecuciones");
+  assert.equal(ordenado[0].id, 2, "el único con dato real debe ir primero");
+  assert.ok(ordenado.slice(1).every((s) => s.ejecuciones === null));
 });

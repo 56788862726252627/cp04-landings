@@ -41,22 +41,60 @@ export function isMakeLiveConfigured(env) {
   return Boolean(env && env.MAKE_API_TOKEN && env.MAKE_API_BASE_URL && env.MAKE_TEAM_ID);
 }
 
+// Evidencia real confirmada (diagnóstico con GET /scenarios de Make, campos
+// devueltos): id, name, teamId, devices, deviceId, devicesScope, isActive,
+// scheduling, dlqCount, allDlqCount, operations, centicredits, transfer,
+// usedModules, usedPackages, lastEdit, createdByUser, updatedByUser,
+// blueprint, folderId.
+//
+// Es decir: Make NO expone `executions` ni `errors` en este endpoint. Antes,
+// `Number(raw?.executions || 0)` / `Number(raw?.errors || 0)` convertían
+// silenciosamente "campo ausente" en "0 confirmado", lo que hacía que la UI
+// mostrara 0 ejecuciones/0 errores/0% tasa de error/"—" en mayor volumen/
+// salud "OK" para escenarios que en realidad no tienen ese dato en vivo —
+// no que estén confirmados sin errores. `operations` sí viene siempre
+// (confirmado): es la única métrica de volumen acumulado real disponible
+// hoy sin llamadas adicionales por escenario (evitando N+1 contra
+// /scenarios/{id}/logs, fuera de alcance de esta corrección).
+//
+// rawMetric() nunca inventa un 0: si el campo no es un número real, propaga
+// `null` ("dato no disponible"), no un `0` que se confundiría con "cero
+// real confirmado".
+function rawMetric(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 // Deriva salud/criticidad con el MISMO criterio documentado que
 // src/data/makeInventory.js en el frontend (mantenido intencionalmente en
 // paralelo: son runtimes distintos — Worker vs Vite — sin build compartido).
+// A diferencia del snapshot (que siempre tiene ejecuciones/errores reales),
+// aquí ambos pueden ser `null` — nunca se inventa una tasa cuando falta el
+// dato.
 function computeErrorRate(ejecuciones, errores) {
+  if (ejecuciones === null || errores === null) return null;
   if (!ejecuciones) return 0;
   return Math.round((errores / ejecuciones) * 1000) / 10;
 }
 
+// "SIN_DATOS" es un estado de salud distinto de "OK": OK afirma "confirmado
+// sin errores relevantes", SIN_DATOS reconoce honestamente que Make no
+// entrega ejecuciones/errores para este escenario en el endpoint actual.
 function computeHealth({ ejecuciones, errores, activo, categoria }) {
   const tasa = computeErrorRate(ejecuciones, errores);
+
+  if (tasa === null) {
+    if (!activo && categoria !== "DEVELOPMENT_QA" && categoria !== "TECHNICAL_MONITORING") return "ATENCION";
+    return "SIN_DATOS";
+  }
+
   if (ejecuciones >= 10 && tasa >= 25) return "CRITICO";
   if (tasa >= 5 && tasa < 25) return "ATENCION";
   if (!activo && categoria !== "DEVELOPMENT_QA" && categoria !== "TECHNICAL_MONITORING") return "ATENCION";
   return "OK";
 }
 
+// Criticidad de negocio: depende SOLO de la categoría arquitectónica, nunca
+// de la tasa de error operativa (son conceptos distintos, no se mezclan).
 function computeCriticality(categoria) {
   if (categoria === "APP_TRIGGERED") return "ALTA";
   if (categoria === "INTERNAL_OPERATION" || categoria === "SCHEDULED") return "MEDIA";
@@ -69,9 +107,9 @@ function computeCriticality(categoria) {
 // diseño: solo se construye el objeto de salida campo a campo, nunca se
 // reenvía el objeto crudo.
 export function sanitizeMakeScenario(raw, categoria = "SIN_CLASIFICAR") {
-  const ejecuciones = Number(raw?.executions || 0);
-  const operaciones = Number(raw?.operations || 0);
-  const errores = Number(raw?.errors || 0);
+  const ejecuciones = rawMetric(raw?.executions);
+  const operaciones = rawMetric(raw?.operations);
+  const errores = rawMetric(raw?.errors);
   const activo = Boolean(raw?.isActive);
 
   const enriched = { ejecuciones, errores, activo, categoria };

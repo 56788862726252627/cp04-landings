@@ -57,6 +57,62 @@ test("sanitizeMakeScenario: deriva tasa de error, salud y criticidad correctamen
   assert.equal(sanitized.fuente_de_verdad_dato, "confirmado_make_api_live");
 });
 
+// --- Regresión: corrección de mapeo de métricas EN VIVO ---
+//
+// Evidencia real confirmada con GET /scenarios de Make (diagnóstico
+// temporal, sesión de corrección de métricas): el endpoint real NO expone
+// `executions` ni `errors`, solo `operations` (además de dlqCount,
+// centicredits, transfer, usedModules... ninguno usado aquí). Estos
+// fixtures reproducen exactamente esa forma real, sin inventar campos que
+// Make no envía.
+const RAW_MAKE_SHAPE_REAL = {
+  id: 5735907, name: "🗓️ Sincronización Multi-Calendario", teamId: 1099976,
+  isActive: true, scheduling: { type: "interval", interval: 1800 },
+  dlqCount: 0, allDlqCount: 0, operations: 1546, centicredits: 0,
+  usedModules: 3, usedPackages: ["util"], lastEdit: "2026-07-06T14:32:29.507Z",
+  folderId: null,
+  // Nótese: sin `executions` ni `errors` — así responde Make hoy de verdad.
+};
+
+test("4. sanitizeMakeScenario: campo ausente en la API real (executions/errors) nunca se convierte en 0 — se propaga null", () => {
+  const sanitized = sanitizeMakeScenario(RAW_MAKE_SHAPE_REAL, "INTERNAL_OPERATION");
+  assert.equal(sanitized.ejecuciones_acumuladas, null, "ejecuciones ausente en Make debe ser null, nunca 0");
+  assert.equal(sanitized.errores_acumulados, null, "errores ausente en Make debe ser null, nunca 0");
+  assert.equal(sanitized.tasa_error, null, "sin ejecuciones/errores reales no se puede afirmar una tasa 0%");
+});
+
+test("5. sanitizeMakeScenario: operations SÍ viene en la API real y se agrega correctamente (no se pierde)", () => {
+  const sanitized = sanitizeMakeScenario(RAW_MAKE_SHAPE_REAL, "INTERNAL_OPERATION");
+  assert.equal(sanitized.operaciones_acumuladas, 1546);
+});
+
+test("7. sanitizeMakeScenario: salud SIN_DATOS cuando faltan ejecuciones/errores en un escenario activo y relevante", () => {
+  const sanitized = sanitizeMakeScenario(RAW_MAKE_SHAPE_REAL, "INTERNAL_OPERATION");
+  assert.equal(sanitized.salud, "SIN_DATOS");
+  assert.notEqual(sanitized.salud, "OK", "SIN_DATOS no debe confundirse con OK (OK afirmaría 0 errores confirmados)");
+});
+
+test("7. sanitizeMakeScenario: salud ATENCION para un escenario inactivo y relevante, incluso sin datos de ejecuciones/errores", () => {
+  const sanitized = sanitizeMakeScenario({ ...RAW_MAKE_SHAPE_REAL, isActive: false }, "INTERNAL_OPERATION");
+  assert.equal(sanitized.salud, "ATENCION");
+});
+
+test("1/3. sanitizeMakeScenario: con ejecuciones y errores reales presentes, la tasa se calcula igual que siempre (regresión no rota)", () => {
+  const sanitized = sanitizeMakeScenario({ ...RAW_MAKE_SHAPE_REAL, executions: 100, errors: 25 }, "INTERNAL_OPERATION");
+  assert.equal(sanitized.ejecuciones_acumuladas, 100);
+  assert.equal(sanitized.errores_acumulados, 25);
+  assert.equal(sanitized.tasa_error, 25);
+  assert.equal(sanitized.salud, "CRITICO");
+});
+
+test("8. sanitizeMakeScenario: criticidad depende solo de la categoría, nunca de la tasa de error/salud", () => {
+  const sinDatos = sanitizeMakeScenario(RAW_MAKE_SHAPE_REAL, "APP_TRIGGERED");
+  const conErrorCritico = sanitizeMakeScenario({ ...RAW_MAKE_SHAPE_REAL, executions: 100, errors: 90 }, "APP_TRIGGERED");
+  assert.equal(sinDatos.criticidad, "ALTA");
+  assert.equal(conErrorCritico.criticidad, "ALTA");
+  assert.notEqual(sinDatos.salud, conErrorCritico.salud, "la salud sí difiere (SIN_DATOS vs CRITICO) pero la criticidad no debe verse afectada");
+});
+
 test("7. fetchLiveMakeInventory: MAKE_NOT_CONFIGURED cuando faltan secrets (estado real hoy)", async () => {
   __resetMakeLiveStateForTests();
   const result = await fetchLiveMakeInventory({});

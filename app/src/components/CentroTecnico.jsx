@@ -14,6 +14,8 @@ import {
   computeTotales,
   filterScenarios,
   sortScenarios,
+  formatMetric,
+  pickMayorVolumen,
 } from "../utils/makeCentroTecnicoLogic.js";
 
 export const CP04_MAKE_LIVE_ENDPOINT = "/api/support/make/scenarios";
@@ -38,8 +40,11 @@ export const CP04_MAKE_LIVE_TIMEOUT_MS = 8000;
 // este componente llegara a renderizarse para un rol distinto de SUPPORT,
 // se autoprotege y no muestra nada.
 
-const HEALTH_LABEL = { OK: "OK", ATENCION: "Atención", CRITICO: "Crítico" };
-const HEALTH_COLOR = { OK: T.accent, ATENCION: T.warning, CRITICO: T.danger };
+// SIN_DATOS: Make no reporta ejecuciones/errores para este escenario en el
+// endpoint en vivo actual — distinto de "OK" (que afirma 0 errores
+// confirmados). Ver worker-reservas/support/makeLiveInventory.js.
+const HEALTH_LABEL = { OK: "OK", ATENCION: "Atención", CRITICO: "Crítico", SIN_DATOS: "Sin datos" };
+const HEALTH_COLOR = { OK: T.accent, ATENCION: T.warning, CRITICO: T.danger, SIN_DATOS: T.textDim };
 
 const CATEGORY_LABEL = {
   [MAKE_SCENARIO_CATEGORIES.APP_TRIGGERED]: "Disparado por la app",
@@ -207,10 +212,10 @@ export default function CentroTecnico({ selectedRole }) {
   // de la tabla): memoizados para no recalcularlos en cada tecla de búsqueda.
   const derived = useMemo(() => {
     const totales = computeTotales(enriched);
-    const mayorVolumen = enriched.reduce((max, s) => (s.ejecuciones > (max?.ejecuciones || 0) ? s : max), null);
-    const conErrores = sortScenarios(enriched.filter((s) => s.errores > 0), "errores");
+    const mayorVolumen = pickMayorVolumen(enriched);
+    const conErrores = sortScenarios(enriched.filter((s) => typeof s.errores === "number" && s.errores > 0), "errores");
     const topConsumo = sortScenarios(enriched, "operaciones").slice(0, 8);
-    const porSalud = { OK: 0, ATENCION: 0, CRITICO: 0 };
+    const porSalud = { OK: 0, ATENCION: 0, CRITICO: 0, SIN_DATOS: 0 };
     enriched.forEach((s) => { porSalud[s.salud] += 1; });
     return { totales, mayorVolumen, conErrores, topConsumo, porSalud };
   }, [enriched]);
@@ -330,11 +335,19 @@ export default function CentroTecnico({ selectedRole }) {
           <KpiCard label="Total escenarios" value={totales.total} />
           <KpiCard label="Activos" value={totales.activos} color={T.accent} />
           <KpiCard label="Inactivos" value={totales.inactivos} color={T.textDim} />
-          <KpiCard label="Con errores" value={totales.conErrores} color={totales.conErrores ? T.danger : T.accent} />
-          <KpiCard label="Ejecuciones acumuladas" value={totales.ejecuciones.toLocaleString("es-ES")} />
-          <KpiCard label="Operaciones acumuladas" value={totales.operaciones.toLocaleString("es-ES")} />
-          <KpiCard label="Tasa de error global" value={`${tasaErrorGlobal}%`} color={tasaErrorGlobal > 5 ? T.warning : T.accent} />
-          <KpiCard label="Mayor volumen" value={mayorVolumen?.ejecuciones.toLocaleString("es-ES") || "—"} sub={mayorVolumen?.nombre} />
+          <KpiCard
+            label="Con errores"
+            value={totales.conErrores === null ? "No disponible" : totales.conErrores}
+            color={totales.conErrores ? T.danger : T.accent}
+          />
+          <KpiCard label="Ejecuciones acumuladas" value={formatMetric(totales.ejecuciones)} />
+          <KpiCard label="Operaciones acumuladas" value={formatMetric(totales.operaciones)} />
+          <KpiCard
+            label="Tasa de error global"
+            value={tasaErrorGlobal === null ? "No disponible" : `${tasaErrorGlobal}%`}
+            color={tasaErrorGlobal > 5 ? T.warning : T.accent}
+          />
+          <KpiCard label="Mayor volumen" value={formatMetric(mayorVolumen?.operaciones)} sub={mayorVolumen?.nombre} />
         </div>
       </Panel>
 
@@ -353,7 +366,11 @@ export default function CentroTecnico({ selectedRole }) {
 
       {/* D. ERRORES Y ALERTAS */}
       <Panel eyebrow="D" title="Errores y alertas">
-        {conErrores.length === 0 ? (
+        {totales.conErrores === null ? (
+          <div style={{ color: T.textDim }}>
+            Datos de errores no disponibles en la fuente en vivo de Make para estos escenarios (el endpoint actual no expone ejecuciones/errores acumulados).
+          </div>
+        ) : conErrores.length === 0 ? (
           <div style={{ color: T.accent }}>Sin escenarios con errores registrados.</div>
         ) : (
           <div style={{ display: "grid", gap: 8 }}>
@@ -362,7 +379,7 @@ export default function CentroTecnico({ selectedRole }) {
                 <span style={{ color: T.text }}>{s.nombre}</span>
                 <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   <Badge color={HEALTH_COLOR[s.salud]}>{HEALTH_LABEL[s.salud]}</Badge>
-                  <span style={{ color: T.danger, fontWeight: 800, fontSize: ".85rem" }}>{s.errores} err · {s.tasaError}%</span>
+                  <span style={{ color: T.danger, fontWeight: 800, fontSize: ".85rem" }}>{formatMetric(s.errores)} err · {formatMetric(s.tasaError, "%")}</span>
                 </span>
               </div>
             ))}
@@ -376,7 +393,7 @@ export default function CentroTecnico({ selectedRole }) {
           {topConsumo.map((s) => (
             <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px" }}>
               <span style={{ color: T.text }}>{s.nombre}</span>
-              <span style={{ color: T.textDim }}>{s.operaciones.toLocaleString("es-ES")} operaciones · {s.ejecuciones.toLocaleString("es-ES")} ejecuciones</span>
+              <span style={{ color: T.textDim }}>{formatMetric(s.operaciones)} operaciones · {formatMetric(s.ejecuciones)} ejecuciones</span>
             </div>
           ))}
         </div>
@@ -468,7 +485,7 @@ export default function CentroTecnico({ selectedRole }) {
                 <Badge color={T.primary}>{CATEGORY_LABEL[s.categoria]}</Badge>
                 <Badge color={s.activo ? T.accent : T.textDim}>{s.activo ? "Activo" : "Inactivo"}</Badge>
                 <Badge color={HEALTH_COLOR[s.salud]}>{HEALTH_LABEL[s.salud]}</Badge>
-                <span style={{ color: T.textDim, fontSize: ".78rem", whiteSpace: "nowrap" }}>{s.ejecuciones.toLocaleString("es-ES")} ejec.</span>
+                <span style={{ color: T.textDim, fontSize: ".78rem", whiteSpace: "nowrap" }}>{formatMetric(s.ejecuciones)} ejec.</span>
               </div>
             ))}
             {filtrados.length === 0 && <div style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>Sin resultados para este filtro/búsqueda.</div>}
@@ -486,9 +503,9 @@ export default function CentroTecnico({ selectedRole }) {
                 <div><span style={{ color: T.textDim }}>Categoría:</span> {CATEGORY_LABEL[s.categoria]}</div>
                 <div><span style={{ color: T.textDim }}>Estado:</span> {s.activo ? "Activo" : "Inactivo"}</div>
                 <div><span style={{ color: T.textDim }}>Scheduling:</span> {s.scheduling}</div>
-                <div><span style={{ color: T.textDim }}>Ejecuciones:</span> {s.ejecuciones.toLocaleString("es-ES")}</div>
-                <div><span style={{ color: T.textDim }}>Operaciones:</span> {s.operaciones.toLocaleString("es-ES")}</div>
-                <div><span style={{ color: T.textDim }}>Errores:</span> {s.errores} ({s.tasaError}%)</div>
+                <div><span style={{ color: T.textDim }}>Ejecuciones:</span> {formatMetric(s.ejecuciones)}</div>
+                <div><span style={{ color: T.textDim }}>Operaciones:</span> {formatMetric(s.operaciones)}</div>
+                <div><span style={{ color: T.textDim }}>Errores:</span> {formatMetric(s.errores)} {typeof s.tasaError === "number" ? `(${s.tasaError}%)` : ""}</div>
                 <div><span style={{ color: T.textDim }}>Salud:</span> {HEALTH_LABEL[s.salud]}</div>
                 <div><span style={{ color: T.textDim }}>Criticidad:</span> {s.criticidad}</div>
                 <div><span style={{ color: T.textDim }}>Última modificación:</span> {new Date(s.ultimaModificacion).toLocaleString("es-ES")}</div>

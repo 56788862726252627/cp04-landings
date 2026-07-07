@@ -30,13 +30,20 @@ export function enrichSnapshotScenario(scenario) {
 // nombres de campo son distintos (snake_case, `_acumulados`) y ya incluye
 // `dependencia_principal` / `fuente_de_verdad_dato` reales — nunca
 // `usaAirtable` (ese campo no existe en la respuesta en vivo).
+//
+// IMPORTANTE: el endpoint real `/scenarios` de Make (confirmado con
+// evidencia real, ver worker-reservas/support/makeLiveInventory.js) NO
+// expone `executions` ni `errors` — el Worker ya propaga `null` para esos
+// campos cuando Make no los trae, nunca un `0` inventado. Aquí NO se debe
+// volver a convertir ese `null` honesto en `0` (ese era exactamente el bug):
+// por eso no se usa `?? 0` para ejecuciones/errores/tasaError.
 export function enrichLiveScenario(raw) {
   return {
     ...raw,
-    ejecuciones: raw.ejecuciones_acumuladas ?? 0,
-    operaciones: raw.operaciones_acumuladas ?? 0,
-    errores: raw.errores_acumulados ?? 0,
-    tasaError: raw.tasa_error ?? 0,
+    ejecuciones: raw.ejecuciones_acumuladas ?? null,
+    operaciones: raw.operaciones_acumuladas ?? null,
+    errores: raw.errores_acumulados ?? null,
+    tasaError: raw.tasa_error ?? null,
     salud: raw.salud || "OK",
     criticidad: raw.criticidad || "BAJA",
     ultimaModificacion: raw.ultima_modificacion,
@@ -46,17 +53,59 @@ export function enrichLiveScenario(raw) {
   };
 }
 
+// Formatea una métrica para la UI sin fingir nunca un 0: si el valor no es
+// un número real (dato no disponible en la fuente actual), se dice
+// explícitamente en vez de mostrar "0" o "null%".
+export function formatMetric(value, suffix = "") {
+  return typeof value === "number" ? `${value.toLocaleString("es-ES")}${suffix}` : "No disponible";
+}
+
+// Suma solo sobre los escenarios que SÍ reportan el campo. Si la lista está
+// vacía, la suma real es 0 (no hay nada que sumar, no es un dato ausente).
+// Si la lista tiene escenarios pero NINGUNO reporta el campo, el agregado es
+// `null` — no se puede afirmar "0 acumulado", solo "no disponible en la
+// fuente actual".
+function sumKnown(enriched, field) {
+  const known = enriched.filter((s) => typeof s[field] === "number");
+  if (enriched.length > 0 && known.length === 0) return null;
+  return known.reduce((a, s) => a + s[field], 0);
+}
+
 export function computeTotales(enriched) {
   const total = enriched.length;
   const activos = enriched.filter((s) => s.activo).length;
   const inactivos = total - activos;
-  const conErrores = enriched.filter((s) => s.errores > 0).length;
-  const ejecuciones = enriched.reduce((a, s) => a + s.ejecuciones, 0);
-  const operaciones = enriched.reduce((a, s) => a + s.operaciones, 0);
-  const erroresTotales = enriched.reduce((a, s) => a + s.errores, 0);
-  const tasaErrorGlobal = ejecuciones ? Math.round((erroresTotales / ejecuciones) * 1000) / 10 : 0;
+
+  const ejecuciones = sumKnown(enriched, "ejecuciones");
+  const operaciones = sumKnown(enriched, "operaciones");
+  const erroresTotales = sumKnown(enriched, "errores");
+
+  // "Con errores": cuenta escenarios con errores confirmados > 0. Si NINGÚN
+  // escenario reporta el campo, no se puede afirmar "0 escenarios con
+  // errores" (sería inventar una confirmación que no existe): se expone
+  // como `null` igual que el agregado.
+  const conocidosErrores = enriched.filter((s) => typeof s.errores === "number");
+  const conErrores = enriched.length > 0 && conocidosErrores.length === 0
+    ? null
+    : conocidosErrores.filter((s) => s.errores > 0).length;
+
+  const tasaErrorGlobal = (ejecuciones !== null && erroresTotales !== null)
+    ? (ejecuciones ? Math.round((erroresTotales / ejecuciones) * 1000) / 10 : 0)
+    : null;
 
   return { total, activos, inactivos, conErrores, ejecuciones, operaciones, erroresTotales, tasaErrorGlobal };
+}
+
+// "Mayor volumen" se mide por operaciones acumuladas, nunca por ejecuciones:
+// es la única métrica de volumen que el endpoint real /scenarios de Make
+// expone de forma fiable hoy (ver enrichLiveScenario). Un escenario sin
+// dato de operaciones nunca puede "ganar" el máximo.
+export function pickMayorVolumen(enriched) {
+  return enriched.reduce((max, s) => {
+    if (typeof s.operaciones !== "number") return max;
+    if (!max || s.operaciones > max.operaciones) return s;
+    return max;
+  }, null);
 }
 
 export function filterScenarios(enriched, { filtro, busqueda } = {}) {
@@ -73,14 +122,21 @@ export function filterScenarios(enriched, { filtro, busqueda } = {}) {
   });
 }
 
+// Trata un valor no numérico (null = dato no disponible) como el mínimo
+// posible: al ordenar descendente, los escenarios sin dato quedan al final,
+// nunca intercalados al azar ni produciendo NaN en la comparación.
+function numOrMin(value) {
+  return typeof value === "number" ? value : -Infinity;
+}
+
 export function sortScenarios(list, orden) {
   const copy = [...list];
 
   copy.sort((a, b) => {
-    if (orden === "errores") return b.errores - a.errores;
-    if (orden === "ejecuciones") return b.ejecuciones - a.ejecuciones;
-    if (orden === "operaciones") return b.operaciones - a.operaciones;
-    if (orden === "tasaError") return b.tasaError - a.tasaError;
+    if (orden === "errores") return numOrMin(b.errores) - numOrMin(a.errores);
+    if (orden === "ejecuciones") return numOrMin(b.ejecuciones) - numOrMin(a.ejecuciones);
+    if (orden === "operaciones") return numOrMin(b.operaciones) - numOrMin(a.operaciones);
+    if (orden === "tasaError") return numOrMin(b.tasaError) - numOrMin(a.tasaError);
     if (orden === "ultimaModificacion") return new Date(b.ultimaModificacion) - new Date(a.ultimaModificacion);
     if (orden === "criticidad") return (CP04_CRITICALITY_RANK[b.criticidad] || 0) - (CP04_CRITICALITY_RANK[a.criticidad] || 0);
     if (orden === "nombre") return String(a.nombre).localeCompare(String(b.nombre), "es");

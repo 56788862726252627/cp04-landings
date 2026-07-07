@@ -79,3 +79,12 @@ test("describeLiveIssue: sin reason no produce mensaje (no inventa una causa)", 
   assert.equal(describeLiveIssue(null, false), null);
   assert.equal(describeLiveIssue(undefined, true), null);
 });
+
+test("10. resolveMakeInventorySource: live válido con métricas parciales (ejecuciones/errores null) sigue siendo 'live', no cae a snapshot", () => {
+  const liveConMetricasParciales = Array.from({ length: 50 }, (_, i) => ({
+    id: i, activo: true, ejecuciones: null, errores: null, operaciones: 100, tasaError: null, salud: "SIN_DATOS",
+  }));
+  const result = resolveMakeInventorySource({ liveOk: true, liveScenarios: liveConMetricasParciales, snapshotScenarios: [{ id: 99 }] });
+  assert.equal(result.source, "live", "que falten ejecuciones/errores no es un fallo de conexión: source sigue siendo live");
+  assert.equal(result.scenarios.length, 50);
+});
