@@ -54,10 +54,10 @@ export function enrichLiveScenario(raw) {
 }
 
 // Formatea una métrica para la UI sin fingir nunca un 0: si el valor no es
-// un número real (dato no disponible en la fuente actual), se dice
-// explícitamente en vez de mostrar "0" o "null%".
+// un número real y finito (dato no disponible en la fuente actual, o NaN),
+// se dice explícitamente en vez de mostrar "0", "null%" o el literal "NaN".
 export function formatMetric(value, suffix = "") {
-  return typeof value === "number" ? `${value.toLocaleString("es-ES")}${suffix}` : "No disponible";
+  return typeof value === "number" && Number.isFinite(value) ? `${value.toLocaleString("es-ES")}${suffix}` : "No disponible";
 }
 
 // Suma solo sobre los escenarios que SÍ reportan el campo. Si la lista está
@@ -128,6 +128,28 @@ export function filterScenarios(enriched, { filtro, busqueda } = {}) {
 function numOrMin(value) {
   return typeof value === "number" ? value : -Infinity;
 }
+
+// Texto de cabecera dinámico según la fuente real de los datos (live/
+// snapshot/unavailable). Antes era un texto fijo que afirmaba "Snapshot...
+// No es una conexión en vivo" incluso cuando source === "live" — falso.
+// Deliberadamente NO repite el detalle exacto de frescura (timestamp) que
+// ya muestra el badge EN VIVO/SNAPSHOT justo debajo, para no duplicar
+// información.
+export function describeCentroTecnicoHeader(source, total) {
+  if (source === "live") {
+    return `Consola de observabilidad de los ${total} escenarios de Make de Club Pádel 04, con datos actuales obtenidos en vivo del backend.`;
+  }
+  if (source === "snapshot") {
+    return `Consola de observabilidad de los ${total} escenarios de Make de Club Pádel 04. Mostrando la última instantánea conocida: no hay conexión en vivo disponible ahora mismo.`;
+  }
+  return "Consola de observabilidad de las automatizaciones Make de Club Pádel 04. No hay datos disponibles en este momento: ni conexión en vivo ni instantánea previa.";
+}
+
+// Texto de seguridad del panel G: debe ser válido tanto si la fuente actual
+// es live como snapshot/fallback — nunca afirma "es un snapshot" de forma
+// absoluta (eso era incorrecto en vivo).
+export const CP04_SECURITY_DATA_NOTE =
+  "Los datos llegan al frontend a través de un backend protegido de solo lectura, en vivo o como última instantánea conocida según disponibilidad — el frontend nunca posee ni transmite claves de Make.";
 
 export function sortScenarios(list, orden) {
   const copy = [...list];

@@ -16,6 +16,8 @@ import {
   sortScenarios,
   formatMetric,
   pickMayorVolumen,
+  describeCentroTecnicoHeader,
+  CP04_SECURITY_DATA_NOTE,
 } from "../utils/makeCentroTecnicoLogic.js";
 
 export const CP04_MAKE_LIVE_ENDPOINT = "/api/support/make/scenarios";
@@ -119,12 +121,29 @@ function Panel({ title, eyebrow, children, style = {} }) {
   );
 }
 
-function KpiCard({ label, value, sub, color }) {
+// `isPlaceholder`: el valor es un texto de estado ("No disponible"), no una
+// cifra. Se le da tratamiento tipográfico distinto (fuente de cuerpo, no de
+// display; tamaño responsive más contenido) para que nunca se desborde ni
+// invada la tarjeta contigua en vistas estrechas/tablet, y para que no se
+// confunda visualmente con un valor numérico real.
+function KpiCard({ label, value, sub, color, isPlaceholder }) {
   return (
-    <div style={{ border: `1px solid ${T.line}`, borderRadius: 16, padding: "16px 18px", background: "rgba(255,255,255,.03)" }}>
+    <div style={{ border: `1px solid ${T.line}`, borderRadius: 16, padding: "16px 18px", background: "rgba(255,255,255,.03)", minWidth: 0, overflow: "hidden" }}>
       <div style={{ color: T.textDim, fontSize: ".76rem", fontWeight: 700, marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: T.fontDisplay, fontSize: "1.7rem", fontWeight: 900, color: color || T.text }}>{value}</div>
-      {sub && <div style={{ color: T.textDim, fontSize: ".72rem", marginTop: 4 }}>{sub}</div>}
+      <div
+        style={{
+          fontFamily: isPlaceholder ? T.fontBody : T.fontDisplay,
+          fontSize: isPlaceholder ? "clamp(.82rem, 2.1vw, 1rem)" : "clamp(1.25rem, 3.2vw, 1.7rem)",
+          fontWeight: isPlaceholder ? 700 : 900,
+          lineHeight: 1.25,
+          color: color || T.text,
+          overflowWrap: "break-word",
+          wordBreak: "break-word",
+        }}
+      >
+        {value}
+      </div>
+      {sub && <div style={{ color: T.textDim, fontSize: ".72rem", marginTop: 4, overflowWrap: "break-word", wordBreak: "break-word" }}>{sub}</div>}
     </div>
   );
 }
@@ -243,9 +262,7 @@ export default function CentroTecnico({ selectedRole }) {
           Observabilidad de automatizaciones
         </h2>
         <p style={{ color: T.textDim, maxWidth: 720, lineHeight: 1.6 }}>
-          Snapshot real de los {MAKE_INVENTORY_META.totalReal} escenarios de Make, capturado el{" "}
-          {new Date(MAKE_INVENTORY_META.capturedAt).toLocaleString("es-ES")} vía consulta de solo lectura (fuente:{" "}
-          <code>{MAKE_INVENTORY_META.source}</code>). No es una conexión en vivo.
+          {describeCentroTecnicoHeader(effectiveSource, totales.total)}
         </p>
       </div>
 
@@ -338,16 +355,31 @@ export default function CentroTecnico({ selectedRole }) {
           <KpiCard
             label="Con errores"
             value={totales.conErrores === null ? "No disponible" : totales.conErrores}
-            color={totales.conErrores ? T.danger : T.accent}
+            color={totales.conErrores === null ? T.textDim : (totales.conErrores ? T.danger : T.accent)}
+            isPlaceholder={totales.conErrores === null}
           />
-          <KpiCard label="Ejecuciones acumuladas" value={formatMetric(totales.ejecuciones)} />
-          <KpiCard label="Operaciones acumuladas" value={formatMetric(totales.operaciones)} />
+          <KpiCard
+            label="Ejecuciones acumuladas"
+            value={formatMetric(totales.ejecuciones)}
+            isPlaceholder={totales.ejecuciones === null}
+          />
+          <KpiCard
+            label="Operaciones acumuladas"
+            value={formatMetric(totales.operaciones)}
+            isPlaceholder={totales.operaciones === null}
+          />
           <KpiCard
             label="Tasa de error global"
             value={tasaErrorGlobal === null ? "No disponible" : `${tasaErrorGlobal}%`}
-            color={tasaErrorGlobal > 5 ? T.warning : T.accent}
+            color={tasaErrorGlobal === null ? T.textDim : (tasaErrorGlobal > 5 ? T.warning : T.accent)}
+            isPlaceholder={tasaErrorGlobal === null}
           />
-          <KpiCard label="Mayor volumen" value={formatMetric(mayorVolumen?.operaciones)} sub={mayorVolumen?.nombre} />
+          <KpiCard
+            label="Mayor volumen"
+            value={formatMetric(mayorVolumen?.operaciones)}
+            sub={mayorVolumen?.nombre}
+            isPlaceholder={typeof mayorVolumen?.operaciones !== "number"}
+          />
         </div>
       </Panel>
 
@@ -508,7 +540,7 @@ export default function CentroTecnico({ selectedRole }) {
                 <div><span style={{ color: T.textDim }}>Errores:</span> {formatMetric(s.errores)} {typeof s.tasaError === "number" ? `(${s.tasaError}%)` : ""}</div>
                 <div><span style={{ color: T.textDim }}>Salud:</span> {HEALTH_LABEL[s.salud]}</div>
                 <div><span style={{ color: T.textDim }}>Criticidad:</span> {s.criticidad}</div>
-                <div><span style={{ color: T.textDim }}>Última modificación:</span> {new Date(s.ultimaModificacion).toLocaleString("es-ES")}</div>
+                <div><span style={{ color: T.textDim }}>Última modificación:</span> {s.ultimaModificacion ? new Date(s.ultimaModificacion).toLocaleString("es-ES") : "No disponible"}</div>
                 <div><span style={{ color: T.textDim }}>Dependencia principal:</span> {s.dependenciaPrincipal}</div>
                 <div><span style={{ color: T.textDim }}>Fuente del dato:</span> {s.fuenteDeVerdadDato}</div>
               </div>
@@ -539,7 +571,7 @@ export default function CentroTecnico({ selectedRole }) {
         <ul style={{ margin: 0, paddingLeft: 20, color: T.textDim, lineHeight: 1.8, fontSize: ".88rem" }}>
           <li>Acceso exclusivo del rol SUPPORT (navegación, guard de render y este componente lo verifican de forma independiente).</li>
           <li>Ningún token, hookId invocable, URL de webhook, credencial ni contenido HTML de email se muestra en este panel.</li>
-          <li>Los datos son un snapshot de solo lectura obtenido fuera del navegador — el frontend nunca posee ni transmite claves de Make.</li>
+          <li>{CP04_SECURITY_DATA_NOTE}</li>
         </ul>
       </Panel>
 

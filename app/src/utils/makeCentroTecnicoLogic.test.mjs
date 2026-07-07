@@ -11,6 +11,8 @@ import {
   sortScenarios,
   formatMetric,
   pickMayorVolumen,
+  describeCentroTecnicoHeader,
+  CP04_SECURITY_DATA_NOTE,
 } from "./makeCentroTecnicoLogic.js";
 
 const enrichedSnapshot = MAKE_INVENTORY.map(enrichSnapshotScenario);
@@ -229,4 +231,69 @@ test("sortScenarios: los escenarios sin dato numérico quedan al final al ordena
   const ordenado = sortScenarios(muestra, "ejecuciones");
   assert.equal(ordenado[0].id, 2, "el único con dato real debe ir primero");
   assert.ok(ordenado.slice(1).every((s) => s.ejecuciones === null));
+});
+
+// --- Regresión: QA visual/semántico post-EN VIVO ---
+
+test("describeCentroTecnicoHeader: live nunca afirma 'no es una conexión en vivo' (bug anterior)", () => {
+  const texto = describeCentroTecnicoHeader("live", 50);
+  assert.ok(texto.includes("50"));
+  assert.ok(texto.toLowerCase().includes("vivo"));
+  assert.ok(!texto.toLowerCase().includes("no es una conexión en vivo"));
+  assert.ok(!texto.toLowerCase().includes("snapshot"), "en live no debe mencionar snapshot");
+});
+
+test("describeCentroTecnicoHeader: snapshot es honesto sobre la ausencia de conexión en vivo", () => {
+  const texto = describeCentroTecnicoHeader("snapshot", 50);
+  assert.ok(texto.toLowerCase().includes("instantánea"));
+  assert.ok(texto.toLowerCase().includes("no hay conexión en vivo"));
+});
+
+test("describeCentroTecnicoHeader: unavailable no inventa datos ni cifras", () => {
+  const texto = describeCentroTecnicoHeader("unavailable", 0);
+  assert.ok(texto.toLowerCase().includes("no hay datos disponibles"));
+  assert.ok(!texto.includes("50"), "no debe inventar un total cuando no hay datos");
+});
+
+test("describeCentroTecnicoHeader: los tres textos son distintos entre sí (no es una constante fija reciclada)", () => {
+  const live = describeCentroTecnicoHeader("live", 50);
+  const snapshot = describeCentroTecnicoHeader("snapshot", 50);
+  const unavailable = describeCentroTecnicoHeader("unavailable", 50);
+  assert.notEqual(live, snapshot);
+  assert.notEqual(snapshot, unavailable);
+  assert.notEqual(live, unavailable);
+});
+
+test("CP04_SECURITY_DATA_NOTE: es neutral respecto a la fuente — no afirma de forma absoluta que los datos 'son un snapshot'", () => {
+  const texto = CP04_SECURITY_DATA_NOTE.toLowerCase();
+  assert.ok(!texto.includes("los datos son un snapshot"), "no debe afirmar snapshot de forma incondicional (falso en vivo)");
+  assert.ok(texto.includes("en vivo") && texto.includes("instantánea"), "debe cubrir ambos casos de fuente");
+  assert.ok(texto.includes("nunca posee ni transmite claves"), "debe mantener la garantía de seguridad de siempre");
+});
+
+test("formatMetric: nunca produce el texto literal 'null' ni 'undefined' visible para el usuario", () => {
+  for (const v of [null, undefined, NaN, "no-es-un-numero", {}]) {
+    const out = formatMetric(v);
+    assert.ok(!out.includes("null"));
+    assert.ok(!out.includes("undefined"));
+    assert.equal(out, "No disponible");
+  }
+});
+
+test("Escenario real EN VIVO completo (50, sin executions/errors): los valores de KPI renderizados son honestos, no ceros ni nulls visibles", () => {
+  const enriched = Array.from({ length: 50 }, (_, i) => enrichLiveScenario(liveRawSinDatos({ id: i, operaciones_acumuladas: 1000 })));
+  const totales = computeTotales(enriched);
+
+  const kpiEjecuciones = formatMetric(totales.ejecuciones);
+  const kpiErrores = totales.conErrores === null ? "No disponible" : String(totales.conErrores);
+  const kpiTasa = totales.tasaErrorGlobal === null ? "No disponible" : `${totales.tasaErrorGlobal}%`;
+  const kpiOperaciones = formatMetric(totales.operaciones);
+
+  assert.equal(kpiEjecuciones, "No disponible");
+  assert.equal(kpiErrores, "No disponible");
+  assert.equal(kpiTasa, "No disponible");
+  assert.equal(kpiOperaciones, "50.000", "operaciones sí es un valor real (50 x 1000), no un placeholder");
+  for (const texto of [kpiEjecuciones, kpiErrores, kpiTasa, kpiOperaciones]) {
+    assert.ok(!texto.includes("null") && !texto.includes("undefined"));
+  }
 });
