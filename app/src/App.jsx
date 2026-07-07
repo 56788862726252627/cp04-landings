@@ -35,11 +35,11 @@ const GALLERY_REAL_IMAGE_STYLES = `
 
 
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
 import { LazyClubGallery } from "./components/lazy/lazyGallery.js";
-import CP04GuidedTutorial from "./components/CP04GuidedTutorial.jsx";
+import { LazyCP04GuidedTutorial } from "./components/lazy/lazyGuidedTutorial.js";
 import { useAuth } from "./auth/AuthContext.jsx";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 import { authFetch } from "./auth/authService.js";
@@ -52,7 +52,7 @@ import {
   cp04CanAccessSection,
   cp04GetSafeStartSection,
 } from "./utils/rbac.js";
-import CentroTecnico from "./components/CentroTecnico.jsx";
+import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
 import { T } from "./theme.js";
 /**
  * Club Pádel 04 · SaaS App segura
@@ -6715,7 +6715,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <CentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,
@@ -7335,14 +7335,20 @@ export default function ClubPadel04SaaSApp() {
       {mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}
       <div className="cp04-layout">
         <Sidebar current={current} selectedRole={selectedRole} onClearRole={clearRole} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} />
-        <main className="cp04-main" data-tour="main-content">{modules[safeCurrentSection] || modules.inicio}</main>
+        <main className="cp04-main" data-tour="main-content">
+          <LazyLoadBoundary label="Cargando módulo...">
+            {modules[safeCurrentSection] || modules.inicio}
+          </LazyLoadBoundary>
+        </main>
       </div>
-      <CP04GuidedTutorial
-        selectedRole={selectedRole}
-        onNavigate={navigate}
-        openRevision={tutorialRevision}
-        onSetMobileMenuOpen={setMobileMenuOpen}
-      />
+      <Suspense fallback={null}>
+        <LazyCP04GuidedTutorial
+          selectedRole={selectedRole}
+          onNavigate={navigate}
+          openRevision={tutorialRevision}
+          onSetMobileMenuOpen={setMobileMenuOpen}
+        />
+      </Suspense>
     </>
   );
 }
