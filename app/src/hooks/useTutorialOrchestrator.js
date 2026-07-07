@@ -21,15 +21,15 @@ export const useTutorialOrchestrator = (stepData, current, onNavigate) => {
         if (!el) el = document.getElementById('root') || document.body;
 
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
+
         setTimeout(() => {
           const rect = el.getBoundingClientRect();
-          setTargetRect({ 
-            x: rect.left, 
-            y: rect.top, 
-            w: rect.width, 
+          setTargetRect({
+            x: rect.left,
+            y: rect.top,
+            w: rect.width,
             h: rect.height,
-            isFallback: !document.querySelector(stepData.selector) 
+            isFallback: !document.querySelector(stepData.selector)
           });
         }, 400);
       }, 600);

@@ -7009,7 +7009,7 @@ export default function ClubPadel04SaaSApp() {
     setMobileMenuOpen(false);
   }
 
-  
+
   const loginClock = useClock();
   const loginLang = useLang();
   const ltx = key => t(key, loginLang);
@@ -7103,9 +7103,9 @@ export default function ClubPadel04SaaSApp() {
             <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
               Iniciar sesión
             </button>
-            
+
           </div>
-          
+
               {registerOpen && (
                 <div style={{ marginTop:18, padding:18, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
                   {!registerDone ? (
