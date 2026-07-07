@@ -6,8 +6,8 @@ import {
   MAKE_SCENARIO_CATEGORIES,
 } from "../data/makeInventory.js";
 import { cp04NormalizeRole } from "../utils/rbac.js";
-import { authFetch } from "../auth/authService.js";
-import { resolveMakeInventorySource, createSingleFlightGuard } from "../utils/makeLiveClient.js";
+import { authFetch, getAccessToken } from "../auth/authService.js";
+import { resolveMakeInventorySource, createSingleFlightGuard, describeLiveIssue } from "../utils/makeLiveClient.js";
 import {
   enrichSnapshotScenario,
   enrichLiveScenario,
@@ -273,7 +273,7 @@ export default function CentroTecnico({ selectedRole }) {
           </span>
           {liveError && (
             <span title={liveError} style={{ color: T.textDim, fontSize: ".74rem" }}>
-              (en vivo no disponible: {liveError})
+              (en vivo no disponible: {describeLiveIssue(liveError, Boolean(getAccessToken())) || liveError})
             </span>
           )}
         </div>

@@ -22,6 +22,23 @@ export function resolveMakeInventorySource({ liveOk, liveScenarios, snapshotScen
   return { source: "unavailable", scenarios: [] };
 }
 
+// Traduce el `reason`/error crudo devuelto por el Worker (o por el propio
+// fetch) a un mensaje accionable, SOLO en el caso concreto que causaba
+// confusión real: el navegador no tiene un access_token real de Supabase
+// (p.ej. porque se entró por el selector de rol demo "Acceso por roles" en
+// vez de "Acceso real" con email/contraseña) y por eso el Worker responde
+// fail-closed con 401 MISSING_TOKEN. Para cualquier otro motivo (rol
+// insuficiente con sesión real, Make no disponible, error de red, etc.) NO
+// se sustituye nada: se deja pasar el motivo real tal cual, para no mostrar
+// nunca una razón inventada o distinta de la real (ver tests de regresión).
+export function describeLiveIssue(reason, hasAccessToken) {
+  if (!reason) return null;
+  if (!hasAccessToken && (reason === "MISSING_TOKEN" || reason === "HTTP_401")) {
+    return "No hay una sesión real de Supabase en este navegador: el acceso rápido por roles (demo) no genera un token real. Inicia sesión con tu email y contraseña reales para consultar el inventario en vivo.";
+  }
+  return null;
+}
+
 // Guard "single-flight": evita que dos llamadas concurrentes (doble efecto
 // de StrictMode, doble clic en "Actualizar estado") disparen dos peticiones
 // en paralelo. tryStart() devuelve false si ya hay una operación en curso;
