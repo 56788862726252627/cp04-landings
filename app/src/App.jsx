@@ -43,6 +43,7 @@ import { LazyCP04GuidedTutorial } from "./components/lazy/lazyGuidedTutorial.js"
 import { useAuth } from "./auth/AuthContext.jsx";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 import { authFetch } from "./auth/authService.js";
+import { useTenantConfig } from "./tenant-runtime/TenantConfigProvider.jsx";
 import { evaluateSlotAvailability, hasBookingOverlap, AVAILABILITY_STATUS } from "./utils/availability.js";
 import {
   CP04_ROLE_PERMISSIONS,
@@ -53,6 +54,7 @@ import {
   cp04GetSafeStartSection,
   cp04CanEditTournament,
 } from "./utils/rbac.js";
+import { cp04ReadTenantAware, cp04WriteTenantAware, cp04RemoveTenantAware } from "./utils/tenantAwareAppStorage.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
 import { T } from "./theme.js";
 import {
@@ -1489,12 +1491,28 @@ function cp04RequiresBackendAuth(section) {
   return cp04IsProtectedSection(section);
 }
 
-function cp04GetStoredAuthMode() {
+// Mismo patrón defensivo que src/auth/authService.js (safeLocalStorage()):
+// nunca lanza por un storage no disponible (modo privado, entorno sin
+// `window`...). No se importa la versión de authService.js porque no está
+// exportada (es privada a ese módulo) — este es el mismo helper de 3
+// líneas, no una segunda API de storage.
+function cp04SafeLocalStorage() {
   try {
-    return localStorage.getItem("cp04_auth_mode") || CP04_AUTH_MODES.DEMO;
+    return window.localStorage;
   } catch {
-    return CP04_AUTH_MODES.DEMO;
+    return null;
   }
+}
+
+// tenantId: resuelto vía useTenantConfig() por quien llama (siempre
+// disponible dentro del árbol montado en main.jsx bajo TenantConfigProvider)
+// y pasado aquí explícitamente porque esta función vive fuera de un
+// componente React. Sin tenantId, cp04ReadTenantAware cae a la clave legacy
+// plana — mismo comportamiento que antes de esta integración.
+function cp04GetStoredAuthMode(tenantId) {
+  return (
+    cp04ReadTenantAware(cp04SafeLocalStorage(), { tenantId, key: "cp04_auth_mode" }) || CP04_AUTH_MODES.DEMO
+  );
 }
 
 
@@ -4172,6 +4190,7 @@ function ReprogramarReserva({ setCurrent }) {
 }
 
 function Gestion() {
+  const { tenantId } = useTenantConfig();
   const [emailConsulta, setEmailConsulta] = useState("");
   const [reservasReales, setReservasReales] = useState([]);
   const [cargandoReservas, setCargandoReservas] = useState(false);
@@ -4188,9 +4207,10 @@ function Gestion() {
 
   useEffect(() => {
     try {
+      const storage = cp04SafeLocalStorage();
       const emailGuardado =
-        window.localStorage.getItem("cp04_user_email") ||
-        window.localStorage.getItem("cp04-reservas-email");
+        cp04ReadTenantAware(storage, { tenantId, key: "cp04_user_email" }) ||
+        cp04ReadTenantAware(storage, { tenantId, key: "cp04-reservas-email" });
 
       if (emailGuardado) {
         setEmailConsulta(emailGuardado);
@@ -4198,7 +4218,7 @@ function Gestion() {
     } catch {
       // El listado puede funcionar aunque localStorage no esté disponible.
     }
-  }, []);
+  }, [tenantId]);
 
   function normalizarReserva(item) {
     const reserva =
@@ -4343,14 +4363,7 @@ function Gestion() {
       setFuenteReservas(resultado.source || "airtable");
       setReservasConsultadas(true);
 
-      try {
-        window.localStorage.setItem(
-          "cp04-reservas-email",
-          emailLimpio,
-        );
-      } catch {
-        // La consulta ya ha terminado correctamente.
-      }
+      cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key: "cp04-reservas-email" }, emailLimpio);
     } catch (error) {
       setReservasReales([]);
       setReservasConsultadas(true);
@@ -6198,7 +6211,8 @@ function Admin() {
 
 
 function AuthProductionStatusPanel() {
-  const mode = cp04GetStoredAuthMode();
+  const { tenantId } = useTenantConfig();
+  const mode = cp04GetStoredAuthMode(tenantId);
   const isDemo = mode === CP04_AUTH_MODES.DEMO || mode === CP04_AUTH_MODES.LOCAL_DEMO;
 
   return (
@@ -6238,9 +6252,20 @@ function Soporte() {
 
 function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   const auth = useAuth();
+  const { tenantId } = useTenantConfig();
   const lang = useLang();
   const tx = key => t(key, lang);
   const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+
+  // Identificador de usuario para namespacing de storage (ver
+  // src/tenant-runtime/buildStorageKey.js, formato
+  // tenant:{tenantId}:user:{userId}:{key}). Con sesión real, auth.user.id es
+  // estable. Sin sesión real (rol elegido sin backend, auth.user es null) no
+  // existe un userId real: se usa el rol elegido localmente como
+  // identificador estable, documentado explícitamente como tal (ver LOTE B,
+  // audit/tenant-storage-isolation/TENANT_STORAGE_MIGRATION_PLAN.md) — nunca
+  // ambiguo con un userId real porque lleva el prefijo "local-role:".
+  const profileUserId = auth.user?.id ? String(auth.user.id) : `local-role:${cp04NormalizeRole(selectedRole)}`;
 
   // Perfil preparado para backend real.
   // Actualmente localStorage funciona como fallback local para no romper la demo.
@@ -6254,13 +6279,13 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   // desde aquí: viven centralizados en src/auth/authService.js.
 
   function saveProfileFallback(key, value) {
-    try {
-      const serialized = typeof value === "string" ? value : JSON.stringify(value);
-      localStorage.setItem(key, serialized);
-      return true;
-    } catch {
-      return false;
-    }
+    const serialized = typeof value === "string" ? value : JSON.stringify(value);
+    cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key, userId: profileUserId }, serialized);
+    return true;
+  }
+
+  function readProfileFallback(key) {
+    return cp04ReadTenantAware(cp04SafeLocalStorage(), { tenantId, key, userId: profileUserId });
   }
 
   async function saveProfileField(field, value) {
@@ -6280,7 +6305,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
 
   // Avatar — persiste en localStorage (modo demo)
   // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
-  const [avatarSrc, setAvatarSrc] = useState(() => { try { return localStorage.getItem("cp04_avatar") || null; } catch { return null; } });
+  const [avatarSrc, setAvatarSrc] = useState(() => readProfileFallback("cp04_avatar") || null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarMsg, setAvatarMsg] = useState("");
   const [avatarError, setAvatarError] = useState("");
@@ -6288,7 +6313,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
 
   // Bio — persiste en localStorage (modo demo)
   // TODO: GET/PATCH /api/profile/me { bio }
-  const [bio, setBio] = useState(() => { try { return localStorage.getItem("cp04_bio") || ""; } catch { return ""; } });
+  const [bio, setBio] = useState(() => readProfileFallback("cp04_bio") || "");
   const [bioEdit, setBioEdit] = useState(false);
   const [bioDraft, setBioDraft] = useState("");
   const [bioMsg, setBioMsg] = useState("");
@@ -6296,14 +6321,14 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
 
   // Datos deportivos — persiste en localStorage (modo demo)
   // TODO: GET/PATCH /api/profile/me { deporteData }
-  const [deporteData, setDeporteData] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_deporte") || "{}"); } catch { return {}; } });
+  const [deporteData, setDeporteData] = useState(() => { try { return JSON.parse(readProfileFallback("cp04_deporte") || "{}"); } catch { return {}; } });
   const [deporteEditing, setDeporteEditing] = useState(false);
   const [deporteDraft, setDeporteDraft] = useState({});
   const [deporteMsg, setDeporteMsg] = useState("");
 
   // Privacidad — persiste en localStorage (modo demo)
   // TODO: GET/PATCH /api/profile/me { privacy }
-  const [privacidad, setPrivacidad] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_privacidad") || "{}"); } catch { return {}; } });
+  const [privacidad, setPrivacidad] = useState(() => { try { return JSON.parse(readProfileFallback("cp04_privacidad") || "{}"); } catch { return {}; } });
   const [privMsg, setPrivMsg] = useState("");
 
   // Contraseña
@@ -6349,7 +6374,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
     setTimeout(() => setAvatarMsg(""), 3000);
   }
   function handleAvatarDelete() {
-    try { localStorage.removeItem("cp04_avatar"); } catch {}
+    cp04RemoveTenantAware(cp04SafeLocalStorage(), { tenantId, key: "cp04_avatar", userId: profileUserId });
     setAvatarSrc(null); setAvatarPreview(null); setShowDelConfirm(false);
     setAvatarMsg(tx("perfil.avatar_eliminada"));
     setTimeout(() => setAvatarMsg(""), 3000);
@@ -6951,8 +6976,17 @@ function PwaStatusBanners() {
 
 export default function ClubPadel04SaaSApp() {
   const auth = useAuth();
+  // Primer consumidor real de TenantConfigProvider (montado en main.jsx)
+  // desde App.jsx — hasta esta integración el Provider envolvía el árbol sin
+  // que nada lo leyera (ver docs/agencia-ia/RUNTIME_INTEGRATION_SAFE_PLAN.md,
+  // STEP 6-7). tenantId es el único campo que este lote necesita: namespacing
+  // de storage. Branding/recursos/horario/feature-flags del resto del
+  // contrato quedan fuera de alcance de esta integración (no solicitados).
+  const { tenantId } = useTenantConfig();
   const [current, setCurrent] = useState("inicio");
-  const [selectedRole, setSelectedRole] = useState(() => localStorage.getItem("cp04_role") || "");
+  const [selectedRole, setSelectedRole] = useState(
+    () => cp04ReadTenantAware(cp04SafeLocalStorage(), { tenantId, key: "cp04_role" }) || ""
+  );
   const [pendingRole, setPendingRole] = useState("");
   const [rolePassword, setRolePassword] = useState("");
   const [showRolePassword, setShowRolePassword] = useState(false);
@@ -7057,9 +7091,9 @@ export default function ClubPadel04SaaSApp() {
     }
 
     if (rememberRole) {
-      localStorage.setItem("cp04_role", pendingRole);
+      cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key: "cp04_role" }, pendingRole);
     } else {
-      localStorage.removeItem("cp04_role");
+      cp04RemoveTenantAware(cp04SafeLocalStorage(), { tenantId, key: "cp04_role" });
     }
     setSelectedRole(pendingRole);
     setCurrent(role.start || "inicio");
@@ -7075,8 +7109,12 @@ export default function ClubPadel04SaaSApp() {
     // aquí solo limpia lo que sigue siendo estado local de la demo/UI:
     // el rol demo elegido (cp04_role, cuando no vino de un login real) y los
     // formularios en curso. Ningún permiso del siguiente usuario puede
-    // heredar nada de esto: todo queda a cero.
-    localStorage.removeItem("cp04_role");
+    // heredar nada de esto: todo queda a cero. removeLegacy:true porque esto
+    // es un logout real (no una migración): debe invalidar el rol
+    // recordado bajo cualquiera de sus dos ubicaciones posibles (namespaced
+    // o legacy), igual que authService.clearPersisted() para accessToken/
+    // refreshToken/user.
+    cp04RemoveTenantAware(cp04SafeLocalStorage(), { tenantId, key: "cp04_role", removeLegacy: true });
 
     setSelectedRole("");
     setPendingRole("");
