@@ -125,3 +125,85 @@ test("escenario combinado: cambio de tenant Y cambio de usuario en el mismo nave
   assert.equal(JSON.parse(cp04Value).perfil, "publico");
   assert.equal(JSON.parse(club02Value).perfil, "privado");
 });
+
+// LOTE C — cp04_torneo_v2 / cp04_torneo_hist_v2 (torneo del club, namespaced
+// SOLO por tenant, sin userId: es dato de club, no de un jugador individual
+// — ver comentario de torneoLoadSaved/torneoLoadHist en App.jsx y LOTE H en
+// audit/tenant-storage-isolation/TENANT_STORAGE_MIGRATION_PLAN.md). Usa las
+// claves literales reales de producción (no un placeholder genérico como
+// "cp04_role" en los tests de arriba) para que un cambio accidental del
+// nombre de la constante TORNEO_STORE/TORNEO_HIST_STORE en App.jsx no pase
+// desapercibido.
+
+test("LOTE C: tenant A no lee cp04_torneo_v2 de tenant B (bracket de un club nunca visible para otro)", () => {
+  const storage = createMockStorage();
+  cp04WriteTenantAware(storage, { tenantId: "cp04", key: "cp04_torneo_v2" }, JSON.stringify({ nombre: "Torneo de Verano CP04" }));
+  const leidoPorClub02 = cp04ReadTenantAware(storage, { tenantId: "club02", key: "cp04_torneo_v2" });
+  assert.equal(leidoPorClub02, null);
+});
+
+test("LOTE C: tenant A no lee cp04_torneo_hist_v2 de tenant B (historial de deshacer/rehacer no se filtra entre clubes)", () => {
+  const storage = createMockStorage();
+  cp04WriteTenantAware(
+    storage,
+    { tenantId: "cp04", key: "cp04_torneo_hist_v2" },
+    JSON.stringify({ snaps: [{ id: 1, action: "Cambio de formato" }], idx: 0 })
+  );
+  const leidoPorClub02 = cp04ReadTenantAware(storage, { tenantId: "club02", key: "cp04_torneo_hist_v2" });
+  assert.equal(leidoPorClub02, null);
+});
+
+test("LOTE C: fallback legacy funciona si no hay tenant (torneo se sigue leyendo con la clave plana de siempre)", () => {
+  const storage = createMockStorage({ cp04_torneo_v2: JSON.stringify({ nombre: "Torneo previo a la integración" }) });
+  const valor = cp04ReadTenantAware(storage, { tenantId: null, key: "cp04_torneo_v2" });
+  assert.equal(JSON.parse(valor).nombre, "Torneo previo a la integración");
+});
+
+test("LOTE C: fallback legacy no destruye datos antiguos de torneo (leer la legacy no la borra ni la sobreescribe)", () => {
+  const storage = createMockStorage({ cp04_torneo_v2: JSON.stringify({ nombre: "Torneo legacy" }) });
+  cp04ReadTenantAware(storage, { tenantId: "cp04", key: "cp04_torneo_v2" });
+  const dump = storage._dump();
+  assert.equal(dump.cp04_torneo_v2, JSON.stringify({ nombre: "Torneo legacy" }));
+  assert.equal("tenant:cp04:cp04_torneo_v2" in dump, false);
+});
+
+test("LOTE C: escritura nueva de torneo queda namespaced cuando hay tenant, sin tocar la clave legacy", () => {
+  const storage = createMockStorage({ cp04_torneo_v2: JSON.stringify({ nombre: "Torneo legacy" }) });
+  cp04WriteTenantAware(storage, { tenantId: "cp04", key: "cp04_torneo_v2" }, JSON.stringify({ nombre: "Torneo nuevo" }));
+  const dump = storage._dump();
+  assert.equal(JSON.parse(dump["tenant:cp04:cp04_torneo_v2"]).nombre, "Torneo nuevo");
+  // No se elimina ni se sobreescribe accidentalmente la clave antigua.
+  assert.equal(JSON.parse(dump.cp04_torneo_v2).nombre, "Torneo legacy");
+});
+
+test("LOTE C: lectura de historial de torneo prioriza namespaced y cae a legacy si no existe namespaced", () => {
+  const storageConAmbas = createMockStorage({
+    "tenant:cp04:cp04_torneo_hist_v2": JSON.stringify({ snaps: [], idx: -1, origen: "namespaced" }),
+    cp04_torneo_hist_v2: JSON.stringify({ snaps: [], idx: -1, origen: "legacy" }),
+  });
+  assert.equal(
+    JSON.parse(cp04ReadTenantAware(storageConAmbas, { tenantId: "cp04", key: "cp04_torneo_hist_v2" })).origen,
+    "namespaced"
+  );
+
+  const storageSoloLegacy = createMockStorage({
+    cp04_torneo_hist_v2: JSON.stringify({ snaps: [], idx: -1, origen: "legacy" }),
+  });
+  assert.equal(
+    JSON.parse(cp04ReadTenantAware(storageSoloLegacy, { tenantId: "cp04", key: "cp04_torneo_hist_v2" })).origen,
+    "legacy"
+  );
+});
+
+test("LOTE C: no se eliminan claves antiguas de torneo accidentalmente (cp04WriteTenantAware nunca borra, solo escribe la namespaced)", () => {
+  const storage = createMockStorage({
+    cp04_torneo_v2: JSON.stringify({ nombre: "Torneo legacy" }),
+    cp04_torneo_hist_v2: JSON.stringify({ snaps: [], idx: -1 }),
+  });
+  cp04WriteTenantAware(storage, { tenantId: "cp04", key: "cp04_torneo_v2" }, JSON.stringify({ nombre: "Torneo nuevo" }));
+  cp04WriteTenantAware(storage, { tenantId: "cp04", key: "cp04_torneo_hist_v2" }, JSON.stringify({ snaps: [{ id: 1 }], idx: 0 }));
+
+  const dump = storage._dump();
+  assert.ok("cp04_torneo_v2" in dump, "la clave legacy de torneo no debería desaparecer solo por escribir la namespaced");
+  assert.ok("cp04_torneo_hist_v2" in dump, "la clave legacy de historial no debería desaparecer solo por escribir la namespaced");
+});

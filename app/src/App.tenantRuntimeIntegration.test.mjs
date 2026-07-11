@@ -158,3 +158,51 @@ test("las 8 claves migradas aparecen cerca (misma línea o líneas contiguas) de
 test("cp04SafeLocalStorage() existe como fallback defensivo (mismo patrón que authService.safeLocalStorage, no accede a window sin protección)", () => {
   assert.match(appJsxSource, /function cp04SafeLocalStorage\(\)\s*\{/);
 });
+
+// LOTE C — cp04_torneo_v2 / cp04_torneo_hist_v2. Estos dos no aparecen como
+// strings literales en cada call site (TORNEO_STORE/TORNEO_HIST_STORE son
+// constantes reutilizadas), así que se verifican por nombre de constante en
+// vez de por el string exacto, igual que se hace en el propio App.jsx.
+
+test("torneoLoadSaved/torneoLoadHist reciben tenantId como parámetro y usan cp04ReadTenantAware (ya no localStorage.getItem crudo)", () => {
+  const loadSavedBody = sliceFunction(appJsxSource, "function torneoLoadSaved(tenantId) {", "function torneoLoadHist(");
+  assert.match(loadSavedBody, /cp04ReadTenantAware\(cp04SafeLocalStorage\(\), \{ tenantId, key: TORNEO_STORE \}\)/);
+  assert.doesNotMatch(loadSavedBody, /localStorage\.getItem\(TORNEO_STORE\)/);
+
+  const loadHistBody = sliceFunction(appJsxSource, "function torneoLoadHist(tenantId) {", "function torneoBuildEmptyPairs(");
+  assert.match(loadHistBody, /cp04ReadTenantAware\(cp04SafeLocalStorage\(\), \{ tenantId, key: TORNEO_HIST_STORE \}\)/);
+  assert.doesNotMatch(loadHistBody, /localStorage\.getItem\(TORNEO_HIST_STORE\)/);
+});
+
+test("Torneos() consume useTenantConfig() y propaga tenantId a torneoLoadHist/torneoLoadSaved al montar", () => {
+  const body = sliceFunction(appJsxSource, "function Torneos({ selectedRole }) {", "function RankingAvatar(");
+  assert.match(body, /const\s*\{\s*tenantId\s*\}\s*=\s*useTenantConfig\(\)/);
+  assert.match(body, /torneoLoadHist\(tenantId\)/);
+  assert.match(body, /torneoLoadSaved\(tenantId\)/);
+});
+
+test("las 5 escrituras de TORNEO_STORE/TORNEO_HIST_STORE dentro de Torneos() usan cp04WriteTenantAware, ninguna quedó en localStorage.setItem crudo", () => {
+  const body = sliceFunction(appJsxSource, "function Torneos({ selectedRole }) {", "function RankingAvatar(");
+
+  const torneoStoreWrites = (body.match(/cp04WriteTenantAware\(cp04SafeLocalStorage\(\), \{ tenantId, key: TORNEO_STORE \}/g) || []).length;
+  assert.equal(torneoStoreWrites, 1, "el useEffect de persistencia del torneo debería escribir vía cp04WriteTenantAware");
+
+  const torneoHistWrites = (body.match(/cp04WriteTenantAware\(cp04SafeLocalStorage\(\), \{ tenantId, key: TORNEO_HIST_STORE \}/g) || []).length;
+  assert.equal(torneoHistWrites, 4, "pushHistory/handleUndo/handleRedo/handleRestoreVersion deberían escribir vía cp04WriteTenantAware (4 puntos)");
+
+  assert.doesNotMatch(body, /localStorage\.setItem\(TORNEO_STORE/);
+  assert.doesNotMatch(body, /localStorage\.setItem\(TORNEO_HIST_STORE/);
+});
+
+test("el useEffect que persiste TORNEO_STORE incluye tenantId en su array de dependencias (sin closure obsoleta tras un cambio de tenant)", () => {
+  const body = sliceFunction(appJsxSource, "function Torneos({ selectedRole }) {", "function RankingAvatar(");
+  assert.match(
+    body,
+    /cp04WriteTenantAware\(cp04SafeLocalStorage\(\), \{ tenantId, key: TORNEO_STORE \}, JSON\.stringify\(s\)\);\s*setSavedAt\(new Date\(\)\);\s*\}, \[[^\]]*\btenantId\b[^\]]*\]\);/,
+  );
+});
+
+test("el módulo Torneos local sigue intacto: torneoBuildFullBracket/torneoAdvanceWinner/validateTorneoCustomCount siguen importados sin cambios", () => {
+  assert.match(appJsxSource, /import\s*\{[^}]*torneoBuildFullBracket[^}]*\}\s*from\s*"\.\/utils\/torneoBracket\.js"/s);
+  assert.match(appJsxSource, /import\s*\{[^}]*validateTorneoCustomCount[^}]*\}\s*from\s*"\.\/utils\/torneoValidation\.js"/s);
+});

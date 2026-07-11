@@ -5040,9 +5040,18 @@ const FORMAT_MAX = { "16": 8, "32": 16, "64": 32 };
 const MATCH_H = 78;
 const BASE_GAP = 10;
 
-function torneoLoadSaved() {
+// torneoLoadSaved/torneoLoadHist: dato de club (torneo del club, no de un
+// jugador individual), namespaced solo por tenant — sin userId. Mismo
+// criterio ya documentado para LOTE H
+// (audit/tenant-storage-isolation/TENANT_STORAGE_MIGRATION_PLAN.md): un
+// torneo del club sobrevive al logout de un usuario individual porque es
+// dato del club, no del usuario, así que no debe aislarse por usuario.
+// tenantId se recibe como parámetro (igual que cp04GetStoredAuthMode) en vez
+// de resolverse aquí porque estas funciones viven fuera de un componente
+// React — quien llama (Torneos()) ya lo resuelve una vez vía useTenantConfig().
+function torneoLoadSaved(tenantId) {
   try {
-    const raw = JSON.parse(localStorage.getItem(TORNEO_STORE) || "null");
+    const raw = JSON.parse(cp04ReadTenantAware(cp04SafeLocalStorage(), { tenantId, key: TORNEO_STORE }) || "null");
     if (!raw || typeof raw !== "object") return null;
     const rawPairs = Array.isArray(raw.pairs) ? raw.pairs : [];
     const rawBracket = Array.isArray(raw.bracket) ? raw.bracket : [];
@@ -5069,9 +5078,9 @@ function torneoLoadSaved() {
   } catch { return null; }
 }
 
-function torneoLoadHist() {
+function torneoLoadHist(tenantId) {
   try {
-    const raw = JSON.parse(localStorage.getItem(TORNEO_HIST_STORE) || "null");
+    const raw = JSON.parse(cp04ReadTenantAware(cp04SafeLocalStorage(), { tenantId, key: TORNEO_HIST_STORE }) || "null");
     if (raw && Array.isArray(raw.snaps) && typeof raw.idx === "number") return raw;
     return { snaps: [], idx: -1 };
   } catch { return { snaps: [], idx: -1 }; }
@@ -5111,6 +5120,7 @@ function torneoGetRoundPadding(round) {
 }
 
 function Torneos({ selectedRole }) {
+  const { tenantId } = useTenantConfig();
   const lang = useLang();
   const tx = key => t(key, lang);
   // Edición de bracket (añadir/editar/eliminar parejas, reordenar, marcar
@@ -5125,10 +5135,10 @@ function Torneos({ selectedRole }) {
   const canEdit = cp04CanEditTournament(selectedRole);
   const histRef = useRef(null);
   if (!histRef.current) {
-    histRef.current = torneoLoadHist();
+    histRef.current = torneoLoadHist(tenantId);
   }
 
-  const saved = torneoLoadSaved();
+  const saved = torneoLoadSaved(tenantId);
   const [formatMode, setFormatMode] = useState(saved?.formatMode ?? "32");
   const [customMode, setCustomMode] = useState(saved?.customMode ?? "pairs");
   const [customInput, setCustomInput] = useState(saved?.customInput ?? "");
@@ -5169,9 +5179,9 @@ function Torneos({ selectedRole }) {
 
   useEffect(() => {
     const s = { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published, torneoId, nombre, fecha, hora, categoria, modalidad };
-    localStorage.setItem(TORNEO_STORE, JSON.stringify(s));
+    cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key: TORNEO_STORE }, JSON.stringify(s));
     setSavedAt(new Date());
-  }, [pairs, bracket, byePair, byeDrawDate, published, formatMode, customMode, customInput, torneoId, nombre, fecha, hora, categoria, modalidad]);
+  }, [pairs, bracket, byePair, byeDrawDate, published, formatMode, customMode, customInput, torneoId, nombre, fecha, hora, categoria, modalidad, tenantId]);
 
   const showNotice = (msg, err = false) => {
     setNotice(msg); setNoticeErr(err);
@@ -5199,7 +5209,7 @@ function Torneos({ selectedRole }) {
       const idx = typeof h.idx === "number" ? h.idx : -1;
       const newSnaps = [...snaps.slice(0, idx + 1), snap].slice(-30);
       histRef.current = { snaps: newSnaps, idx: newSnaps.length - 1 };
-      localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+      cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key: TORNEO_HIST_STORE }, JSON.stringify(histRef.current));
       setHistVersion(v => v + 1);
     } catch { /* silent */ }
   };
@@ -5232,7 +5242,7 @@ function Torneos({ selectedRole }) {
     if (h.idx <= 0) return;
     const ni = h.idx - 1;
     histRef.current = { ...h, idx: ni };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key: TORNEO_HIST_STORE }, JSON.stringify(histRef.current));
     restoreSnap(h.snaps[ni]);
     setHistVersion(v => v + 1);
     showNotice(`↩ Deshecho: ${h.snaps[ni].action}`);
@@ -5244,7 +5254,7 @@ function Torneos({ selectedRole }) {
     if (h.idx >= h.snaps.length - 1) return;
     const ni = h.idx + 1;
     histRef.current = { ...h, idx: ni };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key: TORNEO_HIST_STORE }, JSON.stringify(histRef.current));
     restoreSnap(h.snaps[ni]);
     setHistVersion(v => v + 1);
     showNotice(`↪ Rehecho: ${h.snaps[ni].action}`);
@@ -5256,7 +5266,7 @@ function Torneos({ selectedRole }) {
     const snap = h.snaps[idx];
     if (!snap) return;
     histRef.current = { ...h, idx };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key: TORNEO_HIST_STORE }, JSON.stringify(histRef.current));
     restoreSnap(snap);
     setHistVersion(v => v + 1);
     setShowHistory(false);
