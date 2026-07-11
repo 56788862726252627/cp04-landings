@@ -10,6 +10,14 @@
 //   por defecto aquí: ese "downgrade" amable es responsabilidad de la UI,
 //   no de esta puerta de autorización).
 
+// Lote A7 — Session Cookie (backend): resolveSessionToken añade la cookie
+// HttpOnly `cp04_at` como segunda fuente de token (tras Authorization:
+// Bearer), con mitigación CSRF por Origin allowlist para peticiones
+// mutantes. Es el MISMO middleware de siempre (authenticateRequest sigue
+// siendo el único punto de verificación); solo cambia de dónde se lee el
+// token crudo antes de verificarlo.
+import { resolveSessionToken } from "./session-cookie.js";
+
 export const CP04_AUTH_ROLES = ["PLAYER", "STAFF", "ADMIN", "SUPPORT"];
 
 export const CP04_AUTH_PERMISSIONS = {
@@ -134,7 +142,13 @@ export async function verifySupabaseIdentity(token, env, fetchImpl = fetch) {
 // otro proveedor. El contrato de salida es estable para el resto del Worker:
 // { authenticated, userId, email, role, clubId, organizationId, sessionId, tokenExpiresAt }
 export async function authenticateRequest(request, env, options = {}) {
-  const token = parseAuthorizationHeader(request);
+  const resolved = resolveSessionToken(request, env, { parseAuthorizationHeader });
+
+  if (resolved.csrfRejected) {
+    return { authenticated: false, reason: "CSRF_ORIGIN_MISMATCH" };
+  }
+
+  const token = resolved.token;
 
   if (!token) {
     return { authenticated: false, reason: "MISSING_TOKEN" };
@@ -188,6 +202,7 @@ const AUTH_FAILURE_STATUS = {
   ROLE_NOT_ASSIGNED: 403,
   UPSTREAM_ERROR: 502,
   PROVIDER_NOT_CONFIGURED: 501,
+  CSRF_ORIGIN_MISMATCH: 403,
 };
 
 const AUTH_FAILURE_MESSAGE = {
@@ -196,6 +211,7 @@ const AUTH_FAILURE_MESSAGE = {
   ROLE_NOT_ASSIGNED: "La cuenta no tiene un rol asignado en el sistema.",
   UPSTREAM_ERROR: "No se pudo validar la sesión con el proveedor de identidad.",
   PROVIDER_NOT_CONFIGURED: "Autenticación backend no configurada todavía.",
+  CSRF_ORIGIN_MISMATCH: "Origen no permitido para una petición autenticada por cookie.",
 };
 
 function denyResponse(reason) {

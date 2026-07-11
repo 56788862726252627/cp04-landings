@@ -1,0 +1,22 @@
+{
+  "_comment": "Identidades de prueba para los 20 escenarios del harness. No son cuentas reales de Supabase — solo payloads de login mockeados (mismo patrón que okLoginResponse() en authService.tenantIsolation.test.mjs).",
+  "playerA": {
+    "email": "playera@clubpadel04.example",
+    "role": "PLAYER",
+    "accessToken": "token-playerA",
+    "refreshToken": "refresh-playerA"
+  },
+  "playerB": {
+    "email": "playerb@clubpadel04.example",
+    "role": "PLAYER",
+    "accessToken": "token-playerB",
+    "refreshToken": "refresh-playerB"
+  },
+  "adminA": {
+    "email": "playera@clubpadel04.example",
+    "role": "ADMIN",
+    "accessToken": "token-adminA",
+    "refreshToken": "refresh-adminA",
+    "note": "mismo email que playerA — representa la escalada de rol PLAYER->ADMIN del escenario 7, no una cuenta distinta"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/stripe/checkout-session.schema.json",
+  "title": "CP04 Stripe Adapter — Checkout Session (mock output)",
+  "description": "Forma esperada de la salida de MockStripeCheckoutStore#createCheckoutSession (worker-reservas/payments/stripe-adapter.mock.js). Subconjunto deliberado de la Checkout Session real de Stripe — solo los campos que este adapter necesita y produce.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "object", "livemode", "status", "amount_total", "currency", "success_url", "cancel_url", "metadata"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^cs_test_mock_" },
+    "object": { "type": "string", "enum": ["checkout.session"] },
+    "livemode": { "type": "boolean", "enum": [false] },
+    "status": { "type": "string", "enum": ["open", "complete", "expired"] },
+    "amount_total": { "type": "integer", "minimum": 1 },
+    "currency": { "type": "string", "pattern": "^[a-z]{3}$" },
+    "success_url": { "type": "string", "minLength": 1 },
+    "cancel_url": { "type": "string", "minLength": 1 },
+    "metadata": {
+      "type": "object",
+      "required": ["tenant_id", "client_id", "user_id", "booking_id", "payment_reference"],
+      "properties": {
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "client_id": { "type": "string", "minLength": 1 },
+        "user_id": { "type": "string", "minLength": 1 },
+        "booking_id": { "type": "string", "minLength": 1 },
+        "payment_reference": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

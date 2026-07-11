@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-08T10:18:12.900Z",
+  "level": "error",
+  "service": "airtable",
+  "environment": "production",
+  "event_type": "airtable_write",
+  "message": "429 de Airtable al confirmar recordatorio",
+  "request_id": "req_77bb28ef41",
+  "correlation_id": "corr_1a2b3c4d55",
+  "client_id": "club-padel-04",
+  "tenant_id": null,
+  "scenario_id": "5810214",
+  "execution_id": null,
+  "user_id_hash": null,
+  "error_code": "AIRTABLE_RATE_LIMIT.EXCEEDED",
+  "duration_ms": 620,
+  "status": "failure",
+  "metadata": { "scenario_name": "Recordatorio 2h Antes (ficticio para fixture)" }
+}

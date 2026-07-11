@@ -1,0 +1,20 @@
+{
+  "_why": "charge.refunded — reembolso sandbox de un cobro ya confirmado. Debe mapear a PAYMENT_STATUS.REFUNDED y, en integración real, revertir el efecto de negocio aplicado por el evento PAID original (misma booking_id/payment_reference).",
+  "id": "evt_QACP04STRIPE_charge_refunded_001",
+  "object": "event",
+  "type": "charge.refunded",
+  "created": 1799700400,
+  "livemode": false,
+  "data": {
+    "object": {
+      "id": "ch_test_mock_0001",
+      "metadata": {
+        "tenant_id": "tnt_qacp04_test",
+        "client_id": "clt_qacp04_test",
+        "user_id": "usr_qacp04_test",
+        "booking_id": "bkg_qacp04_0001",
+        "payment_reference": "payref_qacp04_0001"
+      }
+    }
+  }
+}

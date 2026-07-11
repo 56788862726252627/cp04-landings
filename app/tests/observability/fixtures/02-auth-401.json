@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-08T10:16:01.118Z",
+  "level": "info",
+  "service": "supabase-auth",
+  "environment": "production",
+  "event_type": "auth_session_check",
+  "message": "Sin access_token de Supabase en la sesion del navegador",
+  "request_id": "req_2c9f7a01e2",
+  "correlation_id": null,
+  "client_id": "club-padel-04",
+  "tenant_id": null,
+  "scenario_id": null,
+  "execution_id": null,
+  "user_id_hash": null,
+  "error_code": "AUTH.MISSING_TOKEN",
+  "duration_ms": 3,
+  "status": "failure",
+  "metadata": { "route": "/api/support/make/scenarios" }
+}

@@ -1,0 +1,10 @@
+{
+  "to": "+34600000001",
+  "template_name": "reminder_2h_before",
+  "language": "es",
+  "category": "UTILITY",
+  "components": [
+    { "type": "body", "parameters": [{ "type": "text", "text": "QA_CP04 Pista 1" }, { "type": "text", "text": "10:00" }] }
+  ],
+  "idempotency_key": "QA_CP04_WA_REMINDER_20260709A"
+}

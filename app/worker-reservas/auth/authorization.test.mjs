@@ -269,7 +269,10 @@ test("Integración: preflight OPTIONS a /api/reservas responde 204 con CORS y si
 
   assert.equal(response.status, 204);
   assert.equal(response.headers.get("Access-Control-Allow-Origin"), "http://localhost:5173");
-  assert.equal(response.headers.get("Access-Control-Allow-Headers"), "Content-Type, Authorization");
+  assert.equal(
+    response.headers.get("Access-Control-Allow-Headers"),
+    "Content-Type, Authorization, X-CP04-Correlation-Id, X-CP04-Request-Id"
+  );
 });
 
 // --- Extra: confirma que el nuevo gate del listado por email queda activo ---

@@ -1,0 +1,12 @@
+{
+  "to": "+34600000004",
+  "template_name": "reminder_24h",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "player_name": "Carlos Díaz",
+    "court_name": "Pista 1",
+    "date_time": "2026-07-11 10:00"
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:bkg_0004:reminder_24h"
+}

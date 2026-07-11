@@ -1,0 +1,5 @@
+{
+  "_why": "Sin '+' inicial ni código de país explícito — normalizePhoneNumber() sin defaultCountryCode debe devolver valid:false, reason:'missing_country_code'.",
+  "raw_input": "600 000 022",
+  "expected_reason_without_default_country_code": "missing_country_code"
+}

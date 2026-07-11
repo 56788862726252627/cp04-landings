@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/stripe/stripe-webhook-event.schema.json",
+  "title": "CP04 Stripe Adapter — Webhook Event (multi-tenant, mock)",
+  "description": "Contrato de un evento Stripe recibido por el futuro endpoint propio del Worker (worker-reservas/payments/stripe-adapter.mock.js), distinto del contrato de schemas/make-qa/stripe-webhook-event.schema.json (ese valida el CustomWebHook plano que consume Make hoy). Este schema exige el contrato de metadata multi-tenant descrito en docs/agencia-ia/TENANT_ISOLATION_CONTRACT.md (tenant_id, client_id, user_id, booking_id, payment_reference) porque este adapter, a diferencia del escenario Make actual, está diseñado para un futuro con más de un tenant compartiendo infraestructura. livemode debe ser SIEMPRE false por contrato en fixtures de esta suite — ningún fixture puede confundirse con un evento real.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "object", "type", "created", "livemode", "data"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^evt_QACP04STRIPE_" },
+    "object": { "type": "string", "enum": ["event"] },
+    "type": {
+      "type": "string",
+      "enum": [
+        "checkout.session.completed",
+        "checkout.session.expired",
+        "payment_intent.succeeded",
+        "payment_intent.payment_failed",
+        "charge.refunded"
+      ]
+    },
+    "created": { "type": "integer", "minimum": 0 },
+    "livemode": { "type": "boolean", "enum": [false] },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object"],
+      "properties": {
+        "object": {
+          "type": "object",
+          "required": ["id", "metadata"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "metadata": {
+              "type": "object",
+              "required": ["tenant_id", "client_id", "user_id", "booking_id", "payment_reference"],
+              "properties": {
+                "tenant_id": { "type": "string", "minLength": 1 },
+                "client_id": { "type": "string", "minLength": 1 },
+                "user_id": { "type": "string", "minLength": 1 },
+                "booking_id": { "type": "string", "minLength": 1 },
+                "payment_reference": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

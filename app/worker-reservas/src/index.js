@@ -7,9 +7,87 @@ import {
   requireRoles,
 } from "../auth/authorization.js";
 import {
+  isOriginAllowed,
+  resolveSessionToken,
+  resolveRefreshToken,
+  buildAccessCookie,
+  buildRefreshCookie,
+  buildExpiredAccessCookie,
+  buildExpiredRefreshCookie,
+} from "../auth/session-cookie.js";
+import {
   fetchLiveMakeInventory,
   checkMakeRateLimit,
 } from "../support/makeLiveInventory.js";
+
+import {
+  resolveRequestId,
+  resolveCorrelationId,
+  resolveOrStartCorrelationId,
+  attachCorrelationHeaders,
+  buildRequestLogEvent,
+  logStructuredEvent,
+  buildHealthLiveResponse,
+  buildHealthReadyResponse,
+  buildMakePayload,
+  dependencyStatusFromConfig,
+} from "./observability-runtime.js";
+import {
+  AVAILABILITY_ERROR,
+  availabilityAirtableTimeoutMs,
+  buildAvailabilityFormula,
+  isTimeoutError,
+  normalizeAvailabilityRecords,
+  resolveAvailabilityScope,
+  validateAvailabilityDate,
+} from "./availability-contract.js";
+import {
+  BOOKING_ERROR,
+  buildCanonicalBookingOperation,
+  classifyBookingBackendResponse,
+  isBookingWriteAction,
+  resolveReservationScope,
+  validateBookingIdempotency,
+} from "./booking-contract.js";
+import { runStripeWebhookIntegrationHarness } from "../payments/stripe-integration-harness.js";
+import {
+  STRIPE_WEBHOOK_ROUTE,
+  validateContentType,
+  assertRawBodyNotConsumed,
+  extractSignatureHeader,
+  sanitizeForRouteLogging,
+  withTimeoutBudget,
+  mapClassificationToHttpResponse,
+} from "../payments/stripe-route-contract.js";
+import { createStripeEventLockStore } from "../payments/stripe-lock-store-factory.js";
+import { PaymentIdempotencyStore } from "../payments/stripe-idempotency.js";
+import { createInMemorySideEffects } from "../payments/stripe-side-effects.js"; // sustituir por implementación real antes de producción
+
+// Stripe webhook — estado de módulo (singleton por isolate, no por request:
+// el lock de idempotencia debe sobrevivir entre requests dentro del mismo
+// isolate, igual que el backend KV lo hace entre isolates). Se crea de forma
+// PEREZOSA (no en el top-level del módulo) porque `env` — y por tanto
+// `env.STRIPE_IDEMPOTENCY_KV` — solo existe dentro de fetch(request, env),
+// nunca en el scope de import de un Worker; WORKER_ROUTE_INTEGRATION_PLAN.md
+// asumía un store 100% en memoria (sin env) y podía permitirse un `const` de
+// top-level, pero el adapter KV real (stripe-lock-store-factory.js) sí lo
+// necesita.
+let stripeEventLockStore = null;
+const stripeBusinessIdempotencyStore = new PaymentIdempotencyStore();
+
+function getStripeEventLockStore(env) {
+  if (!stripeEventLockStore) {
+    stripeEventLockStore = createStripeEventLockStore(env).store;
+  }
+  return stripeEventLockStore;
+}
+
+// Exportado (además del default de fetch()) únicamente para que los tests de
+// worker-reservas/src/index.stripe-webhook.test.mjs puedan verificar la
+// memoización del singleton sin duplicar la lógica de selección KV/memoria
+// (esa ya la prueba tests/stripe/lock-store-factory.test.mjs sobre
+// createStripeEventLockStore en aislamiento).
+export { getStripeEventLockStore };
 
 const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 const BOOKING_DURATIONS = [60, 90, 120];
@@ -28,24 +106,41 @@ function jsonResponse(body, status = 200, corsHeaders = {}) {
   });
 }
 
+// Lote A7 — variante de jsonResponse() que además adjunta una o más cabeceras
+// Set-Cookie. No sustituye a jsonResponse (que sigue igual para las ~50
+// rutas que no necesitan cookies): un objeto plano no puede tener dos claves
+// "Set-Cookie" (login necesita fijar cp04_at Y cp04_rt a la vez), así que
+// esta variante usa `Headers.append()`, que sí soporta cabeceras repetidas.
+function jsonResponseWithCookies(body, status, corsHeaders, cookies = []) {
+  const headers = new Headers({
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    ...corsHeaders,
+  });
+  for (const cookie of cookies) {
+    if (cookie) headers.append("Set-Cookie", cookie);
+  }
+  return new Response(JSON.stringify(body), { status, headers });
+}
+
 function corsHeaders(request, env) {
-  const origin = request.headers.get("Origin") || "";
-  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
-  .split(",")
-  .map((item) => item.trim())
-  .filter(Boolean);
-
-const isAllowedOrigin = allowedOrigins.includes(origin);
-const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
-
-  if (!isAllowedOrigin) {
+  // isOriginAllowed() centraliza el mismo allowlist (ALLOWED_ORIGIN) que
+  // ahora también usa el gate CSRF de session-cookie.js — una sola fuente
+  // de verdad para "qué origen es de confianza".
+  if (!isOriginAllowed(request, env)) {
     return {};
   }
 
+  const origin = request.headers.get("Origin") || "";
+
   return {
-    "Access-Control-Allow-Origin": corsOrigin,
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-CP04-Correlation-Id, X-CP04-Request-Id",
+    // Lote A7 — necesario para que fetch(url, {credentials:'include'}) desde
+    // el frontend envíe/reciba las cookies HttpOnly de sesión. Solo se emite
+    // cuando el origen ya está en el allowlist (arriba) — nunca junto a "*".
+    "Access-Control-Allow-Credentials": "true",
     "Vary": "Origin",
   };
 }
@@ -424,18 +519,49 @@ function normalizePayload(payload) {
   };
 }
 
-async function forwardToMake(payload, env) {
+async function forwardToMake(payload, env, correlation = {}) {
   if (!env.MAKE_RESERVAS_WEBHOOK) {
-    return { configured: false, ok: false, status: null };
+    return { configured: false, ok: false, status: 503, body: null, error: BOOKING_ERROR.BACKEND_UNAVAILABLE };
   }
 
-  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+  const outgoingPayload = buildMakePayload(payload, {
+    requestId: correlation.requestId ?? null,
+    correlationId: correlation.correlationId ?? null,
   });
 
-  return { configured: true, ok: response.ok, status: response.status };
+  const configuredTimeout = Number(env.MAKE_RESERVAS_TIMEOUT_MS);
+  const timeoutMs = Number.isFinite(configuredTimeout)
+    ? Math.min(Math.max(Math.trunc(configuredTimeout), 100), 10_000)
+    : 5000;
+
+  let response;
+  try {
+    response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(outgoingPayload),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    const timedOut = error?.name === "AbortError" || error?.name === "TimeoutError";
+    return {
+      configured: true,
+      ok: false,
+      status: timedOut ? 504 : 503,
+      body: null,
+      error: timedOut ? BOOKING_ERROR.TIMEOUT : BOOKING_ERROR.BACKEND_UNAVAILABLE,
+    };
+  }
+
+  let body = null;
+  try {
+    const raw = await response.text();
+    body = raw.trim() ? JSON.parse(raw) : null;
+  } catch {
+    body = null;
+  }
+
+  return { configured: true, ok: response.ok, status: response.status, body };
 }
 
 async function prepareAirtableWrite(payload, env) {
@@ -454,7 +580,7 @@ async function prepareAirtableWrite(payload, env) {
   };
 }
 
-async function handleReservas(request, env) {
+async function handleReservas(request, env, correlation = {}) {
   const headers = corsHeaders(request, env);
 
   if (!headers["Access-Control-Allow-Origin"]) {
@@ -500,21 +626,89 @@ async function handleReservas(request, env) {
     return jsonResponse({ ok: false, error: "Validation failed", fields: errors }, 422, headers);
   }
 
-  const normalizedPayload = normalizePayload(payload);
-  const makeResult = await forwardToMake(normalizedPayload, env);
+  const idempotency = validateBookingIdempotency(payload);
+  if (!idempotency.ok) {
+    return jsonResponse({ ok: false, error: idempotency.code, message: "Idempotency key inválida o ausente." }, 422, headers);
+  }
+
+  let normalizedPayload = normalizePayload(payload);
+  if (isBookingWriteAction(payload?.accion)) {
+    const scope = resolveReservationScope(env);
+    if (!scope.ok) {
+      return jsonResponse({ ok: false, error: scope.code, message: "El ámbito canónico de reservas no está configurado." }, 503, headers);
+    }
+    const canonical = buildCanonicalBookingOperation(
+      { ...normalizedPayload, idempotency_key: idempotency.value },
+      { scope, correlationId: correlation.correlationId }
+    );
+    if (!canonical.ok) {
+      return jsonResponse({ ok: false, error: canonical.code, message: "El intervalo de reserva no es válido." }, 422, headers);
+    }
+    normalizedPayload = { ...normalizedPayload, ...canonical.value };
+  }
+
+  const makeResult = await forwardToMake(normalizedPayload, env, correlation);
   const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
 
-  if (makeResult.configured && !makeResult.ok) {
-    return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
+  if (!makeResult.configured || makeResult.error) {
+    const status = makeResult.status || 503;
+    return jsonResponse({ ok: false, error: makeResult.error || BOOKING_ERROR.BACKEND_UNAVAILABLE }, status, headers);
+  }
+
+  const backend = classifyBookingBackendResponse(makeResult.status, makeResult.body || {});
+  if (!makeResult.ok || backend.status >= 400) {
+    return jsonResponse({ ok: false, error: backend.code, correlation_id: correlation.correlationId }, backend.status, headers);
+  }
+  if (isBookingWriteAction(payload?.accion) && backend.code === "forwarded") {
+    return jsonResponse(
+      {
+        ok: false,
+        error: BOOKING_ERROR.BACKEND_UNAVAILABLE,
+        message: "La autoridad de reservas no confirmó commit, replay ni conflicto.",
+        correlation_id: correlation.correlationId,
+      },
+      503,
+      headers
+    );
   }
 
   return jsonResponse({
     ok: true,
-    status: makeResult.configured ? "forwarded" : "accepted_without_make_webhook",
+    status: backend.code,
+    correlation_id: correlation.correlationId,
+    reservation_id: makeResult.body?.reservation_id || null,
     make: { configured: makeResult.configured, status: makeResult.status },
     airtable: airtableResult,
-  }, 200, headers);
+  }, backend.status, headers);
 }
+const AVAILABILITY_ERROR_MESSAGE = Object.freeze({
+  [AVAILABILITY_ERROR.MISSING_DATE]: "El parámetro fecha es obligatorio.",
+  [AVAILABILITY_ERROR.INVALID_DATE_FORMAT]: "La fecha debe usar el formato ISO YYYY-MM-DD.",
+  [AVAILABILITY_ERROR.IMPOSSIBLE_DATE]: "La fecha indicada no existe.",
+  [AVAILABILITY_ERROR.DATE_OUT_OF_RANGE]: "La fecha está fuera del rango permitido.",
+  [AVAILABILITY_ERROR.INVALID_TIMEZONE]: "La zona horaria del club no es válida.",
+  [AVAILABILITY_ERROR.TIMEZONE_MISMATCH]: "La zona horaria solicitada no coincide con la del club.",
+  [AVAILABILITY_ERROR.SCOPE_NOT_CONFIGURED]: "El ámbito tenant/club de disponibilidad no está configurado.",
+  [AVAILABILITY_ERROR.AIRTABLE_NOT_CONFIGURED]: "Airtable no está configurado para disponibilidad.",
+  [AVAILABILITY_ERROR.AIRTABLE_TIMEOUT]: "Airtable excedió el tiempo máximo de respuesta.",
+  [AVAILABILITY_ERROR.AIRTABLE_UNAVAILABLE]: "Airtable no está disponible.",
+  [AVAILABILITY_ERROR.AIRTABLE_INVALID_RESPONSE]: "Airtable devolvió una respuesta no válida.",
+  [AVAILABILITY_ERROR.AIRTABLE_MISSING_FIELDS]: "Airtable devolvió registros incompletos.",
+});
+
+function availabilityErrorResponse(code, status, headers, extra = {}) {
+  return jsonResponse(
+    {
+      ok: false,
+      error: code,
+      message: AVAILABILITY_ERROR_MESSAGE[code] || "No se pudo consultar la disponibilidad.",
+      ...extra,
+    },
+    status,
+    headers
+  );
+}
+
 async function handleDisponibilidad(request, env) {
   const headers = corsHeaders(request, env);
 
@@ -524,144 +718,128 @@ async function handleDisponibilidad(request, env) {
 
   if (request.method !== "GET") {
     return jsonResponse(
-      { ok: false, error: "Method not allowed" },
+      { ok: false, error: "METHOD_NOT_ALLOWED", message: "Método no permitido." },
       405,
       { ...headers, Allow: "GET, OPTIONS" }
     );
   }
 
   const url = new URL(request.url);
-
-
-
-      // CP04_DOMINGOS_V1: una consulta dominical devuelve cerrado sin leer Airtable.
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/disponibilidad"
-      ) {
-        const fechaConsulta = cleanText(url.searchParams.get("fecha"));
-
-        if (isSundayISO(fechaConsulta)) {
-          return jsonResponse(
-            {
-              ok: true,
-              fecha: fechaConsulta,
-              cerrado: true,
-              motivo: "Club cerrado los domingos",
-              ocupadas: [],
-              total: 0
-            },
-            200,
-            corsHeaders(request, env)
-          );
-        }
-      }
-
-  const fecha = url.searchParams.get("fecha");
-
-  if (!fecha) {
-    return jsonResponse(
-      { ok: false, error: "Falta el parámetro fecha" },
-      400,
-      headers
-    );
-  }
-
-  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: "Airtable no está configurado en el Worker",
-        configured: {
-          token: Boolean(env.AIRTABLE_TOKEN),
-          base: Boolean(env.AIRTABLE_BASE_ID),
-          table: Boolean(env.AIRTABLE_TABLE_ID)
-        }
-      },
-      500,
-      headers
-    );
-  }
-
-  const formula = `AND(
-    FIND("${fecha}|", {clave_slot}) = 1,
-    OR(
-      {estado_reserva} = "pendiente",
-      {estado_reserva} = "confirmada",
-      {estado_reserva} = "reprogramada"
-    )
-  )`;
-
-  const airtableUrl =
-    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
-    `?filterByFormula=${encodeURIComponent(formula)}` +
-    `&fields%5B%5D=clave_slot` +
-    `&fields%5B%5D=estado_reserva` +
-    `&fields%5B%5D=fecha_reserva` +
-    `&fields%5B%5D=hora_inicio` +
-    `&fields%5B%5D=hora_fin` +
-    `&fields%5B%5D=Pista`;
-
-  const airtableRes = await fetch(airtableUrl, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
-      "Content-Type": "application/json"
-    }
+  const dateResult = validateAvailabilityDate(url.searchParams.get("fecha"), {
+    timeZone: env.CLUB_TIMEZONE || "Europe/Madrid",
+    requestedTimeZone: url.searchParams.get("timezone"),
+    maxAdvanceDays: env.AVAILABILITY_MAX_ADVANCE_DAYS || 365,
   });
 
-  const data = await airtableRes.json();
+  if (!dateResult.ok) {
+    return availabilityErrorResponse(dateResult.code, 400, headers);
+  }
 
-  if (!airtableRes.ok) {
+  const scope = resolveAvailabilityScope(env);
+  if (!scope.ok) {
+    return availabilityErrorResponse(scope.code, 503, headers);
+  }
+
+  const fecha = dateResult.value;
+  if (dateResult.isSunday) {
     return jsonResponse(
       {
-        ok: false,
-        error: "Error consultando disponibilidad en Airtable",
-        status: airtableRes.status,
-        details: data
+        ok: true,
+        fecha,
+        timezone: dateResult.timeZone,
+        cerrado: true,
+        motivo: "Club cerrado los domingos",
+        ocupadas: [],
+        ocupadas_detalle: [],
+        total: 0,
       },
-      500,
+      200,
       headers
     );
   }
 
-  const ocupadas = (data.records || [])
-    .map((record) => record.fields?.clave_slot)
-    .filter(Boolean);
+  const token = env.AIRTABLE_TOKEN || env.AIRTABLE_API_KEY;
+  const tableId = env.AIRTABLE_RESERVAS_TABLE || env.AIRTABLE_TABLE_ID;
+  if (!token || !env.AIRTABLE_BASE_ID || !tableId) {
+    return availabilityErrorResponse(AVAILABILITY_ERROR.AIRTABLE_NOT_CONFIGURED, 503, headers);
+  }
 
-  // ocupadas_detalle: además de la clave plana (solo hora de inicio, que ya
-  // usan otros consumidores), se expone hora_fin de cada reserva existente
-  // cuando Airtable la tiene rellena. Esto es lo mínimo necesario para que
-  // el frontend pueda detectar solapamientos por intervalo real (una
-  // reserva de 90/120 min ocupa más de un slot de una hora) en vez de por
-  // coincidencia exacta de hora de inicio. No añade ni modifica nada en
-  // Airtable: solo se lee un campo que ya existe (hora_fin, ya usado en
-  // cp04ListReservations más abajo).
-  const ocupadasDetalle = (data.records || [])
-    .map((record) => {
-      const fields = record.fields || {};
-      const pista = fields.Pista;
-      const horaInicio = fields.hora_inicio;
-      const horaFin = fields.hora_fin;
+  const endpoint = new URL(
+    `https://api.airtable.com/v0/${encodeURIComponent(env.AIRTABLE_BASE_ID)}/${encodeURIComponent(tableId)}`
+  );
+  endpoint.searchParams.set("filterByFormula", buildAvailabilityFormula({ date: fecha, scope }));
+  for (const field of [
+    "clave_slot",
+    "estado_reserva",
+    "fecha_reserva",
+    "hora_inicio",
+    "hora_fin",
+    "Pista",
+    scope.tenantField,
+    scope.clubField,
+  ]) {
+    endpoint.searchParams.append("fields[]", field);
+  }
 
-      if (!pista || !horaInicio) return null;
+  let airtableRes;
+  try {
+    airtableRes = await fetch(endpoint.toString(), {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+      signal: AbortSignal.timeout(availabilityAirtableTimeoutMs(env)),
+    });
+  } catch (error) {
+    const code = isTimeoutError(error)
+      ? AVAILABILITY_ERROR.AIRTABLE_TIMEOUT
+      : AVAILABILITY_ERROR.AIRTABLE_UNAVAILABLE;
+    return availabilityErrorResponse(code, code === AVAILABILITY_ERROR.AIRTABLE_TIMEOUT ? 504 : 502, headers);
+  }
 
-      return {
-        pista: Array.isArray(pista) ? pista[0] : pista,
-        fecha,
-        hora_inicio: horaInicio,
-        hora_fin: horaFin || null
-      };
-    })
-    .filter(Boolean);
+  let rawText;
+  try {
+    rawText = await airtableRes.text();
+  } catch (error) {
+    const code = isTimeoutError(error)
+      ? AVAILABILITY_ERROR.AIRTABLE_TIMEOUT
+      : AVAILABILITY_ERROR.AIRTABLE_INVALID_RESPONSE;
+    return availabilityErrorResponse(code, code === AVAILABILITY_ERROR.AIRTABLE_TIMEOUT ? 504 : 502, headers);
+  }
 
+  if (!airtableRes.ok) {
+    return availabilityErrorResponse(
+      AVAILABILITY_ERROR.AIRTABLE_UNAVAILABLE,
+      502,
+      headers,
+      { airtable_status: airtableRes.status }
+    );
+  }
+
+  if (!rawText.trim()) {
+    return availabilityErrorResponse(AVAILABILITY_ERROR.AIRTABLE_INVALID_RESPONSE, 502, headers);
+  }
+
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    return availabilityErrorResponse(AVAILABILITY_ERROR.AIRTABLE_INVALID_RESPONSE, 502, headers);
+  }
+
+  const normalized = normalizeAvailabilityRecords(data?.records, { date: fecha, scope });
+  if (!normalized.ok) {
+    return availabilityErrorResponse(normalized.code, 502, headers);
+  }
+
+  const ocupadas = normalized.records.map((record) => record.slotKey);
+  const ocupadasDetalle = normalized.records.map((record) => record.detail);
   return jsonResponse(
     {
       ok: true,
       fecha,
+      timezone: dateResult.timeZone,
       ocupadas,
       ocupadas_detalle: ocupadasDetalle,
-      total: ocupadas.length
+      total: ocupadas.length,
     },
     200,
     headers
@@ -1308,7 +1486,11 @@ async function handleAuthRoute(request, env, url) {
       );
     }
 
-    const token = parseAuthorizationHeader(request);
+    // Lote A7: /api/auth/me (GET, "SESSION"/"VALIDATION" del ciclo) ahora
+    // acepta el token también desde la cookie HttpOnly cp04_at, no solo del
+    // header Authorization — mismo resolver que ya usa authenticateRequest()
+    // en authorization.js. GET nunca dispara el gate CSRF (método seguro).
+    const { token } = resolveSessionToken(request, env, { parseAuthorizationHeader });
 
     if (!token) {
       return jsonResponse(
@@ -1317,7 +1499,7 @@ async function handleAuthRoute(request, env, url) {
           auth_ready: true,
           provider: "supabase",
           error: "MISSING_BEARER_TOKEN",
-          message: "Falta Authorization Bearer token."
+          message: "Falta token de sesión (Authorization Bearer o cookie cp04_at)."
         },
         401,
         headers
@@ -1368,8 +1550,15 @@ async function handleAuthRoute(request, env, url) {
   }
 
   if (path === "/api/auth/logout" && method === "POST") {
+    // Lote A7: logout SIEMPRE expira cp04_at/cp04_rt en la respuesta, pase lo
+    // que pase después (sin Supabase configurado, sin token, CSRF rechazado,
+    // o si la revocación upstream falla). Es la única ruta donde "fail-safe"
+    // significa limpiar el navegador incondicionalmente — ver Fase 4 del
+    // encargo ("logout real", "no mantener fallback silencioso").
+    const expiredCookies = [buildExpiredAccessCookie(), buildExpiredRefreshCookie()];
+
     if (!supabaseReady) {
-      return jsonResponse(
+      return jsonResponseWithCookies(
         {
           ok: true,
           auth_ready: false,
@@ -1377,22 +1566,46 @@ async function handleAuthRoute(request, env, url) {
           message: "Logout preparado. Pendiente invalidar sesión real cuando exista backend auth."
         },
         200,
-        headers
+        headers,
+        expiredCookies
       );
     }
 
-    const token = parseAuthorizationHeader(request);
+    // Dual-source: Authorization Bearer (compatibilidad) o cookie cp04_at.
+    // Impacto de un logout forzado por CSRF: bajo (fuerza cierre de sesión
+    // ajena, no expone ni modifica datos) — se aplica el mismo gate que en
+    // refresh por consistencia, documentado como tal, no como mitigación de
+    // un riesgo de exposición de datos.
+    const resolved = resolveSessionToken(request, env, { parseAuthorizationHeader });
+
+    if (resolved.csrfRejected) {
+      return jsonResponseWithCookies(
+        {
+          ok: false,
+          auth_ready: true,
+          provider: "supabase",
+          error: "CSRF_ORIGIN_MISMATCH",
+          message: "Origen no permitido para cerrar sesión mediante cookie."
+        },
+        403,
+        headers,
+        expiredCookies
+      );
+    }
+
+    const token = resolved.token;
 
     if (!token) {
-      return jsonResponse(
+      return jsonResponseWithCookies(
         {
           ok: true,
           auth_ready: true,
           provider: "supabase",
-          message: "Sesión local cerrada. No había token Bearer que invalidar."
+          message: "Sesión local cerrada. No había token que invalidar."
         },
         200,
-        headers
+        headers,
+        expiredCookies
       );
     }
 
@@ -1414,7 +1627,7 @@ async function handleAuthRoute(request, env, url) {
       }
     );
 
-    return jsonResponse(
+    return jsonResponseWithCookies(
       {
         ok: response.ok,
         auth_ready: true,
@@ -1425,7 +1638,8 @@ async function handleAuthRoute(request, env, url) {
           : "Logout solicitado, revisar proveedor."
       },
       response.ok ? 200 : response.status,
-      headers
+      headers,
+      expiredCookies
     );
   }
 
@@ -1441,7 +1655,27 @@ async function handleAuthRoute(request, env, url) {
       });
     }
 
-    const refreshToken = String(body.refresh_token || "");
+    // Lote A7: dual-source — body.refresh_token (compatibilidad legacy con
+    // el frontend actual, que sigue leyendo/escribiendo localStorage) o
+    // cookie HttpOnly cp04_rt (ciclo de sesión seguro). refresh es siempre
+    // POST -> el gate CSRF se evalúa siempre que la fuente sea la cookie.
+    const resolvedRefresh = resolveRefreshToken(request, env, String(body.refresh_token || "") || null);
+
+    if (resolvedRefresh.csrfRejected) {
+      return jsonResponse(
+        {
+          ok: false,
+          auth_ready: true,
+          provider: "supabase",
+          error: "CSRF_ORIGIN_MISMATCH",
+          message: "Origen no permitido para renovar sesión mediante cookie."
+        },
+        403,
+        headers
+      );
+    }
+
+    const refreshToken = resolvedRefresh.token;
 
     if (!refreshToken) {
       return jsonResponse(
@@ -1470,19 +1704,30 @@ async function handleAuthRoute(request, env, url) {
       return cp04SupabaseErrorResponse(request, env, result, "No se pudo renovar la sesión.");
     }
 
-    return jsonResponse(
+    // Rotación: cada refresh exitoso reemite AMBAS cookies con los valores
+    // nuevos que devuelve Supabase (access_token nuevo + refresh_token
+    // rotado), igual que ya hace authService.js en el body/localStorage.
+    const newAccessToken = result.data?.access_token || null;
+    const newRefreshToken = result.data?.refresh_token || null;
+    const expiresIn = result.data?.expires_in;
+
+    return jsonResponseWithCookies(
       {
         ok: true,
         auth_ready: true,
         provider: "supabase",
-        access_token: result.data?.access_token || null,
-        refresh_token: result.data?.refresh_token || null,
-        expires_in: result.data?.expires_in || null,
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+        expires_in: expiresIn || null,
         token_type: result.data?.token_type || "bearer",
         session: "active"
       },
       200,
-      headers
+      headers,
+      [
+        newAccessToken ? buildAccessCookie(newAccessToken, { maxAgeSeconds: expiresIn }) : null,
+        newRefreshToken ? buildRefreshCookie(newRefreshToken) : null,
+      ]
     );
   }
 
@@ -1527,7 +1772,17 @@ async function handleAuthRoute(request, env, url) {
 
     const user = cp04MapSupabaseUserToCp04(result.data?.user, "PLAYER");
 
-    return jsonResponse(
+    // Lote A7: login fija cp04_at/cp04_rt como cookies HttpOnly ADEMÁS de
+    // devolver los tokens en el body JSON. El body se mantiene por
+    // compatibilidad legacy explícita con el frontend actual (authService.js
+    // sigue leyéndolo y namespacing bajo tenant:*: en localStorage) — ver
+    // TENANT_STORAGE_HARNESS_REPORT/informe de esta misión para el plazo de
+    // retirada. No se ha tocado authService.js ni App.jsx en esta misión.
+    const loginAccessToken = result.data?.access_token || null;
+    const loginRefreshToken = result.data?.refresh_token || null;
+    const loginExpiresIn = result.data?.expires_in;
+
+    return jsonResponseWithCookies(
       {
         ok: true,
         auth_ready: true,
@@ -1535,14 +1790,18 @@ async function handleAuthRoute(request, env, url) {
         user: cp04SafeAuthUser(user),
         role: user.role,
         permissions: user.permissions,
-        access_token: result.data?.access_token || null,
-        refresh_token: result.data?.refresh_token || null,
-        expires_in: result.data?.expires_in || null,
+        access_token: loginAccessToken,
+        refresh_token: loginRefreshToken,
+        expires_in: loginExpiresIn || null,
         token_type: result.data?.token_type || "bearer",
         session: "active"
       },
       200,
-      headers
+      headers,
+      [
+        loginAccessToken ? buildAccessCookie(loginAccessToken, { maxAgeSeconds: loginExpiresIn }) : null,
+        loginRefreshToken ? buildRefreshCookie(loginRefreshToken) : null,
+      ]
     );
   }
 
@@ -1663,7 +1922,25 @@ async function handleAuthRoute(request, env, url) {
       });
     }
 
-    const token = parseAuthorizationHeader(request);
+    // Lote A7: dual-source, igual que /api/auth/me — Authorization Bearer o
+    // cookie cp04_at. POST mutante -> CSRF gate activo si la fuente es la cookie.
+    const resolvedChangePassword = resolveSessionToken(request, env, { parseAuthorizationHeader });
+
+    if (resolvedChangePassword.csrfRejected) {
+      return jsonResponse(
+        {
+          ok: false,
+          auth_ready: true,
+          provider: "supabase",
+          error: "CSRF_ORIGIN_MISMATCH",
+          message: "Origen no permitido para cambiar la contraseña mediante cookie."
+        },
+        403,
+        headers
+      );
+    }
+
+    const token = resolvedChangePassword.token;
     const password = String(body.newPassword || body.password || "");
 
     if (!token || !password) {
@@ -1673,7 +1950,7 @@ async function handleAuthRoute(request, env, url) {
           auth_ready: true,
           provider: "supabase",
           error: "VALIDATION_ERROR",
-          message: "Falta token Bearer o nueva contraseña."
+          message: "No se pudo verificar tu sesión. Vuelve a iniciar sesión e inténtalo de nuevo."
         },
         400,
         headers
@@ -1791,15 +2068,146 @@ async function handleSupportMakeScenarios(request, env) {
   );
 }
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
+// GET /api/support/health/ready — Centro Técnico, SUPPORT-only, mismo patrón
+// fail-closed que handleSupportMakeScenarios (401 sin token/inválido, 403
+// rol≠SUPPORT). Dependencias clasificadas solo por presencia de
+// configuración (env vars) — cero llamadas de red reales en esta fase (ver
+// audit/observability/19_WORKER_INTEGRATION_PLAN_NOT_INTEGRATED.md §3): el
+// ping en vivo real a Supabase/Airtable/Make queda para una fase posterior.
+async function handleSupportHealthReady(request, env) {
+  const headers = corsHeaders(request, env);
 
-    try {
-      if (
-        url.pathname === "/api/jugadores/alta" ||
-        url.pathname === "/jugadores/alta"
-      ) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (request.method !== "GET") {
+    return jsonResponse({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405, headers);
+  }
+
+  const gate = await requireRoles(request, env, ["SUPPORT"]);
+  if (!gate.ok) {
+    return jsonResponse(gate.body, gate.status, headers);
+  }
+
+  const airtableConfigured = Boolean(
+    (env.AIRTABLE_TOKEN || env.AIRTABLE_API_KEY) &&
+    env.AIRTABLE_BASE_ID &&
+    (env.AIRTABLE_RESERVAS_TABLE || env.AIRTABLE_TABLE_ID)
+  );
+
+  const dependencies = [
+    dependencyStatusFromConfig({ name: "supabase-auth", configured: cp04SupabaseConfigured(env) }),
+    dependencyStatusFromConfig({ name: "airtable", configured: airtableConfigured }),
+    dependencyStatusFromConfig({ name: "make", configured: Boolean(env.MAKE_RESERVAS_WEBHOOK) }),
+  ];
+
+  const checks = [{ name: "process_alive", passed: true, message: null }];
+
+  const health = buildHealthReadyResponse({ service: "worker", checks, dependencies });
+
+  return jsonResponse(health, 200, headers);
+}
+
+// BLOQUEADOR DOCUMENTADO (WORKER_ROUTE_INTEGRATION_PLAN.md, Zona 5): no existe
+// todavía un loader de tenant-registry/client-config del lado Worker (los
+// equivalentes de src/config/ leen de node:fs, que no existe en el runtime de
+// Cloudflare Workers). Devolver null aquí es explícito y seguro, no un
+// descuido: checkTenantSafety() (stripe-tenant-safety.js, vía el harness)
+// clasifica cualquier evento con expectedTenantId=null como MISSING_TENANT
+// (fail-closed) — ningún evento puede alcanzar TENANT_OK ni disparar un
+// side-effect de negocio hasta que este resolver tenga una implementación
+// real. Sustituir cuando exista ese loader, no antes.
+async function resolveTenantIdForRequest(request, env) {
+  void request;
+  void env;
+  return null;
+}
+
+async function loadTenantRegistryEntry(tenantId, env) {
+  void tenantId;
+  void env;
+  return null;
+}
+
+async function loadClientConfigForTenant(tenantId, env) {
+  void tenantId;
+  void env;
+  return null;
+}
+
+// POST /api/payments/stripe/webhook — orquesta el pipeline ya construido y
+// probado en worker-reservas/payments/ (WORKER_ROUTE_INTEGRATION_PLAN.md,
+// Zona 4): este handler es composición, no reimplementación. `env` llega tal
+// cual del Worker real — getStripeEventLockStore(env) es lo único que decide
+// KV vs memoria (ver stripe-lock-store-factory.js), nunca este handler.
+async function handleStripeWebhook(request, env, correlation) {
+  assertRawBodyNotConsumed(request);
+
+  const contentTypeCheck = validateContentType(request.headers);
+  if (!contentTypeCheck.valid) {
+    return jsonResponse({ received: false, error: contentTypeCheck.reason }, 400, corsHeaders(request, env));
+  }
+
+  const signatureHeader = extractSignatureHeader(request.headers);
+  const rawBody = await request.text();
+
+  // expectedTenantId: derivar del dominio que recibió el webhook, NUNCA del
+  // payload (ver TENANT_RESOLUTION_CONTRACT_NOTE, stripe-route-contract.js).
+  const expectedTenantId = await resolveTenantIdForRequest(request, env);
+  const tenantRegistryEntry = await loadTenantRegistryEntry(expectedTenantId, env);
+  const clientConfig = await loadClientConfigForTenant(expectedTenantId, env);
+
+  const { timedOut, value, ...timeoutResult } = await withTimeoutBudget(() =>
+    runStripeWebhookIntegrationHarness({
+      rawBody,
+      signatureHeader,
+      webhookSecret: env.STRIPE_WEBHOOK_SECRET,
+      expectedTenantId,
+      tenantRegistryEntry,
+      clientConfig,
+      eventLockStore: getStripeEventLockStore(env),
+      businessIdempotencyStore: stripeBusinessIdempotencyStore,
+      sideEffects: createInMemorySideEffects(), // sustituir por implementación real antes de producción
+    })
+  );
+
+  const result = timedOut ? timeoutResult : value;
+  const response = mapClassificationToHttpResponse(result.classification, correlation);
+
+  logStructuredEvent(
+    buildRequestLogEvent({
+      requestId: correlation.requestId,
+      correlationId: correlation.correlationId,
+      eventType: "stripe_webhook",
+      message: sanitizeForRouteLogging(result),
+      status: response.status < 400 ? "success" : "failure",
+    })
+  );
+
+  return jsonResponse(response.body, response.status, { ...corsHeaders(request, env), ...response.headers });
+}
+
+// Enrutado real del Worker — cuerpo idéntico al que existía antes de la
+// integración de Observabilidad (ver audit/observability/20_EXACT_INTEGRATION_DIFF_PLAN.md
+// §6, "envolver, nunca reescribir"), extraído a función nombrada para que
+// export.fetch() pueda envolverlo con resolución de request_id/correlation_id
+// y logging estructurado sin tocar ninguna línea de la lógica de rutas.
+async function routeRequest(request, env, url, correlation) {
+  // GET /health/live — liveness puro, sin auth, sin dependencias externas
+  // (probe de infraestructura, ver Fase 5 de la misión de integración).
+  if (url.pathname === "/health/live") {
+    return jsonResponse(buildHealthLiveResponse(), 200, corsHeaders(request, env));
+  }
+
+  if (url.pathname === "/api/support/health/ready") {
+    return await handleSupportHealthReady(request, env);
+  }
+
+  if (
+    url.pathname === "/api/jugadores/alta" ||
+    url.pathname === "/jugadores/alta"
+  ) {
         // Alta de jugador es operación de STAFF/ADMIN/SUPPORT en la matriz
         // RBAC. Gate listo, detrás del mismo flag que cancelar/reprogramar
         // y por el mismo motivo (ver comentario en handleReservas).
@@ -1874,8 +2282,23 @@ export default {
 
         return await handleReservas(
           request,
-          env
+          env,
+          correlation
         );
+      }
+
+      if (url.pathname === STRIPE_WEBHOOK_ROUTE.path) {
+        if (request.method === "OPTIONS") {
+          return new Response(null, { status: 204, headers: corsHeaders(request, env) });
+        }
+        if (request.method !== STRIPE_WEBHOOK_ROUTE.method) {
+          return jsonResponse(
+            { received: false, error: "method_not_allowed" },
+            405,
+            { ...corsHeaders(request, env), Allow: STRIPE_WEBHOOK_ROUTE.method }
+          );
+        }
+        return await handleStripeWebhook(request, env, correlation);
       }
 
       return jsonResponse(
@@ -1883,8 +2306,25 @@ export default {
         404,
         corsHeaders(request, env)
       );
+}
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const requestId = resolveRequestId(request.headers);
+    const isReservationWrite =
+      request.method === "POST" &&
+      (url.pathname === "/api/reservas" || url.pathname === "/reservas");
+    const correlationId = isReservationWrite
+      ? resolveOrStartCorrelationId(request.headers)
+      : resolveCorrelationId(request.headers);
+    const startMs = Date.now();
+    let response;
+
+    try {
+      response = await routeRequest(request, env, url, { requestId, correlationId });
     } catch (error) {
-      return jsonResponse(
+      response = jsonResponse(
         {
           ok: false,
           error: "Internal server error",
@@ -1894,5 +2334,20 @@ export default {
         corsHeaders(request, env)
       );
     }
+
+    logStructuredEvent(
+      buildRequestLogEvent({
+        requestId,
+        correlationId,
+        eventType: "http_request",
+        message: `${request.method} ${url.pathname}`,
+        status: response.status < 400 ? "success" : "failure",
+        errorCode: response.status >= 400 ? "UNKNOWN.UNCLASSIFIED" : null,
+        durationMs: Date.now() - startMs,
+        metadata: { http_status: response.status, path: url.pathname },
+      })
+    );
+
+    return attachCorrelationHeaders(response, { requestId, correlationId });
   }
 };

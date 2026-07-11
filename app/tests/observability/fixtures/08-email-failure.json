@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-08T10:22:15.333Z",
+  "level": "error",
+  "service": "gmail",
+  "environment": "production",
+  "event_type": "email_send",
+  "message": "Fallo de envio de confirmacion de reserva",
+  "request_id": "req_44ee55ff66",
+  "correlation_id": "corr_77aa88bb99",
+  "client_id": "club-padel-04",
+  "tenant_id": null,
+  "scenario_id": "5697630",
+  "execution_id": null,
+  "user_id_hash": "aabbccddeeff0011",
+  "error_code": "EMAIL.SEND_FAILED",
+  "duration_ms": 430,
+  "status": "failure",
+  "metadata": { "template": "confirmacion_reserva" }
+}

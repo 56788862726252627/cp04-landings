@@ -1,0 +1,18 @@
+{
+  "test_id": "QA-A1-001",
+  "scenario_id": "6244975",
+  "status": "EJECUTADO — PASS_VERIFIED",
+  "execution_id": "b33719e814894fcdb0d089286a247774",
+  "executed_at": "2026-07-07T23:55:10.557Z",
+  "payload": {
+    "accion": "qa_test_generacion_qr",
+    "record_id": "QA_CP04_TEST_RECORD_001",
+    "nombre": "QA_CP04_TEST",
+    "email": "eduardorodriguezrodriguez24@gmail.com",
+    "clave_reserva": "QA_CP04_QR_20260708",
+    "fecha_reserva": "2026-12-31",
+    "hora_inicio": "10:00",
+    "hora_fin": "11:30",
+    "pista": "QA_TEST_PISTA"
+  }
+}

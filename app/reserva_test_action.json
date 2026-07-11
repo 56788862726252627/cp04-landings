@@ -1,0 +1,18 @@
+{
+  "action": "create_reserva",
+  "jugador": {
+    "nombre": "Edu Test",
+    "apellidos": "Prueba",
+    "email": "eduardorodriguezrodriguez24@gmail.com",
+    "telefono": "600000000"
+  },
+  "reserva": {
+    "fecha": "2026-08-20",
+    "pista": "Pista 1",
+    "hora": "10:00",
+    "hora_fin": "11:30",
+    "duracion_minutos": 90,
+    "modalidad": "partido",
+    "nivel": "intermedio"
+  }
+}

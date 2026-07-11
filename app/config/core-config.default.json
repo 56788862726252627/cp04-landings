@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1.0.0",
+  "layer": "core",
+  "roles": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+  "featureDefaults": {
+    "reservas": true,
+    "cancelaciones": true,
+    "reprogramaciones": true,
+    "listaEspera": false,
+    "torneos": false,
+    "ranking": false,
+    "emparejamientos": false,
+    "crm": false,
+    "nps": false,
+    "noShow": false,
+    "referidos": false,
+    "membresias": false,
+    "pagos": false,
+    "qr": false,
+    "promociones": false,
+    "ia": false,
+    "soporte": true,
+    "dashboards": true,
+    "automatizaciones": true,
+    "campanas": false,
+    "notificaciones": true,
+    "whatsapp": false
+  },
+  "featureDependencies": {
+    "listaEspera": ["reservas"],
+    "emparejamientos": ["ranking"],
+    "nps": ["crm"],
+    "referidos": ["crm"],
+    "campanas": ["crm", "notificaciones"],
+    "noShow": ["reservas"],
+    "cancelaciones": ["reservas"],
+    "reprogramaciones": ["reservas"]
+  },
+  "roleCapabilities": {
+    "PLAYER": [
+      { "feature": "reservas", "actions": ["view", "manage"] },
+      { "feature": "cancelaciones", "actions": ["manage"] },
+      { "feature": "reprogramaciones", "actions": ["manage"] },
+      { "feature": "soporte", "actions": ["view"] }
+    ],
+    "STAFF": [
+      { "feature": "reservas", "actions": ["view", "manage"] },
+      { "feature": "cancelaciones", "actions": ["view", "manage"] },
+      { "feature": "reprogramaciones", "actions": ["view", "manage"] },
+      { "feature": "soporte", "actions": ["view"] }
+    ],
+    "ADMIN": [
+      { "feature": "reservas", "actions": ["view", "manage"] },
+      { "feature": "cancelaciones", "actions": ["view", "manage"] },
+      { "feature": "reprogramaciones", "actions": ["view", "manage"] },
+      { "feature": "dashboards", "actions": ["view", "manage"] },
+      { "feature": "automatizaciones", "actions": ["view", "manage"] },
+      { "feature": "soporte", "actions": ["view"] }
+    ],
+    "SUPPORT": [
+      { "feature": "soporte", "actions": ["view", "manage"] },
+      { "feature": "automatizaciones", "actions": ["view"] }
+    ]
+  }
+}

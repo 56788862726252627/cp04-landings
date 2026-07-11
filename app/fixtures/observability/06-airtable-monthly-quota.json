@@ -1,0 +1,10 @@
+{
+  "type": "airtable_response",
+  "table": "reservas",
+  "http_status": 402,
+  "quota_exhausted": true,
+  "duration_ms": 210,
+  "request_id": "req_local-0006",
+  "correlation_id": "corr_local-0006",
+  "occurred_at": "2026-07-08T13:00:25.000Z"
+}

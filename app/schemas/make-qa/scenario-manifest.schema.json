@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/scenario-manifest.schema.json",
+  "title": "CP04 Make QA — Scenario Manifest Entry",
+  "description": "Contrato de una fila del manifest machine-readable de los 50 escenarios Make de Club Pádel 04 (fixtures/make-qa/manifest/50-scenarios.json). Valida cada objeto de la lista `scenarios`, no el documento completo (el documento completo añade metadatos de cabecera: manifest_version, generated_at, source, *_enum). Ver scripts/make-qa/schema-validator.mjs (subconjunto draft-07, mismo motor que schemas/observability).",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario_name",
+    "scenario_id",
+    "app_module",
+    "button_or_action",
+    "endpoint",
+    "initiating_role",
+    "consuming_role",
+    "dependencies",
+    "risk_level",
+    "destructive",
+    "destructive_note",
+    "payload_schema",
+    "fixture",
+    "test_id",
+    "wave",
+    "expected_status",
+    "expected_side_effects",
+    "forbidden_side_effects",
+    "evidence_required",
+    "rollback",
+    "current_status",
+    "next_action"
+  ],
+  "properties": {
+    "scenario_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "description": "Nombre visible del escenario en Make, incluyendo su emoji identificador."
+    },
+    "scenario_id": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{1,10}$",
+      "description": "ID numérico real de Make. null solo si el escenario no existe como tal (no aplica hoy a ninguno de los 50)."
+    },
+    "app_module": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "button_or_action": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "endpoint": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "initiating_role": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "enum": ["PLAYER", "STAFF", "ADMIN", "SUPPORT", "SYSTEM", "LEGACY"] }
+    },
+    "consuming_role": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "enum": ["PLAYER", "STAFF", "ADMIN", "SUPPORT", "SYSTEM", "LEGACY"] }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["AIRTABLE", "GMAIL", "GOOGLE_SHEETS", "STRIPE", "WHATSAPP", "OPENAI", "GOOGLE_CALENDAR", "GOOGLE_DRIVE", "TELEGRAM", "MAKE_API"] }
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "destructive": {
+      "type": "boolean",
+      "description": "true si ejecutar la rama real/positiva del escenario produce un efecto de mundo real difícil de revertir (WhatsApp/email a un tercero real, cargo real, evento Calendar permanente, cambio de cupo/membresía real). Ver destructive_note para la condición exacta."
+    },
+    "destructive_note": {
+      "type": ["string", "null"],
+      "maxLength": 500
+    },
+    "payload_schema": {
+      "type": ["string", "null"],
+      "description": "Ruta relativa (desde app/) al JSON Schema del payload QA de este escenario, si existe uno diseñado."
+    },
+    "fixture": {
+      "type": ["string", "null"],
+      "description": "Ruta relativa (desde app/) al fixture de payload QA de este escenario, si existe uno diseñado."
+    },
+    "test_id": {
+      "type": ["string", "null"],
+      "pattern": "^QA-A[0-9]+-[0-9]{3}$"
+    },
+    "wave": {
+      "type": "string",
+      "enum": ["wave_0", "wave_1", "wave_2", "wave_3", "wave_4", "wave_5", "wave_6", "unassigned"]
+    },
+    "expected_status": {
+      "type": "string",
+      "enum": ["SUCCESS_NO_OP", "SUCCESS_WRITE", "ERROR_EXPECTED_CONFIG", "N/A_NOT_RUNNABLE"],
+      "description": "Resultado de ejecución esperado por diseño, no el resultado real observado (eso vive en un evidence record, no en el manifest)."
+    },
+    "expected_side_effects": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "forbidden_side_effects": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+    },
+    "evidence_required": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+    },
+    "rollback": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "current_status": {
+      "type": "string",
+      "enum": ["PASS_VERIFIED", "READY_PENDING_AIRTABLE_PREFLIGHT", "SAFE_WITH_RESTRICTIONS", "BLOCKED_PENDING_AIRTABLE_VERIFICATION", "BLOCKED_EXTERNAL_RATE_LIMIT", "BLOCKED_EXTERNAL_WHATSAPP_PENDING", "CONFIG_ERROR", "NOT_SAFE", "NEEDS_FIX_BEFORE_TEST", "NOT_TESTED"]
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    }
+  }
+}

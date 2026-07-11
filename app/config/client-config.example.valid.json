@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientId": "3f2a1b10-8c3e-4b7a-9d2f-1a2b3c4d5e6f",
+  "tenantId": "cp04",
+  "slug": "club-padel-04",
+  "brand": {
+    "name": "Club Pádel 04",
+    "legalName": null,
+    "logo": null,
+    "favicon": null,
+    "images": []
+  },
+  "theme": {
+    "bg": "#05080d",
+    "surface": "#0b111d",
+    "surface2": "#111a2b",
+    "surface3": "#18243a",
+    "accent": "#b6ff00",
+    "accent2": "#20e3b2",
+    "primary": "#2f6bff",
+    "text": "#ffffff",
+    "textDim": "#9aa8bd",
+    "line": "rgba(255,255,255,0.10)",
+    "danger": "#ff5e3a",
+    "warning": "#ffad47",
+    "fontDisplay": "'Syne', sans-serif",
+    "fontBody": "'DM Sans', sans-serif"
+  },
+  "locale": { "language": "es-ES", "currency": "EUR" },
+  "timezone": "Europe/Madrid",
+  "courts": [
+    { "id": 1, "name": "Pista 1", "type": "Cristal Pro", "price60": 10, "price90": 18, "price120": 24 },
+    { "id": 2, "name": "Pista 2", "type": "Cristal Pro", "price60": 10, "price90": 18, "price120": 24 },
+    { "id": 3, "name": "Pista 3", "type": "Cristal Central", "price60": 12, "price90": 20, "price120": 26 },
+    { "id": 4, "name": "Pista 4", "type": "Cristal Central", "price60": 12, "price90": 20, "price120": 26 }
+  ],
+  "bookingHours": ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"],
+  "roles": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+  "features": {
+    "reservas": true,
+    "cancelaciones": true,
+    "reprogramaciones": true,
+    "listaEspera": false,
+    "torneos": true,
+    "ranking": true,
+    "emparejamientos": false,
+    "crm": false,
+    "nps": false,
+    "noShow": false,
+    "referidos": false,
+    "membresias": false,
+    "pagos": false,
+    "qr": false,
+    "promociones": false,
+    "ia": false,
+    "soporte": true,
+    "dashboards": true,
+    "automatizaciones": true,
+    "campanas": false,
+    "notificaciones": true,
+    "whatsapp": false
+  },
+  "integrations": {
+    "automation": { "provider": "make", "enabled": true, "webhookRef": "MAKE_RESERVAS_WEBHOOK" },
+    "data": { "provider": "airtable", "enabled": true, "baseIdRef": "AIRTABLE_BASE_ID", "tablesRef": { "reservas": "AIRTABLE_RESERVAS_TABLE" } },
+    "payments": { "provider": "none", "enabled": false },
+    "messaging": { "provider": "none", "enabled": false },
+    "ai": { "provider": "none", "enabled": false }
+  },
+  "plan": {
+    "name": "pro",
+    "limits": { "bookingsPerMonth": null, "users": null, "storageMB": null }
+  },
+  "domains": { "primary": null, "subdomain": "club-padel-04.pages.dev" },
+  "contact": { "email": "info@clubpadel04.example", "phone": null, "address": "Antequera, Málaga" },
+  "support": { "level": "basico", "channel": null },
+  "deploymentProfile": "production"
+}

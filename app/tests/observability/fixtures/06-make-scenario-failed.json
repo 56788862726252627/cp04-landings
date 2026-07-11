@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-08T10:20:30.250Z",
+  "level": "error",
+  "service": "make",
+  "environment": "production",
+  "event_type": "scenario_execution",
+  "message": "Ejecucion de escenario Make termino en error",
+  "request_id": "req_11ffaa22bb",
+  "correlation_id": "corr_33cc44dd55",
+  "client_id": "club-padel-04",
+  "tenant_id": null,
+  "scenario_id": "6199248",
+  "execution_id": null,
+  "user_id_hash": null,
+  "error_code": "MAKE_EXECUTION.SCENARIO_FAILED",
+  "duration_ms": 1840,
+  "status": "failure",
+  "metadata": { "scenario_name": "Alta de Jugador" }
+}

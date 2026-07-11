@@ -1,0 +1,23 @@
+{
+  "name": "Club Pádel 04",
+  "short_name": "Pádel 04",
+  "description": "Reservas de pistas, ranking y gestión operativa de Club Pádel 04.",
+  "start_url": "/?source=pwa",
+  "id": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#05080d",
+  "theme_color": "#05080d",
+  "lang": "es-ES",
+  "dir": "ltr",
+  "categories": ["sports", "lifestyle", "business"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

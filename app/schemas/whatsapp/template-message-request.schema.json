@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/whatsapp/template-message-request.schema.json",
+  "title": "CP04 WhatsApp Adapter — Template Message Request (multi-tenant, mock)",
+  "description": "Contrato de entrada para el futuro sendTemplateMessage() propio de la app (worker-reservas/messaging/whatsapp-adapter.mock.js), distinto del contrato de schemas/make-qa/whatsapp-template-message.schema.json (ese valida el envío específico del conector nativo de Make, con idempotency_key prefijado QA_CP04_ y sin tenant_id). Este schema exige tenant_id explícito porque este adapter está diseñado para multi-tenant, no para un único cliente implícito.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["to", "template_name", "language", "tenant_id", "idempotency_key"],
+  "properties": {
+    "to": { "type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$" },
+    "template_name": {
+      "type": "string",
+      "enum": [
+        "booking_confirmed",
+        "booking_cancelled",
+        "booking_rescheduled",
+        "reminder_24h",
+        "reminder_2h",
+        "tournament_update",
+        "waitlist_slot_available",
+        "incident_notice",
+        "faq_response",
+        "opt_out_ack"
+      ]
+    },
+    "language": { "type": "string", "enum": ["es", "en", "es_ES", "en_US"] },
+    "variables": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "tenant_id": { "type": "string", "minLength": 1 },
+    "idempotency_key": { "type": "string", "minLength": 1 }
+  }
+}

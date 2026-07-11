@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://internal.cp04-agency/schemas/release/release-manifest.schema.json",
+  "title": "CP04 Release Manifest",
+  "description": "Contrato machine-readable de una release técnica (commit+build), distinto de config/deployment-profile.schema.json (que describe el ESTADO DE DESPLIEGUE de un CLIENTE por entorno de negocio). Un release-manifest describe UNA release concreta candidata a promoción a través de los 5 entornos técnicos de scripts/release/environments.mjs (LOCAL/TEST/STAGING/CANARY/PRODUCTION) — 'environment' aquí NO es el mismo enum que deployment-profile.schema.json#environment (development/staging/production, capa de negocio por cliente). 'deployment_profile' referencia (no duplica) ese documento cuando aplica. Nunca contiene secretos, solo referencias por nombre. No ejecuta ningún despliegue.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "release_id",
+    "commit_sha",
+    "build_id",
+    "tenant_id",
+    "environment",
+    "deployment_profile",
+    "security_status",
+    "qa_status",
+    "backup_status",
+    "observability_status",
+    "dependency_status",
+    "rollback_ref",
+    "approved_by",
+    "created_at"
+  ],
+  "$defs": {
+    "gateStatusValue": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "BLOCKED", "WARN", "PENDING", "UNKNOWN", "NOT_APPLICABLE"],
+      "description": "NOT_APPLICABLE es el único estado equivalente a 'no bloquea' sin ser un PASS demostrado — reservado para gates condicionales (ej. STRIPE_READY cuando payments.enabled=false). UNKNOWN es el default seguro cuando no hay evidencia todavía (nunca se infiere PASS de la ausencia de datos, mismo principio SIN_DATOS de schemas/observability/health-status.schema.json)."
+    },
+    "gateStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence_ref", "checked_at"],
+      "properties": {
+        "status": { "$ref": "#/$defs/gateStatusValue" },
+        "evidence_ref": {
+          "type": ["string", "null"],
+          "description": "Ruta relativa al artefacto/reporte que sustenta 'status' (ej. 'audit/security-hardening/10_PRODUCTION_SECURITY_READINESS.md'). null solo si status es UNKNOWN."
+        },
+        "checked_at": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Cuándo se generó la evidencia referenciada — no cuándo se construyó el manifest. null solo si status es UNKNOWN."
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "release_id": {
+      "type": "string",
+      "pattern": "^rel_[A-Za-z0-9-]{8,}$",
+      "description": "Identificador único de esta release, mismo estilo de prefijo que request_id/correlation_id (schemas/observability/log-event.schema.json)."
+    },
+    "commit_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "SHA de git (corto o completo) del commit exacto que esta release empaqueta."
+    },
+    "build_id": {
+      "type": "string",
+      "pattern": "^build_[A-Za-z0-9-]{6,}$",
+      "description": "Identificador del artefacto de build (salida de 'vite build' + hash/timestamp), no del commit."
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]{1,62}[a-z0-9])?$",
+      "description": "Mismo patrón que log-event.schema.json#tenant_id y tenant-registry.schema.json#tenantId. Hoy siempre 'cp04' (mono-tenant real) — el contrato admite N tenants sin cambios."
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["LOCAL", "TEST", "STAGING", "CANARY", "PRODUCTION"],
+      "description": "Entorno TÉCNICO de esta release (pipeline de release engineering), ver scripts/release/environments.mjs. Distinto de deployment_profile.deployment_status, que es el estado de negocio del cliente."
+    },
+    "deployment_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "client_slug", "deployment_status"],
+      "properties": {
+        "ref": { "type": ["string", "null"], "description": "Ej. 'clients/<slug>/deployment-profile.json'. Puntero, no copia — el documento referenciado sigue siendo la fuente de verdad de deploymentStatus." },
+        "client_slug": { "type": ["string", "null"], "pattern": "^[a-z0-9]([a-z0-9-]{0,48}[a-z0-9])?$" },
+        "deployment_status": {
+          "type": ["string", "null"],
+          "enum": [null, "DRAFT", "CONFIG_READY", "STAGING_READY", "QA_PASS", "PRODUCTION_READY", "DEPLOYED", "VERIFIED", "ACTIVE", "SUSPENDED", "ARCHIVED"],
+          "description": "Copia de lectura del deploymentStatus vigente en el momento de construir el manifest — snapshot, no fuente de verdad."
+        }
+      }
+    },
+    "security_status": { "$ref": "#/$defs/gateStatus" },
+    "qa_status": { "$ref": "#/$defs/gateStatus" },
+    "backup_status": { "$ref": "#/$defs/gateStatus" },
+    "observability_status": { "$ref": "#/$defs/gateStatus" },
+    "dependency_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "stripe", "whatsapp", "airtable", "make_qa"],
+      "description": "Desglose de dependencias externas — el 'overall' es el peor caso de los 4, nunca un promedio que pueda esconder un BLOCKED individual.",
+      "properties": {
+        "overall": { "$ref": "#/$defs/gateStatus" },
+        "stripe": { "$ref": "#/$defs/gateStatus" },
+        "whatsapp": { "$ref": "#/$defs/gateStatus" },
+        "airtable": { "$ref": "#/$defs/gateStatus" },
+        "make_qa": { "$ref": "#/$defs/gateStatus" }
+      }
+    },
+    "rollback_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["previous_release_id", "previous_commit_sha", "trigger", "owner"],
+      "description": "Mismo espíritu que docs/agencia-ia/CLIENT_ROLLBACK_CONTRACT.md#rollbackRef pero a nivel de release técnica, no de cliente.",
+      "properties": {
+        "previous_release_id": { "type": ["string", "null"], "pattern": "^rel_[A-Za-z0-9-]{8,}$" },
+        "previous_commit_sha": { "type": ["string", "null"], "pattern": "^[0-9a-f]{7,40}$" },
+        "trigger": {
+          "type": "string",
+          "enum": ["none", "manual", "qa_failure", "incident", "go_live_rejected", "canary_threshold_breach", "other"],
+          "default": "none"
+        },
+        "owner": { "type": ["string", "null"] }
+      }
+    },
+    "approved_by": {
+      "type": ["object", "null"],
+      "description": "null mientras GO_LIVE_APPROVED no se haya concedido. Nunca se infiere un aprobador — es el único gate no automatizable (mismo principio que docs/agencia-ia/DEPLOYMENT_PROMOTION_GATES.md#GO_LIVE_APPROVED).",
+      "additionalProperties": false,
+      "required": ["name", "role", "approved_at"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "approved_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "environment": { "const": "PRODUCTION" } }, "required": ["environment"] },
+      "then": { "properties": { "approved_by": { "type": "object" } }, "required": ["approved_by"] }
+    }
+  ]
+}

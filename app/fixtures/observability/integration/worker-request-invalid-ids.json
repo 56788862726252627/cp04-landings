@@ -1,0 +1,9 @@
+{
+  "description": "Petición simulada con cabeceras presentes pero con formato inválido (no cumplen el patrón del contrato) — deben tratarse igual que 'ausentes', nunca aceptarse tal cual.",
+  "headers": {
+    "X-CP04-Request-Id": "not-a-valid-id",
+    "X-CP04-Correlation-Id": "tambien-invalido"
+  },
+  "method": "POST",
+  "path": "/api/reservas"
+}

@@ -1,0 +1,17 @@
+{
+  "test_id": "QA-A3-003",
+  "scenario_id": "6199248",
+  "status": "DISEÑADO — pendiente de preflight Airtable",
+  "payload": {
+    "nombre": "QA_CP04",
+    "apellidos": "TEST_A3",
+    "email": "eduardorodriguezrodriguez24+qacp04a3@gmail.com",
+    "nivel": "QA_TEST",
+    "comentarios": "QA_CP04 Lote A3 - no es un jugador real",
+    "telefono": "",
+    "fecha_nacimiento": "",
+    "genero": "",
+    "acepta_condiciones": true,
+    "origen": "QA_TERMINAL7"
+  }
+}

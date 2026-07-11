@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientId": "00000000-0000-4000-8000-000000000002",
+  "tenantId": "fixture-club-02",
+  "slug": "club-deportivo-fixture-dos",
+  "brand": { "name": "Club Deportivo Fixture Dos (FIXTURE TÉCNICO — NO ES CLIENTE REAL)" },
+  "locale": { "language": "es-ES", "currency": "EUR" },
+  "timezone": "Europe/Madrid",
+  "courts": [
+    { "id": 1, "name": "Pista 1", "type": "Cristal", "price60": 9, "price90": 16, "price120": 22 },
+    { "id": 2, "name": "Pista 2", "type": "Cristal", "price60": 9, "price90": 16, "price120": 22 }
+  ],
+  "bookingHours": ["09:00", "10:00", "11:00", "17:00", "18:00", "19:00", "20:00"],
+  "roles": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+  "features": { "torneos": true, "ranking": true },
+  "integrations": {
+    "automation": { "provider": "make", "enabled": true, "webhookRef": "MAKE_RESERVAS_WEBHOOK_FIXTURE_CLUB_02" },
+    "data": { "provider": "airtable", "enabled": true, "baseIdRef": "AIRTABLE_BASE_ID_FIXTURE_CLUB_02" },
+    "payments": { "provider": "none", "enabled": false },
+    "messaging": { "provider": "none", "enabled": false },
+    "ai": { "provider": "none", "enabled": false }
+  },
+  "plan": { "name": "starter" },
+  "domains": { "primary": null, "subdomain": "club-deportivo-fixture-dos.pages.dev" },
+  "contact": { "email": "info@fixture-club-02.example" },
+  "support": { "level": "basico" },
+  "deploymentProfile": "staging"
+}

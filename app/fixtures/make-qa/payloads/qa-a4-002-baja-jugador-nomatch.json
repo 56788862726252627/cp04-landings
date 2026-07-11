@@ -1,0 +1,9 @@
+{
+  "test_id": "QA-A4-002",
+  "scenario_id": "5288809",
+  "status": "DISEÑADO — pendiente de preflight Airtable — SOLO rama no-match",
+  "payload": {
+    "email": "qa_cp04_lote_a4_nomatch@invalid.test",
+    "nombre": "QA_CP04_TEST_A4"
+  }
+}

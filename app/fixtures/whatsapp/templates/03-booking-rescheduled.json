@@ -1,0 +1,13 @@
+{
+  "to": "+34600000003",
+  "template_name": "booking_rescheduled",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "player_name": "Marta Ruiz",
+    "old_date_time": "2026-07-10 09:00",
+    "new_date_time": "2026-07-11 09:00",
+    "court_name": "Pista 3"
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:bkg_0003:booking_rescheduled"
+}

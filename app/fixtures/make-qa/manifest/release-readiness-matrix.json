@@ -1,0 +1,969 @@
+{
+  "total": 50,
+  "by_release_gate": {
+    "PASS": 1,
+    "BLOCKED": 47,
+    "NOT_SAFE": 2
+  },
+  "rows": [
+    {
+      "scenario_id": "6244975",
+      "scenario_name": "🔑 Generación QR Acceso",
+      "wave": "wave_0",
+      "current_status": "PASS_VERIFIED",
+      "dependency_readiness": "LOCAL_READY",
+      "dependency_additional_blockers": [],
+      "release_gate": "PASS",
+      "release_gate_reason": "PASS_VERIFIED ya confirmado con evidencia real, no re-derivado",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "6233755",
+      "scenario_name": "🗺️ Mapa de Flujos",
+      "wave": "wave_0",
+      "current_status": "CONFIG_ERROR",
+      "dependency_readiness": "CONFIG_ERROR",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=CONFIG_ERROR — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "6323457",
+      "scenario_name": "⚖️ Solicitud GDPR Acceso u Olvido",
+      "wave": "wave_2",
+      "current_status": "READY_PENDING_AIRTABLE_PREFLIGHT",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=READY_PENDING_AIRTABLE_PREFLIGHT — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "6199248",
+      "scenario_name": "🎾 Alta de Jugador",
+      "wave": "wave_1",
+      "current_status": "READY_PENDING_AIRTABLE_PREFLIGHT",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=READY_PENDING_AIRTABLE_PREFLIGHT — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5697630",
+      "scenario_name": "📡 API Reservas (crear_reserva)",
+      "wave": "wave_1",
+      "current_status": "READY_PENDING_AIRTABLE_PREFLIGHT",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=READY_PENDING_AIRTABLE_PREFLIGHT — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5291559",
+      "scenario_name": "🔐 Control Acceso QR (DENEGADO_INVALIDO)",
+      "wave": "wave_1",
+      "current_status": "READY_PENDING_AIRTABLE_PREFLIGHT",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=READY_PENDING_AIRTABLE_PREFLIGHT — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5288809",
+      "scenario_name": "❌ Baja de Jugador + Promoción (rama no-match)",
+      "wave": "wave_2",
+      "current_status": "SAFE_WITH_RESTRICTIONS",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=SAFE_WITH_RESTRICTIONS — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "4919937",
+      "scenario_name": "🏆 Cruces de Torneo (rama no-match)",
+      "wave": "wave_2",
+      "current_status": "SAFE_WITH_RESTRICTIONS",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=SAFE_WITH_RESTRICTIONS — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5330078",
+      "scenario_name": "🏅 Resultados y Clasificación (rama no-match)",
+      "wave": "wave_2",
+      "current_status": "SAFE_WITH_RESTRICTIONS",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=SAFE_WITH_RESTRICTIONS — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5791128",
+      "scenario_name": "👥 Emparejamiento Sin Pareja",
+      "wave": "wave_2",
+      "current_status": "SAFE_WITH_RESTRICTIONS",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=SAFE_WITH_RESTRICTIONS — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": false
+    },
+    {
+      "scenario_id": "6323441",
+      "scenario_name": "💳 Pago Confirmado Stripe → Cuota + Recibo",
+      "wave": "wave_4",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "dependency_readiness": "STRIPE_TEST_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_PENDING_AIRTABLE_VERIFICATION — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "6335117",
+      "scenario_name": "🔄 Dunning Cobro Recurrente Stripe",
+      "wave": "wave_4",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "dependency_readiness": "STRIPE_TEST_REQUIRED",
+      "dependency_additional_blockers": [
+        "WHATSAPP_SETUP_REQUIRED",
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_PENDING_AIRTABLE_VERIFICATION — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "6335114",
+      "scenario_name": "📸 Instagram Borrador con IA",
+      "wave": "wave_3",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_PENDING_AIRTABLE_VERIFICATION — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5735907",
+      "scenario_name": "🗓️ Sincronización Multi-Calendario",
+      "wave": "wave_3",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_PENDING_AIRTABLE_VERIFICATION — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5736472",
+      "scenario_name": "🚨 Alerta Pistas Libres + Flash Promo",
+      "wave": "wave_3",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_PENDING_AIRTABLE_VERIFICATION — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5791119",
+      "scenario_name": "📊 Informe Mensual",
+      "wave": "wave_3",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_PENDING_AIRTABLE_VERIFICATION — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5811918",
+      "scenario_name": "🔁 Onboarding Secuencial",
+      "wave": "wave_3",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "dependency_readiness": "READY_FOR_PREFLIGHT",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_PENDING_AIRTABLE_VERIFICATION — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5736463",
+      "scenario_name": "⚡ Recordatorio 2h Antes",
+      "wave": "unassigned",
+      "current_status": "BLOCKED_EXTERNAL_RATE_LIMIT",
+      "dependency_readiness": "AIRTABLE_OBSERVING",
+      "dependency_additional_blockers": [
+        "WHATSAPP_SETUP_REQUIRED"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_RATE_LIMIT — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5736797",
+      "scenario_name": "🚫 Seguimiento No-Show",
+      "wave": "unassigned",
+      "current_status": "BLOCKED_EXTERNAL_RATE_LIMIT",
+      "dependency_readiness": "AIRTABLE_OBSERVING",
+      "dependency_additional_blockers": [
+        "WHATSAPP_SETUP_REQUIRED"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_RATE_LIMIT — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5791133",
+      "scenario_name": "🏟️ Cierre Temporal de Pistas",
+      "wave": "wave_5",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_WHATSAPP_PENDING — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5811888",
+      "scenario_name": "💸 Escalado Impagos",
+      "wave": "wave_5",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_WHATSAPP_PENDING — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "6323450",
+      "scenario_name": "🛡️ Alerta Seguridad Acceso Sospechoso",
+      "wave": "wave_5",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_WHATSAPP_PENDING — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5812456",
+      "scenario_name": "❄️ Congelación + Reactivación Membresía",
+      "wave": "wave_5",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_WHATSAPP_PENDING — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5791022",
+      "scenario_name": "🎁 Bienvenida Nuevo Socio",
+      "wave": "wave_5",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_WHATSAPP_PENDING — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5812297",
+      "scenario_name": "🎁 Programa de Referidos",
+      "wave": "wave_5",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_WHATSAPP_PENDING — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5811864",
+      "scenario_name": "🎂 Felicitación Cumpleaños",
+      "wave": "wave_5",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_WHATSAPP_PENDING — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5736470",
+      "scenario_name": "🔁 Reactivación Inactivos 30d",
+      "wave": "wave_5",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=BLOCKED_EXTERNAL_WHATSAPP_PENDING — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5791113",
+      "scenario_name": "📋 Gestión Lista de Espera",
+      "wave": "wave_6",
+      "current_status": "NOT_SAFE",
+      "dependency_readiness": "NOT_SAFE",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "NOT_SAFE",
+      "release_gate_reason": "Estructuralmente NOT_SAFE — requiere diseño de aislamiento/harness",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5799061",
+      "scenario_name": "💬 Chatbot Web Reservas",
+      "wave": "wave_6",
+      "current_status": "NOT_SAFE",
+      "dependency_readiness": "NOT_SAFE",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "NOT_SAFE",
+      "release_gate_reason": "Estructuralmente NOT_SAFE — requiere diseño de aislamiento/harness",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5736466",
+      "scenario_name": "⭐ Encuesta Post-Partido",
+      "wave": "unassigned",
+      "current_status": "NEEDS_FIX_BEFORE_TEST",
+      "dependency_readiness": "CONFIG_ERROR",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NEEDS_FIX_BEFORE_TEST — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "6323445",
+      "scenario_name": "🔑 Email Recuperación de Contraseña SaaS",
+      "wave": "unassigned",
+      "current_status": "CONFIG_ERROR",
+      "dependency_readiness": "CONFIG_ERROR",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=CONFIG_ERROR — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5747703",
+      "scenario_name": "📝 Tally → API Reservas",
+      "wave": "unassigned",
+      "current_status": "CONFIG_ERROR",
+      "dependency_readiness": "CONFIG_ERROR",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=CONFIG_ERROR — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "6335118",
+      "scenario_name": "🔔 Notificación Push PWA",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5791116",
+      "scenario_name": "🏷️ Confirmación Inscripción Torneo",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5750308",
+      "scenario_name": "📧 Monitor Prueba Gratuita",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5736800",
+      "scenario_name": "📋 Dashboard Ejecutivo Diario",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5811901",
+      "scenario_name": "📊 Análisis NPS Semanal",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5736468",
+      "scenario_name": "📊 Panel KPI Semanal",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "6217724",
+      "scenario_name": "🔄 Backup Semanal",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5799041",
+      "scenario_name": "📈 Predicción Ocupación",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5791374",
+      "scenario_name": "🏆 Reto 04 + Puntos",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5733370",
+      "scenario_name": "💰 Facturación y Cobro",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5791032",
+      "scenario_name": "💳 Recordatorio Cuota Mensual",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5791124",
+      "scenario_name": "🎯 Campaña Flash WhatsApp",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "6216523",
+      "scenario_name": "🗂️ Backup Plantilla Drive",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "6299114",
+      "scenario_name": "⚠️ Alerta Crítica Fallos Make",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "low",
+      "destructive": false
+    },
+    {
+      "scenario_id": "5799031",
+      "scenario_name": "🎧 Atención Socio WhatsApp FAQ",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "5798996",
+      "scenario_name": "🤖 Bot IA Reservas WhatsApp",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "WHATSAPP_SETUP_REQUIRED",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "high",
+      "destructive": true
+    },
+    {
+      "scenario_id": "4832095",
+      "scenario_name": "🤖 Bot IA Reservas Telegram",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "dependency_additional_blockers": [],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    },
+    {
+      "scenario_id": "4942506",
+      "scenario_name": "🔔 Recordatorio 24h Antes",
+      "wave": "unassigned",
+      "current_status": "NOT_TESTED",
+      "dependency_readiness": "AIRTABLE_OBSERVING",
+      "dependency_additional_blockers": [
+        "WHATSAPP_SETUP_REQUIRED"
+      ],
+      "release_gate": "BLOCKED",
+      "release_gate_reason": "current_status=NOT_TESTED — no hay PASS_VERIFIED real que lo respalde todavía",
+      "risk_level": "medium",
+      "destructive": true
+    }
+  ],
+  "execution_order": [
+    {
+      "position": 1,
+      "wave": "wave_0",
+      "scenario_id": "6233755",
+      "scenario_name": "🗺️ Mapa de Flujos"
+    },
+    {
+      "position": 2,
+      "wave": "wave_0",
+      "scenario_id": "6244975",
+      "scenario_name": "🔑 Generación QR Acceso"
+    },
+    {
+      "position": 3,
+      "wave": "wave_1",
+      "scenario_id": "5291559",
+      "scenario_name": "🔐 Control Acceso QR (DENEGADO_INVALIDO)"
+    },
+    {
+      "position": 4,
+      "wave": "wave_1",
+      "scenario_id": "5697630",
+      "scenario_name": "📡 API Reservas (crear_reserva)"
+    },
+    {
+      "position": 5,
+      "wave": "wave_1",
+      "scenario_id": "6199248",
+      "scenario_name": "🎾 Alta de Jugador"
+    },
+    {
+      "position": 6,
+      "wave": "wave_2",
+      "scenario_id": "6323457",
+      "scenario_name": "⚖️ Solicitud GDPR Acceso u Olvido"
+    },
+    {
+      "position": 7,
+      "wave": "wave_2",
+      "scenario_id": "5288809",
+      "scenario_name": "❌ Baja de Jugador + Promoción (rama no-match)"
+    },
+    {
+      "position": 8,
+      "wave": "wave_2",
+      "scenario_id": "4919937",
+      "scenario_name": "🏆 Cruces de Torneo (rama no-match)"
+    },
+    {
+      "position": 9,
+      "wave": "wave_2",
+      "scenario_id": "5330078",
+      "scenario_name": "🏅 Resultados y Clasificación (rama no-match)"
+    },
+    {
+      "position": 10,
+      "wave": "wave_2",
+      "scenario_id": "5791128",
+      "scenario_name": "👥 Emparejamiento Sin Pareja"
+    },
+    {
+      "position": 11,
+      "wave": "wave_3",
+      "scenario_id": "5791119",
+      "scenario_name": "📊 Informe Mensual"
+    },
+    {
+      "position": 12,
+      "wave": "wave_3",
+      "scenario_id": "5736472",
+      "scenario_name": "🚨 Alerta Pistas Libres + Flash Promo"
+    },
+    {
+      "position": 13,
+      "wave": "wave_3",
+      "scenario_id": "5811918",
+      "scenario_name": "🔁 Onboarding Secuencial"
+    },
+    {
+      "position": 14,
+      "wave": "wave_3",
+      "scenario_id": "5735907",
+      "scenario_name": "🗓️ Sincronización Multi-Calendario"
+    },
+    {
+      "position": 15,
+      "wave": "wave_3",
+      "scenario_id": "6335114",
+      "scenario_name": "📸 Instagram Borrador con IA"
+    },
+    {
+      "position": 16,
+      "wave": "wave_4",
+      "scenario_id": "6323441",
+      "scenario_name": "💳 Pago Confirmado Stripe → Cuota + Recibo"
+    },
+    {
+      "position": 17,
+      "wave": "wave_4",
+      "scenario_id": "6335117",
+      "scenario_name": "🔄 Dunning Cobro Recurrente Stripe"
+    },
+    {
+      "position": 18,
+      "wave": "wave_5",
+      "scenario_id": "5811864",
+      "scenario_name": "🎂 Felicitación Cumpleaños"
+    },
+    {
+      "position": 19,
+      "wave": "wave_5",
+      "scenario_id": "5736470",
+      "scenario_name": "🔁 Reactivación Inactivos 30d"
+    },
+    {
+      "position": 20,
+      "wave": "wave_5",
+      "scenario_id": "5791022",
+      "scenario_name": "🎁 Bienvenida Nuevo Socio"
+    },
+    {
+      "position": 21,
+      "wave": "wave_5",
+      "scenario_id": "5812297",
+      "scenario_name": "🎁 Programa de Referidos"
+    },
+    {
+      "position": 22,
+      "wave": "wave_5",
+      "scenario_id": "5812456",
+      "scenario_name": "❄️ Congelación + Reactivación Membresía"
+    },
+    {
+      "position": 23,
+      "wave": "wave_5",
+      "scenario_id": "5791133",
+      "scenario_name": "🏟️ Cierre Temporal de Pistas"
+    },
+    {
+      "position": 24,
+      "wave": "wave_5",
+      "scenario_id": "5811888",
+      "scenario_name": "💸 Escalado Impagos"
+    },
+    {
+      "position": 25,
+      "wave": "wave_5",
+      "scenario_id": "6323450",
+      "scenario_name": "🛡️ Alerta Seguridad Acceso Sospechoso"
+    },
+    {
+      "position": 26,
+      "wave": "wave_6",
+      "scenario_id": "5791113",
+      "scenario_name": "📋 Gestión Lista de Espera"
+    },
+    {
+      "position": 27,
+      "wave": "wave_6",
+      "scenario_id": "5799061",
+      "scenario_name": "💬 Chatbot Web Reservas"
+    },
+    {
+      "position": 28,
+      "wave": "unassigned",
+      "scenario_id": "5736466",
+      "scenario_name": "⭐ Encuesta Post-Partido"
+    },
+    {
+      "position": 29,
+      "wave": "unassigned",
+      "scenario_id": "5736468",
+      "scenario_name": "📊 Panel KPI Semanal"
+    },
+    {
+      "position": 30,
+      "wave": "unassigned",
+      "scenario_id": "5736800",
+      "scenario_name": "📋 Dashboard Ejecutivo Diario"
+    },
+    {
+      "position": 31,
+      "wave": "unassigned",
+      "scenario_id": "5747703",
+      "scenario_name": "📝 Tally → API Reservas"
+    },
+    {
+      "position": 32,
+      "wave": "unassigned",
+      "scenario_id": "5799041",
+      "scenario_name": "📈 Predicción Ocupación"
+    },
+    {
+      "position": 33,
+      "wave": "unassigned",
+      "scenario_id": "5811901",
+      "scenario_name": "📊 Análisis NPS Semanal"
+    },
+    {
+      "position": 34,
+      "wave": "unassigned",
+      "scenario_id": "6216523",
+      "scenario_name": "🗂️ Backup Plantilla Drive"
+    },
+    {
+      "position": 35,
+      "wave": "unassigned",
+      "scenario_id": "6217724",
+      "scenario_name": "🔄 Backup Semanal"
+    },
+    {
+      "position": 36,
+      "wave": "unassigned",
+      "scenario_id": "6299114",
+      "scenario_name": "⚠️ Alerta Crítica Fallos Make"
+    },
+    {
+      "position": 37,
+      "wave": "unassigned",
+      "scenario_id": "6323445",
+      "scenario_name": "🔑 Email Recuperación de Contraseña SaaS"
+    },
+    {
+      "position": 38,
+      "wave": "unassigned",
+      "scenario_id": "6335118",
+      "scenario_name": "🔔 Notificación Push PWA"
+    },
+    {
+      "position": 39,
+      "wave": "unassigned",
+      "scenario_id": "4832095",
+      "scenario_name": "🤖 Bot IA Reservas Telegram"
+    },
+    {
+      "position": 40,
+      "wave": "unassigned",
+      "scenario_id": "4942506",
+      "scenario_name": "🔔 Recordatorio 24h Antes"
+    },
+    {
+      "position": 41,
+      "wave": "unassigned",
+      "scenario_id": "5736463",
+      "scenario_name": "⚡ Recordatorio 2h Antes"
+    },
+    {
+      "position": 42,
+      "wave": "unassigned",
+      "scenario_id": "5736797",
+      "scenario_name": "🚫 Seguimiento No-Show"
+    },
+    {
+      "position": 43,
+      "wave": "unassigned",
+      "scenario_id": "5750308",
+      "scenario_name": "📧 Monitor Prueba Gratuita"
+    },
+    {
+      "position": 44,
+      "wave": "unassigned",
+      "scenario_id": "5791032",
+      "scenario_name": "💳 Recordatorio Cuota Mensual"
+    },
+    {
+      "position": 45,
+      "wave": "unassigned",
+      "scenario_id": "5791116",
+      "scenario_name": "🏷️ Confirmación Inscripción Torneo"
+    },
+    {
+      "position": 46,
+      "wave": "unassigned",
+      "scenario_id": "5791374",
+      "scenario_name": "🏆 Reto 04 + Puntos"
+    },
+    {
+      "position": 47,
+      "wave": "unassigned",
+      "scenario_id": "5799031",
+      "scenario_name": "🎧 Atención Socio WhatsApp FAQ"
+    },
+    {
+      "position": 48,
+      "wave": "unassigned",
+      "scenario_id": "5733370",
+      "scenario_name": "💰 Facturación y Cobro"
+    },
+    {
+      "position": 49,
+      "wave": "unassigned",
+      "scenario_id": "5791124",
+      "scenario_name": "🎯 Campaña Flash WhatsApp"
+    },
+    {
+      "position": 50,
+      "wave": "unassigned",
+      "scenario_id": "5798996",
+      "scenario_name": "🤖 Bot IA Reservas WhatsApp"
+    }
+  ]
+}

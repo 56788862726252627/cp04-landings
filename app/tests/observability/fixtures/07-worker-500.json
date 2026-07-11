@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-08T10:21:05.777Z",
+  "level": "critical",
+  "service": "worker",
+  "environment": "production",
+  "event_type": "http_request",
+  "message": "Error interno no clasificado en el Worker",
+  "request_id": "req_99aa88bb77",
+  "correlation_id": "corr_22dd11ee00",
+  "client_id": "club-padel-04",
+  "tenant_id": null,
+  "scenario_id": null,
+  "execution_id": null,
+  "user_id_hash": "1122334455667788",
+  "error_code": "WORKER_5XX.INTERNAL_ERROR",
+  "duration_ms": 58,
+  "status": "failure",
+  "metadata": { "route": "/api/reservas", "method": "POST" }
+}

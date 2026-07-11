@@ -1,0 +1,14 @@
+{
+  "_why": "data.object.metadata.email ausente — fixture malformado a propósito para probar que decideStripeEventHandling() rechaza en vez de procesar 'por si acaso'.",
+  "id": "evt_QACP04_missing_metadata_20260709A",
+  "object": "event",
+  "type": "checkout.session.completed",
+  "created": 1799600200,
+  "livemode": false,
+  "data": {
+    "object": {
+      "id": "cs_test_qacp04_missing_meta_001",
+      "metadata": {}
+    }
+  }
+}

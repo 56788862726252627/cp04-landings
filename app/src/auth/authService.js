@@ -14,6 +14,9 @@
 // exportadas aquí, nunca fetch()/localStorage directamente.
 
 import { AUTH_MODES } from "./authTypes.js";
+import { readTenantStorageItem, writeTenantStorageItem, removeTenantStorageItem } from "../tenant-runtime/buildStorageKey.js";
+import { loadBrowserRuntimeConfig } from "../tenant-runtime/loadBrowserRuntimeConfig.js";
+import { resolveRuntimeTenant } from "../tenant-runtime/resolveRuntimeTenant.js";
 
 const AUTH_ENDPOINTS = {
   login: "/api/auth/login",
@@ -28,7 +31,13 @@ const AUTH_ENDPOINTS = {
 // Mismas claves que ya usaba App.jsx antes de esta fase: se mantiene el
 // formato de almacenamiento para no romper nada que todavía las lea
 // directamente durante la migración progresiva (ver Fase 6 del informe).
-const STORAGE_KEYS = {
+// Renombradas de STORAGE_KEYS a LEGACY_STORAGE_KEYS en la fase de
+// namespacing multi-tenant (ver audit/tenant-storage-isolation/
+// TENANT_STORAGE_MIGRATION_PLAN.md, Lote A): siguen siendo el nombre físico
+// de la clave "de siempre", usado ahora como (a) sufijo de la clave
+// namespaced nueva y (b) fallback de lectura legacy — nunca se borran solas
+// salvo en un logout real (ver removeAuthField).
+const LEGACY_STORAGE_KEYS = {
   accessToken: "cp04_access_token",
   refreshToken: "cp04_refresh_token",
   authMode: "cp04_auth_mode",
@@ -52,34 +61,125 @@ function safeLocalStorage() {
   }
 }
 
+function safeHostname() {
+  try {
+    return window.location.hostname;
+  } catch {
+    return null;
+  }
+}
+
+// Resolución de tenantId: reutiliza tal cual el mismo mecanismo síncrono ya
+// usado en src/main.jsx (loadBrowserRuntimeConfig + resolveRuntimeTenant),
+// sin reimplementar la lógica de resolución dominio→tenant — se vuelve a
+// invocar desde aquí porque authService.js es un módulo independiente de
+// React (no tiene acceso al TenantConfigProvider montado en main.jsx). Es
+// una llamada adicional, pura y barata (JSON ya empaquetado por Vite en
+// build time, cero I/O en runtime), no una segunda implementación del
+// resolver ni una segunda API de namespace.
+//
+// Si la resolución falla por cualquier motivo (entorno sin `window`, como
+// node --test; config inválida) se degrada a null: el resto de este
+// archivo trata null como "sin namespace disponible" y usa exclusivamente
+// las claves legacy, exactamente igual que antes de esta fase. Nunca se
+// bloquea login/logout/getSession por un fallo de namespacing — el
+// namespacing es una capa adicional de aislamiento, no un requisito para
+// que la autenticación funcione.
+function resolveTenantId() {
+  try {
+    const { resolvedConfig, registry } = loadBrowserRuntimeConfig();
+    const hostname = safeHostname();
+    if (!hostname) return resolvedConfig?.tenantId ?? null;
+    const tenantStatus = resolveRuntimeTenant(hostname, registry, {
+      fallbackTenantId: resolvedConfig.tenantId,
+    });
+    return tenantStatus.tenantId ?? resolvedConfig?.tenantId ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Calculado una única vez al cargar el módulo (mismo momento que la
+// hidratación síncrona de restoreFromStorage() más abajo) — no hay ningún
+// flujo de "cambio de tenant en caliente" dentro de una misma pestaña en
+// esta SPA (cada tenant se sirve desde su propio origen, ver Modelo A en
+// docs/agencia-ia/ARCHITECTURE_CORE_VS_VERTICAL.md), así que recalcularlo
+// en cada llamada no aportaría nada y sí complicaría el código.
+const tenantId = resolveTenantId();
+
+// Namespacing aplicado SOLO a los 3 campos que se leen/escriben
+// exclusivamente dentro de este archivo (accessToken, refreshToken, user —
+// los de mayor sensibilidad: tokens de sesión + PII completa del usuario).
+// authMode, userEmail y role se dejan deliberadamente en su clave legacy
+// plana en esta fase: los tres tienen un segundo lector/escritor directo en
+// `localStorage`/`window.localStorage` dentro de src/App.jsx
+// (cp04_auth_mode: línea 1471; cp04_user_email: línea 4152;
+// cp04_role: líneas 6827/6932/6934/6951) que esta fase NO toca (regla de
+// alcance: no modificar App.jsx sin autorización explícita). Namespacear
+// esos 3 aquí sin actualizar esos puntos de lectura directa rompería la
+// app (el rol/idioma-de-auth/email dejarían de verse tras un login real).
+// Documentado como dependencia exacta para el siguiente lote, no
+// implementado como una solución falsa a medias.
+function writeAuthField(storage, field, value) {
+  const legacyKey = LEGACY_STORAGE_KEYS[field];
+  if (!tenantId) {
+    storage.setItem(legacyKey, value);
+    return;
+  }
+  writeTenantStorageItem(storage, { tenantId, key: legacyKey }, value);
+}
+
+function removeAuthField(storage, field, { removeLegacy = true } = {}) {
+  const legacyKey = LEGACY_STORAGE_KEYS[field];
+  if (!tenantId) {
+    storage.removeItem(legacyKey);
+    return;
+  }
+  // removeLegacy=true por defecto: un logout real debe invalidar la sesión
+  // sin importar bajo qué clave (nueva o legacy) estuviera guardada — dejar
+  // la legacy intacta reabriría una sesión "cerrada" en el próximo arranque
+  // vía el fallback de lectura de readAuthField. Esto NO es una migración
+  // destructiva de datos de negocio: es el cierre de sesión de siempre,
+  // aplicado a las dos ubicaciones posibles del mismo dato de sesión.
+  removeTenantStorageItem(storage, { tenantId, key: legacyKey, legacyKey, removeLegacy });
+}
+
+function readAuthField(storage, field) {
+  const legacyKey = LEGACY_STORAGE_KEYS[field];
+  if (!tenantId) {
+    return storage.getItem(legacyKey);
+  }
+  return readTenantStorageItem(storage, { tenantId, key: legacyKey, legacyKey });
+}
+
 function persist() {
   const storage = safeLocalStorage();
   if (!storage) return;
 
   try {
     if (state.accessToken) {
-      storage.setItem(STORAGE_KEYS.accessToken, state.accessToken);
-      storage.setItem(STORAGE_KEYS.authMode, "supabase_real");
+      writeAuthField(storage, "accessToken", state.accessToken);
+      storage.setItem(LEGACY_STORAGE_KEYS.authMode, "supabase_real");
     } else {
-      storage.removeItem(STORAGE_KEYS.accessToken);
+      removeAuthField(storage, "accessToken");
     }
 
     if (state.refreshToken) {
-      storage.setItem(STORAGE_KEYS.refreshToken, state.refreshToken);
+      writeAuthField(storage, "refreshToken", state.refreshToken);
     } else {
-      storage.removeItem(STORAGE_KEYS.refreshToken);
+      removeAuthField(storage, "refreshToken");
     }
 
     if (state.user) {
-      storage.setItem(STORAGE_KEYS.user, JSON.stringify(state.user));
-      if (state.user.email) storage.setItem(STORAGE_KEYS.userEmail, state.user.email);
+      writeAuthField(storage, "user", JSON.stringify(state.user));
+      if (state.user.email) storage.setItem(LEGACY_STORAGE_KEYS.userEmail, state.user.email);
     } else {
-      storage.removeItem(STORAGE_KEYS.user);
-      storage.removeItem(STORAGE_KEYS.userEmail);
+      removeAuthField(storage, "user");
+      storage.removeItem(LEGACY_STORAGE_KEYS.userEmail);
     }
 
     if (state.role) {
-      storage.setItem(STORAGE_KEYS.role, state.role);
+      storage.setItem(LEGACY_STORAGE_KEYS.role, state.role);
     }
   } catch {
     // Almacenamiento no disponible (modo privado, cuota, etc.): la sesión
@@ -92,12 +192,14 @@ function clearPersisted() {
   if (!storage) return;
 
   try {
-    storage.removeItem(STORAGE_KEYS.accessToken);
-    storage.removeItem(STORAGE_KEYS.refreshToken);
-    storage.removeItem(STORAGE_KEYS.authMode);
-    storage.removeItem(STORAGE_KEYS.user);
-    storage.removeItem(STORAGE_KEYS.userEmail);
-    storage.removeItem(STORAGE_KEYS.role);
+    // accessToken/refreshToken/user: borran namespaced + legacy (logout
+    // real, no migración — ver comentario de removeAuthField).
+    removeAuthField(storage, "accessToken");
+    removeAuthField(storage, "refreshToken");
+    storage.removeItem(LEGACY_STORAGE_KEYS.authMode);
+    removeAuthField(storage, "user");
+    storage.removeItem(LEGACY_STORAGE_KEYS.userEmail);
+    storage.removeItem(LEGACY_STORAGE_KEYS.role);
   } catch {
     // Nada que hacer si el almacenamiento no está disponible.
   }
@@ -108,10 +210,10 @@ function restoreFromStorage() {
   if (!storage) return;
 
   try {
-    const accessToken = storage.getItem(STORAGE_KEYS.accessToken);
-    const refreshToken = storage.getItem(STORAGE_KEYS.refreshToken);
-    const rawUser = storage.getItem(STORAGE_KEYS.user);
-    const role = storage.getItem(STORAGE_KEYS.role);
+    const accessToken = readAuthField(storage, "accessToken");
+    const refreshToken = readAuthField(storage, "refreshToken");
+    const rawUser = readAuthField(storage, "user");
+    const role = storage.getItem(LEGACY_STORAGE_KEYS.role);
 
     state = {
       accessToken: accessToken || null,
@@ -240,7 +342,7 @@ export async function logout(options = {}) {
   } catch {
     // Best-effort: el estado local YA quedó limpio arriba. Un fallo de red
     // aquí no debe impedir que el usuario "salga" de la app.
-    return { ok: false, message: "No se pudo contactar con el backend para cerrar sesión." };
+    return { ok: false, message: "No se pudo cerrar la sesión en el servidor." };
   }
 }
 
@@ -293,7 +395,7 @@ export async function refreshSession() {
       body: JSON.stringify({ refresh_token: state.refreshToken }),
     });
   } catch {
-    return { ok: false, error: "UPSTREAM_ERROR", message: "No se pudo contactar con el backend para renovar la sesión." };
+    return { ok: false, error: "UPSTREAM_ERROR", message: "No se pudo renovar la sesión. Vuelve a iniciar sesión si el problema continúa." };
   }
 
   const data = await readJsonSafe(response);

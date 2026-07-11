@@ -1,0 +1,31 @@
+{
+  "$schema": "../../schemas/make-qa/dependency-status.schema.json",
+  "generated_at": "2026-07-09",
+  "description": "Estado de dependencias externas, separado deliberadamente del manifest de 50 escenarios (objetivo 2 de esta misión: la cuota mensual de Airtable ya NO debe asumirse automáticamente como bloqueo permanente — este archivo es la única fuente de verdad re-chequeable, y preflight-runner.mjs lo lee en cada ejecución en vez de confiar en el current_status congelado del manifest). Actualizar este archivo (no el manifest) cuando llegue evidencia nueva de una lectura real.",
+  "checks": {
+    "AIRTABLE_MONTHLY_QUOTA": {
+      "status": "unknown",
+      "last_confirmed_exhausted_at": "2026-07-08T00:00:00.000Z",
+      "note": "Confirmado agotado 2026-07-08 ('maximum number of requests allowed for this month'). No reverificado desde entonces en esta sesión — no asumir agotado NI disponible sin una lectura fresca. Este es exactamente el punto del objetivo 2: dejar de tratar la cuota como bloqueo automático permanente.",
+      "recheck_method": "Lectura de solo lectura (ej. list_tables_for_base o equivalente) contra la base appyWvzZJLzy0E6aX, sin ninguna escritura, antes de cualquier intento de ejecución de un escenario con dependencia AIRTABLE."
+    },
+    "AIRTABLE_RATE_LIMIT_PER_MINUTE": {
+      "status": "degraded",
+      "note": "P0-2 (🔔 Recordatorio 2h Antes, 5736463) reactivado a interval 2700s (45min) y en observación activa; la ejecución posterior a la reactivación seguía devolviendo 429. No reintentar los escenarios afectados hasta que cierre la ventana de observación de T3.",
+      "affected_scenario_ids": ["5736463", "5736797", "4942506"],
+      "mitigation_available": "audit/airtable-p0-architecture-20260708 (batching/caché/dedup/backoff/jitter/budgets, diseño con 43 tests locales verdes, todavía NO aplicado a Make real). Ver también audit/airtable-p0-tooling-20260709 (detector de clusters 429, log-parser, window-simulator)."
+    },
+    "WHATSAPP_REAL_SEND": {
+      "status": "unavailable",
+      "note": "Sin canal de prueba autorizado. Método seguro disponible sin este bloqueo: Run once en Make + inspección de payload, sin activar el envío real (ver audit/app-make-50-integration/APP_MAKE_50_WHATSAPP_PREPRODUCTION_PLAN.md)."
+    },
+    "STRIPE_SANDBOX_EVENT": {
+      "status": "unknown",
+      "note": "Requiere generar un evento de prueba en el dashboard de Stripe en modo test — acción fuera de las herramientas MCP disponibles en esta sesión."
+    },
+    "MAKE_API_TOKEN_MAPA_FLUJOS": {
+      "status": "invalid",
+      "note": "Token de API de Make hardcodeado y expirado en el módulo HTTP del escenario 6233755 (Mapa de Flujos). Bloqueo de seguridad (línea T1: rotar token + sustituir por conexión Make nativa), no de cuota — no se resuelve reintentando."
+    }
+  }
+}

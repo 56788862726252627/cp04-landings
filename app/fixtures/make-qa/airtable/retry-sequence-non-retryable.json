@@ -1,0 +1,6 @@
+{
+  "_why": "401 (credencial inválida) no es reintentable — reintentar no lo arregla, hace falta rotar la conexión (mismo patrón que Mapa de Flujos, aunque ahí el 401 era de la API de Make, no de Airtable).",
+  "attempts": [
+    { "status": 401, "error": { "message": "Invalid authentication token" } }
+  ]
+}

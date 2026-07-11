@@ -1,0 +1,8 @@
+{
+  "test_id": "QA-A3-001",
+  "scenario_id": "5291559",
+  "status": "DISEÑADO — pendiente de preflight Airtable",
+  "payload": {
+    "clave_reserva": "QA_CP04_QR_NOMATCH_20260708A3"
+  }
+}

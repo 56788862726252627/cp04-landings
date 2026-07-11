@@ -1,0 +1,27 @@
+{
+  "test_id": "QA-A3-002",
+  "scenario_id": "5697630",
+  "status": "DISEÑADO — pendiente de preflight Airtable",
+  "payload": {
+    "accion": "crear_reserva",
+    "jugador": {
+      "nombre": "QA_CP04",
+      "apellidos": "TEST_A3",
+      "email": "eduardorodriguezrodriguez24@gmail.com",
+      "telefono": ""
+    },
+    "reserva": {
+      "fecha": "2026-12-30",
+      "pista": "QA_TEST_PISTA_A3",
+      "hora": "09:00",
+      "hora_fin": "10:30",
+      "modalidad": "QA_TEST",
+      "nivel": "QA_TEST",
+      "duracion_minutos": 90,
+      "precio_total": 0
+    },
+    "clave_reserva": "QA_CP04_RES_A3_20260708",
+    "origen": "QA_TERMINAL7",
+    "club": "QA_TEST"
+  }
+}

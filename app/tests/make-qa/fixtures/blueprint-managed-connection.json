@@ -1,0 +1,28 @@
+{
+  "flow": [
+    {
+      "id": 10,
+      "module": "http:ActionSendData",
+      "parameters": {
+        "headers": [
+          { "name": "Authorization", "value": "{{connection.token}}" }
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "module": "builtin:BasicRouter",
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 21,
+              "module": "http:ActionSendData",
+              "parameters": { "headers": [{ "name": "Authorization", "value": "Bearer nested-hardcoded-secret-value-123456" }] }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

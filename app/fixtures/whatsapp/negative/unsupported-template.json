@@ -1,0 +1,9 @@
+{
+  "_why": "template_name 'membership_upgrade_offer' no existe en WHATSAPP_TEMPLATES ni en el enum del schema — viola el schema Y resolveTemplate()/buildTemplateComponents() deben devolver reason:'unsupported_template'.",
+  "to": "+34600000013",
+  "template_name": "membership_upgrade_offer",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {},
+  "idempotency_key": "whatsapp:tnt_qacp04_test:bkg_0013:membership_upgrade_offer"
+}

@@ -1,0 +1,5 @@
+{
+  "_why": "429 por minuto (rate limit), NO cuota mensual — mismo patrón confirmado en audit/make-50-auditoria-20260707/MAKE_50_AIRTABLE_RATE_LIMIT_DIAGNOSIS.md para P0-2.",
+  "status": 429,
+  "error": { "type": "TOO_MANY_REQUESTS", "message": "You have made too many requests. Please retry in a few seconds." }
+}

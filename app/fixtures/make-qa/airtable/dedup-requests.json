@@ -1,0 +1,7 @@
+{
+  "_why": "Dos peticiones con la misma tabla+filtro+campos, emitidas dentro de la ventana de dedup (ej. dos escenarios Make consultando lo mismo casi a la vez) — la segunda debe detectarse como duplicada y no disparar una llamada real nueva.",
+  "request_a": { "table": "log_reservas", "filterByFormula": "{clave_reserva}='QA_CP04_QR_NOMATCH_20260708A3'", "fields": ["clave_reserva", "estado"] },
+  "request_b_same_signature": { "table": "log_reservas", "filterByFormula": "{clave_reserva}='QA_CP04_QR_NOMATCH_20260708A3'", "fields": ["estado", "clave_reserva"] },
+  "request_c_different_signature": { "table": "log_reservas", "filterByFormula": "{clave_reserva}='QA_CP04_OTRA_CLAVE'", "fields": ["clave_reserva", "estado"] },
+  "dedup_window_ms": 2000
+}

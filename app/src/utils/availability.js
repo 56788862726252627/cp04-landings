@@ -146,3 +146,39 @@ export function evaluateSlotAvailability({
   // 8. Disponible.
   return { status: AVAILABILITY_STATUS.AVAILABLE, reason: null };
 }
+
+/** Convierte la respuesta compatible del Worker en intervalos evaluables. */
+export function availabilityBookingsFromResponse(data, fallbackDurationMinutes = 90) {
+  if (Array.isArray(data?.ocupadas_detalle) && data.ocupadas_detalle.length > 0) {
+    return data.ocupadas_detalle.map((item) => ({
+      courtId: item.pista,
+      date: item.fecha,
+      startTime: item.hora_inicio,
+      endTime: item.hora_fin || null,
+      endMinutes: item.hora_fin ? undefined : minutesFromTime(item.hora_inicio) + Number(fallbackDurationMinutes),
+    }));
+  }
+
+  return (Array.isArray(data?.ocupadas) ? data.ocupadas : []).map((key) => {
+    const [date, courtId, startTime] = String(key).split("|");
+    return {
+      courtId,
+      date,
+      startTime,
+      endMinutes: minutesFromTime(startTime) + Number(fallbackDurationMinutes),
+    };
+  });
+}
+
+export function hasBookingOverlap({ data, date, startTime, durationMinutes, courtId }) {
+  const result = evaluateSlotAvailability({
+    date,
+    startTime,
+    durationMinutes: Number(durationMinutes),
+    courtId,
+    existingBookings: availabilityBookingsFromResponse(data, durationMinutes),
+    openingHours: {},
+    currentDateTime: new Date(Date.UTC(1970, 0, 1)),
+  });
+  return result.status === AVAILABILITY_STATUS.OCCUPIED;
+}

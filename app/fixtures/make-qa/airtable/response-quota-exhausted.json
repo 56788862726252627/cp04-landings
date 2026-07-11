@@ -1,0 +1,5 @@
+{
+  "_why": "Texto real confirmado el 2026-07-08 (ver audit/app-make-50-integration/APP_MAKE_50_EXTERNAL_BLOCKERS.md) — cuota MENSUAL de facturación agotada, distinta del rate-limit por minuto.",
+  "status": 429,
+  "error": { "type": "INVALID_REQUEST_UNKNOWN", "message": "API billing plan limit exceeded. You've reached the maximum number of requests allowed for this month. Upgrade for higher limits here... or wait until usage resets." }
+}

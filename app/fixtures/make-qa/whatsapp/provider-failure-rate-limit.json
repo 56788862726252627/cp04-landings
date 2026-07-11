@@ -1,0 +1,5 @@
+{
+  "_why": "Forma real (documentada) de un error 130429 de WhatsApp Cloud API, reutilizada como fixture de fallo de proveedor — nunca se llama al proveedor real para generarlo.",
+  "error": { "code": 130429, "message": "(#130429) Rate limit hit", "type": "OAuthException" },
+  "retryable": true
+}

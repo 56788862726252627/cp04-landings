@@ -1,0 +1,13 @@
+{
+  "to": "+34600000007",
+  "template_name": "waitlist_slot_available",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "player_name": "Jorge Molina",
+    "court_name": "Pista 2",
+    "date_time": "2026-07-10 20:00",
+    "expires_in_minutes": "15"
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:wl_0001:waitlist_slot_available"
+}

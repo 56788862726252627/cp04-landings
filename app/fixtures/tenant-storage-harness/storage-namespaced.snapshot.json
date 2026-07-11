@@ -1,0 +1,14 @@
+{
+  "_comment": "Snapshot del ESTADO REAL de hoy (2026-07-10) tras Lote A+D: solo accessToken/refreshToken/user quedan namespaced bajo tenant:{tenantId}:*. El resto (authMode/userEmail/role/perfil/torneo/registro/idioma) sigue en su clave plana legacy, confirmado por lectura de src/App.jsx — no es una proyección futura, es lo que produce el código actual.",
+  "tenant:cp04:cp04_access_token": "token-nuevo-namespaced",
+  "tenant:cp04:cp04_refresh_token": "refresh-nuevo-namespaced",
+  "tenant:cp04:cp04_user": "{\"email\":\"jugador@clubpadel04.example\",\"role\":\"PLAYER\"}",
+  "cp04_auth_mode": "supabase_real",
+  "cp04_user_email": "jugador@clubpadel04.example",
+  "cp04_role": "PLAYER",
+  "cp04_avatar": "data:image/png;base64,avatar-sin-namespace",
+  "cp04_bio": "Bio todavia sin namespace (Lote B pendiente)",
+  "cp04_torneo_v2": "{\"bracket\":\"bracket-actual\"}",
+  "cp04-reservas-email": "jugador@clubpadel04.example",
+  "cp04_language": "\"es\""
+}

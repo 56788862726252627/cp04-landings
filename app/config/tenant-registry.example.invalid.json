@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "layer": "registry",
+  "tenants": [
+    {
+      "tenantId": "cp04",
+      "slug": "club-padel-04",
+      "verticalId": "padel",
+      "domains": { "primary": null, "subdomain": "club-padel-04.pages.dev" },
+      "status": "active"
+    },
+    {
+      "tenantId": "cp04",
+      "slug": "club-padel-04-duplicado",
+      "verticalId": "padel",
+      "domains": { "primary": null, "subdomain": "club-padel-04.pages.dev" },
+      "status": "active"
+    }
+  ]
+}

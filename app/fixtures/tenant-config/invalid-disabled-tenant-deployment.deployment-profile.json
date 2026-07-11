@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientSlug": "club-deportivo-fixture-tres",
+  "environment": "production",
+  "releaseVersion": "1.0.0",
+  "configRef": "clients/club-deportivo-fixture-tres/client-config.json",
+  "brandingRef": "clients/club-deportivo-fixture-tres/BRANDING.md",
+  "integrationsRef": "clients/club-deportivo-fixture-tres/INTEGRATIONS.md",
+  "domainRef": null,
+  "workerProfile": null,
+  "featureFlagsRef": "clients/club-deportivo-fixture-tres/client-config.json#features",
+  "secretsRefs": [],
+  "deploymentStatus": "ACTIVE",
+  "qaStatus": "PASS",
+  "goLiveStatus": "APPROVED",
+  "rollbackRef": {
+    "previousReleaseVersion": null,
+    "previousConfigRef": null,
+    "previousDeploymentRef": null,
+    "trigger": "none",
+    "owner": null,
+    "validationAfterRollback": null
+  },
+  "lastValidatedAt": "2026-07-09",
+  "gates": {
+    "CONFIG_VALID": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "BRANDING_VALID": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "INTEGRATIONS_VALID": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "SECURITY_VALID": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "QA_VALID": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "BACKUP_READY": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "OBSERVABILITY_READY": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "GO_LIVE_APPROVED": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null }
+  }
+}

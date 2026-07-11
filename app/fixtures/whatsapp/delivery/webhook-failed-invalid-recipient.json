@@ -1,0 +1,26 @@
+{
+  "_why": "Forma real de un evento 'failed' con errors[] — código 131026 (recipient phone number not on WhatsApp), ya catalogado en PROVIDER_ERROR_CODES (whatsapp-contract.js) como retryable:false, category:'invalid_recipient'. normalizeDeliveryStatusEvent() debe reutilizar classifyProviderError(), no reimplementar la clasificación.",
+  "entry": [
+    {
+      "id": "WABA_ID_TEST",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": { "display_phone_number": "34900000000", "phone_number_id": "111111111111111" },
+            "statuses": [
+              {
+                "id": "wamid.TESTMSG0002",
+                "status": "failed",
+                "timestamp": "1719000100",
+                "recipient_id": "34600000061",
+                "errors": [ { "code": 131026, "title": "Message Undeliverable", "message": "Message undeliverable — recipient phone number not on WhatsApp" } ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

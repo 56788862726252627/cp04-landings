@@ -63,3 +63,15 @@ export function cp04GetSafeStartSection(role) {
   const allowed = CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER;
   return allowed[0] || "inicio";
 }
+
+// Edición del bracket de torneos (añadir/editar/eliminar parejas, cambiar
+// formato, reordenar, marcar ganador, publicar, deshacer/rehacer) es
+// operación de STAFF/ADMIN/SUPPORT — mismo criterio que el resto de acciones
+// de staff en CP04_ROLE_PERMISSIONS (cancelar/reprogramar/alta_jugador).
+// PLAYER conserva acceso de solo lectura a la sección "torneos" (ya está en
+// su lista de secciones permitidas) pero no a estas acciones mutativas.
+export const CP04_TOURNAMENT_EDITOR_ROLES = ["STAFF", "ADMIN", "SUPPORT"];
+
+export function cp04CanEditTournament(role) {
+  return CP04_TOURNAMENT_EDITOR_ROLES.includes(cp04NormalizeRole(role));
+}

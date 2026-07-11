@@ -1,0 +1,20 @@
+{
+  "_why": "metadata.user_id no coincide con el usuario que inició el checkout (simula un evento cruzado entre sesiones, o un intento de que el efecto de un pago se aplique a la cuenta equivocada). handleWebhookEvent() debe rechazar con reason:'wrong_user' cuando se le pasa expectedUserId, incluso con tenant_id correcto.",
+  "id": "evt_QACP04STRIPE_wrong_user_001",
+  "object": "event",
+  "type": "checkout.session.completed",
+  "created": 1799700800,
+  "livemode": false,
+  "data": {
+    "object": {
+      "id": "cs_test_mock_wrong_user_0001",
+      "metadata": {
+        "tenant_id": "tnt_qacp04_test",
+        "client_id": "clt_qacp04_test",
+        "user_id": "usr_OTRO_usuario_999",
+        "booking_id": "bkg_qacp04_0007",
+        "payment_reference": "payref_qacp04_0007"
+      }
+    }
+  }
+}

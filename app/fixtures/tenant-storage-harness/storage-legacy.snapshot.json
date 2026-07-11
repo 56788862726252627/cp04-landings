@@ -1,0 +1,21 @@
+{
+  "_comment": "Snapshot de localStorage tal y como lo dejaba un build ANTERIOR al Lote A/D (formato 100% plano, sin namespace de tenant). Representa el navegador de un usuario que no ha vuelto a loguearse desde antes de ese deploy — usado en escenarios 9 (claves legacy), 10 (migración), 11 (rollback).",
+  "cp04_access_token": "token-legacy-de-antes-del-deploy",
+  "cp04_refresh_token": "refresh-legacy-de-antes-del-deploy",
+  "cp04_auth_mode": "supabase_real",
+  "cp04_user": "{\"email\":\"veterano@clubpadel04.example\",\"role\":\"STAFF\"}",
+  "cp04_user_email": "veterano@clubpadel04.example",
+  "cp04_role": "STAFF",
+  "cp04_avatar": "data:image/png;base64,legacy-avatar",
+  "cp04_bio": "Bio legacy sin namespacear",
+  "cp04_deporte": "{\"nivel\":\"intermedio\"}",
+  "cp04_privacidad": "{\"perfilPublico\":true}",
+  "cp04_torneo_v2": "{\"bracket\":\"legacy-bracket\"}",
+  "cp04_torneo_hist_v2": "[]",
+  "cp04-reservas-email": "veterano@clubpadel04.example",
+  "cp04_register_open": "true",
+  "cp04_register_name": "Veterano",
+  "cp04_register_email": "veterano@clubpadel04.example",
+  "cp04_register_done": "true",
+  "cp04_language": "\"es\""
+}

@@ -1,0 +1,30 @@
+{
+  "_why": "Payload real (documentado) de webhook de Meta con las 3 transiciones legítimas de un mismo message_id en 3 eventos de statuses[] separados (nunca llegan en un solo evento) — se modelan aquí en 3 entries distintas de 'entry[].changes[]' para simular 3 llamadas reales al webhook, una por transición.",
+  "sent": {
+    "entry": [
+      { "id": "WABA_ID_TEST", "changes": [ { "field": "messages", "value": {
+        "messaging_product": "whatsapp",
+        "metadata": { "display_phone_number": "34900000000", "phone_number_id": "111111111111111" },
+        "statuses": [ { "id": "wamid.TESTMSG0001", "status": "sent", "timestamp": "1719000000", "recipient_id": "34600000060" } ]
+      } } ] }
+    ]
+  },
+  "delivered": {
+    "entry": [
+      { "id": "WABA_ID_TEST", "changes": [ { "field": "messages", "value": {
+        "messaging_product": "whatsapp",
+        "metadata": { "display_phone_number": "34900000000", "phone_number_id": "111111111111111" },
+        "statuses": [ { "id": "wamid.TESTMSG0001", "status": "delivered", "timestamp": "1719000010", "recipient_id": "34600000060" } ]
+      } } ] }
+    ]
+  },
+  "read": {
+    "entry": [
+      { "id": "WABA_ID_TEST", "changes": [ { "field": "messages", "value": {
+        "messaging_product": "whatsapp",
+        "metadata": { "display_phone_number": "34900000000", "phone_number_id": "111111111111111" },
+        "statuses": [ { "id": "wamid.TESTMSG0001", "status": "read", "timestamp": "1719000030", "recipient_id": "34600000060" } ]
+      } } ] }
+    ]
+  }
+}

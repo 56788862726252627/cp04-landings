@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/dependency-readiness.schema.json",
+  "title": "CP04 Make QA — Dependency Readiness (derivado)",
+  "description": "Contrato de una entrada de fixtures/make-qa/manifest/dependency-readiness.json (generado por dependency-readiness-classifier.mjs --write). Documento derivado y regenerable, no fuente de verdad — la fuente de verdad sigue siendo scenario-manifest.schema.json + dependency-status.schema.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenario_id", "scenario_name", "current_status", "status", "additional_blockers", "reasons"],
+  "properties": {
+    "scenario_id": { "type": "string" },
+    "scenario_name": { "type": "string" },
+    "current_status": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["LOCAL_READY", "AIRTABLE_BLOCKED", "AIRTABLE_OBSERVING", "STRIPE_TEST_REQUIRED", "WHATSAPP_SETUP_REQUIRED", "MAKE_LIVE_EXECUTION_REQUIRED", "CONFIG_ERROR", "NOT_SAFE", "READY_FOR_PREFLIGHT", "READY_FOR_LIVE_QA"]
+    },
+    "additional_blockers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "reasons": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

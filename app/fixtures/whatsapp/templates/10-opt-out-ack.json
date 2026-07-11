@@ -1,0 +1,9 @@
+{
+  "_why": "opt_out_ack no tiene variables (variables:[] en WHATSAPP_TEMPLATES) — confirma que buildTemplateComponents() acepta una plantilla sin parámetros y produce components:[] sin marcarlo como error.",
+  "to": "+34600000010",
+  "template_name": "opt_out_ack",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {},
+  "idempotency_key": "whatsapp:tnt_qacp04_test:optout_0001:opt_out_ack"
+}

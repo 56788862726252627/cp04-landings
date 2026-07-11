@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-baja-jugador-nomatch.schema.json",
+  "title": "QA-A4-002 · Payload Baja de Jugador — SOLO rama no-match (5288809)",
+  "description": "email debe usar el dominio .test reservado para pruebas (RFC 2606), garantía estructural de que nunca puede coincidir con un socio real. La rama 'encontrado' de este mismo escenario da de baja a un socio real de verdad — este schema existe precisamente para que un payload con dominio real nunca pueda validar como QA.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["email", "nombre"],
+  "properties": {
+    "email": { "type": "string", "pattern": "^[^@]+@[^@]+\\.test$" },
+    "nombre": { "type": "string", "pattern": "^QA_CP04" }
+  }
+}

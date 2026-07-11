@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "layer": "registry",
+  "tenants": [
+    {
+      "tenantId": "fixture-club-08a",
+      "slug": "club-deportivo-fixture-ocho-a",
+      "verticalId": "padel",
+      "domains": { "primary": null, "subdomain": "duplicado-fixture.pages.dev" },
+      "status": "active"
+    },
+    {
+      "tenantId": "fixture-club-08b",
+      "slug": "club-deportivo-fixture-ocho-b",
+      "verticalId": "padel",
+      "domains": { "primary": null, "subdomain": "duplicado-fixture.pages.dev" },
+      "status": "staging"
+    }
+  ]
+}

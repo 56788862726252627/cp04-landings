@@ -1,0 +1,1 @@
+{"to": "+34600000015", "template_name": "booking_confirmed", "language": "es", "tenant_id": "tnt_qacp04_test", "variables": {"player_name": "Ana"

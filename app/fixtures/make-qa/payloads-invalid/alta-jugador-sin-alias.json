@@ -1,0 +1,15 @@
+{
+  "_why_invalid": "email sin alias '+qacp04' — no identificable como prueba, no cumple la regla de 'cero tercero afectado'",
+  "payload": {
+    "nombre": "QA_CP04",
+    "apellidos": "TEST_A3",
+    "email": "eduardorodriguezrodriguez24@gmail.com",
+    "nivel": "QA_TEST",
+    "comentarios": "QA_CP04 Lote A3 - no es un jugador real",
+    "telefono": "",
+    "fecha_nacimiento": "",
+    "genero": "",
+    "acepta_condiciones": true,
+    "origen": "QA_TERMINAL7"
+  }
+}

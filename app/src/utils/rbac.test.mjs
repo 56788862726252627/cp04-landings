@@ -7,6 +7,7 @@ import {
   cp04CanAccessSection,
   cp04GetSafeStartSection,
   cp04IsSupportOnlySection,
+  cp04CanEditTournament,
 } from "./rbac.js";
 
 test("PLAYER no puede acceder a flujos_make ni a soporte", () => {
@@ -80,4 +81,48 @@ test("CP04_ROLE_PERMISSIONS: ningún rol de negocio (PLAYER/STAFF/ADMIN) incluye
       assert.equal(CP04_ROLE_PERMISSIONS[role].includes(section), false);
     }
   }
+});
+
+// cp04CanEditTournament — cierre del hallazgo de auditoría "Torneos sin
+// distinción viewer/editor" (audit/multi-tenant-role-wiring/ROLE_CAPABILITY_WIRING_AUDIT.md
+// §2): edición de bracket (añadir/editar/eliminar pareja, formato,
+// reordenar, autoasignar, guardar, publicar, marcar ganador,
+// deshacer/rehacer/restaurar) es operación de STAFF/ADMIN/SUPPORT. PLAYER
+// conserva la sección "torneos" (vista de solo lectura), nunca la capacidad
+// de editar.
+
+test("PLAYER no puede editar el bracket de torneos", () => {
+  assert.equal(cp04CanEditTournament("PLAYER"), false);
+});
+
+test("ADMIN puede editar el bracket de torneos", () => {
+  assert.equal(cp04CanEditTournament("ADMIN"), true);
+});
+
+test("STAFF puede editar el bracket de torneos", () => {
+  assert.equal(cp04CanEditTournament("STAFF"), true);
+});
+
+test("SUPPORT puede editar el bracket de torneos", () => {
+  assert.equal(cp04CanEditTournament("SUPPORT"), true);
+});
+
+test("cp04CanEditTournament: rol desconocido/vacío se deniega (fail-closed a PLAYER, nunca se degrada a un rol más privilegiado)", () => {
+  assert.equal(cp04CanEditTournament("hacker"), false);
+  assert.equal(cp04CanEditTournament(""), false);
+  assert.equal(cp04CanEditTournament(undefined), false);
+  assert.equal(cp04CanEditTournament(null), false);
+});
+
+test("cp04CanEditTournament: insensible a mayúsculas/espacios (misma normalización que el resto del RBAC)", () => {
+  assert.equal(cp04CanEditTournament("  admin  "), true);
+  assert.equal(cp04CanEditTournament("Staff"), true);
+  assert.equal(cp04CanEditTournament("player"), false);
+});
+
+test("CP04_TOURNAMENT_EDITOR_ROLES es exactamente STAFF/ADMIN/SUPPORT, sin PLAYER", () => {
+  for (const role of ["STAFF", "ADMIN", "SUPPORT"]) {
+    assert.equal(cp04CanEditTournament(role), true, `${role} debería poder editar`);
+  }
+  assert.equal(cp04CanEditTournament("PLAYER"), false, "PLAYER no debería poder editar");
 });

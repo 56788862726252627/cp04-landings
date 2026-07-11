@@ -1,0 +1,8 @@
+{
+  "_why": "JSON válido pero estructuralmente inválido para el contrato: 'variables' es un array en vez de un objeto, y falta 'idempotency_key' — additionalProperties/required deben rechazarlo.",
+  "to": "+34600000014",
+  "template_name": "booking_confirmed",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": ["Ana García", "Pista 1"]
+}

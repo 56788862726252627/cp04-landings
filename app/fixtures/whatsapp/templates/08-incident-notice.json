@@ -1,0 +1,10 @@
+{
+  "to": "+34600000008",
+  "template_name": "incident_notice",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "incident_summary": "Pista 3 cerrada por mantenimiento hasta las 18:00."
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:inc_0001:incident_notice"
+}

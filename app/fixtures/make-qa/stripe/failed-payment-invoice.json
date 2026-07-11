@@ -1,0 +1,13 @@
+{
+  "id": "evt_QACP04_failed_20260709A",
+  "object": "event",
+  "type": "invoice.payment_failed",
+  "created": 1799600100,
+  "livemode": false,
+  "data": {
+    "object": {
+      "id": "in_test_qacp04_failed_001",
+      "metadata": { "email": "qa_cp04_stripe_nomatch@invalid.test" }
+    }
+  }
+}

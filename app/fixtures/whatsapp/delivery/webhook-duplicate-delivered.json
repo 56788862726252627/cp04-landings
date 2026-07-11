@@ -1,0 +1,21 @@
+{
+  "_why": "Meta garantiza entrega at-least-once de webhooks — puede reenviar EXACTAMENTE el mismo evento (id, status, timestamp) más de una vez. Ambos payloads son idénticos a propósito: deduplicateDeliveryEvent() debe marcar el segundo como duplicado (misma clave message_id:status), nunca procesarlo dos veces como si fuera una transición nueva.",
+  "first": {
+    "entry": [
+      { "id": "WABA_ID_TEST", "changes": [ { "field": "messages", "value": {
+        "messaging_product": "whatsapp",
+        "metadata": { "display_phone_number": "34900000000", "phone_number_id": "111111111111111" },
+        "statuses": [ { "id": "wamid.TESTMSG0003", "status": "delivered", "timestamp": "1719000200", "recipient_id": "34600000062" } ]
+      } } ] }
+    ]
+  },
+  "resent_by_meta": {
+    "entry": [
+      { "id": "WABA_ID_TEST", "changes": [ { "field": "messages", "value": {
+        "messaging_product": "whatsapp",
+        "metadata": { "display_phone_number": "34900000000", "phone_number_id": "111111111111111" },
+        "statuses": [ { "id": "wamid.TESTMSG0003", "status": "delivered", "timestamp": "1719000200", "recipient_id": "34600000062" } ]
+      } } ] }
+    ]
+  }
+}

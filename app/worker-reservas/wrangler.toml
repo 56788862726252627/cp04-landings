@@ -12,3 +12,8 @@ AIRTABLE_TABLE_ID = "tblBtLjPS3sis28nz"
 # AIRTABLE_TOKEN
 
 AIRTABLE_RESERVAS_TABLE="tblBtLjPS3sis28nz"
+
+[[kv_namespaces]]
+binding = "STRIPE_IDEMPOTENCY_KV"
+id = "5479e1741d0b4567bb4ee075efe21303"
+preview_id = "029b31a07f9f40b8925c5d64e11a9b50"

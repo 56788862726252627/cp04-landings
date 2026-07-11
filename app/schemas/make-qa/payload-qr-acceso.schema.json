@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-qr-acceso.schema.json",
+  "title": "QA-A1 · Payload Generación QR Acceso (6244975)",
+  "description": "Contrato del payload QA-A1-001, ya ejecutado y verificado (PASS_VERIFIED, execution b33719e814894fcdb0d089286a247774). Los patrones QA_CP04_ son obligatorios en record_id y clave_reserva para que el payload-validator.mjs pueda distinguir datos de prueba de datos reales por forma, no solo por intención.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["accion", "record_id", "nombre", "email", "clave_reserva", "fecha_reserva", "hora_inicio", "hora_fin", "pista"],
+  "properties": {
+    "accion": { "type": "string", "enum": ["qa_test_generacion_qr"] },
+    "record_id": { "type": "string", "pattern": "^QA_CP04_" },
+    "nombre": { "type": "string", "pattern": "^QA_CP04" },
+    "email": { "type": "string", "pattern": "^[^@]+@[^@]+\\.[^@]+$" },
+    "clave_reserva": { "type": "string", "pattern": "^QA_CP04_" },
+    "fecha_reserva": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "hora_inicio": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+    "hora_fin": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+    "pista": { "type": "string", "pattern": "^QA_" }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "_why": "language 'fr' no está en SUPPORTED_LANGUAGES — viola el schema (enum cerrado) Y resolveTemplate() debe devolver found:false, reason:'wrong_locale'.",
+  "to": "+34600000012",
+  "template_name": "reminder_24h",
+  "language": "fr",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "player_name": "Pierre Dubois",
+    "court_name": "Pista 2",
+    "date_time": "2026-07-11 09:00"
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:bkg_0012:reminder_24h"
+}

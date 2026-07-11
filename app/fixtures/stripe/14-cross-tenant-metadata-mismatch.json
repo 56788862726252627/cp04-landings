@@ -1,0 +1,20 @@
+{
+  "_why": "metadata.tenant_id coincide con expectedTenantId (a diferencia de 09-wrong-tenant.json), pero metadata.client_id pertenece a OTRO tenant según el registro cliente<->tenant inyectado en el test — simula metadata internamente inconsistente (p.ej. un bug de origen que mezcló client_id de dos tenants en el mismo checkout). checkTenantSafety() debe devolver CROSS_TENANT_METADATA_MISMATCH cuando se le inyecta un isClientOfTenant() que sabe que este client_id no pertenece a este tenant_id — el adapter base (validateEventMetadata/handleWebhookEvent) NO detecta esto porque solo compara tenant_id, nunca client_id contra un registro externo.",
+  "id": "evt_QACP04STRIPE_cross_tenant_mismatch_001",
+  "object": "event",
+  "type": "checkout.session.completed",
+  "created": 1799701200,
+  "livemode": false,
+  "data": {
+    "object": {
+      "id": "cs_test_mock_cross_tenant_0001",
+      "metadata": {
+        "tenant_id": "tnt_qacp04_test",
+        "client_id": "clt_OTRO_cliente_999",
+        "user_id": "usr_qacp04_test",
+        "booking_id": "bkg_qacp04_0010",
+        "payment_reference": "payref_qacp04_0010"
+      }
+    }
+  }
+}

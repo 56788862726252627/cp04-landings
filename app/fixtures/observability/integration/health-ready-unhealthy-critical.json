@@ -1,0 +1,14 @@
+{
+  "description": "Simulación de /api/support/health/ready con Airtable UNHEALTHY (crítico) — el agregado debe salir UNHEALTHY y deriveAlertRecommendation debe dar P0.",
+  "input": {
+    "service": "worker",
+    "checks": [
+      { "name": "process_alive", "passed": true, "message": null }
+    ],
+    "dependencies": [
+      { "name": "supabase-auth", "status": "HEALTHY", "latency_ms": 110, "error_code": null, "last_success_at": "2026-07-09T08:59:00.000Z", "retryable": false },
+      { "name": "airtable", "status": "UNHEALTHY", "latency_ms": null, "error_code": "AIRTABLE_MONTHLY_QUOTA.EXHAUSTED", "last_success_at": "2026-07-09T07:00:00.000Z", "retryable": false }
+    ],
+    "latencyMs": 30
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "_comment": "Alias de fixtures ya existentes en fixtures/tenant-config/ y config/tenant-registry.example.valid.json — no se duplica el client-config completo, solo se fija el mapeo hostname->tenantId->alias que usan los escenarios del harness.",
+  "cp04": {
+    "tenantId": "cp04",
+    "alias": "cp04",
+    "hostname": "unknown-host.example",
+    "note": "hostname sin match en el registry cae al fallback cp04 (mismo comportamiento que localhost/preview real, ver main.jsx y authService.tenantIsolation.test.mjs)"
+  },
+  "club02": {
+    "tenantId": "fixture-club-02",
+    "alias": "club02",
+    "hostname": "club-deportivo-fixture-dos.pages.dev",
+    "note": "coincide con config/tenant-registry.example.valid.json y fixtures/tenant-config/valid-second-club-fixture.client-config.json"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Petición simulada sin cabeceras de correlación — el Worker debe GENERAR request_id (nunca null) y dejar correlation_id en null salvo que sea el punto de entrada de un flujo de negocio.",
+  "headers": {},
+  "method": "GET",
+  "path": "/api/disponibilidad"
+}

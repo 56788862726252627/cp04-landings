@@ -1,0 +1,20 @@
+{
+  "_why": "checkout.session.expired — el pagador nunca completó el pago dentro del plazo. Debe mapear a PAYMENT_STATUS.EXPIRED, no a un fallo de pago (son negocios distintos: uno nunca intentó pagar, el otro lo intentó y falló).",
+  "id": "evt_QACP04STRIPE_checkout_expired_001",
+  "object": "event",
+  "type": "checkout.session.expired",
+  "created": 1799700100,
+  "livemode": false,
+  "data": {
+    "object": {
+      "id": "cs_test_mock_tnt_qacp04_test_bkg_qacp04_0002_1",
+      "metadata": {
+        "tenant_id": "tnt_qacp04_test",
+        "client_id": "clt_qacp04_test",
+        "user_id": "usr_qacp04_test",
+        "booking_id": "bkg_qacp04_0002",
+        "payment_reference": "payref_qacp04_0002"
+      }
+    }
+  }
+}

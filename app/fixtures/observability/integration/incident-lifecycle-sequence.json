@@ -1,0 +1,10 @@
+{
+  "description": "Secuencia realista de eventos ya validados (mismo shape que log-event.schema.json) para el mismo fingerprint airtable|AIRTABLE_RATE_LIMIT.EXCEEDED, usada en el test end-to-end dedup -> suppression -> incident-engine: OPEN (12:00) -> ESCALATED (13:05, >1h sin resolver) -> RESOLVED (13:25, tras ventana de recuperación sin nuevas ocurrencias).",
+  "occurrences_batch_1": [
+    { "service": "airtable", "error_code": "AIRTABLE_RATE_LIMIT.EXCEEDED", "timestamp": "2026-07-09T12:00:00.000Z", "correlation_id": "corr_lifecycle-0001" },
+    { "service": "airtable", "error_code": "AIRTABLE_RATE_LIMIT.EXCEEDED", "timestamp": "2026-07-09T12:02:00.000Z", "correlation_id": "corr_lifecycle-0002" },
+    { "service": "airtable", "error_code": "AIRTABLE_RATE_LIMIT.EXCEEDED", "timestamp": "2026-07-09T12:04:00.000Z", "correlation_id": "corr_lifecycle-0003" }
+  ],
+  "check_at_ms": "2026-07-09T13:05:00.000Z",
+  "recovery_check_at_ms": "2026-07-09T13:25:00.000Z"
+}

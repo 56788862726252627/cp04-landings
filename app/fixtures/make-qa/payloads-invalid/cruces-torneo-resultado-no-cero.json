@@ -1,0 +1,8 @@
+{
+  "_why_invalid": "resultado_equipo1/2 distinto de 0 — un resultado real nunca debe poder colarse en un payload QA de la rama no-match",
+  "payload": {
+    "partido_id": "QA_CP04_A4_NOMATCH",
+    "resultado_equipo1": 6,
+    "resultado_equipo2": 3
+  }
+}

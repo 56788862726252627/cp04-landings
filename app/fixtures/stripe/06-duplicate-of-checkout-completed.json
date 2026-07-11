@@ -1,0 +1,20 @@
+{
+  "_why": "Mismo id de evento que 01-checkout-session-completed.json (evt_QACP04STRIPE_checkout_completed_001) — simula un reintento de entrega de Stripe (Stripe reenvía el webhook si no recibe 2xx a tiempo). Debe detectarse como duplicado por StripeEventDedupStore/duplicateEventProtection, nunca reprocesarse.",
+  "id": "evt_QACP04STRIPE_checkout_completed_001",
+  "object": "event",
+  "type": "checkout.session.completed",
+  "created": 1799700000,
+  "livemode": false,
+  "data": {
+    "object": {
+      "id": "cs_test_mock_tnt_qacp04_test_bkg_qacp04_0001_1",
+      "metadata": {
+        "tenant_id": "tnt_qacp04_test",
+        "client_id": "clt_qacp04_test",
+        "user_id": "usr_qacp04_test",
+        "booking_id": "bkg_qacp04_0001",
+        "payment_reference": "payref_qacp04_0001"
+      }
+    }
+  }
+}

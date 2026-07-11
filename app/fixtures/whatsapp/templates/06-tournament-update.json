@@ -1,0 +1,12 @@
+{
+  "_why": "category MARKETING (torneo) — a diferencia de los demás fixtures (UTILITY), este requiere opt-in vigente sin excepción antes de enviarse; nunca se envía solo por tener una reserva activa.",
+  "to": "+34600000006",
+  "template_name": "tournament_update",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "tournament_name": "Torneo Verano CP04",
+    "update_message": "Los cuadros ya están publicados en el tablón del club."
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:trn_0001:tournament_update"
+}

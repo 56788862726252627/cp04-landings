@@ -1,0 +1,5 @@
+{
+  "_why": "Un timeout/fallo de red real no produce ninguna respuesta JSON que clasificar por código — se simula en tests/whatsapp/adapter.test.mjs con un providerSend que lanza (throw new Error('ETIMEDOUT'))). callProvider() en whatsapp-adapter.mock.js debe capturarlo y devolver retryable:true, category:'network_failure', errorCode:null (nunca dejar que la excepción se propague sin controlar).",
+  "simulated_error_message": "ETIMEDOUT: connect timed out contacting graph.facebook.com",
+  "expected_classification": { "retryable": true, "category": "network_failure", "errorCode": null }
+}

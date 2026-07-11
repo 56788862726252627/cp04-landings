@@ -1,0 +1,16 @@
+{
+  "description": "Simulación de /api/support/health/ready con Airtable DEGRADED (rate-limit intermitente) pero Worker/Auth/Make sanos — el agregado debe salir DEGRADED, nunca HEALTHY ni UNHEALTHY.",
+  "input": {
+    "service": "worker",
+    "checks": [
+      { "name": "process_alive", "passed": true, "message": null },
+      { "name": "env_vars_present", "passed": true, "message": null }
+    ],
+    "dependencies": [
+      { "name": "supabase-auth", "status": "HEALTHY", "latency_ms": 120, "error_code": null, "last_success_at": "2026-07-09T08:59:00.000Z", "retryable": false },
+      { "name": "airtable", "status": "DEGRADED", "latency_ms": 900, "error_code": "AIRTABLE_RATE_LIMIT.EXCEEDED", "last_success_at": "2026-07-09T08:55:00.000Z", "retryable": true },
+      { "name": "make", "status": "HEALTHY", "latency_ms": 300, "error_code": null, "last_success_at": "2026-07-09T08:59:30.000Z", "retryable": false }
+    ],
+    "latencyMs": 45
+  }
+}

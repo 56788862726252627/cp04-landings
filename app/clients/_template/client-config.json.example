@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientId": "00000000-0000-4000-8000-000000000000",
+  "tenantId": "nombre-cliente-ejemplo",
+  "slug": "nombre-cliente-ejemplo",
+  "brand": {
+    "name": "NOMBRE_COMERCIAL_DEL_CLIENTE",
+    "legalName": null,
+    "logo": null,
+    "favicon": null,
+    "images": []
+  },
+  "locale": { "language": "es-ES", "currency": "EUR" },
+  "timezone": "Europe/Madrid",
+  "roles": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+  "features": {
+    "reservas": true,
+    "cancelaciones": true,
+    "reprogramaciones": true,
+    "listaEspera": false,
+    "torneos": false,
+    "ranking": false,
+    "emparejamientos": false,
+    "crm": false,
+    "nps": false,
+    "noShow": false,
+    "referidos": false,
+    "membresias": false,
+    "pagos": false,
+    "qr": false,
+    "promociones": false,
+    "ia": false,
+    "soporte": true,
+    "dashboards": true,
+    "automatizaciones": false,
+    "campanas": false,
+    "notificaciones": true,
+    "whatsapp": false
+  },
+  "integrations": {
+    "automation": { "provider": "make", "enabled": false, "webhookRef": null },
+    "data": { "provider": "airtable", "enabled": false, "baseIdRef": null, "tablesRef": {} },
+    "payments": { "provider": "none", "enabled": false },
+    "messaging": { "provider": "none", "enabled": false },
+    "ai": { "provider": "none", "enabled": false }
+  },
+  "plan": {
+    "name": "starter",
+    "limits": { "bookingsPerMonth": null, "users": null, "storageMB": null }
+  },
+  "domains": { "primary": null, "subdomain": "nombre-cliente-ejemplo.example" },
+  "contact": { "email": "contacto@nombre-cliente-ejemplo.example", "phone": null, "address": null },
+  "support": { "level": "basico", "channel": null },
+  "deploymentProfile": "development"
+}

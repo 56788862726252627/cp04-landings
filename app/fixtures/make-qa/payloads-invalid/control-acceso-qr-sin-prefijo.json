@@ -1,0 +1,6 @@
+{
+  "_why_invalid": "clave_reserva sin prefijo QA_CP04_ — riesgo de colisión con una reserva real",
+  "payload": {
+    "clave_reserva": "RES_20260708A3"
+  }
+}

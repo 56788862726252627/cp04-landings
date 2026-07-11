@@ -1,0 +1,6 @@
+{
+  "_why": "Número en SuppressionList (bloqueo administrativo), NO en la lista de opt-out del propio usuario — validateRecipient() debe rechazarlo con reason que empieza por 'blocked_recipient:' incluso si tuviera opt-in vigente.",
+  "phone": "+34600000021",
+  "reason": "queja_reiterada_spam_reportado",
+  "at": "2026-07-09T09:00:00.000Z"
+}

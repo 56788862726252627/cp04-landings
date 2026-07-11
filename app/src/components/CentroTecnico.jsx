@@ -253,12 +253,12 @@ export default function CentroTecnico({ selectedRole }) {
   const filtrados = sortScenarios(filterScenarios(enriched, { filtro, busqueda }), orden);
 
   return (
-    <section style={{ padding: "clamp(18px,3vw,42px) 24px", maxWidth: 1280, margin: "0 auto" }}>
+    <section aria-labelledby="cp04-centro-tecnico-heading" style={{ padding: "clamp(18px,3vw,42px) 24px", maxWidth: 1280, margin: "0 auto" }}>
       <div style={{ marginBottom: 22 }}>
         <div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".14em", fontSize: ".78rem", textTransform: "uppercase", marginBottom: 8 }}>
           Centro Técnico · Solo SUPPORT
         </div>
-        <h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.8rem,3.4vw,2.6rem)", margin: "0 0 8px", letterSpacing: "-.03em" }}>
+        <h2 id="cp04-centro-tecnico-heading" style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.8rem,3.4vw,2.6rem)", margin: "0 0 8px", letterSpacing: "-.03em" }}>
           Observabilidad de automatizaciones
         </h2>
         <p style={{ color: T.textDim, maxWidth: 720, lineHeight: 1.6 }}>
@@ -268,8 +268,8 @@ export default function CentroTecnico({ selectedRole }) {
 
       {/* Indicador de frescura de datos del inventario de Make — independiente del estado de Airtable */}
       <div
-        role="status"
-        aria-live="polite"
+        role={effectiveSource === "unavailable" ? "alert" : "status"}
+        aria-live={effectiveSource === "unavailable" ? "assertive" : "polite"}
         style={{
           display: "flex",
           gap: 14,
@@ -303,8 +303,10 @@ export default function CentroTecnico({ selectedRole }) {
           type="button"
           onClick={loadLive}
           disabled={loadingLive}
+          aria-busy={loadingLive}
           style={{
             padding: "8px 16px",
+            minHeight: 36,
             borderRadius: 10,
             border: `1px solid ${T.accent}66`,
             background: loadingLive ? "transparent" : `${T.accent}18`,
@@ -321,6 +323,8 @@ export default function CentroTecnico({ selectedRole }) {
 
       {/* FASE 6 — banner de dependencia externa degradada */}
       <div
+        role="alert"
+        aria-live="assertive"
         style={{
           border: `1px solid ${T.warning}66`,
           background: `${T.warning}14`,
@@ -470,6 +474,7 @@ export default function CentroTecnico({ selectedRole }) {
               onClick={() => setFiltro(f.id)}
               style={{
                 padding: "6px 14px",
+                minHeight: 36,
                 borderRadius: 999,
                 border: `1px solid ${filtro === f.id ? T.accent : T.line}`,
                 background: filtro === f.id ? `${T.accent}18` : "transparent",
@@ -520,7 +525,7 @@ export default function CentroTecnico({ selectedRole }) {
                 <span style={{ color: T.textDim, fontSize: ".78rem", whiteSpace: "nowrap" }}>{formatMetric(s.ejecuciones)} ejec.</span>
               </div>
             ))}
-            {filtrados.length === 0 && <div style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>Sin resultados para este filtro/búsqueda.</div>}
+            {filtrados.length === 0 && <div role="status" aria-live="polite" style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>Sin resultados para este filtro/búsqueda.</div>}
           </div>
         </div>
 

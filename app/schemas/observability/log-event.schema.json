@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/observability/log-event.schema.json",
+  "title": "CP04 Observability Log Event",
+  "description": "Contrato validable del evento de log operativo de Club Pádel 04 / futura Agencia multi-cliente. Formaliza audit/observability/02_LOGGING_STANDARD.md y 04_CORRELATION_ID_STANDARD.md. Ver audit/observability/11_EVENT_CONTRACT.md para el mapeo de nombres de campo respecto al diseño original (severity→level, latency_ms→duration_ms, result→status, context→metadata) y las reglas de negocio que este JSON Schema NO puede expresar por sí solo (aplicadas en scripts/observability/validate-log-event.mjs).",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "timestamp",
+    "level",
+    "service",
+    "environment",
+    "event_type",
+    "message",
+    "request_id",
+    "correlation_id",
+    "client_id",
+    "tenant_id",
+    "scenario_id",
+    "execution_id",
+    "user_id_hash",
+    "error_code",
+    "duration_ms",
+    "status",
+    "metadata"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Opcional. Si se omite, el consumidor asume '1.0.0' (versión actual de este contrato)."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC con milisegundos y sufijo Z. Nunca hora local sin zona — ver 04_CORRELATION_ID_STANDARD.md §10 (precedente real del bug de fecha 1970 en Centro Técnico)."
+    },
+    "level": {
+      "type": "string",
+      "enum": ["debug", "info", "warn", "error", "critical"],
+      "description": "Severidad de LOG (técnica), distinta de la severidad de INCIDENTE (P0-P3, ver 06_ALERTING_MATRIX.md)."
+    },
+    "service": {
+      "type": "string",
+      "enum": ["frontend", "worker", "make", "airtable", "supabase-auth", "gmail", "google-calendar", "stripe", "whatsapp", "ia"],
+      "description": "stripe/whatsapp/ia son namespaces reservados — sin integración real hoy (ver 01_AGENCY_COMMERCIAL_STRATEGY.md §1.3-1.4)."
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["production", "staging", "development", "test"]
+    },
+    "event_type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+      "minLength": 3,
+      "maxLength": 64,
+      "description": "snake_case, extensible por diseño (no es un enum cerrado). Ejemplos: http_request, auth_login_attempt, make_webhook_call, health_check, scenario_execution, email_send."
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Descripción legible, sin datos sensibles. maxLength deliberadamente bajo para desincentivar volcar un payload completo aquí — para eso está metadata, con su propio límite y escaneo de secretos."
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^req_[A-Za-z0-9-]{8,}$",
+      "description": "Identifica una única petición HTTP. Ver 04_CORRELATION_ID_STANDARD.md §1."
+    },
+    "correlation_id": {
+      "type": ["string", "null"],
+      "pattern": "^corr_[A-Za-z0-9-]{8,}$",
+      "description": "Identifica un flujo de negocio completo multi-sistema (ver 04 §2). null si el evento no pertenece a un flujo correlacionable (ej. un health check aislado)."
+    },
+    "client_id": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z0-9]([a-z0-9-]{1,62}[a-z0-9])?$",
+      "description": "Hoy constante 'club-padel-04' en casi todos los eventos de negocio (mono-cliente, ver 04 §3). null permitido para eventos de infraestructura sin cliente asociado (ej. arranque del Worker)."
+    },
+    "tenant_id": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z0-9]([a-z0-9-]{1,62}[a-z0-9])?$",
+      "description": "Reservado — decisión de arquitectura multi-cliente pendiente, fuera de esta terminal (ver 04 §3). Se espera null en la práctica hasta que exista esa arquitectura."
+    },
+    "scenario_id": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{1,10}$",
+      "description": "ID numérico real de Make (ej. '5697630'). null si service ≠ 'make' o no aplica."
+    },
+    "execution_id": {
+      "type": ["string", "null"],
+      "description": "Reservado — no expuesto hoy por el endpoint de Make usado por la app (ver 04 §6). Se espera null en todos los eventos reales hasta que exista esa fuente."
+    },
+    "user_id_hash": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{16}$",
+      "description": "SHA-256 truncado a 16 hex del UUID de usuario de Supabase. El contrato NUNCA acepta el UUID crudo en este campo (endurece la política de doble nivel de 04 §4: aquí siempre se hashea, sin excepción de 'infraestructura propia')."
+    },
+    "error_code": {
+      "type": ["string", "null"],
+      "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$",
+      "description": "Formato CATEGORIA.CODIGO. Debe existir en schemas/observability/error-taxonomy.json. Regla de negocio (no expresable en JSON Schema puro): obligatorio no-null cuando level ∈ {warn, error, critical} — aplicada en validate-log-event.mjs."
+    },
+    "duration_ms": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 300000,
+      "description": "Duración medida en el punto de generación del log. Tope de 300000 ms (5 min) como guarda de cordura, no como límite de negocio."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["success", "failure", "partial", "degraded", "unknown"],
+      "description": "'unknown' es obligatorio cuando no se pudo verificar el resultado real — nunca colapsar a 'success' por omisión (mismo principio que rawMetric()/SIN_DATOS del Centro Técnico)."
+    },
+    "metadata": {
+      "type": ["object", "null"],
+      "description": "Contexto adicional no sensible. additionalProperties permitido a nivel de JSON Schema (es deliberadamente flexible), pero DEBE pasar el escaneo de patrones prohibidos de validate-log-event.mjs (contraseñas, tokens, cookies, Authorization, API keys, secrets) y no debe serializar a más de 4000 caracteres (guarda contra volcar un payload completo)."
+    }
+  }
+}

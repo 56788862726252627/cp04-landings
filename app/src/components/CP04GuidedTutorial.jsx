@@ -373,6 +373,16 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
     return () => clearTimeout(timerRef.current);
   }, [step, visible]); // eslint-disable-line
 
+  /* Cerrar con Escape, igual que "Saltar" */
+  useEffect(() => {
+    if (!visible) return undefined;
+    function onKeyDown(event) {
+      if (event.key === "Escape") close(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [visible]); // eslint-disable-line
+
   function close(markSeen) {
     if (markSeen) {
       try { localStorage.setItem(storageKey(selectedRole), "1"); } catch {}

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { evaluateSlotAvailability, AVAILABILITY_STATUS, AVAILABILITY_REASON } from "./availability.js";
+import { evaluateSlotAvailability, hasBookingOverlap, AVAILABILITY_STATUS, AVAILABILITY_REASON } from "./availability.js";
 
 // Cierre 23:00, apertura discreta (con hueco de mediodía, como en el
 // proyecto real: BOOKING_HOURS deja fuera 13:00-16:00), duraciones válidas
@@ -141,4 +141,30 @@ test("extra: fecha de un día anterior a hoy -> unavailable/past_time", () => {
   const result = evaluate({ date: "2026-07-01", startTime: "20:00" });
   assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
   assert.equal(result.reason, AVAILABILITY_REASON.PAST_TIME);
+});
+
+const workerAvailability = {
+  ocupadas_detalle: [{ pista: "Pista 1", fecha: "2026-07-13", hora_inicio: "10:00", hora_fin: "11:30" }],
+};
+
+for (const durationMinutes of [60, 90, 120]) {
+  test(`precheck envío: solicitud de ${durationMinutes} min detecta solapamiento parcial real`, () => {
+    assert.equal(hasBookingOverlap({
+      data: workerAvailability,
+      date: "2026-07-13",
+      startTime: "11:00",
+      durationMinutes,
+      courtId: "Pista 1",
+    }), true);
+  });
+}
+
+test("precheck envío: reserva contigua al final del intervalo es válida", () => {
+  assert.equal(hasBookingOverlap({
+    data: workerAvailability,
+    date: "2026-07-13",
+    startTime: "11:30",
+    durationMinutes: 60,
+    courtId: "Pista 1",
+  }), false);
 });
