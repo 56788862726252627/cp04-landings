@@ -1332,11 +1332,15 @@ const DEMO_KPI = {
   torneosActivos: 2,
   ingresosMes: 4820,
   alertasCriticas: 0,
-  incidenciasAbiertas: 1,
-  makeActivos: 38,
-  makeErrores: 2,
-  makePausados: 3,
-  tasaExitoMake: 97.4,
+  // Alcance funcional/operativo preparado en la app (no una validación en
+  // producción de un proveedor externo) — ver home.sistema_preparado. 0 en
+  // incidencias/pausados a propósito: evita un aviso "X incidencias" que
+  // contradiga la tarjeta "50/50" que se muestra junto a él.
+  incidenciasAbiertas: 0,
+  makeActivos: 50,
+  makeErrores: 0,
+  makePausados: 0,
+  tasaExitoMake: 100,
   ultimoBackup: "Lun 07:00",
   qrGenerados: 24,
   exportaciones: 7,
@@ -1593,7 +1597,7 @@ const TRANSLATIONS = {
     "role.ADMIN.label":"Administrador / jefe","role.ADMIN.desc":"Panel de dirección, métricas y control operativo.",
     "role.SUPPORT.label":"Soporte técnico","role.SUPPORT.desc":"Zona técnica, integraciones y diagnóstico interno.",
     "home.reservas_hoy":"Reservas hoy","home.ocupacion_media":"Ocupación media",
-    "home.socios_activos":"Socios activos","home.procesos_activos":"Procesos activos",
+    "home.socios_activos":"Socios activos","home.procesos_activos":"Procesos activos","home.sistema_preparado":"Sistema preparado",
     "home.ingresos_mes":"Ingresos mes","home.torneos_activos":"Torneos activos",
     "home.estado_operativo":"Estado operativo","home.reservar":"Reservar",
     "home.torneo":"Torneo","home.alta":"Alta","home.procesos":"Procesos",
@@ -1795,7 +1799,7 @@ const TRANSLATIONS = {
     "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Management panel, metrics and operational control.",
     "role.SUPPORT.label":"Technical support","role.SUPPORT.desc":"Technical zone, integrations and internal diagnostics.",
     "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
-    "home.socios_activos":"Active members","home.procesos_activos":"Active processes",
+    "home.socios_activos":"Active members","home.procesos_activos":"Active processes","home.sistema_preparado":"System ready",
     "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
     "home.estado_operativo":"Operational status","home.reservar":"Book",
     "home.torneo":"Tournament","home.alta":"Sign up","home.procesos":"Processes",
@@ -1997,7 +2001,7 @@ const TRANSLATIONS = {
     "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Dashboard, metrics and operational control.",
     "role.SUPPORT.label":"Technical support","role.SUPPORT.desc":"Technical zone, integrations and internal diagnostics.",
     "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
-    "home.socios_activos":"Active members","home.procesos_activos":"Active processes",
+    "home.socios_activos":"Active members","home.procesos_activos":"Active processes","home.sistema_preparado":"System ready",
     "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
     "home.estado_operativo":"System status","home.reservar":"Book",
     "home.torneo":"Tournament","home.alta":"Register","home.procesos":"Processes",
@@ -2199,7 +2203,7 @@ const TRANSLATIONS = {
     "role.ADMIN.label":"Administrateur","role.ADMIN.desc":"Tableau de bord, métriques et contrôle opérationnel.",
     "role.SUPPORT.label":"Support technique","role.SUPPORT.desc":"Zone technique, intégrations et diagnostics internes.",
     "home.reservas_hoy":"Réservations auj.","home.ocupacion_media":"Occupation moy.",
-    "home.socios_activos":"Membres actifs","home.procesos_activos":"Processus actifs",
+    "home.socios_activos":"Membres actifs","home.procesos_activos":"Processus actifs","home.sistema_preparado":"Système prêt",
     "home.ingresos_mes":"Revenus du mois","home.torneos_activos":"Tournois actifs",
     "home.estado_operativo":"État opérationnel","home.reservar":"Réserver",
     "home.torneo":"Tournoi","home.alta":"Inscription","home.procesos":"Processus",
@@ -2397,7 +2401,7 @@ const TRANSLATIONS = {
     "role.ADMIN.label":"Amministratore","role.ADMIN.desc":"Pannello di gestione, metriche e controllo operativo.",
     "role.SUPPORT.label":"Supporto tecnico","role.SUPPORT.desc":"Zona tecnica, integrazioni e diagnostica interna.",
     "home.reservas_hoy":"Prenotazioni oggi","home.ocupacion_media":"Occupazione media",
-    "home.socios_activos":"Soci attivi","home.procesos_activos":"Processi attivi",
+    "home.socios_activos":"Soci attivi","home.procesos_activos":"Processi attivi","home.sistema_preparado":"Sistema pronto",
     "home.ingresos_mes":"Entrate mensili","home.torneos_activos":"Tornei attivi",
     "home.estado_operativo":"Stato operativo","home.reservar":"Prenota",
     "home.torneo":"Torneo","home.alta":"Iscrizione","home.procesos":"Processi",
@@ -2595,7 +2599,7 @@ const TRANSLATIONS = {
     "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controlo operacional.",
     "role.SUPPORT.label":"Suporte técnico","role.SUPPORT.desc":"Zona técnica, integrações e diagnóstico interno.",
     "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
-    "home.socios_activos":"Sócios ativos","home.procesos_activos":"Processos ativos",
+    "home.socios_activos":"Sócios ativos","home.procesos_activos":"Processos ativos","home.sistema_preparado":"Sistema preparado",
     "home.ingresos_mes":"Receitas do mês","home.torneos_activos":"Torneios ativos",
     "home.estado_operativo":"Estado operacional","home.reservar":"Reservar",
     "home.torneo":"Torneio","home.alta":"Registo","home.procesos":"Processos",
@@ -2793,7 +2797,7 @@ const TRANSLATIONS = {
     "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controle operacional.",
     "role.SUPPORT.label":"Suporte técnico","role.SUPPORT.desc":"Zona técnica, integrações e diagnóstico interno.",
     "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
-    "home.socios_activos":"Sócios ativos","home.procesos_activos":"Processos ativos",
+    "home.socios_activos":"Sócios ativos","home.procesos_activos":"Processos ativos","home.sistema_preparado":"Sistema preparado",
     "home.ingresos_mes":"Receita do mês","home.torneos_activos":"Torneios ativos",
     "home.estado_operativo":"Status operacional","home.reservar":"Reservar",
     "home.torneo":"Torneio","home.alta":"Cadastro","home.procesos":"Processos",
@@ -2991,7 +2995,7 @@ const TRANSLATIONS = {
     "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Verwaltungspanel, Metriken und Betriebskontrolle.",
     "role.SUPPORT.label":"Technischer Support","role.SUPPORT.desc":"Technische Zone, Integrationen und interne Diagnose.",
     "home.reservas_hoy":"Buchungen heute","home.ocupacion_media":"Durchschn. Auslastung",
-    "home.socios_activos":"Aktive Mitglieder","home.procesos_activos":"Aktive Prozesse",
+    "home.socios_activos":"Aktive Mitglieder","home.procesos_activos":"Aktive Prozesse","home.sistema_preparado":"System bereit",
     "home.ingresos_mes":"Monatseinnahmen","home.torneos_activos":"Aktive Turniere",
     "home.estado_operativo":"Betriebsstatus","home.reservar":"Buchen",
     "home.torneo":"Turnier","home.alta":"Registrierung","home.procesos":"Prozesse",
@@ -3614,7 +3618,7 @@ function Inicio({ navigate, selectedRole }) {
         <MetricCard label={tx("home.reservas_hoy")} value={kpi.reservasHoy} sub={`vs 10 ${tx("home.vs_ayer")}`} trend={20} icon="🎾" />
         <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
         <MetricCard label={tx("home.socios_activos")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
-        <MetricCard label={tx("home.procesos_activos")} value={`${kpi.makeActivos}/43`} sub={`${kpi.makeErrores} ${kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
+        <MetricCard label={tx("home.procesos_activos")} value={`${kpi.makeActivos}/50`} sub={tx("home.sistema_preparado")} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
         <MetricCard label={tx("home.ingresos_mes")} value={`${kpi.ingresosMes}€`} sub={tx("home.estimacion_mensual")} trend={12} color="#34d399" icon="💶" />
         <MetricCard label={tx("home.torneos_activos")} value={kpi.torneosActivos} sub={tx("home.en_curso")} trend={null} color={T.warning} icon="🏆" />
       </div>
@@ -3635,7 +3639,7 @@ function Inicio({ navigate, selectedRole }) {
         <ChartCard title={tx("home.ocupacion_pista")} sub={tx("home.porcentaje_uso")}>
           <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} unit="%" />
         </ChartCard>
-        <ChartCard title={tx("home.estado_procesos")} sub={`43 ${tx("home.procesos_conectados")}`}>
+        <ChartCard title={tx("home.estado_procesos")} sub={`50 ${tx("home.procesos_conectados")}`}>
           <DonutChart size={100} label="Sistema" segments={[
             { l: tx("home.activos"),      v: kpi.makeActivos,  c: T.accent },
             { l: tx("home.pausados"),     v: kpi.makePausados, c: T.warning },
@@ -6288,7 +6292,7 @@ function Admin() {
         <MetricCard label={tx("admin.reservas_mes")} value="268" sub={`vs 241 ${tx("admin.vs_mes_anterior")}`} trend={11} icon="🎾" />
         <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
         <MetricCard label={tx("admin.socios")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
-        <MetricCard label={tx("admin.procesos")} value={`${kpi.makeActivos}/43`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
+        <MetricCard label={tx("admin.procesos")} value={`${kpi.makeActivos}/50`} sub={tx("home.sistema_preparado")} trend={null} color={T.accent} icon="⚡" />
         <MetricCard label={tx("admin.backup")} value={kpi.ultimoBackup} sub={tx("admin.prox_lunes")} trend={null} color="#34d399" icon="💾" />
       </div>
 
@@ -7546,7 +7550,31 @@ export default function ClubPadel04SaaSApp() {
               </div>
           <Notice tone="error">{loginError}</Notice>
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
-            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
+            {/* Mismo tratamiento visual que el botón primario premium del
+                resto de la app (Btn variant="primary": degradado
+                accent→accent2 + sombra de brillo + sin borde), en vez de un
+                relleno plano sin `border` explícito — ese hueco dejaba el
+                borde por defecto del navegador visible por debajo del color
+                de acento, dando un aspecto apagado/desactivado aunque el
+                botón estuviera activo. disabled solo mientras falten email
+                o contraseña (afordance real de "aún no puedes enviar"), con
+                la misma opacidad .55 que ya usa Btn para su estado disabled
+                — nunca un negro/gris que parezca roto. */}
+            <button
+              type="submit"
+              className="cp04-menu-button"
+              disabled={!loginEmail.trim() || !loginPassword.trim()}
+              style={{
+                width: "auto",
+                border: "none",
+                background: `linear-gradient(135deg, ${T.accent}, ${T.accent2})`,
+                color: "#06100a",
+                fontWeight: 900,
+                boxShadow: "0 16px 36px rgba(182,255,0,.18)",
+                opacity: (!loginEmail.trim() || !loginPassword.trim()) ? 0.55 : 1,
+                cursor: (!loginEmail.trim() || !loginPassword.trim()) ? "not-allowed" : "pointer",
+              }}
+            >
               Iniciar sesión
             </button>
 

@@ -90,3 +90,81 @@ test("privacidad: el texto nuevo de Notice/EmptyState no introduce jerga técnic
   assert.doesNotMatch("No se encontraron reservas", BANNED_TERMS_REGEX);
   assert.doesNotMatch("No hay registros que coincidan con los filtros seleccionados.", BANNED_TERMS_REGEX);
 });
+
+// --- Revisión visual manual en navegador (2026-07-12) ---------------------
+// Dos hallazgos concretos de una revisión visual real: el botón "Iniciar
+// sesión" no encajaba con el resto de botones premium verde/neón de la app,
+// y la tarjeta de "Procesos activos" mostraba "38/43" con un texto
+// secundario de "incidencias" — mismo criterio que el resto de este
+// archivo: inspección de código fuente (el repo no tiene jsdom/testing-library).
+
+test("el botón \"Iniciar sesión\" usa el mismo degradado premium accent→accent2 que Btn variant=\"primary\", no un relleno plano sin border", () => {
+  const start = appJsxSource.indexOf("Iniciar sesión");
+  const body = appJsxSource.slice(Math.max(0, start - 700), start);
+  assert.match(body, /background: `linear-gradient\(135deg, \$\{T\.accent\}, \$\{T\.accent2\}\)`/);
+  assert.match(body, /boxShadow: "0 16px 36px rgba\(182,255,0,\.18\)"/);
+  assert.match(body, /border: "none"/);
+});
+
+test("el botón \"Iniciar sesión\" se deshabilita solo mientras falten email o contraseña, con opacidad .55 (no un negro/gris que parezca roto)", () => {
+  const start = appJsxSource.indexOf("Iniciar sesión");
+  const body = appJsxSource.slice(Math.max(0, start - 700), start);
+  assert.match(body, /disabled=\{!loginEmail\.trim\(\) \|\| !loginPassword\.trim\(\)\}/);
+  assert.match(body, /opacity: \(!loginEmail\.trim\(\) \|\| !loginPassword\.trim\(\)\) \? 0\.55 : 1/);
+});
+
+test("el botón \"Iniciar sesión\" sigue usando la clase cp04-menu-button (hereda hover/focus-visible ya definidos globalmente, no se duplica ese CSS)", () => {
+  const start = appJsxSource.indexOf("Iniciar sesión");
+  const body = appJsxSource.slice(Math.max(0, start - 700), start);
+  assert.match(body, /className="cp04-menu-button"/);
+});
+
+test("la tarjeta de procesos activos muestra 50/50 en Inicio y en Admin, ya no 38/43", () => {
+  assert.doesNotMatch(appJsxSource, /\/43/);
+  assert.doesNotMatch(appJsxSource, /\bmakeActivos: 38\b/);
+  const homeCard = appJsxSource.match(/<MetricCard label=\{tx\("home\.procesos_activos"\)\}.*?\/>/);
+  assert.ok(homeCard, "no se encontró la tarjeta de procesos activos de Inicio");
+  assert.match(homeCard[0], /value=\{`\$\{kpi\.makeActivos\}\/50`\}/);
+
+  const adminCard = appJsxSource.match(/<MetricCard label=\{tx\("admin\.procesos"\)\}.*?\/>/);
+  assert.ok(adminCard, "no se encontró la tarjeta de procesos de Admin");
+  assert.match(adminCard[0], /value=\{`\$\{kpi\.makeActivos\}\/50`\}/);
+});
+
+test("el texto secundario de la tarjeta de procesos ya no dice \"X incidencias\" (contradictorio con 50/50): usa home.sistema_preparado", () => {
+  const homeCard = appJsxSource.match(/<MetricCard label=\{tx\("home\.procesos_activos"\)\}.*?\/>/)[0];
+  assert.match(homeCard, /sub=\{tx\("home\.sistema_preparado"\)\}/);
+  assert.doesNotMatch(homeCard, /kpi\.makeErrores/);
+
+  const adminCard = appJsxSource.match(/<MetricCard label=\{tx\("admin\.procesos"\)\}.*?\/>/)[0];
+  assert.match(adminCard, /sub=\{tx\("home\.sistema_preparado"\)\}/);
+  assert.doesNotMatch(adminCard, /kpi\.tasaExitoMake/);
+});
+
+test("DEMO_KPI ya no contradice \"50/50\": makeErrores/makePausados/incidenciasAbiertas en 0 (nunca se afirma verificación real, solo alcance preparado)", () => {
+  const start = appJsxSource.indexOf("const DEMO_KPI = {");
+  const end = appJsxSource.indexOf("};", start);
+  const block = appJsxSource.slice(start, end);
+  assert.match(block, /makeActivos: 50,/);
+  assert.match(block, /makeErrores: 0,/);
+  assert.match(block, /makePausados: 0,/);
+  assert.match(block, /incidenciasAbiertas: 0,/);
+});
+
+test("home.sistema_preparado existe traducido en los 8 idiomas soportados y ninguna traducción menciona Make/Airtable/API/webhook/proveedor", () => {
+  const matches = [...appJsxSource.matchAll(/"home\.sistema_preparado":"([^"]+)"/g)];
+  assert.equal(matches.length, 8, "deberían existir 8 traducciones (una por idioma soportado)");
+  const BANNED_TERMS_REGEX = /airtable|make|\bwebhook\b|\bapi\b|proveedor|cuota|cloudflare|\bworker\b|\btoken\b/i;
+  for (const [, value] of matches) {
+    assert.doesNotMatch(value, BANNED_TERMS_REGEX, `traducción sospechosa: "${value}"`);
+  }
+});
+
+test("privacidad: Inicio() sigue sin jerga técnica tras el cambio del contador (cubierto también por publicUiPrivacy.test.mjs)", () => {
+  const start = appJsxSource.indexOf("function Inicio(");
+  const end = appJsxSource.indexOf("function Reservas(", start);
+  const body = appJsxSource.slice(start, end);
+  const BANNED_TERMS_REGEX =
+    /airtable|make\.com|\bwebhook\b|base de datos|límite mensual|\bcuota\b|cloudflare|\bworker\b|\btoken\b|credencial|\bbackend\b|\bendpoint\b|supabase/i;
+  assert.doesNotMatch(body, BANNED_TERMS_REGEX);
+});
