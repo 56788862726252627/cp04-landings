@@ -169,3 +169,63 @@ export function torneoFirstErrorMessage(errors) {
   const values = Object.values(errors || {});
   return values.length > 0 ? values[0] : null;
 }
+
+// --- Lote de cierre funcional local (2026-07-12, ver
+// audit/torneos-modulo/TORNEOS_100_COMPLETION_PLAN.md, filas pendientes de
+// LOTE B/C) — mismo patrón que el resto del archivo: puro, testeable con
+// node --test, App.jsx importa estas mismas funciones sin duplicarlas.
+
+// Mismo criterio de "pareja con nombre" que ya usa pairLabel() en App.jsx
+// (no "Vacía" si player1 O player2 tienen contenido) — se reutiliza aquí en
+// vez de inventar una segunda definición más estricta.
+export function torneoIsPairNamed(pair) {
+  return Boolean(pair?.player1?.trim() || pair?.player2?.trim());
+}
+
+// LOTE C pendiente #5: "exigir que ambos lados de un cruce tengan nombre
+// antes de permitir marcar ganador". Antes de este cambio, App.jsx solo
+// comprobaba el lado que se iba a marcar como ganador, no el rival.
+export function torneoCanMarkWinner(pairA, pairB) {
+  return torneoIsPairNamed(pairA) && torneoIsPairNamed(pairB);
+}
+
+// LOTE C pendiente #1: "excluir del sorteo de BYE a las parejas sin
+// player1/player2". Devuelve el subconjunto sorteable; si NINGUNA pareja
+// tiene nombre todavía (cuadro recién creado, sin rellenar), se devuelven
+// todas para no bloquear el sorteo de demostración — es preferible un BYE
+// sobre una pareja vacía a que "Reordenar cruces" deje de funcionar del
+// todo cuando el cuadro está totalmente vacío.
+export function torneoEligibleForBye(pairs) {
+  const list = Array.isArray(pairs) ? pairs : [];
+  const named = list.filter(torneoIsPairNamed);
+  return named.length > 0 ? named : list;
+}
+
+// LOTE C pendiente #3 (mitigación segura): en vez de reescribir el motor de
+// bracket para permitir eliminar una pareja que ya avanzó sin descuadrar la
+// ronda siguiente (cambio de mayor riesgo, documentado como pendiente en el
+// plan), se bloquea esa eliminación con un aviso claro. `bracket` ya trae
+// `winner` por partido (ver torneoAdvanceWinner en torneoBracket.js) — no se
+// reimplementa esa lógica, solo se consulta.
+export function torneoPairHasAdvanced(pairId, bracket) {
+  const list = Array.isArray(bracket) ? bracket : [];
+  return list.some((m) => m.winner === pairId);
+}
+
+// LOTE G pendiente #4: "validar también la forma interna de cada pareja en
+// torneoLoadSaved (no solo el bracket)". Si localStorage fue manipulado a
+// mano o quedó de un formato antiguo, una pareja sin id o con player1/
+// player2 no-string podría romper el resto del módulo (pairLabel, el motor
+// de bracket, el CSV/JSON de exportación). Se sanea en vez de descartar el
+// torneo completo: cada pareja recupera una forma válida, o se descarta si
+// ni siquiera tiene un id utilizable.
+export function torneoSanitizePairs(rawPairs) {
+  const list = Array.isArray(rawPairs) ? rawPairs : [];
+  return list
+    .filter((p) => p && typeof p === "object" && typeof p.id === "string" && p.id)
+    .map((p) => ({
+      id: p.id,
+      player1: typeof p.player1 === "string" ? p.player1 : "",
+      player2: typeof p.player2 === "string" ? p.player2 : "",
+    }));
+}

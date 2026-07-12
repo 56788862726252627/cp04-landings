@@ -68,7 +68,12 @@ import {
   validateTorneoParaPublicar,
   validateTorneoParejasDuplicadas,
   torneoFirstErrorMessage,
+  torneoCanMarkWinner,
+  torneoEligibleForBye,
+  torneoPairHasAdvanced,
+  torneoSanitizePairs,
 } from "./utils/torneoValidation.js";
+import { torneoPairStatus, torneoBuildRanking, torneoCsvEscapeField } from "./utils/torneoExport.js";
 import {
   COURTS_DEFAULT as COURTS,
   BOOKING_HOURS_DEFAULT as BOOKING_HOURS,
@@ -5069,6 +5074,25 @@ const TORNEO_DEMO_NAMES = [
   ["José Márquez", "Víctor Cano"],
   ["Samuel Nieto", "Héctor Ríos"],
   ["Bruno Serrano", "Leo Fuentes"],
+  // LOTE B pendiente: ampliar de 16 a 32 nombres — un cuadro de 32 parejas
+  // repetía literalmente los mismos 16 nombres dos veces al autoasignar
+  // (`i % TORNEO_DEMO_NAMES.length`), visible en una demo real.
+  ["Rodrigo Ibáñez", "Nacho Peña"],
+  ["Guillermo Soto", "Tomás Aguilar"],
+  ["Emilio Vargas", "Andrés Campos"],
+  ["Roberto Blanco", "Iker Rey"],
+  ["Ismael Cordero", "Gonzalo Marín"],
+  ["Enrique Duarte", "Cristian Bravo"],
+  ["Víctor Salas", "Julián Reyes"],
+  ["Ángel Carrasco", "Damián Vidal"],
+  ["Rubén Guerrero", "Marcelo Pardo"],
+  ["Felipe Montes", "Bruno Lozano"],
+  ["Ezequiel Cabrera", "Nicolás Barrios"],
+  ["Diego Miranda", "Salvador Ochoa"],
+  ["Martín Ferrer", "Iván Cuesta"],
+  ["Óscar Reina", "Alonso Herrero"],
+  ["Raúl Solís", "Tomás Bermejo"],
+  ["Cristóbal Nogales", "Mateo Vera"],
 ];
 
 const TORNEO_STORE = "cp04_torneo_v2";
@@ -5094,7 +5118,9 @@ function torneoLoadSaved(tenantId) {
     const rawBracket = Array.isArray(raw.bracket) ? raw.bracket : [];
     // If bracket items lack 'round' (old format), discard bracket to avoid crash
     const bracketOk = rawBracket.length === 0 || rawBracket.every(m => typeof m.round === "number");
-    const pairs = rawPairs;
+    // Saneado de forma (LOTE G pendiente #4): localStorage manipulado a mano
+    // o de un formato antiguo no debe poder crashear el resto del módulo.
+    const pairs = torneoSanitizePairs(rawPairs);
     const bracket = bracketOk ? rawBracket : [];
     // LOTE A (integridad de datos): un torneo publicado debe seguir siendo
     // válido al recargar. Si localStorage fue manipulado a mano, o quedó de
@@ -5176,9 +5202,9 @@ function Torneos({ selectedRole }) {
   }
 
   const saved = torneoLoadSaved(tenantId);
-  const [formatMode, setFormatMode] = useState(saved?.formatMode ?? "32");
-  const [customMode, setCustomMode] = useState(saved?.customMode ?? "pairs");
-  const [customInput, setCustomInput] = useState(saved?.customInput ?? "");
+  const [formatMode, setFormatMode] = useState(() => saved?.formatMode ?? "32");
+  const [customMode, setCustomMode] = useState(() => saved?.customMode ?? "pairs");
+  const [customInput, setCustomInput] = useState(() => saved?.customInput ?? "");
   const [customError, setCustomError] = useState("");
   const [pairs, setPairs] = useState(() => saved?.pairs ?? []);
   const [bracket, setBracket] = useState(() => saved?.bracket ?? []);
@@ -5213,6 +5239,10 @@ function Torneos({ selectedRole }) {
   const [histVersion, setHistVersion] = useState(0);
 
   const currentMax = formatMode !== "custom" ? FORMAT_MAX[formatMode] : null;
+  // LOTE B pendiente #1: el botón "＋ Añadir" debía quedarse activo incluso
+  // al llegar al límite (solo avisaba con un toast tras el clic) — ahora se
+  // deshabilita visualmente, mismo límite que ya aplicaba handleAddPair.
+  const pairsAtMax = Boolean(currentMax && pairs.length >= currentMax) || pairs.length >= 32;
 
   useEffect(() => {
     const s = { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published, torneoId, nombre, fecha, hora, categoria, modalidad };
@@ -5338,12 +5368,23 @@ function Torneos({ selectedRole }) {
 
   const handleReorder = () => {
     if (!canEdit) return;
+    // LOTE C pendiente #2: reordenar con resultados ya marcados los pierde
+    // sin aviso — exigir confirmación explícita antes de tirar ese trabajo,
+    // crítico en una demo en vivo donde un clic accidental no debe borrar
+    // una ronda ya jugada delante del cliente.
+    if (bracket.some(m => m.winner)) {
+      const ok = window.confirm("Ya hay resultados marcados en el bracket. Reordenar los cruces los perderá. ¿Continuar?");
+      if (!ok) return;
+    }
     pushHistory("Reordenar cruces");
     const shuffled = [...pairs].sort(() => Math.random() - 0.5);
     let newBye = null; let newByeDate = null;
     if (shuffled.length % 2 !== 0) {
-      const idx = Math.floor(Math.random() * shuffled.length);
-      newBye = shuffled[idx]; newByeDate = new Date().toISOString();
+      // LOTE C pendiente #1: el sorteo de BYE excluye parejas vacías cuando
+      // hay alguna pareja completa disponible (torneoEligibleForBye).
+      const eligible = torneoEligibleForBye(shuffled);
+      const idx = Math.floor(Math.random() * eligible.length);
+      newBye = eligible[idx]; newByeDate = new Date().toISOString();
     }
     const nb = torneoBuildFullBracket(shuffled, newBye ? newBye.id : null);
     setPairs(shuffled); setBracket(nb); setByePair(newBye); setByeDrawDate(newByeDate);
@@ -5403,10 +5444,21 @@ function Torneos({ selectedRole }) {
     const upd = [...pairs, np];
     setPairs(upd);
     if (upd.length % 2 === 0 && byePair) { setByePair(null); setByeDrawDate(null); }
+    showNotice("Pareja añadida.");
   };
 
   const handleDeletePair = (id) => {
     if (!canEdit) return;
+    // LOTE C pendiente #3 (mitigación segura): eliminar una pareja que ya
+    // avanzó dejaría un hueco en la ronda siguiente (el motor de bracket no
+    // reconstruye el árbol al vuelo) — se bloquea con un aviso claro en vez
+    // de dejar el bracket roto a medio torneo, algo especialmente visible
+    // en una demo en vivo.
+    if (torneoPairHasAdvanced(id, bracket)) {
+      showNotice("Esta pareja ya ganó un cruce y avanzó de ronda: no se puede eliminar sin deshacer antes ese resultado.", true);
+      setDeleteId(null);
+      return;
+    }
     pushHistory("Eliminar pareja");
     const upd = pairs.filter(p => p.id !== id);
     let nb = byePair; let nd = byeDrawDate;
@@ -5445,7 +5497,10 @@ function Torneos({ selectedRole }) {
       nombreTorneo: `Torneo Club Pádel 04 · ${pairs.length} parejas`,
       numJugadores: pairs.length * 2, numParejas: pairs.length, formato: formatMode,
       parejas: pairs.map(p => ({ jugador1: p.player1, jugador2: p.player2 })),
-      ranking: pairs.map((p, i) => ({ pos: i + 1, jugador1: p.player1, jugador2: p.player2 })),
+      // LOTE E: ranking real derivado del bracket (misma función que
+      // alimenta la tabla de Ranking en pantalla, torneoPairStatus), no el
+      // orden de creación del array de parejas.
+      ranking: torneoBuildRanking(pairs, bracket, byePair?.id ?? null),
       bracket: bracket.map(m => {
         const pA = pairs.find(p => p.id === m.pairA);
         const pB = m.pairB ? pairs.find(p => p.id === m.pairB) : null;
@@ -5466,7 +5521,9 @@ function Torneos({ selectedRole }) {
 
   const handleExportCSV = () => {
     const lines = ["#,Jugador 1,Jugador 2"];
-    pairs.forEach((p, i) => lines.push(`${i + 1},"${p.player1 || ""}","${p.player2 || ""}"`));
+    // LOTE F: escapar comillas/comas/saltos de línea (RFC 4180) — un nombre
+    // con una coma o comilla corrompía antes las columnas del CSV.
+    pairs.forEach((p, i) => lines.push(`${i + 1},${torneoCsvEscapeField(p.player1 || "")},${torneoCsvEscapeField(p.player2 || "")}`));
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `parejas-cp04-${Date.now()}.csv`; a.click();
@@ -5666,7 +5723,9 @@ function Torneos({ selectedRole }) {
               <span style={{ color: T.accent, fontSize: ".85rem", fontWeight: 700 }}>{pairs.length}{currentMax ? `/${currentMax}` : ""}</span>
             </h3>
             {canEdit && (
-              <button type="button" className="cp04-control-btn primary" onClick={handleAddPair} style={{ width: "auto", padding: "7px 14px", fontSize: ".85rem" }}>＋ Añadir</button>
+              <button type="button" className="cp04-control-btn primary" onClick={handleAddPair} disabled={pairsAtMax}
+                title={pairsAtMax ? "Límite de parejas alcanzado para este formato" : undefined}
+                style={{ width: "auto", padding: "7px 14px", fontSize: ".85rem", opacity: pairsAtMax ? .5 : 1, cursor: pairsAtMax ? "not-allowed" : "pointer" }}>＋ Añadir</button>
             )}
           </div>
 
@@ -5847,7 +5906,7 @@ function Torneos({ selectedRole }) {
                                   <span style={{ flex: 1, fontSize: ".78rem", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: match.winner === match.pairA ? 800 : 400, color: match.winner === match.pairA ? T.accent : match.winner ? "rgba(255,255,255,.32)" : "#fff", textDecoration: match.winner && match.winner !== match.pairA ? "line-through" : "none" }}>
                                     {match.winner === match.pairA && "🏆 "}{pA ? pairLabel(pA) : <em style={{ color: "rgba(255,255,255,.28)" }}>Por definir</em>}
                                   </span>
-                                  {canEdit && !match.winner && pA && pA.player1 && match.pairB && (
+                                  {canEdit && !match.winner && match.pairB && torneoCanMarkWinner(pA, pB) && (
                                     <button type="button" onClick={() => handleMarkWinner(match.id, match.pairA)}
                                       style={{ background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, borderRadius: 5, padding: "2px 7px", cursor: "pointer", fontSize: ".66rem", fontWeight: 800, flexShrink: 0 }}>
                                       ✓A
@@ -5860,7 +5919,7 @@ function Torneos({ selectedRole }) {
                                   <span style={{ flex: 1, fontSize: ".78rem", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: match.winner === match.pairB ? 800 : 400, color: match.winner === match.pairB ? T.accent : match.winner ? "rgba(255,255,255,.32)" : "#fff", textDecoration: match.winner && match.winner !== match.pairB ? "line-through" : "none" }}>
                                     {match.winner === match.pairB && "🏆 "}{pB ? pairLabel(pB) : <em style={{ color: "rgba(255,255,255,.28)" }}>Por definir</em>}
                                   </span>
-                                  {canEdit && !match.winner && pB && pB.player1 && match.pairA && (
+                                  {canEdit && !match.winner && match.pairA && torneoCanMarkWinner(pA, pB) && (
                                     <button type="button" onClick={() => handleMarkWinner(match.id, match.pairB)}
                                       style={{ background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, borderRadius: 5, padding: "2px 7px", cursor: "pointer", fontSize: ".66rem", fontWeight: 800, flexShrink: 0 }}>
                                       ✓B
@@ -5906,10 +5965,14 @@ function Torneos({ selectedRole }) {
                 </thead>
                 <tbody>
                   {pairs.map((pair, i) => {
-                    const match = bracket.find(m => m.pairA === pair.id || m.pairB === pair.id);
-                    const isW = match?.winner === pair.id;
-                    const isL = match?.winner && match.winner !== pair.id;
-                    const isBye = byePair?.id === pair.id;
+                    // Misma fuente de verdad que el JSON exportado
+                    // (torneoBuildRanking/torneoPairStatus): la tabla en
+                    // pantalla y el archivo descargado nunca pueden divergir
+                    // sobre quién avanzó o quedó eliminada.
+                    const status = torneoPairStatus(pair.id, bracket, byePair?.id ?? null);
+                    const isW = status === "avanza";
+                    const isL = status === "eliminada";
+                    const isBye = status === "bye";
                     return (
                       <tr key={pair.id} style={{ opacity: isL ? .48 : 1, transition: "opacity .3s" }}>
                         <td style={{ color: T.textDim, fontSize: ".82rem" }}>{i + 1}</td>

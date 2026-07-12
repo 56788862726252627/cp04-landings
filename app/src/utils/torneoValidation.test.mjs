@@ -14,6 +14,11 @@ import {
   validateTorneoParejasDuplicadas,
   validateTorneoParaPublicar,
   torneoFirstErrorMessage,
+  torneoIsPairNamed,
+  torneoCanMarkWinner,
+  torneoEligibleForBye,
+  torneoPairHasAdvanced,
+  torneoSanitizePairs,
 } from "./torneoValidation.js";
 import { torneoBuildFullBracket } from "./torneoBracket.js";
 
@@ -229,3 +234,78 @@ for (const n of [8, 16, 32, 9]) {
     assert.equal(r.ok, true, JSON.stringify(r.errors));
   });
 }
+
+// --- Cierre funcional local (2026-07-12) ---------------------------------
+
+test("torneoIsPairNamed: true si player1 o player2 tienen contenido, false si ambos están vacíos/solo espacios", () => {
+  assert.equal(torneoIsPairNamed(makePair("p1", "Ana", "")), true);
+  assert.equal(torneoIsPairNamed(makePair("p1", "", "Sofía")), true);
+  assert.equal(torneoIsPairNamed(makePair("p1", "", "")), false);
+  assert.equal(torneoIsPairNamed(makePair("p1", "   ", "  ")), false);
+  assert.equal(torneoIsPairNamed(null), false);
+  assert.equal(torneoIsPairNamed(undefined), false);
+});
+
+test("torneoCanMarkWinner: requiere que AMBOS lados del cruce tengan nombre, no solo el que se marca ganador", () => {
+  const conNombre = makePair("p1", "Ana", "Sofía");
+  const vacia = makePair("p2", "", "");
+  assert.equal(torneoCanMarkWinner(conNombre, makePair("p3", "Luis", "Marta")), true);
+  assert.equal(torneoCanMarkWinner(conNombre, vacia), false, "no debe poder marcarse ganador si el rival está vacío");
+  assert.equal(torneoCanMarkWinner(vacia, conNombre), false, "tampoco al revés");
+});
+
+test("torneoEligibleForBye: excluye del sorteo a las parejas sin nombre cuando hay al menos una completa", () => {
+  const pairs = [
+    makePair("p1", "Ana", "Sofía"),
+    makePair("p2", "", ""),
+    makePair("p3", "Luis", "Marta"),
+  ];
+  const eligible = torneoEligibleForBye(pairs);
+  assert.deepEqual(eligible.map((p) => p.id), ["p1", "p3"]);
+});
+
+test("torneoEligibleForBye: si NINGUNA pareja tiene nombre, devuelve todas (no bloquea el sorteo de un cuadro recién creado)", () => {
+  const pairs = [makePair("p1", "", ""), makePair("p2", "", "")];
+  const eligible = torneoEligibleForBye(pairs);
+  assert.deepEqual(eligible.map((p) => p.id), ["p1", "p2"]);
+});
+
+test("torneoEligibleForBye: lista vacía devuelve lista vacía, no lanza", () => {
+  assert.deepEqual(torneoEligibleForBye([]), []);
+  assert.deepEqual(torneoEligibleForBye(undefined), []);
+});
+
+test("torneoPairHasAdvanced: true si la pareja aparece como winner en algún partido del bracket", () => {
+  const pairs = [makePair("p1", "Ana", "Sofía"), makePair("p2", "Luis", "Marta")];
+  const bracket = torneoBuildFullBracket(pairs, null);
+  const jugado = bracket.map((m) => (m.pairA === "p1" ? { ...m, winner: "p1" } : m));
+  assert.equal(torneoPairHasAdvanced("p1", jugado), true);
+  assert.equal(torneoPairHasAdvanced("p2", jugado), false);
+});
+
+test("torneoPairHasAdvanced: false para un bracket vacío o sin resultados, nunca lanza", () => {
+  assert.equal(torneoPairHasAdvanced("p1", []), false);
+  assert.equal(torneoPairHasAdvanced("p1", undefined), false);
+});
+
+test("torneoSanitizePairs: conserva parejas con forma válida tal cual", () => {
+  const input = [makePair("p1", "Ana", "Sofía"), makePair("p2", "Luis", "Marta")];
+  assert.deepEqual(torneoSanitizePairs(input), input);
+});
+
+test("torneoSanitizePairs: descarta entradas sin id utilizable (localStorage manipulado a mano)", () => {
+  const input = [makePair("p1", "Ana", "Sofía"), { player1: "Sin id", player2: "" }, null, "no es objeto", 42];
+  const sane = torneoSanitizePairs(input);
+  assert.deepEqual(sane, [{ id: "p1", player1: "Ana", player2: "Sofía" }]);
+});
+
+test("torneoSanitizePairs: normaliza player1/player2 no-string a cadena vacía en vez de crashear más adelante", () => {
+  const input = [{ id: "p1", player1: 123, player2: null }];
+  assert.deepEqual(torneoSanitizePairs(input), [{ id: "p1", player1: "", player2: "" }]);
+});
+
+test("torneoSanitizePairs: entrada no-array (undefined/null/objeto suelto) devuelve lista vacía, no lanza", () => {
+  assert.deepEqual(torneoSanitizePairs(undefined), []);
+  assert.deepEqual(torneoSanitizePairs(null), []);
+  assert.deepEqual(torneoSanitizePairs({}), []);
+});

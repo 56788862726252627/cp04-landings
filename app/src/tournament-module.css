@@ -1190,3 +1190,35 @@
     flex-direction: column;
   }
 }
+
+/* LOTE F pendiente (audit/torneos-modulo/TORNEOS_100_COMPLETION_PLAN.md):
+   "Imprimir / PDF" (window.print() en App.jsx) imprimía toda la página
+   (sidebar, barra móvil, controles de edición) en vez de solo el bracket —
+   nada de esto aporta valor en un PDF que un club vaya a colgar en un
+   tablón o compartir por email. Oculta navegación/controles mutativos al
+   imprimir, deja visibles bracket, parejas y ranking (lo único que tiene
+   sentido en un documento impreso). No se ha podido confirmar visualmente
+   en este entorno (sin navegador real) — ver riesgos pendientes. */
+@media print {
+  .cp04-sidebar,
+  .cp04-mobilebar,
+  .cp04-overlay,
+  .cp04-sidebar-close,
+  .cp04-tournament-control,
+  .cp04-format-pill,
+  .cp04-slide-notice {
+    display: none !important;
+  }
+
+  .cp04-layout {
+    display: block !important;
+  }
+
+  .cp04-tournament-grid {
+    display: block !important;
+  }
+
+  .cp04-tournament-panel {
+    break-inside: avoid;
+  }
+}
