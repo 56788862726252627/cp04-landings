@@ -38,7 +38,6 @@ const GALLERY_REAL_IMAGE_STYLES = `
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
-import { LazyClubGallery } from "./components/lazy/lazyGallery.js";
 import { LazyCP04GuidedTutorial } from "./components/lazy/lazyGuidedTutorial.js";
 import { useAuth } from "./auth/AuthContext.jsx";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
