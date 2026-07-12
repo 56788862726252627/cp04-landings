@@ -208,12 +208,24 @@ const globalStyles = `
   .cp04-sidebar-close { display: none; }
   .cp04-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; }
   .cp04-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
-  .cp04-card { position: relative; overflow: hidden; background: linear-gradient(150deg, rgba(17,26,43,.94), rgba(8,13,15,.94)); border: 1px solid rgba(255,255,255,.11); border-radius: 26px; padding: 24px; box-shadow: 0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05); }
+  .cp04-card { position: relative; overflow: hidden; background: linear-gradient(150deg, rgba(17,26,43,.94), rgba(8,13,15,.94)); border: 1px solid rgba(255,255,255,.11); border-radius: 26px; padding: 24px; box-shadow: 0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
   .cp04-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 16% 0%, rgba(182,255,0,.08), transparent 32%); }
   .cp04-card > * { position: relative; }
+  @media (hover: hover) and (pointer: fine) {
+    .cp04-card:hover { transform: translateY(-2px); border-color: rgba(182,255,0,.22); box-shadow: 0 26px 80px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06); }
+  }
   .cp04-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, border-color .18s ease; }
   .cp04-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); box-shadow: 0 14px 32px rgba(0,0,0,.24); }
   .cp04-badge { display: inline-flex; align-items: center; max-width: 100%; white-space: nowrap; line-height: 1; }
+  .cp04-notice { display: flex; align-items: flex-start; gap: 10px; padding: 13px 16px; border-radius: 14px; font-weight: 700; font-size: .92rem; line-height: 1.5; margin-bottom: 14px; }
+  .cp04-notice-icon { flex: 0 0 auto; line-height: 1.4; }
+  .cp04-notice-error { color: #ffb3b3; background: rgba(255,94,58,.10); border: 1px solid rgba(255,94,58,.32); }
+  .cp04-notice-warning { color: #ffd79a; background: rgba(255,173,71,.10); border: 1px solid rgba(255,173,71,.32); }
+  .cp04-notice-success { color: #b6ff00; background: rgba(182,255,0,.09); border: 1px solid rgba(182,255,0,.34); }
+  .cp04-empty-state { text-align: center; padding: 42px 20px; color: ${T.textDim}; }
+  .cp04-empty-state-icon { font-size: 2rem; margin-bottom: 10px; }
+  .cp04-empty-state-title { display: block; color: ${T.text}; font-size: 1.02rem; margin-bottom: 6px; }
+  .cp04-empty-state-desc { margin: 0; line-height: 1.6; max-width: 420px; margin-left: auto; margin-right: auto; }
   .cp04-table-wrap { overflow-x: auto; }
   .cp04-table { width: 100%; min-width: 620px; border-collapse: collapse; }
   .cp04-table th, .cp04-table td { padding: 16px 18px; border-bottom: 1px solid ${T.line}; text-align: left; }
@@ -225,6 +237,7 @@ const globalStyles = `
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
     .cp04-btn:hover:not(:disabled) { transform: none; }
+    .cp04-card:hover { transform: none; }
   }
   .cp04-gallery { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: stretch; }
   .cp04-gallery-side { display: grid; grid-template-columns: 1fr; gap: 20px; }
@@ -235,7 +248,7 @@ const globalStyles = `
   .cp04-gallery-caption { position: absolute; left: 18px; right: 18px; bottom: 18px; padding: 14px 16px; border-radius: 18px; background: rgba(5,8,13,.74); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(14px); }
   @media (max-width: 1180px) { .cp04-grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
   @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.88); backdrop-filter: blur(18px); } .cp04-menu-button { background: linear-gradient(135deg, ${T.accent}, ${T.accent2}); color: #06100a; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(88vw, 340px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3, .cp04-gallery { grid-template-columns: 1fr; } .cp04-gallery-item.featured { min-height: 340px; } }
-  @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } .cp04-gallery-item, .cp04-gallery-item.featured { min-height: 245px; border-radius: 22px; } }
+  @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } .cp04-gallery-item, .cp04-gallery-item.featured { min-height: 245px; border-radius: 22px; } .cp04-grid-2, .cp04-grid-3 { gap: 16px; } .cp04-empty-state { padding: 32px 16px; } .cp04-notice { padding: 12px 14px; font-size: .88rem; } }
 `;
 
 
@@ -572,6 +585,42 @@ function Btn({ children, onClick, variant = "primary", disabled = false, type = 
     danger: { background: "rgba(255,94,58,.12)", color: T.danger, border: "1px solid rgba(255,94,58,.30)" },
   };
   return <button className="cp04-btn" type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 15, fontFamily: T.fontDisplay, fontWeight: 900, letterSpacing: "-.01em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }} {...rest}>{children}</button>;
+}
+
+// Notice: banner de aviso consistente para mensajes de nivel de
+// formulario/pantalla (login, registro, selección de rol, recuperar
+// contraseña...). Generaliza el mismo patrón visual (fondo con tinte +
+// borde + icono) que ya usaba de forma aislada el aviso de Torneos
+// (cp04-slide-notice) y el error de personalizado de Torneos (⚠️ + texto),
+// en vez de dejar cada pantalla con su propio texto de color suelto sin
+// fondo ni jerarquía. No sustituye a FieldError (error de un campo
+// individual, más discreto por diseño): Notice es para el mensaje
+// principal de la acción (enviar formulario, iniciar sesión...).
+function Notice({ tone = "error", children }) {
+  if (!children) return null;
+  const icon = tone === "success" ? "✓" : tone === "warning" ? "⚠" : "⚠️";
+  const role = tone === "success" ? "status" : "alert";
+  return (
+    <div role={role} aria-live="polite" className={`cp04-notice cp04-notice-${tone}`}>
+      <span aria-hidden="true" className="cp04-notice-icon">{icon}</span>
+      <span>{children}</span>
+    </div>
+  );
+}
+
+// EmptyState: estado vacío consistente (icono + título + descripción),
+// mismo patrón que ya usaban Ranking/Torneos por separado (ver
+// "ranking.sin_resultados" y "Sin parejas..."), generalizado aquí para que
+// cualquier lista/tabla sin resultados (p. ej. Gestion) se sienta parte de
+// la misma identidad visual en vez de un texto plano sin peso.
+function EmptyState({ icon = "🔍", title, description }) {
+  return (
+    <div className="cp04-empty-state">
+      <div className="cp04-empty-state-icon" aria-hidden="true">{icon}</div>
+      {title && <strong className="cp04-empty-state-title">{title}</strong>}
+      {description && <p className="cp04-empty-state-desc">{description}</p>}
+    </div>
+  );
 }
 
 
@@ -4196,7 +4245,6 @@ function Gestion() {
   const [cargandoReservas, setCargandoReservas] = useState(false);
   const [reservasConsultadas, setReservasConsultadas] = useState(false);
   const [errorReservas, setErrorReservas] = useState("");
-  const [fuenteReservas, setFuenteReservas] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("");
   const [filtroPista, setFiltroPista] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
@@ -4360,14 +4408,12 @@ function Gestion() {
         });
 
       setReservasReales(listaNormalizada);
-      setFuenteReservas(resultado.source || "airtable");
       setReservasConsultadas(true);
 
       cp04WriteTenantAware(cp04SafeLocalStorage(), { tenantId, key: "cp04-reservas-email" }, emailLimpio);
     } catch (error) {
       setReservasReales([]);
       setReservasConsultadas(true);
-      setFuenteReservas("");
       setErrorReservas(
         error instanceof Error
           ? error.message
@@ -4725,26 +4771,17 @@ function Gestion() {
               }}
             >
               Mostrando {reservasFiltradas.length} de{" "}
-              {reservasReales.length} reservas · Fuente:{" "}
-              {fuenteReservas ? "base de datos" : "base de datos"}
+              {reservasReales.length} reservas
             </div>
           </Card>
 
           {reservasFiltradas.length === 0 ? (
             <Card>
-              <strong>
-                No se encontraron reservas
-              </strong>
-
-              <p
-                style={{
-                  color: T.textDim,
-                  marginBottom: 0,
-                }}
-              >
-                No hay registros que coincidan con los
-                filtros seleccionados.
-              </p>
+              <EmptyState
+                icon="📋"
+                title="No se encontraron reservas"
+                description="No hay registros que coincidan con los filtros seleccionados."
+              />
             </Card>
           ) : (
             <Card>
@@ -7444,7 +7481,7 @@ export default function ClubPadel04SaaSApp() {
                   {ltx("login.olvide_pwd")}
                 </button>
               </div>
-          {loginError && <div role="alert" aria-live="polite" style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
+          <Notice tone="error">{loginError}</Notice>
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
             <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
               Iniciar sesión
@@ -7497,7 +7534,7 @@ export default function ClubPadel04SaaSApp() {
                         style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
                       />
 
-                      {registerError && <div role="alert" aria-live="polite" style={{ color:"#ff8b8b", marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
+                      <Notice tone="error">{registerError}</Notice>
 
                       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
                         <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
@@ -7584,7 +7621,7 @@ export default function ClubPadel04SaaSApp() {
                   <input type="checkbox" checked={rememberRole} onChange={e => setRememberRole(e.target.checked)} style={{ width:18, height:18, accentColor:T.accent }} />
                   {ltx("login.guardar_sesion")}
                 </label>
-                {roleError && <div role="alert" aria-live="polite" style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{roleError}</div>}
+                <Notice tone="error">{roleError}</Notice>
                 <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                   <button type="submit" className="cp04-menu-button"
                     style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
@@ -7614,7 +7651,7 @@ export default function ClubPadel04SaaSApp() {
                         autoFocus
                         style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
                       />
-                      {forgotPwdEmailError && <div role="alert" aria-live="polite" style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
+                      <Notice tone="error">{forgotPwdEmailError}</Notice>
                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
                         <button type="submit" className="cp04-menu-button"
                           style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
