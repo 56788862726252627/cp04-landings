@@ -70,7 +70,7 @@ p { color: var(--text-dim); margin: 0 0 12px; }
   margin-bottom: 12px;
 }
 
-.section { padding: 96px 0; }
+.section { padding: 96px 0; scroll-margin-top: 88px; }
 .section--surface { background: var(--surface); }
 .section__intro { max-width: 640px; font-size: 17px; margin-bottom: 40px; }
 .section__note { margin-top: 32px; font-size: 14px; color: var(--text-dim); max-width: 640px; }
@@ -188,7 +188,10 @@ p { color: var(--text-dim); margin: 0 0 12px; }
 .hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.68) 45%, rgba(5,8,13,0.94) 100%);
+  /* Overlay aligado (2026-07) con el rango de Brand System §2: más aclarado que la versión
+     anterior para dejar ver más el fondo, manteniendo contraste suficiente donde se apoya el
+     texto (parada intermedia al 45%, que coincide con la zona vertical del h1/subtítulo). */
+  background: linear-gradient(180deg, rgba(2,6,23,0.38) 0%, rgba(2,6,23,0.58) 45%, rgba(5,8,13,0.85) 100%);
 }
 .hero__content {
   position: relative;
@@ -385,14 +388,13 @@ p { color: var(--text-dim); margin: 0 0 12px; }
   align-items: center;
   cursor: pointer;
 }
-.accordion__trigger span { color: var(--accent); font-size: 20px; font-weight: 400; transition: transform 0.2s ease; }
-.accordion__item.is-open .accordion__trigger span { transform: rotate(45deg); }
+.accordion__trigger span { color: var(--accent); font-size: 20px; font-weight: 400; }
 .accordion__panel {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.25s ease;
 }
-.accordion__item.is-open .accordion__panel { max-height: 200px; }
+.accordion__item.is-open .accordion__panel { max-height: 280px; }
 .accordion__panel p { padding-bottom: 22px; margin: 0; }
 
 /* CTA final + form */
@@ -451,6 +453,12 @@ p { color: var(--text-dim); margin: 0 0 12px; }
   .grid--modules { grid-template-columns: repeat(2, 1fr); }
   .timeline { grid-template-columns: repeat(2, 1fr); }
   .gallery { grid-template-columns: repeat(3, 1fr); }
+  /* Tablet (781–1024px): hereda los tamaños de escritorio si no se ajustan aquí, dejando
+     demasiado aire vertical por sección y un hero demasiado alto para esta franja. */
+  .section { padding: 72px 0; }
+  .section__intro { margin-bottom: 32px; }
+  .hero { min-height: 560px; }
+  .hero__content { padding: 96px 24px; }
 }
 
 @media (max-width: 780px) {
