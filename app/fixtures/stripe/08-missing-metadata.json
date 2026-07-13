@@ -1,0 +1,18 @@
+{
+  "_why": "metadata sin booking_id ni payment_reference — fixture malformado a propósito para probar que validateEventMetadata()/handleWebhookEvent() rechazan con action:'reject', reason:'missing_metadata' en vez de procesar 'por si acaso'.",
+  "id": "evt_QACP04STRIPE_missing_metadata_001",
+  "object": "event",
+  "type": "checkout.session.completed",
+  "created": 1799700600,
+  "livemode": false,
+  "data": {
+    "object": {
+      "id": "cs_test_mock_incompleto_0001",
+      "metadata": {
+        "tenant_id": "tnt_qacp04_test",
+        "client_id": "clt_qacp04_test",
+        "user_id": "usr_qacp04_test"
+      }
+    }
+  }
+}

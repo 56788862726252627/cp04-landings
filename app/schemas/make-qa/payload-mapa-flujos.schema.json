@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-mapa-flujos.schema.json",
+  "title": "QA-A2 · Payload Mapa de Flujos (6233755)",
+  "description": "Escenario programado (no webhook): scenarios_run sin datos de entrada. Contrato deliberadamente vacío — cualquier campo enviado sería additionalProperties rechazado, porque este escenario no consume payload. Ya ejecutado (CONFIG_ERROR 401, execution ac06792316ac48a4b900de3a35d6a1cf).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {}
+}

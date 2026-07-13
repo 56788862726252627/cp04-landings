@@ -1,0 +1,30 @@
+{
+  "scenario": "dependencia-unknown",
+  "now": "2026-07-08T12:00:00.000Z",
+  "slo_target_example": 0.999,
+  "health": {
+    "service": "worker",
+    "status": "DEGRADED",
+    "timestamp": "2026-07-08T12:00:00.000Z",
+    "latency_ms": 13,
+    "version": "1.0.0",
+    "checks": [
+      { "name": "process_alive", "passed": true, "message": null }
+    ],
+    "dependencies": [
+      { "name": "supabase-auth", "status": "HEALTHY", "latency_ms": 41, "error_code": null, "last_success_at": "2026-07-08T11:59:50.000Z", "retryable": false },
+      { "name": "airtable", "status": "HEALTHY", "latency_ms": 90, "error_code": null, "last_success_at": "2026-07-08T11:59:55.000Z", "retryable": false },
+      { "name": "make", "status": "HEALTHY", "latency_ms": 106, "error_code": null, "last_success_at": "2026-07-08T11:59:58.000Z", "retryable": false },
+      { "name": "gmail", "status": "HEALTHY", "latency_ms": 56, "error_code": null, "last_success_at": "2026-07-08T11:59:40.000Z", "retryable": false },
+      { "name": "cloudflare", "status": "UNKNOWN", "latency_ms": null, "error_code": null, "last_success_at": "2026-07-08T09:10:00.000Z", "retryable": false }
+    ]
+  },
+  "samples": [
+    { "timestamp": "2026-07-08T11:58:10.000Z", "service": "worker", "status": "success", "latency_ms": 100 },
+    { "timestamp": "2026-07-08T11:58:20.000Z", "service": "worker", "status": "success", "latency_ms": 95 },
+    { "timestamp": "2026-07-08T11:58:30.000Z", "service": "worker", "status": "success", "latency_ms": 110 },
+    { "timestamp": "2026-07-08T11:58:40.000Z", "service": "worker", "status": "success", "latency_ms": 98 },
+    { "timestamp": "2026-07-08T11:58:50.000Z", "service": "worker", "status": "success", "latency_ms": 105 },
+    { "timestamp": "2026-07-08T11:59:00.000Z", "service": "worker", "status": "success", "latency_ms": 101 }
+  ]
+}

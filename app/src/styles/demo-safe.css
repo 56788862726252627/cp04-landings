@@ -1,0 +1,27 @@
+/*
+ * Club Pádel 04 · Estilos demo-safe archivados
+ *
+ * Auditoría 51 · 75F
+ * Se desactiva el banner visual global de demo para presentación a cliente.
+ *
+ * Motivo:
+ * - Evitar que aparezca "DEMO" durante refrescos.
+ * - Evitar sensación de maqueta.
+ * - Mantener presentación comercial más profesional.
+ *
+ * Seguridad:
+ * - Esto NO activa pagos reales.
+ * - Esto NO activa reservas reales.
+ * - Esto NO activa WhatsApp real.
+ * - Esto NO activa webhooks reales.
+ * - Esto NO activa producción comercial.
+ * - Esto NO toca DNS.
+ * - Esto NO conecta dominio definitivo.
+ */
+
+.cp04-demo-safe-banner,
+.cp04-demo-safe-badge,
+.cp04-demo-action-notice,
+.cp04-demo-safe-panel {
+  display: none !important;
+}

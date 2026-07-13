@@ -1,0 +1,836 @@
+===== REPORTE LIMPIO SIDEBAR / PERFIL / BOTONES · App.jsx =====
+
+
+===== CONTEXTO 1-34 =====
+1: import './cp04-login-enter-white-final.js';
+2: import './tournament-module.css';
+3: import './internal-background-detector';
+4: import './internal-module-backgrounds.css';
+5: import './cp04-two-buttons-fix';
+6: import './cp04-sidebar-fix';
+7: import './cp04-legibility-polish.css';
+8: import './torcal-role-background.css';
+9: import './role-background-detector';
+10: 
+11: const GALLERY_REAL_IMAGE_STYLES = `
+12:   .cp04-gallery-card,
+13:   .cp04-gallery-main,
+14:   .cp04-gallery-side {
+15:     position: relative !important;
+16:     overflow: hidden !important;
+17:     background-size: cover !important;
+18:     background-position: center center !important;
+19:     background-repeat: no-repeat !important;
+20:   }
+21: 
+22:   .cp04-gallery-card img,
+23:   .cp04-gallery-main img,
+24:   .cp04-gallery-side img {
+25:     display: block !important;
+26:     width: 100% !important;
+27:     height: 100% !important;
+28:     min-height: 100% !important;
+29:     object-fit: cover !important;
+30:     object-position: center center !important;
+31:     opacity: 1 !important;
+32:     visibility: visible !important;
+33:   }
+34: `;
+
+===== CONTEXTO 167-220 =====
+167:   { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+168:   { id: "SUPPORT", label: "Soporte técnico", access: "Protegido", sections: "Soporte", permissions: ["Ver estado técnico", "Revisar configuración de conexiones", "Consultar registros del sistema", "Auditar integraciones"] },
+169: ];
+170: 
+171: const PROTECTED_SECTIONS = ["Gestión", "Admin", "Soporte"];
+172: 
+173: const globalStyles = `
+174:   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;700;800&display=swap');
+175:   * { box-sizing: border-box; }
+176:   html { background: ${T.bg}; }
+177:   body { margin: 0; min-width: 320px; background: radial-gradient(circle at 20% 0%, rgba(182,255,0,.12), transparent 30%), radial-gradient(circle at 86% 12%, rgba(47,107,255,.22), transparent 36%), linear-gradient(145deg, #05080d 0%, #08111f 48%, #05080d 100%); color: ${T.text}; font-family: ${T.fontBody}; }
+178:   body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size: 56px 56px; mask-image: linear-gradient(to bottom, rgba(0,0,0,.6), transparent 72%); }
+179:   input, select, textarea { background: rgba(5,8,13,.72); border: 1px solid ${T.line}; color: ${T.text}; border-radius: 14px; padding: 13px 15px; width: 100%; outline: none; min-height: 46px; box-shadow: inset 0 1px 0 rgba(255,255,255,.03); transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
+180:   textarea { min-height: 118px; resize: vertical; }
+181:   input::placeholder, textarea::placeholder { color: rgba(154,168,189,.72); }
+182:   input:focus, select:focus, textarea:focus { background: rgba(11,17,29,.94); border-color: ${T.accent}; box-shadow: 0 0 0 4px rgba(182,255,0,.16), 0 18px 40px rgba(0,0,0,.22); }
+183:   button:focus-visible { outline: 3px solid rgba(182,255,0,.9); outline-offset: 3px; }
+184:   h1, h2, h3 { text-wrap: balance; }
+185:   p { margin-top: 0; }
+186:   code { color: ${T.accent}; background: rgba(182,255,0,.08); border: 1px solid rgba(182,255,0,.18); border-radius: 8px; padding: 2px 7px; }
+187:   .cp04-layout { min-height: 100vh; display: grid; grid-template-columns: 292px minmax(0,1fr); }
+188:   .cp04-main { min-width: 0; }
+189:   .cp04-sidebar { position: sticky; top: 0; height: 100vh; padding: 24px; border-right: 1px solid ${T.line}; background: linear-gradient(180deg, rgba(10,16,28,.96), rgba(5,8,13,.90)); overflow: auto; backdrop-filter: blur(18px); }
+190:   .cp04-mobilebar { display: none; }
+191:   .cp04-overlay { display: none; }
+192:   .cp04-sidebar-close { display: none; }
+193:   .cp04-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; }
+194:   .cp04-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+195:   .cp04-card { position: relative; overflow: hidden; background: linear-gradient(150deg, rgba(17,26,43,.94), rgba(8,13,15,.94)); border: 1px solid rgba(255,255,255,.11); border-radius: 26px; padding: 24px; box-shadow: 0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05); }
+196:   .cp04-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 16% 0%, rgba(182,255,0,.08), transparent 32%); }
+197:   .cp04-card > * { position: relative; }
+198:   .cp04-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, border-color .18s ease; }
+199:   .cp04-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); box-shadow: 0 14px 32px rgba(0,0,0,.24); }
+200:   .cp04-badge { display: inline-flex; align-items: center; max-width: 100%; white-space: nowrap; line-height: 1; }
+201:   .cp04-table-wrap { overflow-x: auto; }
+202:   .cp04-table { width: 100%; min-width: 620px; border-collapse: collapse; }
+203:   .cp04-table th, .cp04-table td { padding: 16px 18px; border-bottom: 1px solid ${T.line}; text-align: left; }
+204:   .cp04-table th { color: ${T.textDim}; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+205:   .cp04-gallery { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: stretch; }
+206:   .cp04-gallery-side { display: grid; grid-template-columns: 1fr; gap: 20px; }
+207:   .cp04-gallery-item { min-height: 230px; border-radius: 28px; overflow: hidden; position: relative; border: 1px solid ${T.line}; background: radial-gradient(circle at 20% 18%, rgba(182,255,0,.26), transparent 28%), linear-gradient(135deg, rgba(47,107,255,.18), rgba(17,26,43,.96)); }
+208:   .cp04-gallery-item.featured { min-height: 480px; }
+209:   .cp04-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+210:   .cp04-gallery-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(182,255,0,.18), rgba(47,107,255,.12)), repeating-linear-gradient(90deg, rgba(255,255,255,.10) 0 1px, transparent 1px 34px); }
+211:   .cp04-gallery-caption { position: absolute; left: 18px; right: 18px; bottom: 18px; padding: 14px 16px; border-radius: 18px; background: rgba(5,8,13,.74); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(14px); }
+212:   @media (max-width: 1180px) { .cp04-grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+213:   @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.88); backdrop-filter: blur(18px); } .cp04-menu-button { background: linear-gradient(135deg, ${T.accent}, ${T.accent2}); color: #06100a; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(88vw, 340px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3, .cp04-gallery { grid-template-columns: 1fr; } .cp04-gallery-item.featured { min-height: 340px; } }
+214:   @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } .cp04-gallery-item, .cp04-gallery-item.featured { min-height: 245px; border-radius: 22px; } }
+215: `;
+216: 
+217: 
+218: const GALLERY_FORCE_STYLES = `
+219: .cp04-gallery-card {
+220:   position: relative;
+
+===== CONTEXTO 191-241 =====
+191:   .cp04-overlay { display: none; }
+192:   .cp04-sidebar-close { display: none; }
+193:   .cp04-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; }
+194:   .cp04-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+195:   .cp04-card { position: relative; overflow: hidden; background: linear-gradient(150deg, rgba(17,26,43,.94), rgba(8,13,15,.94)); border: 1px solid rgba(255,255,255,.11); border-radius: 26px; padding: 24px; box-shadow: 0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05); }
+196:   .cp04-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 16% 0%, rgba(182,255,0,.08), transparent 32%); }
+197:   .cp04-card > * { position: relative; }
+198:   .cp04-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, border-color .18s ease; }
+199:   .cp04-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); box-shadow: 0 14px 32px rgba(0,0,0,.24); }
+200:   .cp04-badge { display: inline-flex; align-items: center; max-width: 100%; white-space: nowrap; line-height: 1; }
+201:   .cp04-table-wrap { overflow-x: auto; }
+202:   .cp04-table { width: 100%; min-width: 620px; border-collapse: collapse; }
+203:   .cp04-table th, .cp04-table td { padding: 16px 18px; border-bottom: 1px solid ${T.line}; text-align: left; }
+204:   .cp04-table th { color: ${T.textDim}; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+205:   .cp04-gallery { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: stretch; }
+206:   .cp04-gallery-side { display: grid; grid-template-columns: 1fr; gap: 20px; }
+207:   .cp04-gallery-item { min-height: 230px; border-radius: 28px; overflow: hidden; position: relative; border: 1px solid ${T.line}; background: radial-gradient(circle at 20% 18%, rgba(182,255,0,.26), transparent 28%), linear-gradient(135deg, rgba(47,107,255,.18), rgba(17,26,43,.96)); }
+208:   .cp04-gallery-item.featured { min-height: 480px; }
+209:   .cp04-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+210:   .cp04-gallery-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(182,255,0,.18), rgba(47,107,255,.12)), repeating-linear-gradient(90deg, rgba(255,255,255,.10) 0 1px, transparent 1px 34px); }
+211:   .cp04-gallery-caption { position: absolute; left: 18px; right: 18px; bottom: 18px; padding: 14px 16px; border-radius: 18px; background: rgba(5,8,13,.74); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(14px); }
+212:   @media (max-width: 1180px) { .cp04-grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+213:   @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.88); backdrop-filter: blur(18px); } .cp04-menu-button { background: linear-gradient(135deg, ${T.accent}, ${T.accent2}); color: #06100a; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(88vw, 340px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3, .cp04-gallery { grid-template-columns: 1fr; } .cp04-gallery-item.featured { min-height: 340px; } }
+214:   @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } .cp04-gallery-item, .cp04-gallery-item.featured { min-height: 245px; border-radius: 22px; } }
+215: `;
+216: 
+217: 
+218: const GALLERY_FORCE_STYLES = `
+219: .cp04-gallery-card {
+220:   position: relative;
+221:   overflow: hidden;
+222:   border-radius: 24px;
+223:   background: rgba(8,13,15,.94);
+224:   min-height: 220px;
+225: }
+226: 
+227: .cp04-gallery-card img,
+228: .cp04-gallery-img {
+229:   display: block;
+230:   width: 100%;
+231:   height: 100%;
+232:   min-height: inherit;
+233:   object-fit: cover;
+234:   object-position: center;
+235:   border-radius: inherit;
+236: }
+237: 
+238: .cp04-gallery-card::before {
+239:   display: none !important;
+240: }
+241: 
+
+===== CONTEXTO 2423-2473 =====
+2423:     "soporte.airtable_item":"Base de datos preparada sin escritura activa",
+2424:     "soporte.stripe_item":"Pagos y mensajería pendientes de configuración",
+2425:     "soporte.obs_eyebrow":"Observabilidad","soporte.obs_title":"Logs y errores",
+2426:     "soporte.obs_desc":"Zona reservada para diagnóstico cuando exista backend real.",
+2427:     "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
+2428:     "soporte.logs_errores":"Errores de integraciones","soporte.logs_alertas":"Alertas técnicas futuras",
+2429:     "soporte.vars_h3":"Variables privadas",
+2430:   },
+2431:   "en-GB": {
+2432:     "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+2433:     "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+2434:     "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+2435:     "nav.admin":"Admin","nav.flujos_make":"Tech centre","nav.soporte":"Support",
+2436:     "nav.cerrar_sesion":"Sign out","nav.saas_label":"Secure SaaS","nav.cerrar_menu":"Close","nav.abrir_menu":"Menu",
+2437:     "login.title":"Log in as role","login.entrar":"Enter","login.cancelar":"Cancel",
+2438:     "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
+2439:     "login.guardar_sesion":"Remember me on this device","login.acceder_como":"Log in as",
+2440:     "login.intro_pwd":"Enter the password assigned to this role.",
+2441:     "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
+2442:     "login.sesion_label":"Club Pádel 04 · Login",
+2443:     "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
+2444:     "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+2445:     "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2446:     "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
+2447:     "login.idioma":"Language",
+2448:     "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, check bookings and ranking.",
+2449:     "role.STAFF.label":"Staff / reception","role.STAFF.desc":"Daily management of bookings, sign-ups and player assistance.",
+2450:     "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Management panel, metrics and operational control.",
+2451:     "role.SUPPORT.label":"Technical support","role.SUPPORT.desc":"Technical zone, integrations and internal diagnostics.",
+2452:     "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+2453:     "home.socios_activos":"Active members","home.procesos_activos":"Active processes",
+2454:     "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
+2455:     "home.estado_operativo":"Operational status","home.reservar":"Book",
+2456:     "home.torneo":"Tournament","home.alta":"Sign up","home.procesos":"Processes",
+2457:     "home.avisos_activos":"Active alerts","home.ver_procesos":"View processes",
+2458:     "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2459:     "home.estimacion_mensual":"Monthly estimate","home.en_curso":"In progress",
+2460:     "home.este_mes":"this month","home.incidencia":"incident","home.incidencias_s":"incidents",
+2461:     "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
+2462:     "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
+2463:     "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents",
+2464:     "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+2465:     "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+2466:     "home.club_operativo":"Padel club","home.hero_accent":"operational",
+2467:     "home.hero_subtitle":"SaaS by roles: player, reception, administration and support.",
+2468:     "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+2469:     "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
+2470:     "home.ver_admin":"View admin","home.ver_soporte":"View support",
+2471:     "home.galeria":"Club gallery",
+2472:     "home.dias_semana":"M,T,W,T,F,S,S",
+2473:     "home.dias_largo":"Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+
+===== CONTEXTO 2625-2675 =====
+2625:     "soporte.airtable_item":"Database ready without active writes",
+2626:     "soporte.stripe_item":"Payments and messaging pending configuration",
+2627:     "soporte.obs_eyebrow":"Observability","soporte.obs_title":"Logs and errors",
+2628:     "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
+2629:     "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+2630:     "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
+2631:     "soporte.vars_h3":"Private variables",
+2632:   },
+2633:   "en-US": {
+2634:     "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+2635:     "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+2636:     "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+2637:     "nav.admin":"Admin","nav.flujos_make":"Tech center","nav.soporte":"Support",
+2638:     "nav.cerrar_sesion":"Sign out","nav.saas_label":"Secure SaaS","nav.cerrar_menu":"Close","nav.abrir_menu":"Menu",
+2639:     "login.title":"Sign in as role","login.entrar":"Sign in","login.cancelar":"Cancel",
+2640:     "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
+2641:     "login.guardar_sesion":"Remember me on this device","login.acceder_como":"Sign in as",
+2642:     "login.intro_pwd":"Enter the password assigned to this role.",
+2643:     "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
+2644:     "login.sesion_label":"Club Pádel 04 · Sign In",
+2645:     "login.legal":"Local access protected by password. Session can be saved on this device only.",
+2646:     "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+2647:     "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2648:     "login.subtitle":"Select how you want to enter the app. Each role has an experience tailored to its permissions.",
+2649:     "login.idioma":"Language",
+2650:     "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, view bookings and ranking.",
+2651:     "role.STAFF.label":"Staff / front desk","role.STAFF.desc":"Daily management of bookings and player assistance.",
+2652:     "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Dashboard, metrics and operational control.",
+2653:     "role.SUPPORT.label":"Technical support","role.SUPPORT.desc":"Technical zone, integrations and internal diagnostics.",
+2654:     "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+2655:     "home.socios_activos":"Active members","home.procesos_activos":"Active processes",
+2656:     "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
+2657:     "home.estado_operativo":"System status","home.reservar":"Book",
+2658:     "home.torneo":"Tournament","home.alta":"Register","home.procesos":"Processes",
+2659:     "home.avisos_activos":"Active alerts","home.ver_procesos":"View processes",
+2660:     "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2661:     "home.estimacion_mensual":"Monthly estimate","home.en_curso":"In progress",
+2662:     "home.este_mes":"this month","home.incidencia":"incident","home.incidencias_s":"incidents",
+2663:     "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
+2664:     "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
+2665:     "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents",
+2666:     "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+2667:     "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+2668:     "home.club_operativo":"Padel club","home.hero_accent":"operational",
+2669:     "home.hero_subtitle":"SaaS by roles: player, front desk, administration and support.",
+2670:     "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+2671:     "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
+2672:     "home.ver_admin":"View admin","home.ver_soporte":"View support",
+2673:     "home.galeria":"Club gallery",
+2674:     "home.dias_semana":"M,T,W,T,F,S,S",
+2675:     "home.dias_largo":"Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+
+===== CONTEXTO 3946-4039 =====
+3946:   return (
+3947:     <button
+3948:       type="button"
+3949:       onClick={() => onSelect(lang)}
+3950:       style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", background: isSelected ? "rgba(182,255,0,.1)" : "transparent", border: "none", borderLeft: isSelected ? "3px solid rgba(182,255,0,.8)" : "3px solid transparent", padding: "8px 14px", cursor: "pointer", color: "#fff", textAlign: "left", transition: "background .12s ease" }}
+3951:       onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
+3952:       onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+3953:     >
+3954:       <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{lang.flag}</span>
+3955:       <span style={{ flex: 1, minWidth: 0 }}>
+3956:         <span style={{ display: "block", fontWeight: 700, fontSize: ".83rem", color: isSelected ? "rgba(182,255,0,.95)" : "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lang.label}</span>
+3957:         <span style={{ display: "block", fontSize: ".71rem", color: "rgba(154,168,189,.7)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lang.countryEs || lang.country} · {lang.code}</span>
+3958:       </span>
+3959:       {isSelected && <span style={{ color: "rgba(182,255,0,.9)", fontSize: ".85rem", flexShrink: 0 }}>✓</span>}
+3960:     </button>
+3961:   );
+3962: }
+3963: 
+3964: // ============================================================
+3965: // END i18n
+3966: // ============================================================
+3967: 
+3968: function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, onClose }) {
+3969:   const lang = useLang();
+3970:   const tx = key => t(key, lang);
+3971:   const navKeys = [
+3972:     ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
+3973:     ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
+3974:     ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["admin","nav.admin","📊"],
+3975:     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
+3976:   ];
+3977:   const menuByRole = {
+3978:     PLAYER: ["inicio","reservas","torneos","ranking","perfil"],
+3979:     STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
+3980:     ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
+3981:     SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+3982:   };
+3983:   const allowedMenu = menuByRole[selectedRole] || menuByRole.PLAYER;
+3984:   const visibleItems = navKeys.filter(([id]) => allowedMenu.includes(id));
+3985: 
+3986:   return (
+3987:     <aside id="cp04-mobile-menu" className="cp04-sidebar" data-open={mobileOpen ? "true" : "false"} aria-label="Navegación principal">
+3988:       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:26 }}>
+3989:         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+3990:           <span style={{ width:12, height:12, borderRadius:"50%", background:T.accent, boxShadow:`0 0 18px ${T.accent}` }} />
+3991:           <div>
+3992:             <div style={{ fontFamily:T.fontDisplay, fontWeight:900 }}>CLUB PÁDEL 04</div>
+3993:             <div style={{ color:T.textDim, fontSize:".78rem" }}>{tx("nav.saas_label")}</div>
+3994:           </div>
+3995:         </div>
+3996:         <button className="cp04-menu-button cp04-sidebar-close" type="button" onClick={onClose} aria-label="Cerrar menú">{tx("nav.cerrar_menu")}</button>
+3997:       </div>
+3998:       <nav style={{ display:"grid", gap:8 }}>
+3999:         {visibleItems.map(([id, key, icon]) => {
+4000:           const label = tx(key);
+4001:           return (
+4002:             <button key={id} data-tour={`sidebar-${id}`} onClick={() => onNavigate(id)} aria-current={current === id ? "page" : undefined}
+4003:               aria-label={`${label}`}
+4004:               style={{ display:"flex", gap:10, width:"100%", background:current===id?T.accent:"transparent", color:current===id?"#07090e":T.textDim, border:`1px solid ${current===id?T.accent:T.line}`, borderRadius:14, padding:"12px 14px", cursor:"pointer", fontWeight:900 }}>
+4005:               <span aria-hidden="true">{icon}</span><span>{label}</span>
+4006:             </button>
+4007:           );
+4008:         })}
+4009:       </nav>
+4010:       {onClearRole && (
+4011:         <button className="cp04-menu-button" type="button" onClick={onClearRole}
+4012:           style={{ width:"100%", marginTop:14, marginBottom:10, justifyContent:"center", borderColor:"rgba(182,255,0,.32)" }}>
+4013:           🚪 {tx("nav.cerrar_sesion")}
+4014:         </button>
+4015:       )}
+4016:       <div style={{ marginTop:18 }}><LanguageSelector /></div>
+4017:       <Card style={{ marginTop:14, padding:16 }}>
+4018:         <strong style={{ color:T.accent }}>{tx("common.modo_seguro")}</strong>
+4019:         <p style={{ color:T.textDim, fontSize:".84rem", lineHeight:1.5, marginBottom:0 }}>{tx("common.entorno")}.</p>
+4020:       </Card>
+4021:     </aside>
+4022:   );
+4023: }
+4024: 
+4025: function Inicio({ setCurrent }) {
+4026:   const clk = useClock();
+4027:   const lang = useLang();
+4028:   const tx = key => t(key, lang);
+4029:   const kpi = DEMO_KPI;
+4030:   const makeOk = kpi.makeActivos >= 35;
+4031:   const makeStatus = kpi.makeErrores > 3 ? "error" : kpi.makeErrores > 0 ? "warn" : "ok";
+4032:   const diasCortos = tx("home.dias_semana").split(",");
+4033:   const diasLargo = tx("home.dias_largo").split(",");
+4034: 
+4035:   return (
+4036:     <div style={{ padding: "clamp(24px,4vw,48px) 24px clamp(60px,10vw,96px)", maxWidth: 1220, margin: "0 auto" }}>
+4037: 
+4038:       {/* HERO */}
+4039:       <section style={{ display: "grid", alignItems: "center", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,340px),1fr))", gap: "clamp(20px,4vw,48px)", marginBottom: "clamp(28px,4vw,48px)" }}>
+
+===== CONTEXTO 4003-4053 =====
+4003:               aria-label={`${label}`}
+4004:               style={{ display:"flex", gap:10, width:"100%", background:current===id?T.accent:"transparent", color:current===id?"#07090e":T.textDim, border:`1px solid ${current===id?T.accent:T.line}`, borderRadius:14, padding:"12px 14px", cursor:"pointer", fontWeight:900 }}>
+4005:               <span aria-hidden="true">{icon}</span><span>{label}</span>
+4006:             </button>
+4007:           );
+4008:         })}
+4009:       </nav>
+4010:       {onClearRole && (
+4011:         <button className="cp04-menu-button" type="button" onClick={onClearRole}
+4012:           style={{ width:"100%", marginTop:14, marginBottom:10, justifyContent:"center", borderColor:"rgba(182,255,0,.32)" }}>
+4013:           🚪 {tx("nav.cerrar_sesion")}
+4014:         </button>
+4015:       )}
+4016:       <div style={{ marginTop:18 }}><LanguageSelector /></div>
+4017:       <Card style={{ marginTop:14, padding:16 }}>
+4018:         <strong style={{ color:T.accent }}>{tx("common.modo_seguro")}</strong>
+4019:         <p style={{ color:T.textDim, fontSize:".84rem", lineHeight:1.5, marginBottom:0 }}>{tx("common.entorno")}.</p>
+4020:       </Card>
+4021:     </aside>
+4022:   );
+4023: }
+4024: 
+4025: function Inicio({ setCurrent }) {
+4026:   const clk = useClock();
+4027:   const lang = useLang();
+4028:   const tx = key => t(key, lang);
+4029:   const kpi = DEMO_KPI;
+4030:   const makeOk = kpi.makeActivos >= 35;
+4031:   const makeStatus = kpi.makeErrores > 3 ? "error" : kpi.makeErrores > 0 ? "warn" : "ok";
+4032:   const diasCortos = tx("home.dias_semana").split(",");
+4033:   const diasLargo = tx("home.dias_largo").split(",");
+4034: 
+4035:   return (
+4036:     <div style={{ padding: "clamp(24px,4vw,48px) 24px clamp(60px,10vw,96px)", maxWidth: 1220, margin: "0 auto" }}>
+4037: 
+4038:       {/* HERO */}
+4039:       <section style={{ display: "grid", alignItems: "center", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,340px),1fr))", gap: "clamp(20px,4vw,48px)", marginBottom: "clamp(28px,4vw,48px)" }}>
+4040:         <div>
+4041:           <div style={{ display: "inline-flex", alignItems: "center", gap: 10, color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".78rem", textTransform: "uppercase", marginBottom: 16, padding: "7px 12px", border: `1px solid rgba(182,255,0,.22)`, borderRadius: 999, background: "rgba(182,255,0,.07)" }}>
+4042:             <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.accent, boxShadow: `0 0 8px ${T.accent}` }} />
+4043:             Club Pádel 04
+4044:           </div>
+4045:           <h1 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(2.8rem,7vw,5.6rem)", lineHeight: .88, margin: "0 0 18px", letterSpacing: "-.07em" }}>
+4046:             {tx("home.club_operativo")}<br /><span style={{ color: T.accent }}>{tx("home.hero_accent")}</span>
+4047:           </h1>
+4048:           <p style={{ color: T.textDim, fontSize: "clamp(.95rem,1.8vw,1.1rem)", lineHeight: 1.75, maxWidth: 640, margin: "0 0 24px" }}>
+4049:             {tx("home.hero_subtitle")}
+4050:           </p>
+4051:           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+4052:             <Btn onClick={() => setCurrent("reservas")} style={{ color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
+4053:             <Btn variant="secondary" onClick={() => setCurrent("torneos")}>🏆 {tx("home.btn_torneos")}</Btn>
+
+===== CONTEXTO 7235-7285 =====
+7235:           </p>
+7236:         </div>
+7237:       </div>
+7238: 
+7239:       {/* ── NOTIFICACIONES ── */}
+7240:       <div style={cs}>
+7241:         <h3 style={{ ...hs, marginBottom:10 }}>🔔 {tx("perfil.notificaciones")}</h3>
+7242:         <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:14 }}>{tx("perfil.notif_desc")}</p>
+7243:         <div style={{ padding:"12px 16px", border:`1px dashed ${T.line}`, borderRadius:14, color:T.textDim, fontSize:".84rem", lineHeight:1.7 }}>
+7244:           Confirmaciones de reserva &nbsp;·&nbsp; recordatorios de partido &nbsp;·&nbsp; torneos &nbsp;·&nbsp; cambios de horario
+7245:           <div style={{ marginTop:6, fontSize:".75rem", color:T.textDim }}>
+7246:             Preparado para integración con correo y mensajería desde backend real.
+7247:           </div>
+7248:         </div>
+7249:       </div>
+7250: 
+7251:     </div>
+7252:   );
+7253: }
+7254: 
+7255: 
+7256: export default function ClubPadel04SaaSApp() {
+7257:   const [current, setCurrent] = useState("inicio");
+7258:   const [selectedRole, setSelectedRole] = useState(() => localStorage.getItem("cp04_role") || "");
+7259:   const [pendingRole, setPendingRole] = useState("");
+7260:   const [rolePassword, setRolePassword] = useState("");
+7261:   const [showRolePassword, setShowRolePassword] = useState(false);
+7262:   const [rememberRole, setRememberRole] = useState(true);
+7263:   const [roleError, setRoleError] = useState("");
+7264:   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+7265:   const [tutorialRevision, setTutorialRevision] = useState(0);
+7266:   const [forgotPwdStep, setForgotPwdStep] = useState("idle");
+7267:   const [forgotPwdEmail, setForgotPwdEmail] = useState("");
+7268:   const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
+7269: 
+7270:   // Login universal preparado para producción.
+7271:   // Mantiene los perfiles demo internos sin obligar a usuarios reales a usar correos fijos.
+7272:   const [loginEmail, setLoginEmail] = useState("");
+7273:   const [loginPassword, setLoginPassword] = useState("");
+7274:   const [showLoginPassword, setShowLoginPassword] = useState(false);
+7275:   const [loginError, setLoginError] = useState("");
+7276: 
+7277:   const [registerOpen, setRegisterOpen] = useState(() => localStorage.getItem("cp04_register_open") === "true");
+7278:   const [registerName, setRegisterName] = useState(() => localStorage.getItem("cp04_register_name") || "");
+7279:   const [registerEmail, setRegisterEmail] = useState(() => localStorage.getItem("cp04_register_email") || "");
+7280:   const [registerPassword, setRegisterPassword] = useState("");
+7281:   const [registerConfirm, setRegisterConfirm] = useState("");
+7282:   const [registerError, setRegisterError] = useState("");
+7283:   const [registerDone, setRegisterDone] = useState(() => localStorage.getItem("cp04_register_done") === "true");
+7284: 
+7285:   // AUDITORIA 24 · restaurar sesión Supabase real al recargar la app
+
+===== CONTEXTO 7320-7370 =====
+7320:         if (user.email) {
+7321:           localStorage.setItem("cp04_user_email", user.email);
+7322:         }
+7323: 
+7324:         if (!cancelled) {
+7325:           setSelectedRole(restoredRole);
+7326:           setLoginError("");
+7327:         }
+7328:       } catch (error) {
+7329:         if (!cancelled) {
+7330:           setLoginError("");
+7331:         }
+7332:       }
+7333:     }
+7334: 
+7335:     restoreSupabaseSession();
+7336: 
+7337:     return () => {
+7338:       cancelled = true;
+7339:     };
+7340:   }, []);
+7341:   const menuButtonRef = useRef(null);
+7342:   const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+7343: 
+7344:   const roleConfig = {
+7345:     PLAYER: {
+7346:       label: "Jugador / cliente",
+7347:       desc: "Reservar pistas, consultar reservas y ranking.",
+7348:       start: "inicio",
+7349:       password: "jugador04",
+7350:     },
+7351:     STAFF: {
+7352:       label: "Staff / recepción",
+7353:       desc: "Gestión diaria de reservas, altas y atención al jugador.",
+7354:       start: "gestion",
+7355:       password: "staff04",
+7356:     },
+7357:     ADMIN: {
+7358:       label: "Administrador / jefe",
+7359:       desc: "Panel de dirección, métricas y control operativo.",
+7360:       start: "admin",
+7361:       password: "admin04",
+7362:     },
+7363:     SUPPORT: {
+7364:       label: "Soporte técnico",
+7365:       desc: "Zona técnica, integraciones y diagnóstico interno.",
+7366:       start: "soporte",
+7367:       password: "soporte04",
+7368:     },
+7369:   };
+7370: 
+
+===== CONTEXTO 7718-7768 =====
+7718:                   onClick={() => setShowLoginPassword(v => !v)}
+7719:                   style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+7720:                 >
+7721:                   {showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"}
+7722:                 </button>
+7723:                 <button
+7724:                     type="button"
+7725:                     onClick={openRegister}
+7726:                     style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+7727:                   >
+7728:                     Crear cuenta
+7729:                   </button>
+7730:                   <button
+7731:                   type="button"
+7732:                   onClick={openForgotPwd}
+7733:                   style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+7734:                 >
+7735:                   {ltx("login.olvide_pwd")}
+7736:                 </button>
+7737:               </div>
+7738:           {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
+7739:           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
+7740:             <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#ffffff", fontWeight:900 }}>
+7741:               Iniciar sesión
+7742:             </button>
+7743:             
+7744:           </div>
+7745:           
+7746:               {registerOpen && (
+7747:                 <div style={{ marginTop:18, padding:18, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+7748:                   {!registerDone ? (
+7749:                     <div>
+7750:                       <strong style={{ display:"block", marginBottom:6 }}>Crear cuenta</strong>
+7751:                       <p style={{ color:T.textDim, marginTop:0, marginBottom:14, lineHeight:1.55, fontSize:".9rem" }}>
+7752:                         Crea tu acceso como jugador para reservar pistas, consultar actividad y gestionar tu perfil.
+7753:                       </p>
+7754: 
+7755:                       <input
+7756:                         type="text"
+7757:                         value={registerName}
+7758:                         onChange={e => { setRegisterName(e.target.value); localStorage.setItem("cp04_register_name", e.target.value); setRegisterError(""); }}
+7759:                         placeholder="Nombre completo"
+7760:                         autoComplete="name"
+7761:                         style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+7762:                       />
+7763: 
+7764:                       <input
+7765:                         type="email"
+7766:                         value={registerEmail}
+7767:                         onChange={e => { setRegisterEmail(e.target.value); localStorage.setItem("cp04_register_email", e.target.value); setRegisterError(""); }}
+7768:                         placeholder="Correo electrónico"
+
+===== CONTEXTO 7772-7837 =====
+7772: 
+7773:                       <input
+7774:                         type="password"
+7775:                         value={registerPassword}
+7776:                         onChange={e => { setRegisterPassword(e.target.value); setRegisterError(""); }}
+7777:                         placeholder="Contraseña"
+7778:                         autoComplete="new-password"
+7779:                         style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+7780:                       />
+7781: 
+7782:                       <input
+7783:                         type="password"
+7784:                         value={registerConfirm}
+7785:                         onChange={e => { setRegisterConfirm(e.target.value); setRegisterError(""); }}
+7786:                         placeholder="Confirmar contraseña"
+7787:                         autoComplete="new-password"
+7788:                         style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+7789:                       />
+7790: 
+7791:                       {registerError && <div style={{ color:"#ff8b8b", marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
+7792: 
+7793:                       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+7794:                         <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+7795:                           Crear cuenta
+7796:                         </button>
+7797:                         <button type="button" className="cp04-menu-button" onClick={closeRegister} style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+7798:                           Volver
+7799:                         </button>
+7800:                       </div>
+7801:                     </div>
+7802:                   ) : (
+7803:                     <div>
+7804:                       <div style={{ color:T.accent, fontSize:"1.4rem", marginBottom:8 }}>✓</div>
+7805:                       <strong style={{ display:"block", marginBottom:8 }}>Cuenta creada correctamente</strong>
+7806:                       <p style={{ color:T.textDim, lineHeight:1.55, marginTop:0, fontSize:".9rem" }}>
+7807:                         Tu cuenta se ha creado. Puede requerir confirmación por email según la configuración de seguridad. Ya puedes intentar iniciar sesión.
+7808:                       </p>
+7809:                       <button type="button" className="cp04-menu-button" onClick={closeRegister}>
+7810:                         Volver al inicio de sesión
+7811:                       </button>
+7812:                     </div>
+7813:                   )}
+7814:                 </div>
+7815:               )}
+7816: 
+7817: <p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
+7818:             Acceso seguro conectado al sistema de autenticación real.
+7819:           </p>
+7820:         </form>
+7821: 
+7822:         <div style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
+7823:           <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+7824:             ACCESO POR ROLES
+7825:           </div>
+7826:           <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+7827:             Ver la app por roles
+7828:           </strong>
+7829:           <p style={{ color:T.textDim, marginTop:0, marginBottom:0, lineHeight:1.55 }}>
+7830:             Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.
+7831:           </p>
+7832:         </div>
+7833:       </div>
+7834: 
+7835: 
+7836:             <div className="cp04-grid-2">
+7837:               {Object.keys(roleConfig).map((roleId) => {
+
+===== CONTEXTO 7858-7912 =====
+7858:                   value={rolePassword}
+7859:                   onChange={e => setRolePassword(e.target.value)}
+7860:                   placeholder={ltx("login.password")}
+7861:                   autoFocus
+7862:                   style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${roleError?"#ff6b6b":T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+7863:                 />
+7864:                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+7865:                   <button type="button" onClick={() => setShowRolePassword(v => !v)}
+7866:                     style={{ border:"none", background:"transparent", color:T.accent, fontWeight:900, cursor:"pointer", padding:0 }}>
+7867:                     {showRolePassword ? ltx("login.ocultar_pwd") : ltx("login.ver_pwd")}
+7868:                   </button>
+7869:                   <button type="button" onClick={openForgotPwd}
+7870:                     style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}>
+7871:                     {ltx("login.olvide_pwd")}
+7872:                   </button>
+7873:                 </div>
+7874:                 <label style={{ display:"flex", alignItems:"center", gap:10, color:T.textDim, marginBottom:12, cursor:"pointer", userSelect:"none" }}>
+7875:                   <input type="checkbox" checked={rememberRole} onChange={e => setRememberRole(e.target.checked)} style={{ width:18, height:18, accentColor:T.accent }} />
+7876:                   {ltx("login.guardar_sesion")}
+7877:                 </label>
+7878:                 {roleError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{roleError}</div>}
+7879:                 <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+7880:                   <button type="submit" className="cp04-menu-button"
+7881:                     style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
+7882:                     {ltx("login.entrar")}
+7883:                   </button>
+7884:                   <button type="button" className="cp04-menu-button"
+7885:                     onClick={() => { setPendingRole(""); setRolePassword(""); setRoleError(""); }}
+7886:                     style={{ width:"auto" }}>
+7887:                     {ltx("login.cancelar")}
+7888:                   </button>
+7889:                 </div>
+7890:               </form>
+7891:             )}
+7892: 
+7893:             {forgotPwdStep !== "idle" && (
+7894:               <div style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+7895:                 {forgotPwdStep === "form" && (
+7896:                   <>
+7897:                     <strong style={{ display:"block", marginBottom:6 }}>{ltx("login.recuperar_title")}</strong>
+7898:                     <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_desc")}</p>
+7899:                     <form onSubmit={handleForgotPwdSubmit}>
+7900:                       <input
+7901:                         type="email"
+7902:                         value={forgotPwdEmail}
+7903:                         onChange={e => { setForgotPwdEmail(e.target.value); setForgotPwdEmailError(""); }}
+7904:                         placeholder={ltx("login.recuperar_email")}
+7905:                         autoFocus
+7906:                         style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+7907:                       />
+7908:                       {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
+7909:                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
+7910:                         <button type="submit" className="cp04-menu-button"
+7911:                           style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+7912:                           {ltx("login.recuperar_btn")}
+
+===== CONTEXTO 7888-7942 =====
+7888:                   </button>
+7889:                 </div>
+7890:               </form>
+7891:             )}
+7892: 
+7893:             {forgotPwdStep !== "idle" && (
+7894:               <div style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+7895:                 {forgotPwdStep === "form" && (
+7896:                   <>
+7897:                     <strong style={{ display:"block", marginBottom:6 }}>{ltx("login.recuperar_title")}</strong>
+7898:                     <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_desc")}</p>
+7899:                     <form onSubmit={handleForgotPwdSubmit}>
+7900:                       <input
+7901:                         type="email"
+7902:                         value={forgotPwdEmail}
+7903:                         onChange={e => { setForgotPwdEmail(e.target.value); setForgotPwdEmailError(""); }}
+7904:                         placeholder={ltx("login.recuperar_email")}
+7905:                         autoFocus
+7906:                         style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+7907:                       />
+7908:                       {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
+7909:                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
+7910:                         <button type="submit" className="cp04-menu-button"
+7911:                           style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+7912:                           {ltx("login.recuperar_btn")}
+7913:                         </button>
+7914:                         <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+7915:                           style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+7916:                           {ltx("login.recuperar_volver")}
+7917:                         </button>
+7918:                       </div>
+7919:                     </form>
+7920:                   </>
+7921:                 )}
+7922:                 {forgotPwdStep === "sent" && (
+7923:                   <>
+7924:                     <div style={{ color:T.accent, fontWeight:900, fontSize:"1.4rem", marginBottom:10 }}>✓</div>
+7925:                     <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
+7926:                     <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_enviado")}</p>
+7927:                     <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+7928:                       style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+7929:                       {ltx("login.recuperar_volver")}
+7930:                     </button>
+7931:                   </>
+7932:                 )}
+7933:               </div>
+7934:             )}
+7935: 
+7936:             <p style={{ color:T.textDim, marginTop:24, fontSize:".9rem" }}>
+7937:               {ltx("login.legal")}
+7938:             </p>
+7939:           </section>
+7940:         </main>
+7941:       </>
+7942:     );
+
+===== CONTEXTO 7905-7955 =====
+7905:                         autoFocus
+7906:                         style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+7907:                       />
+7908:                       {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
+7909:                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
+7910:                         <button type="submit" className="cp04-menu-button"
+7911:                           style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+7912:                           {ltx("login.recuperar_btn")}
+7913:                         </button>
+7914:                         <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+7915:                           style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+7916:                           {ltx("login.recuperar_volver")}
+7917:                         </button>
+7918:                       </div>
+7919:                     </form>
+7920:                   </>
+7921:                 )}
+7922:                 {forgotPwdStep === "sent" && (
+7923:                   <>
+7924:                     <div style={{ color:T.accent, fontWeight:900, fontSize:"1.4rem", marginBottom:10 }}>✓</div>
+7925:                     <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
+7926:                     <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_enviado")}</p>
+7927:                     <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+7928:                       style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+7929:                       {ltx("login.recuperar_volver")}
+7930:                     </button>
+7931:                   </>
+7932:                 )}
+7933:               </div>
+7934:             )}
+7935: 
+7936:             <p style={{ color:T.textDim, marginTop:24, fontSize:".9rem" }}>
+7937:               {ltx("login.legal")}
+7938:             </p>
+7939:           </section>
+7940:         </main>
+7941:       </>
+7942:     );
+7943:   }
+7944: 
+7945:   return (
+7946:     <>
+7947:       <style>{globalStyles}</style>
+7948:       <style>{GALLERY_REAL_IMAGE_STYLES}</style>
+7949:       <style>{GALLERY_FORCE_STYLES}</style>
+7950:       <div className="cp04-mobilebar">
+7951:         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+7952:           <span style={{ width:10, height:10, borderRadius:"50%", background:T.accent }} />
+7953:           <strong style={{ fontFamily:T.fontDisplay }}>CLUB PÁDEL 04</strong>
+7954:         </div>
+7955:         <ClockDisplay compact />
+
+===== CONTEXTO 7934-7971 =====
+7934:             )}
+7935: 
+7936:             <p style={{ color:T.textDim, marginTop:24, fontSize:".9rem" }}>
+7937:               {ltx("login.legal")}
+7938:             </p>
+7939:           </section>
+7940:         </main>
+7941:       </>
+7942:     );
+7943:   }
+7944: 
+7945:   return (
+7946:     <>
+7947:       <style>{globalStyles}</style>
+7948:       <style>{GALLERY_REAL_IMAGE_STYLES}</style>
+7949:       <style>{GALLERY_FORCE_STYLES}</style>
+7950:       <div className="cp04-mobilebar">
+7951:         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+7952:           <span style={{ width:10, height:10, borderRadius:"50%", background:T.accent }} />
+7953:           <strong style={{ fontFamily:T.fontDisplay }}>CLUB PÁDEL 04</strong>
+7954:         </div>
+7955:         <ClockDisplay compact />
+7956:         <button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú de navegación" aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>{ltx("nav.abrir_menu")}</button>
+7957:       </div>
+7958:       {mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}
+7959:       <div className="cp04-layout">
+7960:         <Sidebar current={current} selectedRole={selectedRole} onClearRole={clearRole} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} />
+7961:         <main className="cp04-main" data-tour="main-content">{modules[current] || modules.inicio}</main>
+7962:       </div>
+7963:       <CP04GuidedTutorial
+7964:         selectedRole={selectedRole}
+7965:         onNavigate={navigate}
+7966:         openRevision={tutorialRevision}
+7967:       />
+7968:     </>
+7969:   );
+7970: }
+7971: 

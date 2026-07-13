@@ -1,0 +1,139 @@
+{
+  "x-contract-version": "1.0.0",
+  "x-description": "Taxonomía de errores validable de Club Pádel 04 / Agencia. Refina audit/observability/03_ERROR_TAXONOMY.md (que sigue vigente como prosa descriptiva) en una estructura consultable por código. No inventa integraciones que no existen: WHATSAPP y STRIPE están definidas como categorías reservadas sin códigos reales (ver 01_AGENCY_COMMERCIAL_STRATEGY.md §1.4 del sistema comercial). CODE debe cumplir el patrón ^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$ del log-event.schema.json.",
+  "severities": ["debug", "info", "warn", "error", "critical"],
+  "alert_levels": ["P0", "P1", "P2", "P3"],
+  "categories": {
+    "AUTH": {
+      "description": "Fallos de autenticación (identidad): el usuario no puede probar quién es. Ya existe como vocabulario real en src/auth/authService.js.",
+      "owner": "Producto (Agencia) — dominio compartido con T1 (Seguridad) para cualquier cambio de política de sesión",
+      "codes": [
+        { "code": "AUTH.MISSING_TOKEN", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": 401, "runbook_ref": "pending", "description": "Sin access_token de Supabase en el navegador — esperado si el usuario no ha iniciado sesión real (ver feedback-login-demo-vs-real.md)." },
+        { "code": "AUTH.SESSION_INVALID", "severity": "warn", "retryable": false, "alert_level": "P3", "http_status": 401, "runbook_ref": "pending", "description": "Token presente pero rechazado por Supabase." },
+        { "code": "AUTH.MISSING_REFRESH_TOKEN", "severity": "warn", "retryable": false, "alert_level": "P3", "http_status": 401, "runbook_ref": "pending", "description": "No hay refresh token para renovar la sesión." },
+        { "code": "AUTH.REFRESH_FAILED", "severity": "warn", "retryable": true, "alert_level": "P3", "http_status": 401, "runbook_ref": "pending", "description": "Falló la renovación de sesión — reintentable una vez antes de forzar re-login." },
+        { "code": "AUTH.LOGIN_FAILED", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": 401, "runbook_ref": "pending", "description": "Credenciales rechazadas — no reintentar automáticamente." },
+        { "code": "AUTH.REGISTER_FAILED", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": 400, "runbook_ref": "pending", "description": "Alta de usuario rechazada." },
+        { "code": "AUTH.UPSTREAM_ERROR", "severity": "error", "retryable": true, "alert_level": "P1", "http_status": null, "runbook_ref": "06_ALERTING_MATRIX.md#auth-upstream-error", "description": "No se pudo contactar el servidor de auth (red/timeout) — alerta si es en ráfaga, ver 06_ALERTING_MATRIX.md." }
+      ]
+    },
+    "AUTHZ": {
+      "description": "Fallos de autorización (permisos): la identidad se conoce, pero no tiene permiso para la acción. Distinta de AUTH a propósito — antes mezclada dentro de WORKER.* en 03_ERROR_TAXONOMY.md.",
+      "owner": "T1 (Seguridad) — dominio de RBAC/Worker, esta terminal solo documenta el contrato sin tocar código",
+      "codes": [
+        { "code": "AUTHZ.ROLE_FORBIDDEN", "severity": "warn", "retryable": false, "alert_level": "P2", "http_status": 403, "runbook_ref": "pending", "description": "Sesión válida pero rol insuficiente (ej. no-SUPPORT en ruta SUPPORT-only)." },
+        { "code": "AUTHZ.ORIGIN_NOT_ALLOWED", "severity": "warn", "retryable": false, "alert_level": "P2", "http_status": 403, "runbook_ref": "pending", "description": "Origen fuera de ALLOWED_ORIGIN — posible integración mal configurada o abuso." },
+        { "code": "AUTHZ.ROLE_GATE_BYPASS_RISK", "severity": "critical", "retryable": false, "alert_level": "P0", "http_status": null, "runbook_ref": "pending", "description": "Reservado para cuando exista instrumentación real del hallazgo CP04_ENFORCE_ROLE_GATES inactivo (ver project-make-50-auditoria-app-20260707) — NO se genera hoy, esta terminal no toca esa lógica." }
+      ]
+    },
+    "VALIDATION": {
+      "description": "Entrada de usuario/cliente rechazada por reglas de negocio conocidas. Ya existe como AVAILABILITY_REASON en src/utils/availability.js.",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "VALIDATION.INVALID_DATE", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": 400, "runbook_ref": "pending", "description": "Fecha inválida en solicitud de reserva." },
+        { "code": "VALIDATION.CLUB_CLOSED", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": 400, "runbook_ref": "pending", "description": "Fecha/hora fuera del calendario de apertura del club." },
+        { "code": "VALIDATION.BOOKING_OVERLAP", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": 409, "runbook_ref": "pending", "description": "Solapamiento con una reserva existente (bloqueo de duplicados)." },
+        { "code": "VALIDATION.PAST_TIME", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": 400, "runbook_ref": "pending", "description": "Intento de reservar en el pasado." }
+      ]
+    },
+    "AIRTABLE_RATE_LIMIT": {
+      "description": "429 de Airtable. Ya confirmado en producción en 3 escenarios reales que comparten conexión/base/tabla (project-make-50-auditoria-app-20260707).",
+      "owner": "Producto (Agencia) — causa raíz de arquitectura compartida es territorio de T3",
+      "codes": [
+        { "code": "AIRTABLE_RATE_LIMIT.EXCEEDED", "severity": "error", "retryable": true, "alert_level": "P1", "http_status": 429, "runbook_ref": "06_ALERTING_MATRIX.md#airtable-rate-limited", "description": "429 confirmado — retryable con backoff exponencial." }
+      ]
+    },
+    "AIRTABLE_MONTHLY_QUOTA": {
+      "description": "Cuota mensual de Airtable agotada (distinta de rate-limit por segundo). Sin instrumentar hoy — categoría nueva, sin precedente en 03_ERROR_TAXONOMY.md.",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "AIRTABLE_MONTHLY_QUOTA.EXHAUSTED", "severity": "critical", "retryable": false, "alert_level": "P0", "http_status": 402, "runbook_ref": "pending", "description": "Cuota del plan agotada — no reintentable hasta el siguiente ciclo o upgrade de plan; bloquea todas las reservas." }
+      ]
+    },
+    "MAKE_EXECUTION": {
+      "description": "Fallo en tiempo de ejecución de un escenario Make ya disparado (distinto de un problema de configuración del escenario).",
+      "owner": "Producto (Agencia) — territorio de detalle de ejecución es T4 (QA Make)",
+      "codes": [
+        { "code": "MAKE_EXECUTION.SCENARIO_FAILED", "severity": "error", "retryable": true, "alert_level": "P1", "http_status": null, "runbook_ref": "pending", "description": "Ejecución de escenario terminó en error dentro de Make." },
+        { "code": "MAKE_EXECUTION.NO_EXECUTION_DATA", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": null, "runbook_ref": "pending", "description": "El endpoint /scenarios consultado no expone dato de ejecución individual (ver 01_OBSERVABILITY_INVENTORY.md §4) — 'desconocido', no 'fallo', mismo principio que SIN_DATOS del Centro Técnico." }
+      ]
+    },
+    "MAKE_CONFIGURATION": {
+      "description": "Problema de configuración del escenario o de la conexión Worker→Make (distinto de un fallo de ejecución concreto).",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "MAKE_CONFIGURATION.SCENARIO_INACTIVE", "severity": "warn", "retryable": false, "alert_level": "P2", "http_status": null, "runbook_ref": "pending", "description": "Escenario relevante para una operación de cliente está inactivo." },
+        { "code": "MAKE_CONFIGURATION.WEBHOOK_UNREACHABLE", "severity": "error", "retryable": true, "alert_level": "P1", "http_status": 503, "runbook_ref": "06_ALERTING_MATRIX.md#worker-upstream-unavailable", "description": "El Worker no pudo contactar el webhook de Make configurado." }
+      ]
+    },
+    "EXTERNAL_PROVIDER": {
+      "description": "Catch-all para proveedores externos no cubiertos por una categoría propia (hoy: Google Calendar).",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "EXTERNAL_PROVIDER.GOOGLE_CALENDAR_SYNC_FAILED", "severity": "warn", "retryable": true, "alert_level": "P2", "http_status": null, "runbook_ref": "pending", "description": "Fallo de sincronización con Google Calendar." },
+        { "code": "EXTERNAL_PROVIDER.UNKNOWN_FAILURE", "severity": "warn", "retryable": true, "alert_level": "P2", "http_status": null, "runbook_ref": "pending", "description": "Fallo de un proveedor externo no clasificado todavía — revisar y, si se repite, promover a categoría propia." }
+      ]
+    },
+    "EMAIL": {
+      "description": "Gmail vía Make. 40 de 44 escenarios con conexión Gmail sin auditar contenido (project-make-50-auditoria-app-20260707) — entregabilidad hoy es, en la práctica, desconocida en la mayoría de casos.",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "EMAIL.DELIVERY_UNKNOWN", "severity": "info", "retryable": false, "alert_level": "P3", "http_status": null, "runbook_ref": "pending", "description": "Sin confirmación de entrega — estado honesto por defecto mientras no exista instrumentación de entregabilidad." },
+        { "code": "EMAIL.SEND_FAILED", "severity": "error", "retryable": true, "alert_level": "P2", "http_status": null, "runbook_ref": "pending", "description": "Fallo de envío confirmado." }
+      ]
+    },
+    "WHATSAPP": {
+      "description": "Reservado. Cero código de integración real hoy (ver 01_AGENCY_COMMERCIAL_STRATEGY.md §1.4). Sin códigos — no inventar vocabulario de errores de algo que no existe.",
+      "owner": "N/A — sin integración real",
+      "codes": []
+    },
+    "STRIPE": {
+      "description": "Reservado. Cero código de integración real hoy (ver 01_AGENCY_COMMERCIAL_STRATEGY.md §1.4). Sin códigos — no inventar vocabulario de errores de algo que no existe.",
+      "owner": "N/A — sin integración real",
+      "codes": []
+    },
+    "WORKER_4XX": {
+      "description": "Respuestas 4xx del Worker no cubiertas por AUTH/AUTHZ/VALIDATION (ej. rate-limit propio del Worker, distinto del rate-limit de Airtable).",
+      "owner": "T1 (Seguridad) — dominio de Worker, esta terminal no toca el código",
+      "codes": [
+        { "code": "WORKER_4XX.RATE_LIMITED", "severity": "warn", "retryable": true, "alert_level": "P2", "http_status": 429, "runbook_ref": "06_ALERTING_MATRIX.md#worker-rate-limited", "description": "429 propio del Worker — protección funcionando según diseño." }
+      ]
+    },
+    "WORKER_5XX": {
+      "description": "Respuestas 5xx del Worker — la disciplina fail-closed ya documentada en worker-reservas/src/index.js (línea 1736-1738) mapea aquí.",
+      "owner": "T1 (Seguridad) — dominio de Worker, esta terminal no toca el código",
+      "codes": [
+        { "code": "WORKER_5XX.UPSTREAM_UNAVAILABLE", "severity": "error", "retryable": true, "alert_level": "P1", "http_status": 503, "runbook_ref": "06_ALERTING_MATRIX.md#worker-upstream-unavailable", "description": "Make no configurado, no disponible, o respuesta inválida." },
+        { "code": "WORKER_5XX.INTERNAL_ERROR", "severity": "critical", "retryable": false, "alert_level": "P0", "http_status": 500, "runbook_ref": "06_ALERTING_MATRIX.md#worker-internal-error", "description": "Error no clasificado dentro del Worker — máxima prioridad de triage." }
+      ]
+    },
+    "TIMEOUT": {
+      "description": "La operación no completó dentro del límite de tiempo esperado — categoría de transporte, distinta del servicio afectado.",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "TIMEOUT.UPSTREAM_TIMEOUT", "severity": "error", "retryable": true, "alert_level": "P2", "http_status": null, "runbook_ref": "pending", "description": "Timeout esperando respuesta de un sistema aguas arriba (Make, Airtable, Auth, etc.) — usar junto a service para saber cuál." }
+      ]
+    },
+    "NETWORK": {
+      "description": "Fallo de red/conectividad, sin respuesta HTTP recibida — categoría de transporte, distinta de TIMEOUT (aquí no hubo ni siquiera conexión).",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "NETWORK.CONNECTION_FAILED", "severity": "error", "retryable": true, "alert_level": "P2", "http_status": null, "runbook_ref": "pending", "description": "No se pudo establecer conexión con el sistema aguas arriba." }
+      ]
+    },
+    "DATA_INTEGRITY": {
+      "description": "El dato recibido es estructuralmente inválido o inconsistente (no un problema de red ni de permisos). Precedente real: el bug de 'NaN' mostrado como texto literal, corregido en Centro Técnico (project-centro-tecnico-envivo-20260706).",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "DATA_INTEGRITY.MALFORMED_RESPONSE", "severity": "error", "retryable": false, "alert_level": "P2", "http_status": null, "runbook_ref": "pending", "description": "Respuesta de un sistema aguas arriba con forma inesperada (campo ausente, tipo incorrecto, NaN/null no manejado)." }
+      ]
+    },
+    "UNKNOWN": {
+      "description": "Catch-all obligatorio para cualquier evento con severity error/critical que no encaje en ninguna categoría anterior. Nunca dejar un evento crítico sin clasificar en silencio.",
+      "owner": "Producto (Agencia)",
+      "codes": [
+        { "code": "UNKNOWN.UNCLASSIFIED", "severity": "error", "retryable": false, "alert_level": "P1", "http_status": null, "runbook_ref": "06_ALERTING_MATRIX.md#severity-critical-no-cubierto", "description": "Evento de severidad elevada sin categoría asignable todavía — triage manual obligatorio, candidato a nueva categoría si se repite." }
+      ]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "_why": "Parámetros de reintento a validar en whatsapp-mock.test.mjs: backoff exponencial con techo, nunca reintento inmediato ni creciendo sin límite.",
+  "attempts": [
+    { "attempt": 1, "expected_min_ms": 1000, "expected_max_ms": 1250 },
+    { "attempt": 2, "expected_min_ms": 2000, "expected_max_ms": 2250 },
+    { "attempt": 3, "expected_min_ms": 4000, "expected_max_ms": 4250 },
+    { "attempt": 10, "expected_min_ms": 30000, "expected_max_ms": 30250 }
+  ],
+  "base_ms": 1000,
+  "max_ms": 30000,
+  "jitter_ms": 250
+}

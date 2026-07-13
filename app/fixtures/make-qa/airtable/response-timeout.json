@@ -1,0 +1,5 @@
+{
+  "timeout_ms_configured": 5000,
+  "actual_latency_ms": 12000,
+  "_why": "Latencia real (simulada) muy por encima del timeout configurado — debe clasificarse como timedOut:true, nunca confundirse con un 200 lento."
+}

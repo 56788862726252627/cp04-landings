@@ -1,0 +1,8 @@
+{
+  "_why": "2 fallos de rate-limit seguidos de éxito en el 3er intento — dentro de maxRetries=3, debe terminar en success.",
+  "attempts": [
+    { "status": 429, "error": { "message": "You have made too many requests." } },
+    { "status": 429, "error": { "message": "You have made too many requests." } },
+    { "status": 200, "data": { "records": [] } }
+  ]
+}

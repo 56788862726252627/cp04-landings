@@ -1,0 +1,107 @@
+7911:           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
+7912:             <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#ffffff", fontWeight:900 }}>
+7913:               Iniciar sesión
+7914:             </button>
+7915:             
+7916:           </div>
+7917:           
+7918:               {registerOpen && (
+7919:                 <div style={{ marginTop:18, padding:18, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+7920:                   {!registerDone ? (
+7921:                     <div>
+7922:                       <strong style={{ display:"block", marginBottom:6 }}>Crear cuenta</strong>
+7923:                       <p style={{ color:T.textDim, marginTop:0, marginBottom:14, lineHeight:1.55, fontSize:".9rem" }}>
+7924:                         Crea tu acceso como jugador para reservar pistas, consultar actividad y gestionar tu perfil.
+7925:                       </p>
+7926: 
+7927:                       <input
+7928:                         type="text"
+7929:                         value={registerName}
+7930:                         onChange={e => { setRegisterName(e.target.value); localStorage.setItem("cp04_register_name", e.target.value); setRegisterError(""); }}
+7931:                         placeholder="Nombre completo"
+7932:                         autoComplete="name"
+7933:                         style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+7934:                       />
+
+==========================================================================================
+
+7986:                 </div>
+7987:               )}
+7988: 
+7989: <p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
+7990:             Acceso seguro conectado al sistema de autenticación real.
+7991:           </p>
+7992:         </form>
+7993: 
+7994:         <div style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
+7995:           <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+7996:             ACCESO POR ROLES
+7997:           </div>
+7998:           <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+7999:             Ver la app por roles
+8000:           </strong>
+8001:           <p style={{ color:T.textDim, marginTop:0, marginBottom:0, lineHeight:1.55 }}>
+8002:             Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.
+8003:           </p>
+8004:         </div>
+8005:       </div>
+8006: 
+8007: 
+8008:             <div className="cp04-grid-2">
+8009:               {Object.keys(roleConfig).map((roleId) => {
+
+==========================================================================================
+
+8015:                     <strong style={{ display:"block", fontSize:"1.1rem", marginBottom:8 }}>{rl.label}</strong>
+8016:                     <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>
+8017:                   </button>
+8018:                 );
+8019:               })}
+8020:             </div>
+8021: 
+8022:             {pendingRole && (
+8023:               <form onSubmit={confirmRoleAccess} style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+8024:                 <strong style={{ display:"block", marginBottom:8 }}>
+8025:                   {ltx("login.acceder_como")} {roleLabels[pendingRole]?.label || roleConfig[pendingRole]?.label}
+8026:                 </strong>
+8027:                 <p style={{ color:T.textDim, marginTop:0, marginBottom:14 }}>{ltx("login.intro_pwd")}</p>
+8028:                 <input
+8029:                   type={showRolePassword ? "text" : "password"}
+8030:                   value={rolePassword}
+8031:                   onChange={e => setRolePassword(e.target.value)}
+8032:                   placeholder={ltx("login.password")}
+8033:                   autoFocus
+8034:                   style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${roleError?"#ff6b6b":T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+8035:                 />
+8036:                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+8037:                   <button type="button" onClick={() => setShowRolePassword(v => !v)}
+8038:                     style={{ border:"none", background:"transparent", color:T.accent, fontWeight:900, cursor:"pointer", padding:0 }}>
+
+==========================================================================================
+
+8058:                     style={{ width:"auto" }}>
+8059:                     {ltx("login.cancelar")}
+8060:                   </button>
+8061:                 </div>
+8062:               </form>
+8063:             )}
+8064: 
+8065:             {forgotPwdStep !== "idle" && (
+8066:               <div style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+8067:                 {forgotPwdStep === "form" && (
+8068:                   <>
+8069:                     <strong style={{ display:"block", marginBottom:6 }}>{ltx("login.recuperar_title")}</strong>
+8070:                     <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_desc")}</p>
+8071:                     <form onSubmit={handleForgotPwdSubmit}>
+8072:                       <input
+8073:                         type="email"
+8074:                         value={forgotPwdEmail}
+8075:                         onChange={e => { setForgotPwdEmail(e.target.value); setForgotPwdEmailError(""); }}
+8076:                         placeholder={ltx("login.recuperar_email")}
+8077:                         autoFocus
+8078:                         style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+8079:                       />
+8080:                       {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
+8081:                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
+
+==========================================================================================

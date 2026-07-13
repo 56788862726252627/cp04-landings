@@ -1,0 +1,26 @@
+{
+  "description": "Snapshot re-chequeable del estado de seguridad, sourced de audit/security-hardening/09_P0_SECURITY_BACKLOG.md y 10_PRODUCTION_SECURITY_READINESS.md (sesión 2026-07-08). Actualizar este archivo (no inventar un estado nuevo) cuando llegue evidencia fresca — mismo patrón que fixtures/make-qa/dependency-status.json.",
+  "generated_at": "2026-07-08T02:02:00.000Z",
+  "source_refs": ["audit/security-hardening/09_P0_SECURITY_BACKLOG.md", "audit/security-hardening/10_PRODUCTION_SECURITY_READINESS.md"],
+  "readiness_percent": 80,
+  "open_p0": [
+    {
+      "id": "P0-1",
+      "title": "Webhook de Make expuesto en repo público (histórico + activo)",
+      "remediation_ref": "audit/security-hardening/08_SECRET_ROTATION_RUNBOOK.md#bloque-1"
+    },
+    {
+      "id": "P0-2",
+      "title": "Gate de autorización (CP04_ENFORCE_ROLE_GATES) inactivo por defecto",
+      "remediation_ref": "audit/security-hardening/11_SUPPORT_ROLE_P0_CLOSURE_RUNBOOK.md"
+    }
+  ],
+  "open_p1": [],
+  "open_p2": ["Ausencia de rate limiting en login/registro"],
+  "open_p3": [
+    "Ausencia de cabeceras de seguridad HTTP",
+    "Documentación de secretos incompleta en wrangler.toml",
+    "Nombres duplicados AIRTABLE_TOKEN/AIRTABLE_API_KEY",
+    "Dependencias dev desactualizadas sin CVE"
+  ]
+}

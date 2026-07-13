@@ -1,0 +1,11 @@
+{
+  "_why_invalid": "to sin '+' inicial ni código de país — no cumple E.164",
+  "to": "600000001",
+  "template_name": "reminder_2h_before",
+  "language": "es",
+  "category": "UTILITY",
+  "components": [
+    { "type": "body", "parameters": [{ "type": "text", "text": "QA_CP04 Pista 1" }] }
+  ],
+  "idempotency_key": "QA_CP04_WA_INVALID_RECIPIENT_20260709A"
+}

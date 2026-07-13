@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agencia-ia.internal/schemas/vertical-config/1.0.0/vertical-config.schema.json",
+  "title": "Agencia IA — Vertical Config",
+  "description": "Esquema de la capa VERTICAL CONFIG descrita en docs/agencia-ia/ARCHITECTURE_CORE_VS_VERTICAL.md y audit/agency-platform-architecture/AGENCY_VERTICALIZATION_STRATEGY.md. Vocabulario y overrides de feature flags comunes a todos los clientes de un mismo sector. Hoy solo existe evidencia de código para UN vertical real: 'padel' (recurso=pista, evento=torneo) — no se define ningún otro verticalId hasta que exista un segundo vertical con código real (mismo criterio ya aplicado en AGENCY_PRODUCTIZATION_ROADMAP.md, sin fabricar datos especulativos).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "layer", "verticalId", "resourceType", "eventType", "roleLabels"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "layer": { "type": "string", "const": "vertical" },
+    "verticalId": {
+      "type": "string",
+      "pattern": "^[a-z]([a-z0-9-]{0,30}[a-z0-9])?$",
+      "description": "Identificador corto del vertical. Único valor con evidencia de código hoy: 'padel'."
+    },
+    "resourceType": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Etiqueta del recurso reservable de este vertical (p.ej. 'pista' en deportivo, 'sala'/'profesional' en clínico — este último NO_EXISTE en código todavía)."
+    },
+    "eventType": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Vocabulario del evento propio del vertical (p.ej. 'torneo')."
+    },
+    "roleLabels": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Etiqueta VISIBLE por rol para este vertical — nunca el mecanismo de RBAC en sí (eso es CORE, cp04NormalizeRole, sin cambios). Ver AGENCY_VERTICALIZATION_STRATEGY.md punto 2.",
+      "required": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+      "properties": {
+        "PLAYER": { "type": "string", "minLength": 1 },
+        "STAFF": { "type": "string", "minLength": 1 },
+        "ADMIN": { "type": "string", "minLength": 1 },
+        "SUPPORT": { "type": "string", "minLength": 1 }
+      }
+    },
+    "featureOverrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Override parcial (todas las keys opcionales) del default GLOBAL de core-config.schema.json#featureDefaults para este vertical. Mismo catálogo cerrado de 23 keys, ninguna key nueva.",
+      "properties": {
+        "reservas": { "type": "boolean" },
+        "cancelaciones": { "type": "boolean" },
+        "reprogramaciones": { "type": "boolean" },
+        "listaEspera": { "type": "boolean" },
+        "torneos": { "type": "boolean" },
+        "ranking": { "type": "boolean" },
+        "emparejamientos": { "type": "boolean" },
+        "crm": { "type": "boolean" },
+        "nps": { "type": "boolean" },
+        "noShow": { "type": "boolean" },
+        "referidos": { "type": "boolean" },
+        "membresias": { "type": "boolean" },
+        "pagos": { "type": "boolean", "const": false },
+        "qr": { "type": "boolean" },
+        "promociones": { "type": "boolean" },
+        "ia": { "type": "boolean", "const": false },
+        "soporte": { "type": "boolean" },
+        "dashboards": { "type": "boolean" },
+        "automatizaciones": { "type": "boolean" },
+        "campanas": { "type": "boolean" },
+        "notificaciones": { "type": "boolean" },
+        "whatsapp": { "type": "boolean", "const": false }
+      }
+    },
+    "bookingModalitiesDefault": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "default": [],
+      "description": "Vocabulario de modalidades de reserva de este vertical. Para 'padel' hereda literalmente BOOKING_MODALITIES_DEFAULT de src/data/clientConfig.default.js (único vertical real hoy, no se inventa de nuevo)."
+    },
+    "bookingLevelsDefault": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "default": [],
+      "description": "Vocabulario de niveles de este vertical. Para 'padel' hereda literalmente BOOKING_LEVELS_DEFAULT de src/data/clientConfig.default.js."
+    },
+    "metrics": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "default": [],
+      "description": "Métricas propias del vertical, ya mencionadas como ejemplo en ARCHITECTURE_CORE_VS_VERTICAL.md."
+    }
+  },
+  "examples": [
+    {
+      "schemaVersion": "1.0.0",
+      "layer": "vertical",
+      "verticalId": "padel",
+      "resourceType": "pista",
+      "eventType": "torneo",
+      "roleLabels": { "PLAYER": "Jugador", "STAFF": "Staff", "ADMIN": "Administrador", "SUPPORT": "Soporte" },
+      "featureOverrides": { "torneos": true, "ranking": true },
+      "bookingModalitiesDefault": ["libre", "partido", "clase", "torneo"],
+      "bookingLevelsDefault": ["iniciacion", "intermedio", "avanzado", "competicion"],
+      "metrics": ["ocupación por pista", "reservas por hora"]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "type": "worker_http_request",
+    "route": "/api/reservas",
+    "method": "POST",
+    "http_status": 200,
+    "duration_ms": 100,
+    "request_id": "req_chain-a1",
+    "correlation_id": "corr_local-chain-a",
+    "occurred_at": "2026-07-08T13:05:00.000Z"
+  },
+  {
+    "type": "make_execution",
+    "scenario_id": "5697630",
+    "scenario_name": "API Reservas (ficticio para fixture)",
+    "status": "success",
+    "duration_ms": 300,
+    "request_id": "req_chain-a2",
+    "correlation_id": "corr_local-chain-a",
+    "execution_id": "exec-chain-a2",
+    "occurred_at": "2026-07-08T13:05:01.000Z"
+  },
+  {
+    "type": "airtable_response",
+    "table": "reservas",
+    "http_status": 200,
+    "duration_ms": 90,
+    "request_id": "req_chain-a3",
+    "correlation_id": "corr_local-chain-a",
+    "occurred_at": "2026-07-08T13:05:02.000Z"
+  }
+]

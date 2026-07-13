@@ -1,0 +1,16 @@
+{
+  "description": "Simulación de /api/support/health/ready con todas las dependencias sanas — el agregado debe salir HEALTHY y deriveAlertRecommendation debe dar None.",
+  "input": {
+    "service": "worker",
+    "checks": [
+      { "name": "process_alive", "passed": true, "message": null },
+      { "name": "env_vars_present", "passed": true, "message": null }
+    ],
+    "dependencies": [
+      { "name": "supabase-auth", "status": "HEALTHY", "latency_ms": 90, "error_code": null, "last_success_at": "2026-07-09T08:59:00.000Z", "retryable": false },
+      { "name": "airtable", "status": "HEALTHY", "latency_ms": 150, "error_code": null, "last_success_at": "2026-07-09T08:59:20.000Z", "retryable": false },
+      { "name": "make", "status": "HEALTHY", "latency_ms": 200, "error_code": null, "last_success_at": "2026-07-09T08:59:30.000Z", "retryable": false }
+    ],
+    "latencyMs": 25
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "_why": "to coincide deliberadamente con la lista de opt-out usada en whatsapp-mock.test.mjs — debe bloquearse SIEMPRE, incluso siendo un template/idempotency_key perfectamente válidos.",
+  "to": "+34600000099",
+  "template_name": "referral_program",
+  "language": "es",
+  "category": "MARKETING",
+  "components": [
+    { "type": "body", "parameters": [{ "type": "text", "text": "QA_CP04" }] }
+  ],
+  "idempotency_key": "QA_CP04_WA_OPTOUT_20260709A"
+}

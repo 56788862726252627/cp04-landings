@@ -1,0 +1,13 @@
+{
+  "flow": [
+    {
+      "id": 10,
+      "module": "http:ActionSendData",
+      "parameters": {
+        "headers": [
+          { "name": "Authorization", "value": "Bearer abcdefghijklmnopqrstuvwxyz0123456789" }
+        ]
+      }
+    }
+  ]
+}

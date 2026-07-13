@@ -1,0 +1,4 @@
+{
+  "_why": "WhatsApp Cloud API no documenta un código '500' propio (usa códigos OAuthException); 131000 es el equivalente funcional — fallo genérico del proveedor, transitorio. classifyProviderError(131000) debe devolver category:'unknown', retryable:true.",
+  "error": { "code": 131000, "message": "Generic provider failure", "type": "OAuthException" }
+}

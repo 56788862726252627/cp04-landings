@@ -1,0 +1,9 @@
+{
+  "description": "Petición simulada con ambas cabeceras de correlación ya presentes y válidas — el Worker debe RESPETARLAS, nunca regenerarlas.",
+  "headers": {
+    "X-CP04-Request-Id": "req_11111111-2222-4333-8444-555555555555",
+    "X-CP04-Correlation-Id": "corr_aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
+  },
+  "method": "POST",
+  "path": "/api/reservas"
+}

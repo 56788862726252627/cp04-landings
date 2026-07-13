@@ -1,0 +1,11 @@
+{
+  "type": "worker_http_error",
+  "route": "/api/reservas",
+  "method": "POST",
+  "http_status": 500,
+  "reason": "internal_error",
+  "duration_ms": 55,
+  "request_id": "req_local-0005",
+  "correlation_id": "corr_local-0005",
+  "occurred_at": "2026-07-08T13:00:20.000Z"
+}

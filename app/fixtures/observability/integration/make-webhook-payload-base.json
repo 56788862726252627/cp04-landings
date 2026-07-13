@@ -1,0 +1,10 @@
+{
+  "description": "Payload de negocio real (simplificado) que el Worker ya construye hoy para MAKE_RESERVAS_WEBHOOK (forwardToMake, worker-reservas/src/index.js:427) — usado para probar que buildMakePayload() añade correlación SIN tocar ningún campo existente.",
+  "base_payload": {
+    "accion": "crear",
+    "fecha": "2026-07-15",
+    "hora": "18:00",
+    "pista": "Pista 2",
+    "email": "jugador@example.com"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "layer": "vertical",
+  "verticalId": "padel",
+  "resourceType": "pista",
+  "eventType": "torneo",
+  "roleLabels": {
+    "PLAYER": "Jugador",
+    "STAFF": "Staff",
+    "ADMIN": "Administrador",
+    "SUPPORT": "Soporte"
+  },
+  "featureOverrides": {
+    "torneos": true,
+    "ranking": true
+  },
+  "bookingModalitiesDefault": ["libre", "partido", "clase", "torneo"],
+  "bookingLevelsDefault": ["iniciacion", "intermedio", "avanzado", "competicion"],
+  "metrics": ["ocupación por pista", "reservas por hora"]
+}

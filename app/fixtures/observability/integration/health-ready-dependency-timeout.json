@@ -1,0 +1,15 @@
+{
+  "description": "Simulación de /api/support/health/ready con Make en timeout (no crítico-bloqueante por sí solo, pero status UNKNOWN nunca se infiere como HEALTHY) — el agregado debe salir DEGRADED, nunca HEALTHY, coherente con el principio SIN_DATOS de deriveOverallStatus.",
+  "input": {
+    "service": "worker",
+    "checks": [
+      { "name": "process_alive", "passed": true, "message": null }
+    ],
+    "dependencies": [
+      { "name": "supabase-auth", "status": "HEALTHY", "latency_ms": 95, "error_code": null, "last_success_at": "2026-07-09T08:59:00.000Z", "retryable": false },
+      { "name": "airtable", "status": "HEALTHY", "latency_ms": 140, "error_code": null, "last_success_at": "2026-07-09T08:59:20.000Z", "retryable": false },
+      { "name": "make", "status": "UNKNOWN", "latency_ms": 8000, "error_code": "TIMEOUT.UPSTREAM_TIMEOUT", "last_success_at": "2026-07-09T08:40:00.000Z", "retryable": true }
+    ],
+    "latencyMs": 8050
+  }
+}

@@ -1,0 +1,7 @@
+===== getent clubpadel04.com =====
+
+===== getent app.clubpadel04.com =====
+
+===== nslookup si existe =====
+
+===== dig si existe =====

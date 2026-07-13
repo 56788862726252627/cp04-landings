@@ -1,0 +1,9 @@
+{
+  "_why": "4 fallos de rate-limit seguidos, con maxRetries=3 (4 intentos totales) — se agota sin éxito, mismo patrón que el 429 persistente documentado para P0-2 tras reactivación.",
+  "attempts": [
+    { "status": 429, "error": { "message": "You have made too many requests." } },
+    { "status": 429, "error": { "message": "You have made too many requests." } },
+    { "status": 429, "error": { "message": "You have made too many requests." } },
+    { "status": 429, "error": { "message": "You have made too many requests." } }
+  ]
+}

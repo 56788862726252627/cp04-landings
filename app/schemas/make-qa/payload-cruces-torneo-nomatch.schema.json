@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-cruces-torneo-nomatch.schema.json",
+  "title": "QA-A4-003 · Payload Cruces de Torneo — SOLO rama no-match (4919937)",
+  "description": "resultado_equipo1/2 fijos en 0 — un resultado real nunca debe poder colarse en un payload QA. partido_id inventado con prefijo QA_CP04_ para garantizar 0 resultados en la búsqueda de Airtable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["partido_id", "resultado_equipo1", "resultado_equipo2"],
+  "properties": {
+    "partido_id": { "type": "string", "pattern": "^QA_CP04_" },
+    "resultado_equipo1": { "type": "integer", "enum": [0] },
+    "resultado_equipo2": { "type": "integer", "enum": [0] }
+  }
+}

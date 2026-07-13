@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agencia-ia.internal/schemas/tenant-registry/1.0.0/tenant-registry.schema.json",
+  "title": "Agencia IA — Tenant Registry",
+  "description": "Registro de tenants conocidos por la plataforma, usado exclusivamente para resolución de dominio (docs/agencia-ia/DOMAIN_TENANT_RESOLUTION.md) y detección de duplicados (tenantId/domain) antes de promoción (docs/agencia-ia/DEPLOYMENT_PROMOTION_GATES.md). No sustituye a clients/<slug>/client-config.json como fuente de verdad de un cliente concreto — es un índice ligero, sin datos de negocio, sin secretos, sin conexión a ningún servicio real. Un tenant real solo debe aparecer aquí si ya tiene una carpeta clients/<slug>/ con client-config.json válido.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "layer", "tenants"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "layer": { "type": "string", "const": "registry" },
+    "tenants": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tenantId", "slug", "verticalId", "domains", "status"],
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$",
+            "minLength": 2,
+            "maxLength": 32,
+            "description": "Debe coincidir con tenantId del client-config.json de ese cliente. Único dentro del registro (ver validación de duplicados en src/config/validateResolvedConfig.js)."
+          },
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,48}[a-z0-9])?$",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "verticalId": {
+            "type": "string",
+            "pattern": "^[a-z]([a-z0-9-]{0,30}[a-z0-9])?$",
+            "description": "Debe existir un vertical-config.<verticalId>.json correspondiente. Hoy solo 'padel' tiene evidencia de código real."
+          },
+          "domains": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["subdomain"],
+            "properties": {
+              "primary": { "type": ["string", "null"], "format": "hostname", "default": null },
+              "subdomain": { "type": "string", "format": "hostname" }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "disabled", "staging", "maintenance"],
+            "description": "'active': resuelve tráfico de producción normalmente. 'disabled': tenant offboarded o suspendido — resolveDomainTenant debe rechazar con status disabled, nunca servir su config. 'staging': config validada pero no promovida a producción — solo accesible en el dominio de staging, nunca en el de producción. 'maintenance': tenant activo pero temporalmente en mantenimiento — resolveDomainTenant devuelve maintenance en vez de la config resuelta."
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schemaVersion": "1.0.0",
+      "layer": "registry",
+      "tenants": [
+        {
+          "tenantId": "cp04",
+          "slug": "club-padel-04",
+          "verticalId": "padel",
+          "domains": { "primary": null, "subdomain": "club-padel-04.pages.dev" },
+          "status": "active"
+        }
+      ]
+    }
+  ]
+}

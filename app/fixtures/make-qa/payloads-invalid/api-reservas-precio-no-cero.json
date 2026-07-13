@@ -1,0 +1,11 @@
+{
+  "_why_invalid": "precio_total distinto de 0 — regla de negocio: ninguna prueba QA debe generar expectativa de cobro real",
+  "payload": {
+    "accion": "crear_reserva",
+    "jugador": { "nombre": "QA_CP04", "apellidos": "TEST_A3", "email": "eduardorodriguezrodriguez24@gmail.com", "telefono": "" },
+    "reserva": { "fecha": "2026-12-30", "pista": "QA_TEST_PISTA_A3", "hora": "09:00", "hora_fin": "10:30", "modalidad": "QA_TEST", "nivel": "QA_TEST", "duracion_minutos": 90, "precio_total": 25 },
+    "clave_reserva": "QA_CP04_RES_A3_20260708",
+    "origen": "QA_TERMINAL7",
+    "club": "QA_TEST"
+  }
+}

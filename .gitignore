@@ -1,0 +1,94 @@
+# Dependencias y builds
+node_modules/
+dist/
+*/dist/
+.env
+.env.*
+.DS_Store
+*.log
+
+# Backups, snapshots, releases e importaciones
+backups/
+*/backups/
+backup*/
+*backup*
+*BACKUP*
+*SEGURIDAD*
+*checkpoint*
+snapshots/
+releases/
+importaciones/
+audit/
+audits/
+
+# Copias manuales
+*.backup*
+*.BACKUP*
+*.bak*
+*.tmp
+*.old
+
+# Archivos temporales de pruebas y comprobaciones
+comprobacion-*.json
+comprobar-*.json
+prueba-*.json
+whoami-*.json
+jugadores-prueba-*.json
+jugadores-por-*.json
+jugadores-id-*.json
+jugadores-final.json
+jugadores-cp04-final.json
+bases-token-*.json
+bases-airtable.json
+bases-final.json
+esquema-token-*.json
+esquema-id-*.json
+tablas-airtable.json
+tablas-final.json
+plantilla_google_drive_backup_cp04.json
+
+# Scripts temporales de reparación
+comprobar_*.py
+desplegar_*.py
+guardar_*.py
+fix_*.py
+rebuild_*.py
+replace_*.py
+recortar_*.py
+aplicar_*.py
+
+# Carpetas auxiliares
+prompts/
+scripts/
+make-blueprints/
+workflows/
+docs/comprobaciones-generales/
+
+# Worker y copias locales del worker
+worker-reservas/backups/
+worker-reservas/*.BACKUP*
+worker-reservas/*.backup*
+worker-reservas/*.bak*
+worker-reservas/src/*.BACKUP*
+worker-reservas/src/*.backup*
+worker-reservas/src/*.bak*
+worker-reservas/src/index.js.BACKUP*
+worker-reservas/wrangler.toml.BACKUP*
+worker-reservas/ultima-alta-app.json
+
+# Errores por nombres raros o copias mal escritas
+*wr4 angler*
+*wrangler.toml0*
+
+# Archivos auxiliares restantes de auditorías y blueprints
+app/alta-jugador-*.json
+app/audit_workflows_*.py
+app/auditoria-terminal-*.txt
+app/resumen-modulos-clave.txt
+app/prompts/
+app/scripts/
+
+# CP04 external final/export packs outside app
+ENTREGA_FINAL_CLUB_PADEL_04/
+REVISION_VISUAL_PACK_FINAL_CP04/
+USO_EXTERNO_PACK_FINAL_CP04/

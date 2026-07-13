@@ -1,0 +1,23 @@
+[
+  {
+    "type": "worker_http_request",
+    "route": "/api/reservas",
+    "method": "POST",
+    "http_status": 200,
+    "duration_ms": 105,
+    "request_id": "req_chain-b1",
+    "correlation_id": "corr_local-chain-b",
+    "occurred_at": "2026-07-08T13:06:00.000Z"
+  },
+  {
+    "type": "make_execution",
+    "scenario_id": "5697630",
+    "scenario_name": "API Reservas (ficticio para fixture)",
+    "status": "failed",
+    "duration_ms": 8000,
+    "request_id": "req_chain-b2",
+    "correlation_id": "corr_local-chain-b",
+    "execution_id": null,
+    "occurred_at": "2026-07-08T13:06:01.000Z"
+  }
+]

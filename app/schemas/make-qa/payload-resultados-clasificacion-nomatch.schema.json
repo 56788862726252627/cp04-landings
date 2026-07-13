@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-resultados-clasificacion-nomatch.schema.json",
+  "title": "QA-A4-004 · Payload Resultados y Clasificación — SOLO rama no-match (5330078)",
+  "description": "Mismo patrón que Cruces de Torneo (QA-A4-003): juegos fijos en 0, id_partido inventado con prefijo QA_CP04_.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id_partido", "juegos_local", "juegos_visitante"],
+  "properties": {
+    "id_partido": { "type": "string", "pattern": "^QA_CP04_" },
+    "juegos_local": { "type": "integer", "enum": [0] },
+    "juegos_visitante": { "type": "integer", "enum": [0] }
+  }
+}

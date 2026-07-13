@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agencia-ia.internal/schemas/deployment-profile/1.0.0/deployment-profile.schema.json",
+  "title": "Agencia IA — Client Deployment Profile",
+  "description": "Contrato de ciclo de vida de despliegue de un cliente. Complementa (no sustituye) config/client-config.schema.json: client-config.json describe QUÉ es el cliente; deployment-profile.json describe EN QUÉ ESTADO está su despliegue en un entorno concreto. Documento puramente de seguimiento — no ejecuta ningún despliegue por sí mismo. NUNCA contiene secretos, solo referencias por nombre (*Ref).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "clientSlug",
+    "environment",
+    "releaseVersion",
+    "configRef",
+    "brandingRef",
+    "integrationsRef",
+    "domainRef",
+    "workerProfile",
+    "featureFlagsRef",
+    "secretsRefs",
+    "deploymentStatus",
+    "qaStatus",
+    "goLiveStatus",
+    "rollbackRef",
+    "lastValidatedAt",
+    "gates"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Versión de este esquema. Independiente de schemaVersion en client-config.schema.json (son documentos distintos con ciclos de vida propios)."
+    },
+    "clientSlug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]{0,48}[a-z0-9])?$",
+      "minLength": 2,
+      "maxLength": 50,
+      "description": "Debe coincidir exactamente con el campo 'slug' del client-config.json referenciado en configRef."
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["development", "staging", "production"],
+      "description": "Mismo enum que 'deploymentProfile' en client-config.schema.json. Un mismo cliente puede tener un deployment-profile.json por entorno (p.ej. uno para staging, otro para production)."
+    },
+    "releaseVersion": {
+      "type": ["string", "null"],
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Versión semántica de la plataforma/configuración desplegada. null mientras el perfil está en DRAFT (todavía no hay nada que versionar). No existe automatización de versionado en este proyecto hoy: se asigna manualmente."
+    },
+    "configRef": {
+      "type": ["string", "null"],
+      "description": "Referencia (ruta relativa), no contenido embebido, al client-config.json validado que corresponde a este despliegue. Ej.: \"clients/<slug>/client-config.json\"."
+    },
+    "brandingRef": {
+      "type": ["string", "null"],
+      "description": "Referencia a la documentación de branding de este cliente. Ej.: \"clients/<slug>/BRANDING.md\"."
+    },
+    "integrationsRef": {
+      "type": ["string", "null"],
+      "description": "Referencia a la documentación de integraciones de este cliente. Ej.: \"clients/<slug>/INTEGRATIONS.md\"."
+    },
+    "domainRef": {
+      "type": ["string", "null"],
+      "description": "Referencia a dónde está definido el dominio real (client-config.json → domains.primary/subdomain es la fuente de verdad del valor). Este campo es un puntero de seguimiento, no una segunda fuente de verdad del dominio — nunca debe contener un dominio inventado por este documento."
+    },
+    "workerProfile": {
+      "type": ["string", "null"],
+      "description": "Nombre de referencia del entorno/perfil de Worker de Cloudflare de este cliente (p.ej. el valor que se pasaría a `wrangler --env <workerProfile>`), NUNCA una URL ni un ID de cuenta real. null mientras no se ha decidido/creado."
+    },
+    "featureFlagsRef": {
+      "type": ["string", "null"],
+      "description": "Referencia al bloque de features vigente. Ej.: \"clients/<slug>/client-config.json#features\". No duplica los flags aquí — el client-config.json sigue siendo la única fuente de verdad de qué está activo."
+    },
+    "secretsRefs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Lista de NOMBRES de secrets relevantes para este despliegue (nunca valores). Debe ser subconjunto de lo documentado en clients/<slug>/SECRETS_REFERENCES.md."
+    },
+    "deploymentStatus": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "CONFIG_READY",
+        "STAGING_READY",
+        "QA_PASS",
+        "PRODUCTION_READY",
+        "DEPLOYED",
+        "VERIFIED",
+        "ACTIVE",
+        "SUSPENDED",
+        "ARCHIVED"
+      ],
+      "default": "DRAFT",
+      "description": "Estado de ciclo de vida. Ver docs/agencia-ia/CLIENT_DEPLOYMENT_LIFECYCLE.md para la máquina de estados completa y las reglas de transición."
+    },
+    "qaStatus": {
+      "type": "string",
+      "enum": ["PENDING", "IN_PROGRESS", "PASS", "FAIL"],
+      "default": "PENDING"
+    },
+    "goLiveStatus": {
+      "type": "string",
+      "enum": ["NOT_REQUESTED", "REQUESTED", "APPROVED", "REJECTED"],
+      "default": "NOT_REQUESTED"
+    },
+    "rollbackRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["previousReleaseVersion", "previousConfigRef", "previousDeploymentRef", "trigger", "owner", "validationAfterRollback"],
+      "description": "Contrato mínimo de rollback. Ver docs/agencia-ia/CLIENT_ROLLBACK_CONTRACT.md para el procedimiento completo.",
+      "properties": {
+        "previousReleaseVersion": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "previousConfigRef": { "type": ["string", "null"] },
+        "previousDeploymentRef": { "type": ["string", "null"] },
+        "trigger": {
+          "type": "string",
+          "enum": ["none", "manual", "qa_failure", "incident", "go_live_rejected", "other"],
+          "default": "none",
+          "description": "'none' mientras no exista ningún despliegue previo del que hacer rollback."
+        },
+        "owner": { "type": ["string", "null"] },
+        "validationAfterRollback": { "type": ["string", "null"], "description": "Referencia a cómo se valida que el rollback dejó el sistema en un estado conocido bueno (p.ej. referencia a QA_CHECKLIST.md)." }
+      }
+    },
+    "lastValidatedAt": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}:\\d{2}Z)?$",
+      "description": "Fecha ISO 8601 de la última validación completa (schema + gates). null si nunca se validó."
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CONFIG_VALID",
+        "BRANDING_VALID",
+        "INTEGRATIONS_VALID",
+        "SECURITY_VALID",
+        "QA_VALID",
+        "BACKUP_READY",
+        "OBSERVABILITY_READY",
+        "GO_LIVE_APPROVED"
+      ],
+      "description": "Los 8 gates de promoción. Ver docs/agencia-ia/DEPLOYMENT_PROMOTION_GATES.md.",
+      "properties": {
+        "CONFIG_VALID": { "$ref": "#/$defs/gate" },
+        "BRANDING_VALID": { "$ref": "#/$defs/gate" },
+        "INTEGRATIONS_VALID": { "$ref": "#/$defs/gate" },
+        "SECURITY_VALID": { "$ref": "#/$defs/gate" },
+        "QA_VALID": { "$ref": "#/$defs/gate" },
+        "BACKUP_READY": { "$ref": "#/$defs/gate" },
+        "OBSERVABILITY_READY": { "$ref": "#/$defs/gate" },
+        "GO_LIVE_APPROVED": { "$ref": "#/$defs/gate" }
+      }
+    }
+  },
+  "$defs": {
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "owner", "evidence", "blocker", "approver", "date"],
+      "properties": {
+        "status": { "type": "string", "enum": ["PENDING", "PASS", "FAIL", "BLOCKED"], "default": "PENDING" },
+        "owner": { "type": ["string", "null"], "description": "Persona/rol responsable de este gate." },
+        "evidence": { "type": ["string", "null"], "description": "Referencia a la evidencia (ej. resultado de tests, checklist firmado) — nunca el contenido embebido." },
+        "blocker": { "type": ["string", "null"], "description": "Motivo si status es FAIL o BLOCKED. null si no hay bloqueo." },
+        "approver": { "type": ["string", "null"], "description": "Quién aprobó el paso de este gate (puede ser distinto del owner)." },
+        "date": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}:\\d{2}Z)?$" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "Regla dura: no se permite environment=production salvo con QA superado y un deploymentStatus posterior a QA. Implementa el requisito 'no salto directo development -> production sin QA explícito' como una restricción validable, no solo documentada.",
+      "if": {
+        "properties": { "environment": { "const": "production" } },
+        "required": ["environment"]
+      },
+      "then": {
+        "properties": {
+          "qaStatus": { "const": "PASS" },
+          "deploymentStatus": { "enum": ["PRODUCTION_READY", "DEPLOYED", "VERIFIED", "ACTIVE", "SUSPENDED"] }
+        },
+        "required": ["qaStatus", "deploymentStatus"]
+      }
+    }
+  ],
+  "examples": [
+    {
+      "schemaVersion": "1.0.0",
+      "clientSlug": "nombre-cliente-ejemplo",
+      "environment": "development",
+      "releaseVersion": null,
+      "configRef": "clients/nombre-cliente-ejemplo/client-config.json",
+      "brandingRef": "clients/nombre-cliente-ejemplo/BRANDING.md",
+      "integrationsRef": "clients/nombre-cliente-ejemplo/INTEGRATIONS.md",
+      "domainRef": null,
+      "workerProfile": null,
+      "featureFlagsRef": "clients/nombre-cliente-ejemplo/client-config.json#features",
+      "secretsRefs": [],
+      "deploymentStatus": "DRAFT",
+      "qaStatus": "PENDING",
+      "goLiveStatus": "NOT_REQUESTED",
+      "rollbackRef": {
+        "previousReleaseVersion": null,
+        "previousConfigRef": null,
+        "previousDeploymentRef": null,
+        "trigger": "none",
+        "owner": null,
+        "validationAfterRollback": null
+      },
+      "lastValidatedAt": null,
+      "gates": {
+        "CONFIG_VALID": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+        "BRANDING_VALID": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+        "INTEGRATIONS_VALID": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+        "SECURITY_VALID": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+        "QA_VALID": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+        "BACKUP_READY": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+        "OBSERVABILITY_READY": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+        "GO_LIVE_APPROVED": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null }
+      }
+    }
+  ]
+}

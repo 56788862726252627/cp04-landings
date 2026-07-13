@@ -1,0 +1,3 @@
+OK: paquete preview existe
+OK: index.html existe en paquete
+OK: assets existen en paquete

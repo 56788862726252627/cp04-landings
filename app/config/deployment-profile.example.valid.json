@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientSlug": "nombre-cliente-ejemplo",
+  "environment": "staging",
+  "releaseVersion": "0.1.0",
+  "configRef": "clients/nombre-cliente-ejemplo/client-config.json",
+  "brandingRef": "clients/nombre-cliente-ejemplo/BRANDING.md",
+  "integrationsRef": "clients/nombre-cliente-ejemplo/INTEGRATIONS.md",
+  "domainRef": null,
+  "workerProfile": "nombre-cliente-ejemplo-staging",
+  "featureFlagsRef": "clients/nombre-cliente-ejemplo/client-config.json#features",
+  "secretsRefs": [],
+  "deploymentStatus": "STAGING_READY",
+  "qaStatus": "IN_PROGRESS",
+  "goLiveStatus": "NOT_REQUESTED",
+  "rollbackRef": {
+    "previousReleaseVersion": null,
+    "previousConfigRef": null,
+    "previousDeploymentRef": null,
+    "trigger": "none",
+    "owner": null,
+    "validationAfterRollback": null
+  },
+  "lastValidatedAt": "2026-07-08",
+  "gates": {
+    "CONFIG_VALID": { "status": "PASS", "owner": "equipo-onboarding", "evidence": "config/CLIENT_CONFIG_SCHEMA_GUIDE.md validación aplicada", "blocker": null, "approver": "equipo-onboarding", "date": "2026-07-08" },
+    "BRANDING_VALID": { "status": "PASS", "owner": "equipo-onboarding", "evidence": "clients/nombre-cliente-ejemplo/BRANDING.md checklist completo", "blocker": null, "approver": "equipo-onboarding", "date": "2026-07-08" },
+    "INTEGRATIONS_VALID": { "status": "PENDING", "owner": "equipo-onboarding", "evidence": null, "blocker": "a la espera de alta real de Airtable/Make", "approver": null, "date": null },
+    "SECURITY_VALID": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "QA_VALID": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "BACKUP_READY": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "OBSERVABILITY_READY": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null },
+    "GO_LIVE_APPROVED": { "status": "PENDING", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null }
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "schema": "tenant-isolation-harness-gate/v1-baseline",
+  "generated_at": "2026-07-11T00:34:21.467Z",
+  "source": "tests/tenant-storage-harness/*.test.mjs",
+  "totals": {
+    "total": 22,
+    "pass": 15,
+    "expected_fail": 4,
+    "skip": 3,
+    "unexpected_fail": 0
+  },
+  "duration_ms_reference": 1094.78677,
+  "scenarios": [
+    {
+      "id": "1",
+      "classification": "PASS",
+      "title": "1. Tenant cp04 + playerA: login namespacea el token bajo tenant:cp04:*"
+    },
+    {
+      "id": "2",
+      "classification": "PASS",
+      "title": "2. Tenant cp04 + playerB: mismo namespace de tenant, token propio de B"
+    },
+    {
+      "id": "3",
+      "classification": "PASS",
+      "title": "3. Tenant club02 + playerA: mismo player, namespace de tenant distinto al de cp04"
+    },
+    {
+      "id": "4",
+      "classification": "PASS",
+      "title": "4. A -> B: login de club02 no pisa ni borra el token namespaced de cp04"
+    },
+    {
+      "id": "5",
+      "classification": "PASS",
+      "title": "5. B -> A: login de cp04 no pisa ni borra el token namespaced de club02"
+    },
+    {
+      "id": "6a",
+      "classification": "PASS",
+      "title": "6a. Dos usuarios mismo navegador: auth namespaced por tenant, el 2º login sustituye al 1º en su misma clave de tenant (comportamiento esperado, no una fuga)"
+    },
+    {
+      "id": "6b",
+      "classification": "EXPECTED_FAIL",
+      "title": "6b. Dos usuarios mismo navegador: el perfil (avatar/bio) de playerA queda visible para playerB tras el cambio de cuenta"
+    },
+    {
+      "id": "7",
+      "classification": "PASS",
+      "title": "7. PLAYER -> ADMIN: la escalada de rol no afecta el namespacing de accessToken/refreshToken/user"
+    },
+    {
+      "id": "8",
+      "classification": "PASS",
+      "title": "8. Logout de A no afecta la sesión de B (tenant distinto, storage compartido)"
+    },
+    {
+      "id": "9",
+      "classification": "PASS",
+      "title": "9. Claves legacy cp04_*: una sesión guardada solo en formato antiguo se restaura igual sin volver a loguearse"
+    },
+    {
+      "id": "10a",
+      "classification": "PASS",
+      "title": "10a. Migración (auth, Lote A): la siguiente escritura real migra a la clave namespaced sin tocar todavía la legacy"
+    },
+    {
+      "id": "10b",
+      "classification": "SKIP",
+      "title": "10b. Migración de datos de negocio (torneo/perfil/registro): sin lógica de migración que ejercitar todavía"
+    },
+    {
+      "id": "11",
+      "classification": "PASS",
+      "title": "11. Rollback seguro (auth): revertir el deploy no pierde la sesión porque la legacy nunca se sobreescribe fuera de logout explícito"
+    },
+    {
+      "id": "12",
+      "classification": "SKIP",
+      "title": "12. Favoritos: no existe ninguna clave de storage ni componente de favoritos en el código"
+    },
+    {
+      "id": "13",
+      "classification": "EXPECTED_FAIL",
+      "title": "13. Reservas: el email prellenado de cp04 es visible para club02 en storage compartido"
+    },
+    {
+      "id": "14",
+      "classification": "EXPECTED_FAIL",
+      "title": "14. Torneos: el bracket de cp04 es visible/sobrescribible por club02 en storage compartido"
+    },
+    {
+      "id": "15",
+      "classification": "PASS",
+      "title": "15. Ranking: no persiste en storage hoy — no hay regresión posible por namespacing (test de no-regresión)"
+    },
+    {
+      "id": "16",
+      "classification": "SKIP",
+      "title": "16. Notificaciones: no existe ninguna clave de storage ni sistema de notificaciones persistente"
+    },
+    {
+      "id": "17",
+      "classification": "EXPECTED_FAIL",
+      "title": "17. Cache PWA: el nombre de cache es idéntico para cualquier tenant (sin namespace de tenantId)"
+    },
+    {
+      "id": "18",
+      "classification": "PASS",
+      "title": "18. Offline: caches.match(OFFLINE_URL) devuelve el offline.html cacheado del propio origen, sin datos de otro tenant"
+    },
+    {
+      "id": "19",
+      "classification": "PASS",
+      "title": "19. Cambio de hostname: el mismo tenant lógico servido desde dos hostnames NO comparte sesión automáticamente (namespacing es por tenantId, no por hostname)"
+    },
+    {
+      "id": "20",
+      "classification": "PASS",
+      "title": "20. Reload/restart: reimportar el módulo (equivalente a F5 o reiniciar el navegador) restaura la sesión namespaced sin mezclar tenants"
+    }
+  ]
+}

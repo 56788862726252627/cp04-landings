@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientSlug": "nombre-cliente-ejemplo",
+  "environment": "production",
+  "releaseVersion": "1.0",
+  "configRef": "clients/nombre-cliente-ejemplo/client-config.json",
+  "brandingRef": "clients/nombre-cliente-ejemplo/BRANDING.md",
+  "integrationsRef": "clients/nombre-cliente-ejemplo/INTEGRATIONS.md",
+  "domainRef": null,
+  "workerProfile": null,
+  "featureFlagsRef": "clients/nombre-cliente-ejemplo/client-config.json#features",
+  "secretsRefs": [],
+  "deploymentStatus": "LIVE",
+  "qaStatus": "PENDING",
+  "goLiveStatus": "APPROVED",
+  "rollbackRef": {
+    "previousReleaseVersion": null,
+    "previousConfigRef": null,
+    "trigger": "none",
+    "owner": null,
+    "validationAfterRollback": null
+  },
+  "lastValidatedAt": "08-07-2026",
+  "gates": {
+    "CONFIG_VALID": { "status": "PASS", "owner": null, "evidence": null, "blocker": null, "approver": null, "date": null }
+  },
+  "extraCampoNoPermitido": true
+}

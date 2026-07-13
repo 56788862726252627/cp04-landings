@@ -1,0 +1,11 @@
+{
+  "type": "make_execution",
+  "scenario_id": "6199248",
+  "scenario_name": "Alta de Jugador (ficticio para fixture)",
+  "status": "failed",
+  "duration_ms": 1840,
+  "request_id": "req_local-0007",
+  "correlation_id": "corr_local-0007",
+  "execution_id": "exec-local-0007",
+  "occurred_at": "2026-07-08T13:00:30.000Z"
+}

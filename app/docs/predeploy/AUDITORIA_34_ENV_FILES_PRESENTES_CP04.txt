@@ -1,0 +1,6 @@
+./.env
+./.env.example
+./.env.production
+./audit/cancelacion-duplicado-exacto-20260614-083627/precheck.env
+./audit/deploy-pages-produccion-20260614-140517/project.env
+./audit/prueba-get-reservas-con-email-20260614-073324/resultado.env

@@ -1,0 +1,13 @@
+{
+  "_why": "booking_confirmed exige player_name/court_name/date_time/booking_reference — aquí falta booking_reference. Válido según el schema de envoltorio (variables es un objeto libre), pero buildTemplateComponents() debe rechazarlo con errors:['missing_variable:booking_reference'].",
+  "to": "+34600000011",
+  "template_name": "booking_confirmed",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "player_name": "Sara Nieto",
+    "court_name": "Pista 1",
+    "date_time": "2026-07-10 10:00"
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:bkg_0011:booking_confirmed"
+}

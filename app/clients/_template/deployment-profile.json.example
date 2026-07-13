@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientSlug": "nombre-cliente-ejemplo",
+  "environment": "development",
+  "releaseVersion": null,
+  "configRef": "clients/nombre-cliente-ejemplo/client-config.json",
+  "brandingRef": "clients/nombre-cliente-ejemplo/BRANDING.md",
+  "integrationsRef": "clients/nombre-cliente-ejemplo/INTEGRATIONS.md",
+  "domainRef": null,
+  "workerProfile": null,
+  "featureFlagsRef": "clients/nombre-cliente-ejemplo/client-config.json#features",
+  "secretsRefs": [],
+  "deploymentStatus": "DRAFT",
+  "qaStatus": "PENDING",
+  "goLiveStatus": "NOT_REQUESTED",
+  "rollbackRef": {
+    "previousReleaseVersion": null,
+    "previousConfigRef": null,
+    "previousDeploymentRef": null,
+    "trigger": "none",
+    "owner": null,
+    "validationAfterRollback": null
+  },
+  "lastValidatedAt": null,
+  "gates": {
+    "CONFIG_VALID": {
+      "status": "PENDING",
+      "owner": null,
+      "evidence": null,
+      "blocker": null,
+      "approver": null,
+      "date": null
+    },
+    "BRANDING_VALID": {
+      "status": "PENDING",
+      "owner": null,
+      "evidence": null,
+      "blocker": null,
+      "approver": null,
+      "date": null
+    },
+    "INTEGRATIONS_VALID": {
+      "status": "PENDING",
+      "owner": null,
+      "evidence": null,
+      "blocker": null,
+      "approver": null,
+      "date": null
+    },
+    "SECURITY_VALID": {
+      "status": "PENDING",
+      "owner": null,
+      "evidence": null,
+      "blocker": null,
+      "approver": null,
+      "date": null
+    },
+    "QA_VALID": {
+      "status": "PENDING",
+      "owner": null,
+      "evidence": null,
+      "blocker": null,
+      "approver": null,
+      "date": null
+    },
+    "BACKUP_READY": {
+      "status": "PENDING",
+      "owner": null,
+      "evidence": null,
+      "blocker": null,
+      "approver": null,
+      "date": null
+    },
+    "OBSERVABILITY_READY": {
+      "status": "PENDING",
+      "owner": null,
+      "evidence": null,
+      "blocker": null,
+      "approver": null,
+      "date": null
+    },
+    "GO_LIVE_APPROVED": {
+      "status": "PENDING",
+      "owner": null,
+      "evidence": null,
+      "blocker": null,
+      "approver": null,
+      "date": null
+    }
+  }
+}

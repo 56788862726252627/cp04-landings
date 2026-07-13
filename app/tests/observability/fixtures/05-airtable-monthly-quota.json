@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-08T10:19:00.000Z",
+  "level": "critical",
+  "service": "airtable",
+  "environment": "production",
+  "event_type": "airtable_write",
+  "message": "Cuota mensual de Airtable agotada",
+  "request_id": "req_5566ccdd88",
+  "correlation_id": "corr_66aa77bb99",
+  "client_id": "club-padel-04",
+  "tenant_id": null,
+  "scenario_id": null,
+  "execution_id": null,
+  "user_id_hash": null,
+  "error_code": "AIRTABLE_MONTHLY_QUOTA.EXHAUSTED",
+  "duration_ms": 210,
+  "status": "failure",
+  "metadata": { "plan": "team" }
+}

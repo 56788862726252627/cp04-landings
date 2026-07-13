@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-alta-jugador.schema.json",
+  "title": "QA-A3-003 · Payload Alta de Jugador (6199248)",
+  "description": "email debe ser un alias '+' de la propia cuenta del admin (mismo buzón real, identificable, cero tercero afectado) — el '+' antes del dominio es obligatorio por diseño de esta suite, no un detalle cosmético.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nombre", "apellidos", "email", "nivel", "comentarios", "telefono", "fecha_nacimiento", "genero", "acepta_condiciones", "origen"],
+  "properties": {
+    "nombre": { "type": "string", "pattern": "^QA_CP04" },
+    "apellidos": { "type": "string", "pattern": "^TEST_" },
+    "email": { "type": "string", "pattern": "^[^@+]+\\+qacp04[a-z0-9]*@[^@]+\\.[^@]+$" },
+    "nivel": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "comentarios": { "type": "string", "pattern": "^QA_CP04" },
+    "telefono": { "type": "string", "maxLength": 20 },
+    "fecha_nacimiento": { "type": "string", "maxLength": 20 },
+    "genero": { "type": "string", "maxLength": 20 },
+    "acepta_condiciones": { "type": "boolean", "enum": [true] },
+    "origen": { "type": "string", "enum": ["QA_TERMINAL7"] }
+  }
+}

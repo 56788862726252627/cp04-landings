@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-08T10:23:40.010Z",
+  "level": "error",
+  "service": "worker",
+  "environment": "production",
+  "event_type": "make_webhook_call",
+  "message": "Timeout esperando respuesta de Make",
+  "request_id": "req_22bb33cc44",
+  "correlation_id": "corr_55dd66ee77",
+  "client_id": "club-padel-04",
+  "tenant_id": null,
+  "scenario_id": "5697630",
+  "execution_id": null,
+  "user_id_hash": null,
+  "error_code": "TIMEOUT.UPSTREAM_TIMEOUT",
+  "duration_ms": 8000,
+  "status": "unknown",
+  "metadata": { "target": "make", "timeout_ms": 8000 }
+}

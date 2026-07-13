@@ -1,0 +1,6 @@
+{
+  "_why": "Secuencia de 3 lecturas sobre la misma clave: primera (miss, sin caché aún), segunda dentro del TTL (hit), tercera después de expirar el TTL (miss otra vez) — mismo contrato que exige audit/airtable-p0-architecture-20260708 para reducir llamadas reales.",
+  "cache_key": "jugadores:activo_count",
+  "ttl_ms": 1000,
+  "reads_at_ms_offset": [0, 400, 1500]
+}

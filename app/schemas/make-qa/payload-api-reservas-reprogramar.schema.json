@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-api-reservas-reprogramar.schema.json",
+  "title": "T13 · Payload API Reservas — accion:reprogramar_reserva (contrato de smoke, no ejecuta la acción real)",
+  "description": "Espejo del contrato real validado por worker-reservas/src/index.js::validatePayload — rama accion==='reprogramar_reserva' exige clave_reserva, nueva_fecha_reserva (YYYY-MM-DD), nueva_hora_inicio/nueva_hora_fin (HH:MM, fin > inicio) y nueva_pista. clave_reserva/nueva_pista llevan prefijo QA_/QA_CP04_ (mismo criterio que payload-api-reservas-crear.schema.json) para no colisionar con una reserva o pista real. APP_MAKE_50_BUSINESS_COVERAGE.md marcaba esta rama como 'Missing — pendiente de una futura oleada'; este schema la cubre para el contrato de smoke (T13), no crea ningún escenario Make nuevo. Nunca dispara un POST real.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["accion", "clave_reserva", "nueva_fecha_reserva", "nueva_hora_inicio", "nueva_hora_fin", "nueva_pista"],
+  "properties": {
+    "accion": { "type": "string", "enum": ["reprogramar_reserva"] },
+    "clave_reserva": { "type": "string", "pattern": "^QA_CP04_[A-Za-z0-9_-]{0,119}$", "minLength": 8, "maxLength": 128 },
+    "nueva_fecha_reserva": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "nueva_hora_inicio": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+    "nueva_hora_fin": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+    "nueva_pista": { "type": "string", "pattern": "^QA_", "maxLength": 100 }
+  }
+}

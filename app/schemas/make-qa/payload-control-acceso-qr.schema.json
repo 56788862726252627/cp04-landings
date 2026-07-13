@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-control-acceso-qr.schema.json",
+  "title": "QA-A3-001 · Payload Control Acceso QR — rama DENEGADO_INVALIDO (5291559)",
+  "description": "clave_reserva debe empezar por QA_CP04_ para garantizar que no colisiona con ninguna reserva real (regla de seguridad de esta suite, no solo convención de nombres — ver payload-validator.mjs).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["clave_reserva"],
+  "properties": {
+    "clave_reserva": { "type": "string", "pattern": "^QA_CP04_", "minLength": 10, "maxLength": 120 }
+  }
+}

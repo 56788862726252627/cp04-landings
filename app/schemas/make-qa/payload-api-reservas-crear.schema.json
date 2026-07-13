@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-api-reservas-crear.schema.json",
+  "title": "QA-A3-002 · Payload API Reservas — accion:crear_reserva (5697630)",
+  "description": "precio_total debe ser 0 (regla de negocio: ninguna prueba QA genera un cargo o expectativa de cobro real). pista y clave_reserva deben llevar prefijo QA_ / QA_CP04_ para no colisionar con pistas o claves reales — ver CRITERIO FAIL en audit/app-make-50-integration/APP_MAKE_50_QA_PLAN.md (alcanzar un módulo whatsapp-business-cloud es señal de alerta inmediata, validado fuera de este schema por decision-rules.mjs).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["accion", "jugador", "reserva", "clave_reserva", "origen", "club"],
+  "properties": {
+    "accion": { "type": "string", "enum": ["crear_reserva"] },
+    "jugador": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nombre", "apellidos", "email", "telefono"],
+      "properties": {
+        "nombre": { "type": "string", "pattern": "^QA_CP04" },
+        "apellidos": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "pattern": "^[^@]+@[^@]+\\.[^@]+$" },
+        "telefono": { "type": "string", "maxLength": 20 }
+      }
+    },
+    "reserva": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fecha", "pista", "hora", "hora_fin", "modalidad", "nivel", "duracion_minutos", "precio_total"],
+      "properties": {
+        "fecha": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "pista": { "type": "string", "pattern": "^QA_" },
+        "hora": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+        "hora_fin": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+        "modalidad": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "nivel": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "duracion_minutos": { "type": "integer", "minimum": 15, "maximum": 240 },
+        "precio_total": { "type": "number", "enum": [0], "description": "Solo se permite 0 — ninguna prueba QA debe generar expectativa de cobro real" }
+      }
+    },
+    "clave_reserva": { "type": "string", "pattern": "^QA_CP04_" },
+    "origen": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "club": { "type": "string", "minLength": 1, "maxLength": 60 }
+  }
+}

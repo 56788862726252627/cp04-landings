@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/whatsapp/consent-event.schema.json",
+  "title": "CP04 WhatsApp Adapter — Consent Event (opt-in / opt-out / resubscribe, mock)",
+  "description": "Contrato de un evento de consentimiento aplicado por worker-reservas/messaging/whatsapp-consent.js#ConsentStore. reason solo es obligatorio para type:'opt_out' (auditar por qué se dio de baja); type:'opt_in'/'resubscribe' exigen source en vez de reason.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "phone", "at"],
+  "properties": {
+    "type": { "type": "string", "enum": ["opt_in", "opt_out", "resubscribe"] },
+    "phone": { "type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$" },
+    "source": { "type": "string", "enum": ["booking_form", "whatsapp_reply", "admin_manual", "import_legacy"] },
+    "reason": { "type": ["string", "null"] },
+    "at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$" }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "to": "+34600000002",
+  "template_name": "booking_cancelled",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "player_name": "Luis Pérez",
+    "court_name": "Pista 2",
+    "date_time": "2026-07-10 18:00",
+    "cancellation_reason": "Cancelada por el socio"
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:bkg_0002:booking_cancelled"
+}

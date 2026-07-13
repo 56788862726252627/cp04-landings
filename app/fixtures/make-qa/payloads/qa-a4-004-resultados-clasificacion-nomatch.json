@@ -1,0 +1,10 @@
+{
+  "test_id": "QA-A4-004",
+  "scenario_id": "5330078",
+  "status": "DISEÑADO — pendiente de preflight Airtable — SOLO rama no-match",
+  "payload": {
+    "id_partido": "QA_CP04_A4_NOMATCH",
+    "juegos_local": 0,
+    "juegos_visitante": 0
+  }
+}

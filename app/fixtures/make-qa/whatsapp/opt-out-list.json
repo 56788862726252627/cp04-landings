@@ -1,0 +1,4 @@
+{
+  "_why": "Lista de prueba de destinatarios que ejercieron opt-out, consumida por whatsapp-mock.test.mjs. No es una lista real de socios.",
+  "opted_out_numbers": ["+34600000099", "+34600000098"]
+}

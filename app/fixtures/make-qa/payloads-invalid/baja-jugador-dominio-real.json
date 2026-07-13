@@ -1,0 +1,7 @@
+{
+  "_why_invalid": "email con dominio real (gmail.com) en vez de .test (RFC 2606) — este es exactamente el error que podría dar de baja a un socio real de verdad en la rama 'encontrado'",
+  "payload": {
+    "email": "un.socio.real@gmail.com",
+    "nombre": "QA_CP04_TEST_A4"
+  }
+}

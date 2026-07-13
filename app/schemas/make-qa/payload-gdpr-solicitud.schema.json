@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/payload-gdpr-solicitud.schema.json",
+  "title": "QA-A4-001 · Payload Solicitud GDPR (6323457)",
+  "description": "email debe ser un alias '+' de la propia cuenta del admin — cero tercero afectado, único camino 100% seguro de los 50 según audit/app-make-50-integration/APP_MAKE_50_MASTER_MATRIX_QA_EXACT.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["email", "tipo_solicitud", "motivo"],
+  "properties": {
+    "email": { "type": "string", "pattern": "^[^@+]+\\+qacp04[a-z0-9]*@[^@]+\\.[^@]+$" },
+    "tipo_solicitud": { "type": "string", "enum": ["acceso", "olvido"] },
+    "motivo": { "type": "string", "pattern": "QA_CP04", "minLength": 10, "maxLength": 300 }
+  }
+}

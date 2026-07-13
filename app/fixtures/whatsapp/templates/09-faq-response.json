@@ -1,0 +1,11 @@
+{
+  "to": "+34600000009",
+  "template_name": "faq_response",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "question_topic": "Horario de recepción",
+    "answer_summary": "La recepción abre de 8:00 a 22:00 todos los días, incluidos festivos."
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:faq_0001:faq_response"
+}

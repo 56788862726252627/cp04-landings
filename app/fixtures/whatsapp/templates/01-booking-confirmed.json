@@ -1,0 +1,13 @@
+{
+  "to": "+34600000001",
+  "template_name": "booking_confirmed",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "player_name": "Ana García",
+    "court_name": "Pista 1",
+    "date_time": "2026-07-10 10:00",
+    "booking_reference": "BKG-0001"
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:bkg_0001:booking_confirmed"
+}

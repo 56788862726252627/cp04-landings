@@ -1,0 +1,28 @@
+{
+  "_why": "Dos casos de robustez que extractDeliveryStatusEvents()/normalizeDeliveryStatusEvent() nunca deben lanzar: (1) 'field':'messages' pero value.statuses ausente (es un mensaje ENTRANTE, no un estado de entrega — Meta usa el mismo 'field' para ambos, se distingue por la forma del payload, no por el nombre del field); (2) un status entry sin 'id' ni 'recipient_id' (evento corrupto/incompleto).",
+  "incoming_message_not_a_status": {
+    "entry": [
+      {
+        "id": "WABA_ID_TEST",
+        "changes": [
+          {
+            "field": "messages",
+            "value": {
+              "messaging_product": "whatsapp",
+              "metadata": { "display_phone_number": "34900000000", "phone_number_id": "111111111111111" },
+              "messages": [ { "from": "34600000063", "id": "wamid.INCOMING0001", "timestamp": "1719000300", "text": { "body": "STOP" }, "type": "text" } ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "corrupt_status_entry": {
+    "entry": [
+      { "id": "WABA_ID_TEST", "changes": [ { "field": "messages", "value": {
+        "messaging_product": "whatsapp",
+        "statuses": [ { "status": "delivered" } ]
+      } } ] }
+    ]
+  }
+}

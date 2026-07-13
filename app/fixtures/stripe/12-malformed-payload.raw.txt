@@ -1,0 +1,1 @@
+{"id": "evt_QACP04STRIPE_malformed_001", "object": "event", "type": "checkout.session.completed", "created": 1799701000, "livemode": false, "data": {"object": {"id": "cs_test_mock_malformed_0001" "metadata": {"tenant_id": "tnt_qacp04_test"

@@ -1,0 +1,10 @@
+{
+  "test_id": "QA-A4-001",
+  "scenario_id": "6323457",
+  "status": "DISEÑADO — pendiente de preflight Airtable",
+  "payload": {
+    "email": "eduardorodriguezrodriguez24+qacp04a4@gmail.com",
+    "tipo_solicitud": "acceso",
+    "motivo": "QA_CP04 Lote A4 - prueba controlada, no es una solicitud real"
+  }
+}

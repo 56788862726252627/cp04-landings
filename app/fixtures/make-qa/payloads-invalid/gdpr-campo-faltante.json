@@ -1,0 +1,7 @@
+{
+  "_why_invalid": "falta el campo obligatorio 'motivo'",
+  "payload": {
+    "email": "eduardorodriguezrodriguez24+qacp04a4@gmail.com",
+    "tipo_solicitud": "acceso"
+  }
+}

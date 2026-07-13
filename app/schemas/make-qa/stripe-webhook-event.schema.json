@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/stripe-webhook-event.schema.json",
+  "title": "CP04 Make QA — Stripe Webhook Event (mock)",
+  "description": "Contrato de un evento Stripe simulado para QA de 💳 Pago Confirmado (6323441) y 🔄 Dunning (6335117). livemode debe ser SIEMPRE false por contrato — es la garantía estructural de que ningún fixture de esta suite puede confundirse con un evento real, ni siquiera por accidente de copiar/pegar. metadata.email debe seguir el patrón de Ruta C (no coincide con ningún socio real) ya establecido en audit/app-make-50-integration/APP_MAKE_50_STRIPE_SANDBOX_PLAN.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "object", "type", "created", "livemode", "data"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^evt_QACP04_" },
+    "object": { "type": "string", "enum": ["event"] },
+    "type": { "type": "string", "enum": ["checkout.session.completed", "payment_intent.succeeded", "payment_intent.payment_failed", "invoice.payment_failed", "invoice.payment_succeeded"] },
+    "created": { "type": "integer", "minimum": 0 },
+    "livemode": { "type": "boolean", "enum": [false] },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object"],
+      "properties": {
+        "object": {
+          "type": "object",
+          "required": ["id", "metadata"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "metadata": {
+              "type": "object",
+              "required": ["email"],
+              "properties": {
+                "email": { "type": "string", "pattern": "^[^@]+@[^@]+\\.(test|invalid)$" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

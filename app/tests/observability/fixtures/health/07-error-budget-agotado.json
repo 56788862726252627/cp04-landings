@@ -1,0 +1,45 @@
+{
+  "scenario": "error-budget-agotado",
+  "now": "2026-07-08T12:00:00.000Z",
+  "slo_target_example": 0.99,
+  "_nota_slo_target": "0.99 (99%) es un objetivo ILUSTRATIVO deliberadamente estricto para esta fixture, elegido para demostrar agotamiento de presupuesto con un tamaño de muestra pequeño y manejable. No es un SLO contractual real — ver 07_SLO_SLI_FRAMEWORK.md §3.",
+  "health": {
+    "service": "worker",
+    "status": "HEALTHY",
+    "timestamp": "2026-07-08T12:00:00.000Z",
+    "latency_ms": 11,
+    "version": "1.0.0",
+    "checks": [
+      { "name": "process_alive", "passed": true, "message": null }
+    ],
+    "dependencies": [
+      { "name": "supabase-auth", "status": "HEALTHY", "latency_ms": 40, "error_code": null, "last_success_at": "2026-07-08T11:59:50.000Z", "retryable": false },
+      { "name": "airtable", "status": "HEALTHY", "latency_ms": 88, "error_code": null, "last_success_at": "2026-07-08T11:59:55.000Z", "retryable": false },
+      { "name": "make", "status": "HEALTHY", "latency_ms": 104, "error_code": null, "last_success_at": "2026-07-08T11:59:58.000Z", "retryable": false },
+      { "name": "gmail", "status": "HEALTHY", "latency_ms": 55, "error_code": null, "last_success_at": "2026-07-08T11:59:40.000Z", "retryable": false },
+      { "name": "cloudflare", "status": "HEALTHY", "latency_ms": 8, "error_code": null, "last_success_at": "2026-07-08T11:59:59.000Z", "retryable": false }
+    ]
+  },
+  "samples": [
+    { "timestamp": "2026-07-08T11:55:00.000Z", "service": "worker", "status": "success", "latency_ms": 100 },
+    { "timestamp": "2026-07-08T11:55:30.000Z", "service": "worker", "status": "success", "latency_ms": 95 },
+    { "timestamp": "2026-07-08T11:56:00.000Z", "service": "worker", "status": "failure", "latency_ms": 8000 },
+    { "timestamp": "2026-07-08T11:56:30.000Z", "service": "worker", "status": "success", "latency_ms": 110 },
+    { "timestamp": "2026-07-08T11:57:00.000Z", "service": "worker", "status": "success", "latency_ms": 90 },
+    { "timestamp": "2026-07-08T11:57:15.000Z", "service": "worker", "status": "failure", "latency_ms": 7800 },
+    { "timestamp": "2026-07-08T11:57:30.000Z", "service": "worker", "status": "success", "latency_ms": 105 },
+    { "timestamp": "2026-07-08T11:57:45.000Z", "service": "worker", "status": "success", "latency_ms": 98 },
+    { "timestamp": "2026-07-08T11:58:00.000Z", "service": "worker", "status": "success", "latency_ms": 101 },
+    { "timestamp": "2026-07-08T11:58:15.000Z", "service": "worker", "status": "failure", "latency_ms": 8100 },
+    { "timestamp": "2026-07-08T11:58:30.000Z", "service": "worker", "status": "success", "latency_ms": 92 },
+    { "timestamp": "2026-07-08T11:58:45.000Z", "service": "worker", "status": "success", "latency_ms": 99 },
+    { "timestamp": "2026-07-08T11:59:00.000Z", "service": "worker", "status": "success", "latency_ms": 96 },
+    { "timestamp": "2026-07-08T11:59:10.000Z", "service": "worker", "status": "success", "latency_ms": 103 },
+    { "timestamp": "2026-07-08T11:59:20.000Z", "service": "worker", "status": "success", "latency_ms": 89 },
+    { "timestamp": "2026-07-08T11:59:30.000Z", "service": "worker", "status": "success", "latency_ms": 107 },
+    { "timestamp": "2026-07-08T11:59:35.000Z", "service": "worker", "status": "success", "latency_ms": 94 },
+    { "timestamp": "2026-07-08T11:59:40.000Z", "service": "worker", "status": "success", "latency_ms": 100 },
+    { "timestamp": "2026-07-08T11:59:50.000Z", "service": "worker", "status": "success", "latency_ms": 97 },
+    { "timestamp": "2026-07-08T11:59:55.000Z", "service": "worker", "status": "success", "latency_ms": 91 }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "layer": "registry",
+  "tenants": [
+    {
+      "tenantId": "cp04",
+      "slug": "club-padel-04",
+      "verticalId": "padel",
+      "domains": { "primary": null, "subdomain": "club-padel-04.pages.dev" },
+      "status": "active"
+    },
+    {
+      "tenantId": "fixture-club-02",
+      "slug": "club-deportivo-fixture-dos",
+      "verticalId": "padel",
+      "domains": { "primary": null, "subdomain": "club-deportivo-fixture-dos.pages.dev" },
+      "status": "staging"
+    },
+    {
+      "tenantId": "fixture-club-03",
+      "slug": "club-deportivo-fixture-tres",
+      "verticalId": "padel",
+      "domains": { "primary": null, "subdomain": "club-deportivo-fixture-tres.pages.dev" },
+      "status": "disabled"
+    },
+    {
+      "tenantId": "fixture-club-04",
+      "slug": "club-deportivo-fixture-cuatro",
+      "verticalId": "padel",
+      "domains": { "primary": null, "subdomain": "club-deportivo-fixture-cuatro.pages.dev" },
+      "status": "maintenance"
+    }
+  ]
+}

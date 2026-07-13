@@ -1,0 +1,6 @@
+{
+  "_why_invalid": "este escenario es programado (no webhook) y no consume payload — additionalProperties:false debe rechazar cualquier campo",
+  "payload": {
+    "algo": "no debería aceptarse"
+  }
+}

@@ -1,0 +1,137 @@
+// Club Pádel 04 · Inventario real de escenarios Make (snapshot).
+//
+// IMPORTANTE — por qué esto es un snapshot y no una llamada en vivo:
+// el frontend NUNCA debe llamar a la API de Make con una clave privada
+// (ya lo advertía el propio código anterior de FlujosMake). La consulta en
+// vivo que alimenta este archivo se hizo vía MCP de Make (solo lectura,
+// fuera del navegador) durante la auditoría de Club Pádel 04. Los datos
+// operacionales (activo, scheduling, ejecuciones, operaciones, errores,
+// última modificación) son exactamente los devueltos por Make en esa
+// consulta — no están inventados ni extrapolados de los blueprints locales.
+//
+// Para refrescar este snapshot: repetir la consulta de solo lectura vía
+// MCP (organizations_list → teams_list → scenarios_list) y regenerar este
+// archivo. No existe todavía una vía de refresco en vivo desde la app: eso
+// requeriría un endpoint propio en el Worker que guarde el token de Make
+// como secret de servidor (nunca en el frontend) — fuera del alcance de
+// esta fase.
+
+export const MAKE_INVENTORY_META = Object.freeze({
+  capturedAt: "2026-07-06T14:32:00.000Z",
+  source: "confirmado_make_mcp",
+  organization: "Edu.Rodríguez.IA",
+  team: "My Team",
+  totalReal: 50,
+});
+
+// categoria: clasificación arquitectónica. Es un campo DERIVADO por análisis
+// (no un campo que la API de Make devuelva tal cual), documentado aquí
+// mismo por escenario. Ver worker-reservas/docs y las auditorías Make
+// previas para el razonamiento completo de cada clasificación.
+export const MAKE_SCENARIO_CATEGORIES = Object.freeze({
+  APP_TRIGGERED: "APP_TRIGGERED",
+  EVENT_TRIGGERED: "EVENT_TRIGGERED",
+  SCHEDULED: "SCHEDULED",
+  INTERNAL_OPERATION: "INTERNAL_OPERATION",
+  TECHNICAL_MONITORING: "TECHNICAL_MONITORING",
+  DEVELOPMENT_QA: "DEVELOPMENT_QA",
+});
+
+const C = MAKE_SCENARIO_CATEGORIES;
+
+// Cada entrada: datos operacionales = confirmado_make_mcp (tal cual los
+// devolvió Make). `categoria` = derivado. Nunca se incluye aquí ningún
+// token, hookId invocable, URL de webhook, contenido HTML de email ni dato
+// personal de jugadores — solo métricas agregadas.
+export const MAKE_INVENTORY = Object.freeze([
+  { id: 5697630, nombre: "📡 API Reservas", categoria: C.APP_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 115, operaciones: 519, errores: 67, ultimaModificacion: "2026-06-19T18:10:39.482Z", usaAirtable: true },
+  { id: 6199248, nombre: "🎾 Alta de Jugador", categoria: C.APP_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 22, operaciones: 75, errores: 2, ultimaModificacion: "2026-06-26T01:34:11.609Z", usaAirtable: true },
+
+  { id: 6299114, nombre: "⚠️ Alerta Crítica Fallos Make", categoria: C.TECHNICAL_MONITORING, activo: false, scheduling: "cada 900s (15 min)", ejecuciones: 257, operaciones: 858, errores: 1, ultimaModificacion: "2026-06-23T11:06:55.060Z", usaAirtable: false },
+  { id: 6233755, nombre: "🗺️ Mapa de Flujos", categoria: C.TECHNICAL_MONITORING, activo: true, scheduling: "semanal · lunes 07:30", ejecuciones: 18, operaciones: 97, errores: 3, ultimaModificacion: "2026-06-29T05:33:39.182Z", usaAirtable: false },
+
+  { id: 6217724, nombre: "🔄 Backup Semanal", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · lunes 07:00", ejecuciones: 46, operaciones: 176, errores: 4, ultimaModificacion: "2026-06-26T01:36:10.974Z", usaAirtable: true },
+  { id: 5791128, nombre: "👥 Emparejamiento Sin Pareja", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · jueves 11:00", ejecuciones: 5, operaciones: 19, errores: 2, ultimaModificacion: "2026-06-29T18:26:11.099Z", usaAirtable: true },
+  { id: 5736472, nombre: "🚨 Alerta Pistas Libres + Flash Promo", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · mar/vie 09:00", ejecuciones: 5, operaciones: 50, errores: 0, ultimaModificacion: "2026-06-26T01:32:47.200Z", usaAirtable: true },
+  { id: 5736800, nombre: "📋 Dashboard Ejecutivo Diario", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · diario 09:00", ejecuciones: 34, operaciones: 117, errores: 1, ultimaModificacion: "2026-06-26T01:53:25.553Z", usaAirtable: true },
+  { id: 5736468, nombre: "📊 Panel KPI Semanal", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · martes 08:00", ejecuciones: 4, operaciones: 28, errores: 0, ultimaModificacion: "2026-06-29T05:36:38.060Z", usaAirtable: true },
+  { id: 5736470, nombre: "🔁 Reactivación Inactivos 30d", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · martes 10:00", ejecuciones: 4, operaciones: 13, errores: 0, ultimaModificacion: "2026-06-29T05:38:15.380Z", usaAirtable: true },
+  { id: 5799041, nombre: "📈 Predicción Ocupación", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · martes 07:00", ejecuciones: 3, operaciones: 52, errores: 0, ultimaModificacion: "2026-06-29T05:37:08.875Z", usaAirtable: true },
+  { id: 5811864, nombre: "🎂 Felicitación Cumpleaños", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · diario 09:00", ejecuciones: 33, operaciones: 49, errores: 0, ultimaModificacion: "2026-06-29T05:31:33.213Z", usaAirtable: true },
+  { id: 5811901, nombre: "📊 Análisis NPS Semanal", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · martes 08:30", ejecuciones: 15, operaciones: 67, errores: 0, ultimaModificacion: "2026-06-26T01:34:45.629Z", usaAirtable: true },
+  { id: 5811888, nombre: "💸 Escalado Impagos", categoria: C.SCHEDULED, activo: true, scheduling: "semanal · diario 08:00", ejecuciones: 37, operaciones: 58, errores: 0, ultimaModificacion: "2026-06-29T05:30:58.136Z", usaAirtable: true },
+  { id: 5791032, nombre: "💳 Recordatorio Cuota Mensual", categoria: C.SCHEDULED, activo: false, scheduling: "cada 2 592 000s (30 días)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T17:53:31.813Z", usaAirtable: true },
+  { id: 5791119, nombre: "📊 Informe Mensual", categoria: C.SCHEDULED, activo: true, scheduling: "cada 2 592 000s (30 días)", ejecuciones: 8, operaciones: 33, errores: 4, ultimaModificacion: "2026-06-29T05:32:59.256Z", usaAirtable: true },
+
+  { id: 5735907, nombre: "🗓️ Sincronización Multi-Calendario", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 1800s (30 min)", ejecuciones: 1528, operaciones: 1546, errores: 0, ultimaModificacion: "2026-07-06T14:32:29.507Z", usaAirtable: true, nota: "Optimizado en esta auditoría: 15→30 min." },
+  { id: 5791116, nombre: "🏷️ Confirmación Inscripción Torneo", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 3600s (1h)", ejecuciones: 502, operaciones: 545, errores: 1, ultimaModificacion: "2026-06-26T01:50:59.045Z", usaAirtable: true },
+  { id: 4942506, nombre: "🔔 Recordatorio 24h Antes", categoria: C.INTERNAL_OPERATION, activo: false, scheduling: "cada 3600s (1h)", ejecuciones: 148, operaciones: 592, errores: 55, ultimaModificacion: "2026-07-06T14:29:31.568Z", usaAirtable: true, nota: "Corrección defensiva aplicada (excluye fecha/hora vacías antes de parseDate). Pendiente validación funcional con datos reales: la prueba controlada falló por el bloqueo externo de Airtable, no por el fix." },
+  { id: 5736463, nombre: "⚡ Recordatorio 2h Antes", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 1800s (30 min)", ejecuciones: 487, operaciones: 1851, errores: 92, ultimaModificacion: "2026-06-29T05:39:41.202Z", usaAirtable: true, nota: "Errores actuales = RateLimitError 429 de Airtable (dependencia externa degradada), no un bug del escenario." },
+  { id: 5736797, nombre: "🚫 Seguimiento No-Show", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 21600s (6h)", ejecuciones: 187, operaciones: 429, errores: 13, ultimaModificacion: "2026-06-29T05:41:39.895Z", usaAirtable: true },
+  { id: 5791113, nombre: "📋 Gestión Lista de Espera", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 3600s (1h)", ejecuciones: 466, operaciones: 483, errores: 0, ultimaModificacion: "2026-06-29T17:57:25.573Z", usaAirtable: true },
+  { id: 5750308, nombre: "📧 Monitor Prueba Gratuita", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 3600s (1h)", ejecuciones: 452, operaciones: 454, errores: 0, ultimaModificacion: "2026-06-29T05:34:16.616Z", usaAirtable: true },
+  { id: 5811918, nombre: "🔁 Onboarding Secuencial", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 3600s (1h)", ejecuciones: 474, operaciones: 1827, errores: 3, ultimaModificacion: "2026-06-29T05:35:15.793Z", usaAirtable: true },
+  { id: 5812456, nombre: "❄️ Congelación + Reactivación Membresía", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 3600s (1h)", ejecuciones: 468, operaciones: 784, errores: 0, ultimaModificacion: "2026-06-26T01:51:39.434Z", usaAirtable: true },
+  { id: 5791022, nombre: "🎁 Bienvenida Nuevo Socio", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 3600s (1h)", ejecuciones: 461, operaciones: 795, errores: 0, ultimaModificacion: "2026-06-26T01:37:41.586Z", usaAirtable: true },
+  { id: 5812297, nombre: "🎁 Programa de Referidos", categoria: C.INTERNAL_OPERATION, activo: true, scheduling: "cada 3600s (1h)", ejecuciones: 449, operaciones: 1343, errores: 0, ultimaModificacion: "2026-06-29T05:37:48.572Z", usaAirtable: true },
+  { id: 5736466, nombre: "⭐ Encuesta Post-Partido", categoria: C.INTERNAL_OPERATION, activo: false, scheduling: "cada 3600s (1h)", ejecuciones: 64, operaciones: 257, errores: 57, ultimaModificacion: "2026-06-29T05:29:49.477Z", usaAirtable: true },
+
+  { id: 4919937, nombre: "🏆 Cruces de Torneo", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 2, operaciones: 7, errores: 1, ultimaModificacion: "2026-06-26T01:52:53.022Z", usaAirtable: true },
+  { id: 5330078, nombre: "🏅 Resultados y Clasificación", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 6, errores: 0, ultimaModificacion: "2026-06-29T05:40:26.152Z", usaAirtable: true },
+  { id: 5791374, nombre: "🏆 Reto 04 + Puntos", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 6, errores: 0, ultimaModificacion: "2026-06-29T05:41:02.023Z", usaAirtable: true },
+  { id: 5791133, nombre: "🏟️ Cierre Temporal de Pistas", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 4, operaciones: 74, errores: 0, ultimaModificacion: "2026-06-26T01:39:08.108Z", usaAirtable: true },
+  { id: 5288809, nombre: "❌ Baja de Jugador + Promoción", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 9, errores: 0, ultimaModificacion: "2026-06-26T01:37:06.291Z", usaAirtable: true },
+  { id: 5291559, nombre: "🔐 Control Acceso QR", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 9, operaciones: 41, errores: 4, ultimaModificacion: "2026-06-26T01:52:28.332Z", usaAirtable: true },
+  { id: 6244975, nombre: "🔑 Generación QR Acceso", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 9, operaciones: 28, errores: 6, ultimaModificacion: "2026-06-29T17:56:55.356Z", usaAirtable: false },
+  { id: 5799031, nombre: "🎧 Atención Socio WhatsApp FAQ", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:43:58.075Z", usaAirtable: true },
+  { id: 5791124, nombre: "🎯 Campaña Flash WhatsApp", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T17:52:05.632Z", usaAirtable: true },
+  { id: 5733370, nombre: "💰 Facturación y Cobro", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T17:52:57.357Z", usaAirtable: true },
+  { id: 5799061, nombre: "💬 Chatbot Web Reservas", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-26T01:38:23.159Z", usaAirtable: false },
+  { id: 5798996, nombre: "🤖 Bot IA Reservas WhatsApp", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:45:19.306Z", usaAirtable: false },
+  { id: 4832095, nombre: "🤖 Bot IA Reservas Telegram", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (Telegram watchUpdates)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:44:47.157Z", usaAirtable: false },
+  { id: 6323457, nombre: "⚖️ Solicitud GDPR Acceso u Olvido de Datos", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T05:27:35.959Z", usaAirtable: true, nota: "Sin blueprint local previo; no conectado a la app." },
+  { id: 6323450, nombre: "🛡️ Alerta Seguridad Acceso Sospechoso", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T05:27:09.091Z", usaAirtable: false, nota: "Sin blueprint local previo; no conectado a la app." },
+  { id: 6323441, nombre: "💳 Pago Confirmado Stripe → Cuota + Recibo", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 4, errores: 0, ultimaModificacion: "2026-06-29T05:36:04.160Z", usaAirtable: true, nota: "Stripe no está activado en la app (regla del proyecto); solo existe la infraestructura en Make." },
+  { id: 6335117, nombre: "🔄 Dunning Cobro Recurrente Stripe", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:28:36.088Z", usaAirtable: true, nota: "Stripe no está activado en la app." },
+  { id: 6323445, nombre: "🔑 Email Recuperación de Contraseña SaaS", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T05:26:47.987Z", usaAirtable: false, nota: "NO conectar: Supabase Auth es la única fuente de verdad de recuperación de contraseña. Ver recomendaciones." },
+  { id: 6335114, nombre: "📸 Instagram Borrador con IA", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T20:52:56.817Z", usaAirtable: true, nota: "Marketing, sin relación con la app." },
+  { id: 6335118, nombre: "🔔 Notificación Push PWA", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T20:53:52.789Z", usaAirtable: true, nota: "La app no tiene push PWA implementado todavía." },
+  { id: 5747703, nombre: "📝 Tally → API Reservas", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T18:27:30.571Z", usaAirtable: false },
+
+  { id: 6216523, nombre: "🗂️ Backup Plantilla Drive", categoria: C.DEVELOPMENT_QA, activo: false, scheduling: "cada 900s (15 min)", ejecuciones: 443, operaciones: 443, errores: 0, ultimaModificacion: "2026-06-29T05:44:12.409Z", usaAirtable: false, nota: "Nombre indica plantilla/QA. Confirmado inactivo — no reactivar sin necesidad." },
+]);
+
+// --- Derivación (documentada, no inventada) ---
+
+export function computeErrorRate(scenario) {
+  if (!scenario.ejecuciones) return 0;
+  return Math.round((scenario.errores / scenario.ejecuciones) * 1000) / 10; // % con 1 decimal
+}
+
+// Criterios de salud (documentados, ver Fase 5 de la auditoría):
+// CRÍTICO: tasa de error >= 25% con al menos 10 ejecuciones, o dependencia
+//          externa conocida bloqueada afectando directamente al escenario.
+// ATENCIÓN: tasa de error entre 5% y 25%, o inactivo pese a ser relevante
+//           para el negocio (categoría distinta de DEVELOPMENT_QA/TECHNICAL_MONITORING).
+// OK: el resto.
+export function computeHealth(scenario) {
+  const tasa = computeErrorRate(scenario);
+  const relevante = scenario.categoria !== C.DEVELOPMENT_QA;
+
+  if (scenario.ejecuciones >= 10 && tasa >= 25) return "CRITICO";
+  if (tasa >= 5 && tasa < 25) return "ATENCION";
+  if (!scenario.activo && relevante && scenario.categoria !== C.TECHNICAL_MONITORING) return "ATENCION";
+  return "OK";
+}
+
+// Criticidad de negocio (documentada): depende de la categoría y de si está
+// confirmado como conectado a la app (APP_TRIGGERED), no del volumen.
+export function computeCriticality(scenario) {
+  if (scenario.categoria === C.APP_TRIGGERED) return "ALTA";
+  if (scenario.categoria === C.INTERNAL_OPERATION || scenario.categoria === C.SCHEDULED) return "MEDIA";
+  return "BAJA";
+}
+
+export function getScenarioNote(scenario) {
+  return scenario.nota || null;
+}

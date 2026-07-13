@@ -1,0 +1,602 @@
+{
+  "generated_at": "2026-07-09",
+  "total": 50,
+  "by_status": {
+    "LOCAL_READY": 1,
+    "CONFIG_ERROR": 4,
+    "READY_FOR_PREFLIGHT": 13,
+    "STRIPE_TEST_REQUIRED": 2,
+    "AIRTABLE_OBSERVING": 3,
+    "WHATSAPP_SETUP_REQUIRED": 12,
+    "NOT_SAFE": 2,
+    "MAKE_LIVE_EXECUTION_REQUIRED": 13
+  },
+  "scenarios": [
+    {
+      "scenario_id": "6244975",
+      "scenario_name": "🔑 Generación QR Acceso",
+      "current_status": "PASS_VERIFIED",
+      "status": "LOCAL_READY",
+      "additional_blockers": [],
+      "reasons": [
+        "Sin dependencias externas bloqueantes (Airtable/Stripe/WhatsApp-destructivo) detectadas — solo depende de Gmail y/o servicios sin restricción activa"
+      ]
+    },
+    {
+      "scenario_id": "6233755",
+      "scenario_name": "🗺️ Mapa de Flujos",
+      "current_status": "CONFIG_ERROR",
+      "status": "CONFIG_ERROR",
+      "additional_blockers": [],
+      "reasons": [
+        "CONFIG_ERROR ya confirmado en el manifest"
+      ]
+    },
+    {
+      "scenario_id": "6323457",
+      "scenario_name": "⚖️ Solicitud GDPR Acceso u Olvido",
+      "current_status": "READY_PENDING_AIRTABLE_PREFLIGHT",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "6199248",
+      "scenario_name": "🎾 Alta de Jugador",
+      "current_status": "READY_PENDING_AIRTABLE_PREFLIGHT",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5697630",
+      "scenario_name": "📡 API Reservas (crear_reserva)",
+      "current_status": "READY_PENDING_AIRTABLE_PREFLIGHT",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5291559",
+      "scenario_name": "🔐 Control Acceso QR (DENEGADO_INVALIDO)",
+      "current_status": "READY_PENDING_AIRTABLE_PREFLIGHT",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5288809",
+      "scenario_name": "❌ Baja de Jugador + Promoción (rama no-match)",
+      "current_status": "SAFE_WITH_RESTRICTIONS",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "4919937",
+      "scenario_name": "🏆 Cruces de Torneo (rama no-match)",
+      "current_status": "SAFE_WITH_RESTRICTIONS",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5330078",
+      "scenario_name": "🏅 Resultados y Clasificación (rama no-match)",
+      "current_status": "SAFE_WITH_RESTRICTIONS",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791128",
+      "scenario_name": "👥 Emparejamiento Sin Pareja",
+      "current_status": "SAFE_WITH_RESTRICTIONS",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "6323441",
+      "scenario_name": "💳 Pago Confirmado Stripe → Cuota + Recibo",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "status": "STRIPE_TEST_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Depende de Stripe — requiere un evento de prueba en modo sandbox antes de cualquier ejecución en vivo",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "6335117",
+      "scenario_name": "🔄 Dunning Cobro Recurrente Stripe",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "status": "STRIPE_TEST_REQUIRED",
+      "additional_blockers": [
+        "WHATSAPP_SETUP_REQUIRED",
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Depende de Stripe — requiere un evento de prueba en modo sandbox antes de cualquier ejecución en vivo",
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "6335114",
+      "scenario_name": "📸 Instagram Borrador con IA",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5735907",
+      "scenario_name": "🗓️ Sincronización Multi-Calendario",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5736472",
+      "scenario_name": "🚨 Alerta Pistas Libres + Flash Promo",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791119",
+      "scenario_name": "📊 Informe Mensual",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5811918",
+      "scenario_name": "🔁 Onboarding Secuencial",
+      "current_status": "BLOCKED_PENDING_AIRTABLE_VERIFICATION",
+      "status": "READY_FOR_PREFLIGHT",
+      "additional_blockers": [],
+      "reasons": [
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5736463",
+      "scenario_name": "⚡ Recordatorio 2h Antes",
+      "current_status": "BLOCKED_EXTERNAL_RATE_LIMIT",
+      "status": "AIRTABLE_OBSERVING",
+      "additional_blockers": [
+        "WHATSAPP_SETUP_REQUIRED"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: AIRTABLE_OBSERVING (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5736797",
+      "scenario_name": "🚫 Seguimiento No-Show",
+      "current_status": "BLOCKED_EXTERNAL_RATE_LIMIT",
+      "status": "AIRTABLE_OBSERVING",
+      "additional_blockers": [
+        "WHATSAPP_SETUP_REQUIRED"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: AIRTABLE_OBSERVING (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791133",
+      "scenario_name": "🏟️ Cierre Temporal de Pistas",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5811888",
+      "scenario_name": "💸 Escalado Impagos",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "6323450",
+      "scenario_name": "🛡️ Alerta Seguridad Acceso Sospechoso",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)"
+      ]
+    },
+    {
+      "scenario_id": "5812456",
+      "scenario_name": "❄️ Congelación + Reactivación Membresía",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791022",
+      "scenario_name": "🎁 Bienvenida Nuevo Socio",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5812297",
+      "scenario_name": "🎁 Programa de Referidos",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5811864",
+      "scenario_name": "🎂 Felicitación Cumpleaños",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5736470",
+      "scenario_name": "🔁 Reactivación Inactivos 30d",
+      "current_status": "BLOCKED_EXTERNAL_WHATSAPP_PENDING",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791113",
+      "scenario_name": "📋 Gestión Lista de Espera",
+      "current_status": "NOT_SAFE",
+      "status": "NOT_SAFE",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Estructuralmente NOT_SAFE en el manifest — requiere diseño de aislamiento/harness antes de cualquier reclasificación",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5799061",
+      "scenario_name": "💬 Chatbot Web Reservas",
+      "current_status": "NOT_SAFE",
+      "status": "NOT_SAFE",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Estructuralmente NOT_SAFE en el manifest — requiere diseño de aislamiento/harness antes de cualquier reclasificación",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5736466",
+      "scenario_name": "⭐ Encuesta Post-Partido",
+      "current_status": "NEEDS_FIX_BEFORE_TEST",
+      "status": "CONFIG_ERROR",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Blueprint roto (NEEDS_FIX_BEFORE_TEST) — mismo bucket que credenciales inválidas, pero la causa es distinta: revisar destructive_note",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "6323445",
+      "scenario_name": "🔑 Email Recuperación de Contraseña SaaS",
+      "current_status": "CONFIG_ERROR",
+      "status": "CONFIG_ERROR",
+      "additional_blockers": [],
+      "reasons": [
+        "CONFIG_ERROR ya confirmado en el manifest"
+      ]
+    },
+    {
+      "scenario_id": "5747703",
+      "scenario_name": "📝 Tally → API Reservas",
+      "current_status": "CONFIG_ERROR",
+      "status": "CONFIG_ERROR",
+      "additional_blockers": [],
+      "reasons": [
+        "CONFIG_ERROR ya confirmado en el manifest"
+      ]
+    },
+    {
+      "scenario_id": "6335118",
+      "scenario_name": "🔔 Notificación Push PWA",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791116",
+      "scenario_name": "🏷️ Confirmación Inscripción Torneo",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5750308",
+      "scenario_name": "📧 Monitor Prueba Gratuita",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5736800",
+      "scenario_name": "📋 Dashboard Ejecutivo Diario",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5811901",
+      "scenario_name": "📊 Análisis NPS Semanal",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5736468",
+      "scenario_name": "📊 Panel KPI Semanal",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "6217724",
+      "scenario_name": "🔄 Backup Semanal",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5799041",
+      "scenario_name": "📈 Predicción Ocupación",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791374",
+      "scenario_name": "🏆 Reto 04 + Puntos",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5733370",
+      "scenario_name": "💰 Facturación y Cobro",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791032",
+      "scenario_name": "💳 Recordatorio Cuota Mensual",
+      "current_status": "NOT_TESTED",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5791124",
+      "scenario_name": "🎯 Campaña Flash WhatsApp",
+      "current_status": "NOT_TESTED",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "6216523",
+      "scenario_name": "🗂️ Backup Plantilla Drive",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local"
+      ]
+    },
+    {
+      "scenario_id": "6299114",
+      "scenario_name": "⚠️ Alerta Crítica Fallos Make",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local"
+      ]
+    },
+    {
+      "scenario_id": "5799031",
+      "scenario_name": "🎧 Atención Socio WhatsApp FAQ",
+      "current_status": "NOT_TESTED",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [
+        "READY_FOR_PREFLIGHT"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: READY_FOR_PREFLIGHT (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    },
+    {
+      "scenario_id": "5798996",
+      "scenario_name": "🤖 Bot IA Reservas WhatsApp",
+      "current_status": "NOT_TESTED",
+      "status": "WHATSAPP_SETUP_REQUIRED",
+      "additional_blockers": [],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)"
+      ]
+    },
+    {
+      "scenario_id": "4832095",
+      "scenario_name": "🤖 Bot IA Reservas Telegram",
+      "current_status": "NOT_TESTED",
+      "status": "MAKE_LIVE_EXECUTION_REQUIRED",
+      "additional_blockers": [],
+      "reasons": [
+        "Sin bloqueo estructural ni de Stripe/WhatsApp detectado, pero inactivo en Make y sin payload QA preparado — necesita decisión de reactivación + ejecución en vivo, no solo pre-flight local"
+      ]
+    },
+    {
+      "scenario_id": "4942506",
+      "scenario_name": "🔔 Recordatorio 24h Antes",
+      "current_status": "NOT_TESTED",
+      "status": "AIRTABLE_OBSERVING",
+      "additional_blockers": [
+        "WHATSAPP_SETUP_REQUIRED"
+      ],
+      "reasons": [
+        "Envío WhatsApp real si se completa la ejecución — requiere canal de prueba autorizado (o método Run once sin activar envío)",
+        "Airtable: AIRTABLE_OBSERVING (ver fixtures/make-qa/dependency-status.json)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal.cp04-agency/schemas/make-qa/dependency-status.schema.json",
+  "title": "CP04 Make QA — Dependency Status",
+  "description": "Contrato de fixtures/make-qa/dependency-status.json. Cada entrada de `checks` describe el estado re-chequeable de una dependencia externa concreta, separado del manifest de escenarios (objetivo 2: no asumir un bloqueo como permanente).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["generated_at", "checks"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "description": { "type": "string" },
+    "generated_at": { "type": "string" },
+    "checks": {
+      "type": "object",
+      "description": "Mapa nombre_del_check -> estado. additionalProperties es intencionalmente flexible aquí (a nivel de objeto contenedor): el conjunto de checks crece según se descubren nuevas dependencias externas, no es un enum cerrado como el de scenario-manifest."
+    }
+  }
+}

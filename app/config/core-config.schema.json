@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agencia-ia.internal/schemas/core-config/1.0.0/core-config.schema.json",
+  "title": "Agencia IA — Core Config",
+  "description": "Esquema de la capa CORE PLATFORM descrita en docs/agencia-ia/ARCHITECTURE_CORE_VS_VERTICAL.md. Defaults válidos para cualquier cliente de cualquier vertical: catálogo cerrado de features con su default global, dependencias entre features, y capacidades declarativas por rol. Documento único (no hay 'un core-config por cliente'): es el nivel más bajo de la cascada CORE < VERTICAL < CLIENT. Cierra el Quick Win 4 (config/feature-flags.default.json, nunca construido) formalizándolo dentro de esta capa en vez de como archivo suelto.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "layer", "roles", "featureDefaults", "featureDependencies", "roleCapabilities"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "layer": { "type": "string", "const": "core" },
+    "roles": {
+      "type": "array",
+      "description": "Conjunto CANÓNICO completo de roles de la plataforma — idéntico a CP04_ROLES en src/utils/rbac.js. El 'roles' de client-config.schema.json es siempre un SUBCONJUNTO de este conjunto, nunca puede añadir un rol que no esté aquí (rbac.js no lo reconocería).",
+      "items": { "type": "string", "enum": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"] },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "featureDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Default GLOBAL de cada feature si ninguna capa superior (vertical/cliente) dice lo contrario. Mismo catálogo cerrado de 23 keys que client-config.schema.json#features. Fail-closed: una key ausente aquí se trata como false en la cascada (ver src/config/resolveFeatureFlags.js), nunca como true.",
+      "required": [
+        "reservas", "cancelaciones", "reprogramaciones", "listaEspera", "torneos", "ranking", "emparejamientos",
+        "crm", "nps", "noShow", "referidos", "membresias", "pagos", "qr", "promociones", "ia", "soporte",
+        "dashboards", "automatizaciones", "campanas", "notificaciones", "whatsapp"
+      ],
+      "properties": {
+        "reservas": { "type": "boolean" },
+        "cancelaciones": { "type": "boolean" },
+        "reprogramaciones": { "type": "boolean" },
+        "listaEspera": { "type": "boolean" },
+        "torneos": { "type": "boolean" },
+        "ranking": { "type": "boolean" },
+        "emparejamientos": { "type": "boolean" },
+        "crm": { "type": "boolean" },
+        "nps": { "type": "boolean" },
+        "noShow": { "type": "boolean" },
+        "referidos": { "type": "boolean" },
+        "membresias": { "type": "boolean" },
+        "pagos": { "type": "boolean", "const": false, "description": "Forzado false — misma regla de proyecto que client-config.schema.json#features.pagos. Defensa en profundidad: aunque este documento se editara a mano, el schema sigue bloqueándolo." },
+        "qr": { "type": "boolean" },
+        "promociones": { "type": "boolean" },
+        "ia": { "type": "boolean", "const": false, "description": "Forzado false — ver client-config.schema.json#features.ia." },
+        "soporte": { "type": "boolean" },
+        "dashboards": { "type": "boolean" },
+        "automatizaciones": { "type": "boolean" },
+        "campanas": { "type": "boolean" },
+        "notificaciones": { "type": "boolean" },
+        "whatsapp": { "type": "boolean", "const": false, "description": "Forzado false — ver client-config.schema.json#features.whatsapp." }
+      }
+    },
+    "featureDependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Dependencias duras ya documentadas en audit/agency-platform-architecture/AGENCY_TENANT_CONFIG_MODEL.md §2. Si una feature está ON pero alguna de sus dependencias resuelve a OFF, src/config/resolveFeatureFlags.js la degrada a OFF automáticamente. 'membresias' NO aparece aquí: su relación con 'pagos' es una recomendación documental, no una dependencia bloqueante.",
+      "properties": {
+        "listaEspera": { "type": "array", "items": { "type": "string" }, "const": ["reservas"] },
+        "emparejamientos": { "type": "array", "items": { "type": "string" }, "const": ["ranking"] },
+        "nps": { "type": "array", "items": { "type": "string" }, "const": ["crm"] },
+        "referidos": { "type": "array", "items": { "type": "string" }, "const": ["crm"] },
+        "campanas": { "type": "array", "items": { "type": "string" }, "const": ["crm", "notificaciones"] },
+        "noShow": { "type": "array", "items": { "type": "string" }, "const": ["reservas"] },
+        "cancelaciones": { "type": "array", "items": { "type": "string" }, "const": ["reservas"] },
+        "reprogramaciones": { "type": "array", "items": { "type": "string" }, "const": ["reservas"] }
+      }
+    },
+    "roleCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Metadata DECLARATIVA para UI (qué mostrar/ocultar por rol) — nunca una fuente de autorización. El mecanismo real de permisos sigue siendo exclusivamente cp04NormalizeRole/rbac.js, sin cambios. Cada 'feature' referenciado aquí debe ser una de las 23 keys ya cerradas en featureDefaults, para no inventar vocabulario nuevo fuera de lo ya auditado.",
+      "required": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+      "properties": {
+        "PLAYER": { "$ref": "#/$defs/capabilityList" },
+        "STAFF": { "$ref": "#/$defs/capabilityList" },
+        "ADMIN": { "$ref": "#/$defs/capabilityList" },
+        "SUPPORT": { "$ref": "#/$defs/capabilityList" }
+      }
+    }
+  },
+  "$defs": {
+    "capabilityList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["feature", "actions"],
+        "properties": {
+          "feature": {
+            "type": "string",
+            "enum": [
+              "reservas", "cancelaciones", "reprogramaciones", "listaEspera", "torneos", "ranking", "emparejamientos",
+              "crm", "nps", "noShow", "referidos", "membresias", "pagos", "qr", "promociones", "ia", "soporte",
+              "dashboards", "automatizaciones", "campanas", "notificaciones", "whatsapp"
+            ]
+          },
+          "actions": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["view", "manage"] },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "schemaVersion": "1.0.0",
+      "layer": "core",
+      "roles": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+      "featureDefaults": {
+        "reservas": true, "cancelaciones": true, "reprogramaciones": true, "listaEspera": false,
+        "torneos": false, "ranking": false, "emparejamientos": false, "crm": false, "nps": false,
+        "noShow": false, "referidos": false, "membresias": false, "pagos": false, "qr": false,
+        "promociones": false, "ia": false, "soporte": true, "dashboards": true, "automatizaciones": true,
+        "campanas": false, "notificaciones": true, "whatsapp": false
+      },
+      "featureDependencies": {
+        "listaEspera": ["reservas"], "emparejamientos": ["ranking"], "nps": ["crm"], "referidos": ["crm"],
+        "campanas": ["crm", "notificaciones"], "noShow": ["reservas"], "cancelaciones": ["reservas"], "reprogramaciones": ["reservas"]
+      },
+      "roleCapabilities": {
+        "PLAYER": [{ "feature": "reservas", "actions": ["view", "manage"] }],
+        "STAFF": [{ "feature": "reservas", "actions": ["view", "manage"] }],
+        "ADMIN": [{ "feature": "reservas", "actions": ["view", "manage"] }, { "feature": "dashboards", "actions": ["view"] }],
+        "SUPPORT": [{ "feature": "soporte", "actions": ["view", "manage"] }]
+      }
+    }
+  ]
+}

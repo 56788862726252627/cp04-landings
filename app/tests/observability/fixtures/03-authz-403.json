@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-08T10:17:45.500Z",
+  "level": "warn",
+  "service": "worker",
+  "environment": "production",
+  "event_type": "http_request",
+  "message": "Rol insuficiente para ruta SUPPORT-only",
+  "request_id": "req_44aa19cd30",
+  "correlation_id": "corr_9e0b2f7710",
+  "client_id": "club-padel-04",
+  "tenant_id": null,
+  "scenario_id": null,
+  "execution_id": null,
+  "user_id_hash": "9f8e7d6c5b4a3210",
+  "error_code": "AUTHZ.ROLE_FORBIDDEN",
+  "duration_ms": 9,
+  "status": "failure",
+  "metadata": { "route": "/api/support/make/scenarios", "role": "PLAYER" }
+}

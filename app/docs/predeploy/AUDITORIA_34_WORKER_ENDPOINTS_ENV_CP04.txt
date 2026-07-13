@@ -1,0 +1,449 @@
+worker-reservas/wrangler.toml:6:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wrangler.toml:7:AIRTABLE_BASE_ID = "appyWvzZJLzy0E6aX"
+worker-reservas/wrangler.toml:8:AIRTABLE_TABLE_ID = "tblBtLjPS3sis28nz"
+worker-reservas/wrangler.toml:10:# Secrets:
+worker-reservas/wrangler.toml:11:# MAKE_RESERVAS_WEBHOOK
+worker-reservas/wrangler.toml:12:# AIRTABLE_TOKEN
+worker-reservas/wrangler.toml:14:AIRTABLE_RESERVAS_TABLE="tblBtLjPS3sis28nz"
+worker-reservas/src/index.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/src/index.js:13:      ...corsHeaders,
+worker-reservas/src/index.js:18:function corsHeaders(request, env) {
+worker-reservas/src/index.js:19:  const origin = request.headers.get("Origin") || "";
+worker-reservas/src/index.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/src/index.js:25:const isAllowedOrigin = allowedOrigins.includes(origin);
+worker-reservas/src/index.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/src/index.js:28:  if (!isAllowedOrigin) {
+worker-reservas/src/index.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/src/index.js:36:    "Vary": "Origin",
+worker-reservas/src/index.js:414:async function forwardToMake(payload, env) {
+worker-reservas/src/index.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/src/index.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/src/index.js:428:async function prepareAirtableWrite(payload, env) {
+worker-reservas/src/index.js:430:    (env.AIRTABLE_TOKEN || env.AIRTABLE_API_KEY) &&
+worker-reservas/src/index.js:431:    env.AIRTABLE_BASE_ID &&
+worker-reservas/src/index.js:432:    (env.AIRTABLE_RESERVAS_TABLE || env.AIRTABLE_TABLE_ID)
+worker-reservas/src/index.js:440:    reason: "Reserva confirmada vía Make. Escritura directa Airtable desactivada para evitar duplicados y bloqueos 403."
+worker-reservas/src/index.js:445:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:447:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/src/index.js:448:    return jsonResponse({ ok: false, error: "Origin not allowed" }, 403, headers);
+worker-reservas/src/index.js:472:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/src/index.js:473:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/src/index.js:475:  if (makeResult.configured && !makeResult.ok) {
+worker-reservas/src/index.js:476:    return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
+worker-reservas/src/index.js:481:    status: makeResult.configured ? "forwarded" : "accepted_without_make_webhook",
+worker-reservas/src/index.js:482:    make: { configured: makeResult.configured, status: makeResult.status },
+worker-reservas/src/index.js:483:    airtable: airtableResult,
+worker-reservas/src/index.js:487:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:505:      // CP04_DOMINGOS_V1: una consulta dominical devuelve cerrado sin leer Airtable.
+worker-reservas/src/index.js:523:            corsHeaders(request, env)
+worker-reservas/src/index.js:538:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/src/index.js:542:        error: "Airtable no está configurado en el Worker",
+worker-reservas/src/index.js:544:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/src/index.js:545:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/src/index.js:546:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/src/index.js:563:  const airtableUrl =
+worker-reservas/src/index.js:564:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/src/index.js:572:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/src/index.js:575:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/src/index.js:580:  const data = await airtableRes.json();
+worker-reservas/src/index.js:582:  if (!airtableRes.ok) {
+worker-reservas/src/index.js:586:        error: "Error consultando disponibilidad en Airtable",
+worker-reservas/src/index.js:587:        status: airtableRes.status,
+worker-reservas/src/index.js:655:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:680:    !env.AIRTABLE_TOKEN ||
+worker-reservas/src/index.js:681:    !env.AIRTABLE_BASE_ID ||
+worker-reservas/src/index.js:682:    !env.AIRTABLE_TABLE_ID
+worker-reservas/src/index.js:687:        error: "Airtable not configured",
+worker-reservas/src/index.js:724:    `https://api.airtable.com/v0/` +
+worker-reservas/src/index.js:725:    `${encodeURIComponent(env.AIRTABLE_BASE_ID)}/` +
+worker-reservas/src/index.js:726:    `${encodeURIComponent(env.AIRTABLE_TABLE_ID)}`;
+worker-reservas/src/index.js:732:    const airtableUrl = new URL(endpoint);
+worker-reservas/src/index.js:734:    airtableUrl.searchParams.set(
+worker-reservas/src/index.js:739:    airtableUrl.searchParams.set(
+worker-reservas/src/index.js:744:    airtableUrl.searchParams.set(
+worker-reservas/src/index.js:750:      airtableUrl.searchParams.set(
+worker-reservas/src/index.js:756:    const airtableResponse = await fetch(
+worker-reservas/src/index.js:757:      airtableUrl.toString(),
+worker-reservas/src/index.js:761:          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/src/index.js:767:    const rawText = await airtableResponse.text();
+worker-reservas/src/index.js:769:    let airtableData = {};
+worker-reservas/src/index.js:772:      airtableData = rawText
+worker-reservas/src/index.js:779:          error: "Invalid Airtable response",
+worker-reservas/src/index.js:780:          airtable_status: airtableResponse.status,
+worker-reservas/src/index.js:787:    if (!airtableResponse.ok) {
+worker-reservas/src/index.js:791:          error: "Airtable request failed",
+worker-reservas/src/index.js:792:          airtable_status: airtableResponse.status,
+worker-reservas/src/index.js:800:      airtableData.records
+worker-reservas/src/index.js:802:      ? airtableData.records
+worker-reservas/src/index.js:808:      typeof airtableData.offset === "string"
+worker-reservas/src/index.js:809:        ? airtableData.offset
+worker-reservas/src/index.js:951:      source: "airtable",
+worker-reservas/src/index.js:966:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:980:  if (!env.MAKE_ALTA_JUGADOR_WEBHOOK) {
+worker-reservas/src/index.js:982:      { ok: false, error: "Alta webhook not configured" },
+worker-reservas/src/index.js:1059:  const makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
+worker-reservas/src/index.js:1065:  const responseText = await makeResponse.text();
+worker-reservas/src/index.js:1067:  if (!makeResponse.ok) {
+worker-reservas/src/index.js:1071:        error: "Make request failed",
+worker-reservas/src/index.js:1072:        status: makeResponse.status,
+worker-reservas/src/index.js:1083:      makeResponse: responseText || null,
+worker-reservas/src/index.js:1094:// AUDITORIA 22 · SUPABASE AUTH HELPERS
+worker-reservas/src/index.js:1095:// Helpers para conectar Supabase Auth cuando existan credenciales reales.
+worker-reservas/src/index.js:1096:// Si faltan SUPABASE_URL o SUPABASE_ANON_KEY, el Worker mantiene modo backend_stub.
+worker-reservas/src/index.js:1098:function cp04SupabaseConfigured(env) {
+worker-reservas/src/index.js:1099:  return Boolean(env && env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
+worker-reservas/src/index.js:1102:function cp04SupabaseBaseUrl(env) {
+worker-reservas/src/index.js:1103:  return String(env.SUPABASE_URL || "").replace(/\/+$/, "");
+worker-reservas/src/index.js:1106:function cp04SupabaseHeaders(env, extra = {}) {
+worker-reservas/src/index.js:1108:    apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1109:    Authorization: `Bearer ${String(env.SUPABASE_ANON_KEY || "")}`,
+worker-reservas/src/index.js:1115:function cp04GetBearerToken(request) {
+worker-reservas/src/index.js:1116:  const auth = request.headers.get("Authorization") || "";
+worker-reservas/src/index.js:1117:  const match = auth.match(/^Bearer\s+(.+)$/i);
+worker-reservas/src/index.js:1121:async function cp04SupabaseRequest(env, path, options = {}) {
+worker-reservas/src/index.js:1122:  const base = cp04SupabaseBaseUrl(env);
+worker-reservas/src/index.js:1123:  const response = await fetch(`${base}${path}`, {
+worker-reservas/src/index.js:1125:    headers: cp04SupabaseHeaders(env, options.headers || {})
+worker-reservas/src/index.js:1144:function cp04MapSupabaseUserToCp04(user, fallbackRole = "PLAYER") {
+worker-reservas/src/index.js:1154:    id: user?.id || "supabase-user",
+worker-reservas/src/index.js:1161:function cp04SupabaseErrorResponse(request, env, result, fallbackMessage = "Error de autenticación.") {
+worker-reservas/src/index.js:1166:      provider: "supabase",
+worker-reservas/src/index.js:1167:      error: result?.data?.error || result?.data?.error_description || "SUPABASE_AUTH_ERROR",
+worker-reservas/src/index.js:1172:    corsHeaders(request, env)
+worker-reservas/src/index.js:1179:// base de usuarios y sesiones/tokens seguros.
+worker-reservas/src/index.js:1187:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
+worker-reservas/src/index.js:1221:      message: "Autenticación backend preparada, pendiente de proveedor real y secrets de producción.",
+worker-reservas/src/index.js:1224:        "SESSION_SECRET",
+worker-reservas/src/index.js:1226:        "EMAIL_PROVIDER_TOKEN"
+worker-reservas/src/index.js:1231:    corsHeaders(request, env)
+worker-reservas/src/index.js:1236:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:1239:  const supabaseReady = cp04SupabaseConfigured(env);
+worker-reservas/src/index.js:1246:    if (!supabaseReady) {
+worker-reservas/src/index.js:1253:          message: "Endpoint /api/auth/me preparado. Pendiente validar token real."
+worker-reservas/src/index.js:1260:    const token = cp04GetBearerToken(request);
+worker-reservas/src/index.js:1262:    if (!token) {
+worker-reservas/src/index.js:1267:          provider: "supabase",
+worker-reservas/src/index.js:1268:          error: "MISSING_BEARER_TOKEN",
+worker-reservas/src/index.js:1269:          message: "Falta Authorization Bearer token."
+worker-reservas/src/index.js:1276:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+worker-reservas/src/index.js:1279:        apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1280:        Authorization: `Bearer ${token}`,
+worker-reservas/src/index.js:1295:      return cp04SupabaseErrorResponse(
+worker-reservas/src/index.js:1303:    const user = cp04MapSupabaseUserToCp04(data, "PLAYER");
+worker-reservas/src/index.js:1309:        provider: "supabase",
+worker-reservas/src/index.js:1320:    if (!supabaseReady) {
+worker-reservas/src/index.js:1333:    const token = cp04GetBearerToken(request);
+worker-reservas/src/index.js:1335:    if (!token) {
+worker-reservas/src/index.js:1340:          provider: "supabase",
+worker-reservas/src/index.js:1341:          message: "Sesión local cerrada. No había token Bearer que invalidar."
+worker-reservas/src/index.js:1348:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/logout`, {
+worker-reservas/src/index.js:1351:        apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1352:        Authorization: `Bearer ${token}`,
+worker-reservas/src/index.js:1361:        provider: "supabase",
+worker-reservas/src/index.js:1372:    if (!supabaseReady) {
+worker-reservas/src/index.js:1390:          provider: "supabase",
+worker-reservas/src/index.js:1399:    const result = await cp04SupabaseRequest(env, "/auth/v1/token?grant_type=password", {
+worker-reservas/src/index.js:1405:      return cp04SupabaseErrorResponse(request, env, result, "Login no válido.");
+worker-reservas/src/index.js:1408:    const user = cp04MapSupabaseUserToCp04(result.data?.user, "PLAYER");
+worker-reservas/src/index.js:1414:        provider: "supabase",
+worker-reservas/src/index.js:1418:        access_token: result.data?.access_token || "",
+worker-reservas/src/index.js:1419:        refresh_token: result.data?.refresh_token || "",
+worker-reservas/src/index.js:1421:        token_type: result.data?.token_type || "bearer"
+worker-reservas/src/index.js:1431:    if (!supabaseReady) {
+worker-reservas/src/index.js:1453:          provider: "supabase",
+worker-reservas/src/index.js:1462:    const result = await cp04SupabaseRequest(env, "/auth/v1/signup", {
+worker-reservas/src/index.js:1476:      return cp04SupabaseErrorResponse(request, env, result, "No se pudo registrar el usuario.");
+worker-reservas/src/index.js:1479:    const user = cp04MapSupabaseUserToCp04(result.data?.user, "PLAYER");
+worker-reservas/src/index.js:1485:        provider: "supabase",
+worker-reservas/src/index.js:1489:        message: "Registro creado. Puede requerir confirmación por email según configuración de Supabase."
+worker-reservas/src/index.js:1499:    if (!supabaseReady) {
+worker-reservas/src/index.js:1515:      await cp04SupabaseRequest(env, "/auth/v1/recover", {
+worker-reservas/src/index.js:1519:          redirect_to: String(env.APP_PUBLIC_URL || "").replace(/\/+$/, "") + "/"
+worker-reservas/src/index.js:1528:        provider: "supabase",
+worker-reservas/src/index.js:1539:    if (!supabaseReady) {
+worker-reservas/src/index.js:1545:    const token = cp04GetBearerToken(request);
+worker-reservas/src/index.js:1548:    if (!token || !password) {
+worker-reservas/src/index.js:1553:          provider: "supabase",
+worker-reservas/src/index.js:1555:          message: "Falta token Bearer o nueva contraseña."
+worker-reservas/src/index.js:1562:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+worker-reservas/src/index.js:1565:        apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1566:        Authorization: `Bearer ${token}`,
+worker-reservas/src/index.js:1582:      return cp04SupabaseErrorResponse(
+worker-reservas/src/index.js:1594:        provider: "supabase",
+worker-reservas/src/index.js:1614:export default {
+worker-reservas/src/index.js:1615:  async fetch(request, env) {
+worker-reservas/src/index.js:1655:        corsHeaders(request, env)
+worker-reservas/src/index.js:1665:        corsHeaders(request, env)
+worker-reservas/wrangler.toml0:5:# Public/non-secret Worker variables. Override per environment in Cloudflare if needed.
+worker-reservas/wrangler.toml0:7:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wrangler.toml0:8:AIRTABLE_BASE_ID = "appyWvzZJLzy0E6aX"
+worker-reservas/wrangler.toml0:9:AIRTABLE_TABLE_ID = "tblBtLjPS3sis28nz"
+worker-reservas/wrangler.toml0:10:# Configure secrets with Wrangler or the Cloudflare dashboard, never in this file:
+worker-reservas/wrangler.toml0:11:# wrangler secret put MAKE_RESERVAS_WEBHOOK
+worker-reservas/wrangler.toml0:12:# wrangler secret put AIRTABLE_API_KEY
+worker-reservas/wrangler.toml0:13:# wrangler secret put AIRTABLE_BASE_ID
+worker-reservas/wrangler.toml0:14:# wrangler secret put AIRTABLE_RESERVAS_TABLE
+worker-reservas/wr4 angler.toml0  :5:# Public/non-secret Worker variables. Override per environment in Cloudflare if needed.
+worker-reservas/wr4 angler.toml0  :7:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wr4 angler.toml0  :8:AIRTABLE_BASE_ID = "appyWvzZJLzy0E6aX"
+worker-reservas/wr4 angler.toml0  :9:AIRTABLE_TABLE_ID = "tblBtLjPS3sis28nz"
+worker-reservas/wr4 angler.toml0  :10:# Configure secrets with Wrangler or the Cloudflare dashboard, never in this file:
+worker-reservas/wr4 angler.toml0  :11:# wrangler secret put MAKE_RESERVAS_WEBHOOK
+worker-reservas/wr4 angler.toml0  :12:# wrangler secret put AIRTABLE_API_KEY
+worker-reservas/wr4 angler.toml0  :13:# wrangler secret put AIRTABLE_BASE_ID
+worker-reservas/wr4 angler.toml0  :14:# wrangler secret put AIRTABLE_RESERVAS_TABLE
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:54:- sessionToken
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:61:- Authorization Bearer token o cookie segura
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:74:- token/session actual
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:175:- flujos_make
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:183:### Opción A · Airtable como base inicial de usuarios
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:210:### Opción C · Supabase Auth / Clerk / Auth0
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:235:## Secrets requeridos en Cloudflare Worker
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:237:Posibles secrets futuros:
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:243:- AUTH_CLIENT_SECRET
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:244:- SESSION_SECRET
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:246:- PASSWORD_RESET_SECRET
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:247:- EMAIL_PROVIDER_TOKEN
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:263:- CORS limitado al dominio final.
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:264:- No exponer secrets.
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:267:- Tokens con expiración.
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:287:- corsHeaders
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:322:- Sin secrets en frontend.
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:13:      ...corsHeaders,
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:19:  const origin = request.headers.get("Origin") || "";
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:25:const isAllowedOrigin = allowedOrigins.includes(origin);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:28:  if (!isAllowedOrigin) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:36:    "Vary": "Origin",
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:181:async function forwardToMake(payload, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:182:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:186:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:195:async function prepareAirtableWrite(payload, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:197:  const configured = Boolean(env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && env.AIRTABLE_RESERVAS_TABLE);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:202:    reason: configured ? "Airtable credentials configured; implement table mapping before enabling writes." : "Airtable credentials not configured.",
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:207:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:209:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:210:    return jsonResponse({ ok: false, error: "Origin not allowed" }, 403, headers);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:234:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:235:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:237:  if (makeResult.configured && !makeResult.ok) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:238:    return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:243:    status: makeResult.configured ? "forwarded" : "accepted_without_make_webhook",
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:244:    make: { configured: makeResult.configured, status: makeResult.status },
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:245:    airtable: airtableResult,
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:249:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:274:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:278:        error: "Airtable no está configurado en el Worker",
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:280:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:281:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:282:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:299:  const airtableUrl =
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:300:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:308:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:311:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:316:  const data = await airtableRes.json();
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:318:  if (!airtableRes.ok) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:322:        error: "Error consultando disponibilidad en Airtable",
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:323:        status: airtableRes.status,
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:346:export default {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:347:  async fetch(request, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:362:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:372:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:13:      ...corsHeaders,
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:19:  const origin = request.headers.get("Origin") || "";
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:25:const isAllowedOrigin = allowedOrigins.includes(origin);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:28:  if (!isAllowedOrigin) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:36:    "Vary": "Origin",
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:181:async function forwardToMake(payload, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:182:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:186:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:195:async function prepareAirtableWrite(payload, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:197:  const configured = Boolean(env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && env.AIRTABLE_RESERVAS_TABLE);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:202:    reason: configured ? "Airtable credentials configured; implement table mapping before enabling writes." : "Airtable credentials not configured.",
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:207:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:209:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:210:    return jsonResponse({ ok: false, error: "Origin not allowed" }, 403, headers);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:234:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:235:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:237:  if (makeResult.configured && !makeResult.ok) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:238:    return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:243:    status: makeResult.configured ? "forwarded" : "accepted_without_make_webhook",
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:244:    make: { configured: makeResult.configured, status: makeResult.status },
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:245:    airtable: airtableResult,
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:249:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:274:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:278:        error: "Airtable no está configurado en el Worker",
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:280:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:281:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:282:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:299:  const airtableUrl =
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:300:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:308:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:311:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:316:  const data = await airtableRes.json();
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:318:  if (!airtableRes.ok) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:322:        error: "Error consultando disponibilidad en Airtable",
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:323:        status: airtableRes.status,
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:346:export default {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:347:  async fetch(request, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:362:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:372:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:13:      ...corsHeaders,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:19:  const origin = request.headers.get("Origin") || "";
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:25:const isAllowedOrigin = allowedOrigins.includes(origin);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:28:  if (!isAllowedOrigin) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:36:    "Vary": "Origin",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:414:async function forwardToMake(payload, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:428:async function prepareAirtableWrite(payload, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:430:  const configured = Boolean(env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && env.AIRTABLE_RESERVAS_TABLE);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:435:    reason: configured ? "Airtable credentials configured; implement table mapping before enabling writes." : "Airtable credentials not configured.",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:440:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:442:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:443:    return jsonResponse({ ok: false, error: "Origin not allowed" }, 403, headers);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:467:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:468:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:470:  if (makeResult.configured && !makeResult.ok) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:471:    return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:476:    status: makeResult.configured ? "forwarded" : "accepted_without_make_webhook",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:477:    make: { configured: makeResult.configured, status: makeResult.status },
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:478:    airtable: airtableResult,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:482:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:500:      // CP04_DOMINGOS_V1: una consulta dominical devuelve cerrado sin leer Airtable.
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:518:            corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:533:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:537:        error: "Airtable no está configurado en el Worker",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:539:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:540:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:541:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:558:  const airtableUrl =
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:559:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:567:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:570:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:575:  const data = await airtableRes.json();
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:577:  if (!airtableRes.ok) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:581:        error: "Error consultando disponibilidad en Airtable",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:582:        status: airtableRes.status,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:650:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:675:    !env.AIRTABLE_TOKEN ||
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:676:    !env.AIRTABLE_BASE_ID ||
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:677:    !env.AIRTABLE_TABLE_ID
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:682:        error: "Airtable not configured",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:719:    `https://api.airtable.com/v0/` +
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:720:    `${encodeURIComponent(env.AIRTABLE_BASE_ID)}/` +
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:721:    `${encodeURIComponent(env.AIRTABLE_TABLE_ID)}`;
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:727:    const airtableUrl = new URL(endpoint);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:729:    airtableUrl.searchParams.set(
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:734:    airtableUrl.searchParams.set(
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:739:    airtableUrl.searchParams.set(
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:745:      airtableUrl.searchParams.set(
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:751:    const airtableResponse = await fetch(
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:752:      airtableUrl.toString(),
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:756:          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:762:    const rawText = await airtableResponse.text();
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:764:    let airtableData = {};
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:767:      airtableData = rawText
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:774:          error: "Invalid Airtable response",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:775:          airtable_status: airtableResponse.status,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:782:    if (!airtableResponse.ok) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:786:          error: "Airtable request failed",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:787:          airtable_status: airtableResponse.status,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:795:      airtableData.records
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:797:      ? airtableData.records
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:803:      typeof airtableData.offset === "string"
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:804:        ? airtableData.offset
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:946:      source: "airtable",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:959:export default {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:960:  async fetch(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:989:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:999:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:13:      ...corsHeaders,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:19:  const origin = request.headers.get("Origin") || "";
+worker-reservas/backups/index-antes-alta-20260616-054856.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-alta-20260616-054856.js:25:const isAllowedOrigin = allowedOrigins.includes(origin);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/backups/index-antes-alta-20260616-054856.js:28:  if (!isAllowedOrigin) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:36:    "Vary": "Origin",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:414:async function forwardToMake(payload, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:428:async function prepareAirtableWrite(payload, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:430:  const configured = Boolean(env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && env.AIRTABLE_RESERVAS_TABLE);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:435:    reason: configured ? "Airtable credentials configured; implement table mapping before enabling writes." : "Airtable credentials not configured.",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:440:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:442:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:443:    return jsonResponse({ ok: false, error: "Origin not allowed" }, 403, headers);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:467:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:468:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:470:  if (makeResult.configured && !makeResult.ok) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:471:    return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:476:    status: makeResult.configured ? "forwarded" : "accepted_without_make_webhook",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:477:    make: { configured: makeResult.configured, status: makeResult.status },
+worker-reservas/backups/index-antes-alta-20260616-054856.js:478:    airtable: airtableResult,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:482:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:500:      // CP04_DOMINGOS_V1: una consulta dominical devuelve cerrado sin leer Airtable.
+worker-reservas/backups/index-antes-alta-20260616-054856.js:518:            corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:533:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:537:        error: "Airtable no está configurado en el Worker",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:539:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/backups/index-antes-alta-20260616-054856.js:540:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/backups/index-antes-alta-20260616-054856.js:541:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:558:  const airtableUrl =
+worker-reservas/backups/index-antes-alta-20260616-054856.js:559:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/backups/index-antes-alta-20260616-054856.js:567:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:570:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:575:  const data = await airtableRes.json();
+worker-reservas/backups/index-antes-alta-20260616-054856.js:577:  if (!airtableRes.ok) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:581:        error: "Error consultando disponibilidad en Airtable",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:582:        status: airtableRes.status,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:650:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:675:    !env.AIRTABLE_TOKEN ||
+worker-reservas/backups/index-antes-alta-20260616-054856.js:676:    !env.AIRTABLE_BASE_ID ||
+worker-reservas/backups/index-antes-alta-20260616-054856.js:677:    !env.AIRTABLE_TABLE_ID
+worker-reservas/backups/index-antes-alta-20260616-054856.js:682:        error: "Airtable not configured",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:719:    `https://api.airtable.com/v0/` +
+worker-reservas/backups/index-antes-alta-20260616-054856.js:720:    `${encodeURIComponent(env.AIRTABLE_BASE_ID)}/` +
+worker-reservas/backups/index-antes-alta-20260616-054856.js:721:    `${encodeURIComponent(env.AIRTABLE_TABLE_ID)}`;
+worker-reservas/backups/index-antes-alta-20260616-054856.js:727:    const airtableUrl = new URL(endpoint);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:729:    airtableUrl.searchParams.set(
+worker-reservas/backups/index-antes-alta-20260616-054856.js:734:    airtableUrl.searchParams.set(
+worker-reservas/backups/index-antes-alta-20260616-054856.js:739:    airtableUrl.searchParams.set(
+worker-reservas/backups/index-antes-alta-20260616-054856.js:745:      airtableUrl.searchParams.set(
+worker-reservas/backups/index-antes-alta-20260616-054856.js:751:    const airtableResponse = await fetch(
+worker-reservas/backups/index-antes-alta-20260616-054856.js:752:      airtableUrl.toString(),
+worker-reservas/backups/index-antes-alta-20260616-054856.js:756:          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:762:    const rawText = await airtableResponse.text();
+worker-reservas/backups/index-antes-alta-20260616-054856.js:764:    let airtableData = {};
+worker-reservas/backups/index-antes-alta-20260616-054856.js:767:      airtableData = rawText
+worker-reservas/backups/index-antes-alta-20260616-054856.js:774:          error: "Invalid Airtable response",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:775:          airtable_status: airtableResponse.status,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:782:    if (!airtableResponse.ok) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:786:          error: "Airtable request failed",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:787:          airtable_status: airtableResponse.status,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:795:      airtableData.records
+worker-reservas/backups/index-antes-alta-20260616-054856.js:797:      ? airtableData.records
+worker-reservas/backups/index-antes-alta-20260616-054856.js:803:      typeof airtableData.offset === "string"
+worker-reservas/backups/index-antes-alta-20260616-054856.js:804:        ? airtableData.offset
+worker-reservas/backups/index-antes-alta-20260616-054856.js:946:      source: "airtable",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:959:export default {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:960:  async fetch(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:989:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:999:        corsHeaders(request, env)

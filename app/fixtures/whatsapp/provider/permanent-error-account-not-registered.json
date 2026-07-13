@@ -1,0 +1,4 @@
+{
+  "_why": "Forma real (documentada) de un error 133010 de WhatsApp Cloud API — la WABA no está registrada. NO retryable: ningún reintento lo arregla, hace falta intervención humana (completar el registro). classifyProviderError(133010) debe devolver retryable:false, category:'account_error'.",
+  "error": { "code": 133010, "message": "The WhatsApp Business Account has not been registered", "type": "OAuthException" }
+}

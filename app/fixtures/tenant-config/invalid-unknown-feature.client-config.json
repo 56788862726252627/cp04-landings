@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientId": "00000000-0000-4000-8000-000000000004",
+  "tenantId": "fixture-club-04",
+  "slug": "club-deportivo-fixture-cuatro",
+  "brand": { "name": "Club Deportivo Fixture Cuatro (FIXTURE TÉCNICO — NO ES CLIENTE REAL)" },
+  "locale": { "language": "es-ES", "currency": "EUR" },
+  "timezone": "Europe/Madrid",
+  "roles": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+  "features": { "descuentosVip": true },
+  "integrations": {
+    "automation": { "provider": "make", "enabled": true },
+    "data": { "provider": "airtable", "enabled": true },
+    "payments": { "provider": "none", "enabled": false },
+    "messaging": { "provider": "none", "enabled": false },
+    "ai": { "provider": "none", "enabled": false }
+  },
+  "plan": { "name": "starter" },
+  "domains": { "primary": null, "subdomain": "club-deportivo-fixture-cuatro.pages.dev" },
+  "contact": { "email": "info@fixture-club-04.example" },
+  "support": { "level": "basico" },
+  "deploymentProfile": "development"
+}

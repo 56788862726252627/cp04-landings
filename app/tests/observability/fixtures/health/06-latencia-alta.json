@@ -1,0 +1,36 @@
+{
+  "scenario": "latencia-alta",
+  "now": "2026-07-08T12:00:00.000Z",
+  "slo_target_example": 0.999,
+  "health": {
+    "service": "worker",
+    "status": "DEGRADED",
+    "timestamp": "2026-07-08T12:00:00.000Z",
+    "latency_ms": 14,
+    "version": "1.0.0",
+    "checks": [
+      { "name": "process_alive", "passed": true, "message": null }
+    ],
+    "dependencies": [
+      { "name": "supabase-auth", "status": "HEALTHY", "latency_ms": 40, "error_code": null, "last_success_at": "2026-07-08T11:59:50.000Z", "retryable": false },
+      { "name": "airtable", "status": "HEALTHY", "latency_ms": 91, "error_code": null, "last_success_at": "2026-07-08T11:59:55.000Z", "retryable": false },
+      { "name": "make", "status": "HEALTHY", "latency_ms": 106, "error_code": null, "last_success_at": "2026-07-08T11:59:58.000Z", "retryable": false },
+      { "name": "gmail", "status": "DEGRADED", "latency_ms": 3400, "error_code": null, "last_success_at": "2026-07-08T11:58:00.000Z", "retryable": true },
+      { "name": "cloudflare", "status": "HEALTHY", "latency_ms": 9, "error_code": null, "last_success_at": "2026-07-08T11:59:59.000Z", "retryable": false }
+    ]
+  },
+  "samples": [
+    { "timestamp": "2026-07-08T11:58:05.000Z", "service": "gmail", "status": "degraded", "latency_ms": 3200 },
+    { "timestamp": "2026-07-08T11:58:15.000Z", "service": "gmail", "status": "degraded", "latency_ms": 4100 },
+    { "timestamp": "2026-07-08T11:58:25.000Z", "service": "gmail", "status": "success", "latency_ms": 210 },
+    { "timestamp": "2026-07-08T11:58:35.000Z", "service": "gmail", "status": "degraded", "latency_ms": 3800 },
+    { "timestamp": "2026-07-08T11:58:45.000Z", "service": "gmail", "status": "degraded", "latency_ms": 3950 },
+    { "timestamp": "2026-07-08T11:58:55.000Z", "service": "gmail", "status": "success", "latency_ms": 190 },
+    { "timestamp": "2026-07-08T11:59:05.000Z", "service": "gmail", "status": "degraded", "latency_ms": 4200 },
+    { "timestamp": "2026-07-08T11:58:10.000Z", "service": "worker", "status": "success", "latency_ms": 100 },
+    { "timestamp": "2026-07-08T11:58:20.000Z", "service": "worker", "status": "success", "latency_ms": 95 },
+    { "timestamp": "2026-07-08T11:58:30.000Z", "service": "worker", "status": "success", "latency_ms": 110 },
+    { "timestamp": "2026-07-08T11:58:40.000Z", "service": "worker", "status": "success", "latency_ms": 98 },
+    { "timestamp": "2026-07-08T11:58:50.000Z", "service": "worker", "status": "success", "latency_ms": 105 }
+  ]
+}

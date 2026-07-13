@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientId": "00000000-0000-4000-8000-000000000005",
+  "tenantId": "fixture-club-05",
+  "slug": "club-deportivo-fixture-cinco",
+  "brand": { "name": "Club Deportivo Fixture Cinco (FIXTURE TÉCNICO — NO ES CLIENTE REAL)" },
+  "locale": { "language": "es-ES", "currency": "EUR" },
+  "timezone": "Europe/Madrid",
+  "roles": ["PLAYER", "STAFF", "ADMIN", "SUPPORT"],
+  "features": { "pagos": true },
+  "integrations": {
+    "automation": { "provider": "make", "enabled": true },
+    "data": { "provider": "airtable", "enabled": true },
+    "payments": { "provider": "none", "enabled": false },
+    "messaging": { "provider": "none", "enabled": false },
+    "ai": { "provider": "none", "enabled": false }
+  },
+  "plan": { "name": "starter" },
+  "domains": { "primary": null, "subdomain": "club-deportivo-fixture-cinco.pages.dev" },
+  "contact": { "email": "info@fixture-club-05.example" },
+  "support": { "level": "basico" },
+  "deploymentProfile": "development"
+}

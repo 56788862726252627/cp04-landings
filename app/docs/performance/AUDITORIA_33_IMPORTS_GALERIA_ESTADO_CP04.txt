@@ -1,0 +1,7 @@
+src/components/ClubGallery.jsx:1:import { cp04GalleryAssets } from "../data/visualAssets.js";
+src/components/ClubGallery.jsx:3:export default function ClubGallery() {
+src/components/lazy/LazyLoadBoundary.jsx:1:import { Suspense } from "react";
+src/components/lazy/LazyLoadBoundary.jsx:12:export default function LazyLoadBoundary({ children, label }) {
+src/components/lazy/LazyLoadBoundary.jsx:14:    <Suspense fallback={<LazyFallback label={label} />}>
+src/components/lazy/LazyLoadBoundary.jsx:16:    </Suspense>
+src/components/lazy/lazySections.js:3:export const LazySectionShell = lazy(() => import("./LazySectionShell.jsx"));

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "clientId": "3f2a1b10-8c3e-4b7a-9d2f-1a2b3c4d5e6f",
+  "tenantId": "cp04",
+  "slug": "club-padel-04",
+  "brand": { "name": "Club Pádel 04" },
+  "locale": { "language": "es-ES", "currency": "EUR" },
+  "timezone": "NotATimezone",
+  "roles": ["OWNER"],
+  "features": {
+    "pagos": true
+  },
+  "integrations": {
+    "automation": { "provider": "make", "enabled": true },
+    "data": { "provider": "supabase", "enabled": true },
+    "payments": { "provider": "stripe", "enabled": true },
+    "messaging": { "provider": "none", "enabled": false },
+    "ai": { "provider": "none", "enabled": false }
+  },
+  "plan": { "name": "enterprise" },
+  "domains": { "primary": null },
+  "randomExtraField": true,
+  "deploymentProfile": "production"
+}

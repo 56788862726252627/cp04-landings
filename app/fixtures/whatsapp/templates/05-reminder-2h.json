@@ -1,0 +1,12 @@
+{
+  "to": "+34600000005",
+  "template_name": "reminder_2h",
+  "language": "es",
+  "tenant_id": "tnt_qacp04_test",
+  "variables": {
+    "player_name": "Elena Torres",
+    "court_name": "Pista 4",
+    "date_time": "2026-07-10 12:00"
+  },
+  "idempotency_key": "whatsapp:tnt_qacp04_test:bkg_0005:reminder_2h"
+}

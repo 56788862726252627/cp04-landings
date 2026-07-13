@@ -1,0 +1,39 @@
+{
+  "scenario": "sistema-sano",
+  "now": "2026-07-08T12:00:00.000Z",
+  "slo_target_example": 0.999,
+  "health": {
+    "service": "worker",
+    "status": "HEALTHY",
+    "timestamp": "2026-07-08T12:00:00.000Z",
+    "latency_ms": 12,
+    "version": "1.0.0",
+    "checks": [
+      { "name": "process_alive", "passed": true, "message": null }
+    ],
+    "dependencies": [
+      { "name": "supabase-auth", "status": "HEALTHY", "latency_ms": 45, "error_code": null, "last_success_at": "2026-07-08T11:59:50.000Z", "retryable": false },
+      { "name": "airtable", "status": "HEALTHY", "latency_ms": 90, "error_code": null, "last_success_at": "2026-07-08T11:59:55.000Z", "retryable": false },
+      { "name": "make", "status": "HEALTHY", "latency_ms": 110, "error_code": null, "last_success_at": "2026-07-08T11:59:58.000Z", "retryable": false },
+      { "name": "gmail", "status": "HEALTHY", "latency_ms": 60, "error_code": null, "last_success_at": "2026-07-08T11:59:40.000Z", "retryable": false },
+      { "name": "cloudflare", "status": "HEALTHY", "latency_ms": 8, "error_code": null, "last_success_at": "2026-07-08T11:59:59.000Z", "retryable": false }
+    ]
+  },
+  "samples": [
+    { "timestamp": "2026-07-08T11:58:10.000Z", "service": "worker", "status": "success", "latency_ms": 120 },
+    { "timestamp": "2026-07-08T11:58:20.000Z", "service": "worker", "status": "success", "latency_ms": 95 },
+    { "timestamp": "2026-07-08T11:58:30.000Z", "service": "worker", "status": "success", "latency_ms": 140 },
+    { "timestamp": "2026-07-08T11:58:40.000Z", "service": "worker", "status": "success", "latency_ms": 88 },
+    { "timestamp": "2026-07-08T11:58:50.000Z", "service": "worker", "status": "success", "latency_ms": 102 },
+    { "timestamp": "2026-07-08T11:59:00.000Z", "service": "worker", "status": "success", "latency_ms": 76 },
+    { "timestamp": "2026-07-08T11:59:10.000Z", "service": "worker", "status": "success", "latency_ms": 130 },
+    { "timestamp": "2026-07-08T11:59:20.000Z", "service": "worker", "status": "success", "latency_ms": 99 },
+    { "timestamp": "2026-07-08T11:59:30.000Z", "service": "worker", "status": "success", "latency_ms": 111 },
+    { "timestamp": "2026-07-08T11:59:40.000Z", "service": "worker", "status": "success", "latency_ms": 84 },
+    { "timestamp": "2026-07-08T11:59:45.000Z", "service": "airtable", "status": "success", "latency_ms": 90 },
+    { "timestamp": "2026-07-08T11:59:48.000Z", "service": "airtable", "status": "success", "latency_ms": 85 },
+    { "timestamp": "2026-07-08T11:59:50.000Z", "service": "make", "status": "success", "latency_ms": 108 },
+    { "timestamp": "2026-07-08T11:59:52.000Z", "service": "make", "status": "success", "latency_ms": 115 },
+    { "timestamp": "2026-07-08T11:59:55.000Z", "service": "gmail", "status": "success", "latency_ms": 60 }
+  ]
+}
