@@ -28,7 +28,7 @@ Color de acento adicional visto en la app (login/CTAs): `#a8ff00` (verde lima li
 ## 2. Fondos y gradientes
 
 - **Fondo base de página:** `#05080d`, prácticamente negro. No usar negro puro (`#000000`).
-- **Fondo hero:** imagen real del club (`torcal-padel-bg.png`, fondo de pistas con vistas al Torcal de Antequera) con overlay degradado vertical oscuro para legibilidad de texto:
+- **Fondo hero:** imagen visual de marca (`torcal-padel-bg.png`, hero visual inspirado en Club Pádel 04 y El Torcal de Antequera — origen no confirmado como fotografía real, no etiquetar como foto real del club) con overlay degradado vertical oscuro para legibilidad de texto:
   `linear-gradient(180deg, rgba(2,6,23,0.18) 0%, rgba(2,6,23,0.32) 45%, rgba(2,6,23,0.72) 100%)` sobre la imagen — este es el mismo overlay que ya usa la pantalla de login real (`torcal-role-background.css`).
 - **Gradiente de marca (CTA, iconos, títulos destacados):** `linear-gradient(135deg, #b6ff00 0%, #20e3b2 100%)` — verde lima a verde-teal, diagonal.
 - **Gradiente de tarjeta elevada:** `linear-gradient(135deg, rgba(8,13,25,0.46), rgba(8,13,25,0.28))` con `backdrop-filter: blur(6px)` cuando la tarjeta va sobre una imagen (patrón real usado en `.cp04-card` sobre el fondo Torcal).
@@ -83,7 +83,7 @@ Color de icono: `accent` o `accent2` sobre fondo `surface3`. Nunca icono multico
 
 ## 7. Uso de imágenes
 
-- Usar **fotografía real del club** ya disponible en `public/gallery/cp04/` (pistas, recepción, torneos, instalaciones) y `public/images/torcal-padel-bg.png`. Copias ya preparadas en `projects/club-padel-04/landing/assets/images/`.
+- Usar **fotografía real y distinta del club** (pistas, recepción, torneos, instalaciones) cuando exista. **Estado actual (corregido en QA de imágenes):** no hay todavía fotos reales y distintas disponibles en el repo; la galería muestra un aviso honesto de "pendiente" en vez de imágenes repetidas o de stock (ver `README_LANDING_CLUB_PADEL_04.md` §4).
 - Nunca usar fotos de stock genéricas de pádel/tenis que no sean del club — rompe la promesa de "esto es real, no un mockup" que ya es el ángulo de venta validado (`audit/agency-growth-marketing-system/06_META_ADS_CREATIVE_COPY_LANDING.md`).
 - Las imágenes reales siempre llevan overlay oscuro degradado para mantener contraste de texto (ver §2).
 - Capturas de producto (si se añaden): usar capturas reales de la app (reservas, torneos, ranking), etiquetadas visiblemente como "Vista real de la app" — nunca mockups inventados.
@@ -94,7 +94,7 @@ Color de icono: `accent` o `accent2` sobre fondo `surface3`. Nunca icono multico
 - Oscuro, técnico, con un único acento de color vivo (verde lima) que dirige la mirada al CTA y a los datos clave.
 - Espacios generosos, mucho aire entre secciones (padding vertical 96–140px en desktop).
 - Contraste alto: fondo casi negro, texto blanco, un acento saturado. Nada de grises medios como protagonistas.
-- Inspiración: dashboards SaaS B2B modernos (tipo Linear, Vercel, Stripe en modo oscuro) combinados con la fotografía real del entorno del Torcal de Antequera para dar contexto humano/local sin perder seriedad.
+- Inspiración: dashboards SaaS B2B modernos (tipo Linear, Vercel, Stripe en modo oscuro) combinados con el hero visual de marca inspirado en el entorno del Torcal de Antequera (recurso visual no etiquetado como foto real, ver §2) para dar contexto humano/local sin perder seriedad.
 
 ## 9. Qué NO hacer visualmente
 

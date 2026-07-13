@@ -29,7 +29,7 @@ Altura de sección variable según contenido; usar Auto Layout en todos los fram
 ## 4. Secciones de la landing (orden final)
 
 1. **Header/Nav** — fijo, fondo `bg` con opacidad 90% + blur al hacer scroll. Logo Club Pádel 04 (icono `favicon.svg` + wordmark) a la izquierda; enlaces "Producto / Cómo funciona / Precios / FAQ" al centro-derecha; CTA "Solicitar demo" (botón primario) a la derecha.
-2. **Hero** — full-width, imagen real de fondo (`torcal-padel-bg.png`) con overlay oscuro degradado (Brand System §2). Título H1 (Syne 800, 56–64px), subtítulo (DM Sans, `textDim`), dos CTA (primario "Solicitar demo" + secundario "Ver cómo funciona"), badge pequeño de credibilidad ("Sistema en producción real, no un prototipo").
+2. **Hero** — full-width, imagen visual de marca de fondo (`torcal-padel-bg.png`, recurso visual hero, no etiquetado como foto real — ver Brand System §2) con overlay oscuro degradado (Brand System §2). Título H1 (Syne 800, 56–64px), subtítulo (DM Sans, `textDim`), dos CTA (primario "Solicitar demo" + secundario "Ver cómo funciona"), badge pequeño de credibilidad ("Sistema en producción real, no un prototipo").
 3. **Problema** — fondo `bg` sólido. Título H2 + 4 tarjetas en fila (desktop) / columna (mobile) con icono + texto corto, cada una un punto de dolor (WhatsApp, Excel, dobles reservas, cero visibilidad).
 4. **Solución / Producto** — fondo `surface`. Título H2 + grid de 3 columnas con capturas o mockups de módulos reales (reservas, torneos, ranking) enmarcados en un "browser frame" oscuro con barra superior de 3 puntos, para señalar "esto es producto real, no ilustración".
 5. **Beneficios** — fondo `bg`. Tres columnas: "Para propietarios / Para empleados / Para jugadores", cada una con 3-4 bullets con icono check en `accent`.
