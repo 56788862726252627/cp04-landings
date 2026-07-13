@@ -15,6 +15,7 @@
 - **Qué falta**: una reunión o llamada real con un contacto identificado de cualquiera de los registros del CRM (`MUNICIPIOS_MALAGA_RADIO_ARCHIDONA_CRM.md` o `CRM_INICIAL_PROSPECCION.md`).
 - **Por qué no es tarea de terminal**: requiere que exista un contacto real localizado (nombre, teléfono o email verificado) y que esa persona responda y acepte una fecha.
 - **Señal de resuelto**: reunión o demo agendada y celebrada, registrada en el CRM correspondiente.
+- **Actualización (2026-07-13)**: el contacto comercial real con Villanueva del Trabuco **sigue pendiente**. Ya existe un paquete de primer contacto completo y listo para usar en cuanto se localice el contacto real — ver `docs/agencia-ia/comercial/PRIMER_CONTACTO_VILLANUEVA_DEL_TRABUCO.md` (mensajes de WhatsApp/email/llamada, guiones de 3 y 10 minutos, preguntas de diagnóstico, señales de interés, objeciones y checklists) y su CSV de seguimiento `CRM_PRIMER_CONTACTO_VILLANUEVA_DEL_TRABUCO.csv`. El siguiente desbloqueo real, y el único paso que falta, es **localizar el contacto real** (nombre, teléfono o email verificado de la Concejalía de Deportes) y enviar el mensaje inicial manualmente — no queda ningún trabajo de documentación pendiente para este bloqueo concreto.
 
 ## 3. Propuesta aceptada
 
