@@ -188,7 +188,10 @@ p { color: var(--text-dim); margin: 0 0 12px; }
 .hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.68) 45%, rgba(5,8,13,0.94) 100%);
+  /* Overlay aligado (2026-07) con el rango de Brand System §2: más aclarado que la versión
+     anterior para dejar ver más el fondo, manteniendo contraste suficiente donde se apoya el
+     texto (parada intermedia al 45%, que coincide con la zona vertical del h1/subtítulo). */
+  background: linear-gradient(180deg, rgba(2,6,23,0.38) 0%, rgba(2,6,23,0.58) 45%, rgba(5,8,13,0.85) 100%);
 }
 .hero__content {
   position: relative;
