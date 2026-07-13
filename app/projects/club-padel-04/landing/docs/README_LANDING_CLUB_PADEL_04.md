@@ -13,7 +13,7 @@ Punto de entrada único de todo lo relacionado con la landing de Club Pádel 04.
 | Copy completo de la landing (hero, secciones, FAQ, formulario) | `../copy/LANDING_COPY_CLUB_PADEL_04.md` |
 | Código implementado — versión estática (HTML/CSS/JS, sin dependencias) | `./index.html`, `./styles.css`, `./main.js` (esta carpeta) |
 | Código implementado — versión componente React (para integrar en la app más adelante) | `./LandingClubPadel04.jsx` |
-| Imágenes reutilizadas del club (copiadas desde `public/gallery/cp04/` y `public/images/`) | `../assets/images/` |
+| Imagen de fondo del hero (`torcal-padel-bg.png`) + iconografía (`favicon.svg`, `og-image.svg`) | `../assets/images/` |
 | Exports futuros desde Figma (SVG/PNG de iconos, capturas del diseño) | `../exports/` (vacía por ahora, ver §5) |
 
 ## 2. Cómo ver la landing ahora mismo (sin build, sin deploy)
@@ -26,7 +26,9 @@ python3 -m http.server 8080
 # abrir http://localhost:8080/src/index.html
 ```
 
-Se ha verificado que `index.html`, `styles.css`, `main.js` y todas las imágenes referenciadas en `../assets/images/` responden `200` servidos así (comprobación local realizada en esta misma sesión).
+Se ha verificado que `index.html`, `styles.css`, `main.js` y las imágenes referenciadas actualmente en `../assets/images/` (`torcal-padel-bg.png`, `favicon.svg`, `og-image.svg`) responden `200` servidos así.
+
+**Corrección de honestidad visual (QA de imágenes, ver §4):** la sección de galería (pistas/recepción/torneos) usaba `pistas.jpg`, `recepcion.jpg`, `torneos.jpg` e `instalaciones.jpg` — las 4 eran el mismo archivo binario duplicado (mismo MD5), presentado con captions distintos como si fueran fotos reales diferentes. Se detectó en auditoría QA y se corrigió: los 4 archivos se eliminaron y la sección de galería en `index.html` se sustituyó por un bloque honesto ("Galería pendiente de fotos reales del club") hasta que existan fotografías propias y distintas que publicar.
 
 ## 3. Cómo replicar/editar la landing
 
@@ -36,6 +38,8 @@ Se ha verificado que `index.html`, `styles.css`, `main.js` y todas las imágenes
 
 ## 4. Qué falta para publicarla (checklist honesto)
 
+- [ ] **Fotos reales del club:** la sección de galería (pistas/recepción/torneos) no tiene todavía fotografía propia y distinta que mostrar — se corrigió un defecto donde 4 nombres de archivo apuntaban al mismo binario duplicado, presentado como si fueran fotos distintas. Ahora mismo esa sección muestra un aviso honesto de "pendiente" en vez de imágenes falsas. Sustituir por fotos reales en cuanto estén disponibles (ver `../assets/images/`, sección vacía de fotos de galería).
+- [ ] **Imagen de fondo del hero (`torcal-padel-bg.png`):** revisar su origen antes de un despliegue real — no está confirmado que sea fotografía real del club y no debe presentarse como tal si no lo es.
 - [ ] **Fuentes reales:** Syne y DM Sans no están enlazadas (evitado a propósito para no hacer llamadas externas en esta fase). Añadir el `<link>` gratuito de Google Fonts, o auto-alojar los `.woff2`, antes de un despliegue real.
 - [ ] **Formulario de contacto:** actualmente sin backend. El botón "Solicitar demo" está deshabilitado a propósito en la versión estática y el `submit` está interceptado (`preventDefault`) en ambas versiones. Falta decidir destino (Airtable/CRM, email, endpoint propio) y conectar — no se ha tocado Make/Airtable/Stripe/WhatsApp en esta tarea, según restricción explícita.
 - [ ] **Integración en la app real:** `LandingClubPadel04.jsx` no está importado en `src/App.jsx` ni enrutado. Falta decidir si la landing vive en un dominio/ruta separada de la app (recomendado, para no mezclar marketing con producto autenticado) o dentro del mismo proyecto Vite.

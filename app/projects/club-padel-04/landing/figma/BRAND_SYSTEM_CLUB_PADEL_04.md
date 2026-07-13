@@ -83,7 +83,7 @@ Color de icono: `accent` o `accent2` sobre fondo `surface3`. Nunca icono multico
 
 ## 7. Uso de imágenes
 
-- Usar **fotografía real del club** ya disponible en `public/gallery/cp04/` (pistas, recepción, torneos, instalaciones) y `public/images/torcal-padel-bg.png`. Copias ya preparadas en `projects/club-padel-04/landing/assets/images/`.
+- Usar **fotografía real y distinta del club** (pistas, recepción, torneos, instalaciones) cuando exista. **Estado actual (corregido en QA de imágenes):** no hay todavía fotos reales y distintas disponibles en el repo — una versión anterior de la galería usaba 4 nombres de archivo que apuntaban al mismo binario duplicado, presentado como si fueran fotos diferentes; se eliminó. Mientras no existan fotos reales verificadas, la sección de galería debe mostrar un aviso honesto de "pendiente" (ver `README_LANDING_CLUB_PADEL_04.md` §4), nunca imágenes repetidas ni de stock.
 - Nunca usar fotos de stock genéricas de pádel/tenis que no sean del club — rompe la promesa de "esto es real, no un mockup" que ya es el ángulo de venta validado (`audit/agency-growth-marketing-system/06_META_ADS_CREATIVE_COPY_LANDING.md`).
 - Las imágenes reales siempre llevan overlay oscuro degradado para mantener contraste de texto (ver §2).
 - Capturas de producto (si se añaden): usar capturas reales de la app (reservas, torneos, ranking), etiquetadas visiblemente como "Vista real de la app" — nunca mockups inventados.
