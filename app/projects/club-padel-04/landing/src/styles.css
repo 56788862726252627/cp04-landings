@@ -70,7 +70,7 @@ p { color: var(--text-dim); margin: 0 0 12px; }
   margin-bottom: 12px;
 }
 
-.section { padding: 96px 0; }
+.section { padding: 96px 0; scroll-margin-top: 88px; }
 .section--surface { background: var(--surface); }
 .section__intro { max-width: 640px; font-size: 17px; margin-bottom: 40px; }
 .section__note { margin-top: 32px; font-size: 14px; color: var(--text-dim); max-width: 640px; }
@@ -394,7 +394,7 @@ p { color: var(--text-dim); margin: 0 0 12px; }
   overflow: hidden;
   transition: max-height 0.25s ease;
 }
-.accordion__item.is-open .accordion__panel { max-height: 200px; }
+.accordion__item.is-open .accordion__panel { max-height: 280px; }
 .accordion__panel p { padding-bottom: 22px; margin: 0; }
 
 /* CTA final + form */
@@ -453,6 +453,12 @@ p { color: var(--text-dim); margin: 0 0 12px; }
   .grid--modules { grid-template-columns: repeat(2, 1fr); }
   .timeline { grid-template-columns: repeat(2, 1fr); }
   .gallery { grid-template-columns: repeat(3, 1fr); }
+  /* Tablet (781–1024px): hereda los tamaños de escritorio si no se ajustan aquí, dejando
+     demasiado aire vertical por sección y un hero demasiado alto para esta franja. */
+  .section { padding: 72px 0; }
+  .section__intro { margin-bottom: 32px; }
+  .hero { min-height: 560px; }
+  .hero__content { padding: 96px 24px; }
 }
 
 @media (max-width: 780px) {
