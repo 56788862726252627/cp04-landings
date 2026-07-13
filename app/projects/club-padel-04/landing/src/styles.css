@@ -184,6 +184,15 @@ p { color: var(--text-dim); margin: 0 0 12px; }
   inset: 0;
   background-size: cover;
   background-position: center;
+  /* PNG como fallback universal (2026-07: mismo encuadre, sin sustituir la imagen).
+     image-set() sirve el WebP derivado (~210 KB vs ~2,17 MB del PNG, calidad 88, sin
+     pérdida perceptible) en navegadores que lo soportan; si no lo soportan, la propiedad
+     de arriba ya dejó el PNG cargado. */
+  background-image: url('../assets/images/torcal-padel-bg.png');
+  background-image: image-set(
+    url('../assets/images/torcal-padel-bg.webp') type('image/webp'),
+    url('../assets/images/torcal-padel-bg.png') type('image/png')
+  );
 }
 .hero__overlay {
   position: absolute;
