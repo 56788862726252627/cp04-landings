@@ -12,10 +12,10 @@ Tono: profesional, directo, moderno, orientado a ayuntamientos, clubes deportivo
 > Sistema inteligente de reservas para clubes de pádel
 
 **Subtítulo:**
-> Automatiza reservas, jugadores, torneos, ranking y gestión interna desde una app moderna, ya en funcionamiento real — no un prototipo ni una promesa a futuro.
+> Automatiza reservas, jugadores, torneos, ranking y gestión interna desde una app moderna, preparada para implantarse tras diagnóstico — no un prototipo ni una promesa a futuro.
 
 **Badge de credibilidad (bajo el subtítulo):**
-> Sistema en producción real
+> Demo funcional preparada
 
 **CTA principal:** `Solicitar demo`
 **CTA secundario:** `Ver cómo funciona`
@@ -47,7 +47,7 @@ Tono: profesional, directo, moderno, orientado a ayuntamientos, clubes deportivo
 > Club Pádel 04 centraliza reservas, jugadores, empleados, administración, torneos, ranking y soporte en una sola aplicación pensada para instalaciones deportivas reales — desde un club privado hasta un polideportivo municipal.
 
 **Módulos incluidos (grid):**
-- Reservas inteligentes en tiempo real
+- Reservas organizadas desde móvil y ordenador
 - Alta y gestión de jugadores
 - Torneos con cuadro de eliminatorias
 - Ranking de jugadores
@@ -86,12 +86,12 @@ Tono: profesional, directo, moderno, orientado a ayuntamientos, clubes deportivo
 > Construido como software serio, no como una plantilla genérica
 
 **Texto:**
-> No es una app improvisada: es la misma tecnología con la que ya opera un club real cada semana, con autenticación real, roles diferenciados por persona y copias de seguridad periódicas.
+> No es una app improvisada: es la misma tecnología con la que ya opera un club real cada semana, con acceso por cuenta y rol, roles diferenciados por persona y copias de seguridad periódicas.
 
 **Bloques cortos:**
-- **Autenticación real** — cada usuario accede con su propia cuenta y su propio rol.
+- **Acceso por cuenta y rol** — cada usuario accede con su propia cuenta y su propio rol.
 - **Roles diferenciados** — jugador, personal y administración ven exactamente lo que necesitan, nada más.
-- **Copias de seguridad periódicas** — el trabajo del club queda protegido frente a errores o pérdidas de datos.
+- **Base preparada para copias y control de cambios** — el trabajo del club queda protegido frente a errores o pérdidas de datos.
 - **Demo real disponible** — puedes probarlo tú mismo antes de decidir nada.
 
 ---
@@ -114,7 +114,7 @@ Tono: profesional, directo, moderno, orientado a ayuntamientos, clubes deportivo
 - Aplicación de reservas para pistas, accesible desde móvil y ordenador.
 - Acceso diferenciado para jugadores y para personal de gestión.
 - Panel de gestión completo (alta, consulta y cancelación de reservas).
-- Consulta de disponibilidad en tiempo real.
+- Consulta de disponibilidad actualizada.
 - Perfil de jugador y estructura base para torneos y ranking.
 - Adaptación visual básica a la imagen del club o instalación (logo y colores).
 - Formación inicial al personal que gestionará el sistema.
@@ -229,7 +229,7 @@ Tono: profesional, directo, moderno, orientado a ayuntamientos, clubes deportivo
 **Texto bajo el formulario:**
 > No conectamos ningún pago ni compartimos tus datos con terceros. Te contactamos en menos de 24-48h laborables.
 
-*(Nota técnica: formulario sin backend conectado todavía — ver `README_LANDING_CLUB_PADEL_04.md` para el estado de integración.)*
+*(Nota interna: la conexión definitiva del formulario se activa en la fase de implantación — ver `README_LANDING_CLUB_PADEL_04.md` para el estado de integración.)*
 
 ---
 

@@ -21,7 +21,7 @@ const PROBLEMAS = [
 ];
 
 const MODULOS = [
-  "Reservas inteligentes en tiempo real",
+  "Reservas organizadas desde móvil y ordenador",
   "Alta y gestión de jugadores",
   "Torneos con cuadro de eliminatorias",
   "Ranking de jugadores",
@@ -38,9 +38,9 @@ const BENEFICIOS = [
 ];
 
 const TECNICO = [
-  { icon: "🔐", title: "Autenticación real", text: "Cada usuario accede con su propia cuenta y su propio rol." },
+  { icon: "🔐", title: "Acceso por cuenta y rol", text: "Cada usuario accede con su propia cuenta y su propio rol." },
   { icon: "🧩", title: "Roles diferenciados", text: "Jugador, personal y administración ven exactamente lo que necesitan, nada más." },
-  { icon: "🛡️", title: "Copias de seguridad", text: "El trabajo del club queda protegido frente a errores o pérdidas de datos." },
+  { icon: "🛡️", title: "Base preparada para copias y control de cambios", text: "El trabajo del club queda protegido frente a errores o pérdidas de datos." },
   { icon: "👁️", title: "Demo real disponible", text: "Puedes probarlo tú mismo antes de decidir nada." },
 ];
 
@@ -64,7 +64,7 @@ function FaqItem({ q, a, isOpen, onToggle }) {
   return (
     <div className={`accordion__item${isOpen ? " is-open" : ""}`}>
       <button className="accordion__trigger" onClick={onToggle}>
-        {q} <span>+</span>
+        {q} <span>{isOpen ? "−" : "+"}</span>
       </button>
       <div className="accordion__panel"><p>{a}</p></div>
     </div>
@@ -108,11 +108,11 @@ export default function LandingClubPadel04() {
           <div className="hero__bg" style={{ backgroundImage: "url('/images/torcal-padel-bg.png')" }} />
           <div className="hero__overlay" />
           <div className="container hero__content">
-            <span className="badge">Sistema en producción real</span>
+            <span className="badge">Demo funcional preparada</span>
             <h1>Sistema inteligente de reservas para clubes de pádel</h1>
             <p className="hero__subtitle">
               Automatiza reservas, jugadores, torneos, ranking y gestión interna desde una app
-              moderna, ya en funcionamiento real — no un prototipo ni una promesa a futuro.
+              moderna, preparada para implantarse tras diagnóstico — no un prototipo ni una promesa a futuro.
             </p>
             <div className="hero__actions">
               <a className="btn btn--primary btn--lg" href="#contacto">Solicitar demo</a>
@@ -195,7 +195,7 @@ export default function LandingClubPadel04() {
             <h2>Software serio, no una plantilla genérica</h2>
             <p className="section__intro">
               No es una app improvisada: es la misma tecnología con la que ya opera un club real
-              cada semana, con autenticación real, roles diferenciados por persona y copias de
+              cada semana, con acceso por cuenta y rol, roles diferenciados por persona y copias de
               seguridad periódicas.
             </p>
             <div className="grid grid--4">
@@ -317,7 +317,7 @@ export default function LandingClubPadel04() {
               <div className="card">
                 <h3>Incluye hoy</h3>
                 <ul className="checklist checklist--yes">
-                  <li>Reservas en tiempo real, móvil y ordenador</li>
+                  <li>Reservas organizadas, móvil y ordenador</li>
                   <li>Acceso diferenciado jugador / personal</li>
                   <li>Panel de gestión completo</li>
                   <li>Perfil de jugador, torneos y ranking</li>
@@ -411,9 +411,9 @@ export default function LandingClubPadel04() {
                 Solicitar demo
               </button>
               <p className="form__note">
-                Formulario no conectado todavía (sin backend ni envío real) — preparado para
-                conectar más adelante. No conectamos ningún pago ni compartimos tus datos con
-                terceros.
+                Solicitud preparada para diagnóstico. La conexión definitiva del formulario se
+                activa en la fase de implantación. No conectamos ningún pago ni compartimos tus
+                datos con terceros.
               </p>
             </form>
           </div>

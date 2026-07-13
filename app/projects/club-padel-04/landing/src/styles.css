@@ -385,8 +385,7 @@ p { color: var(--text-dim); margin: 0 0 12px; }
   align-items: center;
   cursor: pointer;
 }
-.accordion__trigger span { color: var(--accent); font-size: 20px; font-weight: 400; transition: transform 0.2s ease; }
-.accordion__item.is-open .accordion__trigger span { transform: rotate(45deg); }
+.accordion__trigger span { color: var(--accent); font-size: 20px; font-weight: 400; }
 .accordion__panel {
   max-height: 0;
   overflow: hidden;

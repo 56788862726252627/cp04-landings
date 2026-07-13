@@ -19,13 +19,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Acordeón FAQ
+  // Acordeón FAQ: el icono cambia de "+" a "−" al abrir (nunca "×", para no leerse como error/cierre).
+  const setAccordionIcon = (item, isOpen) => {
+    const icon = item.querySelector('.accordion__trigger span');
+    if (icon) icon.textContent = isOpen ? '−' : '+';
+  };
   document.querySelectorAll('.accordion__item').forEach((item) => {
     const trigger = item.querySelector('.accordion__trigger');
     trigger.addEventListener('click', () => {
       const wasOpen = item.classList.contains('is-open');
-      document.querySelectorAll('.accordion__item').forEach((i) => i.classList.remove('is-open'));
-      if (!wasOpen) item.classList.add('is-open');
+      document.querySelectorAll('.accordion__item').forEach((i) => {
+        i.classList.remove('is-open');
+        setAccordionIcon(i, false);
+      });
+      if (!wasOpen) {
+        item.classList.add('is-open');
+        setAccordionIcon(item, true);
+      }
     });
   });
 
