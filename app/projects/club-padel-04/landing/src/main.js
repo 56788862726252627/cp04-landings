@@ -19,10 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Acordeón FAQ: el icono cambia de "+" a "−" al abrir (nunca "×", para no leerse como error/cierre).
-  const setAccordionIcon = (item, isOpen) => {
-    const icon = item.querySelector('.accordion__trigger span');
+  // Acordeón FAQ: el icono cambia de "+" a "−" al abrir (nunca "×", para no leerse como error/cierre)
+  // y aria-expanded refleja el mismo estado para lectores de pantalla.
+  const setAccordionState = (item, isOpen) => {
+    const trigger = item.querySelector('.accordion__trigger');
+    const icon = trigger ? trigger.querySelector('span') : null;
     if (icon) icon.textContent = isOpen ? '−' : '+';
+    if (trigger) trigger.setAttribute('aria-expanded', String(isOpen));
   };
   document.querySelectorAll('.accordion__item').forEach((item) => {
     const trigger = item.querySelector('.accordion__trigger');
@@ -30,11 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const wasOpen = item.classList.contains('is-open');
       document.querySelectorAll('.accordion__item').forEach((i) => {
         i.classList.remove('is-open');
-        setAccordionIcon(i, false);
+        setAccordionState(i, false);
       });
       if (!wasOpen) {
         item.classList.add('is-open');
-        setAccordionIcon(item, true);
+        setAccordionState(item, true);
       }
     });
   });

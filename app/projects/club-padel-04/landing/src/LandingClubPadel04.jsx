@@ -63,7 +63,7 @@ const FAQ = [
 function FaqItem({ q, a, isOpen, onToggle }) {
   return (
     <div className={`accordion__item${isOpen ? " is-open" : ""}`}>
-      <button className="accordion__trigger" onClick={onToggle}>
+      <button className="accordion__trigger" aria-expanded={isOpen} onClick={onToggle}>
         {q} <span>{isOpen ? "−" : "+"}</span>
       </button>
       <div className="accordion__panel"><p>{a}</p></div>
