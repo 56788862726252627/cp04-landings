@@ -23,10 +23,11 @@
 
 | Bloque | Estimación |
 |---|---|
+| Paquete de primer contacto Villanueva del Trabuco (mensajes, guiones, localización de contacto, casos de respuesta) | **0 horas — cerrado (2026-07-13)**, ver `docs/agencia-ia/comercial/PRIMER_CONTACTO_VILLANUEVA_DEL_TRABUCO.md` y `EJECUCION_MANUAL_PRIMER_CONTACTO_VILLANUEVA_TRABUCO.md`. |
 | Documentar 1-2 verticales adicionales (si se decide ampliar catálogo) | 2-4 horas por vertical |
 | Unificar las dos escalas de "% avance" en un criterio único | 1-2 horas |
 | Reconciliar el pricing de verticales no deportivos con la matriz maestra (si sigue pendiente) | 2-3 horas |
-| **Total trabajo de terminal restante realista** | **5-9 horas**, repartido en tareas independientes, no bloqueantes entre sí |
+| **Total trabajo de terminal restante realista** | **4-8 horas** (ligeramente por debajo del rango anterior de 5-9h, al quedar cerrado el paquete de Villanueva del Trabuco), repartido en tareas independientes, no bloqueantes entre sí |
 | Resto del camino hasta 100% (bloqueos externos) | No estimable en horas de terminal — depende de terceros (ver `BLOQUEOS_EXTERNOS_AGENCIA_IA.md` §11) |
 
 ## 4. Tareas ordenadas
