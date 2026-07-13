@@ -28,7 +28,7 @@ Color de acento adicional visto en la app (login/CTAs): `#a8ff00` (verde lima li
 ## 2. Fondos y gradientes
 
 - **Fondo base de página:** `#05080d`, prácticamente negro. No usar negro puro (`#000000`).
-- **Fondo hero:** imagen real del club (`torcal-padel-bg.png`, fondo de pistas con vistas al Torcal de Antequera) con overlay degradado vertical oscuro para legibilidad de texto:
+- **Fondo hero:** imagen visual de marca (`torcal-padel-bg.png`, hero visual inspirado en Club Pádel 04 y El Torcal de Antequera — origen no confirmado como fotografía real, no etiquetar como foto real del club) con overlay degradado vertical oscuro para legibilidad de texto:
   `linear-gradient(180deg, rgba(2,6,23,0.18) 0%, rgba(2,6,23,0.32) 45%, rgba(2,6,23,0.72) 100%)` sobre la imagen — este es el mismo overlay que ya usa la pantalla de login real (`torcal-role-background.css`).
 - **Gradiente de marca (CTA, iconos, títulos destacados):** `linear-gradient(135deg, #b6ff00 0%, #20e3b2 100%)` — verde lima a verde-teal, diagonal.
 - **Gradiente de tarjeta elevada:** `linear-gradient(135deg, rgba(8,13,25,0.46), rgba(8,13,25,0.28))` con `backdrop-filter: blur(6px)` cuando la tarjeta va sobre una imagen (patrón real usado en `.cp04-card` sobre el fondo Torcal).
@@ -94,7 +94,7 @@ Color de icono: `accent` o `accent2` sobre fondo `surface3`. Nunca icono multico
 - Oscuro, técnico, con un único acento de color vivo (verde lima) que dirige la mirada al CTA y a los datos clave.
 - Espacios generosos, mucho aire entre secciones (padding vertical 96–140px en desktop).
 - Contraste alto: fondo casi negro, texto blanco, un acento saturado. Nada de grises medios como protagonistas.
-- Inspiración: dashboards SaaS B2B modernos (tipo Linear, Vercel, Stripe en modo oscuro) combinados con la fotografía real del entorno del Torcal de Antequera para dar contexto humano/local sin perder seriedad.
+- Inspiración: dashboards SaaS B2B modernos (tipo Linear, Vercel, Stripe en modo oscuro) combinados con el hero visual de marca inspirado en el entorno del Torcal de Antequera (recurso visual no etiquetado como foto real, ver §2) para dar contexto humano/local sin perder seriedad.
 
 ## 9. Qué NO hacer visualmente
 
