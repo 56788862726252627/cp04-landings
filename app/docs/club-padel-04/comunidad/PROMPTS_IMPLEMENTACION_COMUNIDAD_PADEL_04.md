@@ -8,7 +8,55 @@ Cada prompt está pensado para ejecutarse en modo seguro (rama propia, sin tocar
 
 No incluyen credenciales, datos legales ni contactos reales. No deben lanzarse en cadena automáticamente: cada uno requiere revisión y autorización explícita del usuario antes de ejecutarse.
 
+## Índice de prompts
+
+| Prompt | Tema | Fase |
+|---|---|---|
+| O | Auditoría de capturas y funciones Playtomic/Vola | Previa (fase 0), antes que cualquier otro prompt |
+| A | Modelo de datos social | MVP |
+| B | Prototipo visual — Feed | MVP |
+| C | Prototipo visual — Perfil de jugador | MVP |
+| D | Partidos abiertos | MVP |
+| E | Moderación | MVP |
+| F | Consentimiento y privacidad | MVP |
+| G | Amigos y seguidores | Fase 2 |
+| H | Retos | Fase 2 |
+| I | Grupos | Fase 2 |
+| J | Ranking social | Fase 2 |
+| P | Eventos sociales y deportivos | Fase 2 |
+| K | Mensajería por plantillas | Fase 2 |
+| L | Chat libre | Fase 3 |
+| M | Búsqueda de jugadores + geolocalización opt-in | Fase 3 |
+| Q | QA, seguridad y cierre de calidad | Gate previo a cualquier integración o merge |
+| N | Integración final con App.jsx | Requiere autorización explícita, solo tras Prompt Q |
+
 ---
+
+## Prompt O — Auditoría de capturas y funciones Playtomic/Vola
+
+```
+Analiza (sin descargar ni reproducir literalmente) las capturas de referencia
+de Playtomic/Vola que aporte el usuario y extrae exclusivamente:
+- funcionalidades observadas (qué hace la pantalla, no cómo se ve);
+- flujos de usuario (pasos que sigue el jugador de principio a fin);
+- patrones UX genéricos del sector (no específicos de una marca);
+- módulos potencialmente útiles para Comunidad Pádel 04;
+- riesgos legales detectados en cada función (datos personales, geolocalización,
+  mensajería, menores, imagen de terceros);
+- funciones descartables para Club Pádel 04 (por riesgo, coste o falta de
+  encaje con el negocio real del club);
+- funciones adaptables (misma categoría funcional, pero rediseñadas con
+  naming, textos, paleta e iconografía 100% propios de Club Pádel 04);
+- funciones diferenciales propias que Playtomic/Vola no ofrecen y que
+  podrían ser ventaja competitiva de Club Pádel 04.
+
+Entrega un informe en Markdown en una ruta nueva de docs/club-padel-04/comunidad/,
+sin código, sin capturas ni imágenes de terceros embebidas, sin textos ni
+nombres de marca copiados literalmente. Dejar explícito en el propio informe
+que ninguna función se implementará copiando código, diseño exacto, textos
+ni marca de terceros — solo se documenta la categoría funcional observada.
+No toques App.jsx, integraciones, auth real ni datos reales.
+```
 
 ## Prompt A — Modelo de datos social (diseño, sin Supabase real)
 
@@ -102,6 +150,33 @@ módulo aislado, claramente etiquetado en el diseño como distinto del ranking
 de torneos oficiales. Tests sobre datos mock.
 ```
 
+## Prompt P — Eventos sociales y deportivos
+
+```
+Diseña e implementa en módulo aislado (sin tocar App.jsx, calendario real ni
+sistema de notificaciones real) la capa de eventos de Comunidad Pádel 04,
+cubriendo estas categorías de evento como tipos configurables, no como
+funciones separadas:
+- quedadas informales entre jugadores;
+- partidos sociales;
+- torneos express (formato corto, distinto del módulo Torneos oficial);
+- clinics / clases abiertas;
+- ligas internas del club;
+- eventos oficiales del club (anuncios desde el muro del club).
+
+Debe incluir: inscripción del jugador, cupo máximo y lista de espera,
+recordatorios (diseño del gancho de notificación, sin integrar un proveedor
+real todavía), estados del evento (borrador, publicado, cupo completo,
+cancelado, finalizado) y permisos por rol (quién puede crear cada tipo de
+evento: jugador, staff del club, moderador de plataforma). Deja documentado
+como diseño futuro, sin implementar, el punto de integración con calendario
+externo y con el sistema de notificaciones real.
+
+Etiqueta claramente los eventos "sociales/torneo express" como no oficiales,
+para no confundirlos con el módulo Torneos ya auditado. Tests unitarios sobre
+datos mock. Sin integraciones reales, sin datos personales reales.
+```
+
 ## Prompt K — Mensajería por plantillas (fase 2, previa al chat libre)
 
 ```
@@ -130,6 +205,43 @@ explícito y revocable. Tests sobre datos mock. Sin geolocalización en tiempo
 real ni tracking continuo.
 ```
 
+## Prompt Q — QA, seguridad y cierre de calidad
+
+```
+Antes de considerar cualquier integración o merge de un módulo de Comunidad
+Pádel 04, ejecuta una revisión de QA y seguridad sobre lo implementado hasta
+ese momento (módulos aislados, sin tocar producción). Revisa y documenta el
+resultado de cada punto:
+- rutas tocadas vs. rutas permitidas (confirmar que no se ha salido del
+  alcance autorizado);
+- permisos por rol (staff de club, moderador, jugador) aplicados de forma
+  consistente en cada módulo;
+- privacidad: visibilidad por defecto restrictiva, sin fugas de datos entre
+  tenants/clubes;
+- consentimiento: revocable, con efecto retroactivo, registrado;
+- moderación: cola de reportes funcional, sin contenido huérfano sin revisar;
+- reportes: flujo de reporte de usuario/contenido probado con casos límite;
+- datos personales: minimización de campos, sin geolocalización exacta,
+  sin datos de menores sin flujo de consentimiento parental;
+- accesibilidad: navegación por teclado, roles ARIA, contraste, en los
+  prototipos visuales aislados (Feed, Perfil);
+- responsive: comportamiento en móvil/tablet/escritorio de los prototipos;
+- errores: manejo de estados vacíos, de error y de carga en cada módulo;
+- builds: que el proyecto compila sin romper nada fuera de los módulos
+  aislados de comunidad;
+- tests: cobertura de los tests unitarios de cada prompt anterior (A-M, O, P)
+  en verde;
+- ausencia de secretos: grep de claves/tokens/credenciales en todo lo añadido;
+- ausencia de deploy: confirmar que nada de este trabajo se ha desplegado a
+  producción ni mergeado a main;
+- checklist final antes de merge: lista cerrada de sí/no por cada punto
+  anterior, con hallazgos abiertos priorizados (crítico/alto/medio/bajo).
+
+Entrega un informe de QA en docs/club-padel-04/comunidad/ sin modificar
+código de producción. No toques App.jsx, auth real, Supabase, ni hagas
+merge o deploy como parte de este prompt.
+```
+
 ## Prompt N — Integración final con App.jsx (requiere autorización explícita)
 
 ```
@@ -144,4 +256,4 @@ ningún cambio.
 
 ## Orden recomendado (no vinculante)
 
-1. Prompt A (modelo de datos) → 2. Prompt F (consentimiento/privacidad, en paralelo con A) → 3. Prompts B/C (prototipos visuales) → 4. Prompt E (moderación, antes de abrir cualquier módulo con contenido de usuarios) → 5. Prompt D (partidos abiertos) → 6. Prompt G (amigos/seguidores) → 7. Prompts H/I/J (retos, grupos, ranking) → 8. Prompt K (mensajería por plantillas) → 9. Prompts L/M (chat libre, geolocalización — requieren validación legal previa) → 10. Prompt N (integración final, solo con autorización explícita).
+0. Prompt O (auditoría de capturas y funciones — siempre primero, antes de diseñar nada) → 1. Prompt A (modelo de datos) → 2. Prompt F (consentimiento/privacidad, en paralelo con A) → 3. Prompts B/C (prototipos visuales) → 4. Prompt E (moderación, antes de abrir cualquier módulo con contenido de usuarios) → 5. Prompt D (partidos abiertos) → 6. Prompt G (amigos/seguidores) → 7. Prompts H/I/J/P (retos, grupos, ranking, eventos) → 8. Prompt K (mensajería por plantillas) → 9. Prompts L/M (chat libre, geolocalización — requieren validación legal previa) → 10. Prompt Q (QA, seguridad y cierre de calidad — gate obligatorio antes de integrar) → 11. Prompt N (integración final con App.jsx, solo con autorización explícita y solo si Prompt Q está aprobado).
