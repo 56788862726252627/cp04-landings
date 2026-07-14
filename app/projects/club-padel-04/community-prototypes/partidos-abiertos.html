@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Prototipo — Partidos abiertos · Comunidad Pádel 04</title>
+<link rel="stylesheet" href="community-prototypes.css" />
+</head>
+<body>
+
+<div class="prototype-banner">
+  ⚠️ PROTOTIPO NO INTEGRADO — datos ficticios, sin conexión a backend real, sin App.jsx. Ver <code>PARTIDOS_ABIERTOS_BUSCAR_COMPANERO_COMUNIDAD_PADEL_04.md</code>.
+</div>
+
+<main class="app-shell" aria-label="Prototipo de partidos abiertos de Comunidad Pádel 04">
+
+  <!-- ================= CABECERA ================= -->
+  <header class="community-header">
+    <h1>Partidos abiertos</h1>
+    <span class="badge"><span class="dot" aria-hidden="true"></span>Club Pádel 04 (demo)</span>
+  </header>
+
+  <div class="privacy-banner" role="note">
+    <span class="icon" aria-hidden="true">🔒</span>
+    <span>Solo ves partidos según tu club y tu configuración de privacidad. <a href="#privacidad">Gestionar privacidad</a></span>
+  </div>
+
+  <!-- ================= FILTROS ================= -->
+  <nav class="filter-row" aria-label="Filtros de partidos abiertos">
+    <button class="chip" aria-pressed="true">Todos los niveles</button>
+    <button class="chip" aria-pressed="false">Iniciación</button>
+    <button class="chip" aria-pressed="false">Intermedio</button>
+    <button class="chip" aria-pressed="false">Avanzado</button>
+    <button class="chip" aria-pressed="false">Esta semana</button>
+    <button class="chip" aria-pressed="false">Con plazas libres</button>
+  </nav>
+
+  <!-- ================= CTAs ================= -->
+  <div class="cta-row">
+    <button class="btn btn-primary">+ Crear partido abierto</button>
+    <button class="btn btn-secondary">Buscar compañero <span class="badge" style="margin-left:4px;">Fase 2</span></button>
+  </div>
+
+  <!-- ================= LISTADO DE PARTIDOS ================= -->
+  <section class="mod-queue" aria-label="Listado de partidos abiertos">
+
+    <!-- Partido abierto (2 de 4 plazas) -->
+    <article class="match-card">
+      <div class="match-card-header">
+        <span class="match-title">Sábado 20 julio · 18:00 (demo)</span>
+        <span class="match-status match-open">Con plazas</span>
+      </div>
+      <p class="match-meta">Creado por Jugador Demo 2 · Pista 3 (demo) · Nivel intermedio-avanzado</p>
+      <div class="slots-bar" role="img" aria-label="2 de 4 plazas ocupadas">
+        <div class="slots-bar-fill" style="width:50%;"></div>
+      </div>
+      <p class="severity-note">2 de 4 plazas ocupadas</p>
+      <div class="report-actions">
+        <button class="btn btn-primary">Solicitar plaza</button>
+        <button class="btn btn-text">Ver detalle</button>
+        <button class="kebab-btn" aria-label="Más acciones sobre este partido">⋯</button>
+      </div>
+    </article>
+
+    <!-- Partido completo -->
+    <article class="match-card">
+      <div class="match-card-header">
+        <span class="match-title">Domingo 21 julio · 10:00 (demo)</span>
+        <span class="match-status match-full">Completo</span>
+      </div>
+      <p class="match-meta">Creado por Jugador Demo 4 · Pista 1 (demo) · Nivel iniciación</p>
+      <div class="slots-bar" role="img" aria-label="4 de 4 plazas ocupadas">
+        <div class="slots-bar-fill" style="width:100%;"></div>
+      </div>
+      <p class="severity-note">4 de 4 plazas ocupadas</p>
+      <div class="report-actions">
+        <button class="btn btn-secondary" disabled>Sin plazas</button>
+        <button class="btn btn-text">Ver detalle</button>
+        <button class="kebab-btn" aria-label="Más acciones sobre este partido">⋯</button>
+      </div>
+    </article>
+
+    <!-- Partido propio (creador) -->
+    <article class="match-card" style="border-left:3px solid var(--accent);">
+      <div class="match-card-header">
+        <span class="match-title">Tu partido · Lunes 22 julio · 19:00 (demo)</span>
+        <span class="match-status match-open">Con plazas</span>
+      </div>
+      <p class="match-meta">1 de 4 plazas ocupadas · 1 solicitud pendiente</p>
+      <div class="slots-bar" role="img" aria-label="1 de 4 plazas ocupadas">
+        <div class="slots-bar-fill" style="width:25%;"></div>
+      </div>
+      <div class="report-actions">
+        <button class="btn btn-secondary">Ver solicitudes (1)</button>
+        <button class="btn btn-text">Editar</button>
+        <button class="btn btn-danger">Cancelar</button>
+      </div>
+    </article>
+
+    <!-- Partido cancelado -->
+    <article class="match-card">
+      <div class="match-card-header">
+        <span class="match-title">Martes 16 julio · 09:00 (demo)</span>
+        <span class="match-status match-cancelled">Cancelado</span>
+      </div>
+      <p class="match-meta">Cancelado por el creador</p>
+    </article>
+
+  </section>
+
+  <!-- ================= MOCK: FORMULARIO CREAR PARTIDO ================= -->
+  <section aria-label="Formulario de creación de partido (mock estático)" style="border-top:1px solid var(--line); padding:16px;">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:0 0 12px;">— Mock estático del formulario "Crear partido abierto" —</p>
+    <div class="modal-box" style="margin:0; border-radius:var(--radius-lg);">
+      <h3>Crear partido abierto</h3>
+      <p>Al publicar, otros jugadores de tu club podrán ver que buscas rival en esta fecha y hora.</p>
+      <div class="form-row-2">
+        <div class="form-field">
+          <label class="form-label" for="match-date">Fecha</label>
+          <input class="form-input" type="text" id="match-date" value="20/07/2026" readonly />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="match-time">Hora</label>
+          <input class="form-input" type="text" id="match-time" value="18:00" readonly />
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="match-level">Nivel</label>
+        <select class="form-select" id="match-level">
+          <option>Intermedio - Avanzado</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="match-visibility">Visibilidad</label>
+        <select class="form-select" id="match-visibility">
+          <option>Todo el club</option>
+          <option>Solo amigos</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" style="flex:1;">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1;">Publicar (mock)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ESTADO: SIN CONSENTIMIENTO ================= -->
+  <section aria-label="Estado sin consentimiento social" style="border-top:1px solid var(--line);">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:8px 16px 0;">— Vista alternativa: usuario sin "activity_sharing" activo —</p>
+    <div class="consent-gate">
+      <div class="icon" aria-hidden="true">🔒</div>
+      <h2 style="margin:0 0 8px; font-size:16px;">Activa tu comunidad</h2>
+      <p style="color:var(--text-dim); font-size:13px; margin:0 0 16px;">Activa tu comunidad para ver y crear partidos abiertos.</p>
+      <button class="btn btn-primary" style="width:100%;">Activar comunidad</button>
+    </div>
+  </section>
+
+  <!-- ================= ESTADO: PERFIL PRIVADO (nota, no bloqueo) ================= -->
+  <section aria-label="Nota sobre visibilidad restringida" style="border-top:1px solid var(--line); padding:16px;">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:0 0 8px;">— Nota de diseño: partidos con visibilidad "solo amigos" no aparecen en tu listado si no eres amigo del creador. No se muestra ningún aviso de "acceso denegado" — el partido simplemente no está en la lista. —</p>
+  </section>
+
+  <!-- ================= ESTADO: SIN RESULTADOS ================= -->
+  <section aria-label="Estado sin resultados" style="border-top:1px solid var(--line);">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:8px 16px 0;">— Vista alternativa: sin partidos que coincidan con los filtros —</p>
+    <div class="empty-state">
+      <div class="icon" aria-hidden="true">🎾</div>
+      <h2>No hay partidos abiertos con estos filtros</h2>
+      <p>¿Creas uno tú?</p>
+      <button class="btn btn-primary">+ Crear partido abierto</button>
+    </div>
+  </section>
+
+  <!-- ================= MOCK: REPORTAR / BLOQUEAR ================= -->
+  <section aria-label="Ejemplo de menú de acciones sobre un partido (mock estático)" style="border-top:1px solid var(--line); padding:16px 0 32px;">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:0 16px 12px;">— Mock estático del menú "⋯" de un partido —</p>
+    <div class="modal-box" style="margin:0 16px; max-width:220px; padding:8px;">
+      <button class="btn btn-secondary" style="width:100%; text-align:left; margin-bottom:6px;">Reportar partido</button>
+      <button class="btn btn-danger" style="width:100%; text-align:left;">Bloquear creador</button>
+    </div>
+  </section>
+
+  <div class="privacy-note" id="privacidad">
+    Prototipo visual de Club Pádel 04 — Partidos abiertos. No copia diseño, marca ni código de terceros. Ningún dato de esta página es real. Ningún partido abierto crea, modifica ni cancela una reserva real.
+  </div>
+
+</main>
+
+</body>
+</html>
