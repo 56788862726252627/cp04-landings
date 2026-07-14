@@ -828,3 +828,74 @@ button:focus-visible,
 .form-row-2 .form-field {
   flex: 1;
 }
+
+/* ==================================================================
+   Amigos, seguidores y conexiones (Prompt G) — extiende el sistema
+   anterior, sin redefinir ningún token ni componente ya existente.
+   ================================================================== */
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px 24px;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+}
+
+.player-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-row-info .name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.player-row-info .meta {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.player-row-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.player-row-actions .btn {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.dismiss-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  flex: 0 0 auto;
+}
+
+.dismiss-btn:hover {
+  color: var(--text);
+}
+
+.section-label {
+  font-size: 14px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 16px 16px 8px;
+}
