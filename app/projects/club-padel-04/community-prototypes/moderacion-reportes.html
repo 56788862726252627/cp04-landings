@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Prototipo — Moderación y reportes · Comunidad Pádel 04</title>
+<link rel="stylesheet" href="community-prototypes.css" />
+</head>
+<body>
+
+<div class="prototype-banner">
+  ⚠️ PROTOTIPO NO INTEGRADO — datos ficticios, sin conexión a backend real, sin App.jsx. Ver <code>MODERACION_REPORTES_ROLES_COMUNIDAD_PADEL_04.md</code>.
+</div>
+
+<main class="app-shell" aria-label="Prototipo de moderación y reportes de Comunidad Pádel 04">
+
+  <!-- ================= CABECERA ================= -->
+  <header class="community-header">
+    <h1>Moderación</h1>
+    <span class="badge"><span class="dot" aria-hidden="true"></span>Club Pádel 04 (demo)</span>
+  </header>
+
+  <div class="privacy-banner" role="note">
+    <span class="icon" aria-hidden="true">🔒</span>
+    <span>El reportante nunca es visible para la persona reportada.</span>
+  </div>
+
+  <!-- ================= VISTA: PLAYER (acciones disponibles) ================= -->
+  <section aria-label="Vista de jugador: acciones de seguridad disponibles" style="padding:16px;">
+    <h2 style="font-size:14px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin:0 0 12px;">Como jugador, siempre disponible</h2>
+    <div class="report-actions">
+      <button class="btn btn-secondary">Reportar contenido</button>
+      <button class="btn btn-secondary">Reportar perfil</button>
+      <button class="btn btn-danger">Bloquear usuario</button>
+      <button class="btn btn-text">Ocultar publicación</button>
+    </div>
+    <p class="severity-note">Reportar y bloquear no requieren ningún permiso especial ni consentimiento adicional.</p>
+  </section>
+
+  <!-- ================= TABS DE ROL ================= -->
+  <nav class="tab-row" aria-label="Cambiar vista de rol (mock)">
+    <button class="tab" aria-selected="false">Jugador</button>
+    <button class="tab" aria-selected="true">Staff</button>
+    <button class="tab" aria-selected="false">Admin</button>
+  </nav>
+
+  <div class="role-banner">Vista actual: <strong>STAFF</strong> del club (demo) — puede revisar reportes, no puede banear de forma permanente.</div>
+
+  <!-- ================= COLA DE REPORTES (STAFF) ================= -->
+  <section class="mod-queue" aria-label="Cola de reportes del club">
+
+    <!-- Reporte pendiente -->
+    <article class="report-card">
+      <div class="report-card-header">
+        <span class="report-target">Publicación · Jugador Demo 1</span>
+        <span class="status-pill status-open">Pendiente</span>
+      </div>
+      <p class="report-meta">Motivo: Contenido inapropiado · hace 3 horas</p>
+      <div class="report-detail">"El comentario incluye lenguaje ofensivo hacia otro jugador." (detalle ficticio de ejemplo)</div>
+      <div class="report-actions">
+        <button class="btn btn-secondary">Marcar en revisión</button>
+        <button class="btn btn-text">Ver contenido</button>
+      </div>
+    </article>
+
+    <!-- Reporte en revisión -->
+    <article class="report-card">
+      <div class="report-card-header">
+        <span class="report-target">Perfil · Jugador Demo 5</span>
+        <span class="status-pill status-in_review">En revisión</span>
+      </div>
+      <p class="report-meta">Motivo: Perfil falso · hace 1 día</p>
+      <div class="report-detail">"El nombre y la foto no parecen corresponder a un socio real del club." (detalle ficticio de ejemplo)</div>
+      <div class="report-actions">
+        <button class="btn btn-secondary">Descartar (no procede)</button>
+        <button class="btn btn-primary">Emitir advertencia</button>
+        <button class="btn btn-danger">Retirar contenido</button>
+      </div>
+      <p class="severity-note">Esta decisión no incluye suspender ni banear — esas acciones requieren un ADMIN.</p>
+    </article>
+
+    <!-- Reporte resuelto -->
+    <article class="report-card">
+      <div class="report-card-header">
+        <span class="report-target">Comentario · Jugador Demo 2</span>
+        <span class="status-pill status-resolved">Resuelto</span>
+      </div>
+      <p class="report-meta">Motivo: Spam · resuelto hace 2 días · Acción: contenido retirado</p>
+    </article>
+
+    <!-- Reporte rechazado -->
+    <article class="report-card">
+      <div class="report-card-header">
+        <span class="report-target">Publicación · Jugador Demo 3</span>
+        <span class="status-pill status-dismissed">No procede</span>
+      </div>
+      <p class="report-meta">Motivo: Otro · revisado hace 4 días · Sin acción</p>
+    </article>
+
+  </section>
+
+  <!-- ================= VISTA ADMIN (acciones adicionales) ================= -->
+  <div class="role-banner">Vista adicional: <strong>ADMIN</strong> — puede suspender, banear y revertir decisiones de STAFF.</div>
+
+  <section class="mod-queue" aria-label="Acciones exclusivas de ADMIN">
+    <article class="report-card">
+      <div class="report-card-header">
+        <span class="report-target">Perfil · Jugador Demo 5 (escalado por Staff)</span>
+        <span class="status-pill status-in_review">Escalado</span>
+      </div>
+      <p class="report-meta">Reincidencia: 2ª advertencia en 30 días (demo)</p>
+      <div class="report-actions">
+        <button class="btn btn-secondary">Suspender temporalmente</button>
+        <button class="btn btn-danger">Banear cuenta</button>
+        <button class="btn btn-text">Revertir última acción</button>
+      </div>
+      <p class="severity-note high">Esta acción afecta a la cuenta completa del usuario, no solo a este contenido.</p>
+    </article>
+  </section>
+
+  <!-- ================= ESTADO: COLA VACÍA ================= -->
+  <section aria-label="Estado de cola de reportes vacía" style="border-top:1px solid var(--line);">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:8px 16px 0;">— Vista alternativa: club sin reportes pendientes —</p>
+    <div class="empty-state">
+      <div class="icon" aria-hidden="true">✅</div>
+      <h2>No hay reportes pendientes</h2>
+      <p>La cola de moderación de tu club está al día.</p>
+    </div>
+  </section>
+
+  <!-- ================= MOCK: SANCIÓN AL USUARIO ================= -->
+  <section aria-label="Ejemplo de notificación de sanción al usuario afectado" style="border-top:1px solid var(--line); padding:16px 0;">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:0 16px 12px;">— Mock estático: notificación recibida por el usuario sancionado —</p>
+    <div class="modal-box" style="margin:0 16px; border-radius:var(--radius-lg);">
+      <h3>Aviso de moderación</h3>
+      <p>Has recibido un aviso de nuestro equipo de moderación por incumplir las normas de la comunidad. Si crees que es un error, puedes solicitar revisión.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" style="flex:1;">Solicitar revisión</button>
+        <button class="btn btn-primary" style="flex:1;">Entendido</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MOCK: CONFIRMAR BLOQUEO ================= -->
+  <section aria-label="Ejemplo de confirmación de bloqueo (mock estático)" style="border-top:1px solid var(--line); padding:16px 0 32px;">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:0 16px 12px;">— Mock estático del modal de confirmación de bloqueo —</p>
+    <div class="modal-box" style="margin:0 16px; border-radius:var(--radius-lg);">
+      <h3>Bloquear a Jugador Demo 5</h3>
+      <p>Ya no podrá invitarte a partidos, escribirte ni ver tu actividad. No se le notificará que le has bloqueado.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" style="flex:1;">Cancelar</button>
+        <button class="btn btn-danger" style="flex:1;">Bloquear</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="privacy-note">
+    Prototipo visual de Club Pádel 04 — Moderación. No copia diseño, marca ni código de terceros. Ningún dato de esta página es real. Ninguna acción de moderación se ejecuta automáticamente por IA sin revisión humana.
+  </div>
+
+</main>
+
+</body>
+</html>
