@@ -454,6 +454,124 @@ async function prepareAirtableWrite(payload, env) {
   };
 }
 
+// Consulta compartida de slots ocupados en Airtable para una fecha, con el
+// mismo filtro (fecha + estado activo) que ya usaba handleDisponibilidad.
+// Extraída para poder reutilizarla también en la revalidación de
+// handleReservas, sin duplicar la query. `ok:false` cubre tanto "Airtable
+// no configurado" como errores de red/HTTP: en ningún caso lanza, siempre
+// devuelve un resultado que el llamador decide cómo tratar.
+async function cp04FetchOcupadas(env, fecha) {
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+    return { ok: false, reason: "not_configured" };
+  }
+
+  const formula = `AND(
+    FIND("${fecha}|", {clave_slot}) = 1,
+    OR(
+      {estado_reserva} = "pendiente",
+      {estado_reserva} = "confirmada",
+      {estado_reserva} = "reprogramada"
+    )
+  )`;
+
+  const airtableUrl =
+    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+    `?filterByFormula=${encodeURIComponent(formula)}` +
+    `&fields%5B%5D=clave_slot` +
+    `&fields%5B%5D=estado_reserva` +
+    `&fields%5B%5D=fecha_reserva` +
+    `&fields%5B%5D=hora_inicio` +
+    `&fields%5B%5D=hora_fin` +
+    `&fields%5B%5D=Pista`;
+
+  let airtableRes;
+  try {
+    airtableRes = await fetch(airtableUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    });
+  } catch {
+    return { ok: false, reason: "network_error" };
+  }
+
+  const data = await airtableRes.json().catch(() => null);
+
+  if (!airtableRes.ok) {
+    return { ok: false, reason: "airtable_error", status: airtableRes.status, details: data };
+  }
+
+  const records = data?.records || [];
+  const ocupadas = records.map((record) => record.fields?.clave_slot).filter(Boolean);
+
+  return { ok: true, records, ocupadas };
+}
+
+// Comprobación pura (sin red): ¿el slot fecha|pista|hora ya aparece en la
+// lista de ocupadas? Mismo formato de clave que ya usa el frontend
+// (App.jsx: `${fecha}|${pista}|${hora}`) y que Airtable devuelve en
+// clave_slot, para no introducir un segundo formato paralelo.
+export function cp04IsSlotOccupied(ocupadas, fecha, pista, hora) {
+  if (!Array.isArray(ocupadas) || !fecha || !pista || !hora) return false;
+  const claveSlot = `${fecha}|${pista}|${hora}`;
+  return ocupadas.includes(claveSlot);
+}
+
+// Clave de idempotencia derivada de los campos que identifican de forma
+// única la operación solicitada. Pura y determinista: la misma solicitud
+// exacta produce siempre la misma clave, distintas solicitudes (aunque
+// lleguen del mismo jugador) producen claves distintas.
+export function cp04BuildIdempotencyKey(normalizedPayload) {
+  const accion = normalizedPayload?.accion;
+
+  if (accion === "crear_reserva") {
+    const r = normalizedPayload.reserva || {};
+    const email = normalizedPayload.jugador?.email || "";
+    return `crear|${r.fecha}|${r.pista}|${r.hora}|${email}`;
+  }
+
+  if (accion === "reprogramar_reserva") {
+    return `reprogramar|${normalizedPayload.clave_reserva}|${normalizedPayload.nueva_fecha_reserva}|${normalizedPayload.nueva_hora_inicio}|${normalizedPayload.nueva_pista}`;
+  }
+
+  if (accion === "cancelar_reserva") {
+    return `cancelar|${normalizedPayload.clave_reserva}`;
+  }
+
+  return null;
+}
+
+// Idempotencia best-effort usando la Cache API nativa de Workers
+// (`caches.default`): no requiere ningún binding nuevo ni cambio en
+// wrangler.toml. No es una garantía global entre datacenters, pero cubre
+// el caso real más común (doble clic, reintento inmediato del mismo
+// cliente) durante una ventana corta.
+async function cp04CheckIdempotency(request, normalizedPayload) {
+  const idemKey = cp04BuildIdempotencyKey(normalizedPayload);
+  if (!idemKey) {
+    return { duplicate: false, markDone: async () => {} };
+  }
+
+  const cache = caches.default;
+  const cacheUrl = new URL(request.url);
+  cacheUrl.pathname = `/__cp04_idempotency__/${encodeURIComponent(idemKey)}`;
+  const cacheKey = new Request(cacheUrl.toString());
+
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return { duplicate: true, markDone: async () => {} };
+  }
+
+  return {
+    duplicate: false,
+    markDone: async () => {
+      await cache.put(cacheKey, new Response("1", { headers: { "Cache-Control": "max-age=10" } }));
+    },
+  };
+}
+
 async function handleReservas(request, env) {
   const headers = corsHeaders(request, env);
 
@@ -501,6 +619,67 @@ async function handleReservas(request, env) {
   }
 
   const normalizedPayload = normalizePayload(payload);
+
+  // Idempotencia: si la misma solicitud exacta ya se procesó hace unos
+  // segundos (doble clic, reintento de red del cliente), no se reenvía a
+  // Make una segunda vez. Se marca como "en curso" ANTES de las llamadas
+  // de red siguientes para cerrar la ventana de carrera entre dos
+  // solicitudes casi simultáneas.
+  const idempotency = await cp04CheckIdempotency(request, normalizedPayload);
+  if (idempotency.duplicate) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "DUPLICATE_REQUEST",
+        message: "Esta solicitud ya se está procesando o se procesó hace unos segundos.",
+      },
+      409,
+      headers
+    );
+  }
+  await idempotency.markDone();
+
+  // Revalidación de disponibilidad: vuelve a comprobar contra Airtable
+  // justo antes de reenviar a Make, para reducir (que no eliminar del
+  // todo) la ventana de condición de carrera frente a lo que el frontend
+  // ya comprobó al cargar el formulario. Solo aplica a crear/reprogramar,
+  // que son las únicas acciones que ocupan un slot concreto.
+  //
+  // Si Airtable no responde, no está configurado o está degradado (p. ej.
+  // límite de facturación excedido), NO se bloquea la reserva: se deja
+  // pasar igual que se comportaba el flujo antes de este cambio, para no
+  // convertir un fallo de lectura de Airtable en un corte total de altas.
+  if (accionSolicitada === "crear_reserva" || accionSolicitada === "reprogramar_reserva") {
+    const fechaRevalidar =
+      accionSolicitada === "crear_reserva"
+        ? normalizedPayload.reserva.fecha
+        : normalizedPayload.nueva_fecha_reserva;
+    const pistaRevalidar =
+      accionSolicitada === "crear_reserva"
+        ? normalizedPayload.reserva.pista
+        : normalizedPayload.nueva_pista;
+    const horaRevalidar =
+      accionSolicitada === "crear_reserva"
+        ? normalizedPayload.reserva.hora
+        : normalizedPayload.nueva_hora_inicio;
+
+    const disponibilidad = await cp04FetchOcupadas(env, fechaRevalidar);
+
+    if (disponibilidad.ok && cp04IsSlotOccupied(disponibilidad.ocupadas, fechaRevalidar, pistaRevalidar, horaRevalidar)) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: "SLOT_ALREADY_BOOKED",
+          message: "Ese horario ya no está disponible. Elige otra franja.",
+        },
+        409,
+        headers
+      );
+    }
+    // disponibilidad.ok === false: Airtable no configurado/caído/limitado.
+    // Se continúa sin revalidar, ver nota arriba.
+  }
+
   const makeResult = await forwardToMake(normalizedPayload, env);
   const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
 
@@ -583,51 +762,24 @@ async function handleDisponibilidad(request, env) {
     );
   }
 
-  const formula = `AND(
-    FIND("${fecha}|", {clave_slot}) = 1,
-    OR(
-      {estado_reserva} = "pendiente",
-      {estado_reserva} = "confirmada",
-      {estado_reserva} = "reprogramada"
-    )
-  )`;
+  // Consulta compartida con la revalidación de handleReservas (misma
+  // query, mismo filtro por fecha/estado) — ver cp04FetchOcupadas.
+  const disponibilidad = await cp04FetchOcupadas(env, fecha);
 
-  const airtableUrl =
-    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
-    `?filterByFormula=${encodeURIComponent(formula)}` +
-    `&fields%5B%5D=clave_slot` +
-    `&fields%5B%5D=estado_reserva` +
-    `&fields%5B%5D=fecha_reserva` +
-    `&fields%5B%5D=hora_inicio` +
-    `&fields%5B%5D=hora_fin` +
-    `&fields%5B%5D=Pista`;
-
-  const airtableRes = await fetch(airtableUrl, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
-      "Content-Type": "application/json"
-    }
-  });
-
-  const data = await airtableRes.json();
-
-  if (!airtableRes.ok) {
+  if (!disponibilidad.ok) {
     return jsonResponse(
       {
         ok: false,
         error: "Error consultando disponibilidad en Airtable",
-        status: airtableRes.status,
-        details: data
+        status: disponibilidad.status,
+        details: disponibilidad.details
       },
       500,
       headers
     );
   }
 
-  const ocupadas = (data.records || [])
-    .map((record) => record.fields?.clave_slot)
-    .filter(Boolean);
+  const ocupadas = disponibilidad.ocupadas;
 
   // ocupadas_detalle: además de la clave plana (solo hora de inicio, que ya
   // usan otros consumidores), se expone hora_fin de cada reserva existente
@@ -637,7 +789,7 @@ async function handleDisponibilidad(request, env) {
   // coincidencia exacta de hora de inicio. No añade ni modifica nada en
   // Airtable: solo se lee un campo que ya existe (hora_fin, ya usado en
   // cp04ListReservations más abajo).
-  const ocupadasDetalle = (data.records || [])
+  const ocupadasDetalle = disponibilidad.records
     .map((record) => {
       const fields = record.fields || {};
       const pista = fields.Pista;
