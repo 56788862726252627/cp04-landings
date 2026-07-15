@@ -3668,6 +3668,14 @@ function Reservas() {
 function CancelarReserva({ setCurrent }) {
   const lang = useLang();
   const tx = key => t(key, lang);
+  const auth = useAuth();
+  // Cancelar es operación de STAFF/ADMIN/SUPPORT (RBAC). Con
+  // CP04_ENFORCE_ROLE_GATES activo en el Worker, solo una sesión backend
+  // real (auth.isAuthenticated, vía Supabase) puede llamar al endpoint
+  // protegido de verdad. El login demo por contraseña de rol no emite
+  // token verificable, así que aquí se simula localmente en vez de
+  // devolver siempre 401 MISSING_TOKEN.
+  const isDemoSession = !auth.isAuthenticated;
   const [clave, setClave] = useState("");
   const [confirmado, setConfirmado] = useState(false);
   const [status, setStatus] = useState("idle");
@@ -3678,7 +3686,13 @@ function CancelarReserva({ setCurrent }) {
   const statusMap = {
     idle: [tx("status.cancelar.idle"), tx("status.cancelar.idle_txt"), T.warning],
     sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt"), T.warning],
-    success: [tx("status.cancelar.exito"), tx("status.cancelar.exito_txt"), T.accent],
+    success: [
+      tx("status.cancelar.exito"),
+      isDemoSession
+        ? "Simulado en modo demo: no se ha cancelado ninguna reserva real."
+        : tx("status.cancelar.exito_txt"),
+      T.accent,
+    ],
     error: [tx("status.cancelar.error"), error || tx("status.cancelar.error_txt"), T.danger],
   };
   const [statusTitle, statusText, statusColor] = statusMap[status];
@@ -3716,10 +3730,19 @@ function CancelarReserva({ setCurrent }) {
     sendingRef.current = true;
 
     try {
-      // Cancelar es operación de STAFF/ADMIN/SUPPORT en la matriz RBAC:
-      // adjunta el token real si existe sesión (preparado para cuando se
-      // active CP04_ENFORCE_ROLE_GATES). En demo, sin token, se comporta
-      // igual que antes.
+      if (isDemoSession) {
+        // Modo demo: no se llama al Worker (siempre respondería 401 al no
+        // haber token real), no se toca ningún dato real. Solo feedback
+        // visual local, dejando claro que es una simulación.
+        await new Promise((resolve) => window.setTimeout(resolve, 600));
+        setClave("");
+        setConfirmado(false);
+        setStatus("success");
+        return;
+      }
+
+      // Adjunta el token real de la sesión backend (Supabase) verificada
+      // por el Worker (CP04_ENFORCE_ROLE_GATES).
       const res = await authFetch(CONFIG.bookingEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -3754,13 +3777,17 @@ function CancelarReserva({ setCurrent }) {
     }
   }
 
-  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} /><Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{isDemoSession && <Card style={{ marginBottom:20, borderColor:`${T.warning}66`, color:T.warning, fontSize:".85rem" }}>Modo demo: esta acción se simula localmente, sin llamar al servidor ni afectar a ninguna reserva real.</Card>}<Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
 }
 
 
 function ReprogramarReserva({ setCurrent }) {
   const lang = useLang();
   const tx = key => t(key, lang);
+  const auth = useAuth();
+  // Ver nota equivalente en CancelarReserva: sin sesión backend real, se
+  // simula localmente en vez de llamar al Worker (que devolvería 401).
+  const isDemoSession = !auth.isAuthenticated;
   const [court, setCourt] = useState("Pista 1");
   const [form, setForm] = useState({
     clave_reserva: "",
@@ -3822,6 +3849,19 @@ function ReprogramarReserva({ setCurrent }) {
     setStatusMessage("");
 
     try {
+      if (isDemoSession) {
+        // Modo demo: no se consulta disponibilidad real ni se llama al
+        // Worker (que devolvería 401 al no haber token real). Solo
+        // feedback visual local, sin tocar ningún dato real.
+        await new Promise((resolve) => window.setTimeout(resolve, 600));
+        setStatusMessage(
+          `Simulado en modo demo: ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}. No se ha modificado ninguna reserva real.`,
+        );
+        setStatus("success");
+        setForm((current) => ({ ...current, confirmado: false }));
+        return;
+      }
+
       const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
       const disponibilidad = await fetchDisponibilidad(form.nueva_fecha_reserva);
 
@@ -3894,6 +3934,12 @@ function ReprogramarReserva({ setCurrent }) {
   return (
     <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}>
       <SectionTitle eyebrow={tx("reprog.eyebrow")} title={tx("reprog.title")} desc={tx("reprog.desc")} />
+
+      {isDemoSession && (
+        <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+          Modo demo: esta acción se simula localmente, sin llamar al servidor ni afectar a ninguna reserva real.
+        </Card>
+      )}
 
       <Card
         style={{
@@ -4089,7 +4135,11 @@ function ReprogramarReserva({ setCurrent }) {
             >
               <Btn
                 type="submit"
-                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+                disabled={
+                  sending ||
+                  (!isDemoSession &&
+                    getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available")
+                }
               >
                 {sending ? tx("reprog.enviando") : tx("reprog.btn")}
               </Btn>
