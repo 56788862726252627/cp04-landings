@@ -29,10 +29,10 @@ export const CP04_PROTECTED_SECTIONS = [
 export const CP04_SUPPORT_ONLY_SECTIONS = ["flujos_make", "soporte"];
 
 export const CP04_ROLE_PERMISSIONS = {
-  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
-  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
-  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
-  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"],
+  PLAYER: ["inicio", "reservas", "torneos", "ranking", "comunidad", "perfil"],
+  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "comunidad", "perfil"],
+  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "comunidad", "admin", "perfil"],
+  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "comunidad", "admin", "flujos_make", "soporte", "perfil"],
 };
 
 // Fail-closed: cualquier valor que no sea exactamente uno de los 4 roles

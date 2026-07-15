@@ -53,6 +53,7 @@ import {
   cp04GetSafeStartSection,
 } from "./utils/rbac.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
+import { LazyComunidad } from "./components/lazy/lazyComunidad.js";
 import { T } from "./theme.js";
 /**
  * Club Pádel 04 · SaaS App segura
@@ -1465,6 +1466,7 @@ const TRANSLATIONS = {
     "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
     "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
+    "nav.comunidad":"Comunidad",
     "nav.cerrar_sesion":"Cerrar sesión","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Cerrar","nav.abrir_menu":"Menú",
     "login.title":"Iniciar como rol","login.entrar":"Entrar","login.cancelar":"Cancelar",
     "login.password":"Contraseña","login.ver_pwd":"👁️ Ver contraseña","login.ocultar_pwd":"🙈 Ocultar contraseña",
@@ -1667,6 +1669,7 @@ const TRANSLATIONS = {
     "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
     "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Tech centre","nav.soporte":"Support",
+    "nav.comunidad":"Community",
     "nav.cerrar_sesion":"Sign out","nav.saas_label":"Secure SaaS","nav.cerrar_menu":"Close","nav.abrir_menu":"Menu",
     "login.title":"Log in as role","login.entrar":"Enter","login.cancelar":"Cancel",
     "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
@@ -1869,6 +1872,7 @@ const TRANSLATIONS = {
     "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
     "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Tech center","nav.soporte":"Support",
+    "nav.comunidad":"Community",
     "nav.cerrar_sesion":"Sign out","nav.saas_label":"Secure SaaS","nav.cerrar_menu":"Close","nav.abrir_menu":"Menu",
     "login.title":"Sign in as role","login.entrar":"Sign in","login.cancelar":"Cancel",
     "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
@@ -2071,6 +2075,7 @@ const TRANSLATIONS = {
     "nav.reprogramar":"Reporter","nav.cancelar":"Annuler réservation",
     "nav.gestion":"Réservations","nav.torneos":"Tournois","nav.ranking":"Classement",
     "nav.admin":"Admin","nav.flujos_make":"Centre technique","nav.soporte":"Support",
+    "nav.comunidad":"Communauté",
     "nav.cerrar_sesion":"Déconnexion","nav.saas_label":"SaaS sécurisé","nav.cerrar_menu":"Fermer","nav.abrir_menu":"Menu",
     "login.title":"Se connecter en tant que rôle","login.entrar":"Entrer","login.cancelar":"Annuler",
     "login.password":"Mot de passe","login.ver_pwd":"👁️ Voir le mot de passe","login.ocultar_pwd":"🙈 Masquer",
@@ -2269,6 +2274,7 @@ const TRANSLATIONS = {
     "nav.reprogramar":"Riprogramma","nav.cancelar":"Annulla prenotazione",
     "nav.gestion":"Prenotazioni","nav.torneos":"Tornei","nav.ranking":"Classifica",
     "nav.admin":"Admin","nav.flujos_make":"Centro tecnico","nav.soporte":"Supporto",
+    "nav.comunidad":"Comunità",
     "nav.cerrar_sesion":"Disconnetti","nav.saas_label":"SaaS sicuro","nav.cerrar_menu":"Chiudi","nav.abrir_menu":"Menu",
     "login.title":"Accedi come ruolo","login.entrar":"Entra","login.cancelar":"Annulla",
     "login.password":"Password","login.ver_pwd":"👁️ Mostra password","login.ocultar_pwd":"🙈 Nascondi",
@@ -2467,6 +2473,7 @@ const TRANSLATIONS = {
     "nav.reprogramar":"Reagendar","nav.cancelar":"Cancelar reserva",
     "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Classificação",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Suporte",
+    "nav.comunidad":"Comunidade",
     "nav.cerrar_sesion":"Terminar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
     "login.title":"Entrar como função","login.entrar":"Entrar","login.cancelar":"Cancelar",
     "login.password":"Palavra-passe","login.ver_pwd":"👁️ Ver palavra-passe","login.ocultar_pwd":"🙈 Ocultar",
@@ -2665,6 +2672,7 @@ const TRANSLATIONS = {
     "nav.reprogramar":"Remarcar","nav.cancelar":"Cancelar reserva",
     "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Central técnica","nav.soporte":"Suporte",
+    "nav.comunidad":"Comunidade",
     "nav.cerrar_sesion":"Encerrar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
     "login.title":"Entrar como perfil","login.entrar":"Entrar","login.cancelar":"Cancelar",
     "login.password":"Senha","login.ver_pwd":"👁️ Mostrar senha","login.ocultar_pwd":"🙈 Ocultar",
@@ -2863,6 +2871,7 @@ const TRANSLATIONS = {
     "nav.reprogramar":"Umbuchen","nav.cancelar":"Buchung stornieren",
     "nav.gestion":"Buchungen","nav.torneos":"Turniere","nav.ranking":"Rangliste",
     "nav.admin":"Admin","nav.flujos_make":"Technisches Zentrum","nav.soporte":"Support",
+    "nav.comunidad":"Gemeinschaft",
     "nav.cerrar_sesion":"Abmelden","nav.saas_label":"Sicheres SaaS","nav.cerrar_menu":"Schließen","nav.abrir_menu":"Menü",
     "login.title":"Als Rolle anmelden","login.entrar":"Eintreten","login.cancelar":"Abbrechen",
     "login.password":"Passwort","login.ver_pwd":"👁️ Passwort anzeigen","login.ocultar_pwd":"🙈 Ausblenden",
@@ -3205,7 +3214,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
   const navKeys = [
     ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
     ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
-    ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["admin","nav.admin","📊"],
+    ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["comunidad","nav.comunidad","👥"],["admin","nav.admin","📊"],
     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
   ];
   // Antes había un mapa de permisos propio y duplicado aquí (menuByRole),
@@ -6715,7 +6724,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,
