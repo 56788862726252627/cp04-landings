@@ -1,0 +1,422 @@
+      }
+
+      localStorage.setItem("cp04_register_open", "true");
+      localStorage.setItem("cp04_register_done", "true");
+      setRegisterDone(true);
+      setLoginEmail(cleanEmail);
+      localStorage.setItem("cp04_register_name", cleanName);
+      localStorage.setItem("cp04_register_email", cleanEmail);
+      setRegisterPassword("");
+      setRegisterConfirm("");
+    } catch (error) {
+      console.error("CP04_REGISTER_FRONTEND_ERROR", error);
+      setRegisterError(`No se pudo completar el registro. Detalle: ${error?.message || "error desconocido"}`);
+    }
+  }
+
+  function openRegister() {
+    localStorage.setItem("cp04_register_open", "true");
+    localStorage.setItem("cp04_register_done", "false");
+    setRegisterOpen(true);
+    setRegisterDone(false);
+    setRegisterError("");
+
+    const savedName = localStorage.getItem("cp04_register_name") || "";
+    const savedEmail = localStorage.getItem("cp04_register_email") || loginEmail || "";
+
+    setRegisterName(savedName);
+    setRegisterEmail(savedEmail);
+    setRegisterPassword("");
+    setRegisterConfirm("");
+  }
+
+  function closeRegister() {
+    localStorage.setItem("cp04_register_open", "false");
+    localStorage.setItem("cp04_register_done", "false");
+    setRegisterOpen(false);
+    setRegisterDone(false);
+    setRegisterError("");
+    setRegisterPassword("");
+    setRegisterConfirm("");
+  }
+
+  function openForgotPwd() {
+    setForgotPwdStep("form");
+    setForgotPwdEmail("");
+    setForgotPwdEmailError("");
+  }
+
+  function closeForgotPwd() {
+    setForgotPwdStep("idle");
+    setForgotPwdEmail("");
+    setForgotPwdEmailError("");
+  }
+
+  function handleForgotPwdSubmit(e) {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(forgotPwdEmail.trim())) {
+      setForgotPwdEmailError("Introduce un email válido.");
+      return;
+    }
+    setForgotPwdStep("sent");
+  }
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.querySelector("#cp04-mobile-menu button")?.focus();
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
+  function navigate(section) {
+    const safeRole = cp04NormalizeRole(selectedRole);
+    const safeSection = String(section || "inicio").trim();
+
+    if (!cp04CanAccessSection(safeRole, safeSection)) {
+      setCurrent(cp04GetSafeStartSection(safeRole));
+      setMobileMenuOpen(false);
+      return;
+    }
+
+    setCurrent(safeSection);
+    setMobileMenuOpen(false);
+  }
+
+  
+  const loginClock = useClock();
+  const loginLang = useLang();
+  const ltx = key => t(key, loginLang);
+
+  if (!selectedRole) {
+    const roleLabels = {
+      PLAYER:  { label: ltx("role.PLAYER.label"),  desc: ltx("role.PLAYER.desc")  },
+      STAFF:   { label: ltx("role.STAFF.label"),   desc: ltx("role.STAFF.desc")   },
+      ADMIN:   { label: ltx("role.ADMIN.label"),   desc: ltx("role.ADMIN.desc")   },
+      SUPPORT: { label: ltx("role.SUPPORT.label"), desc: ltx("role.SUPPORT.desc") },
+    };
+    return (
+      <>
+        <style>{globalStyles}</style>
+        <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:"radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), #050910", color:"white" }}>
+          <section style={{ width:"min(1080px, 100%)", border:"1px solid rgba(255,255,255,.12)", borderRadius:34, padding:"clamp(24px, 4vw, 48px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:18 }}>
+              <div style={{ color:T.accent, fontSize:".78rem", letterSpacing:".22em", textTransform:"uppercase", fontWeight:900 }}>
+                {ltx("login.sesion_label")}
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                <div style={{ minWidth:180, maxWidth:220 }}><LanguageSelector /></div>
+                <div style={{ fontFamily:"monospace", textAlign:"right" }}>
+                  <div style={{ color:T.accent, fontWeight:900, fontSize:"1.15rem", letterSpacing:".05em" }}>{loginClock.time}</div>
+                  <div style={{ color:T.textDim, fontSize:".72rem", marginTop:2 }}>{loginClock.day}, {loginClock.date}</div>
+                </div>
+              </div>
+            </div>
+
+            <h1 style={{ fontFamily:T.fontDisplay, fontSize:"clamp(2.6rem, 7vw, 5.8rem)", lineHeight:".9", letterSpacing:"-.07em", margin:"0 0 20px" }}>
+              {ltx("login.title").split(" ").slice(0,-1).join(" ")} <span style={{ color:T.accent }}>{ltx("login.title").split(" ").slice(-1)}</span>
+            </h1>
+
+            <p style={{ color:T.textDim, maxWidth:760, lineHeight:1.7, fontSize:"clamp(1rem, 2vw, 1.18rem)", marginBottom:34 }}>
+              {ltx("login.subtitle")}
+            </p>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:22, marginBottom:26 }}>
+        <form onSubmit={handleUniversalLogin} style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(5,10,18,.72)" }}>
+          <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+            ACCESO REAL
+          </div>
+          <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+            Entrar con correo personal
+          </strong>
+          <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.55 }}>
+            Usa tu email y contraseña. Los roles internos siguen disponibles abajo solo para validación interna.
+          </p>
+          <input
+            type="email"
+            value={loginEmail}
+            onChange={e => setLoginEmail(e.target.value)}
+            placeholder="tu@email.com"
+            autoComplete="email"
+            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+          />
+          <input
+            type={showLoginPassword ? "text" : "password"}
+            value={loginPassword}
+            onChange={e => setLoginPassword(e.target.value)}
+            placeholder={ltx("login.password")}
+            autoComplete="current-password"
+            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+          />
+
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(v => !v)}
+                  style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                >
+                  {showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                </button>
+                <button
+                    type="button"
+                    onClick={openRegister}
+                    style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                  >
+                    Crear cuenta
+                  </button>
+                  <button
+                  type="button"
+                  onClick={openForgotPwd}
+                  style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                >
+                  {ltx("login.olvide_pwd")}
+                </button>
+              </div>
+          {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
+            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#ffffff", fontWeight:900 }}>
+              Iniciar sesión
+            </button>
+            
+          </div>
+          
+              {registerOpen && (
+                <div style={{ marginTop:18, padding:18, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+                  {!registerDone ? (
+                    <div>
+                      <strong style={{ display:"block", marginBottom:6 }}>Crear cuenta</strong>
+                      <p style={{ color:T.textDim, marginTop:0, marginBottom:14, lineHeight:1.55, fontSize:".9rem" }}>
+                        Crea tu acceso como jugador para reservar pistas, consultar actividad y gestionar tu perfil.
+                      </p>
+
+                      <input
+                        type="text"
+                        value={registerName}
+                        onChange={e => { setRegisterName(e.target.value); localStorage.setItem("cp04_register_name", e.target.value); setRegisterError(""); }}
+                        placeholder="Nombre completo"
+                        autoComplete="name"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="email"
+                        value={registerEmail}
+                        onChange={e => { setRegisterEmail(e.target.value); localStorage.setItem("cp04_register_email", e.target.value); setRegisterError(""); }}
+                        placeholder="Correo electrónico"
+                        autoComplete="email"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="password"
+                        value={registerPassword}
+                        onChange={e => { setRegisterPassword(e.target.value); setRegisterError(""); }}
+                        placeholder="Contraseña"
+                        autoComplete="new-password"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="password"
+                        value={registerConfirm}
+                        onChange={e => { setRegisterConfirm(e.target.value); setRegisterError(""); }}
+                        placeholder="Confirmar contraseña"
+                        autoComplete="new-password"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      {registerError && <div style={{ color:"#ff8b8b", marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
+
+                      <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                        <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+                          Crear cuenta
+                        </button>
+                        <button type="button" className="cp04-menu-button" onClick={closeRegister} style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                          Volver
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ color:T.accent, fontSize:"1.4rem", marginBottom:8 }}>✓</div>
+                      <strong style={{ display:"block", marginBottom:8 }}>Cuenta creada correctamente</strong>
+                      <p style={{ color:T.textDim, lineHeight:1.55, marginTop:0, fontSize:".9rem" }}>
+                        Tu cuenta se ha creado. Puede requerir confirmación por email según la configuración de seguridad. Ya puedes intentar iniciar sesión.
+                      </p>
+                      <button type="button" className="cp04-menu-button" onClick={closeRegister}>
+                        Volver al inicio de sesión
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+<p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
+            Acceso seguro conectado al sistema de autenticación real.
+          </p>
+        </form>
+
+        <div style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
+          <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+            ACCESO POR ROLES
+          </div>
+          <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+            Ver la app por roles
+          </strong>
+          <p style={{ color:T.textDim, marginTop:0, marginBottom:0, lineHeight:1.55 }}>
+            Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.
+          </p>
+        </div>
+      </div>
+
+
+            <div className="cp04-grid-2">
+              {Object.keys(roleConfig).map((roleId) => {
+                const rl = roleLabels[roleId] || roleConfig[roleId];
+                return (
+                  <button key={roleId} type="button" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
+                    style={{ textAlign:"left", border:`1px solid ${T.line}`, borderRadius:24, padding:22, background:"rgba(5,10,18,.72)", color:T.text, cursor:"pointer", minHeight:138 }}>
+                    <div className={roleId==="PLAYER" ? "cp04-role-player-id" : undefined} style={{ color: roleId==="PLAYER" ? "#b6ff00" : T.accent, fontWeight:900, letterSpacing:".12em", fontSize:".78rem", marginBottom:8 }}>{roleId}</div>
+                    <strong style={{ display:"block", fontSize:"1.1rem", marginBottom:8 }}>{rl.label}</strong>
+                    <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {pendingRole && (
+              <form onSubmit={confirmRoleAccess} style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+                <strong style={{ display:"block", marginBottom:8 }}>
+                  {ltx("login.acceder_como")} {roleLabels[pendingRole]?.label || roleConfig[pendingRole]?.label}
+                </strong>
+                <p style={{ color:T.textDim, marginTop:0, marginBottom:14 }}>{ltx("login.intro_pwd")}</p>
+                <input
+                  type={showRolePassword ? "text" : "password"}
+                  value={rolePassword}
+                  onChange={e => setRolePassword(e.target.value)}
+                  placeholder={ltx("login.password")}
+                  autoFocus
+                  style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${roleError?"#ff6b6b":T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+                />
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                  <button type="button" onClick={() => setShowRolePassword(v => !v)}
+                    style={{ border:"none", background:"transparent", color:T.accent, fontWeight:900, cursor:"pointer", padding:0 }}>
+                    {showRolePassword ? ltx("login.ocultar_pwd") : ltx("login.ver_pwd")}
+                  </button>
+                  <button type="button" onClick={openForgotPwd}
+                    style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}>
+                    {ltx("login.olvide_pwd")}
+                  </button>
+                </div>
+                <label style={{ display:"flex", alignItems:"center", gap:10, color:T.textDim, marginBottom:12, cursor:"pointer", userSelect:"none" }}>
+                  <input type="checkbox" checked={rememberRole} onChange={e => setRememberRole(e.target.checked)} style={{ width:18, height:18, accentColor:T.accent }} />
+                  {ltx("login.guardar_sesion")}
+                </label>
+                {roleError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{roleError}</div>}
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                  <button type="submit" className="cp04-menu-button"
+                    style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
+                    {ltx("login.entrar")}
+                  </button>
+                  <button type="button" className="cp04-menu-button"
+                    onClick={() => { setPendingRole(""); setRolePassword(""); setRoleError(""); }}
+                    style={{ width:"auto" }}>
+                    {ltx("login.cancelar")}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {forgotPwdStep !== "idle" && (
+              <div style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+                {forgotPwdStep === "form" && (
+                  <>
+                    <strong style={{ display:"block", marginBottom:6 }}>{ltx("login.recuperar_title")}</strong>
+                    <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_desc")}</p>
+                    <form onSubmit={handleForgotPwdSubmit}>
+                      <input
+                        type="email"
+                        value={forgotPwdEmail}
+                        onChange={e => { setForgotPwdEmail(e.target.value); setForgotPwdEmailError(""); }}
+                        placeholder={ltx("login.recuperar_email")}
+                        autoFocus
+                        style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+                      />
+                      {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
+                      <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
+                        <button type="submit" className="cp04-menu-button"
+                          style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+                          {ltx("login.recuperar_btn")}
+                        </button>
+                        <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+                          style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                          {ltx("login.recuperar_volver")}
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                )}
+                {forgotPwdStep === "sent" && (
+                  <>
+                    <div style={{ color:T.accent, fontWeight:900, fontSize:"1.4rem", marginBottom:10 }}>✓</div>
+                    <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
+                    <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_enviado")}</p>
+                    <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+                      style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                      {ltx("login.recuperar_volver")}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            <p style={{ color:T.textDim, marginTop:24, fontSize:".9rem" }}>
+              {ltx("login.legal")}
+            </p>
+          </section>
+        </main>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <style>{globalStyles}</style>
+      <style>{GALLERY_REAL_IMAGE_STYLES}</style>
+      <style>{GALLERY_FORCE_STYLES}</style>
+      <div className="cp04-mobilebar">
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ width:10, height:10, borderRadius:"50%", background:T.accent }} />
+          <strong style={{ fontFamily:T.fontDisplay }}>CLUB PÁDEL 04</strong>
+        </div>
+        <ClockDisplay compact />
+        <button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú de navegación" aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>{ltx("nav.abrir_menu")}</button>
+      </div>
+      {mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}
+      <div className="cp04-layout">
+        <Sidebar current={current} selectedRole={selectedRole} onClearRole={clearRole} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} />
+        <main className="cp04-main" data-tour="main-content">{modules[current] || modules.inicio}</main>
+      </div>
+      <CP04GuidedTutorial
+        selectedRole={selectedRole}
+        onNavigate={navigate}
+        openRevision={tutorialRevision}
+      />
+    </>
+  );
+}
+

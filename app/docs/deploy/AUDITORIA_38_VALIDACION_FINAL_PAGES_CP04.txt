@@ -1,0 +1,4 @@
+OK: index.html final
+OK: _redirects final
+OK: assets final
+OK: ZIP final

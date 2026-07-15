@@ -1,0 +1,1500 @@
+src/App.jsx:43: * Club Pádel 04 · SaaS App segura
+src/App.jsx:48: * - un endpoint seguro propio: /api/reservas.
+src/App.jsx:72:  club: "Club Pádel 04",
+src/App.jsx:74:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+src/App.jsx:99:    key: "torneos",
+src/App.jsx:102:    src: "/optimized/gallery/cp04/torneos.webp?v=cp04FotosSeparadasFinal2",
+src/App.jsx:121:const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
+src/App.jsx:125:  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
+src/App.jsx:126:  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
+src/App.jsx:127:  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
+src/App.jsx:131:  { pos: 1, name: "Jugador demo 1", elo: 3.85, cat: "Demo", wins: 12, losses: 3 },
+src/App.jsx:132:  { pos: 2, name: "Jugador demo 2", elo: 3.72, cat: "Demo", wins: 10, losses: 4 },
+src/App.jsx:133:  { pos: 3, name: "Jugador demo 3", elo: 3.61, cat: "Demo", wins: 9, losses: 5 },
+src/App.jsx:155:  { name: "Automatización de procesos", status: "Activo", detail: "Canal interno seguro configurado", flow: "Reservas → Procesos → Base de datos" },
+src/App.jsx:157:  { name: "Pagos", status: "Listo para conexión", detail: "Reservas, bonos, membresías y torneos", flow: "Sistema → Pagos" },
+src/App.jsx:164:  { id: "PLAYER", label: "Jugador / cliente", access: "Activo", sections: "Inicio, Reservas, Ranking", permissions: ["Crear solicitud de reserva", "Consultar ranking del club", "Ver participación en torneos"] },
+src/App.jsx:165:  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+src/App.jsx:166:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+src/App.jsx:394:    accion: "crear_reserva",
+src/App.jsx:395:    club: CONFIG.club,
+src/App.jsx:403:    reserva: {
+src/App.jsx:411:      precio_total: price,
+src/App.jsx:420:  const cleanKey = form.clave_reserva.trim();
+src/App.jsx:422:  const selectedDate = form.nueva_fecha_reserva
+src/App.jsx:423:    ? new Date(`${form.nueva_fecha_reserva}T00:00:00`)
+src/App.jsx:428:    errors.clave_reserva = _t("errors.clave");
+src/App.jsx:430:    errors.clave_reserva = _t("errors.clave_incompleta");
+src/App.jsx:433:  if (!form.nueva_fecha_reserva) {
+src/App.jsx:434:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha");
+src/App.jsx:436:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha_pasado");
+src/App.jsx:437:  } else if (isSundayISO(form.nueva_fecha_reserva)) {
+src/App.jsx:438:    errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+src/App.jsx:449:  if (!errors.nueva_fecha_reserva && !errors.nueva_hora_inicio && !errors.duracion_minutos) {
+src/App.jsx:450:    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+src/App.jsx:453:    if (slotStatus === "closed") errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+src/App.jsx:461:    errors.confirmado = _t("errors.confirmado_reprog");
+src/App.jsx:472:    accion: "reprogramar_reserva",
+src/App.jsx:473:    clave_reserva: form.clave_reserva.trim(),
+src/App.jsx:474:    nueva_fecha_reserva: form.nueva_fecha_reserva,
+src/App.jsx:479:    club: CONFIG.club,
+src/App.jsx:480:    origen: "app_publica_reprogramar_reserva",
+src/App.jsx:569:      setMensaje("Club cerrado los domingos · no se admiten reservas durante todo el día.");
+src/App.jsx:928:function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
+src/App.jsx:1101:function ChartCard({ title, sub, children, action, demo = false, style: cs = {} }) {
+src/App.jsx:1102:  const cleanSub = sub ? sub.replace(/ ?·? ?demo/gi, "").replace(/Make/gi, "Procesos").trim() : sub;
+src/App.jsx:1120:// TODO producción: alimentar este dashboard desde backend/proxy seguro.
+src/App.jsx:1121:// Los datos de Make deben venir de un endpoint propio o webhook,
+src/App.jsx:1123:const dashboardDataSources = {
+src/App.jsx:1124:  mode: "demo",
+src/App.jsx:1125:  make: "demo/prepared",
+src/App.jsx:1147:  reservasHoy: 12,
+src/App.jsx:1148:  reservasSemana: 68,
+src/App.jsx:1149:  ocupacionMedia: 79,
+src/App.jsx:1152:  torneosActivos: 2,
+src/App.jsx:1167:const DEMO_MAKE_CATEGORIAS = [
+src/App.jsx:1203:    "funcion": "Detecta huecos libres y prepara alertas o promociones flash.",
+src/App.jsx:1204:    "blueprint": "workflows/27-alerta-pistas-libres-flash-promo/final/Alerta_Pistas_Libres_Flash_Promo_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1234:    "blueprint": "workflows/03-analisis-nps-semanal-encuestas-club-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1248:    "funcion": "Gestiona reservas desde la app.",
+src/App.jsx:1249:    "blueprint": "workflows/01-api-reservas/final/API_Reservas_Club_Padel_04_FINAL_V2_Crear_Cancelar_Ocupacion.blueprint.json",
+src/App.jsx:1263:    "funcion": "Backup semanal de reservas y socios.",
+src/App.jsx:1278:    "funcion": "Gestiona baja de jugador y activa promoción automática si corresponde.",
+src/App.jsx:1279:    "blueprint": "workflows/20-baja-jugador-promocion-automatica/final/Baja_de_Jugador_Promocion_Automatica_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1294:    "blueprint": "workflows/07-bienvenida-nuevo-socio-club-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1309:    "blueprint": "workflows/08-chatbot-web-reservas-sin-tally-padel-04/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1323:    "funcion": "Bloquea pistas temporalmente por mantenimiento, clima u otras incidencias.",
+src/App.jsx:1338:    "funcion": "Confirma inscripciones de jugadores a torneos y envía email.",
+src/App.jsx:1339:    "blueprint": "workflows/23-confirmacion-inscripcion-torneo/final/Confirmacion_Inscripcion_Torneo_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1383:    "funcion": "Gestiona cruces de torneo y resultados de partidos.",
+src/App.jsx:1384:    "blueprint": "workflows/24-cruces-de-torneo/final/Cruces_de_Torneo_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1396:    "categoria": "Analítica e IA",
+src/App.jsx:1398:    "funcion": "Genera resumen ejecutivo diario con actividad, ocupación y métricas.",
+src/App.jsx:1399:    "blueprint": "workflows/28-dashboard-ejecutivo-diario/final/Dashboard_Ejecutivo_Diario_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1413:    "funcion": "Detecta jugadores sin pareja y propone emparejamientos adecuados.",
+src/App.jsx:1429:    "blueprint": "workflows/16-escalado-impagos-3-etapas-club-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1444:    "blueprint": "workflows/17-felicitacion-cumpleanos-club-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1458:    "funcion": "Genera QR de acceso para reserva confirmada, envía email y actualiza Airtable.",
+src/App.jsx:1473:    "funcion": "Gestiona lista de espera y promociona jugadores cuando queda una pista libre.",
+src/App.jsx:1474:    "blueprint": "workflows/18-gestion-lista-espera-reservas/final/Gestion_Lista_de_Espera_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1489:    "blueprint": "workflows/20-informe-mensual-de-actividad-club-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1546:    "categoria": "Analítica e IA",
+src/App.jsx:1548:    "funcion": "Calcula KPIs semanales, genera análisis con IA y envía informe por Gmail.",
+src/App.jsx:1564:    "blueprint": "workflows/25-plantilla-google-drive-backup-cp04/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1579:    "blueprint": "workflows/26-prediccion-ocupacion-precios-dinamicos-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1594:    "blueprint": "workflows/27-programa-de-referidos-club-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1609:    "blueprint": "workflows/28-reactivacion-clientes-inactivos-30d-club-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1623:    "funcion": "Envía recordatorio automático 24 horas antes de la reserva.",
+src/App.jsx:1683:    "funcion": "Sincroniza reservas confirmadas con Google Calendar y Airtable.",
+src/App.jsx:1722:    "nombre": "🤖 Bot IA Reservas · Telegram · Pádel 04 · DEFINITIVO",
+src/App.jsx:1723:    "nombre_final": "🤖 Bot IA Reservas · Telegram · Pádel 04 · DEFINITIVO",
+src/App.jsx:1729:    "blueprint": "workflows/36-bot-ia-reservas-telegram-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1737:    "nombre": "🤖 Bot IA Reservas · WhatsApp · Pádel 04 · DEFINITIVO",
+src/App.jsx:1738:    "nombre_final": "🤖 Bot IA Reservas · WhatsApp · Pádel 04 · DEFINITIVO",
+src/App.jsx:1744:    "blueprint": "workflows/37-bot-ia-reservas-whatsapp-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1803:    "funcion": "Envía recordatorio automático 2 horas antes de la reserva.",
+src/App.jsx:1819:    "blueprint": "workflows/42-recordatorio-cuota-mensual-club-padel-04/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1833:    "funcion": "Flujo heredado para transición Tally hacia API de reservas.",
+src/App.jsx:1834:    "blueprint": "workflows/14-tally-api-reservas/final/Tally_API_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1849:  const cats = ["Todas", ...Array.from(new Set(DEMO_MAKE_CATEGORIAS.map(c => c.l)))];
+src/App.jsx:1855:    const blob = new Blob([JSON.stringify({ total: 43, activos: kpi.makeActivos, errores: kpi.makeErrores, pausados: kpi.makePausados, tasaExito: kpi.tasaExitoMake, flujos: WORKFLOW_ITEMS, fuente: "demo", nota: "TODO producción: alimentar desde backend/proxy seguro" }, null, 2)], { type: "application/json" });
+src/App.jsx:1863:      {/* Nota TODO producción */}
+src/App.jsx:1864:      {/* TODO producción: alimentar este dashboard desde backend/proxy seguro (Make API o webhook propio). NUNCA llamar Make API con clave privada desde el frontend. */}
+src/App.jsx:1875:        <MetricCard label={tx("flujos.total_procesos")} value="43/43" sub={tx("flujos.auditados")} icon="⚡" />
+src/App.jsx:1885:        <ChartCard title={tx("flujos.estado_procesos_label")} sub={tx("flujos.por_estado")}>
+src/App.jsx:1886:          <DonutChart size={110} label="43 procesos" segments={[
+src/App.jsx:1904:          <HorizontalBarChart data={DEMO_MAKE_CATEGORIAS.slice(0,6)} />
+src/App.jsx:1998:  // Recomendados (padel/sport/reservas context)
+src/App.jsx:2167:/* AUDITORIA 20 · AUTH REAL HELPERS
+src/App.jsx:2168:   Preparación para autenticación real sin romper modo demo/local.
+src/App.jsx:2169:   El backend/Worker debe ser la autoridad final en producción. */
+src/App.jsx:2172:  DEMO: "demo",
+src/App.jsx:2173:  LOCAL_DEMO: "universal_demo",
+src/App.jsx:2175:  PRODUCTION: "production"
+src/App.jsx:2182:  "soporte"
+src/App.jsx:2186:  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
+src/App.jsx:2187:  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+src/App.jsx:2188:  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+src/App.jsx:2189:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
+src/App.jsx:2229:    "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
+src/App.jsx:2230:    "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
+src/App.jsx:2231:    "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
+src/App.jsx:2232:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
+src/App.jsx:2233:    "nav.cerrar_sesion":"Cerrar sesión","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Cerrar","nav.abrir_menu":"Menú",
+src/App.jsx:2240:    "login.legal":"Acceso local protegido por contraseña. Puedes guardar sesión solo en este dispositivo. Para producción real, las credenciales deberán validarse desde backend/autenticación segura.",
+src/App.jsx:2242:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+src/App.jsx:2243:    "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
+src/App.jsx:2245:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+src/App.jsx:2246:    "role.STAFF.label":"Staff / recepción","role.STAFF.desc":"Gestión diaria de reservas, altas y atención al jugador.",
+src/App.jsx:2249:    "home.reservas_hoy":"Reservas hoy","home.ocupacion_media":"Ocupación media",
+src/App.jsx:2250:    "home.socios_activos":"Socios activos","home.procesos_activos":"Procesos activos",
+src/App.jsx:2251:    "home.ingresos_mes":"Ingresos mes","home.torneos_activos":"Torneos activos",
+src/App.jsx:2252:    "home.estado_operativo":"Estado operativo","home.reservar":"Reservar",
+src/App.jsx:2253:    "home.torneo":"Torneo","home.alta":"Alta","home.procesos":"Procesos",
+src/App.jsx:2254:    "home.avisos_activos":"Avisos activos","home.ver_procesos":"Ver procesos",
+src/App.jsx:2259:    "home.porcentaje_uso":"Porcentaje de uso","home.procesos_conectados":"procesos conectados",
+src/App.jsx:2261:    "home.reservas_hora":"Reservas por hora — hoy","home.reservas_7dias":"Reservas últimos 7 días",
+src/App.jsx:2262:    "home.ocupacion_pista":"Ocupación por pista","home.estado_procesos":"Estado de procesos",
+src/App.jsx:2263:    "home.club_operativo":"Club de pádel","home.hero_accent":"operativo",
+src/App.jsx:2264:    "home.hero_subtitle":"SaaS separado por roles: jugador, recepción, administración y soporte.",
+src/App.jsx:2265:    "home.btn_torneos":"Torneos","home.btn_admin":"Admin",
+src/App.jsx:2266:    "home.ir_reservas":"Ir a reservas","home.ver_gestion":"Ver gestión",
+src/App.jsx:2267:    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver soporte",
+src/App.jsx:2268:    "home.galeria":"Galería del club",
+src/App.jsx:2271:    "admin.panel":"Panel de dirección","admin.metricas":"Métricas globales del club.",
+src/App.jsx:2272:    "admin.reservas_mes":"Reservas mes","admin.ocupacion":"Ocupación media",
+src/App.jsx:2273:    "admin.socios":"Socios activos","admin.procesos":"Procesos activos",
+src/App.jsx:2275:    "admin.vs_mes_anterior":"vs mes anterior","admin.prox_lunes":"Próximo: lunes 07:00",
+src/App.jsx:2277:    "admin.graf_pista":"Ocupación por pista","admin.sub_hoy":"Franja horaria · demo",
+src/App.jsx:2278:    "admin.sub_semana":"Reservas últimos 7 días · demo","admin.sub_pista":"Porcentaje de uso · demo",
+src/App.jsx:2281:    "soporte.title":"Soporte técnico","soporte.desc":"Control técnico de la aplicación.",
+src/App.jsx:2282:    "soporte.proteccion":"Protección requerida en producción",
+src/App.jsx:2283:    "soporte.vars":"Variables privadas",
+src/App.jsx:2284:    "flujos.title":"Centro técnico","flujos.desc":"Estado de automatizaciones del sistema.",
+src/App.jsx:2285:    "torneos.title":"Torneos","torneos.bracket":"Bracket interactivo",
+src/App.jsx:2286:    "torneos.anyadir":"Añadir pareja","torneos.reordenar":"Reordenar cruces",
+src/App.jsx:2287:    "torneos.autoasignar":"Autoasignar","torneos.guardar":"Guardar cuadro",
+src/App.jsx:2288:    "torneos.publicar":"Publicar","torneos.exportar":"Exportar",
+src/App.jsx:2289:    "torneos.ver_ranking":"Ver ranking completo","torneos.personalizado":"Personalizado",
+src/App.jsx:2290:    "torneos.jugadores":"Jugadores","torneos.parejas":"Parejas","torneos.ganador":"Ganador",
+src/App.jsx:2291:    "torneos.eliminada":"Eliminada","torneos.avanza":"Avanza","torneos.bye":"BYE",
+src/App.jsx:2292:    "torneos.pase_directo":"Pase directo","torneos.campeon":"Campeón",
+src/App.jsx:2293:    "torneos.subcampeon":"Subcampeón","torneos.tercer_puesto":"Tercer puesto",
+src/App.jsx:2294:    "reservas.nueva":"Nueva reserva","reservas.fecha":"Fecha","reservas.hora":"Hora",
+src/App.jsx:2295:    "reservas.pista":"Pista","reservas.duracion":"Duración","reservas.confirmar":"Confirmar reserva",
+src/App.jsx:2296:    "reservas.resumen":"Resumen","reservas.disponible":"Disponible","reservas.no_disponible":"No disponible",
+src/App.jsx:2297:    "reprog.clave":"Clave de reserva","reprog.nueva_fecha":"Nueva fecha",
+src/App.jsx:2298:    "reprog.nueva_hora":"Nueva hora de inicio","reprog.nueva_pista":"Nueva pista",
+src/App.jsx:2299:    "reprog.resumen":"Resumen del cambio","reprog.confirmo":"Confirmo que quiero trasladar esta reserva",
+src/App.jsx:2300:    "reprog.btn":"Reprogramar reserva","reprog.volver":"Volver a Reservas",
+src/App.jsx:2302:    "ranking.title":"Ranking","ranking.subtitle":"Clasificación general de jugadores y parejas",
+src/App.jsx:2303:    "ranking.categoria":"Categoría","ranking.nivel":"Nivel","ranking.puntos":"Puntos",
+src/App.jsx:2304:    "ranking.pts":"Pts","ranking.pareja":"Pareja","ranking.jugadores":"Jugadores",
+src/App.jsx:2305:    "ranking.v":"V","ranking.d":"D","ranking.pj":"PJ","ranking.racha":"Racha",
+src/App.jsx:2306:    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Última actualización",
+src/App.jsx:2307:    "ranking.filtrar":"Buscar jugador o pareja...","ranking.general":"General",
+src/App.jsx:2308:    "ranking.masculino":"Masculino","ranking.femenino":"Femenino","ranking.mixto":"Mixto",
+src/App.jsx:2309:    "ranking.iniciacion":"Iniciación","ranking.medio":"Medio","ranking.avanzado":"Avanzado",
+src/App.jsx:2310:    "ranking.podio":"Podio — Top 3","ranking.tabla":"Clasificación completa",
+src/App.jsx:2311:    "ranking.datos_ejemplo":"Datos de ejemplo","ranking.sistema_puntos":"Sistema de puntos del club configurable.",
+src/App.jsx:2312:    "ranking.temporada":"Temporada","ranking.buscar":"Buscar...",
+src/App.jsx:2313:    "ranking.campeon":"Campeón","ranking.subcampeon":"Subcampeón","ranking.tercero":"3er puesto",
+src/App.jsx:2314:    "ranking.mejor_pareja":"Mejor pareja","ranking.pts_totales":"pts totales",
+src/App.jsx:2315:    "ranking.sin_resultados":"Sin resultados con esos filtros.",
+src/App.jsx:2316:    "ranking.estado":"Estado","ranking.activo":"Activo",
+src/App.jsx:2319:    "common.editar":"Editar","common.modo_seguro":"Modo seguro","common.entorno":"Entorno protegido",
+src/App.jsx:2321:    "alta.title":"Alta de jugador","alta.eyebrow":"Jugadores","alta.desc":"Añade un jugador al club.",
+src/App.jsx:2327:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicita la cancelación de una reserva.",
+src/App.jsx:2328:    "cancelar.clave":"Clave de reserva","cancelar.clave_ph":"Introduce tu clave de reserva",
+src/App.jsx:2329:    "cancelar.confirmo_check":"Confirmo que quiero solicitar la cancelación de esta reserva.",
+src/App.jsx:2330:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Volver a Reservas",
+src/App.jsx:2332:    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
+src/App.jsx:2333:    "reservas.datos_jugador":"Datos del jugador","reservas.fecha_pista":"Fecha, hora y pista",
+src/App.jsx:2334:    "reservas.hora_fin":"Hora fin","reservas.total":"Total","reservas.ver_resumen":"Ver resumen",
+src/App.jsx:2335:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
+src/App.jsx:2336:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nueva reserva",
+src/App.jsx:2337:    "reservas.nombre":"Nombre","reservas.apellidos":"Apellidos","reservas.modalidad":"Modalidad",
+src/App.jsx:2338:    "reservas.nivel_form":"Nivel","reservas.comentarios":"Comentarios","reservas.minutos":"minutos",
+src/App.jsx:2339:    "reservas.confirmacion_desc":"La confirmación real dependerá del backend y de las integraciones configuradas.",
+src/App.jsx:2340:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
+src/App.jsx:2341:    "reprog.hora_fin":"Hora fin","reprog.que_ocurre":"Qué ocurre después","reprog.enviando":"Enviando...","reprog.editar":"Editar",
+src/App.jsx:2342:    "soporte.eyebrow":"Soporte",
+src/App.jsx:2345:    "status.reserva.pendiente":"Pendiente","status.reserva.pendiente_txt":"Revisa los datos antes de confirmar.",
+src/App.jsx:2346:    "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
+src/App.jsx:2347:    "status.reserva.exito":"Éxito","status.reserva.exito_txt":"Reserva enviada correctamente. La disponibilidad se está actualizando.",
+src/App.jsx:2348:    "status.reserva.error":"Error","status.reserva.error_txt":"No se pudo completar la reserva. Revisa los datos e inténtalo de nuevo.",
+src/App.jsx:2349:    "status.cancelar.idle":"Pendiente","status.cancelar.idle_txt":"Confirma la cancelación de tu reserva.",
+src/App.jsx:2350:    "status.cancelar.enviando":"Enviando","status.cancelar.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
+src/App.jsx:2353:    "status.reprog.idle":"Pendiente","status.reprog.idle_txt":"Elige una nueva fecha u horario.",
+src/App.jsx:2354:    "status.reprog.enviando":"Reprogramando","status.reprog.enviando_txt":"Estamos comprobando la disponibilidad y actualizando tu reserva.",
+src/App.jsx:2355:    "status.reprog.exito":"Reserva reprogramada","status.reprog.exito_txt":"La reserva se ha actualizado correctamente.",
+src/App.jsx:2356:    "status.reprog.error":"No se pudo reprogramar","status.reprog.error_txt":"Revisa los datos y vuelve a intentarlo.",
+src/App.jsx:2360:    "errors.fecha_domingo":"El club está cerrado los domingos.",
+src/App.jsx:2363:    "errors.hora_cierre":"La reserva terminaría después del cierre del club.",
+src/App.jsx:2366:    "errors.clave":"Introduce la clave de reserva.","errors.clave_incompleta":"La clave de reserva parece incompleta.",
+src/App.jsx:2368:    "errors.confirmado_reprog":"Confirma que quieres reprogramar la reserva.",
+src/App.jsx:2372:    "errors.reserva_error":"No se pudo completar la reserva. Inténtalo de nuevo en unos segundos.",
+src/App.jsx:2374:    "errors.reprog_campos":"Completa correctamente todos los campos obligatorios.",
+src/App.jsx:2375:    "errors.reprog_ocupado":"Ese horario acaba de ocuparse. Selecciona otra franja libre.",
+src/App.jsx:2376:    "errors.reprog_error":"No se pudo completar la reprogramación. Comprueba la clave y vuelve a intentarlo.",
+src/App.jsx:2378:    "home.galeria_eyebrow":"Galería","home.galeria_desc":"Galería visual del club.","home.sistema":"Sistema",
+src/App.jsx:2382:    "reprog.info1":"La clave identifica la reserva que quieres cambiar.",
+src/App.jsx:2383:    "reprog.info2":"Se mantiene la misma clave después de reprogramar.",
+src/App.jsx:2384:    "reprog.info3":"Recibirás la confirmación por correo una vez procesado el cambio.",
+src/App.jsx:2385:    "reprog.info4":"Las notificaciones se activarán en una fase posterior.",
+src/App.jsx:2386:    "reprog.nueva_disponibilidad":"Nueva disponibilidad","reprog.selecciona_franja":"Selecciona una nueva franja disponible.",
+src/App.jsx:2387:    "flujos.exportar_json":"⬇ Exportar JSON","flujos.total_procesos":"Total procesos","flujos.auditados":"Auditados",
+src/App.jsx:2392:    "flujos.estado_procesos_label":"Estado de procesos","flujos.por_estado":"Por estado de conexión",
+src/App.jsx:2395:    "flujos.por_categoria":"Procesos por categoría","flujos.distribucion":"Distribución de los 43 procesos",
+src/App.jsx:2397:    "flujos.sin_errores":"✅ Sin errores registrados","flujos.criticos":"Estado de procesos críticos",
+src/App.jsx:2401:    "flujos.nota_integracion":"Integración técnica conectada. Los datos en tiempo real requieren conexión al backend del club.",
+src/App.jsx:2405:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Reglas de disponibilidad",
+src/App.jsx:2406:    "admin.crec_eyebrow":"Crecimiento","admin.crec_title":"Torneos y procesos",
+src/App.jsx:2407:    "admin.crec_desc":"Zona preparada para activar procesos cuando exista backend.",
+src/App.jsx:2410:    "admin.backup_eyebrow":"Sistema activo","admin.backup_desc":"Copia automática de reservas y socios activos.",
+src/App.jsx:2415:    "auth.pending_desc":"Sistema de acceso configurado por roles. En producción debe protegerse por autenticación y backend de usuarios.",
+src/App.jsx:2417:    "soporte.proteccion_h3":"Protección requerida en producción",
+src/App.jsx:2418:    "soporte.estado_tec_eyebrow":"Estado de integraciones","soporte.estado_tec_title":"Estado técnico",
+src/App.jsx:2419:    "soporte.estado_tec_desc":"Checklist de conexión backend.",
+src/App.jsx:2420:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx:2421:    "soporte.make_item":"Automatizaciones pendientes de secreto privado",
+src/App.jsx:2422:    "soporte.airtable_item":"Base de datos preparada sin escritura activa",
+src/App.jsx:2423:    "soporte.stripe_item":"Pagos y mensajería pendientes de configuración",
+src/App.jsx:2424:    "soporte.obs_eyebrow":"Observabilidad","soporte.obs_title":"Logs y errores",
+src/App.jsx:2425:    "soporte.obs_desc":"Zona reservada para diagnóstico cuando exista backend real.",
+src/App.jsx:2426:    "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
+src/App.jsx:2427:    "soporte.logs_errores":"Errores de integraciones","soporte.logs_alertas":"Alertas técnicas futuras",
+src/App.jsx:2428:    "soporte.vars_h3":"Variables privadas",
+src/App.jsx:2431:    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+src/App.jsx:2432:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+src/App.jsx:2433:    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+src/App.jsx:2434:    "nav.admin":"Admin","nav.flujos_make":"Tech centre","nav.soporte":"Support",
+src/App.jsx:2435:    "nav.cerrar_sesion":"Sign out","nav.saas_label":"Secure SaaS","nav.cerrar_menu":"Close","nav.abrir_menu":"Menu",
+src/App.jsx:2442:    "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
+src/App.jsx:2444:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+src/App.jsx:2447:    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, check bookings and ranking.",
+src/App.jsx:2451:    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+src/App.jsx:2452:    "home.socios_activos":"Active members","home.procesos_activos":"Active processes",
+src/App.jsx:2453:    "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
+src/App.jsx:2454:    "home.estado_operativo":"Operational status","home.reservar":"Book",
+src/App.jsx:2455:    "home.torneo":"Tournament","home.alta":"Sign up","home.procesos":"Processes",
+src/App.jsx:2456:    "home.avisos_activos":"Active alerts","home.ver_procesos":"View processes",
+src/App.jsx:2458:    "home.estimacion_mensual":"Monthly estimate","home.en_curso":"In progress",
+src/App.jsx:2461:    "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
+src/App.jsx:2463:    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+src/App.jsx:2464:    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+src/App.jsx:2465:    "home.club_operativo":"Padel club","home.hero_accent":"operational",
+src/App.jsx:2466:    "home.hero_subtitle":"SaaS by roles: player, reception, administration and support.",
+src/App.jsx:2467:    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+src/App.jsx:2468:    "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
+src/App.jsx:2469:    "home.ver_admin":"View admin","home.ver_soporte":"View support",
+src/App.jsx:2474:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+src/App.jsx:2475:    "admin.socios":"Active members","admin.procesos":"Active processes",
+src/App.jsx:2477:    "admin.vs_mes_anterior":"vs previous month","admin.prox_lunes":"Next: Monday 07:00",
+src/App.jsx:2479:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+src/App.jsx:2480:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+src/App.jsx:2483:    "soporte.title":"Technical support","soporte.desc":"Application technical control.",
+src/App.jsx:2484:    "soporte.proteccion":"Production protection required",
+src/App.jsx:2485:    "soporte.vars":"Private variables",
+src/App.jsx:2487:    "torneos.title":"Tournaments","torneos.bracket":"Interactive bracket",
+src/App.jsx:2488:    "torneos.anyadir":"Add pair","torneos.reordenar":"Reorder matches",
+src/App.jsx:2489:    "torneos.autoasignar":"Auto-assign","torneos.guardar":"Save bracket",
+src/App.jsx:2490:    "torneos.publicar":"Publish","torneos.exportar":"Export",
+src/App.jsx:2491:    "torneos.ver_ranking":"View full ranking","torneos.personalizado":"Custom",
+src/App.jsx:2492:    "torneos.jugadores":"Players","torneos.parejas":"Pairs","torneos.ganador":"Winner",
+src/App.jsx:2493:    "torneos.eliminada":"Eliminated","torneos.avanza":"Advances","torneos.bye":"BYE",
+src/App.jsx:2494:    "torneos.pase_directo":"Direct pass","torneos.campeon":"Champion",
+src/App.jsx:2495:    "torneos.subcampeon":"Runner-up","torneos.tercer_puesto":"Third place",
+src/App.jsx:2496:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+src/App.jsx:2497:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+src/App.jsx:2498:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+src/App.jsx:2499:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+src/App.jsx:2500:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+src/App.jsx:2501:    "reprog.resumen":"Change summary","reprog.confirmo":"I confirm I want to reschedule this booking",
+src/App.jsx:2502:    "reprog.btn":"Reschedule booking","reprog.volver":"Back to bookings",
+src/App.jsx:2504:    "ranking.title":"Ranking","ranking.subtitle":"General ranking of players and pairs",
+src/App.jsx:2505:    "ranking.categoria":"Category","ranking.nivel":"Level","ranking.puntos":"Points",
+src/App.jsx:2506:    "ranking.pts":"Pts","ranking.pareja":"Pair","ranking.jugadores":"Players",
+src/App.jsx:2507:    "ranking.v":"W","ranking.d":"L","ranking.pj":"P","ranking.racha":"Streak",
+src/App.jsx:2508:    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Last updated",
+src/App.jsx:2509:    "ranking.filtrar":"Search player or pair...","ranking.general":"General",
+src/App.jsx:2510:    "ranking.masculino":"Men's","ranking.femenino":"Women's","ranking.mixto":"Mixed",
+src/App.jsx:2511:    "ranking.iniciacion":"Beginner","ranking.medio":"Intermediate","ranking.avanzado":"Advanced",
+src/App.jsx:2512:    "ranking.podio":"Podium — Top 3","ranking.tabla":"Full ranking",
+src/App.jsx:2513:    "ranking.datos_ejemplo":"Sample data","ranking.sistema_puntos":"Club configurable points system.",
+src/App.jsx:2514:    "ranking.temporada":"Season","ranking.buscar":"Search...",
+src/App.jsx:2515:    "ranking.campeon":"Champion","ranking.subcampeon":"Runner-up","ranking.tercero":"3rd place",
+src/App.jsx:2516:    "ranking.mejor_pareja":"Best pair","ranking.pts_totales":"total pts",
+src/App.jsx:2517:    "ranking.sin_resultados":"No results with those filters.",
+src/App.jsx:2518:    "ranking.estado":"Status","ranking.activo":"Active",
+src/App.jsx:2523:    "alta.title":"Player registration","alta.eyebrow":"Players","alta.desc":"Add a player to the club.",
+src/App.jsx:2532:    "cancelar.btn":"Cancel booking","cancelar.enviando":"Sending...","cancelar.volver_reservas":"Back to bookings",
+src/App.jsx:2534:    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
+src/App.jsx:2535:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+src/App.jsx:2536:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+src/App.jsx:2537:    "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
+src/App.jsx:2538:    "reservas.registrada":"Booking registered","reservas.nueva_btn":"New booking",
+src/App.jsx:2539:    "reservas.nombre":"First name","reservas.apellidos":"Surname","reservas.modalidad":"Mode",
+src/App.jsx:2540:    "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
+src/App.jsx:2541:    "reservas.confirmacion_desc":"Real confirmation depends on the backend and configured integrations.",
+src/App.jsx:2542:    "reprog.title":"Reschedule booking","reprog.eyebrow":"Bookings","reprog.desc":"Change the date or time of your booking.",
+src/App.jsx:2543:    "reprog.hora_fin":"End time","reprog.que_ocurre":"What happens next","reprog.enviando":"Sending...","reprog.editar":"Edit",
+src/App.jsx:2544:    "soporte.eyebrow":"Support",
+src/App.jsx:2547:    "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
+src/App.jsx:2548:    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
+src/App.jsx:2549:    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+src/App.jsx:2550:    "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
+src/App.jsx:2555:    "status.reprog.idle":"Pending","status.reprog.idle_txt":"Choose a new date or time.",
+src/App.jsx:2556:    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
+src/App.jsx:2557:    "status.reprog.exito":"Booking rescheduled","status.reprog.exito_txt":"Your booking has been updated successfully.",
+src/App.jsx:2558:    "status.reprog.error":"Could not reschedule","status.reprog.error_txt":"Check your details and try again.",
+src/App.jsx:2562:    "errors.fecha_domingo":"The club is closed on Sundays.",
+src/App.jsx:2565:    "errors.hora_cierre":"The booking would end after club closing time.",
+src/App.jsx:2570:    "errors.confirmado_reprog":"Please confirm you want to reschedule the booking.",
+src/App.jsx:2574:    "errors.reserva_error":"Could not complete the booking. Please try again in a few seconds.",
+src/App.jsx:2576:    "errors.reprog_campos":"Please fill in all required fields correctly.",
+src/App.jsx:2577:    "errors.reprog_ocupado":"That slot has just been taken. Please select another.",
+src/App.jsx:2578:    "errors.reprog_error":"Could not complete the reschedule. Check the key and try again.",
+src/App.jsx:2580:    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
+src/App.jsx:2581:    "cancelar.info1":"We will process your request securely.",
+src/App.jsx:2584:    "reprog.info1":"The key identifies the booking you want to change.",
+src/App.jsx:2585:    "reprog.info2":"The same key is kept after rescheduling.",
+src/App.jsx:2586:    "reprog.info3":"You will receive confirmation by email once the change is processed.",
+src/App.jsx:2587:    "reprog.info4":"Notifications will be activated in a later phase.",
+src/App.jsx:2588:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+src/App.jsx:2589:    "flujos.exportar_json":"⬇ Export JSON","flujos.total_procesos":"Total processes","flujos.auditados":"Audited",
+src/App.jsx:2594:    "flujos.estado_procesos_label":"Process status","flujos.por_estado":"By connection status",
+src/App.jsx:2597:    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 43 processes",
+src/App.jsx:2598:    "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
+src/App.jsx:2599:    "flujos.sin_errores":"✅ No errors recorded","flujos.criticos":"Critical process status",
+src/App.jsx:2600:    "flujos.estado_op":"Operational status","flujos.todos_flujos":"All processes",
+src/App.jsx:2603:    "flujos.nota_integracion":"Technical integration connected. Real-time data requires connection to the club backend.",
+src/App.jsx:2606:    "admin.gestion_item1":"Court management","admin.gestion_item2":"Clients and profiles",
+src/App.jsx:2608:    "admin.crec_eyebrow":"Growth","admin.crec_title":"Tournaments and processes",
+src/App.jsx:2609:    "admin.crec_desc":"Area ready to activate processes when backend is available.",
+src/App.jsx:2617:    "auth.pending_desc":"Role-based access system. In production it must be protected by an authentication provider and user backend.",
+src/App.jsx:2619:    "soporte.proteccion_h3":"Production protection required",
+src/App.jsx:2620:    "soporte.estado_tec_eyebrow":"Integration status","soporte.estado_tec_title":"Technical status",
+src/App.jsx:2621:    "soporte.estado_tec_desc":"Backend connection checklist.",
+src/App.jsx:2622:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx:2623:    "soporte.make_item":"Automations pending private secret",
+src/App.jsx:2624:    "soporte.airtable_item":"Database ready without active writes",
+src/App.jsx:2625:    "soporte.stripe_item":"Payments and messaging pending configuration",
+src/App.jsx:2626:    "soporte.obs_eyebrow":"Observability","soporte.obs_title":"Logs and errors",
+src/App.jsx:2627:    "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
+src/App.jsx:2628:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx:2629:    "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
+src/App.jsx:2630:    "soporte.vars_h3":"Private variables",
+src/App.jsx:2633:    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+src/App.jsx:2634:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+src/App.jsx:2635:    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+src/App.jsx:2636:    "nav.admin":"Admin","nav.flujos_make":"Tech center","nav.soporte":"Support",
+src/App.jsx:2637:    "nav.cerrar_sesion":"Sign out","nav.saas_label":"Secure SaaS","nav.cerrar_menu":"Close","nav.abrir_menu":"Menu",
+src/App.jsx:2644:    "login.legal":"Local access protected by password. Session can be saved on this device only.",
+src/App.jsx:2646:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+src/App.jsx:2649:    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, view bookings and ranking.",
+src/App.jsx:2653:    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+src/App.jsx:2654:    "home.socios_activos":"Active members","home.procesos_activos":"Active processes",
+src/App.jsx:2655:    "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
+src/App.jsx:2656:    "home.estado_operativo":"System status","home.reservar":"Book",
+src/App.jsx:2657:    "home.torneo":"Tournament","home.alta":"Register","home.procesos":"Processes",
+src/App.jsx:2658:    "home.avisos_activos":"Active alerts","home.ver_procesos":"View processes",
+src/App.jsx:2660:    "home.estimacion_mensual":"Monthly estimate","home.en_curso":"In progress",
+src/App.jsx:2663:    "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
+src/App.jsx:2665:    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+src/App.jsx:2666:    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+src/App.jsx:2667:    "home.club_operativo":"Padel club","home.hero_accent":"operational",
+src/App.jsx:2668:    "home.hero_subtitle":"SaaS by roles: player, front desk, administration and support.",
+src/App.jsx:2669:    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+src/App.jsx:2670:    "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
+src/App.jsx:2671:    "home.ver_admin":"View admin","home.ver_soporte":"View support",
+src/App.jsx:2676:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+src/App.jsx:2677:    "admin.socios":"Active members","admin.procesos":"Active processes",
+src/App.jsx:2679:    "admin.vs_mes_anterior":"vs previous month","admin.prox_lunes":"Next: Monday 07:00",
+src/App.jsx:2681:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+src/App.jsx:2682:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+src/App.jsx:2685:    "soporte.title":"Technical support","soporte.desc":"Application technical control.",
+src/App.jsx:2686:    "soporte.proteccion":"Production protection required",
+src/App.jsx:2687:    "soporte.vars":"Private variables",
+src/App.jsx:2689:    "torneos.title":"Tournaments","torneos.bracket":"Interactive bracket",
+src/App.jsx:2690:    "torneos.anyadir":"Add pair","torneos.reordenar":"Reorder matches",
+src/App.jsx:2691:    "torneos.autoasignar":"Auto-assign","torneos.guardar":"Save bracket",
+src/App.jsx:2692:    "torneos.publicar":"Publish","torneos.exportar":"Export",
+src/App.jsx:2693:    "torneos.ver_ranking":"View full ranking","torneos.personalizado":"Custom",
+src/App.jsx:2694:    "torneos.jugadores":"Players","torneos.parejas":"Pairs","torneos.ganador":"Winner",
+src/App.jsx:2695:    "torneos.eliminada":"Eliminated","torneos.avanza":"Advances","torneos.bye":"BYE",
+src/App.jsx:2696:    "torneos.pase_directo":"Direct pass","torneos.campeon":"Champion",
+src/App.jsx:2697:    "torneos.subcampeon":"Runner-up","torneos.tercer_puesto":"Third place",
+src/App.jsx:2698:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+src/App.jsx:2699:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+src/App.jsx:2700:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+src/App.jsx:2701:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+src/App.jsx:2702:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+src/App.jsx:2703:    "reprog.resumen":"Change summary","reprog.confirmo":"I confirm I want to reschedule this booking",
+src/App.jsx:2704:    "reprog.btn":"Reschedule booking","reprog.volver":"Back to bookings",
+src/App.jsx:2706:    "ranking.title":"Ranking","ranking.subtitle":"General ranking of players and pairs",
+src/App.jsx:2707:    "ranking.categoria":"Category","ranking.nivel":"Level","ranking.puntos":"Points",
+src/App.jsx:2708:    "ranking.pts":"Pts","ranking.pareja":"Pair","ranking.jugadores":"Players",
+src/App.jsx:2709:    "ranking.v":"W","ranking.d":"L","ranking.pj":"P","ranking.racha":"Streak",
+src/App.jsx:2710:    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Last updated",
+src/App.jsx:2711:    "ranking.filtrar":"Search player or pair...","ranking.general":"General",
+src/App.jsx:2712:    "ranking.masculino":"Men's","ranking.femenino":"Women's","ranking.mixto":"Mixed",
+src/App.jsx:2713:    "ranking.iniciacion":"Beginner","ranking.medio":"Intermediate","ranking.avanzado":"Advanced",
+src/App.jsx:2714:    "ranking.podio":"Podium — Top 3","ranking.tabla":"Full ranking",
+src/App.jsx:2715:    "ranking.datos_ejemplo":"Sample data","ranking.sistema_puntos":"Club configurable points system.",
+src/App.jsx:2716:    "ranking.temporada":"Season","ranking.buscar":"Search...",
+src/App.jsx:2717:    "ranking.campeon":"Champion","ranking.subcampeon":"Runner-up","ranking.tercero":"3rd place",
+src/App.jsx:2718:    "ranking.mejor_pareja":"Best pair","ranking.pts_totales":"total pts",
+src/App.jsx:2719:    "ranking.sin_resultados":"No results with those filters.",
+src/App.jsx:2720:    "ranking.estado":"Status","ranking.activo":"Active",
+src/App.jsx:2725:    "alta.title":"Player registration","alta.eyebrow":"Players","alta.desc":"Add a player to the club.",
+src/App.jsx:2734:    "cancelar.btn":"Cancel booking","cancelar.enviando":"Sending...","cancelar.volver_reservas":"Back to bookings",
+src/App.jsx:2736:    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
+src/App.jsx:2737:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+src/App.jsx:2738:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+src/App.jsx:2739:    "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
+src/App.jsx:2740:    "reservas.registrada":"Booking confirmed","reservas.nueva_btn":"New booking",
+src/App.jsx:2741:    "reservas.nombre":"First name","reservas.apellidos":"Last name","reservas.modalidad":"Mode",
+src/App.jsx:2742:    "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
+src/App.jsx:2743:    "reservas.confirmacion_desc":"Confirmation depends on the backend and configured integrations.",
+src/App.jsx:2744:    "reprog.title":"Reschedule booking","reprog.eyebrow":"Bookings","reprog.desc":"Change the date or time of your booking.",
+src/App.jsx:2745:    "reprog.hora_fin":"End time","reprog.que_ocurre":"What happens next","reprog.enviando":"Sending...","reprog.editar":"Edit",
+src/App.jsx:2746:    "soporte.eyebrow":"Support",
+src/App.jsx:2749:    "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
+src/App.jsx:2750:    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
+src/App.jsx:2751:    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+src/App.jsx:2752:    "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
+src/App.jsx:2757:    "status.reprog.idle":"Pending","status.reprog.idle_txt":"Choose a new date or time.",
+src/App.jsx:2758:    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
+src/App.jsx:2759:    "status.reprog.exito":"Booking rescheduled","status.reprog.exito_txt":"Your booking has been updated successfully.",
+src/App.jsx:2760:    "status.reprog.error":"Could not reschedule","status.reprog.error_txt":"Check your details and try again.",
+src/App.jsx:2764:    "errors.fecha_domingo":"The club is closed on Sundays.",
+src/App.jsx:2767:    "errors.hora_cierre":"The booking would end after club closing time.",
+src/App.jsx:2772:    "errors.confirmado_reprog":"Please confirm you want to reschedule the booking.",
+src/App.jsx:2776:    "errors.reserva_error":"Could not complete the booking. Please try again in a few seconds.",
+src/App.jsx:2778:    "errors.reprog_campos":"Please fill in all required fields correctly.",
+src/App.jsx:2779:    "errors.reprog_ocupado":"That slot has just been taken. Please select another.",
+src/App.jsx:2780:    "errors.reprog_error":"Could not complete the reschedule. Check the key and try again.",
+src/App.jsx:2782:    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
+src/App.jsx:2783:    "cancelar.info1":"We will process your request securely.",
+src/App.jsx:2786:    "reprog.info1":"The key identifies the booking you want to change.",
+src/App.jsx:2787:    "reprog.info2":"The same key is kept after rescheduling.",
+src/App.jsx:2788:    "reprog.info3":"You will receive confirmation by email once the change is processed.",
+src/App.jsx:2789:    "reprog.info4":"Notifications will be activated in a later phase.",
+src/App.jsx:2790:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+src/App.jsx:2791:    "flujos.exportar_json":"⬇ Export JSON","flujos.total_procesos":"Total processes","flujos.auditados":"Audited",
+src/App.jsx:2796:    "flujos.estado_procesos_label":"Process status","flujos.por_estado":"By connection status",
+src/App.jsx:2799:    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 43 processes",
+src/App.jsx:2800:    "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
+src/App.jsx:2801:    "flujos.sin_errores":"✅ No errors recorded","flujos.criticos":"Critical process status",
+src/App.jsx:2802:    "flujos.estado_op":"Operational status","flujos.todos_flujos":"All processes",
+src/App.jsx:2805:    "flujos.nota_integracion":"Technical integration connected. Real-time data requires connection to the club backend.",
+src/App.jsx:2808:    "admin.gestion_item1":"Court management","admin.gestion_item2":"Clients and profiles",
+src/App.jsx:2810:    "admin.crec_eyebrow":"Growth","admin.crec_title":"Tournaments and processes",
+src/App.jsx:2811:    "admin.crec_desc":"Area ready to activate processes when backend is available.",
+src/App.jsx:2819:    "auth.pending_desc":"Role-based access system. In production it must be protected by an authentication provider and user backend.",
+src/App.jsx:2821:    "soporte.proteccion_h3":"Production protection required",
+src/App.jsx:2822:    "soporte.estado_tec_eyebrow":"Integration status","soporte.estado_tec_title":"Technical status",
+src/App.jsx:2823:    "soporte.estado_tec_desc":"Backend connection checklist.",
+src/App.jsx:2824:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx:2825:    "soporte.make_item":"Automations pending private secret",
+src/App.jsx:2826:    "soporte.airtable_item":"Database ready without active writes",
+src/App.jsx:2827:    "soporte.stripe_item":"Payments and messaging pending configuration",
+src/App.jsx:2828:    "soporte.obs_eyebrow":"Observability","soporte.obs_title":"Logs and errors",
+src/App.jsx:2829:    "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
+src/App.jsx:2830:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx:2831:    "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
+src/App.jsx:2832:    "soporte.vars_h3":"Private variables",
+src/App.jsx:2835:    "nav.inicio":"Accueil","nav.reservar":"Réserver","nav.alta_jugador":"Inscription joueur",
+src/App.jsx:2836:    "nav.reprogramar":"Reporter","nav.cancelar":"Annuler réservation",
+src/App.jsx:2837:    "nav.gestion":"Réservations","nav.torneos":"Tournois","nav.ranking":"Classement",
+src/App.jsx:2838:    "nav.admin":"Admin","nav.flujos_make":"Centre technique","nav.soporte":"Support",
+src/App.jsx:2839:    "nav.cerrar_sesion":"Déconnexion","nav.saas_label":"SaaS sécurisé","nav.cerrar_menu":"Fermer","nav.abrir_menu":"Menu",
+src/App.jsx:2846:    "login.legal":"Accès local protégé par mot de passe. Session sauvegardable sur cet appareil uniquement.",
+src/App.jsx:2847:    "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password",
+src/App.jsx:2848:    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
+src/App.jsx:2855:    "home.reservas_hoy":"Réservations auj.","home.ocupacion_media":"Occupation moy.",
+src/App.jsx:2856:    "home.socios_activos":"Membres actifs","home.procesos_activos":"Processus actifs",
+src/App.jsx:2857:    "home.ingresos_mes":"Revenus du mois","home.torneos_activos":"Tournois actifs",
+src/App.jsx:2858:    "home.estado_operativo":"État opérationnel","home.reservar":"Réserver",
+src/App.jsx:2859:    "home.torneo":"Tournoi","home.alta":"Inscription","home.procesos":"Processus",
+src/App.jsx:2860:    "home.avisos_activos":"Alertes actives","home.ver_procesos":"Voir processus",
+src/App.jsx:2865:    "home.porcentaje_uso":"% d'utilisation","home.procesos_conectados":"processus connectés",
+src/App.jsx:2867:    "home.reservas_hora":"Réservations par heure — auj.","home.reservas_7dias":"Réservations 7 derniers jours",
+src/App.jsx:2868:    "home.ocupacion_pista":"Occupation par court","home.estado_procesos":"État des processus",
+src/App.jsx:2869:    "home.club_operativo":"Club de padel","home.hero_accent":"opérationnel",
+src/App.jsx:2870:    "home.hero_subtitle":"SaaS par rôles: joueur, accueil, administration et support.",
+src/App.jsx:2871:    "home.btn_torneos":"Tournois","home.btn_admin":"Admin",
+src/App.jsx:2872:    "home.ir_reservas":"Aller aux réservations","home.ver_gestion":"Gérer réservations",
+src/App.jsx:2873:    "home.ver_admin":"Voir admin","home.ver_soporte":"Voir support",
+src/App.jsx:2874:    "home.galeria":"Galerie du club",
+src/App.jsx:2876:    "admin.panel":"Tableau de bord","admin.metricas":"Métriques globales du club.",
+src/App.jsx:2877:    "admin.reservas_mes":"Réservations du mois","admin.ocupacion":"Occupation moy.",
+src/App.jsx:2878:    "admin.socios":"Membres actifs","admin.procesos":"Processus actifs",
+src/App.jsx:2880:    "admin.vs_mes_anterior":"vs mois précédent","admin.prox_lunes":"Prochain: lundi 07:00",
+src/App.jsx:2886:    "soporte.title":"Support technique","soporte.desc":"Contrôle technique de l'application.",
+src/App.jsx:2887:    "soporte.proteccion":"Protection requise en production","soporte.vars":"Variables privées",
+src/App.jsx:2889:    "torneos.title":"Tournois","torneos.bracket":"Tableau interactif",
+src/App.jsx:2890:    "torneos.anyadir":"Ajouter paire","torneos.guardar":"Sauvegarder","torneos.publicar":"Publier",
+src/App.jsx:2891:    "torneos.exportar":"Exporter","torneos.campeon":"Champion","torneos.subcampeon":"Finaliste",
+src/App.jsx:2892:    "torneos.tercer_puesto":"3e place","torneos.jugadores":"Joueurs","torneos.parejas":"Paires",
+src/App.jsx:2893:    "torneos.ganador":"Vainqueur","torneos.eliminada":"Éliminé","torneos.avanza":"Avance",
+src/App.jsx:2894:    "torneos.bye":"BYE","torneos.pase_directo":"Passage direct","torneos.personalizado":"Personnalisé",
+src/App.jsx:2895:    "torneos.ver_ranking":"Voir classement complet","torneos.autoasignar":"Auto-assigner","torneos.reordenar":"Réordonner",
+src/App.jsx:2896:    "reservas.nueva":"Nouvelle réservation","reservas.fecha":"Date","reservas.hora":"Heure",
+src/App.jsx:2897:    "reservas.pista":"Court","reservas.duracion":"Durée","reservas.confirmar":"Confirmer réservation",
+src/App.jsx:2898:    "reservas.resumen":"Résumé","reservas.disponible":"Disponible","reservas.no_disponible":"Indisponible",
+src/App.jsx:2899:    "reprog.clave":"Clé de réservation","reprog.nueva_fecha":"Nouvelle date",
+src/App.jsx:2900:    "reprog.nueva_hora":"Nouvelle heure de début","reprog.nueva_pista":"Nouveau court",
+src/App.jsx:2901:    "reprog.resumen":"Résumé du changement","reprog.confirmo":"Je confirme le report de cette réservation",
+src/App.jsx:2902:    "reprog.btn":"Reporter la réservation","reprog.volver":"Retour aux réservations",
+src/App.jsx:2904:    "ranking.title":"Classement","ranking.subtitle":"Classement général des joueurs et paires",
+src/App.jsx:2905:    "ranking.categoria":"Catégorie","ranking.nivel":"Niveau","ranking.puntos":"Points",
+src/App.jsx:2906:    "ranking.pts":"Pts","ranking.pareja":"Paire","ranking.jugadores":"Joueurs",
+src/App.jsx:2907:    "ranking.v":"V","ranking.d":"D","ranking.pj":"M","ranking.racha":"Série",
+src/App.jsx:2908:    "ranking.mov":"Mouv.","ranking.pos":"#","ranking.ultima_act":"Dernière mise à jour",
+src/App.jsx:2909:    "ranking.filtrar":"Rechercher joueur ou paire...","ranking.general":"Général",
+src/App.jsx:2910:    "ranking.masculino":"Masculin","ranking.femenino":"Féminin","ranking.mixto":"Mixte",
+src/App.jsx:2911:    "ranking.iniciacion":"Débutant","ranking.medio":"Intermédiaire","ranking.avanzado":"Avancé",
+src/App.jsx:2912:    "ranking.podio":"Podium — Top 3","ranking.tabla":"Classement complet",
+src/App.jsx:2913:    "ranking.datos_ejemplo":"Données d'exemple","ranking.sistema_puntos":"Système de points du club configurable.",
+src/App.jsx:2914:    "ranking.temporada":"Saison","ranking.buscar":"Rechercher...",
+src/App.jsx:2915:    "ranking.campeon":"Champion","ranking.subcampeon":"Finaliste","ranking.tercero":"3e place",
+src/App.jsx:2916:    "ranking.mejor_pareja":"Meilleure paire","ranking.pts_totales":"pts totaux",
+src/App.jsx:2917:    "ranking.sin_resultados":"Aucun résultat avec ces filtres.",
+src/App.jsx:2918:    "ranking.estado":"Statut","ranking.activo":"Actif",
+src/App.jsx:2921:    "common.editar":"Modifier","common.modo_seguro":"Mode sécurisé","common.entorno":"Environnement protégé",
+src/App.jsx:2923:    "alta.title":"Inscription joueur","alta.eyebrow":"Joueurs","alta.desc":"Ajouter un joueur au club.",
+src/App.jsx:2932:    "cancelar.btn":"Annuler la réservation","cancelar.enviando":"Envoi en cours...","cancelar.volver_reservas":"Retour aux réservations",
+src/App.jsx:2934:    "reservas.title":"Réserver un terrain","reservas.eyebrow":"Réservations","reservas.desc":"Réservez votre terrain en quelques secondes.",
+src/App.jsx:2935:    "reservas.datos_jugador":"Données du joueur","reservas.fecha_pista":"Date, heure et terrain",
+src/App.jsx:2936:    "reservas.hora_fin":"Heure de fin","reservas.total":"Total","reservas.ver_resumen":"Voir le résumé",
+src/App.jsx:2937:    "reservas.editar":"Modifier","reservas.confirmar_btn":"Confirmer","reservas.enviando":"Envoi...",
+src/App.jsx:2938:    "reservas.registrada":"Réservation enregistrée","reservas.nueva_btn":"Nouvelle réservation",
+src/App.jsx:2939:    "reservas.nombre":"Prénom","reservas.apellidos":"Nom","reservas.modalidad":"Mode",
+src/App.jsx:2940:    "reservas.nivel_form":"Niveau","reservas.comentarios":"Commentaires","reservas.minutos":"minutes",
+src/App.jsx:2941:    "reservas.confirmacion_desc":"La confirmation dépend du backend et des intégrations configurées.",
+src/App.jsx:2942:    "reprog.title":"Reprogrammer la réservation","reprog.eyebrow":"Réservations","reprog.desc":"Changer la date ou l'heure de votre réservation.",
+src/App.jsx:2943:    "reprog.hora_fin":"Heure de fin","reprog.que_ocurre":"Que se passe-t-il ensuite","reprog.enviando":"Envoi...","reprog.editar":"Modifier",
+src/App.jsx:2944:    "soporte.eyebrow":"Support",
+src/App.jsx:2947:    "status.reserva.pendiente":"En attente","status.reserva.pendiente_txt":"Vérifiez vos données avant de confirmer.",
+src/App.jsx:2948:    "status.reserva.enviando":"Envoi","status.reserva.enviando_txt":"Nous envoyons votre demande de réservation.",
+src/App.jsx:2949:    "status.reserva.exito":"Succès","status.reserva.exito_txt":"Réservation envoyée avec succès. La disponibilité est mise à jour.",
+src/App.jsx:2950:    "status.reserva.error":"Erreur","status.reserva.error_txt":"Impossible de finaliser la réservation. Vérifiez les données et réessayez.",
+src/App.jsx:2955:    "status.reprog.idle":"En attente","status.reprog.idle_txt":"Choisissez une nouvelle date ou heure.",
+src/App.jsx:2956:    "status.reprog.enviando":"Report en cours","status.reprog.enviando_txt":"Vérification de la disponibilité et mise à jour de votre réservation.",
+src/App.jsx:2957:    "status.reprog.exito":"Réservation reportée","status.reprog.exito_txt":"Votre réservation a été mise à jour avec succès.",
+src/App.jsx:2958:    "status.reprog.error":"Report impossible","status.reprog.error_txt":"Vérifiez les données et réessayez.",
+src/App.jsx:2962:    "errors.fecha_domingo":"Le club est fermé le dimanche.",
+src/App.jsx:2965:    "errors.hora_cierre":"La réservation se terminerait après la fermeture du club.",
+src/App.jsx:2970:    "errors.confirmado_reprog":"Veuillez confirmer que vous souhaitez reporter la réservation.",
+src/App.jsx:2974:    "errors.reserva_error":"Impossible de finaliser la réservation. Réessayez dans quelques secondes.",
+src/App.jsx:2976:    "errors.reprog_campos":"Veuillez remplir correctement tous les champs obligatoires.",
+src/App.jsx:2977:    "errors.reprog_ocupado":"Ce créneau vient d'être pris. Veuillez en sélectionner un autre.",
+src/App.jsx:2978:    "errors.reprog_error":"Impossible de finaliser le report. Vérifiez la clé et réessayez.",
+src/App.jsx:2980:    "home.galeria_eyebrow":"Galerie","home.galeria_desc":"Galerie visuelle du club.","home.sistema":"Système",
+src/App.jsx:2984:    "reprog.info1":"La clé identifie la réservation que vous souhaitez modifier.",
+src/App.jsx:2985:    "reprog.info2":"La même clé est conservée après le report.",
+src/App.jsx:2986:    "reprog.info3":"Vous recevrez une confirmation par email une fois le changement traité.",
+src/App.jsx:2987:    "reprog.info4":"Les notifications seront activées dans une phase ultérieure.",
+src/App.jsx:2988:    "reprog.nueva_disponibilidad":"Nouvelle disponibilité","reprog.selecciona_franja":"Sélectionnez un nouveau créneau disponible.",
+src/App.jsx:2989:    "flujos.exportar_json":"⬇ Exporter JSON","flujos.total_procesos":"Total processus","flujos.auditados":"Audités",
+src/App.jsx:2994:    "flujos.estado_procesos_label":"État des processus","flujos.por_estado":"Par état de connexion",
+src/App.jsx:2997:    "flujos.por_categoria":"Processus par catégorie","flujos.distribucion":"Répartition des 43 processus",
+src/App.jsx:2999:    "flujos.sin_errores":"✅ Aucune erreur enregistrée","flujos.criticos":"État des processus critiques",
+src/App.jsx:3000:    "flujos.estado_op":"État opérationnel","flujos.todos_flujos":"Tous les processus",
+src/App.jsx:3003:    "flujos.nota_integracion":"Intégration technique connectée. Les données en temps réel nécessitent une connexion au backend du club.",
+src/App.jsx:3006:    "admin.gestion_item1":"Gestion des terrains","admin.gestion_item2":"Clients et profils",
+src/App.jsx:3008:    "admin.crec_eyebrow":"Croissance","admin.crec_title":"Tournois et processus",
+src/App.jsx:3009:    "admin.crec_desc":"Zone prête à activer des processus quand le backend sera disponible.",
+src/App.jsx:3017:    "auth.pending_desc":"Système d'accès par rôles. En production, il doit être protégé par un fournisseur d'authentification.",
+src/App.jsx:3019:    "soporte.proteccion_h3":"Protection requise en production",
+src/App.jsx:3020:    "soporte.estado_tec_eyebrow":"État des intégrations","soporte.estado_tec_title":"État technique",
+src/App.jsx:3021:    "soporte.estado_tec_desc":"Liste de vérification de connexion backend.",
+src/App.jsx:3022:    "soporte.worker_item":"Worker de réservations prêt",
+src/App.jsx:3023:    "soporte.make_item":"Automatisations en attente de secret privé",
+src/App.jsx:3024:    "soporte.airtable_item":"Base de données prête sans écriture active",
+src/App.jsx:3025:    "soporte.stripe_item":"Paiements et messagerie en attente de configuration",
+src/App.jsx:3026:    "soporte.obs_eyebrow":"Observabilité","soporte.obs_title":"Logs et erreurs",
+src/App.jsx:3027:    "soporte.obs_desc":"Zone réservée au diagnostic quand le backend réel sera disponible.",
+src/App.jsx:3028:    "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
+src/App.jsx:3029:    "soporte.logs_errores":"Erreurs d'intégrations","soporte.logs_alertas":"Alertes techniques futures",
+src/App.jsx:3030:    "soporte.vars_h3":"Variables privées",
+src/App.jsx:3033:    "nav.inicio":"Inizio","nav.reservar":"Prenota","nav.alta_jugador":"Iscrizione giocatore",
+src/App.jsx:3034:    "nav.reprogramar":"Riprogramma","nav.cancelar":"Annulla prenotazione",
+src/App.jsx:3035:    "nav.gestion":"Prenotazioni","nav.torneos":"Tornei","nav.ranking":"Classifica",
+src/App.jsx:3036:    "nav.admin":"Admin","nav.flujos_make":"Centro tecnico","nav.soporte":"Supporto",
+src/App.jsx:3037:    "nav.cerrar_sesion":"Disconnetti","nav.saas_label":"SaaS sicuro","nav.cerrar_menu":"Chiudi","nav.abrir_menu":"Menu",
+src/App.jsx:3044:    "login.legal":"Accesso locale protetto da password. Sessione salvabile solo su questo dispositivo.",
+src/App.jsx:3046:    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
+src/App.jsx:3053:    "home.reservas_hoy":"Prenotazioni oggi","home.ocupacion_media":"Occupazione media",
+src/App.jsx:3054:    "home.socios_activos":"Soci attivi","home.procesos_activos":"Processi attivi",
+src/App.jsx:3055:    "home.ingresos_mes":"Entrate mensili","home.torneos_activos":"Tornei attivi",
+src/App.jsx:3056:    "home.estado_operativo":"Stato operativo","home.reservar":"Prenota",
+src/App.jsx:3057:    "home.torneo":"Torneo","home.alta":"Iscrizione","home.procesos":"Processi",
+src/App.jsx:3058:    "home.avisos_activos":"Avvisi attivi","home.ver_procesos":"Vedi processi",
+src/App.jsx:3063:    "home.porcentaje_uso":"% utilizzo","home.procesos_conectados":"processi connessi",
+src/App.jsx:3065:    "home.reservas_hora":"Prenotazioni per ora — oggi","home.reservas_7dias":"Prenotazioni ultimi 7 giorni",
+src/App.jsx:3066:    "home.ocupacion_pista":"Occupazione per campo","home.estado_procesos":"Stato processi",
+src/App.jsx:3067:    "home.club_operativo":"Club di padel","home.hero_accent":"operativo",
+src/App.jsx:3068:    "home.hero_subtitle":"SaaS per ruoli: giocatore, reception, amministrazione e supporto.",
+src/App.jsx:3069:    "home.btn_torneos":"Tornei","home.btn_admin":"Admin",
+src/App.jsx:3070:    "home.ir_reservas":"Vai alle prenotazioni","home.ver_gestion":"Gestisci prenotazioni",
+src/App.jsx:3071:    "home.ver_admin":"Vedi admin","home.ver_soporte":"Vedi supporto",
+src/App.jsx:3072:    "home.galeria":"Galleria del club",
+src/App.jsx:3074:    "admin.panel":"Pannello di gestione","admin.metricas":"Metriche globali del club.",
+src/App.jsx:3075:    "admin.reservas_mes":"Prenotazioni mensili","admin.ocupacion":"Occupazione media",
+src/App.jsx:3076:    "admin.socios":"Soci attivi","admin.procesos":"Processi attivi",
+src/App.jsx:3078:    "admin.vs_mes_anterior":"vs mese precedente","admin.prox_lunes":"Prossimo: lunedì 07:00",
+src/App.jsx:3080:    "admin.graf_pista":"Occupazione per campo","admin.sub_hoy":"Fascia oraria · demo",
+src/App.jsx:3081:    "admin.sub_semana":"Prenotazioni 7 giorni · demo","admin.sub_pista":"% utilizzo · demo",
+src/App.jsx:3084:    "soporte.title":"Supporto tecnico","soporte.desc":"Controllo tecnico dell'applicazione.",
+src/App.jsx:3085:    "soporte.proteccion":"Protezione richiesta in produzione","soporte.vars":"Variabili private",
+src/App.jsx:3087:    "torneos.title":"Tornei","torneos.bracket":"Tabellone interattivo",
+src/App.jsx:3088:    "torneos.anyadir":"Aggiungi coppia","torneos.guardar":"Salva","torneos.publicar":"Pubblica",
+src/App.jsx:3089:    "torneos.exportar":"Esporta","torneos.campeon":"Campione","torneos.subcampeon":"Finalista",
+src/App.jsx:3090:    "torneos.tercer_puesto":"3° posto","torneos.jugadores":"Giocatori","torneos.parejas":"Coppie",
+src/App.jsx:3091:    "torneos.ganador":"Vincitore","torneos.eliminada":"Eliminato","torneos.avanza":"Avanza",
+src/App.jsx:3092:    "torneos.bye":"BYE","torneos.pase_directo":"Passaggio diretto","torneos.personalizado":"Personalizzato",
+src/App.jsx:3093:    "torneos.ver_ranking":"Vedi classifica completa","torneos.autoasignar":"Auto-assegna","torneos.reordenar":"Riordina",
+src/App.jsx:3094:    "reservas.nueva":"Nuova prenotazione","reservas.fecha":"Data","reservas.hora":"Ora",
+src/App.jsx:3095:    "reservas.pista":"Campo","reservas.duracion":"Durata","reservas.confirmar":"Conferma prenotazione",
+src/App.jsx:3096:    "reservas.resumen":"Riepilogo","reservas.disponible":"Disponibile","reservas.no_disponible":"Non disponibile",
+src/App.jsx:3097:    "reprog.clave":"Chiave prenotazione","reprog.nueva_fecha":"Nuova data",
+src/App.jsx:3098:    "reprog.nueva_hora":"Nuovo orario di inizio","reprog.nueva_pista":"Nuovo campo",
+src/App.jsx:3099:    "reprog.resumen":"Riepilogo cambio","reprog.confirmo":"Confermo che voglio riprogrammare questa prenotazione",
+src/App.jsx:3100:    "reprog.btn":"Riprogramma prenotazione","reprog.volver":"Torna alle prenotazioni",
+src/App.jsx:3102:    "ranking.title":"Classifica","ranking.subtitle":"Classifica generale di giocatori e coppie",
+src/App.jsx:3103:    "ranking.categoria":"Categoria","ranking.nivel":"Livello","ranking.puntos":"Punti",
+src/App.jsx:3104:    "ranking.pts":"Pts","ranking.pareja":"Coppia","ranking.jugadores":"Giocatori",
+src/App.jsx:3105:    "ranking.v":"V","ranking.d":"P","ranking.pj":"G","ranking.racha":"Serie",
+src/App.jsx:3106:    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Ultimo aggiornamento",
+src/App.jsx:3107:    "ranking.filtrar":"Cerca giocatore o coppia...","ranking.general":"Generale",
+src/App.jsx:3108:    "ranking.masculino":"Maschile","ranking.femenino":"Femminile","ranking.mixto":"Misto",
+src/App.jsx:3109:    "ranking.iniciacion":"Principiante","ranking.medio":"Intermedio","ranking.avanzado":"Avanzato",
+src/App.jsx:3110:    "ranking.podio":"Podio — Top 3","ranking.tabla":"Classifica completa",
+src/App.jsx:3111:    "ranking.datos_ejemplo":"Dati di esempio","ranking.sistema_puntos":"Sistema punti del club configurabile.",
+src/App.jsx:3112:    "ranking.temporada":"Stagione","ranking.buscar":"Cerca...",
+src/App.jsx:3113:    "ranking.campeon":"Campione","ranking.subcampeon":"Finalista","ranking.tercero":"3° posto",
+src/App.jsx:3114:    "ranking.mejor_pareja":"Migliore coppia","ranking.pts_totales":"punti totali",
+src/App.jsx:3115:    "ranking.sin_resultados":"Nessun risultato con questi filtri.",
+src/App.jsx:3116:    "ranking.estado":"Stato","ranking.activo":"Attivo",
+src/App.jsx:3119:    "common.editar":"Modifica","common.modo_seguro":"Modalità sicura","common.entorno":"Ambiente protetto",
+src/App.jsx:3121:    "alta.title":"Registrazione giocatore","alta.eyebrow":"Giocatori","alta.desc":"Aggiungi un giocatore al club.",
+src/App.jsx:3130:    "cancelar.btn":"Cancella prenotazione","cancelar.enviando":"Invio...","cancelar.volver_reservas":"Torna alle prenotazioni",
+src/App.jsx:3132:    "reservas.title":"Prenota un campo","reservas.eyebrow":"Prenotazioni","reservas.desc":"Prenota il tuo campo in pochi secondi.",
+src/App.jsx:3133:    "reservas.datos_jugador":"Dati del giocatore","reservas.fecha_pista":"Data, ora e campo",
+src/App.jsx:3134:    "reservas.hora_fin":"Ora di fine","reservas.total":"Totale","reservas.ver_resumen":"Vedi riepilogo",
+src/App.jsx:3135:    "reservas.editar":"Modifica","reservas.confirmar_btn":"Conferma","reservas.enviando":"Invio...",
+src/App.jsx:3136:    "reservas.registrada":"Prenotazione registrata","reservas.nueva_btn":"Nuova prenotazione",
+src/App.jsx:3137:    "reservas.nombre":"Nome","reservas.apellidos":"Cognome","reservas.modalidad":"Modalità",
+src/App.jsx:3138:    "reservas.nivel_form":"Livello","reservas.comentarios":"Commenti","reservas.minutos":"minuti",
+src/App.jsx:3139:    "reservas.confirmacion_desc":"La conferma dipende dal backend e dalle integrazioni configurate.",
+src/App.jsx:3140:    "reprog.title":"Riprogramma prenotazione","reprog.eyebrow":"Prenotazioni","reprog.desc":"Cambia data o ora della tua prenotazione.",
+src/App.jsx:3141:    "reprog.hora_fin":"Ora di fine","reprog.que_ocurre":"Cosa succede dopo","reprog.enviando":"Invio...","reprog.editar":"Modifica",
+src/App.jsx:3142:    "soporte.eyebrow":"Supporto",
+src/App.jsx:3145:    "status.reserva.pendiente":"In attesa","status.reserva.pendiente_txt":"Controlla i dati prima di confermare.",
+src/App.jsx:3146:    "status.reserva.enviando":"Invio","status.reserva.enviando_txt":"Stiamo inviando la tua richiesta di prenotazione.",
+src/App.jsx:3147:    "status.reserva.exito":"Successo","status.reserva.exito_txt":"Prenotazione inviata con successo. La disponibilità viene aggiornata.",
+src/App.jsx:3148:    "status.reserva.error":"Errore","status.reserva.error_txt":"Impossibile completare la prenotazione. Controlla i dati e riprova.",
+src/App.jsx:3152:    "status.cancelar.error":"Invio non riuscito","status.cancelar.error_txt":"Controlla il codice e riprova.",
+src/App.jsx:3153:    "status.reprog.idle":"In attesa","status.reprog.idle_txt":"Scegli una nuova data o orario.",
+src/App.jsx:3154:    "status.reprog.enviando":"Riprogrammazione","status.reprog.enviando_txt":"Verifica disponibilità e aggiornamento prenotazione.",
+src/App.jsx:3155:    "status.reprog.exito":"Prenotazione riprogrammata","status.reprog.exito_txt":"La prenotazione è stata aggiornata con successo.",
+src/App.jsx:3156:    "status.reprog.error":"Riprogrammazione non riuscita","status.reprog.error_txt":"Controlla i dati e riprova.",
+src/App.jsx:3160:    "errors.fecha_domingo":"Il club è chiuso la domenica.",
+src/App.jsx:3163:    "errors.hora_cierre":"La prenotazione terminerebbe dopo la chiusura del club.",
+src/App.jsx:3168:    "errors.confirmado_reprog":"Conferma che vuoi riprogrammare la prenotazione.",
+src/App.jsx:3172:    "errors.reserva_error":"Impossibile completare la prenotazione. Riprova tra qualche secondo.",
+src/App.jsx:3173:    "errors.cancelar_error":"Impossibile inviare la richiesta. Controlla il codice e riprova.",
+src/App.jsx:3174:    "errors.reprog_campos":"Compila correttamente tutti i campi obbligatori.",
+src/App.jsx:3175:    "errors.reprog_ocupado":"Quella fascia oraria è appena stata occupata. Selezionane un'altra.",
+src/App.jsx:3176:    "errors.reprog_error":"Impossibile completare la riprogrammazione. Controlla il codice e riprova.",
+src/App.jsx:3178:    "home.galeria_eyebrow":"Galleria","home.galeria_desc":"Galleria visiva del club.","home.sistema":"Sistema",
+src/App.jsx:3182:    "reprog.info1":"Il codice identifica la prenotazione che vuoi modificare.",
+src/App.jsx:3183:    "reprog.info2":"Lo stesso codice viene mantenuto dopo la riprogrammazione.",
+src/App.jsx:3184:    "reprog.info3":"Riceverai conferma via email una volta elaborato il cambiamento.",
+src/App.jsx:3185:    "reprog.info4":"Le notifiche saranno attivate in una fase successiva.",
+src/App.jsx:3186:    "reprog.nueva_disponibilidad":"Nuova disponibilità","reprog.selecciona_franja":"Seleziona una nuova fascia disponibile.",
+src/App.jsx:3187:    "flujos.exportar_json":"⬇ Esporta JSON","flujos.total_procesos":"Totale processi","flujos.auditados":"Verificati",
+src/App.jsx:3192:    "flujos.estado_procesos_label":"Stato processi","flujos.por_estado":"Per stato di connessione",
+src/App.jsx:3195:    "flujos.por_categoria":"Processi per categoria","flujos.distribucion":"Distribuzione dei 43 processi",
+src/App.jsx:3197:    "flujos.sin_errores":"✅ Nessun errore registrato","flujos.criticos":"Stato processi critici",
+src/App.jsx:3198:    "flujos.estado_op":"Stato operativo","flujos.todos_flujos":"Tutti i processi",
+src/App.jsx:3201:    "flujos.nota_integracion":"Integrazione tecnica connessa. I dati in tempo reale richiedono connessione al backend del club.",
+src/App.jsx:3203:    "admin.gestion_desc":"Moduli pronti per la gestione operativa.",
+src/App.jsx:3204:    "admin.gestion_item1":"Gestione campi","admin.gestion_item2":"Clienti e profili",
+src/App.jsx:3206:    "admin.crec_eyebrow":"Crescita","admin.crec_title":"Tornei e processi",
+src/App.jsx:3207:    "admin.crec_desc":"Area pronta ad attivare processi quando il backend sarà disponibile.",
+src/App.jsx:3215:    "auth.pending_desc":"Sistema di accesso per ruoli. In produzione deve essere protetto da un provider di autenticazione.",
+src/App.jsx:3217:    "soporte.proteccion_h3":"Protezione richiesta in produzione",
+src/App.jsx:3218:    "soporte.estado_tec_eyebrow":"Stato integrazioni","soporte.estado_tec_title":"Stato tecnico",
+src/App.jsx:3219:    "soporte.estado_tec_desc":"Checklist di connessione backend.",
+src/App.jsx:3220:    "soporte.worker_item":"Worker prenotazioni pronto",
+src/App.jsx:3221:    "soporte.make_item":"Automazioni in attesa di segreto privato",
+src/App.jsx:3222:    "soporte.airtable_item":"Database pronto senza scritture attive",
+src/App.jsx:3223:    "soporte.stripe_item":"Pagamenti e messaggistica in attesa di configurazione",
+src/App.jsx:3224:    "soporte.obs_eyebrow":"Osservabilità","soporte.obs_title":"Log ed errori",
+src/App.jsx:3225:    "soporte.obs_desc":"Area riservata alla diagnostica quando il backend reale sarà disponibile.",
+src/App.jsx:3226:    "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
+src/App.jsx:3227:    "soporte.logs_errores":"Errori di integrazioni","soporte.logs_alertas":"Avvisi tecnici futuri",
+src/App.jsx:3228:    "soporte.vars_h3":"Variabili private",
+src/App.jsx:3231:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Registo de jogador",
+src/App.jsx:3232:    "nav.reprogramar":"Reagendar","nav.cancelar":"Cancelar reserva",
+src/App.jsx:3233:    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Classificação",
+src/App.jsx:3234:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Suporte",
+src/App.jsx:3235:    "nav.cerrar_sesion":"Terminar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
+src/App.jsx:3242:    "login.legal":"Acesso local protegido por palavra-passe. Sessão guardável apenas neste dispositivo.",
+src/App.jsx:3244:    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
+src/App.jsx:3247:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar campos, consultar reservas e classificação.",
+src/App.jsx:3248:    "role.STAFF.label":"Staff / receção","role.STAFF.desc":"Gestão diária de reservas e assistência a jogadores.",
+src/App.jsx:3251:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+src/App.jsx:3252:    "home.socios_activos":"Sócios ativos","home.procesos_activos":"Processos ativos",
+src/App.jsx:3253:    "home.ingresos_mes":"Receitas do mês","home.torneos_activos":"Torneios ativos",
+src/App.jsx:3254:    "home.estado_operativo":"Estado operacional","home.reservar":"Reservar",
+src/App.jsx:3255:    "home.torneo":"Torneio","home.alta":"Registo","home.procesos":"Processos",
+src/App.jsx:3256:    "home.avisos_activos":"Alertas ativos","home.ver_procesos":"Ver processos",
+src/App.jsx:3261:    "home.porcentaje_uso":"% utilização","home.procesos_conectados":"processos conectados",
+src/App.jsx:3263:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+src/App.jsx:3264:    "home.ocupacion_pista":"Ocupação por campo","home.estado_procesos":"Estado dos processos",
+src/App.jsx:3265:    "home.club_operativo":"Clube de padel","home.hero_accent":"operacional",
+src/App.jsx:3266:    "home.hero_subtitle":"SaaS por funções: jogador, receção, administração e suporte.",
+src/App.jsx:3267:    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
+src/App.jsx:3268:    "home.ir_reservas":"Ir para reservas","home.ver_gestion":"Gerir reservas",
+src/App.jsx:3269:    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver suporte",
+src/App.jsx:3270:    "home.galeria":"Galeria do clube",
+src/App.jsx:3272:    "admin.panel":"Painel de gestão","admin.metricas":"Métricas globais do clube.",
+src/App.jsx:3273:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+src/App.jsx:3274:    "admin.socios":"Sócios ativos","admin.procesos":"Processos ativos",
+src/App.jsx:3276:    "admin.vs_mes_anterior":"vs mês anterior","admin.prox_lunes":"Próximo: segunda 07:00",
+src/App.jsx:3278:    "admin.graf_pista":"Ocupação por campo","admin.sub_hoy":"Faixa horária · demo",
+src/App.jsx:3279:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+src/App.jsx:3282:    "soporte.title":"Suporte técnico","soporte.desc":"Controlo técnico da aplicação.",
+src/App.jsx:3283:    "soporte.proteccion":"Proteção necessária em produção","soporte.vars":"Variáveis privadas",
+src/App.jsx:3284:    "flujos.title":"Centro técnico","flujos.desc":"Estado das automatizações do sistema.",
+src/App.jsx:3285:    "torneos.title":"Torneios","torneos.bracket":"Tabela interativa",
+src/App.jsx:3286:    "torneos.anyadir":"Adicionar par","torneos.guardar":"Guardar","torneos.publicar":"Publicar",
+src/App.jsx:3287:    "torneos.exportar":"Exportar","torneos.campeon":"Campeão","torneos.subcampeon":"Vice-campeão",
+src/App.jsx:3288:    "torneos.tercer_puesto":"3.º lugar","torneos.jugadores":"Jogadores","torneos.parejas":"Pares",
+src/App.jsx:3289:    "torneos.ganador":"Vencedor","torneos.eliminada":"Eliminado","torneos.avanza":"Avança",
+src/App.jsx:3290:    "torneos.bye":"BYE","torneos.pase_directo":"Passe direto","torneos.personalizado":"Personalizado",
+src/App.jsx:3291:    "torneos.ver_ranking":"Ver classificação completa","torneos.autoasignar":"Auto-atribuir","torneos.reordenar":"Reordenar",
+src/App.jsx:3292:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Hora",
+src/App.jsx:3293:    "reservas.pista":"Campo","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+src/App.jsx:3294:    "reservas.resumen":"Resumo","reservas.disponible":"Disponível","reservas.no_disponible":"Indisponível",
+src/App.jsx:3295:    "reprog.clave":"Chave de reserva","reprog.nueva_fecha":"Nova data",
+src/App.jsx:3296:    "reprog.nueva_hora":"Nova hora de início","reprog.nueva_pista":"Novo campo",
+src/App.jsx:3297:    "reprog.resumen":"Resumo da alteração","reprog.confirmo":"Confirmo que quero reagendar esta reserva",
+src/App.jsx:3298:    "reprog.btn":"Reagendar reserva","reprog.volver":"Voltar às reservas",
+src/App.jsx:3300:    "ranking.title":"Classificação","ranking.subtitle":"Classificação geral de jogadores e pares",
+src/App.jsx:3301:    "ranking.categoria":"Categoria","ranking.nivel":"Nível","ranking.puntos":"Pontos",
+src/App.jsx:3302:    "ranking.pts":"Pts","ranking.pareja":"Par","ranking.jugadores":"Jogadores",
+src/App.jsx:3303:    "ranking.v":"V","ranking.d":"D","ranking.pj":"J","ranking.racha":"Sequência",
+src/App.jsx:3304:    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Última atualização",
+src/App.jsx:3305:    "ranking.filtrar":"Pesquisar jogador ou par...","ranking.general":"Geral",
+src/App.jsx:3306:    "ranking.masculino":"Masculino","ranking.femenino":"Feminino","ranking.mixto":"Misto",
+src/App.jsx:3307:    "ranking.iniciacion":"Iniciação","ranking.medio":"Intermédio","ranking.avanzado":"Avançado",
+src/App.jsx:3308:    "ranking.podio":"Pódio — Top 3","ranking.tabla":"Classificação completa",
+src/App.jsx:3309:    "ranking.datos_ejemplo":"Dados de exemplo","ranking.sistema_puntos":"Sistema de pontos do clube configurável.",
+src/App.jsx:3310:    "ranking.temporada":"Época","ranking.buscar":"Pesquisar...",
+src/App.jsx:3311:    "ranking.campeon":"Campeão","ranking.subcampeon":"Vice-campeão","ranking.tercero":"3.º lugar",
+src/App.jsx:3312:    "ranking.mejor_pareja":"Melhor par","ranking.pts_totales":"pontos totais",
+src/App.jsx:3313:    "ranking.sin_resultados":"Sem resultados com esses filtros.",
+src/App.jsx:3314:    "ranking.estado":"Estado","ranking.activo":"Ativo",
+src/App.jsx:3317:    "common.editar":"Editar","common.modo_seguro":"Modo seguro","common.entorno":"Ambiente protegido",
+src/App.jsx:3319:    "alta.title":"Registo de jogador","alta.eyebrow":"Jogadores","alta.desc":"Adiciona um jogador ao clube.",
+src/App.jsx:3325:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+src/App.jsx:3326:    "cancelar.clave":"Código de reserva","cancelar.clave_ph":"Introduza o seu código de reserva",
+src/App.jsx:3327:    "cancelar.confirmo_check":"Confirmo que quero cancelar esta reserva.",
+src/App.jsx:3328:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"A enviar...","cancelar.volver_reservas":"Voltar às reservas",
+src/App.jsx:3330:    "reservas.title":"Reservar campo","reservas.eyebrow":"Reservas","reservas.desc":"Reserve o seu campo em segundos.",
+src/App.jsx:3331:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e campo",
+src/App.jsx:3332:    "reservas.hora_fin":"Hora de fim","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+src/App.jsx:3333:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"A enviar...",
+src/App.jsx:3334:    "reservas.registrada":"Reserva registada","reservas.nueva_btn":"Nova reserva",
+src/App.jsx:3335:    "reservas.nombre":"Nome","reservas.apellidos":"Apelido","reservas.modalidad":"Modalidade",
+src/App.jsx:3336:    "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
+src/App.jsx:3337:    "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
+src/App.jsx:3338:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou hora da sua reserva.",
+src/App.jsx:3339:    "reprog.hora_fin":"Hora de fim","reprog.que_ocurre":"O que acontece a seguir","reprog.enviando":"A enviar...","reprog.editar":"Editar",
+src/App.jsx:3340:    "soporte.eyebrow":"Suporte",
+src/App.jsx:3343:    "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Reveja os dados antes de confirmar.",
+src/App.jsx:3344:    "status.reserva.enviando":"A enviar","status.reserva.enviando_txt":"Estamos a enviar o seu pedido de reserva.",
+src/App.jsx:3345:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está a ser atualizada.",
+src/App.jsx:3346:    "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
+src/App.jsx:3347:    "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
+src/App.jsx:3351:    "status.reprog.idle":"Pendente","status.reprog.idle_txt":"Escolha uma nova data ou horário.",
+src/App.jsx:3352:    "status.reprog.enviando":"A reagendar","status.reprog.enviando_txt":"A verificar disponibilidade e a atualizar a sua reserva.",
+src/App.jsx:3353:    "status.reprog.exito":"Reserva reagendada","status.reprog.exito_txt":"A sua reserva foi atualizada com sucesso.",
+src/App.jsx:3354:    "status.reprog.error":"Não foi possível reagendar","status.reprog.error_txt":"Verifique os dados e tente novamente.",
+src/App.jsx:3358:    "errors.fecha_domingo":"O clube está fechado aos domingos.",
+src/App.jsx:3361:    "errors.hora_cierre":"A reserva terminaria depois do encerramento do clube.",
+src/App.jsx:3364:    "errors.clave":"Introduza o código de reserva.","errors.clave_incompleta":"O código de reserva parece incompleto.",
+src/App.jsx:3366:    "errors.confirmado_reprog":"Confirme que pretende reagendar a reserva.",
+src/App.jsx:3370:    "errors.reserva_error":"Não foi possível completar a reserva. Tente novamente em alguns segundos.",
+src/App.jsx:3372:    "errors.reprog_campos":"Preencha corretamente todos os campos obrigatórios.",
+src/App.jsx:3373:    "errors.reprog_ocupado":"Esse horário acabou de ser ocupado. Selecione outro.",
+src/App.jsx:3374:    "errors.reprog_error":"Não foi possível completar o reagendamento. Verifique o código e tente novamente.",
+src/App.jsx:3376:    "home.galeria_eyebrow":"Galeria","home.galeria_desc":"Galeria visual do clube.","home.sistema":"Sistema",
+src/App.jsx:3380:    "reprog.info1":"O código identifica a reserva que pretende alterar.",
+src/App.jsx:3381:    "reprog.info2":"O mesmo código é mantido após o reagendamento.",
+src/App.jsx:3382:    "reprog.info3":"Receberá confirmação por email assim que a alteração for processada.",
+src/App.jsx:3383:    "reprog.info4":"As notificações serão ativadas numa fase posterior.",
+src/App.jsx:3384:    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
+src/App.jsx:3385:    "flujos.exportar_json":"⬇ Exportar JSON","flujos.total_procesos":"Total processos","flujos.auditados":"Auditados",
+src/App.jsx:3390:    "flujos.estado_procesos_label":"Estado dos processos","flujos.por_estado":"Por estado de ligação",
+src/App.jsx:3393:    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 43 processos",
+src/App.jsx:3395:    "flujos.sin_errores":"✅ Sem erros registados","flujos.criticos":"Estado dos processos críticos",
+src/App.jsx:3396:    "flujos.estado_op":"Estado operacional","flujos.todos_flujos":"Todos os processos",
+src/App.jsx:3399:    "flujos.nota_integracion":"Integração técnica conectada. Os dados em tempo real requerem ligação ao backend do clube.",
+src/App.jsx:3403:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+src/App.jsx:3404:    "admin.crec_eyebrow":"Crescimento","admin.crec_title":"Torneios e processos",
+src/App.jsx:3405:    "admin.crec_desc":"Zona preparada para ativar processos quando existir backend.",
+src/App.jsx:3408:    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
+src/App.jsx:3413:    "auth.pending_desc":"Sistema de acesso por funções. Em produção deve ser protegido por fornecedor de autenticação.",
+src/App.jsx:3415:    "soporte.proteccion_h3":"Proteção necessária em produção",
+src/App.jsx:3416:    "soporte.estado_tec_eyebrow":"Estado das integrações","soporte.estado_tec_title":"Estado técnico",
+src/App.jsx:3417:    "soporte.estado_tec_desc":"Checklist de ligação backend.",
+src/App.jsx:3418:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx:3419:    "soporte.make_item":"Automatizações pendentes de segredo privado",
+src/App.jsx:3420:    "soporte.airtable_item":"Base de dados preparada sem escrita ativa",
+src/App.jsx:3421:    "soporte.stripe_item":"Pagamentos e mensagens pendentes de configuração",
+src/App.jsx:3422:    "soporte.obs_eyebrow":"Observabilidade","soporte.obs_title":"Logs e erros",
+src/App.jsx:3423:    "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
+src/App.jsx:3424:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx:3425:    "soporte.logs_errores":"Erros de integrações","soporte.logs_alertas":"Alertas técnicos futuros",
+src/App.jsx:3426:    "soporte.vars_h3":"Variáveis privadas",
+src/App.jsx:3429:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Cadastro de jogador",
+src/App.jsx:3430:    "nav.reprogramar":"Remarcar","nav.cancelar":"Cancelar reserva",
+src/App.jsx:3431:    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Ranking",
+src/App.jsx:3432:    "nav.admin":"Admin","nav.flujos_make":"Central técnica","nav.soporte":"Suporte",
+src/App.jsx:3433:    "nav.cerrar_sesion":"Encerrar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
+src/App.jsx:3440:    "login.legal":"Acesso local protegido por senha. Sessão salvável apenas neste dispositivo.",
+src/App.jsx:3442:    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
+src/App.jsx:3445:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar quadras, consultar reservas e ranking.",
+src/App.jsx:3446:    "role.STAFF.label":"Staff / recepção","role.STAFF.desc":"Gestão diária de reservas e atendimento aos jogadores.",
+src/App.jsx:3449:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+src/App.jsx:3450:    "home.socios_activos":"Sócios ativos","home.procesos_activos":"Processos ativos",
+src/App.jsx:3451:    "home.ingresos_mes":"Receita do mês","home.torneos_activos":"Torneios ativos",
+src/App.jsx:3452:    "home.estado_operativo":"Status operacional","home.reservar":"Reservar",
+src/App.jsx:3453:    "home.torneo":"Torneio","home.alta":"Cadastro","home.procesos":"Processos",
+src/App.jsx:3454:    "home.avisos_activos":"Alertas ativos","home.ver_procesos":"Ver processos",
+src/App.jsx:3459:    "home.porcentaje_uso":"% utilização","home.procesos_conectados":"processos conectados",
+src/App.jsx:3461:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+src/App.jsx:3462:    "home.ocupacion_pista":"Ocupação por quadra","home.estado_procesos":"Status dos processos",
+src/App.jsx:3463:    "home.club_operativo":"Clube de padel","home.hero_accent":"operacional",
+src/App.jsx:3464:    "home.hero_subtitle":"SaaS por perfis: jogador, recepção, administração e suporte.",
+src/App.jsx:3465:    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
+src/App.jsx:3466:    "home.ir_reservas":"Ir para reservas","home.ver_gestion":"Gerenciar reservas",
+src/App.jsx:3467:    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver suporte",
+src/App.jsx:3468:    "home.galeria":"Galeria do clube",
+src/App.jsx:3470:    "admin.panel":"Painel de gestão","admin.metricas":"Métricas globais do clube.",
+src/App.jsx:3471:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+src/App.jsx:3472:    "admin.socios":"Sócios ativos","admin.procesos":"Processos ativos",
+src/App.jsx:3474:    "admin.vs_mes_anterior":"vs mês anterior","admin.prox_lunes":"Próximo: segunda 07:00",
+src/App.jsx:3476:    "admin.graf_pista":"Ocupação por quadra","admin.sub_hoy":"Faixa horária · demo",
+src/App.jsx:3477:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+src/App.jsx:3479:    "admin.integ_desc":"Prontas, pendentes de credenciais ou de implantação.",
+src/App.jsx:3480:    "soporte.title":"Suporte técnico","soporte.desc":"Controle técnico da aplicação.",
+src/App.jsx:3481:    "soporte.proteccion":"Proteção necessária em produção","soporte.vars":"Variáveis privadas",
+src/App.jsx:3483:    "torneos.title":"Torneios","torneos.bracket":"Chave interativa",
+src/App.jsx:3484:    "torneos.anyadir":"Adicionar dupla","torneos.guardar":"Salvar","torneos.publicar":"Publicar",
+src/App.jsx:3485:    "torneos.exportar":"Exportar","torneos.campeon":"Campeão","torneos.subcampeon":"Vice-campeão",
+src/App.jsx:3486:    "torneos.tercer_puesto":"3.º lugar","torneos.jugadores":"Jogadores","torneos.parejas":"Duplas",
+src/App.jsx:3487:    "torneos.ganador":"Vencedor","torneos.eliminada":"Eliminado","torneos.avanza":"Avança",
+src/App.jsx:3488:    "torneos.bye":"BYE","torneos.pase_directo":"Passe direto","torneos.personalizado":"Personalizado",
+src/App.jsx:3489:    "torneos.ver_ranking":"Ver ranking completo","torneos.autoasignar":"Auto-atribuir","torneos.reordenar":"Reordenar",
+src/App.jsx:3490:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Horário",
+src/App.jsx:3491:    "reservas.pista":"Quadra","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+src/App.jsx:3492:    "reservas.resumen":"Resumo","reservas.disponible":"Disponível","reservas.no_disponible":"Indisponível",
+src/App.jsx:3493:    "reprog.clave":"Código da reserva","reprog.nueva_fecha":"Nova data",
+src/App.jsx:3494:    "reprog.nueva_hora":"Novo horário de início","reprog.nueva_pista":"Nova quadra",
+src/App.jsx:3495:    "reprog.resumen":"Resumo da alteração","reprog.confirmo":"Confirmo que quero remarcar esta reserva",
+src/App.jsx:3496:    "reprog.btn":"Remarcar reserva","reprog.volver":"Voltar às reservas",
+src/App.jsx:3498:    "ranking.title":"Ranking","ranking.subtitle":"Classificação geral de jogadores e duplas",
+src/App.jsx:3499:    "ranking.categoria":"Categoria","ranking.nivel":"Nível","ranking.puntos":"Pontos",
+src/App.jsx:3500:    "ranking.pts":"Pts","ranking.pareja":"Dupla","ranking.jugadores":"Jogadores",
+src/App.jsx:3501:    "ranking.v":"V","ranking.d":"D","ranking.pj":"J","ranking.racha":"Sequência",
+src/App.jsx:3502:    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Última atualização",
+src/App.jsx:3503:    "ranking.filtrar":"Buscar jogador ou dupla...","ranking.general":"Geral",
+src/App.jsx:3504:    "ranking.masculino":"Masculino","ranking.femenino":"Feminino","ranking.mixto":"Misto",
+src/App.jsx:3505:    "ranking.iniciacion":"Iniciante","ranking.medio":"Intermediário","ranking.avanzado":"Avançado",
+src/App.jsx:3506:    "ranking.podio":"Pódio — Top 3","ranking.tabla":"Ranking completo",
+src/App.jsx:3507:    "ranking.datos_ejemplo":"Dados de exemplo","ranking.sistema_puntos":"Sistema de pontos do clube configurável.",
+src/App.jsx:3508:    "ranking.temporada":"Temporada","ranking.buscar":"Buscar...",
+src/App.jsx:3509:    "ranking.campeon":"Campeão","ranking.subcampeon":"Vice-campeão","ranking.tercero":"3.º lugar",
+src/App.jsx:3510:    "ranking.mejor_pareja":"Melhor dupla","ranking.pts_totales":"pontos totais",
+src/App.jsx:3511:    "ranking.sin_resultados":"Sem resultados com esses filtros.",
+src/App.jsx:3512:    "ranking.estado":"Status","ranking.activo":"Ativo",
+src/App.jsx:3515:    "common.editar":"Editar","common.modo_seguro":"Modo seguro","common.entorno":"Ambiente protegido",
+src/App.jsx:3517:    "alta.title":"Cadastro de jogador","alta.eyebrow":"Jogadores","alta.desc":"Adicione um jogador ao clube.",
+src/App.jsx:3523:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+src/App.jsx:3524:    "cancelar.clave":"Código de reserva","cancelar.clave_ph":"Digite o código da sua reserva",
+src/App.jsx:3525:    "cancelar.confirmo_check":"Confirmo que quero cancelar esta reserva.",
+src/App.jsx:3526:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Voltar para reservas",
+src/App.jsx:3528:    "reservas.title":"Reservar quadra","reservas.eyebrow":"Reservas","reservas.desc":"Reserve sua quadra em segundos.",
+src/App.jsx:3529:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e quadra",
+src/App.jsx:3530:    "reservas.hora_fin":"Horário de término","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+src/App.jsx:3531:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
+src/App.jsx:3532:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nova reserva",
+src/App.jsx:3533:    "reservas.nombre":"Nome","reservas.apellidos":"Sobrenome","reservas.modalidad":"Modalidade",
+src/App.jsx:3534:    "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
+src/App.jsx:3535:    "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
+src/App.jsx:3536:    "reprog.title":"Reagendar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou horário da sua reserva.",
+src/App.jsx:3537:    "reprog.hora_fin":"Horário de término","reprog.que_ocurre":"O que acontece depois","reprog.enviando":"Enviando...","reprog.editar":"Editar",
+src/App.jsx:3538:    "soporte.eyebrow":"Suporte",
+src/App.jsx:3541:    "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Revise os dados antes de confirmar.",
+src/App.jsx:3542:    "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando a sua solicitação de reserva.",
+src/App.jsx:3543:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está sendo atualizada.",
+src/App.jsx:3544:    "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
+src/App.jsx:3545:    "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
+src/App.jsx:3549:    "status.reprog.idle":"Pendente","status.reprog.idle_txt":"Escolha uma nova data ou horário.",
+src/App.jsx:3550:    "status.reprog.enviando":"Remarcando","status.reprog.enviando_txt":"Verificando disponibilidade e atualizando sua reserva.",
+src/App.jsx:3551:    "status.reprog.exito":"Reserva remarcada","status.reprog.exito_txt":"Sua reserva foi atualizada com sucesso.",
+src/App.jsx:3552:    "status.reprog.error":"Não foi possível remarcar","status.reprog.error_txt":"Verifique os dados e tente novamente.",
+src/App.jsx:3556:    "errors.fecha_domingo":"O clube está fechado aos domingos.",
+src/App.jsx:3559:    "errors.hora_cierre":"A reserva terminaria depois do fechamento do clube.",
+src/App.jsx:3562:    "errors.clave":"Informe o código da reserva.","errors.clave_incompleta":"O código da reserva parece incompleto.",
+src/App.jsx:3564:    "errors.confirmado_reprog":"Confirme que deseja remarcar a reserva.",
+src/App.jsx:3568:    "errors.reserva_error":"Não foi possível completar a reserva. Tente novamente em alguns segundos.",
+src/App.jsx:3570:    "errors.reprog_campos":"Preencha corretamente todos os campos obrigatórios.",
+src/App.jsx:3571:    "errors.reprog_ocupado":"Esse horário acabou de ser ocupado. Selecione outro.",
+src/App.jsx:3572:    "errors.reprog_error":"Não foi possível completar a remarcação. Verifique o código e tente novamente.",
+src/App.jsx:3574:    "home.galeria_eyebrow":"Galeria","home.galeria_desc":"Galeria visual do clube.","home.sistema":"Sistema",
+src/App.jsx:3578:    "reprog.info1":"O código identifica a reserva que você quer alterar.",
+src/App.jsx:3579:    "reprog.info2":"O mesmo código é mantido após a remarcação.",
+src/App.jsx:3580:    "reprog.info3":"Você receberá confirmação por email assim que a alteração for processada.",
+src/App.jsx:3581:    "reprog.info4":"As notificações serão ativadas em uma fase posterior.",
+src/App.jsx:3582:    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
+src/App.jsx:3583:    "flujos.exportar_json":"⬇ Exportar JSON","flujos.total_procesos":"Total processos","flujos.auditados":"Auditados",
+src/App.jsx:3588:    "flujos.estado_procesos_label":"Status dos processos","flujos.por_estado":"Por status de conexão",
+src/App.jsx:3591:    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 43 processos",
+src/App.jsx:3593:    "flujos.sin_errores":"✅ Sem erros registrados","flujos.criticos":"Status dos processos críticos",
+src/App.jsx:3594:    "flujos.estado_op":"Status operacional","flujos.todos_flujos":"Todos os processos",
+src/App.jsx:3597:    "flujos.nota_integracion":"Integração técnica conectada. Os dados em tempo real requerem conexão ao backend do clube.",
+src/App.jsx:3601:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+src/App.jsx:3602:    "admin.crec_eyebrow":"Crescimento","admin.crec_title":"Torneios e processos",
+src/App.jsx:3603:    "admin.crec_desc":"Zona preparada para ativar processos quando existir backend.",
+src/App.jsx:3606:    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
+src/App.jsx:3611:    "auth.pending_desc":"Sistema de acesso por perfis. Em produção deve ser protegido por provedor de autenticação.",
+src/App.jsx:3613:    "soporte.proteccion_h3":"Proteção necessária em produção",
+src/App.jsx:3614:    "soporte.estado_tec_eyebrow":"Status das integrações","soporte.estado_tec_title":"Status técnico",
+src/App.jsx:3615:    "soporte.estado_tec_desc":"Checklist de conexão backend.",
+src/App.jsx:3616:    "soporte.worker_item":"Worker de reservas pronto",
+src/App.jsx:3617:    "soporte.make_item":"Automações pendentes de segredo privado",
+src/App.jsx:3618:    "soporte.airtable_item":"Banco de dados preparado sem escritas ativas",
+src/App.jsx:3619:    "soporte.stripe_item":"Pagamentos e mensagens pendentes de configuração",
+src/App.jsx:3620:    "soporte.obs_eyebrow":"Observabilidade","soporte.obs_title":"Logs e erros",
+src/App.jsx:3621:    "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
+src/App.jsx:3622:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx:3623:    "soporte.logs_errores":"Erros de integrações","soporte.logs_alertas":"Alertas técnicos futuros",
+src/App.jsx:3624:    "soporte.vars_h3":"Variáveis privadas",
+src/App.jsx:3627:    "nav.inicio":"Start","nav.reservar":"Buchen","nav.alta_jugador":"Spieler registrieren",
+src/App.jsx:3628:    "nav.reprogramar":"Umbuchen","nav.cancelar":"Buchung stornieren",
+src/App.jsx:3629:    "nav.gestion":"Buchungen","nav.torneos":"Turniere","nav.ranking":"Rangliste",
+src/App.jsx:3630:    "nav.admin":"Admin","nav.flujos_make":"Technisches Zentrum","nav.soporte":"Support",
+src/App.jsx:3631:    "nav.cerrar_sesion":"Abmelden","nav.saas_label":"Sicheres SaaS","nav.cerrar_menu":"Schließen","nav.abrir_menu":"Menü",
+src/App.jsx:3640:    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
+src/App.jsx:3647:    "home.reservas_hoy":"Buchungen heute","home.ocupacion_media":"Durchschn. Auslastung",
+src/App.jsx:3648:    "home.socios_activos":"Aktive Mitglieder","home.procesos_activos":"Aktive Prozesse",
+src/App.jsx:3649:    "home.ingresos_mes":"Monatseinnahmen","home.torneos_activos":"Aktive Turniere",
+src/App.jsx:3650:    "home.estado_operativo":"Betriebsstatus","home.reservar":"Buchen",
+src/App.jsx:3651:    "home.torneo":"Turnier","home.alta":"Registrierung","home.procesos":"Prozesse",
+src/App.jsx:3652:    "home.avisos_activos":"Aktive Meldungen","home.ver_procesos":"Prozesse anzeigen",
+src/App.jsx:3657:    "home.porcentaje_uso":"% Nutzung","home.procesos_conectados":"verbundene Prozesse",
+src/App.jsx:3659:    "home.reservas_hora":"Buchungen pro Stunde — heute","home.reservas_7dias":"Buchungen letzte 7 Tage",
+src/App.jsx:3660:    "home.ocupacion_pista":"Auslastung je Platz","home.estado_procesos":"Prozessstatus",
+src/App.jsx:3661:    "home.club_operativo":"Padel-Club","home.hero_accent":"in Betrieb",
+src/App.jsx:3662:    "home.hero_subtitle":"SaaS nach Rollen: Spieler, Empfang, Verwaltung und Support.",
+src/App.jsx:3663:    "home.btn_torneos":"Turniere","home.btn_admin":"Admin",
+src/App.jsx:3664:    "home.ir_reservas":"Zu Buchungen","home.ver_gestion":"Buchungen verwalten",
+src/App.jsx:3665:    "home.ver_admin":"Admin anzeigen","home.ver_soporte":"Support anzeigen",
+src/App.jsx:3669:    "admin.reservas_mes":"Monatliche Buchungen","admin.ocupacion":"Durchschn. Auslastung",
+src/App.jsx:3670:    "admin.socios":"Aktive Mitglieder","admin.procesos":"Aktive Prozesse",
+src/App.jsx:3672:    "admin.vs_mes_anterior":"vs Vormonat","admin.prox_lunes":"Nächstes: Montag 07:00",
+src/App.jsx:3673:    "admin.graf_hoy":"Buchungen pro Stunde — heute","admin.graf_semana":"Wöchentliche Entwicklung",
+src/App.jsx:3678:    "soporte.title":"Technischer Support","soporte.desc":"Technische Kontrolle der Anwendung.",
+src/App.jsx:3679:    "soporte.proteccion":"Schutz in Produktion erforderlich","soporte.vars":"Private Variablen",
+src/App.jsx:3681:    "torneos.title":"Turniere","torneos.bracket":"Interaktiver Bracket",
+src/App.jsx:3682:    "torneos.anyadir":"Paar hinzufügen","torneos.guardar":"Speichern","torneos.publicar":"Veröffentlichen",
+src/App.jsx:3683:    "torneos.exportar":"Exportieren","torneos.campeon":"Champion","torneos.subcampeon":"Vizemeister",
+src/App.jsx:3684:    "torneos.tercer_puesto":"3. Platz","torneos.jugadores":"Spieler","torneos.parejas":"Paare",
+src/App.jsx:3685:    "torneos.ganador":"Gewinner","torneos.eliminada":"Ausgeschieden","torneos.avanza":"Rückt vor",
+src/App.jsx:3686:    "torneos.bye":"BYE","torneos.pase_directo":"Direktpass","torneos.personalizado":"Benutzerdefiniert",
+src/App.jsx:3687:    "torneos.ver_ranking":"Vollständige Rangliste","torneos.autoasignar":"Auto-zuweisen","torneos.reordenar":"Neuordnen",
+src/App.jsx:3688:    "reservas.nueva":"Neue Buchung","reservas.fecha":"Datum","reservas.hora":"Uhrzeit",
+src/App.jsx:3689:    "reservas.pista":"Platz","reservas.duracion":"Dauer","reservas.confirmar":"Buchung bestätigen",
+src/App.jsx:3690:    "reservas.resumen":"Zusammenfassung","reservas.disponible":"Verfügbar","reservas.no_disponible":"Nicht verfügbar",
+src/App.jsx:3691:    "reprog.clave":"Buchungsschlüssel","reprog.nueva_fecha":"Neues Datum",
+src/App.jsx:3692:    "reprog.nueva_hora":"Neue Startzeit","reprog.nueva_pista":"Neuer Platz",
+src/App.jsx:3693:    "reprog.resumen":"Änderungsübersicht","reprog.confirmo":"Ich bestätige, dass ich diese Buchung umbuchen möchte",
+src/App.jsx:3694:    "reprog.btn":"Buchung umbuchen","reprog.volver":"Zurück zu Buchungen",
+src/App.jsx:3696:    "ranking.title":"Rangliste","ranking.subtitle":"Allgemeine Rangliste der Spieler und Paare",
+src/App.jsx:3697:    "ranking.categoria":"Kategorie","ranking.nivel":"Niveau","ranking.puntos":"Punkte",
+src/App.jsx:3698:    "ranking.pts":"Pkt","ranking.pareja":"Paar","ranking.jugadores":"Spieler",
+src/App.jsx:3699:    "ranking.v":"S","ranking.d":"N","ranking.pj":"Sp","ranking.racha":"Serie",
+src/App.jsx:3700:    "ranking.mov":"Bew.","ranking.pos":"#","ranking.ultima_act":"Letzte Aktualisierung",
+src/App.jsx:3701:    "ranking.filtrar":"Spieler oder Paar suchen...","ranking.general":"Allgemein",
+src/App.jsx:3702:    "ranking.masculino":"Herren","ranking.femenino":"Damen","ranking.mixto":"Mixed",
+src/App.jsx:3703:    "ranking.iniciacion":"Anfänger","ranking.medio":"Mittel","ranking.avanzado":"Fortgeschritten",
+src/App.jsx:3704:    "ranking.podio":"Podium — Top 3","ranking.tabla":"Vollständige Rangliste",
+src/App.jsx:3705:    "ranking.datos_ejemplo":"Beispieldaten","ranking.sistema_puntos":"Konfigurierbares Club-Punktesystem.",
+src/App.jsx:3706:    "ranking.temporada":"Saison","ranking.buscar":"Suchen...",
+src/App.jsx:3707:    "ranking.campeon":"Champion","ranking.subcampeon":"Vizemeister","ranking.tercero":"3. Platz",
+src/App.jsx:3708:    "ranking.mejor_pareja":"Bestes Paar","ranking.pts_totales":"Pkt gesamt",
+src/App.jsx:3709:    "ranking.sin_resultados":"Keine Ergebnisse mit diesen Filtern.",
+src/App.jsx:3710:    "ranking.estado":"Status","ranking.activo":"Aktiv",
+src/App.jsx:3724:    "cancelar.btn":"Buchung stornieren","cancelar.enviando":"Wird gesendet...","cancelar.volver_reservas":"Zurück zu Buchungen",
+src/App.jsx:3726:    "reservas.title":"Platz buchen","reservas.eyebrow":"Buchungen","reservas.desc":"Buchen Sie Ihren Platz in Sekunden.",
+src/App.jsx:3727:    "reservas.datos_jugador":"Spielerdaten","reservas.fecha_pista":"Datum, Uhrzeit und Platz",
+src/App.jsx:3728:    "reservas.hora_fin":"Endzeit","reservas.total":"Gesamt","reservas.ver_resumen":"Zusammenfassung",
+src/App.jsx:3729:    "reservas.editar":"Bearbeiten","reservas.confirmar_btn":"Bestätigen","reservas.enviando":"Wird gesendet...",
+src/App.jsx:3730:    "reservas.registrada":"Buchung registriert","reservas.nueva_btn":"Neue Buchung",
+src/App.jsx:3731:    "reservas.nombre":"Vorname","reservas.apellidos":"Nachname","reservas.modalidad":"Modus",
+src/App.jsx:3732:    "reservas.nivel_form":"Niveau","reservas.comentarios":"Kommentare","reservas.minutos":"Minuten",
+src/App.jsx:3733:    "reservas.confirmacion_desc":"Die Bestätigung hängt vom Backend und den konfigurierten Integrationen ab.",
+src/App.jsx:3734:    "reprog.title":"Buchung umbuchen","reprog.eyebrow":"Buchungen","reprog.desc":"Datum oder Uhrzeit Ihrer Buchung ändern.",
+src/App.jsx:3735:    "reprog.hora_fin":"Endzeit","reprog.que_ocurre":"Was passiert als nächstes","reprog.enviando":"Wird gesendet...","reprog.editar":"Bearbeiten",
+src/App.jsx:3736:    "soporte.eyebrow":"Support",
+src/App.jsx:3739:    "status.reserva.pendiente":"Ausstehend","status.reserva.pendiente_txt":"Überprüfen Sie Ihre Daten vor der Bestätigung.",
+src/App.jsx:3740:    "status.reserva.enviando":"Wird gesendet","status.reserva.enviando_txt":"Wir senden Ihre Buchungsanfrage.",
+src/App.jsx:3741:    "status.reserva.exito":"Erfolg","status.reserva.exito_txt":"Buchung erfolgreich gesendet. Die Verfügbarkeit wird aktualisiert.",
+src/App.jsx:3742:    "status.reserva.error":"Fehler","status.reserva.error_txt":"Buchung konnte nicht abgeschlossen werden. Überprüfen Sie die Daten und versuchen Sie es erneut.",
+src/App.jsx:3747:    "status.reprog.idle":"Ausstehend","status.reprog.idle_txt":"Wählen Sie ein neues Datum oder eine neue Uhrzeit.",
+src/App.jsx:3748:    "status.reprog.enviando":"Wird umgebucht","status.reprog.enviando_txt":"Verfügbarkeit wird geprüft und Buchung aktualisiert.",
+src/App.jsx:3749:    "status.reprog.exito":"Buchung umgebucht","status.reprog.exito_txt":"Ihre Buchung wurde erfolgreich aktualisiert.",
+src/App.jsx:3750:    "status.reprog.error":"Umbuchung fehlgeschlagen","status.reprog.error_txt":"Überprüfen Sie die Daten und versuchen Sie es erneut.",
+src/App.jsx:3762:    "errors.confirmado_reprog":"Bitte bestätigen Sie, dass Sie die Buchung umbuchen möchten.",
+src/App.jsx:3766:    "errors.reserva_error":"Buchung konnte nicht abgeschlossen werden. Versuchen Sie es in einigen Sekunden erneut.",
+src/App.jsx:3768:    "errors.reprog_campos":"Bitte füllen Sie alle Pflichtfelder korrekt aus.",
+src/App.jsx:3769:    "errors.reprog_ocupado":"Dieses Zeitfenster wurde gerade belegt. Bitte wählen Sie ein anderes.",
+src/App.jsx:3770:    "errors.reprog_error":"Umbuchung konnte nicht abgeschlossen werden. Überprüfen Sie den Schlüssel und versuchen Sie es erneut.",
+src/App.jsx:3776:    "reprog.info1":"Der Schlüssel identifiziert die Buchung, die Sie ändern möchten.",
+src/App.jsx:3777:    "reprog.info2":"Derselbe Schlüssel wird nach der Umbuchung beibehalten.",
+src/App.jsx:3778:    "reprog.info3":"Sie erhalten eine Bestätigung per E-Mail, sobald die Änderung verarbeitet wurde.",
+src/App.jsx:3779:    "reprog.info4":"Benachrichtigungen werden in einer späteren Phase aktiviert.",
+src/App.jsx:3780:    "reprog.nueva_disponibilidad":"Neue Verfügbarkeit","reprog.selecciona_franja":"Wählen Sie ein neues verfügbares Zeitfenster.",
+src/App.jsx:3781:    "flujos.exportar_json":"⬇ JSON exportieren","flujos.total_procesos":"Prozesse gesamt","flujos.auditados":"Geprüft",
+src/App.jsx:3786:    "flujos.estado_procesos_label":"Prozessstatus","flujos.por_estado":"Nach Verbindungsstatus",
+src/App.jsx:3811:    "soporte.proteccion_h3":"Produktionsschutz erforderlich",
+src/App.jsx:3812:    "soporte.estado_tec_eyebrow":"Integrationsstatus","soporte.estado_tec_title":"Technischer Status",
+src/App.jsx:3813:    "soporte.estado_tec_desc":"Backend-Verbindungs-Checkliste.",
+src/App.jsx:3814:    "soporte.worker_item":"Buchungs-Worker bereit",
+src/App.jsx:3815:    "soporte.make_item":"Automatisierungen warten auf privaten Schlüssel",
+src/App.jsx:3816:    "soporte.airtable_item":"Datenbank bereit ohne aktive Schreibvorgänge",
+src/App.jsx:3817:    "soporte.stripe_item":"Zahlungen und Messaging ausstehend",
+src/App.jsx:3818:    "soporte.obs_eyebrow":"Beobachtbarkeit","soporte.obs_title":"Logs und Fehler",
+src/App.jsx:3819:    "soporte.obs_desc":"Bereich für Diagnose wenn echtes Backend verfügbar ist.",
+src/App.jsx:3820:    "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
+src/App.jsx:3821:    "soporte.logs_errores":"Integrationsfehler","soporte.logs_alertas":"Künftige technische Warnungen",
+src/App.jsx:3822:    "soporte.vars_h3":"Private Variablen",
+src/App.jsx:3971:    ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
+src/App.jsx:3972:    ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
+src/App.jsx:3973:    ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["admin","nav.admin","📊"],
+src/App.jsx:3974:    ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
+src/App.jsx:3977:    PLAYER: ["inicio","reservas","torneos","ranking","perfil"],
+src/App.jsx:3978:    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
+src/App.jsx:3979:    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
+src/App.jsx:3980:    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+src/App.jsx:4045:            {tx("home.club_operativo")}<br /><span style={{ color: T.accent }}>{tx("home.hero_accent")}</span>
+src/App.jsx:4051:            <Btn onClick={() => setCurrent("reservas")} style={{ color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
+src/App.jsx:4052:            <Btn variant="secondary" onClick={() => setCurrent("torneos")}>🏆 {tx("home.btn_torneos")}</Btn>
+src/App.jsx:4067:            <Btn onClick={() => setCurrent("reservas")} style={{ padding: "10px 12px", fontSize: ".82rem", color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
+src/App.jsx:4068:            <Btn variant="secondary" onClick={() => setCurrent("torneos")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>🏆 {tx("home.torneo")}</Btn>
+src/App.jsx:4069:            <Btn variant="secondary" onClick={() => setCurrent("flujos_make")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>⚙️ {tx("home.procesos")}</Btn>
+src/App.jsx:4083:        <MetricCard label={tx("home.reservas_hoy")} value={kpi.reservasHoy} sub={`vs 10 ${tx("home.vs_ayer")}`} trend={20} icon="🎾" />
+src/App.jsx:4084:        <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
+src/App.jsx:4086:        <MetricCard label={tx("home.procesos_activos")} value={`${kpi.makeActivos}/43`} sub={`${kpi.makeErrores} ${kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
+src/App.jsx:4088:        <MetricCard label={tx("home.torneos_activos")} value={kpi.torneosActivos} sub={tx("home.en_curso")} trend={null} color={T.warning} icon="🏆" />
+src/App.jsx:4093:        <ChartCard title={tx("home.reservas_hora")} sub={tx("home.franja_horaria")}>
+src/App.jsx:4094:          <MiniBarChart data={DEMO_RESERVAS_HOY} height={70} color={T.accent} unit={tx("home.reservas_hoy").toLowerCase()} />
+src/App.jsx:4096:        <ChartCard title={tx("home.reservas_7dias")} sub={tx("home.tendencia_semanal")}>
+src/App.jsx:4104:        <ChartCard title={tx("home.ocupacion_pista")} sub={tx("home.porcentaje_uso")}>
+src/App.jsx:4107:        <ChartCard title={tx("home.estado_procesos")} sub={`43 ${tx("home.procesos_conectados")}`}>
+src/App.jsx:4127:          <Btn variant="secondary" onClick={() => setCurrent("flujos_make")} style={{ padding: "7px 14px", fontSize: ".8rem" }}>{tx("home.ver_procesos")}</Btn>
+src/App.jsx:4153:    pending: [tx("status.reserva.pendiente"), tx("status.reserva.pendiente_txt"), T.warning],
+src/App.jsx:4154:    sending: [tx("status.reserva.enviando"), tx("status.reserva.enviando_txt"), T.warning],
+src/App.jsx:4155:    success: [tx("status.reserva.exito"), tx("status.reserva.exito_txt"), T.accent],
+src/App.jsx:4156:    error: [tx("status.reserva.error"), statusMessage || tx("status.reserva.error_txt"), T.danger],
+src/App.jsx:4207:      setStatusMessage(tx("errors.reserva_error"));
+src/App.jsx:4221:  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow={tx("reservas.eyebrow")} title={tx("reservas.title")} desc={tx("reservas.desc")} /><CalendarioDisponibilidad
+src/App.jsx:4232:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+src/App.jsx:4290:          accion: "cancelar_reserva",
+src/App.jsx:4291:          clave_reserva: claveLimpia,
+src/App.jsx:4297:          club: "Club Pádel 04",
+src/App.jsx:4298:          origen: "app_publica_cancelar_reserva",
+src/App.jsx:4320:  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} /><Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+src/App.jsx:4324:function ReprogramarReserva({ setCurrent }) {
+src/App.jsx:4329:    clave_reserva: "",
+src/App.jsx:4330:    nueva_fecha_reserva: todayISO(),
+src/App.jsx:4349:    idle: [tx("status.reprog.idle"), tx("status.reprog.idle_txt"), T.warning],
+src/App.jsx:4350:    sending: [tx("status.reprog.enviando"), tx("status.reprog.enviando_txt"), T.warning],
+src/App.jsx:4351:    success: [tx("status.reprog.exito"), statusMessage || tx("status.reprog.exito_txt"), T.accent],
+src/App.jsx:4352:    error: [tx("status.reprog.error"), statusMessage || tx("status.reprog.error_txt"), T.danger],
+src/App.jsx:4378:      setStatusMessage(tx("errors.reprog_campos"));
+src/App.jsx:4388:      const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
+src/App.jsx:4389:      const disponibilidad = await fetchDisponibilidad(form.nueva_fecha_reserva);
+src/App.jsx:4392:        setStatusMessage(tx("errors.reprog_ocupado"));
+src/App.jsx:4414:          form.nueva_fecha_reserva,
+src/App.jsx:4428:        `Nueva fecha ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}.`,
+src/App.jsx:4431:      refreshDisponibilidadAfterChange(form.nueva_fecha_reserva);
+src/App.jsx:4434:      setStatusMessage(tx("errors.reprog_error"));
+src/App.jsx:4443:      clave_reserva: "",
+src/App.jsx:4444:      nueva_fecha_reserva: todayISO(),
+src/App.jsx:4457:      <SectionTitle eyebrow={tx("reprog.eyebrow")} title={tx("reprog.title")} desc={tx("reprog.desc")} />
+src/App.jsx:4471:        initialDate={form.nueva_fecha_reserva}
+src/App.jsx:4474:        title={tx("reprog.nueva_disponibilidad")}
+src/App.jsx:4475:        description={tx("reprog.selecciona_franja")}
+src/App.jsx:4477:          updateForm("nueva_fecha_reserva", fecha);
+src/App.jsx:4486:            <h3 style={{ marginTop: 0 }}>{tx("reprog.clave")}</h3>
+src/App.jsx:4488:            <label htmlFor="reprogramar-clave" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+src/App.jsx:4489:              {tx("reprog.clave")}
+src/App.jsx:4492:              id="reprogramar-clave"
+src/App.jsx:4493:              aria-label={tx("reprog.clave")}
+src/App.jsx:4494:              placeholder={tx("reprog.clave")}
+src/App.jsx:4495:              value={form.clave_reserva}
+src/App.jsx:4496:              onChange={(event) => updateForm("clave_reserva", event.target.value)}
+src/App.jsx:4501:            <FieldError>{errors.clave_reserva}</FieldError>
+src/App.jsx:4506:                  tx("reprog.info1"),
+src/App.jsx:4507:                  tx("reprog.info2"),
+src/App.jsx:4508:                  tx("reprog.info3"),
+src/App.jsx:4509:                  tx("reprog.info4"),
+src/App.jsx:4516:            <h3 style={{ marginTop: 0 }}>{tx("reprog.nueva_fecha")}</h3>
+src/App.jsx:4518:            <label htmlFor="reprogramar-fecha" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+src/App.jsx:4519:              {tx("reprog.nueva_fecha")}
+src/App.jsx:4522:              id="reprogramar-fecha"
+src/App.jsx:4523:              aria-label={tx("reprog.nueva_fecha")}
+src/App.jsx:4526:              value={form.nueva_fecha_reserva}
+src/App.jsx:4527:              onChange={(event) => updateForm("nueva_fecha_reserva", event.target.value)}
+src/App.jsx:4531:            <FieldError>{errors.nueva_fecha_reserva}</FieldError>
+src/App.jsx:4533:            <label htmlFor="reprogramar-hora" style={{ display:"block", color:T.textDim, fontWeight:900, margin:"18px 0 8px" }}>
+src/App.jsx:4534:              {tx("reprog.nueva_hora")}
+src/App.jsx:4537:              id="reprogramar-hora"
+src/App.jsx:4538:              aria-label={tx("reprog.nueva_hora")}
+src/App.jsx:4541:              disabled={sending || isSundayISO(form.nueva_fecha_reserva)}
+src/App.jsx:4547:                  disabled={getSlotStatus(form.nueva_fecha_reserva, hora, duration) !== "available"}
+src/App.jsx:4555:            <label htmlFor="reprogramar-duracion" style={{ display:"block", color:T.textDim, fontWeight:900, margin:"18px 0 8px" }}>
+src/App.jsx:4556:              {tx("reservas.duracion")}
+src/App.jsx:4559:              id="reprogramar-duracion"
+src/App.jsx:4560:              aria-label={tx("reservas.duracion")}
+src/App.jsx:4566:                <option key={minutes} value={minutes}>{minutes} {tx("reservas.minutos")}</option>
+src/App.jsx:4572:              <strong style={{ display:"block", marginBottom:10 }}>{tx("reprog.nueva_pista")}</strong>
+src/App.jsx:4609:              <div style={{ color:T.textDim, marginBottom:6 }}>{tx("reprog.resumen")}</div>
+src/App.jsx:4611:                {formatDateEs(form.nueva_fecha_reserva)} · {form.nueva_hora_inicio}-{nuevaHoraFin} · {court}
+src/App.jsx:4639:              <span>{tx("reprog.confirmo")}</span>
+src/App.jsx:4653:                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+src/App.jsx:4655:                {sending ? tx("reprog.enviando") : tx("reprog.btn")}
+src/App.jsx:4657:              <Btn variant="secondary" disabled={sending} onClick={() => setCurrent("reservas")}>
+src/App.jsx:4658:                {tx("reprog.volver")}
+src/App.jsx:4674:          <h3>Reprogramación enviada correctamente</h3>
+src/App.jsx:4676:            Conserva tu clave de reserva. Recibirás un correo con el nuevo horario confirmado.
+src/App.jsx:4679:            <Btn onClick={resetForm}>Reprogramar otra reserva</Btn>
+src/App.jsx:4680:            <Btn variant="secondary" onClick={() => setCurrent("reservas")}>
+src/App.jsx:4692:  const [reservasReales, setReservasReales] = useState([]);
+src/App.jsx:4694:  const [reservasConsultadas, setReservasConsultadas] = useState(false);
+src/App.jsx:4701:  const reservasEndpoint =
+src/App.jsx:4703:    "/api/reservas";
+src/App.jsx:4709:        window.localStorage.getItem("cp04-reservas-email");
+src/App.jsx:4720:    const reserva =
+src/App.jsx:4727:        reserva.record_id ||
+src/App.jsx:4728:        reserva.id ||
+src/App.jsx:4729:        reserva.clave_reserva ||
+src/App.jsx:4730:        `${reserva.fecha_reserva || reserva.fecha || "sin-fecha"}-${
+src/App.jsx:4731:          reserva.pista || reserva.Pista || "sin-pista"
+src/App.jsx:4732:        }-${reserva.hora_inicio || reserva.hora || "sin-hora"}`,
+src/App.jsx:4735:        reserva.nombre ||
+src/App.jsx:4736:        reserva.Nombre ||
+src/App.jsx:4737:        reserva.jugador_nombre ||
+src/App.jsx:4741:        reserva.apellidos ||
+src/App.jsx:4742:        reserva.Apellidos ||
+src/App.jsx:4743:        reserva.jugador_apellidos ||
+src/App.jsx:4747:        reserva.email ||
+src/App.jsx:4748:        reserva.Email ||
+src/App.jsx:4752:        reserva.fecha_reserva ||
+src/App.jsx:4753:        reserva.fecha ||
+src/App.jsx:4754:        reserva.Fecha ||
+src/App.jsx:4758:        reserva.hora_inicio ||
+src/App.jsx:4759:        reserva.hora ||
+src/App.jsx:4760:        reserva.Hora ||
+src/App.jsx:4764:        reserva.hora_fin ||
+src/App.jsx:4768:        reserva.pista ||
+src/App.jsx:4769:        reserva.Pista ||
+src/App.jsx:4773:        reserva.estado_reserva ||
+src/App.jsx:4774:        reserva.estado ||
+src/App.jsx:4775:        reserva.Estado ||
+src/App.jsx:4780:        reserva.clave_reserva ||
+src/App.jsx:4781:        reserva.clave ||
+src/App.jsx:4785:        reserva.fecha_cancelacion ||
+src/App.jsx:4789:        reserva.event_id ||
+src/App.jsx:4802:        "Introduce un correo electrónico válido para consultar las reservas.",
+src/App.jsx:4813:      const separador = reservasEndpoint.includes("?") ? "&" : "?";
+src/App.jsx:4816:        `${reservasEndpoint}${separador}` +
+src/App.jsx:4836:          `No se pudieron consultar las reservas (${response.status}).`,
+src/App.jsx:4840:      const listaOriginal = Array.isArray(resultado.reservas)
+src/App.jsx:4841:        ? resultado.reservas
+src/App.jsx:4862:          "cp04-reservas-email",
+src/App.jsx:4875:          : "No se pudieron cargar las reservas.",
+src/App.jsx:4885:        reservasReales
+src/App.jsx:4886:          .map((reserva) => reserva.pista)
+src/App.jsx:4889:    [reservasReales],
+src/App.jsx:4895:        reservasReales
+src/App.jsx:4896:          .map((reserva) => reserva.estado)
+src/App.jsx:4899:    [reservasReales],
+src/App.jsx:4902:  const reservasFiltradas = useMemo(
+src/App.jsx:4904:      reservasReales.filter((reserva) => {
+src/App.jsx:4906:          !filtroFecha || reserva.fecha === filtroFecha;
+src/App.jsx:4909:          !filtroPista || reserva.pista === filtroPista;
+src/App.jsx:4912:          !filtroEstado || reserva.estado === filtroEstado;
+src/App.jsx:4921:      reservasReales,
+src/App.jsx:4929:    const confirmadas = reservasReales.filter(
+src/App.jsx:4930:      (reserva) =>
+src/App.jsx:4931:        reserva.estado === "confirmada" ||
+src/App.jsx:4932:        reserva.estado === "reprogramada",
+src/App.jsx:4935:    const pendientes = reservasReales.filter(
+src/App.jsx:4936:      (reserva) => reserva.estado === "pendiente",
+src/App.jsx:4939:    const canceladas = reservasReales.filter(
+src/App.jsx:4940:      (reserva) => reserva.estado === "cancelada",
+src/App.jsx:4944:      total: reservasReales.length,
+src/App.jsx:4949:  }, [reservasReales]);
+src/App.jsx:4954:      estado === "reprogramada"
+src/App.jsx:4980:        title="Listado real de reservas"
+src/App.jsx:4981:        desc="Consulta tus reservas."
+src/App.jsx:4986:          Consultar mis reservas
+src/App.jsx:5010:              aria-label="Correo para consultar reservas"
+src/App.jsx:5036:              : "Consultar reservas"}
+src/App.jsx:5053:      {reservasConsultadas && !errorReservas && (
+src/App.jsx:5150:                  aria-label="Filtrar reservas por fecha"
+src/App.jsx:5171:                  aria-label="Filtrar reservas por pista"
+src/App.jsx:5199:                  aria-label="Filtrar reservas por estado"
+src/App.jsx:5222:              Mostrando {reservasFiltradas.length} de{" "}
+src/App.jsx:5223:              {reservasReales.length} reservas · Fuente:{" "}
+src/App.jsx:5228:          {reservasFiltradas.length === 0 ? (
+src/App.jsx:5231:                No se encontraron reservas
+src/App.jsx:5260:                    {reservasFiltradas.map((reserva) => (
+src/App.jsx:5261:                      <tr key={reserva.id}>
+src/App.jsx:5263:                          {reserva.fecha
+src/App.jsx:5264:                            ? formatDateEs(reserva.fecha)
+src/App.jsx:5269:                          {reserva.horaInicio || "—"}
+src/App.jsx:5270:                          {reserva.horaFin
+src/App.jsx:5271:                            ? `–${reserva.horaFin}`
+src/App.jsx:5275:                        <td>{reserva.pista || "—"}</td>
+src/App.jsx:5279:                            reserva.nombre,
+src/App.jsx:5280:                            reserva.apellidos,
+src/App.jsx:5290:                                reserva.estado,
+src/App.jsx:5295:                            {reserva.estado}
+src/App.jsx:5306:                            {reserva.clave || "—"}
+src/App.jsx:5530:const TORNEO_STORE = "cp04_torneo_v2";
+src/App.jsx:5531:const TORNEO_HIST_STORE = "cp04_torneo_hist_v2";
+src/App.jsx:5536:function torneoLoadSaved() {
+src/App.jsx:5548:function torneoLoadHist() {
+src/App.jsx:5556:function torneoBuildEmptyPairs(count) {
+src/App.jsx:5565:function torneoBuildFullBracket(pairs, byeId) {
+src/App.jsx:5595:function torneoGetRoundLabel(rNum, total) {
+src/App.jsx:5605:function torneoAdvanceWinner(bracket, matchId, winnerId) {
+src/App.jsx:5618:function torneoGetMatchGap(round) {
+src/App.jsx:5622:function torneoGetRoundPadding(round) {
+src/App.jsx:5631:    histRef.current = torneoLoadHist();
+src/App.jsx:5634:  const saved = torneoLoadSaved();
+src/App.jsx:5745:      const c = FORMAT_MAX[fmt]; const np = torneoBuildEmptyPairs(c);
+src/App.jsx:5766:    const np = torneoBuildEmptyPairs(pc);
+src/App.jsx:5779:    const nb = torneoBuildFullBracket(shuffled, newBye ? newBye.id : null);
+src/App.jsx:5803:    pushHistory(next ? "Publicar torneo" : "Despublicar torneo");
+src/App.jsx:5836:    const nb = torneoAdvanceWinner(bracket, matchId, winnerId);
+src/App.jsx:5851:      ranking: pairs.map((p, i) => ({ pos: i + 1, jugador1: p.player1, jugador2: p.player2 })),
+src/App.jsx:5865:    const a = document.createElement("a"); a.href = url; a.download = `torneo-cp04-${Date.now()}.json`; a.click();
+src/App.jsx:5903:          <div style={{ color:T.accent, fontSize:".72rem", fontWeight:900, letterSpacing:".2em", textTransform:"uppercase", marginBottom:8 }}>{tx("torneos.title")}</div>
+src/App.jsx:5905:            {tx("torneos.bracket").split(" ").slice(0,-1).join(" ")} <span style={{ color:T.accent }}>{tx("torneos.bracket").split(" ").slice(-1)}</span>
+src/App.jsx:5938:        <p style={{ color: T.textDim, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 10, fontWeight: 700 }}>Formato del torneo</p>
+src/App.jsx:6058:              <button type="button" className="cp04-control-btn" onClick={handleReorder}>🔀 {tx("torneos.reordenar")}</button>
+src/App.jsx:6059:              <button type="button" className="cp04-control-btn" onClick={handleAutoAssign}>👤 {tx("torneos.autoasignar")}</button>
+src/App.jsx:6060:              <button type="button" className="cp04-control-btn" onClick={handleSave}>💾 {tx("torneos.guardar")}</button>
+src/App.jsx:6062:                {published ? `📝 ${tx("common.volver")}` : `📢 ${tx("torneos.publicar")}`}
+src/App.jsx:6068:            <h3 style={{ marginTop:0, marginBottom:12, fontSize:".95rem" }}>{tx("torneos.exportar")}</h3>
+src/App.jsx:6133:                const gapPx = torneoGetMatchGap(rNum);
+src/App.jsx:6134:                const padPx = torneoGetRoundPadding(rNum);
+src/App.jsx:6135:                const label = torneoGetRoundLabel(rNum, totalRounds);
+src/App.jsx:6225:            <div className="cp04-full-ranking-wrap">
+src/App.jsx:6226:              <table className="cp04-full-ranking-table">
+src/App.jsx:6312:    { key:"general",    label: tx("ranking.general") },
+src/App.jsx:6313:    { key:"masculino",  label: tx("ranking.masculino") },
+src/App.jsx:6314:    { key:"femenino",   label: tx("ranking.femenino") },
+src/App.jsx:6315:    { key:"mixto",      label: tx("ranking.mixto") },
+src/App.jsx:6316:    { key:"iniciacion", label: tx("ranking.iniciacion") },
+src/App.jsx:6317:    { key:"medio",      label: tx("ranking.medio") },
+src/App.jsx:6318:    { key:"avanzado",   label: tx("ranking.avanzado") },
+src/App.jsx:6345:  const PODIO_LABELS = [tx("ranking.campeon"), tx("ranking.subcampeon"), tx("ranking.tercero")];
+src/App.jsx:6355:            {tx("ranking.temporada")} 2026
+src/App.jsx:6358:            {tx("ranking.title")}
+src/App.jsx:6360:          <p style={{ color:T.textDim, fontSize:".9rem", margin:0 }}>{tx("ranking.subtitle")}</p>
+src/App.jsx:6363:          <div style={{ color:T.textDim, fontSize:".72rem" }}>{tx("ranking.ultima_act")}</div>
+src/App.jsx:6367:            {tx("ranking.datos_ejemplo")}
+src/App.jsx:6379:            placeholder={tx("ranking.filtrar")}
+src/App.jsx:6397:          <div style={{ color:T.textDim }}>{tx("ranking.sin_resultados")}</div>
+src/App.jsx:6404:          <div style={{ color:T.textDim, fontSize:".72rem", fontWeight:900, letterSpacing:".1em", textTransform:"uppercase", marginBottom:14 }}>{tx("ranking.podio")}</div>
+src/App.jsx:6430:                      <div style={{ color:T.textDim, fontSize:".64rem", textTransform:"uppercase", letterSpacing:".06em" }}>{tx("ranking.pts")}</div>
+src/App.jsx:6434:                      <div style={{ color:T.textDim, fontSize:".64rem", textTransform:"uppercase", letterSpacing:".06em" }}>{tx("ranking.v")}</div>
+src/App.jsx:6438:                      <div style={{ color:T.textDim, fontSize:".64rem", textTransform:"uppercase", letterSpacing:".06em" }}>{tx("ranking.racha")}</div>
+src/App.jsx:6452:            <span style={{ fontWeight:900, fontSize:".88rem" }}>{tx("ranking.tabla")}</span>
+src/App.jsx:6453:            <span style={{ color:T.textDim, fontSize:".75rem" }}>{filtered.length} {tx("ranking.pareja").toLowerCase()}s</span>
+src/App.jsx:6459:                  <th style={{ width:36 }}>{tx("ranking.pos")}</th>
+src/App.jsx:6460:                  <th>{tx("ranking.pareja")}</th>
+src/App.jsx:6461:                  <th style={{ textAlign:"center" }}>{tx("ranking.pts")}</th>
+src/App.jsx:6462:                  <th style={{ textAlign:"center" }}>{tx("ranking.pj")}</th>
+src/App.jsx:6463:                  <th style={{ textAlign:"center" }}>{tx("ranking.v")}</th>
+src/App.jsx:6464:                  <th style={{ textAlign:"center" }}>{tx("ranking.d")}</th>
+src/App.jsx:6465:                  <th style={{ textAlign:"center" }}>{tx("ranking.racha")}</th>
+src/App.jsx:6466:                  <th style={{ textAlign:"center", display:"none" }} className="cp04-rank-nivel">{tx("ranking.nivel")}</th>
+src/App.jsx:6467:                  <th style={{ textAlign:"center" }}>{tx("ranking.mov")}</th>
+src/App.jsx:6509:                {showAll ? "▲" : "▼"} {showAll ? tx("common.volver") : `${tx("ranking.ver_completo")} (${filtered.length})`}
+src/App.jsx:6525:        <span style={{ color:T.textDim, fontSize:".7rem", fontStyle:"italic" }}>{tx("ranking.sistema_puntos")}</span>
+src/App.jsx:6548:        <MetricCard label={tx("admin.reservas_mes")} value="268" sub={`vs 241 ${tx("admin.vs_mes_anterior")}`} trend={11} icon="🎾" />
+src/App.jsx:6549:        <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
+src/App.jsx:6551:        <MetricCard label={tx("admin.procesos")} value={`${kpi.makeActivos}/43`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
+src/App.jsx:6552:        <MetricCard label={tx("admin.backup")} value={kpi.ultimoBackup} sub={tx("admin.prox_lunes")} trend={null} color="#34d399" icon="💾" />
+src/App.jsx:6557:        <ChartCard title={tx("admin.graf_hoy")} sub={tx("admin.sub_hoy")} demo>
+src/App.jsx:6560:        <ChartCard title={tx("admin.graf_semana")} sub={tx("admin.sub_semana")} demo>
+src/App.jsx:6563:        <ChartCard title={tx("admin.graf_pista")} sub={tx("admin.sub_pista")} demo>
+src/App.jsx:6594:        En local puede mantenerse el modo demo para pruebas, pero en producción las secciones sensibles
+src/App.jsx:6600:          `Secciones protegidas: ${CP04_PROTECTED_SECTIONS.join(", ")}`,
+src/App.jsx:6608:        Regla de producción: el frontend solo debe mostrar la interfaz. La autorización final debe decidirla
+src/App.jsx:6619:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+src/App.jsx:6626:  const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
+src/App.jsx:6629:  // Actualmente localStorage funciona como fallback local para no romper la demo.
+src/App.jsx:6631:  // GET    /api/profile/me
+src/App.jsx:6632:  // PATCH  /api/profile/me
+src/App.jsx:6633:  // POST   /api/profile/avatar
+src/App.jsx:6634:  // DELETE /api/profile/avatar
+src/App.jsx:6635:  // GET    /api/profile/metrics
+src/App.jsx:6638:    me: "/api/profile/me",
+src/App.jsx:6639:    avatar: "/api/profile/avatar",
+src/App.jsx:6640:    metrics: "/api/profile/metrics",
+src/App.jsx:6673:  // Avatar — persiste en localStorage (modo demo)
+src/App.jsx:6674:  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+src/App.jsx:6681:  // Bio — persiste en localStorage (modo demo)
+src/App.jsx:6682:  // TODO: GET/PATCH /api/profile/me { bio }
+src/App.jsx:6689:  // Datos deportivos — persiste en localStorage (modo demo)
+src/App.jsx:6690:  // TODO: GET/PATCH /api/profile/me { deporteData }
+src/App.jsx:6696:  // Privacidad — persiste en localStorage (modo demo)
+src/App.jsx:6697:  // TODO: GET/PATCH /api/profile/me { privacy }
+src/App.jsx:6784:    if (pwdActual !== demoPwds[selectedRole]) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
+src/App.jsx:6793:  // Métricas demo por rol
+src/App.jsx:6794:  const demoMetrics = {
+src/App.jsx:6795:    PLAYER:  { partidos:24, reservas:31, torneos:3,  ranking:12,  actividad:"Alta",     valoracion:4.2, fiabilidad:96, racha:5  },
+src/App.jsx:6796:    STAFF:   { partidos:8,  reservas:187,torneos:1,  ranking:"—", actividad:"Muy alta", valoracion:4.8, fiabilidad:99, racha:12 },
+src/App.jsx:6797:    ADMIN:   { partidos:4,  reservas:312,torneos:5,  ranking:"—", actividad:"Alta",     valoracion:5.0, fiabilidad:100,racha:21 },
+src/App.jsx:6798:    SUPPORT: { partidos:2,  reservas:98, torneos:0,  ranking:"—", actividad:"Media",    valoracion:4.6, fiabilidad:98, racha:7  },
+src/App.jsx:6800:  const metrics = demoMetrics[selectedRole] || demoMetrics.PLAYER;
+src/App.jsx:6806:    { id:"torneo",     icon:"🏆",  label:"Torneo completado",  desc:"Ha participado en torneos",earned:metrics.torneos>0 },
+src/App.jsx:6811:    { id:"frecuente",  icon:"📌",  label:"Reserva frecuente",  desc:"10+ reservas realizadas",  earned:metrics.reservas>=10 },
+src/App.jsx:6814:  // Actividad reciente demo
+src/App.jsx:7024:                  { key:"busqueda",       label:tx("perfil.deporte_busqueda"),       opts:["Disponible para partidos","No disponible","Solo torneos","Buscando pareja"] },
+src/App.jsx:7043:        {/* CAMBIAR CONTRASEÑA */}
+src/App.jsx:7047:            Modo demo local. En producción se validará desde backend de autenticación segura.
+src/App.jsx:7066:            { icon:"📋", label:tx("perfil.metricas_reservas"),  value:metrics.reservas },
+src/App.jsx:7067:            { icon:"🏆", label:tx("perfil.metricas_torneos"),   value:metrics.torneos },
+src/App.jsx:7068:            { icon:"📈", label:tx("perfil.metricas_ranking"),   value:typeof metrics.ranking==="number"?"#"+metrics.ranking:metrics.ranking },
+src/App.jsx:7101:      {/* ── INSIGNIAS Y LOGROS ── */}
+src/App.jsx:7147:            {tx("perfil.info_demo")} En producción real se aplicará política de privacidad completa conforme al RGPD / normativa aplicable.
+src/App.jsx:7157:          Confirmaciones de reserva &nbsp;·&nbsp; recordatorios de partido &nbsp;·&nbsp; torneos &nbsp;·&nbsp; cambios de horario
+src/App.jsx:7169:export default function ClubPadel04SaaSApp() {
+src/App.jsx:7182:  // Login universal preparado para producción.
+src/App.jsx:7183:  // Mantiene los perfiles demo internos sin obligar a usuarios reales a usar correos fijos.
+src/App.jsx:7188:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+src/App.jsx:7193:      desc: "Reservar pistas, consultar reservas y ranking.",
+src/App.jsx:7199:      desc: "Gestión diaria de reservas, altas y atención al jugador.",
+src/App.jsx:7212:      start: "soporte",
+src/App.jsx:7213:      password: "soporte04",
+src/App.jsx:7266:    // Accesos internos de prueba para el propietario/equipo.
+src/App.jsx:7267:    if (clean.includes("soporte")) return "SUPPORT";
+src/App.jsx:7295:    localStorage.setItem("cp04_auth_mode", "universal_demo");
+src/App.jsx:7406:            Usa tu email y contraseña. Los roles demo siguen disponibles abajo solo para pruebas internas.
+src/App.jsx:7446:            Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.
+src/data/README.md:3:Carpeta reservada para datos estáticos seguros:
+src/data/README.md:9:- datos demo
+src/data/performancePlan.js:12:    "ranking",
+src/data/performancePlan.js:13:    "torneos",
+src/data/performancePlan.js:15:    "reservas y auth solo al final"
+src/data/performancePlan.js:17:  protectedAreas: [
+src/data/performancePlan.js:18:    "reservas",
+src/data/visualAssets.js:4:  reservas: "/optimized/images/user-reservas-bg.webp",
+src/data/visualAssets.js:28:    id: "torneos",
+src/data/visualAssets.js:30:    src: "/optimized/gallery/cp04/torneos.webp",
+src/data/visualAssets.js:31:    original: "/gallery/cp04/torneos.jpg"
+src/utils/README.md:3:Carpeta reservada para helpers puros y reutilizables.
+src/utils/README.md:5:No mover aquí lógica crítica de reservas, auth, pagos o Worker sin pruebas E2E.
+src/components/README.md:3:Carpeta reservada para componentes extraídos de forma progresiva.
+src/components/README.md:9:3. Componentes de dashboard.
+src/components/ClubGallery.jsx:8:    <section className="cp04-gallery-module" aria-label="Galería del club">
+src/components/ClubGallery.jsx:10:      <h2>Galería del club</h2>
+src/components/ClubGallery.jsx:11:      <p>Galería visual del club.</p>
+src/components/lazy/lazySections.js:8:  protectedAreas: [
+src/components/lazy/lazySections.js:9:    "reservas",
+src/components/lazy/lazySections.js:11:    "reprogramacion",
+src/components/lazy/lazyGallery.js:6:  section: "club-gallery",
+src/components/lazy/lazyGallery.js:7:  label: "Galería del club",
+src/components/lazy/lazyGallery.js:10:  protectedAreas: [
+src/components/lazy/lazyGallery.js:11:    "reservas",
+src/components/lazy/lazyGallery.js:13:    "reprogramacion",
+src/internal-module-backgrounds.css:27:  --cp04-current-module-bg: url('/images/user-reservas-bg.png');
+src/internal-background-detector.js:25:    text.includes('soporte tecnico') &&
+src/internal-background-detector.js:36:    text.includes('reservar pista') ||
+src/internal-background-detector.js:39:    text.includes('ranking') ||
+src/internal-background-detector.js:52:    text.includes('automatizaciones') ||
+src/internal-background-detector.js:61:    text.includes('dashboard ejecutivo') ||
+src/internal-background-detector.js:63:    text.includes('soporte tecnico');
+src/internal-background-detector.js:66:    text.includes('reservar pista') ||
+src/internal-background-detector.js:67:    text.includes('reservas') ||
+src/internal-background-detector.js:68:    text.includes('reprogramar reserva') ||
+src/internal-background-detector.js:69:    text.includes('cancelar reserva') ||
+src/internal-background-detector.js:71:    text.includes('ranking') ||
+src/internal-background-detector.js:72:    text.includes('torneos') ||
+src/cp04-legibility-polish.css:1:/* CP04 · Mejora SaaS de legibilidad, microinteracciones y contraste */
+src/cp04-legibility-polish.css:46:/* Etiquetas verdes premium */
+src/cp04-legibility-polish.css:177:/* Botón cerrar sesión más premium */
+src/cp04-legibility-polish.css:230:/* FIX ESTRICTO SOLO 2 BOTONES: "Reservar pista" e "Ir a reservas" */
+src/cp04-legibility-polish.css:231:button.cp04-fix-reservar-pista-btn,
+src/cp04-legibility-polish.css:232:button.cp04-fix-ir-reservas-btn {
+src/cp04-legibility-polish.css:252:button.cp04-fix-reservar-pista-btn *,
+src/cp04-legibility-polish.css:253:button.cp04-fix-ir-reservas-btn * {
+src/cp04-legibility-polish.css:260:button.cp04-fix-reservar-pista-btn:hover,
+src/cp04-legibility-polish.css:261:button.cp04-fix-ir-reservas-btn:hover {
+src/cp04-legibility-polish.css:270:/* FIX FINAL ESTRICTO: texto blanco SOLO en "Reservar pista" e "Ir a reservas" */
+src/cp04-legibility-polish.css:271:button.cp04-fix-reservar-pista-btn,
+src/cp04-legibility-polish.css:272:button.cp04-fix-ir-reservas-btn,
+src/cp04-legibility-polish.css:273:button.cp04-fix-reservar-pista-btn *,
+src/cp04-legibility-polish.css:274:button.cp04-fix-ir-reservas-btn * {
+src/cp04-legibility-polish.css:282:/* Mantener fondo premium pero con texto blanco */
+src/cp04-legibility-polish.css:283:button.cp04-fix-reservar-pista-btn,
+src/cp04-legibility-polish.css:284:button.cp04-fix-ir-reservas-btn {
+src/cp04-legibility-polish.css:298:/* FIX DEFINITIVO SOLO BOTONES: Reservar pista / Ir a reservas */
+src/cp04-legibility-polish.css:301:button.cp04-fix-reservar-pista-btn,
+src/cp04-legibility-polish.css:302:button.cp04-fix-reservar-pista-btn *,
+src/cp04-legibility-polish.css:303:button.cp04-fix-ir-reservas-btn,
+src/cp04-legibility-polish.css:304:button.cp04-fix-ir-reservas-btn * {
+src/cp04-legibility-polish.css:312:/* FIX ESTRICTO: texto blanco SOLO en Reservar pista, Ir a reservas, Dar de alta y Pista 1 */
+src/cp04-legibility-polish.css:315:button.cp04-fix-reservar-pista-btn,
+src/cp04-legibility-polish.css:316:button.cp04-fix-reservar-pista-btn *,
+src/cp04-legibility-polish.css:317:button.cp04-fix-ir-reservas-btn,
+src/cp04-legibility-polish.css:318:button.cp04-fix-ir-reservas-btn *,
+src/cp04-legibility-polish.css:333:button.cp04-fix-reservar-pista-btn,
+src/cp04-legibility-polish.css:334:button.cp04-fix-reservar-pista-btn *,
+src/cp04-legibility-polish.css:335:button.cp04-fix-ir-reservas-btn,
+src/cp04-legibility-polish.css:336:button.cp04-fix-ir-reservas-btn *,
+src/cp04-legibility-polish.css:341:button.cp04-fix-reprogramar-reserva-btn,
+src/cp04-legibility-polish.css:342:button.cp04-fix-reprogramar-reserva-btn *,
+src/cp04-legibility-polish.css:343:button.cp04-fix-consultar-reservas-btn,
+src/cp04-legibility-polish.css:344:button.cp04-fix-consultar-reservas-btn * {
+src/cp04-legibility-polish.css:471:/* FASE 80 · Sidebar, navegación y estados activos premium */
+src/cp04-legibility-polish.css:548:/* Cerrar sesión más legible y menos plano */
+src/cp04-legibility-polish.css:592:/* Soporte del sidebar: mismo tono premium que el resto, sin rojo */
+src/cp04-legibility-polish.css:593:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+src/cp04-legibility-polish.css:594:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn {
+src/cp04-legibility-polish.css:609:/* Soporte activo: verde premium, igual que el resto de estados activos */
+src/cp04-legibility-polish.css:610:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
+src/cp04-legibility-polish.css:611:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover {
+src/cp04-legibility-polish.css:624:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[style],
+src/cp04-legibility-polish.css:625:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[style] {
+src/cp04-legibility-polish.css:725:/* Auditoría 19 · Pulido visual premium del sidebar
+src/cp04-legibility-polish.css:726:   Objetivo: unificar soporte/perfil/logout para que no queden verdes/rojos fijos.
+src/cp04-legibility-polish.css:730:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+src/cp04-legibility-polish.css:731:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+src/cp04-legibility-polish.css:740:/* Perfil: estado base premium neutro, sin rojo permanente */
+src/cp04-legibility-polish.css:741:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
+src/cp04-legibility-polish.css:742:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
+src/cp04-legibility-polish.css:760:/* Hover común premium */
+src/cp04-legibility-polish.css:761:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
+src/cp04-legibility-polish.css:762:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
+src/cp04-legibility-polish.css:765:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn:hover,
+src/cp04-legibility-polish.css:766:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn:hover,
+src/cp04-legibility-polish.css:801:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+src/cp04-legibility-polish.css:802:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
+src/cp04-legibility-polish.css:805:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
+src/cp04-legibility-polish.css:806:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
+src/cp04-legibility-polish.css:814:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
+src/cp04-legibility-polish.css:815:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
+src/cp04-legibility-polish.css:829:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn *,
+src/cp04-legibility-polish.css:830:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn *,
+src/cp04-legibility-polish.css:856:/* === AUDITORIA 19.2 · soporte no activo sin filo verde === */
+src/cp04-legibility-polish.css:857:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]),
+src/cp04-legibility-polish.css:858:body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]) {
+src/cp04-legibility-polish.css:867:body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]) *,

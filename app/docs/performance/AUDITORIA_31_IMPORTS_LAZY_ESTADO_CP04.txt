@@ -1,0 +1,8 @@
+src/App.jsx:38:import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+src/App.jsx:788:  return <div className={`cp04-gallery-item${featured ? " featured" : ""}`}>{item.src ? <img src={item.src} alt={`${item.title} de Club Pádel 04`} loading="lazy" /> : <div className="cp04-gallery-fallback" aria-hidden="true" />}<div className="cp04-gallery-caption"><strong style={{ display: "block", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>{item.title}</strong><span style={{ color: T.textDim, fontSize: ".88rem" }}>{item.src ? "" : item.label}</span></div></div>;
+src/main.jsx:1:import { StrictMode } from 'react'
+src/main.jsx:2:import { createRoot } from 'react-dom/client'
+src/components/ClubGallery.jsx:1:import { cp04GalleryAssets } from "../data/visualAssets.js";
+src/components/ClubGallery.jsx:3:export default function ClubGallery() {
+src/components/ClubGallery.jsx:16:            <img src={featured.src} alt={featured.title} loading="lazy" />
+src/components/ClubGallery.jsx:24:              <img src={item.src} alt={item.title} loading="lazy" />

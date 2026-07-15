@@ -1,0 +1,15 @@
+src/App.jsx:1:import './cp04-login-enter-white-final.js';
+src/App.jsx:2:import './tournament-module.css';
+src/App.jsx:3:import './internal-background-detector';
+src/App.jsx:4:import './internal-module-backgrounds.css';
+src/App.jsx:5:import './cp04-two-buttons-fix';
+src/App.jsx:6:import './cp04-sidebar-fix';
+src/App.jsx:7:import './cp04-legibility-polish.css';
+src/App.jsx:8:import './torcal-role-background.css';
+src/App.jsx:9:import './role-background-detector';
+src/App.jsx:38:import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+src/App.jsx:171:  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;700;800&display=swap');
+src/main.jsx:1:import { StrictMode } from 'react'
+src/main.jsx:2:import { createRoot } from 'react-dom/client'
+src/main.jsx:3:import './index.css'
+src/main.jsx:4:import App from './App.jsx'
