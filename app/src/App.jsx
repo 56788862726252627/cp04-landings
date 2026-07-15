@@ -214,6 +214,10 @@ const globalStyles = `
   @media (max-width: 1180px) { .cp04-grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
   @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.88); backdrop-filter: blur(18px); } .cp04-menu-button { background: linear-gradient(135deg, ${T.accent}, ${T.accent2}); color: #06100a; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(88vw, 340px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3, .cp04-gallery { grid-template-columns: 1fr; } .cp04-gallery-item.featured { min-height: 340px; } }
   @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } .cp04-gallery-item, .cp04-gallery-item.featured { min-height: 245px; border-radius: 22px; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+    .cp04-btn:hover:not(:disabled) { transform: none; }
+  }
 `;
 
 
@@ -3089,11 +3093,17 @@ function LanguageSelector() {
   const [selected, setSelected] = useState(() => loadSavedLanguage() || LANGUAGES_RAW.find(l => l.code === "es-ES") || LANGUAGES_ALL[0]);
   const dropRef = useRef(null);
   const searchRef = useRef(null);
+  const triggerRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
     searchRef.current?.focus();
-    function onKey(e) { if (e.key === "Escape") setOpen(false); }
+    function onKey(e) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
@@ -3122,6 +3132,7 @@ function LanguageSelector() {
     setOpen(false);
     setSearch("");
     setGlobalLang(lang);
+    triggerRef.current?.focus();
   }
 
   const filteredRecommended = filterLanguages(LANGUAGES_RECOMMENDED);
@@ -3131,8 +3142,12 @@ function LanguageSelector() {
   return (
     <div ref={dropRef} style={{ position: "relative", width: "100%" }}>
       <button
+        ref={triggerRef}
         type="button"
         aria-label={`Idioma: ${selected.label} ${selected.flag}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls="cp04-lang-listbox"
         onClick={() => setOpen(o => !o)}
         style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "rgba(182,255,0,.06)", border: `1px solid rgba(182,255,0,.18)`, borderRadius: 12, padding: "9px 13px", cursor: "pointer", color: "#fff", fontSize: ".84rem", fontWeight: 700, fontFamily: "inherit" }}
       >
@@ -3155,7 +3170,7 @@ function LanguageSelector() {
             />
           </div>
 
-          <div style={{ overflowY: "auto", flex: 1 }}>
+          <div id="cp04-lang-listbox" role="listbox" aria-label={ltx("lang.buscar")} style={{ overflowY: "auto", flex: 1 }}>
             {!hasResults ? (
               <div style={{ padding: "18px 16px", textAlign: "center" }}>
                 <div style={{ color: "rgba(255,255,255,.55)", fontSize: ".84rem", marginBottom: 8 }}>{ltx("lang.no_encontrados")}</div>
@@ -3189,6 +3204,8 @@ function LangOption({ lang, selected, onSelect }) {
   return (
     <button
       type="button"
+      role="option"
+      aria-selected={isSelected}
       onClick={() => onSelect(lang)}
       style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", background: isSelected ? "rgba(182,255,0,.1)" : "transparent", border: "none", borderLeft: isSelected ? "3px solid rgba(182,255,0,.8)" : "3px solid transparent", padding: "8px 14px", cursor: "pointer", color: "#fff", textAlign: "left", transition: "background .12s ease" }}
       onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}

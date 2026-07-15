@@ -308,6 +308,7 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
   const [tipPos, setTipPos]       = useState({ x: 24, y: 24, w: 360 });
   const lastRevision               = useRef(0);
   const timerRef                   = useRef(null);
+  const dialogRef                  = useRef(null);
 
   /* Auto-show primera vez por rol */
   useEffect(() => {
@@ -372,6 +373,44 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
 
     return () => clearTimeout(timerRef.current);
   }, [step, visible]); // eslint-disable-line
+
+  /* Foco atrapado dentro del diálogo + Escape para cerrar: sin esto, Tab
+     puede escapar del tour hacia elementos ocultos detrás del overlay. */
+  useEffect(() => {
+    if (!visible) return;
+    const focusableSelector = 'button:not(:disabled), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const raf = requestAnimationFrame(() => {
+      const first = dialogRef.current?.querySelector(focusableSelector);
+      first?.focus();
+    });
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close(false);
+        return;
+      }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const items = Array.from(dialogRef.current.querySelectorAll(focusableSelector));
+      if (items.length === 0) return;
+      const firstEl = items[0];
+      const lastEl = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === firstEl) {
+        e.preventDefault();
+        lastEl.focus();
+      } else if (!e.shiftKey && document.activeElement === lastEl) {
+        e.preventDefault();
+        firstEl.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, step]);
 
   function close(markSeen) {
     if (markSeen) {
@@ -538,6 +577,7 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
       {/* ── Tarjeta tooltip ── */}
       <div
         key={`tour-tip-${step}`}
+        ref={dialogRef}
         className="cp04-tour-tip"
         role="dialog"
         aria-modal="true"
