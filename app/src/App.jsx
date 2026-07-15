@@ -6695,6 +6695,85 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   );
 }
 
+// ============================================================
+// PWA status banners: offline / actualización disponible
+// ============================================================
+// Independientes de auth/rol a propósito: deben poder verse tanto en la
+// pantalla de login como dentro de la app ya autenticada. No leen ni
+// escriben ningún estado de sesión/rol.
+function PwaStatusBanners() {
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+  const [checkingConnection, setCheckingConnection] = useState(false);
+  const [updateRegistration, setUpdateRegistration] = useState(null);
+
+  useEffect(() => {
+    function goOffline() { setIsOffline(true); }
+    function goOnline() { setIsOffline(false); }
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, []);
+
+  useEffect(() => {
+    function onUpdateAvailable(event) { setUpdateRegistration(event.detail?.registration || null); }
+    window.addEventListener("cp04:sw-update-available", onUpdateAvailable);
+    return () => window.removeEventListener("cp04:sw-update-available", onUpdateAvailable);
+  }, []);
+
+  async function retryConnection() {
+    setCheckingConnection(true);
+    try {
+      await fetch("/favicon.svg", { method: "HEAD", cache: "no-store" });
+      setIsOffline(false);
+    } catch {
+      setIsOffline(true);
+    } finally {
+      setCheckingConnection(false);
+    }
+  }
+
+  function applyUpdate() {
+    const waiting = updateRegistration?.waiting;
+    if (!waiting) return;
+    waiting.postMessage({ type: "SKIP_WAITING" });
+    setUpdateRegistration(null);
+  }
+
+  if (!isOffline && !updateRegistration) return null;
+
+  return (
+    <div style={{ position: "sticky", top: 0, zIndex: 200, display: "flex", flexDirection: "column", gap: 2 }}>
+      {isOffline && (
+        <div role="status" aria-live="polite" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 12, padding: "10px 16px", background: T.danger, color: "#2a0700", fontWeight: 800, fontSize: ".85rem", textAlign: "center" }}>
+          <span>Sin conexión a internet. Algunas funciones pueden no estar disponibles.</span>
+          <button
+            type="button"
+            onClick={retryConnection}
+            disabled={checkingConnection}
+            style={{ minHeight: 36, padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,.3)", background: "rgba(0,0,0,.12)", color: "inherit", fontWeight: 800, cursor: checkingConnection ? "wait" : "pointer" }}
+          >
+            {checkingConnection ? "Comprobando…" : "Reintentar"}
+          </button>
+        </div>
+      )}
+      {!isOffline && updateRegistration && (
+        <div role="status" aria-live="polite" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 12, padding: "10px 16px", background: T.accent, color: "#06100a", fontWeight: 800, fontSize: ".85rem", textAlign: "center" }}>
+          <span>Hay una nueva versión de Club Pádel 04 disponible.</span>
+          <button
+            type="button"
+            onClick={applyUpdate}
+            style={{ minHeight: 36, padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,.3)", background: "rgba(0,0,0,.12)", color: "inherit", fontWeight: 800, cursor: "pointer" }}
+          >
+            Actualizar ahora
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ClubPadel04SaaSApp() {
   const auth = useAuth();
@@ -7050,6 +7129,7 @@ export default function ClubPadel04SaaSApp() {
     return (
       <>
         <style>{globalStyles}</style>
+        <PwaStatusBanners />
         <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:"radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), #050910", color:"white" }}>
           <section style={{ width:"min(1080px, 100%)", border:"1px solid rgba(255,255,255,.12)", borderRadius:34, padding:"clamp(24px, 4vw, 48px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:18 }}>
@@ -7350,6 +7430,7 @@ export default function ClubPadel04SaaSApp() {
       <style>{globalStyles}</style>
       <style>{GALLERY_REAL_IMAGE_STYLES}</style>
       <style>{GALLERY_FORCE_STYLES}</style>
+      <PwaStatusBanners />
       <div className="cp04-mobilebar">
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <span style={{ width:10, height:10, borderRadius:"50%", background:T.accent }} />
