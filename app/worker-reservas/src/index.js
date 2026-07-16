@@ -461,7 +461,7 @@ async function prepareAirtableWrite(payload, env) {
 // handleReservas, sin duplicar la query. `ok:false` cubre tanto "Airtable
 // no configurado" como errores de red/HTTP: en ningún caso lanza, siempre
 // devuelve un resultado que el llamador decide cómo tratar.
-async function cp04FetchOcupadas(env, fecha) {
+export async function cp04FetchOcupadas(env, fecha) {
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
     return { ok: false, reason: "not_configured" };
   }
@@ -549,7 +549,7 @@ export function cp04BuildIdempotencyKey(normalizedPayload) {
 // wrangler.toml. No es una garantía global entre datacenters, pero cubre
 // el caso real más común (doble clic, reintento inmediato del mismo
 // cliente) durante una ventana corta.
-async function cp04CheckIdempotency(request, normalizedPayload) {
+export async function cp04CheckIdempotency(request, normalizedPayload) {
   const idemKey = cp04BuildIdempotencyKey(normalizedPayload);
   if (!idemKey) {
     return { duplicate: false, markDone: async () => {} };
