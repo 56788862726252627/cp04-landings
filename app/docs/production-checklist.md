@@ -19,7 +19,7 @@
 - [ ] No Google credentials committed.
 - [x] Worker secrets configured only in Cloudflare/backend environment (confirmed live in `cp04-reservas-proxy`).
 - [ ] `ALLOWED_ORIGIN` is exact production frontend origin.
-- [ ] Admin, staff and support panels are not connected to real private data until auth exists.
+- [x] Real authentication (Supabase) and server-side role gates exist and are active in production (`CP04_ENFORCE_ROLE_GATES`). Admin, staff and support panels must still avoid connecting to real private data until each specific data flow is verified end-to-end.
 
 ## Frontend Configuration
 
@@ -47,7 +47,7 @@
 - [ ] Invalid payload returns validation error.
 - [ ] CORS rejects unexpected origins.
 - [ ] Make forwarding tested only after setting private webhook.
-- [ ] Airtable write path is implemented in code (`prepareAirtableWrite`) and called on every `crear_reserva`/`reprogramar_reserva`; it is currently inactive end-to-end only because the Airtable account has hit a billing limit (external, not a code gate). Re-verify against real Airtable once that limit is resolved.
+- [ ] `prepareAirtableWrite` (`worker-reservas/src/index.js`) is a stub/preparation step only — it never calls the Airtable API. Any real write happens inside the Make scenario triggered by the webhook (outside this repo, not verified here). Reading availability from Airtable is implemented but currently blocked externally by an Airtable account billing limit; resolving that limit restores reads only, it does **not** enable a Worker-side write. Define and implement a real Worker-side write path (or explicitly confirm the Make-side write is sufficient) before treating Airtable persistence as production-ready.
 
 ## Auth And Roles
 
