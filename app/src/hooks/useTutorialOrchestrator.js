@@ -9,6 +9,9 @@ export const useTutorialOrchestrator = (stepData, current, onNavigate) => {
   useEffect(() => {
     if (!stepData) return;
 
+    let scrollTimeoutId = null;
+    let rectTimeoutId = null;
+
     const executeStep = () => {
       // 1. Navegación
       if (stepData.targetModule && current !== stepData.targetModule) {
@@ -16,13 +19,13 @@ export const useTutorialOrchestrator = (stepData, current, onNavigate) => {
       }
 
       // 2. Búsqueda con Fallback a #root
-      setTimeout(() => {
+      scrollTimeoutId = setTimeout(() => {
         let el = document.querySelector(stepData.selector);
         if (!el) el = document.getElementById('root') || document.body;
 
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        setTimeout(() => {
+        rectTimeoutId = setTimeout(() => {
           const rect = el.getBoundingClientRect();
           setTargetRect({
             x: rect.left,
@@ -36,6 +39,14 @@ export const useTutorialOrchestrator = (stepData, current, onNavigate) => {
     };
 
     executeStep();
+
+    // Si stepData/current cambian (o el componente se desmonta) antes de que
+    // los timers disparen, se cancelan: evita que un setTargetRect tardío
+    // pise el estado de un paso más reciente del tutorial.
+    return () => {
+      if (scrollTimeoutId) clearTimeout(scrollTimeoutId);
+      if (rectTimeoutId) clearTimeout(rectTimeoutId);
+    };
   }, [stepData, current]);
 
   return targetRect;
