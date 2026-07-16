@@ -100,7 +100,7 @@ function requestedReservationDate(payload, accion) {
 }
 
 
-function validatePayload(payload) {
+export function validatePayload(payload) {
   const errors = {};
   const accion = cleanText(payload?.accion);
 
@@ -255,6 +255,7 @@ function validatePayload(payload) {
   if (!reserva.fecha) {
     errors.fecha = "Fecha requerida.";
   } else if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(reserva.fecha) ||
     Number.isNaN(selectedDate.getTime()) ||
     selectedDate < today
   ) {
@@ -466,7 +467,7 @@ async function cp04FetchOcupadas(env, fecha) {
   }
 
   const formula = `AND(
-    FIND("${fecha}|", {clave_slot}) = 1,
+    FIND("${cp04FormulaText(fecha)}|", {clave_slot}) = 1,
     OR(
       {estado_reserva} = "pendiente",
       {estado_reserva} = "confirmada",
@@ -572,6 +573,35 @@ async function cp04CheckIdempotency(request, normalizedPayload) {
   };
 }
 
+// --- Rate limiting básico defensivo para crear_reserva (in-memory, por
+// isolate) ---
+//
+// Mismo patrón y misma limitación aceptada que checkMakeRateLimit en
+// support/makeLiveInventory.js: protege contra un script que intente saturar
+// el calendario con altas en ráfaga desde un mismo isolate, no contra un
+// ataque distribuido (para eso haría falta un límite a nivel de borde/KV,
+// fuera de alcance de esta fase). El límite es generoso a propósito para no
+// romper pruebas manuales ni demos con varios roles seguidos.
+const CP04_CREAR_RESERVA_RATE_LIMIT_MAX = 30;
+const CP04_CREAR_RESERVA_RATE_LIMIT_WINDOW_MS = 60_000;
+let cp04CrearReservaRateLimitHits = [];
+
+export function cp04CheckCrearReservaRateLimit(now = Date.now()) {
+  cp04CrearReservaRateLimitHits = cp04CrearReservaRateLimitHits.filter(
+    (t) => now - t < CP04_CREAR_RESERVA_RATE_LIMIT_WINDOW_MS
+  );
+  if (cp04CrearReservaRateLimitHits.length >= CP04_CREAR_RESERVA_RATE_LIMIT_MAX) {
+    return false;
+  }
+  cp04CrearReservaRateLimitHits.push(now);
+  return true;
+}
+
+// Expuesto solo para tests (limpiar estado entre casos).
+export function __resetCrearReservaRateLimitForTests() {
+  cp04CrearReservaRateLimitHits = [];
+}
+
 async function handleReservas(request, env) {
   const headers = corsHeaders(request, env);
 
@@ -601,6 +631,19 @@ async function handleReservas(request, env) {
   // servidor todavía: activarlo hoy sin más rompería el tutorial guiado de
   // STAFF/ADMIN/SUPPORT. Ver informe de auditoría para la decisión pendiente.
   const accionSolicitada = cleanText(payload?.accion);
+
+  if (accionSolicitada === "crear_reserva" && !cp04CheckCrearReservaRateLimit()) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "RATE_LIMITED",
+        message: "Demasiadas solicitudes de alta de reserva en poco tiempo. Inténtalo de nuevo en un minuto.",
+      },
+      429,
+      headers
+    );
+  }
+
   const esAccionDeStaff =
     accionSolicitada === "cancelar_reserva" ||
     accionSolicitada === "reprogramar_reserva";
@@ -746,6 +789,17 @@ async function handleDisponibilidad(request, env) {
     );
   }
 
+  // Endpoint público sin autenticación: valida el formato antes de usar
+  // `fecha` en un filtro de Airtable (defensa en profundidad, además del
+  // escape de cp04FormulaText dentro de cp04FetchOcupadas).
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return jsonResponse(
+      { ok: false, error: "Formato de fecha inválido, use YYYY-MM-DD" },
+      400,
+      headers
+    );
+  }
+
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
     return jsonResponse(
       {
@@ -767,12 +821,13 @@ async function handleDisponibilidad(request, env) {
   const disponibilidad = await cp04FetchOcupadas(env, fecha);
 
   if (!disponibilidad.ok) {
+    // No reenviar disponibilidad.details (cuerpo crudo de error de Airtable)
+    // a un cliente anónimo: solo se loguea server-side, sin datos personales.
+    console.error("CP04_DISPONIBILIDAD_AIRTABLE_ERROR", disponibilidad.reason, disponibilidad.status);
     return jsonResponse(
       {
         ok: false,
         error: "Error consultando disponibilidad en Airtable",
-        status: disponibilidad.status,
-        details: disponibilidad.details
       },
       500,
       headers
@@ -821,7 +876,7 @@ async function handleDisponibilidad(request, env) {
 }
 
 // CP04_LISTADO_RESERVAS_V1_BEGIN
-function cp04FormulaText(value) {
+export function cp04FormulaText(value) {
   return String(value ?? "")
     .replace(/\\/g, "\\\\")
     .replace(/"/g, '\\"');
@@ -2036,11 +2091,13 @@ export default {
         corsHeaders(request, env)
       );
     } catch (error) {
+      // No reenviar error?.message (puede incluir detalles internos) a un
+      // cliente anónimo: solo se loguea server-side, sin datos personales.
+      console.error("CP04_WORKER_UNHANDLED_ERROR", error?.message || error);
       return jsonResponse(
         {
           ok: false,
           error: "Internal server error",
-          message: error?.message || "Unknown error"
         },
         500,
         corsHeaders(request, env)
