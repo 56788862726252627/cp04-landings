@@ -48,7 +48,6 @@ import {
   CP04_ROLE_PERMISSIONS,
   CP04_PROTECTED_SECTIONS,
   cp04NormalizeRole,
-  cp04IsProtectedSection,
   cp04CanAccessSection,
   cp04GetSafeStartSection,
 } from "./utils/rbac.js";
@@ -123,18 +122,6 @@ const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18
 const BOOKING_DURATIONS = [60, 90, 120];
 const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
 const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
-
-const BOOKINGS = [
-  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
-  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
-  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
-];
-
-const RANKING = [
-  { pos: 1, name: "Jugador demo 1", elo: 3.85, cat: "Demo", wins: 12, losses: 3 },
-  { pos: 2, name: "Jugador demo 2", elo: 3.72, cat: "Demo", wins: 10, losses: 4 },
-  { pos: 3, name: "Jugador demo 3", elo: 3.61, cat: "Demo", wins: 9, losses: 5 },
-];
 
 const RANKING_PRO = [
   { pos: 1, pareja: "García / Martínez", p1: "Carlos García", p2: "Pedro Martínez", pts: 1250, pj: 24, v: 19, d: 5, racha: 5, nivel: "Avanzado", cat: "Masculino", mov: 0, temporada: "2026" },
@@ -321,17 +308,6 @@ function isSundayISO(value) {
 
 function isPastDateISO(value) {
   return Boolean(value) && value < todayISO();
-}
-
-function minutesFromTime(value) {
-  const match = /^(\d{2}):(\d{2})$/.exec(String(value || ""));
-  if (!match) return Number.NaN;
-  return Number(match[1]) * 60 + Number(match[2]);
-}
-
-function madridCurrentMinutes() {
-  const { hour, minute } = madridDateParts();
-  return Number(hour) * 60 + Number(minute);
 }
 
 // "Ahora" de Madrid, representado como un Date UTC cuyos campos coinciden
@@ -855,14 +831,6 @@ function SectionTitle({ eyebrow, title, desc }) {
   return <div style={{ marginBottom: 30 }}>{eyebrow && <div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".76rem", textTransform: "uppercase", marginBottom: 10 }}>{eyebrow}</div>}<h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(2rem,4vw,3.1rem)", lineHeight: .96, margin: 0, letterSpacing: "-.055em" }}>{title}</h2>{desc && <p style={{ color: T.textDim, lineHeight: 1.75, maxWidth: 760, marginTop: 14, fontSize: "1.02rem" }}>{desc}</p>}</div>;
 }
 
-function Badge({ status }) {
-  const lang = useLang();
-  const tx = key => t(key, lang);
-  const map = { confirmed: [tx("badge.confirmed"), T.accent], pending: [tx("badge.pending"), T.warning], completed: [tx("badge.completed"), T.textDim] };
-  const [label, color] = map[status] || map.pending;
-  return <span className="cp04-badge" style={{ color, background: "rgba(255,255,255,.07)", border: `1px solid ${color}44`, borderRadius: 999, padding: "7px 11px", fontSize: ".74rem", fontWeight: 900 }}>{label}</span>;
-}
-
 function FieldError({ children }) {
   if (!children) return null;
   return <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 6 }}>{children}</div>;
@@ -1006,15 +974,6 @@ function MetricCard({ label, value, sub, trend, color, icon }) {
   );
 }
 
-function ChartTooltip({ x, y, children, visible }) {
-  if (!visible) return null;
-  return (
-    <div style={{ position:"absolute", left:x, top:y, transform:"translate(-50%,-100%)", pointerEvents:"none", zIndex:100, background:"rgba(7,11,20,.95)", border:"1px solid rgba(182,255,0,.35)", borderRadius:10, padding:"7px 11px", whiteSpace:"nowrap", boxShadow:"0 8px 24px rgba(0,0,0,.5)" }}>
-      {children}
-    </div>
-  );
-}
-
 function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
   const col = color || T.accent;
   const [tip, setTip] = useState(null);
@@ -1096,19 +1055,19 @@ function DonutChart({ segments, size = 120, label }) {
   const [tip, setTip] = useState(null);
   if (!segments || !segments.length) return null;
   const total = segments.reduce((s, x) => s + x.v, 0) || 1;
-  let angle = -90;
   const r = 40, cx = 60, cy = 60, stroke = 14;
-  const arcs = segments.map(seg => {
+  const arcs = segments.reduce((acc, seg) => {
     const pct = seg.v / total;
-    const a1 = (angle * Math.PI) / 180;
-    const a2 = ((angle + pct * 360) * Math.PI) / 180;
+    const a1 = (acc.angle * Math.PI) / 180;
+    const a2 = ((acc.angle + pct * 360) * Math.PI) / 180;
     const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
     const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
     const la = pct > 0.5 ? 1 : 0;
     const d = `M ${x1} ${y1} A ${r} ${r} 0 ${la} 1 ${x2} ${y2}`;
-    angle += pct * 360;
-    return { ...seg, d, pct };
-  });
+    acc.list.push({ ...seg, d, pct });
+    acc.angle += pct * 360;
+    return acc;
+  }, { angle: -90, list: [] }).list;
   return (
     <div style={{ display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
       <div style={{ position:"relative", flexShrink:0 }}>
@@ -1188,7 +1147,7 @@ function FlowStatusBadge({ status }) {
   );
 }
 
-function ChartCard({ title, sub, children, action, demo = false, style: cs = {} }) {
+function ChartCard({ title, sub, children, action, style: cs = {} }) {
   const cleanSub = sub ? sub.replace(/ ?·? ?demo/gi, "").replace(/Make/gi, "Procesos").trim() : sub;
   return (
     <div style={{ borderRadius:20, border:`1px solid rgba(255,255,255,.09)`, background:"rgba(11,17,29,.82)", padding:"16px 18px", ...cs }}>
@@ -1210,13 +1169,6 @@ function ChartCard({ title, sub, children, action, demo = false, style: cs = {} 
 // TODO producción: alimentar este dashboard desde backend/proxy seguro.
 // Los datos de Make deben venir de un endpoint propio o webhook,
 // NUNCA de llamadas directas con clave privada desde el frontend.
-const dashboardDataSources = {
-  mode: "demo",
-  make: "demo/prepared",
-  airtable: "prepared",
-  stripe: "prepared",
-  localStorage: "active",
-};
 
 const DEMO_RESERVAS_HOY = [
   { l:"8h", v:1 },{ l:"9h", v:3 },{ l:"10h", v:5 },{ l:"11h", v:4 },
@@ -1416,13 +1368,19 @@ let _globalLang = (() => {
     if (!raw) return _defaultLang;
     const parsed = JSON.parse(raw);
     if (parsed?.code && LANGUAGES_RAW.find(l => l.code === parsed.code)) return parsed;
-  } catch {}
+  } catch {
+    // localStorage puede lanzar en modo privado/Safari; usar el idioma por defecto.
+  }
   return _defaultLang;
 })();
 
 function setGlobalLang(lang) {
   _globalLang = lang || _defaultLang;
-  try { localStorage.setItem("cp04_language", JSON.stringify(_globalLang)); } catch {}
+  try {
+    localStorage.setItem("cp04_language", JSON.stringify(_globalLang));
+  } catch {
+    // localStorage puede lanzar en modo privado/Safari; el idioma sigue en memoria.
+  }
   window.dispatchEvent(new CustomEvent(LANG_CHANGE_EVENT, { detail: { lang: _globalLang } }));
 }
 
@@ -1450,10 +1408,6 @@ const CP04_AUTH_MODES = {
 
 // RBAC movido a src/utils/rbac.js (fuente única, testeada con node --test,
 // también consumida por Sidebar). Ver import al inicio del archivo.
-
-function cp04RequiresBackendAuth(section) {
-  return cp04IsProtectedSection(section);
-}
 
 function cp04GetStoredAuthMode() {
   try {
@@ -5159,7 +5113,7 @@ function Torneos() {
   const [noticeErr, setNoticeErr] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
   const [winnerAnim, setWinnerAnim] = useState(null);
-  const [histVersion, setHistVersion] = useState(0);
+  const [, setHistVersion] = useState(0);
 
   const currentMax = formatMode !== "custom" ? FORMAT_MAX[formatMode] : null;
 
@@ -5179,8 +5133,6 @@ function Torneos() {
     if (p.player1 || p.player2) return `${p.player1 || "—"} / ${p.player2 || "—"}`;
     return "Vacía";
   };
-
-  const getPairById = useCallback((id) => pairs.find(p => p.id === id), [pairs]);
 
   const pushHistory = (action) => {
     try {
@@ -5651,7 +5603,6 @@ function Torneos() {
                       {matches.map(match => {
                         const pA = pairs.find(p => p.id === match.pairA);
                         const pB = match.pairB ? pairs.find(p => p.id === match.pairB) : null;
-                        const pW = match.winner ? pairs.find(p => p.id === match.winner) : null;
                         const isAnim = winnerAnim === match.id;
                         const isPlayed = !!match.winner;
                         return (
@@ -6038,7 +5989,7 @@ function Ranking() {
 }
 
 function Admin() {
-  const clk = useClock();
+  useClock(); // se mantiene la llamada: dispara el refresco periódico interno del hook (setInterval), aunque este panel no lea su valor de retorno.
   const lang = useLang();
   const tx = key => t(key, lang);
   const kpi = DEMO_KPI;
@@ -6241,7 +6192,11 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
     setTimeout(() => setAvatarMsg(""), 3000);
   }
   function handleAvatarDelete() {
-    try { localStorage.removeItem("cp04_avatar"); } catch {}
+    try {
+      localStorage.removeItem("cp04_avatar");
+    } catch {
+      // localStorage puede lanzar en modo privado/Safari; se limpia igualmente el estado en memoria.
+    }
     setAvatarSrc(null); setAvatarPreview(null); setShowDelConfirm(false);
     setAvatarMsg(tx("perfil.avatar_eliminada"));
     setTimeout(() => setAvatarMsg(""), 3000);
