@@ -4147,7 +4147,17 @@ function ReprogramarReserva({ setCurrent }) {
 }
 
 function Gestion() {
-  const [emailConsulta, setEmailConsulta] = useState("");
+  const [emailConsulta, setEmailConsulta] = useState(() => {
+    try {
+      return (
+        window.localStorage.getItem("cp04_user_email") ||
+        window.localStorage.getItem("cp04-reservas-email") ||
+        ""
+      );
+    } catch {
+      return "";
+    }
+  });
   const [reservasReales, setReservasReales] = useState([]);
   const [cargandoReservas, setCargandoReservas] = useState(false);
   const [reservasConsultadas, setReservasConsultadas] = useState(false);
@@ -4160,20 +4170,6 @@ function Gestion() {
   const reservasEndpoint =
     import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
     "/api/reservas";
-
-  useEffect(() => {
-    try {
-      const emailGuardado =
-        window.localStorage.getItem("cp04_user_email") ||
-        window.localStorage.getItem("cp04-reservas-email");
-
-      if (emailGuardado) {
-        setEmailConsulta(emailGuardado);
-      }
-    } catch {
-      // El listado puede funcionar aunque localStorage no esté disponible.
-    }
-  }, []);
 
   function normalizarReserva(item) {
     const reserva =
@@ -5089,10 +5085,7 @@ function torneoGetRoundPadding(round) {
 function Torneos() {
   const lang = useLang();
   const tx = key => t(key, lang);
-  const histRef = useRef(null);
-  if (!histRef.current) {
-    histRef.current = torneoLoadHist();
-  }
+  const [hist, setHist] = useState(() => torneoLoadHist());
 
   const saved = torneoLoadSaved();
   const [formatMode, setFormatMode] = useState(saved?.formatMode ?? "32");
@@ -5113,7 +5106,6 @@ function Torneos() {
   const [noticeErr, setNoticeErr] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
   const [winnerAnim, setWinnerAnim] = useState(null);
-  const [, setHistVersion] = useState(0);
 
   const currentMax = formatMode !== "custom" ? FORMAT_MAX[formatMode] : null;
 
@@ -5137,18 +5129,18 @@ function Torneos() {
   const pushHistory = (action) => {
     try {
       const snap = {
+        // eslint-disable-next-line react-hooks/purity -- pushHistory solo se invoca desde manejadores de clic (onClick), nunca durante el render.
         id: Date.now(),
         ts: new Date().toISOString(),
         action,
         s: { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published },
       };
-      const h = histRef.current ?? { snaps: [], idx: -1 };
-      const snaps = Array.isArray(h.snaps) ? h.snaps : [];
-      const idx = typeof h.idx === "number" ? h.idx : -1;
+      const snaps = Array.isArray(hist.snaps) ? hist.snaps : [];
+      const idx = typeof hist.idx === "number" ? hist.idx : -1;
       const newSnaps = [...snaps.slice(0, idx + 1), snap].slice(-30);
-      histRef.current = { snaps: newSnaps, idx: newSnaps.length - 1 };
-      localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
-      setHistVersion(v => v + 1);
+      const newHist = { snaps: newSnaps, idx: newSnaps.length - 1 };
+      localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
+      setHist(newHist);
     } catch { /* silent */ }
   };
 
@@ -5166,35 +5158,35 @@ function Torneos() {
   };
 
   const handleUndo = () => {
-    const h = histRef.current;
+    const h = hist;
     if (h.idx <= 0) return;
     const ni = h.idx - 1;
-    histRef.current = { ...h, idx: ni };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    const newHist = { ...h, idx: ni };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
     restoreSnap(h.snaps[ni]);
-    setHistVersion(v => v + 1);
+    setHist(newHist);
     showNotice(`↩ Deshecho: ${h.snaps[ni].action}`);
   };
 
   const handleRedo = () => {
-    const h = histRef.current;
+    const h = hist;
     if (h.idx >= h.snaps.length - 1) return;
     const ni = h.idx + 1;
-    histRef.current = { ...h, idx: ni };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    const newHist = { ...h, idx: ni };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
     restoreSnap(h.snaps[ni]);
-    setHistVersion(v => v + 1);
+    setHist(newHist);
     showNotice(`↪ Rehecho: ${h.snaps[ni].action}`);
   };
 
   const handleRestoreVersion = (idx) => {
-    const h = histRef.current;
+    const h = hist;
     const snap = h.snaps[idx];
     if (!snap) return;
-    histRef.current = { ...h, idx };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    const newHist = { ...h, idx };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
     restoreSnap(snap);
-    setHistVersion(v => v + 1);
+    setHist(newHist);
     setShowHistory(false);
     showNotice(`Versión restaurada: ${snap.action}`);
   };
@@ -5234,6 +5226,7 @@ function Torneos() {
     const shuffled = [...pairs].sort(() => Math.random() - 0.5);
     let newBye = null; let newByeDate = null;
     if (shuffled.length % 2 !== 0) {
+      // eslint-disable-next-line react-hooks/purity -- handleReorder solo se invoca desde onClick, nunca durante el render.
       const idx = Math.floor(Math.random() * shuffled.length);
       newBye = shuffled[idx]; newByeDate = new Date().toISOString();
     }
@@ -5270,6 +5263,7 @@ function Torneos() {
     if (currentMax && pairs.length >= currentMax) { showNotice(`Límite alcanzado: ya hay ${currentMax} parejas.`, true); return; }
     if (pairs.length >= 32) { showNotice("Límite: máximo 32 parejas.", true); return; }
     pushHistory("Añadir pareja");
+    // eslint-disable-next-line react-hooks/purity -- handleAddPair solo se invoca desde onClick, nunca durante el render.
     const np = { id: `p${Date.now()}`, player1: "", player2: "" };
     const upd = [...pairs, np];
     setPairs(upd);
@@ -5342,7 +5336,6 @@ function Torneos() {
   bracket.forEach(m => { if (!bracketByRound[m.round]) bracketByRound[m.round] = []; bracketByRound[m.round].push(m); });
   const roundNums = Object.keys(bracketByRound).map(Number).sort((a, b) => a - b);
   const totalRounds = roundNums.length;
-  const hist = histRef.current ?? { snaps: [], idx: -1 };
   const canUndo = hist.idx > 0;
   const canRedo = hist.idx < (hist.snaps?.length ?? 0) - 1;
 
