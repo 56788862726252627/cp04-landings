@@ -318,7 +318,9 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
         const t = setTimeout(() => { setStep(0); setVisible(true); }, 950);
         return () => clearTimeout(t);
       }
-    } catch {}
+    } catch {
+      // localStorage puede lanzar en modo privado/Safari; ignorar y no auto-mostrar.
+    }
   }, [selectedRole]); // eslint-disable-line
 
   /* Forzar apertura desde "Ver tutorial rápido" */
@@ -414,7 +416,11 @@ export default function CP04GuidedTutorial({ selectedRole, onNavigate, openRevis
 
   function close(markSeen) {
     if (markSeen) {
-      try { localStorage.setItem(storageKey(selectedRole), "1"); } catch {}
+      try {
+        localStorage.setItem(storageKey(selectedRole), "1");
+      } catch {
+        // localStorage puede lanzar en modo privado/Safari; ignorar.
+      }
     }
     setVisible(false);
     setTargetRect(null);

@@ -29,7 +29,9 @@ See `SECURITY.md` for the current security baseline and required backend protect
 
 ## Booking Backend
 
-The Vite frontend cannot securely serve `/api/reservas` by itself in production. A Cloudflare Worker proxy is prepared in `worker-reservas/`.
+The Vite frontend cannot securely serve `/api/reservas` by itself. A Cloudflare Worker proxy in `worker-reservas/` is deployed and live in production, with CORS/role gates and secrets configured (implemented, active in production). It revalidates availability and applies idempotency before forwarding to Make (implemented and tested).
+
+Airtable is mixed, not a single "done" state: reading availability is implemented but currently blocked externally by an Airtable account billing limit. The Worker does **not** write to Airtable directly — `prepareAirtableWrite` in `worker-reservas/src/index.js` is a stub that never calls the Airtable API by design; any real persistence happens inside the Make scenario, outside this repository. Resolving the billing limit restores reads only, never a Worker-side write. See `docs/backend-reservas.md` for the full breakdown.
 
 See `docs/backend-reservas.md` for deployment, Make webhook setup and required environment variables.
 
@@ -38,7 +40,7 @@ See `docs/backend-reservas.md` for deployment, Make webhook setup and required e
 - `SECURITY.md`: security baseline.
 - `docs/backend-reservas.md`: booking Worker/proxy.
 - `docs/integraciones.md`: SaaS integrations map.
-- `docs/auth-roles.md`: planned auth roles and permissions.
+- `docs/auth-roles.md`: real auth/roles implementation status.
 - `docs/seo.md`: SEO placeholders and production values.
 - `docs/gallery-assets.md`: gallery configuration and unused asset notes.
 - `docs/deployment.md`: deployment steps for frontend and Worker.
