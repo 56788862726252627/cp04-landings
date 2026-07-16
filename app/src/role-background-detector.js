@@ -5,7 +5,7 @@ function normalizeText(text) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-const bgImage = "linear-gradient(180deg, rgba(2,6,23,0.00) 0%, rgba(2,6,23,0.03) 45%, rgba(2,6,23,0.12) 100%), url(\'/images/torcal-padel-bg.png\')";
+const bgImage = "linear-gradient(180deg, rgba(2,6,23,0.00) 0%, rgba(2,6,23,0.03) 45%, rgba(2,6,23,0.12) 100%), url('/images/torcal-padel-bg.png')";
 
 function applyRoleBackground(active) {
   const targets = [

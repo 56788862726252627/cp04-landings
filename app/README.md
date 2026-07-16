@@ -29,7 +29,7 @@ See `SECURITY.md` for the current security baseline and required backend protect
 
 ## Booking Backend
 
-The Vite frontend cannot securely serve `/api/reservas` by itself in production. A Cloudflare Worker proxy is prepared in `worker-reservas/`.
+The Vite frontend cannot securely serve `/api/reservas` by itself. A Cloudflare Worker proxy in `worker-reservas/` is deployed and live in production, with CORS/role gates and secrets configured. It revalidates availability and applies idempotency before forwarding to Make. The Airtable write path is implemented in code but currently blocked end-to-end by an Airtable account billing limit (external, not a code issue).
 
 See `docs/backend-reservas.md` for deployment, Make webhook setup and required environment variables.
 

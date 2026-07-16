@@ -1,4 +1,3 @@
-import React from "react";
 import { demoSafeDataset } from "../../data/demoSafeDataset";
 import "../../styles/demo-safe.css";
 

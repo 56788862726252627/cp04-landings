@@ -978,7 +978,7 @@ async function cp04ListReservations(request, env) {
 
     const rawText = await airtableResponse.text();
 
-    let airtableData = {};
+    let airtableData;
 
     try {
       airtableData = rawText
@@ -1332,7 +1332,7 @@ async function cp04SupabaseRequest(env, path, options = {}) {
   });
 
   const text = await response.text();
-  let data = null;
+  let data;
 
   try {
     data = text ? JSON.parse(text) : null;
@@ -1486,7 +1486,7 @@ async function handleAuthRoute(request, env, url) {
     });
 
     const text = await response.text();
-    let data = null;
+    let data;
 
     try {
       data = text ? JSON.parse(text) : null;
@@ -1843,7 +1843,7 @@ async function handleAuthRoute(request, env, url) {
     });
 
     const text = await response.text();
-    let data = null;
+    let data;
 
     try {
       data = text ? JSON.parse(text) : null;

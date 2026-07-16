@@ -17,7 +17,7 @@
 - [ ] No Stripe secret key committed.
 - [ ] No WhatsApp token committed.
 - [ ] No Google credentials committed.
-- [ ] Worker secrets configured only in Cloudflare/backend environment.
+- [x] Worker secrets configured only in Cloudflare/backend environment (confirmed live in `cp04-reservas-proxy`).
 - [ ] `ALLOWED_ORIGIN` is exact production frontend origin.
 - [ ] Admin, staff and support panels are not connected to real private data until auth exists.
 
@@ -47,14 +47,14 @@
 - [ ] Invalid payload returns validation error.
 - [ ] CORS rejects unexpected origins.
 - [ ] Make forwarding tested only after setting private webhook.
-- [ ] Airtable write remains disabled until schema is confirmed.
+- [ ] Airtable write path is implemented in code (`prepareAirtableWrite`) and called on every `crear_reserva`/`reprogramar_reserva`; it is currently inactive end-to-end only because the Airtable account has hit a billing limit (external, not a code gate). Re-verify against real Airtable once that limit is resolved.
 
 ## Auth And Roles
 
 - [ ] `docs/auth-roles.md` reviewed.
 - [ ] Provider selected before connecting private data.
 - [ ] `Gestion`, `Admin` and `Soporte` protected server-side before real data.
-- [ ] Role checks implemented server-side, not only in UI.
+- [x] Role checks implemented server-side, not only in UI (`CP04_ENFORCE_ROLE_GATES` active in production).
 
 ## Final Pre-Publish Review
 
