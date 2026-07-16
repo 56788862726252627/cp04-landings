@@ -1666,7 +1666,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Zona reservada para diagnóstico cuando exista backend real.",
     "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
     "soporte.logs_errores":"Errores de integraciones","soporte.logs_alertas":"Alertas técnicas futuras",
-    "soporte.vars_h3":"Variables privadas",
+    "soporte.vars_h3":"Estado de seguridad: variables protegidas",
+    "soporte.vars_no_names":"Los nombres y valores internos no se muestran en la interfaz.",
+    "soporte.vars_validacion":"Validación disponible solo en documentación interna o consola segura.",
   },
   "en-GB": {
     "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
@@ -1869,7 +1871,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
     "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
     "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
-    "soporte.vars_h3":"Private variables",
+    "soporte.vars_h3":"Security status: protected variables",
+    "soporte.vars_no_names":"Internal names and values are not shown in the interface.",
+    "soporte.vars_validacion":"Validation available only in internal documentation or a secure console.",
   },
   "en-US": {
     "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
@@ -2072,7 +2076,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
     "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
     "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
-    "soporte.vars_h3":"Private variables",
+    "soporte.vars_h3":"Security status: protected variables",
+    "soporte.vars_no_names":"Internal names and values are not shown in the interface.",
+    "soporte.vars_validacion":"Validation available only in internal documentation or a secure console.",
   },
   "fr-FR": {
     "nav.inicio":"Accueil","nav.reservar":"Réserver","nav.alta_jugador":"Inscription joueur",
@@ -2271,7 +2277,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Zone réservée au diagnostic quand le backend réel sera disponible.",
     "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
     "soporte.logs_errores":"Erreurs d'intégrations","soporte.logs_alertas":"Alertes techniques futures",
-    "soporte.vars_h3":"Variables privées",
+    "soporte.vars_h3":"État de sécurité : variables protégées",
+    "soporte.vars_no_names":"Les noms et valeurs internes ne sont pas affichés dans l'interface.",
+    "soporte.vars_validacion":"Validation disponible uniquement dans la documentation interne ou une console sécurisée.",
   },
   "it-IT": {
     "nav.inicio":"Inizio","nav.reservar":"Prenota","nav.alta_jugador":"Iscrizione giocatore",
@@ -2470,7 +2478,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Area riservata alla diagnostica quando il backend reale sarà disponibile.",
     "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
     "soporte.logs_errores":"Errori di integrazioni","soporte.logs_alertas":"Avvisi tecnici futuri",
-    "soporte.vars_h3":"Variabili private",
+    "soporte.vars_h3":"Stato di sicurezza: variabili protette",
+    "soporte.vars_no_names":"I nomi e i valori interni non vengono mostrati nell'interfaccia.",
+    "soporte.vars_validacion":"Convalida disponibile solo nella documentazione interna o in una console sicura.",
   },
   "pt-PT": {
     "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Registo de jogador",
@@ -2669,7 +2679,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
     "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
     "soporte.logs_errores":"Erros de integrações","soporte.logs_alertas":"Alertas técnicos futuros",
-    "soporte.vars_h3":"Variáveis privadas",
+    "soporte.vars_h3":"Estado de segurança: variáveis protegidas",
+    "soporte.vars_no_names":"Os nomes e valores internos não são mostrados na interface.",
+    "soporte.vars_validacion":"Validação disponível apenas na documentação interna ou numa consola segura.",
   },
   "pt-BR": {
     "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Cadastro de jogador",
@@ -2868,7 +2880,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
     "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
     "soporte.logs_errores":"Erros de integrações","soporte.logs_alertas":"Alertas técnicos futuros",
-    "soporte.vars_h3":"Variáveis privadas",
+    "soporte.vars_h3":"Estado de segurança: variáveis protegidas",
+    "soporte.vars_no_names":"Os nomes e valores internos não são exibidos na interface.",
+    "soporte.vars_validacion":"Validação disponível apenas na documentação interna ou em um console seguro.",
   },
   "de-DE": {
     "nav.inicio":"Start","nav.reservar":"Buchen","nav.alta_jugador":"Spieler registrieren",
@@ -3067,7 +3081,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Bereich für Diagnose wenn echtes Backend verfügbar ist.",
     "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
     "soporte.logs_errores":"Integrationsfehler","soporte.logs_alertas":"Künftige technische Warnungen",
-    "soporte.vars_h3":"Private Variablen",
+    "soporte.vars_h3":"Sicherheitsstatus: geschützte Variablen",
+    "soporte.vars_no_names":"Interne Namen und Werte werden in der Oberfläche nicht angezeigt.",
+    "soporte.vars_validacion":"Validierung nur in der internen Dokumentation oder einer sicheren Konsole verfügbar.",
   },
 };
 
@@ -6109,7 +6125,7 @@ function AuthProductionStatusPanel() {
 function Soporte() {
   const lang = useLang();
   const tx = key => t(key, lang);
-  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.vars_h3")}</span></h3><PanelList items={[tx("soporte.vars_no_names"), tx("soporte.vars_validacion")]} /></Card></div>;
 }
 
 function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
