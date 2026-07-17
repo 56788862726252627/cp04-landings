@@ -402,6 +402,7 @@ function normalizePayload(payload) {
 
   return {
     accion: "crear_reserva",
+    clave_reserva: cleanText(payload.clave_reserva || ""),
     club: cleanText(payload.club || "Club Padel 04"),
     origen: cleanText(payload.origen || "frontend"),
     jugador: {
@@ -574,13 +575,27 @@ export function cp04IsSlotOccupied(ocupadas, fecha, pista, hora) {
 // única la operación solicitada. Pura y determinista: la misma solicitud
 // exacta produce siempre la misma clave, distintas solicitudes (aunque
 // lleguen del mismo jugador) producen claves distintas.
+//
+// PASO 06D (2026-07-17): para crear_reserva, si el propio cliente ya manda
+// una clave_reserva (pruebas controladas, o un futuro cliente que la
+// genere), se respeta tal cual — es la clave más fuerte posible, e
+// idéntica a la que usará Make/Airtable para esa misma reserva. Si no
+// llega, se deriva de forma estable a partir de los datos que identifican
+// la operación (acción + email normalizado + fecha + hora + pista +
+// teléfono), sin incluir nunca nada sensible en logs derivados de esta
+// clave (no lleva nombre/apellidos, solo lo estrictamente necesario para
+// distinguir una operación de otra).
 export function cp04BuildIdempotencyKey(normalizedPayload) {
   const accion = normalizedPayload?.accion;
 
   if (accion === "crear_reserva") {
+    const claveExplicita = cleanText(normalizedPayload?.clave_reserva);
+    if (claveExplicita) return `crear|clave|${claveExplicita}`;
+
     const r = normalizedPayload.reserva || {};
-    const email = normalizedPayload.jugador?.email || "";
-    return `crear|${r.fecha}|${r.pista}|${r.hora}|${email}`;
+    const email = cleanText(normalizedPayload.jugador?.email).toLowerCase();
+    const telefono = cleanText(normalizedPayload.jugador?.telefono).replace(/\D/g, "");
+    return `crear|${email}|${r.fecha}|${r.pista}|${r.hora}|${telefono}`;
   }
 
   if (accion === "reprogramar_reserva") {
@@ -592,6 +607,70 @@ export function cp04BuildIdempotencyKey(normalizedPayload) {
   }
 
   return null;
+}
+
+// PASO 06D: idempotencia de reservas en memoria — mismo patrón que la
+// caché de disponibilidad del Paso 06B (Map a nivel de módulo, TTL
+// configurable, testable con `now` inyectado). Sustituye, en el flujo real
+// de handleReservas más abajo, al mecanismo anterior basado en la Cache
+// API (cp04CheckIdempotency, justo debajo — se mantiene definido y con sus
+// propios tests, solo deja de llamarse desde handleReservas): aquel
+// marcaba la solicitud como "hecha" ANTES de saber si realmente se
+// reenvió, así que un fallo (Make rechaza, degradado 429, etc.) dejaba
+// bloqueada 10s una repetición legítima del mismo usuario — justo lo que
+// esta misión pide evitar.
+//
+// Regla de bloqueo: una clave solo queda marcada (bloqueando repeticiones
+// durante el TTL) cuando la solicitud original terminó en éxito real de
+// reenvío (`ok:true`). Cualquier otro desenlace (validación, slot ya
+// ocupado, degradado 429, Make rechazado) no marca nada — así una
+// repetición legítima tras un fallo nunca queda bloqueada. Limitación
+// aceptada (mismo criterio que el rate limiter de más abajo): esto no
+// cierra la ventana de carrera de dos solicitudes verdaderamente
+// simultáneas, solo la de reintentos secuenciales — suficiente para el
+// caso real (doble clic, reintento tras error de red del cliente).
+export const CP04_IDEMPOTENCY_TTL_MS = 3 * 60 * 1000; // 3 min, dentro del rango 2-5 min pedido
+let cp04IdempotencyStore = new Map(); // clave -> expiresAt (epoch ms)
+
+export function cp04IsIdempotentDuplicate(key, now = Date.now()) {
+  if (!key) return false;
+  const expiresAt = cp04IdempotencyStore.get(key);
+  if (expiresAt === undefined) return false;
+  if (now >= expiresAt) {
+    cp04IdempotencyStore.delete(key);
+    return false;
+  }
+  return true;
+}
+
+export function cp04MarkIdempotentSuccess(key, now = Date.now()) {
+  if (!key) return;
+  cp04IdempotencyStore.set(key, now + CP04_IDEMPOTENCY_TTL_MS);
+}
+
+// Expuesto solo para tests (limpiar estado entre casos), mismo patrón que
+// __resetAvailabilityCacheForTests.
+export function __resetIdempotencyStoreForTests() {
+  cp04IdempotencyStore = new Map();
+}
+
+const CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE =
+  "Ya hemos recibido esta solicitud hace unos instantes. Si no ves la confirmación, contacta con recepción antes de volver a intentarlo.";
+
+// Respuesta uniforme para una repetición detectada. `reserva_confirmada`
+// es siempre false: el Worker nunca tiene evidencia real de que Make haya
+// terminado de procesar la solicitud original (ver Paso 06C/05D — Make
+// acepta el webhook de forma síncrona mucho antes de completar su propia
+// ejecución), así que nunca se puede afirmar una confirmación aquí.
+export function cp04BuildIdempotentDuplicateResponse() {
+  return {
+    ok: false,
+    code: "IDEMPOTENT_DUPLICATE",
+    duplicated: true,
+    retryable: false,
+    reserva_confirmada: false,
+    message: CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE,
+  };
 }
 
 // Idempotencia best-effort usando la Cache API nativa de Workers
@@ -766,19 +845,14 @@ async function handleReservas(request, env) {
   // Make una segunda vez. Se marca como "en curso" ANTES de las llamadas
   // de red siguientes para cerrar la ventana de carrera entre dos
   // solicitudes casi simultáneas.
-  const idempotency = await cp04CheckIdempotency(request, normalizedPayload);
-  if (idempotency.duplicate) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: "DUPLICATE_REQUEST",
-        message: "Esta solicitud ya se está procesando o se procesó hace unos segundos.",
-      },
-      409,
-      headers
-    );
+  // PASO 06D: ver la nota junto a cp04IsIdempotentDuplicate más arriba —
+  // el marcado real de éxito ocurre al final de esta función, nunca aquí,
+  // para no bloquear un reintento legítimo si esta solicitud termina en
+  // error.
+  const idempotencyKey = cp04BuildIdempotencyKey(normalizedPayload);
+  if (cp04IsIdempotentDuplicate(idempotencyKey)) {
+    return jsonResponse(cp04BuildIdempotentDuplicateResponse(), 409, headers);
   }
-  await idempotency.markDone();
 
   // Revalidación de disponibilidad: vuelve a comprobar contra Airtable
   // justo antes de reenviar a Make, para reducir (que no eliminar del
@@ -870,6 +944,10 @@ async function handleReservas(request, env) {
   if (makeResult.configured && !makeResult.ok) {
     return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
   }
+
+  // PASO 06D: solo aquí, en el único camino de éxito real, se marca la
+  // clave de idempotencia — ver la nota junto a cp04IsIdempotentDuplicate.
+  cp04MarkIdempotentSuccess(idempotencyKey);
 
   return jsonResponse({
     ok: true,

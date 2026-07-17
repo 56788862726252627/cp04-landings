@@ -38,14 +38,42 @@ test("cp04IsSlotOccupied: faltan datos de fecha/pista/hora -> false", () => {
 
 // cp04BuildIdempotencyKey ------------------------------------------------
 
-test("cp04BuildIdempotencyKey: crear_reserva genera clave determinista con fecha/pista/hora/email", () => {
+// PASO 06D (2026-07-17): el formato de la clave derivada para crear_reserva
+// pasa a ser email|fecha|pista|hora|teléfono (antes fecha|pista|hora|email,
+// sin teléfono) — ver cp04BuildIdempotencyKey. Cambio intencional pedido
+// por la misión de idempotencia; el resto de comportamiento (misma
+// solicitud -> misma clave, solicitud distinta -> clave distinta) no
+// cambia y se sigue comprobando en los tests de abajo.
+test("cp04BuildIdempotencyKey: crear_reserva genera clave determinista con email/fecha/pista/hora/telefono", () => {
   const payload = {
     accion: "crear_reserva",
     reserva: { fecha: "2026-08-01", pista: "Pista 1", hora: "10:00" },
     jugador: { email: "demo@no-existe.test" },
   };
   const key = cp04BuildIdempotencyKey(payload);
-  assert.equal(key, "crear|2026-08-01|Pista 1|10:00|demo@no-existe.test");
+  assert.equal(key, "crear|demo@no-existe.test|2026-08-01|Pista 1|10:00|");
+});
+
+test("cp04BuildIdempotencyKey: crear_reserva con clave_reserva explícita la respeta tal cual, ignorando el resto de campos", () => {
+  const payload = {
+    accion: "crear_reserva",
+    clave_reserva: "QA_CP04_TEST_EXPLICITA_001",
+    reserva: { fecha: "2026-08-01", pista: "Pista 1", hora: "10:00" },
+    jugador: { email: "demo@no-existe.test" },
+  };
+  assert.equal(cp04BuildIdempotencyKey(payload), "crear|clave|QA_CP04_TEST_EXPLICITA_001");
+});
+
+test("cp04BuildIdempotencyKey: crear_reserva sin telefono no revienta y sin email tampoco", () => {
+  const sinTelefono = {
+    accion: "crear_reserva",
+    reserva: { fecha: "2026-08-01", pista: "Pista 1", hora: "10:00" },
+    jugador: { email: "demo@no-existe.test" },
+  };
+  assert.doesNotThrow(() => cp04BuildIdempotencyKey(sinTelefono));
+
+  const sinJugador = { accion: "crear_reserva", reserva: { fecha: "2026-08-01", pista: "Pista 1", hora: "10:00" } };
+  assert.doesNotThrow(() => cp04BuildIdempotencyKey(sinJugador));
 });
 
 test("cp04BuildIdempotencyKey: dos solicitudes crear_reserva idénticas producen la misma clave", () => {

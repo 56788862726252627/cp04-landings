@@ -13,6 +13,12 @@ import {
   CP04_AVAILABILITY_CACHE_TTL_MS,
   cp04IsAirtableRateLimited,
   cp04BuildAirtableDegradedResponse,
+  cp04BuildIdempotencyKey,
+  cp04IsIdempotentDuplicate,
+  cp04MarkIdempotentSuccess,
+  cp04BuildIdempotentDuplicateResponse,
+  __resetIdempotencyStoreForTests,
+  CP04_IDEMPOTENCY_TTL_MS,
 } from "./index.js";
 import worker from "./index.js";
 
@@ -666,4 +672,284 @@ test("Integración POST /api/reservas: Make reporta RateLimitError de forma sín
   });
 
   __resetCrearReservaRateLimitForTests();
+});
+
+// Idempotencia de reservas (PASO 06D) ---------------------------------------
+
+const MAKE_URL = "https://hooks.example.test/make-reservas";
+
+function crearReservaBody(overrides = {}) {
+  return {
+    accion: "crear_reserva",
+    jugador: { nombre: "QA Idem", apellidos: "Test", email: "qa-idem@example.test", telefono: "600000001" },
+    reserva: { fecha: "2026-09-11", pista: "Pista 1", hora: "08:00", hora_fin: "09:00", modalidad: "libre", nivel: "intermedio", duracion_minutos: 60, precio_total: 20 },
+    origen: "test",
+    club: "Club Pádel 04",
+    ...overrides,
+  };
+}
+
+function reservaRequest(body) {
+  return new Request("https://worker.test/api/reservas", {
+    method: "POST",
+    headers: { Origin: "http://localhost:5173", "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+// Dispatcher de fetch que distingue Airtable (revalidación de disponibilidad,
+// siempre "sin ocupadas" salvo que se indique lo contrario) de Make (siempre
+// 200 salvo que se indique lo contrario), contando llamadas a cada uno por
+// separado — así se puede comprobar de forma directa cuántas veces se llegó
+// realmente a reenviar a Make.
+function makeCountingFetch({ airtableStatus = 200, airtableBody = { records: [] }, makeStatus = 200, makeBody = { ok: true } } = {}) {
+  const calls = { airtable: 0, make: 0, other: 0 };
+  const fetchImpl = async (url) => {
+    const target = String(url?.url || url);
+    if (target.includes("api.airtable.com")) {
+      calls.airtable += 1;
+      return new Response(JSON.stringify(airtableBody), { status: airtableStatus });
+    }
+    if (target === MAKE_URL) {
+      calls.make += 1;
+      return new Response(JSON.stringify(makeBody), { status: makeStatus });
+    }
+    calls.other += 1;
+    throw new Error(`fetch inesperado a ${target}`);
+  };
+  return { calls, fetchImpl };
+}
+
+async function runReservaFlow(body, opts) {
+  const { calls, fetchImpl } = makeCountingFetch(opts);
+  let response;
+  await withFakeCaches(async () => {
+    await withFakeFetch(fetchImpl, async () => {
+      const env = { ...ENV_BASE, ...FAKE_AIRTABLE_ENV, MAKE_RESERVAS_WEBHOOK: MAKE_URL };
+      response = await worker.fetch(reservaRequest(body), env);
+    });
+  });
+  const json = await response.json();
+  return { response, json, calls };
+}
+
+test("Idempotencia: dos crear_reserva idénticas (sin clave_reserva, se deriva) -> la segunda no llega a forwardToMake", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+
+  const body = crearReservaBody({ clave_reserva: undefined });
+
+  const first = await runReservaFlow(body);
+  assert.equal(first.response.status, 200);
+  assert.equal(first.calls.make, 1);
+
+  const second = await runReservaFlow(body);
+  assert.equal(second.response.status, 409);
+  assert.equal(second.json.code, "IDEMPOTENT_DUPLICATE");
+  assert.equal(second.json.duplicated, true);
+  assert.equal(second.json.reserva_confirmada, false);
+  assert.equal(second.calls.make, 0, "la segunda solicitud no debe reenviarse a Make en absoluto");
+
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+});
+
+test("Idempotencia: dos crear_reserva con distinta hora sí se procesan las dos (claves distintas)", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+
+  const a = crearReservaBody({ reserva: { ...crearReservaBody().reserva, hora: "08:00", hora_fin: "09:00" } });
+  const b = crearReservaBody({ reserva: { ...crearReservaBody().reserva, hora: "09:00", hora_fin: "10:00" } });
+
+  const first = await runReservaFlow(a);
+  const second = await runReservaFlow(b);
+
+  assert.equal(first.response.status, 200);
+  assert.equal(second.response.status, 200);
+  assert.equal(second.json.code, undefined, "no debe marcarse como duplicado");
+
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+});
+
+test("Idempotencia: dos crear_reserva con distinta pista sí se procesan las dos (claves distintas)", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+
+  const a = crearReservaBody({ reserva: { ...crearReservaBody().reserva, pista: "Pista 1" } });
+  const b = crearReservaBody({ reserva: { ...crearReservaBody().reserva, pista: "Pista 2" } });
+
+  const first = await runReservaFlow(a);
+  const second = await runReservaFlow(b);
+
+  assert.equal(first.response.status, 200);
+  assert.equal(second.response.status, 200);
+
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+});
+
+test("Idempotencia: clave_reserva explícita se respeta y prevalece sobre fecha/hora/pista distintas", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+
+  const a = crearReservaBody({
+    clave_reserva: "QA_CP04_TEST_CLAVE_EXPLICITA_01",
+    reserva: { ...crearReservaBody().reserva, hora: "08:00", hora_fin: "09:00", pista: "Pista 1" },
+  });
+  // Mismos datos de la reserva salvo hora/pista (distintos), pero la MISMA
+  // clave_reserva explícita: debe tratarse igualmente como duplicado,
+  // porque la clave explícita manda sobre los campos derivados.
+  const b = crearReservaBody({
+    clave_reserva: "QA_CP04_TEST_CLAVE_EXPLICITA_01",
+    reserva: { ...crearReservaBody().reserva, hora: "10:00", hora_fin: "11:00", pista: "Pista 2" },
+  });
+
+  const first = await runReservaFlow(a);
+  assert.equal(first.response.status, 200);
+
+  const second = await runReservaFlow(b);
+  assert.equal(second.response.status, 409);
+  assert.equal(second.json.code, "IDEMPOTENT_DUPLICATE");
+
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+});
+
+test("cp04BuildIdempotencyKey: clave_reserva ausente se deriva de acción+email+fecha+pista+hora+telefono", () => {
+  const conClave = cp04BuildIdempotencyKey({
+    accion: "crear_reserva",
+    clave_reserva: "QA_EXPLICITA",
+    reserva: { fecha: "2026-09-11", pista: "Pista 1", hora: "08:00" },
+    jugador: { email: "qa-idem@example.test", telefono: "600000001" },
+  });
+  const sinClave = cp04BuildIdempotencyKey({
+    accion: "crear_reserva",
+    reserva: { fecha: "2026-09-11", pista: "Pista 1", hora: "08:00" },
+    jugador: { email: "qa-idem@example.test", telefono: "600000001" },
+  });
+
+  assert.equal(conClave, "crear|clave|QA_EXPLICITA");
+  assert.equal(sinClave, "crear|qa-idem@example.test|2026-09-11|Pista 1|08:00|600000001");
+  assert.notEqual(conClave, sinClave);
+});
+
+test("Idempotencia: un error de Airtable 429 en la revalidación NO se guarda como éxito — la repetición inmediata sí se procesa", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+
+  const body = crearReservaBody({ clave_reserva: undefined, reserva: { ...crearReservaBody().reserva, fecha: "2026-09-12" } });
+
+  const first = await runReservaFlow(body, { airtableStatus: 429, airtableBody: { error: "PUBLIC_API_BILLING_LIMIT_EXCEEDED" } });
+  assert.equal(first.response.status, 503);
+  assert.equal(first.json.code, "AIRTABLE_RATE_LIMIT");
+  assert.equal(first.calls.make, 0, "no debe llegar a Make si la revalidación ya detectó el bloqueo de cuota");
+
+  // Repetición inmediata, exactamente la misma solicitud: como la primera
+  // NO terminó en éxito, no debe tratarse como IDEMPOTENT_DUPLICATE — debe
+  // volver a intentarse de verdad (esta vez Airtable responde bien).
+  const second = await runReservaFlow(body, { airtableStatus: 200 });
+  assert.notEqual(second.json.code, "IDEMPOTENT_DUPLICATE");
+  assert.equal(second.response.status, 200);
+  assert.equal(second.calls.make, 1, "la repetición legítima tras un fallo sí debe llegar a Make");
+
+  __resetCrearReservaRateLimitForTests();
+  __resetIdempotencyStoreForTests();
+});
+
+test("Idempotencia: cancelar_reserva usa su propio espacio de claves (prefijo 'cancelar|'), independiente de crear_reserva", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetIdempotencyStoreForTests();
+
+  const cancelarBody = {
+    accion: "cancelar_reserva",
+    clave_reserva: "QA_CP04_TEST_CANCELAR_IDEM_01",
+    jugador: { nombre: "", email: "", telefono: "" },
+    club: "Club Pádel 04",
+    origen: "test",
+  };
+
+  const first = await runReservaFlow(cancelarBody);
+  assert.equal(first.response.status, 200);
+  assert.equal(first.calls.make, 1);
+
+  const second = await runReservaFlow(cancelarBody);
+  assert.equal(second.response.status, 409);
+  assert.equal(second.json.code, "IDEMPOTENT_DUPLICATE");
+  assert.equal(second.calls.make, 0);
+
+  // La misma clave_reserva, pero para crear_reserva, vive en un espacio de
+  // claves distinto (prefijo "crear|clave|..." vs "cancelar|...") — no debe
+  // verse afectada por el bloqueo de la cancelación.
+  const key = cp04BuildIdempotencyKey({ accion: "crear_reserva", clave_reserva: "QA_CP04_TEST_CANCELAR_IDEM_01" });
+  assert.equal(cp04IsIdempotentDuplicate(key), false);
+
+  __resetIdempotencyStoreForTests();
+});
+
+test("Idempotencia: reprogramar_reserva usa su propio espacio de claves (prefijo 'reprogramar|')", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetIdempotencyStoreForTests();
+
+  const reprogramarBody = {
+    accion: "reprogramar_reserva",
+    clave_reserva: "QA_CP04_TEST_REPROG_IDEM_01",
+    nueva_fecha_reserva: "2026-09-14",
+    nueva_hora_inicio: "08:00",
+    nueva_hora_fin: "09:00",
+    nueva_pista: "Pista 1",
+    pista_nueva: "Pista 1",
+    club: "Club Pádel 04",
+    origen: "test",
+  };
+
+  const first = await runReservaFlow(reprogramarBody);
+  assert.equal(first.response.status, 200);
+  assert.equal(first.calls.make, 1);
+
+  const second = await runReservaFlow(reprogramarBody);
+  assert.equal(second.response.status, 409);
+  assert.equal(second.json.code, "IDEMPOTENT_DUPLICATE");
+  assert.equal(second.calls.make, 0);
+
+  __resetIdempotencyStoreForTests();
+});
+
+test("Idempotencia: cp04IsIdempotentDuplicate/cp04MarkIdempotentSuccess respetan el TTL exacto con timestamps inyectados", () => {
+  __resetIdempotencyStoreForTests();
+  const start = 5_000_000;
+  const key = "crear|qa@example.test|2026-09-14|Pista 1|08:00|600000001";
+
+  cp04MarkIdempotentSuccess(key, start);
+
+  assert.equal(cp04IsIdempotentDuplicate(key, start), true, "justo tras marcar, debe detectarse como duplicado");
+  assert.equal(
+    cp04IsIdempotentDuplicate(key, start + CP04_IDEMPOTENCY_TTL_MS - 1),
+    true,
+    "un instante antes de expirar, sigue bloqueando"
+  );
+  assert.equal(
+    cp04IsIdempotentDuplicate(key, start + CP04_IDEMPOTENCY_TTL_MS),
+    false,
+    "en el instante exacto del TTL (o después), ya no debe bloquear — permite una nueva llamada"
+  );
+
+  __resetIdempotencyStoreForTests();
+});
+
+test("cp04BuildIdempotentDuplicateResponse: forma exacta, reserva_confirmada siempre false", () => {
+  const response = cp04BuildIdempotentDuplicateResponse();
+  assert.deepEqual(response, {
+    ok: false,
+    code: "IDEMPOTENT_DUPLICATE",
+    duplicated: true,
+    retryable: false,
+    reserva_confirmada: false,
+    message: "Ya hemos recibido esta solicitud hace unos instantes. Si no ves la confirmación, contacta con recepción antes de volver a intentarlo.",
+  });
 });
