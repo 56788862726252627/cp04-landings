@@ -646,7 +646,10 @@ export default function CentroTecnico({ selectedRole }) {
           <li><strong style={{ color: T.text }}>Recordatorio 2h Antes:</strong> los errores actuales son <code>RateLimitError 429</code> de Airtable — dependencia externa, no un bug del escenario.</li>
           <li><strong style={{ color: T.text }}>Backup Plantilla Drive:</strong> inactivo. No reactivar sin necesidad confirmada.</li>
           <li><strong style={{ color: T.text }}>Alerta Crítica Fallos Make / Mapa de Flujos:</strong> confirmado que cada nombre corresponde a un único escenario real en Make — no hay duplicados ejecutándose en paralelo.</li>
-          <li><strong style={{ color: T.text }}>Recuperación de contraseña:</strong> Supabase Auth es la única fuente de verdad. El escenario Make "Email Recuperación de Contraseña SaaS" no debe conectarse como segundo sistema de recuperación.</li>
+          <li><strong style={{ color: T.text }}>Alerta Crítica Fallos Make (Paso 02, 2026-07-17):</strong> reconciliado por lectura directa en Make — no está roto, está pausado a la espera de rotar una credencial de acceso.</li>
+          <li><strong style={{ color: T.text }}>Recuperación de contraseña:</strong> Supabase Auth es la única fuente de verdad. El escenario Make "Email Recuperación de Contraseña SaaS" no debe conectarse como segundo sistema de recuperación — sigue activo en Make con un disparador real asignado (0 ejecuciones hasta hoy); requiere una decisión humana para desactivarlo o aceptar el riesgo formalmente.</li>
+          <li><strong style={{ color: T.text }}>Chatbot Web Reservas (Paso 02, 2026-07-17):</strong> sigue activo en Make pese a estar clasificado como no seguro (decide reservas sin determinismo vía IA); sin disparador en vivo asignado hoy, pero pendiente de una decisión de producto para desactivarlo formalmente.</li>
+          <li><strong style={{ color: T.text }}>Cierre Temporal de Pistas (Paso 02, 2026-07-17):</strong> confirmado operativo en Make (ejecuciones reales sin errores) — la documentación previa que lo daba como bloqueado por WhatsApp estaba desactualizada.</li>
         </ul>
       </Panel>
     </section>

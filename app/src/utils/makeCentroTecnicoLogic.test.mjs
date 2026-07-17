@@ -127,14 +127,14 @@ test("sortScenarios: no muta la lista original (copia defensiva)", () => {
 
 // --- PASO 01 Make 50/50 (2026-07-17): computeVerificacionResumen ---
 
-test("computeVerificacionResumen: sobre el snapshot real, 4 confirmados y 42 sin confirmar (16+18+8), 4 inferidos", () => {
+test("computeVerificacionResumen: sobre el snapshot real tras el Paso 02, 5 confirmados y 43 sin confirmar (16+18+9), 2 inferidos", () => {
   const resumen = computeVerificacionResumen(enrichedSnapshot);
   assert.equal(resumen.total, 50);
-  assert.equal(resumen.verificados, 4);
-  assert.equal(resumen.inferidos, 4);
+  assert.equal(resumen.verificados, 5);
+  assert.equal(resumen.inferidos, 2);
   assert.equal(resumen.listosSinBloqueo, 16);
   assert.equal(resumen.bloqueadosExterno, 18);
-  assert.equal(resumen.pendientesMakeReal, 8);
+  assert.equal(resumen.pendientesMakeReal, 9);
   assert.equal(resumen.sinClasificar, 0);
   assert.equal(
     resumen.verificados + resumen.inferidos + resumen.listosSinBloqueo + resumen.bloqueadosExterno + resumen.pendientesMakeReal,
@@ -145,7 +145,7 @@ test("computeVerificacionResumen: sobre el snapshot real, 4 confirmados y 42 sin
 test("computeVerificacionResumen: nunca cuenta listo_sin_bloqueo ni pendiente_make_real como verificado", () => {
   const resumen = computeVerificacionResumen(enrichedSnapshot);
   assert.ok(resumen.verificados < resumen.total, "no puede afirmar que todos están confirmados");
-  assert.equal(resumen.verificados, 4, "verificados es estrictamente el conteo de 'confirmado', nada más");
+  assert.equal(resumen.verificados, 5, "verificados es estrictamente el conteo de 'confirmado', nada más");
 });
 
 test("computeVerificacionResumen: un escenario EN VIVO sin estadoVerificacion se cuenta como sinClasificar, nunca se inventa un estado", () => {

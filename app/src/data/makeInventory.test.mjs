@@ -5,6 +5,7 @@ import {
   MAKE_INVENTORY_META,
   MAKE_VERIFICATION_STATES,
   MAKE_VERIFICATION_META,
+  MAKE_VERIFICATION_STEP2_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -116,15 +117,15 @@ test("MAKE_VERIFICATION_STATES expone exactamente los 5 estados pedidos por el r
   );
 });
 
-test("reparto real de estadoVerificacion no inventa un 50/50 operativo (solo 4/50 confirmados hoy)", () => {
+test("reparto real de estadoVerificacion no inventa un 50/50 operativo (5/50 confirmados tras el Paso 02)", () => {
   const conteo = { confirmado: 0, inferido: 0, listo_sin_bloqueo: 0, bloqueado_externo: 0, pendiente_make_real: 0 };
   for (const s of MAKE_INVENTORY) conteo[s.estadoVerificacion] += 1;
 
-  assert.equal(conteo.confirmado, 4, "confirmados debe ser 4/50, no más — no se puede inflar sin evidencia real");
-  assert.equal(conteo.inferido, 4);
+  assert.equal(conteo.confirmado, 5, "confirmados debe ser 5/50 tras el Paso 02, no más — no se puede inflar sin evidencia real");
+  assert.equal(conteo.inferido, 2);
   assert.equal(conteo.listo_sin_bloqueo, 16);
   assert.equal(conteo.bloqueado_externo, 18);
-  assert.equal(conteo.pendiente_make_real, 8);
+  assert.equal(conteo.pendiente_make_real, 9);
   const total = Object.values(conteo).reduce((a, b) => a + b, 0);
   assert.equal(total, MAKE_INVENTORY.length);
 });
@@ -132,4 +133,40 @@ test("reparto real de estadoVerificacion no inventa un 50/50 operativo (solo 4/5
 test("MAKE_VERIFICATION_META deja explícito que la clasificación no requiere conexión a Make", () => {
   assert.equal(MAKE_VERIFICATION_META.requiereConexionMake, false);
   assert.equal(typeof MAKE_VERIFICATION_META.clasificadoEn, "string");
+});
+
+// --- PASO 02 Make 50/50 (2026-07-17): reconciliación de los 4 "inferido" ---
+
+test("MAKE_VERIFICATION_STEP2_META documenta los 4 escenarios revisados y el resultado (2 cambian, 2 siguen inferido)", () => {
+  assert.deepEqual(MAKE_VERIFICATION_STEP2_META.escenariosRevisados.sort(), [5791133, 5799061, 6299114, 6323445].sort());
+  assert.equal(MAKE_VERIFICATION_STEP2_META.cambiosDeEstado, 2);
+  assert.equal(MAKE_VERIFICATION_STEP2_META.siguenInferidos, 2);
+});
+
+test("Cierre Temporal de Pistas (5791133) pasa a confirmado con evidencia real de Make (ejecuciones>0, 0 errores)", () => {
+  const s = MAKE_INVENTORY.find((x) => x.id === 5791133);
+  assert.ok(s);
+  assert.equal(s.estadoVerificacion, "confirmado");
+  assert.match(s.nota, /PASO 02/);
+});
+
+test("Alerta Crítica Fallos Make (6299114) pasa a pendiente_make_real — pausado por credencial, no roto", () => {
+  const s = MAKE_INVENTORY.find((x) => x.id === 6299114);
+  assert.ok(s);
+  assert.equal(s.estadoVerificacion, "pendiente_make_real");
+  assert.match(s.nota, /PASO 02/);
+});
+
+test("Email Recuperación de Contraseña SaaS (6323445) sigue inferido — riesgo reconfirmado, decisión humana pendiente", () => {
+  const s = MAKE_INVENTORY.find((x) => x.id === 6323445);
+  assert.ok(s);
+  assert.equal(s.estadoVerificacion, "inferido");
+  assert.match(s.nota, /PASO 02/);
+});
+
+test("Chatbot Web Reservas (5799061) sigue inferido — NOT_SAFE reconfirmado activo, decisión de producto pendiente", () => {
+  const s = MAKE_INVENTORY.find((x) => x.id === 5799061);
+  assert.ok(s);
+  assert.equal(s.estadoVerificacion, "inferido");
+  assert.match(s.nota, /PASO 02/);
 });
