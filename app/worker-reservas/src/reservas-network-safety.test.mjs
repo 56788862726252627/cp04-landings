@@ -11,6 +11,8 @@ import {
   cp04InvalidateAvailabilityCache,
   __resetAvailabilityCacheForTests,
   CP04_AVAILABILITY_CACHE_TTL_MS,
+  cp04IsAirtableRateLimited,
+  cp04BuildAirtableDegradedResponse,
 } from "./index.js";
 import worker from "./index.js";
 
@@ -504,5 +506,164 @@ test("cp04CheckCrearReservaRateLimit: queda accesible y determinista con timesta
   __resetCrearReservaRateLimitForTests();
   const now = 1_000_000;
   assert.equal(cp04CheckCrearReservaRateLimit(now), true);
+  __resetCrearReservaRateLimitForTests();
+});
+
+// Modo degradado Airtable 429 (PASO 06C) ------------------------------------
+
+test("cp04IsAirtableRateLimited: detecta un 429 directo por status, sin necesitar texto", () => {
+  assert.equal(cp04IsAirtableRateLimited(429, ""), true);
+  assert.equal(cp04IsAirtableRateLimited(429, undefined), true);
+});
+
+test("cp04IsAirtableRateLimited: detecta el texto PUBLIC_API_BILLING_LIMIT_EXCEEDED aunque el status no sea exactamente 429", () => {
+  const texto = "API billing plan limit exceeded. You've reached the maximum number of requests allowed for this month. PUBLIC_API_BILLING_LIMIT_EXCEEDED";
+  assert.equal(cp04IsAirtableRateLimited(422, texto), true);
+  assert.equal(cp04IsAirtableRateLimited(null, texto), true);
+});
+
+test("cp04IsAirtableRateLimited: detecta RateLimitError (el nombre de error que reporta Make, ver Paso 05D) en el texto", () => {
+  const texto = JSON.stringify({ error: { name: "RateLimitError", message: "[429] " } });
+  assert.equal(cp04IsAirtableRateLimited(200, texto), true, "Make puede envolver el 429 real de Airtable bajo su propio status de aceptación del webhook");
+});
+
+test("cp04IsAirtableRateLimited: un error genérico o 'no configurado' NO se confunde con un bloqueo de cuota", () => {
+  assert.equal(cp04IsAirtableRateLimited(422, "INVALID_FILTER_BY_FORMULA"), false);
+  assert.equal(cp04IsAirtableRateLimited(500, ""), false);
+  assert.equal(cp04IsAirtableRateLimited(null, "not_configured"), false);
+});
+
+test("cp04BuildAirtableDegradedResponse: forma exacta pedida por la misión, sin filtrar el detalle técnico al cliente", () => {
+  const originalError = console.error;
+  const logged = [];
+  console.error = (...args) => logged.push(args);
+
+  let response;
+  try {
+    response = cp04BuildAirtableDegradedResponse({ origen: "test", status: 429, secretoInterno: "no-debe-salir-al-cliente" });
+  } finally {
+    console.error = originalError;
+  }
+
+  assert.deepEqual(response, {
+    ok: false,
+    code: "AIRTABLE_RATE_LIMIT",
+    retryable: true,
+    reserva_confirmada: false,
+    message: "El sistema de reservas está temporalmente saturado. Inténtalo de nuevo más tarde o contacta con recepción.",
+  });
+
+  // El detalle técnico se loguea server-side (para diagnóstico), pero
+  // nunca forma parte de la respuesta JSON que ve el cliente.
+  assert.ok(logged.length >= 1, "debe loguear el detalle técnico server-side");
+  assert.equal(JSON.stringify(response).includes("secretoInterno"), false, "el detalle técnico no debe filtrarse en la respuesta al cliente");
+});
+
+test("Integración /api/disponibilidad: Airtable responde 429 -> 503 en modo degradado, no el 500 genérico", async () => {
+  __resetAvailabilityCacheForTests();
+  await withFakeFetch(
+    async () => new Response(JSON.stringify({ error: { type: "PUBLIC_API_BILLING_LIMIT_EXCEEDED" } }), { status: 429 }),
+    async () => {
+      const env = { ...ENV_BASE, ...FAKE_AIRTABLE_ENV };
+      const response = await worker.fetch(disponibilidadRequest("2026-09-09"), env);
+      const body = await response.json();
+
+      assert.equal(response.status, 503);
+      assert.equal(body.ok, false);
+      assert.equal(body.code, "AIRTABLE_RATE_LIMIT");
+      assert.equal(body.retryable, true);
+      assert.equal(body.reserva_confirmada, false);
+      assert.match(body.message, /temporalmente saturado/);
+    }
+  );
+});
+
+test("Integración POST /api/reservas: revalidación con Airtable en 429 -> 503 degradado, NUNCA 'forwarded' (no hay confirmación falsa)", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetCrearReservaRateLimitForTests();
+
+  await withFakeCaches(async () => {
+    await withFakeFetch(
+      async (url) => {
+        const target = String(url?.url || url);
+        if (target.includes("api.airtable.com")) {
+          return new Response(JSON.stringify({ error: "API billing plan limit exceeded" }), { status: 429 });
+        }
+        throw new Error("no debería llegar a reenviarse a Make si la revalidación detecta el bloqueo de cuota");
+      },
+      async () => {
+        const request = new Request("https://worker.test/api/reservas", {
+          method: "POST",
+          headers: { Origin: "http://localhost:5173", "Content-Type": "application/json" },
+          body: JSON.stringify({
+            accion: "crear_reserva",
+            jugador: { nombre: "QA Degradado", apellidos: "Test", email: "qa-degradado@example.test", telefono: "600000000" },
+            reserva: { fecha: "2026-09-09", pista: "Pista 1", hora: "08:00", hora_fin: "09:00", modalidad: "libre", nivel: "intermedio", duracion_minutos: 60, precio_total: 20 },
+            clave_reserva: "QA_CACHE_TEST_DEGRADADO_67890",
+            origen: "test",
+            club: "Club Pádel 04",
+          }),
+        });
+
+        const env = { ...ENV_BASE, ...FAKE_AIRTABLE_ENV };
+        const response = await worker.fetch(request, env);
+        const body = await response.json();
+
+        assert.equal(response.status, 503);
+        assert.equal(body.code, "AIRTABLE_RATE_LIMIT");
+        assert.equal(body.reserva_confirmada, false);
+        // Nunca debe aparecer la forma de éxito de una reserva normal.
+        assert.notEqual(body.status, "forwarded");
+        assert.equal(body.make, undefined, "no debe reenviarse a Make: el fallo se detecta antes, en la revalidación");
+      }
+    );
+  });
+
+  __resetCrearReservaRateLimitForTests();
+});
+
+test("Integración POST /api/reservas: Make reporta RateLimitError de forma síncrona en el cuerpo -> 503 degradado (defensa adicional, ver nota en forwardToMake)", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetCrearReservaRateLimitForTests();
+
+  await withFakeCaches(async () => {
+    await withFakeFetch(
+      async (url) => {
+        const target = String(url?.url || url);
+        if (target.includes("api.airtable.com")) {
+          // Revalidación de disponibilidad: sin conflicto, deja pasar hacia Make.
+          return new Response(JSON.stringify({ records: [] }), { status: 200 });
+        }
+        if (target.includes("make.com") || target === "https://hooks.example.test/make-reservas") {
+          return new Response(JSON.stringify({ error: { name: "RateLimitError", message: "[429] " } }), { status: 200 });
+        }
+        throw new Error(`fetch inesperado a ${target}`);
+      },
+      async () => {
+        const request = new Request("https://worker.test/api/reservas", {
+          method: "POST",
+          headers: { Origin: "http://localhost:5173", "Content-Type": "application/json" },
+          body: JSON.stringify({
+            accion: "crear_reserva",
+            jugador: { nombre: "QA Make", apellidos: "Degradado", email: "qa-make-degradado@example.test", telefono: "600000000" },
+            reserva: { fecha: "2026-09-10", pista: "Pista 2", hora: "09:00", hora_fin: "10:00", modalidad: "libre", nivel: "intermedio", duracion_minutos: 60, precio_total: 20 },
+            clave_reserva: "QA_CACHE_TEST_MAKE_RATELIMIT_1",
+            origen: "test",
+            club: "Club Pádel 04",
+          }),
+        });
+
+        const env = { ...ENV_BASE, ...FAKE_AIRTABLE_ENV, MAKE_RESERVAS_WEBHOOK: "https://hooks.example.test/make-reservas" };
+        const response = await worker.fetch(request, env);
+        const body = await response.json();
+
+        assert.equal(response.status, 503);
+        assert.equal(body.code, "AIRTABLE_RATE_LIMIT");
+        assert.equal(body.reserva_confirmada, false);
+        assert.notEqual(body.status, "forwarded");
+      }
+    );
+  });
+
   __resetCrearReservaRateLimitForTests();
 });

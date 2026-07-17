@@ -436,7 +436,17 @@ async function forwardToMake(payload, env) {
     body: JSON.stringify(payload),
   });
 
-  return { configured: true, ok: response.ok, status: response.status };
+  // PASO 06C: se lee el cuerpo de forma segura (nunca lanza) solo para
+  // poder detectar un bloqueo de cuota de Airtable si Make llegara a
+  // reportarlo de forma síncrona en la respuesta del propio webhook.
+  // Evidencia real (Paso 05D): Make normalmente responde 200 de inmediato
+  // (el webhook queda aceptado) y el fallo de Airtable ocurre después, de
+  // forma asíncrona dentro de la ejecución del escenario — el Worker no
+  // puede verlo desde aquí. Esto es una defensa adicional para el caso en
+  // que Make sí lo reporte síncronamente, no el caso esperado hoy.
+  const bodyText = await response.text().catch(() => "");
+
+  return { configured: true, ok: response.ok, status: response.status, bodyText };
 }
 
 async function prepareAirtableWrite(payload, env) {
@@ -452,6 +462,41 @@ async function prepareAirtableWrite(payload, env) {
     ok: true,
     status: 200,
     reason: "Reserva confirmada vía Make. Escritura directa Airtable desactivada para evitar duplicados y bloqueos 403."
+  };
+}
+
+// PASO 06C (2026-07-17): modo degradado para el bloqueo de cuota de
+// Airtable (HTTP 429 / "PUBLIC_API_BILLING_LIMIT_EXCEEDED" / el
+// "RateLimitError" que reporta Make — ver Paso 05D). Es DELIBERADAMENTE
+// más estrecho que "cualquier fallo de Airtable": Airtable no configurado,
+// un error genérico o una caída de red mantienen el comportamiento
+// existente documentado en cada sitio donde se usa. Solo esta categoría
+// específica de fallo — la única que sabemos, con evidencia real, que
+// significa "la reserva probablemente no se completará al otro lado" — debe
+// impedir avanzar y devolver el mensaje degradado en vez de una falsa
+// confirmación.
+export function cp04IsAirtableRateLimited(status, detailsText) {
+  if (status === 429) return true;
+  return /PUBLIC_API_BILLING_LIMIT_EXCEEDED|RateLimitError/i.test(String(detailsText ?? ""));
+}
+
+const CP04_AIRTABLE_RATE_LIMIT_USER_MESSAGE =
+  "El sistema de reservas está temporalmente saturado. Inténtalo de nuevo más tarde o contacta con recepción.";
+
+// Respuesta controlada y uniforme de "modo degradado". `message` es lo
+// único que llega al cliente; `technicalDetail` NUNCA sale del Worker —
+// solo se loguea server-side (mismo patrón que
+// CP04_WORKER_UNHANDLED_ERROR/CP04_DISPONIBILIDAD_AIRTABLE_ERROR), para
+// poder diagnosticar sin filtrar nada interno (ni un token, ni el cuerpo
+// crudo de Airtable/Make) al usuario final.
+export function cp04BuildAirtableDegradedResponse(technicalDetail) {
+  console.error("CP04_AIRTABLE_RATE_LIMIT", JSON.stringify(technicalDetail));
+  return {
+    ok: false,
+    code: "AIRTABLE_RATE_LIMIT",
+    retryable: true,
+    reserva_confirmada: false,
+    message: CP04_AIRTABLE_RATE_LIMIT_USER_MESSAGE,
   };
 }
 
@@ -772,8 +817,24 @@ async function handleReservas(request, env) {
         headers
       );
     }
-    // disponibilidad.ok === false: Airtable no configurado/caído/limitado.
-    // Se continúa sin revalidar, ver nota arriba.
+
+    // PASO 06C: a diferencia del resto de fallos de Airtable (que siguen
+    // dejando pasar la solicitud, ver nota arriba), un bloqueo de CUOTA
+    // aquí sí debe frenar la solicitud. Evidencia real (Paso 05D): cuando
+    // Airtable está así de saturado, la ejecución de Make también falla
+    // más adelante en su propio paso de Airtable — dejar pasar solo
+    // produciría una respuesta "forwarded" que en realidad nunca llega a
+    // confirmarse, exactamente la falsa confirmación que esta misión pide
+    // evitar.
+    if (!disponibilidad.ok && cp04IsAirtableRateLimited(disponibilidad.status, JSON.stringify(disponibilidad.details ?? disponibilidad.reason ?? ""))) {
+      return jsonResponse(
+        cp04BuildAirtableDegradedResponse({ origen: "revalidacion_reserva", accion: accionSolicitada, status: disponibilidad.status, reason: disponibilidad.reason }),
+        503,
+        headers
+      );
+    }
+    // Cualquier otro disponibilidad.ok === false (Airtable no configurado,
+    // error genérico, red caída): se continúa sin revalidar, ver nota arriba.
   }
 
   const makeResult = await forwardToMake(normalizedPayload, env);
@@ -791,6 +852,19 @@ async function handleReservas(request, env) {
     accionSolicitada === "reprogramar_reserva"
   ) {
     cp04InvalidateAvailabilityCache();
+  }
+
+  // PASO 06C: defensa adicional si Make llegara a reportar el bloqueo de
+  // cuota de Airtable de forma síncrona en la respuesta del propio webhook
+  // (ver nota en forwardToMake — hoy Make normalmente responde 200 antes
+  // de que ese fallo ocurra, pero si alguna vez lo reporta aquí, tampoco
+  // debe tratarse como una reserva confirmada).
+  if (makeResult.configured && cp04IsAirtableRateLimited(makeResult.status, makeResult.bodyText)) {
+    return jsonResponse(
+      cp04BuildAirtableDegradedResponse({ origen: "forward_to_make", accion: accionSolicitada, status: makeResult.status }),
+      503,
+      headers
+    );
   }
 
   if (makeResult.configured && !makeResult.ok) {
@@ -891,6 +965,15 @@ async function handleDisponibilidad(request, env) {
     // No reenviar disponibilidad.details (cuerpo crudo de error de Airtable)
     // a un cliente anónimo: solo se loguea server-side, sin datos personales.
     console.error("CP04_DISPONIBILIDAD_AIRTABLE_ERROR", disponibilidad.reason, disponibilidad.status);
+
+    if (cp04IsAirtableRateLimited(disponibilidad.status, JSON.stringify(disponibilidad.details ?? disponibilidad.reason ?? ""))) {
+      return jsonResponse(
+        cp04BuildAirtableDegradedResponse({ origen: "disponibilidad", fecha, status: disponibilidad.status, reason: disponibilidad.reason }),
+        503,
+        headers
+      );
+    }
+
     return jsonResponse(
       {
         ok: false,

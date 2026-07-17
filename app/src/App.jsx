@@ -44,6 +44,7 @@ import { useAuth } from "./auth/AuthContext.jsx";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 import { authFetch } from "./auth/authService.js";
 import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
+import { cp04BuildReservationError, cp04ReservationErrorMessage } from "./utils/reservationErrors.js";
 import {
   CP04_ROLE_PERMISSIONS,
   CP04_PROTECTED_SECTIONS,
@@ -504,7 +505,7 @@ async function sendBooking(payload) {
   });
 
   const data = await readSafeResponse(res);
-  if (!res.ok || data?.ok === false) throw new Error("booking_request_failed");
+  if (!res.ok || data?.ok === false) throw cp04BuildReservationError(data, "booking_request_failed");
   return data;
 }
 
@@ -3606,8 +3607,8 @@ function Reservas() {
       refreshDisponibilidadAfterChange(form.fecha);
       setStatus("success");
       setStep(3);
-    } catch {
-      setStatusMessage(tx("errors.reserva_error"));
+    } catch (err) {
+      setStatusMessage(cp04ReservationErrorMessage(err, tx("errors.reserva_error")));
       setStatus("error");
     } finally {
       sendingRef.current = false;
@@ -3732,15 +3733,15 @@ function CancelarReserva({ setCurrent }) {
       const data = await readSafeResponse(res);
 
       if (!res.ok || data?.ok === false) {
-        throw new Error("cancel_request_failed");
+        throw cp04BuildReservationError(data, "cancel_request_failed");
       }
 
       setClave("");
       setConfirmado(false);
       setStatus("success");
       refreshDisponibilidadAfterChange();
-    } catch {
-      setError(tx("errors.cancelar_error"));
+    } catch (err) {
+      setError(cp04ReservationErrorMessage(err, tx("errors.cancelar_error")));
       setStatus("error");
     } finally {
       sendingRef.current = false;
@@ -3852,7 +3853,7 @@ function ReprogramarReserva({ setCurrent }) {
       const data = await readSafeResponse(res);
 
       if (!res.ok || data?.ok === false) {
-        throw new Error("reschedule_request_failed");
+        throw cp04BuildReservationError(data, "reschedule_request_failed");
       }
 
       let destinationConfirmed = false;
@@ -3879,8 +3880,8 @@ function ReprogramarReserva({ setCurrent }) {
       setStatus("success");
       refreshDisponibilidadAfterChange(form.nueva_fecha_reserva);
       setForm((current) => ({ ...current, confirmado: false }));
-    } catch {
-      setStatusMessage(tx("errors.reprog_error"));
+    } catch (err) {
+      setStatusMessage(cp04ReservationErrorMessage(err, tx("errors.reprog_error")));
       setStatus("error");
     } finally {
       sendingRef.current = false;
