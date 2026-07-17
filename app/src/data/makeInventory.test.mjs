@@ -8,6 +8,7 @@ import {
   MAKE_VERIFICATION_STEP2_META,
   MAKE_VERIFICATION_STEP3B_META,
   MAKE_VERIFICATION_STEP4A_META,
+  MAKE_VERIFICATION_STEP4B_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -229,4 +230,22 @@ test("PASO 04A: los 16 escenarios clasificados traen su nota de auditoría con e
     assert.ok(s, `escenario ${id} no encontrado`);
     assert.match(s.nota, /PASO 04A/, `${s.nombre} debería tener una nota del Paso 04A`);
   }
+});
+
+// --- PASO 04B Make 50/50 (2026-07-17): investigación del error de Control Acceso QR ---
+
+test("MAKE_VERIFICATION_STEP4B_META documenta el escenario investigado y la clasificación del error", () => {
+  assert.equal(MAKE_VERIFICATION_STEP4B_META.escenarioId, 5291559);
+  assert.equal(MAKE_VERIFICATION_STEP4B_META.clasificacionError, "mapeo_de_datos");
+  assert.equal(MAKE_VERIFICATION_STEP4B_META.moduloAfectado, "ActionCreateRecord (airtable)");
+  assert.equal(MAKE_VERIFICATION_STEP4B_META.pareceYaCorregido, true);
+});
+
+test("Control Acceso QR (5291559): la nota documenta la causa raíz encontrada en el Paso 04B", () => {
+  const s = MAKE_INVENTORY.find((x) => x.id === 5291559);
+  assert.ok(s);
+  assert.equal(s.estadoVerificacion, "listo_sin_bloqueo", "el Paso 04B no cambia estadoVerificacion, solo documenta la causa");
+  assert.match(s.nota, /PASO 04B/);
+  assert.match(s.nota, /422/);
+  assert.match(s.nota, /select option/i);
 });

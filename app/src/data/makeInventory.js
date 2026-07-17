@@ -124,6 +124,27 @@ export const MAKE_VERIFICATION_STEP4A_META = Object.freeze({
   grupoE_noSegurosTodavia: [5733370, 5798996, 4832095],
 });
 
+// PASO 04B (2026-07-17): investigación de la causa de error del único
+// escenario del Grupo D (Control Acceso QR, 5291559). SOLO LECTURA vía MCP
+// (executions_list) — no se ejecutó, activó ni desactivó el escenario, no
+// se corrigió nada en Make ni en Airtable. Los 4 errores históricos son la
+// misma causa: el módulo que crea el registro en Airtable devuelve 422
+// "Insufficient permissions to create new select option" al escribir un
+// valor que no existe todavía como opción predefinida en un campo de
+// selección única — un problema de mapeo/configuración de campo, no de
+// credencial. Las 5 ejecuciones posteriores a los 4 errores (2026-06-19
+// 23:58 en adelante) terminaron sin error, indicio de que ya se corrigió;
+// pendiente de confirmar con ejecuciones reales más recientes. Detalle
+// completo en la `nota` del escenario 5291559.
+export const MAKE_VERIFICATION_STEP4B_META = Object.freeze({
+  investigadoEn: "2026-07-17",
+  metodo: "mcp_make_solo_lectura_executions_list",
+  escenarioId: 5291559,
+  clasificacionError: "mapeo_de_datos",
+  moduloAfectado: "ActionCreateRecord (airtable)",
+  pareceYaCorregido: true,
+});
+
 // categoria: clasificación arquitectónica. Es un campo DERIVADO por análisis
 // (no un campo que la API de Make devuelva tal cual), documentado aquí
 // mismo por escenario. Ver worker-reservas/docs y las auditorías Make
@@ -181,7 +202,7 @@ export const MAKE_INVENTORY = Object.freeze([
   { id: 5791374, nombre: "🏆 Reto 04 + Puntos", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 6, errores: 0, ultimaModificacion: "2026-06-29T05:41:02.023Z", usaAirtable: true, nota: "PASO 04A (2026-07-17): isActive=false hoy (activo en el snapshot); 1 ejecución histórica, sin errores. Clasificación: B) requiere decisión humana para reactivarlo — otorga puntos internos de gamificación, bajo riesgo.", estadoVerificacion: "listo_sin_bloqueo" },
   { id: 5791133, nombre: "🏟️ Cierre Temporal de Pistas", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 4, operaciones: 74, errores: 0, ultimaModificacion: "2026-06-26T01:39:08.108Z", usaAirtable: true, nota: "PASO 02 (2026-07-17, MCP solo lectura): isActive=true con webhook real asignado, 4 ejecuciones reales y 0 errores — funciona en Make hoy. La documentación previa que lo daba como bloqueado por WhatsApp estaba desactualizada. Esto confirma que el escenario opera en Make; no confirma por sí solo que la app dispare este flujo (posible origen: automatización directa sobre Airtable, no el Worker de la app).", estadoVerificacion: "confirmado" },
   { id: 5288809, nombre: "❌ Baja de Jugador + Promoción", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 9, errores: 0, ultimaModificacion: "2026-06-26T01:37:06.291Z", usaAirtable: true, nota: "PASO 04A (2026-07-17): isActive=true, con disparador real asignado, 1 ejecución histórica, sin errores. Clasificación: C) requiere datos de prueba — da de baja a un jugador real y promociona a un suplente; probarlo sin un jugador ficticio de prueba afectaría a un socio real.", estadoVerificacion: "listo_sin_bloqueo" },
-  { id: 5291559, nombre: "🔐 Control Acceso QR", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 9, operaciones: 41, errores: 4, ultimaModificacion: "2026-06-26T01:52:28.332Z", usaAirtable: true, nota: "PASO 04A (2026-07-17): isActive=true, con disparador real asignado, 9 ejecuciones históricas y 4 errores (44%, muestra pequeña pero notable). Clasificación: D) requiere revisar la causa de ese 44% de error antes de considerarlo listo para más pruebas.", estadoVerificacion: "listo_sin_bloqueo" },
+  { id: 5291559, nombre: "🔐 Control Acceso QR", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 9, operaciones: 41, errores: 4, ultimaModificacion: "2026-06-26T01:52:28.332Z", usaAirtable: true, nota: "PASO 04A (2026-07-17): isActive=true, con disparador real asignado, 9 ejecuciones históricas y 4 errores (44%, muestra pequeña pero notable). Clasificación: D) requiere revisar la causa de ese 44% de error antes de considerarlo listo para más pruebas. PASO 04B (2026-07-17, MCP solo lectura, executions_list): los 4 errores son la misma causa exacta — el módulo que crea el registro en Airtable (ActionCreateRecord) devuelve 422 'Insufficient permissions to create new select option' al intentar escribir un valor (p.ej. el resultado del control de acceso) que no existe todavía como opción predefinida en ese campo de selección única de Airtable. Es un problema de mapeo de datos/configuración del campo, no de credencial ni de código de la app. Los 4 errores ocurrieron el 2026-06-19 (22:39-23:44); las 5 ejecuciones posteriores (2026-06-19 23:58 a 2026-06-20 00:12, dos de ellas repetición manual de las fallidas) terminaron con éxito sin ese error — indicio fuerte de que ya se corrigió (opción añadida al campo o ajuste de configuración), pendiente de confirmar con ejecuciones reales más recientes.", estadoVerificacion: "listo_sin_bloqueo" },
   { id: 6244975, nombre: "🔑 Generación QR Acceso", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 9, operaciones: 28, errores: 6, ultimaModificacion: "2026-06-29T17:56:55.356Z", usaAirtable: false, estadoVerificacion: "confirmado" },
   { id: 5799031, nombre: "🎧 Atención Socio WhatsApp FAQ", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:43:58.075Z", usaAirtable: true, estadoVerificacion: "pendiente_make_real" },
   { id: 5791124, nombre: "🎯 Campaña Flash WhatsApp", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T17:52:05.632Z", usaAirtable: true, estadoVerificacion: "pendiente_make_real" },
