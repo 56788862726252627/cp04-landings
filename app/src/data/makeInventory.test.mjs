@@ -7,6 +7,7 @@ import {
   MAKE_VERIFICATION_META,
   MAKE_VERIFICATION_STEP2_META,
   MAKE_VERIFICATION_STEP3B_META,
+  MAKE_VERIFICATION_STEP4A_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -189,4 +190,43 @@ test("Chatbot Web Reservas (5799061): desactivado y cerrado, no queda inferido",
 test("tras el Paso 03B ya no queda ningún escenario en estado 'inferido'", () => {
   const inferidos = MAKE_INVENTORY.filter((s) => s.estadoVerificacion === "inferido");
   assert.equal(inferidos.length, 0);
+});
+
+// --- PASO 04A Make 50/50 (2026-07-17): clasificación A-E de los 16 "listo_sin_bloqueo" ---
+
+test("MAKE_VERIFICATION_STEP4A_META cubre exactamente los 16 escenarios listo_sin_bloqueo, sin solapes", () => {
+  const grupos = [
+    MAKE_VERIFICATION_STEP4A_META.grupoA_listosParaPrueba,
+    MAKE_VERIFICATION_STEP4A_META.grupoB_requierenDecisionHumana,
+    MAKE_VERIFICATION_STEP4A_META.grupoC_requierenDatosDePrueba,
+    MAKE_VERIFICATION_STEP4A_META.grupoD_requierenConfiguracionPrevia,
+    MAKE_VERIFICATION_STEP4A_META.grupoE_noSegurosTodavia,
+  ];
+  const todos = grupos.flat();
+  assert.equal(todos.length, 16, "el total de las 5 columnas debe ser 16, sin solapes ni huecos");
+  assert.equal(new Set(todos).size, 16, "ningún escenario debe aparecer en dos grupos a la vez");
+  assert.equal(MAKE_VERIFICATION_STEP4A_META.totalRevisados, 16);
+
+  const listoSinBloqueoIds = MAKE_INVENTORY.filter((s) => s.estadoVerificacion === "listo_sin_bloqueo").map((s) => s.id);
+  assert.deepEqual(todos.sort((a, b) => a - b), listoSinBloqueoIds.sort((a, b) => a - b));
+});
+
+test("PASO 04A no cambia estadoVerificacion de ningún escenario (solo clasifica prioridad/riesgo)", () => {
+  const listoSinBloqueo = MAKE_INVENTORY.filter((s) => s.estadoVerificacion === "listo_sin_bloqueo");
+  assert.equal(listoSinBloqueo.length, 16, "el Paso 04A no debe mover ningún escenario a otro estadoVerificacion");
+});
+
+test("PASO 04A: los 16 escenarios clasificados traen su nota de auditoría con el marcador PASO 04A", () => {
+  const ids = [
+    ...MAKE_VERIFICATION_STEP4A_META.grupoA_listosParaPrueba,
+    ...MAKE_VERIFICATION_STEP4A_META.grupoB_requierenDecisionHumana,
+    ...MAKE_VERIFICATION_STEP4A_META.grupoC_requierenDatosDePrueba,
+    ...MAKE_VERIFICATION_STEP4A_META.grupoD_requierenConfiguracionPrevia,
+    ...MAKE_VERIFICATION_STEP4A_META.grupoE_noSegurosTodavia,
+  ];
+  for (const id of ids) {
+    const s = MAKE_INVENTORY.find((x) => x.id === id);
+    assert.ok(s, `escenario ${id} no encontrado`);
+    assert.match(s.nota, /PASO 04A/, `${s.nombre} debería tener una nota del Paso 04A`);
+  }
 });
