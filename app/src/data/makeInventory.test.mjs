@@ -10,6 +10,7 @@ import {
   MAKE_VERIFICATION_STEP4A_META,
   MAKE_VERIFICATION_STEP4B_META,
   MAKE_VERIFICATION_STEP5A_META,
+  MAKE_VERIFICATION_STEP5C_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -282,4 +283,28 @@ test("PASO 05A no modifica estadoVerificacion, activo ni ejecuciones de ningún 
   assert.equal(conteo.listo_sin_bloqueo, 16);
   assert.equal(conteo.bloqueado_externo, 18);
   assert.equal(conteo.pendiente_make_real, 9);
+});
+
+// --- PASO 05C Make 50/50 (2026-07-17): prueba controlada API Reservas + Control Acceso QR ---
+
+test("MAKE_VERIFICATION_STEP5C_META documenta la prueba controlada como inconclusa, sin datos reales ni comunicaciones a terceros", () => {
+  assert.deepEqual(MAKE_VERIFICATION_STEP5C_META.escenariosProbados.sort(), [5291559, 5697630].sort());
+  assert.equal(MAKE_VERIFICATION_STEP5C_META.ejecucionesRealizadas, 2);
+  assert.equal(MAKE_VERIFICATION_STEP5C_META.resultadoConcluyente, false);
+  assert.equal(MAKE_VERIFICATION_STEP5C_META.datosRealesDeSociosUsados, false);
+  assert.equal(MAKE_VERIFICATION_STEP5C_META.comunicacionesATercerosReales, false);
+});
+
+test("PASO 05C no cambia estadoVerificacion de API Reservas ni Control Acceso QR (resultado inconcluso)", () => {
+  const apiReservas = MAKE_INVENTORY.find((s) => s.id === 5697630);
+  const controlQr = MAKE_INVENTORY.find((s) => s.id === 5291559);
+  assert.equal(apiReservas.estadoVerificacion, "confirmado");
+  assert.equal(controlQr.estadoVerificacion, "listo_sin_bloqueo");
+  assert.match(apiReservas.nota, /PASO 05C/);
+  assert.match(controlQr.nota, /PASO 05C/);
+});
+
+test("PASO 05C: ningún dato del inventario menciona un socio real ni una dirección de email de un tercero", () => {
+  const serializado = JSON.stringify(MAKE_INVENTORY).toLowerCase();
+  assert.ok(!serializado.includes("@gmail.com"), "el inventario no debe contener direcciones de email reales");
 });

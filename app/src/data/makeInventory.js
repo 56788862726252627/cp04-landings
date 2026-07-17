@@ -197,6 +197,40 @@ export const MAKE_VERIFICATION_STEP5A_META = Object.freeze({
   flujosQueCumplenLas7Condiciones: 0,
 });
 
+// PASO 05C (2026-07-17): prueba controlada, autorizada explícitamente por el
+// usuario, de 📡 API Reservas (5697630, acción crear_reserva) y 🔐 Control
+// Acceso QR (5291559), ambos ya activos en Make. Se usó `scenarios_run`
+// (MCP) con datos 100% sintéticos (QA_CP04_TEST) — en ningún momento se usó
+// un socio real, ni se envió WhatsApp/Telegram/Stripe, ni se cambió ninguna
+// credencial. El único email que pudo haberse enviado (ruta de "acción no
+// reconocida" de API Reservas) va, por diseño del propio escenario, a la
+// cuenta del dueño del proyecto — nunca a un tercero.
+//
+// Resultado: las 2 ejecuciones terminaron con status SUCCESS pero con solo
+// 1 operación consumida cada una — muy por debajo de lo esperado si la
+// lógica de negocio (crear reserva / validar QR) se hubiera ejecutado
+// completa. Indicio más probable: los datos pasados en `data` a
+// `scenarios_run` no llegaron al módulo webhook (1) en la forma en que lo
+// haría una llamada real del Worker — probablemente ambas ejecuciones
+// cayeron en su rama de "no reconocido"/"no encontrado" sin completar la
+// ruta principal. No se pudo verificar de forma independiente en Airtable
+// porque la consulta de solo lectura devolvió el mismo 429 de cuota que
+// bloquea este proyecto desde hace meses. CONCLUSIÓN: prueba INCONCLUSA,
+// no se sube ni se baja ningún estadoVerificacion por esta causa. Se
+// detuvo la sesión de pruebas aquí (no se ejecutó la 3ª prueba planeada)
+// para no seguir generando ejecuciones reales sin entender la causa.
+export const MAKE_VERIFICATION_STEP5C_META = Object.freeze({
+  probadoEn: "2026-07-17",
+  metodo: "mcp_make_scenarios_run_datos_sinteticos",
+  escenariosProbados: [5697630, 5291559],
+  ejecucionesRealizadas: 2,
+  ejecucionesConStatusSuccess: 2,
+  resultadoConcluyente: false,
+  verificacionAirtableDirecta: "bloqueada_429_cuota",
+  datosRealesDeSociosUsados: false,
+  comunicacionesATercerosReales: false,
+});
+
 // categoria: clasificación arquitectónica. Es un campo DERIVADO por análisis
 // (no un campo que la API de Make devuelva tal cual), documentado aquí
 // mismo por escenario. Ver worker-reservas/docs y las auditorías Make
@@ -217,7 +251,7 @@ const C = MAKE_SCENARIO_CATEGORIES;
 // token, hookId invocable, URL de webhook, contenido HTML de email ni dato
 // personal de jugadores — solo métricas agregadas.
 export const MAKE_INVENTORY = Object.freeze([
-  { id: 5697630, nombre: "📡 API Reservas", categoria: C.APP_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 115, operaciones: 519, errores: 67, ultimaModificacion: "2026-06-19T18:10:39.482Z", usaAirtable: true, estadoVerificacion: "confirmado" },
+  { id: 5697630, nombre: "📡 API Reservas", categoria: C.APP_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 115, operaciones: 519, errores: 67, ultimaModificacion: "2026-06-19T18:10:39.482Z", usaAirtable: true, nota: "PASO 05C (2026-07-17): prueba controlada con datos sintéticos (QA_CP04_TEST) vía scenarios_run (MCP), acción crear_reserva. Ejecución con status SUCCESS pero solo 1 operación consumida (se esperaban 4 si la rama 'pista libre' se ejecuta completa: búsqueda + Calendar + Airtable + email). Indicio de que la scenario_run del MCP no inyectó los datos como el webhook real los recibiría — probablemente cayó en la rama de 'acción no reconocida', que envía un único email de aviso al propio dueño de la cuenta (nunca a un socio real). Verificación directa en Airtable bloqueada por el mismo 429 de cuota de siempre. Resultado INCONCLUSO sobre si la lógica real de creación de reserva funciona — no se sube a 'confirmado' con más fuerza ni se degrada: para una prueba concluyente hace falta invocar el endpoint real de la app (Worker) o el propio formulario de Make, no la inyección de datos de scenarios_run.", estadoVerificacion: "confirmado" },
   { id: 6199248, nombre: "🎾 Alta de Jugador", categoria: C.APP_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 22, operaciones: 75, errores: 2, ultimaModificacion: "2026-06-26T01:34:11.609Z", usaAirtable: true, estadoVerificacion: "confirmado" },
 
   { id: 6299114, nombre: "⚠️ Alerta Crítica Fallos Make", categoria: C.TECHNICAL_MONITORING, activo: false, scheduling: "cada 900s (15 min)", ejecuciones: 257, operaciones: 858, errores: 1, ultimaModificacion: "2026-06-23T11:06:55.060Z", usaAirtable: false, nota: "PASO 02 (2026-07-17, MCP solo lectura, reconfirma 2026-07-10): isActive=false, isinvalid=false, 1 error de 257 ejecuciones (99.6% éxito histórico). Nota propia del escenario en Make: pendiente de actualizar la credencial de acceso a la API de Make. No está roto — está pausado a la espera de esa rotación. Contradicción anterior con un export local que decía 'ROTO' queda resuelta: ese export reflejaba un estado ya superado.", estadoVerificacion: "pendiente_make_real" },
@@ -254,7 +288,7 @@ export const MAKE_INVENTORY = Object.freeze([
   { id: 5791374, nombre: "🏆 Reto 04 + Puntos", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 6, errores: 0, ultimaModificacion: "2026-06-29T05:41:02.023Z", usaAirtable: true, nota: "PASO 04A (2026-07-17): isActive=false hoy (activo en el snapshot); 1 ejecución histórica, sin errores. Clasificación: B) requiere decisión humana para reactivarlo — otorga puntos internos de gamificación, bajo riesgo.", estadoVerificacion: "listo_sin_bloqueo" },
   { id: 5791133, nombre: "🏟️ Cierre Temporal de Pistas", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 4, operaciones: 74, errores: 0, ultimaModificacion: "2026-06-26T01:39:08.108Z", usaAirtable: true, nota: "PASO 02 (2026-07-17, MCP solo lectura): isActive=true con webhook real asignado, 4 ejecuciones reales y 0 errores — funciona en Make hoy. La documentación previa que lo daba como bloqueado por WhatsApp estaba desactualizada. Esto confirma que el escenario opera en Make; no confirma por sí solo que la app dispare este flujo (posible origen: automatización directa sobre Airtable, no el Worker de la app).", estadoVerificacion: "confirmado" },
   { id: 5288809, nombre: "❌ Baja de Jugador + Promoción", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 9, errores: 0, ultimaModificacion: "2026-06-26T01:37:06.291Z", usaAirtable: true, nota: "PASO 04A (2026-07-17): isActive=true, con disparador real asignado, 1 ejecución histórica, sin errores. Clasificación: C) requiere datos de prueba — da de baja a un jugador real y promociona a un suplente; probarlo sin un jugador ficticio de prueba afectaría a un socio real.", estadoVerificacion: "listo_sin_bloqueo" },
-  { id: 5291559, nombre: "🔐 Control Acceso QR", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 9, operaciones: 41, errores: 4, ultimaModificacion: "2026-06-26T01:52:28.332Z", usaAirtable: true, nota: "PASO 04A (2026-07-17): isActive=true, con disparador real asignado, 9 ejecuciones históricas y 4 errores (44%, muestra pequeña pero notable). Clasificación: D) requiere revisar la causa de ese 44% de error antes de considerarlo listo para más pruebas. PASO 04B (2026-07-17, MCP solo lectura, executions_list): los 4 errores son la misma causa exacta — el módulo que crea el registro en Airtable (ActionCreateRecord) devuelve 422 'Insufficient permissions to create new select option' al intentar escribir un valor (p.ej. el resultado del control de acceso) que no existe todavía como opción predefinida en ese campo de selección única de Airtable. Es un problema de mapeo de datos/configuración del campo, no de credencial ni de código de la app. Los 4 errores ocurrieron el 2026-06-19 (22:39-23:44); las 5 ejecuciones posteriores (2026-06-19 23:58 a 2026-06-20 00:12, dos de ellas repetición manual de las fallidas) terminaron con éxito sin ese error — indicio fuerte de que ya se corrigió (opción añadida al campo o ajuste de configuración), pendiente de confirmar con ejecuciones reales más recientes.", estadoVerificacion: "listo_sin_bloqueo" },
+  { id: 5291559, nombre: "🔐 Control Acceso QR", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 9, operaciones: 41, errores: 4, ultimaModificacion: "2026-06-26T01:52:28.332Z", usaAirtable: true, nota: "PASO 04A (2026-07-17): isActive=true, con disparador real asignado, 9 ejecuciones históricas y 4 errores (44%, muestra pequeña pero notable). Clasificación: D) requiere revisar la causa de ese 44% de error antes de considerarlo listo para más pruebas. PASO 04B (2026-07-17, MCP solo lectura, executions_list): los 4 errores son la misma causa exacta — el módulo que crea el registro en Airtable (ActionCreateRecord) devuelve 422 'Insufficient permissions to create new select option' al intentar escribir un valor (p.ej. el resultado del control de acceso) que no existe todavía como opción predefinida en ese campo de selección única de Airtable. Es un problema de mapeo de datos/configuración del campo, no de credencial ni de código de la app. Los 4 errores ocurrieron el 2026-06-19 (22:39-23:44); las 5 ejecuciones posteriores (2026-06-19 23:58 a 2026-06-20 00:12, dos de ellas repetición manual de las fallidas) terminaron con éxito sin ese error — indicio fuerte de que ya se corrigió (opción añadida al campo o ajuste de configuración), pendiente de confirmar con ejecuciones reales más recientes. PASO 05C (2026-07-17): prueba controlada vía scenarios_run (MCP) con una clave_reserva sintética (QA_CP04_TEST). Ejecución con status SUCCESS pero solo 1 operación consumida (se esperaban 2-3 si cualquiera de las 3 ramas del router se completa: ACCESO_OK, QR_CADUCADO o DENEGADO_INVALIDO, todas terminan en al menos una escritura en Airtable). Mismo indicio que en API Reservas: los datos de scenarios_run probablemente no llegaron al webhook (módulo 1) en la forma esperada, por lo que ninguna de las 3 ramas se disparó. No se pudo confirmar directamente en Airtable (mismo 429 de cuota). No se puede concluir todavía si el fix del 422 (visto en el Paso 04B) sigue vigente — hace falta repetir la prueba desde el endpoint real de la app o el propio Make antes de dar esto por cerrado.", estadoVerificacion: "listo_sin_bloqueo" },
   { id: 6244975, nombre: "🔑 Generación QR Acceso", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 9, operaciones: 28, errores: 6, ultimaModificacion: "2026-06-29T17:56:55.356Z", usaAirtable: false, estadoVerificacion: "confirmado" },
   { id: 5799031, nombre: "🎧 Atención Socio WhatsApp FAQ", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:43:58.075Z", usaAirtable: true, estadoVerificacion: "pendiente_make_real" },
   { id: 5791124, nombre: "🎯 Campaña Flash WhatsApp", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T17:52:05.632Z", usaAirtable: true, estadoVerificacion: "pendiente_make_real" },
