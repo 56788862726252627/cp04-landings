@@ -462,6 +462,9 @@ async function prepareAirtableWrite(payload, env) {
 // no configurado" como errores de red/HTTP: en ningún caso lanza, siempre
 // devuelve un resultado que el llamador decide cómo tratar.
 export async function cp04FetchOcupadas(env, fecha) {
+  const cached = cp04GetCachedAvailability(fecha);
+  if (cached) return cached;
+
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
     return { ok: false, reason: "not_configured" };
   }
@@ -507,7 +510,9 @@ export async function cp04FetchOcupadas(env, fecha) {
   const records = data?.records || [];
   const ocupadas = records.map((record) => record.fields?.clave_slot).filter(Boolean);
 
-  return { ok: true, records, ocupadas };
+  const result = { ok: true, records, ocupadas };
+  cp04SetCachedAvailability(fecha, result);
+  return result;
 }
 
 // Comprobación pura (sin red): ¿el slot fecha|pista|hora ya aparece en la
@@ -600,6 +605,54 @@ export function cp04CheckCrearReservaRateLimit(now = Date.now()) {
 // Expuesto solo para tests (limpiar estado entre casos).
 export function __resetCrearReservaRateLimitForTests() {
   cp04CrearReservaRateLimitHits = [];
+}
+
+// PASO 06B (2026-07-17): caché en memoria de disponibilidad por fecha, para
+// reducir lecturas repetidas a Airtable mientras dura el bloqueo de cuota
+// (PUBLIC_API_BILLING_LIMIT_EXCEEDED — ver
+// src/data/makeInventory.js::MAKE_VERIFICATION_STEP6A_META). Sin cambiar la
+// lógica funcional de reservas: cp04FetchOcupadas sigue devolviendo
+// exactamente la misma forma de resultado, solo evita repetir la llamada de
+// red si ya se consultó esa fecha hace poco. Mismo patrón que el rate
+// limiter de arriba: estado en memoria del propio Worker, sin binding
+// nuevo, sin tocar credenciales.
+export const CP04_AVAILABILITY_CACHE_TTL_MS = 30_000; // 30s — dentro del rango 30-60s pedido
+let cp04AvailabilityCache = new Map(); // fecha -> { result, expiresAt }
+
+export function cp04GetCachedAvailability(fecha, now = Date.now()) {
+  const entry = cp04AvailabilityCache.get(fecha);
+  if (!entry) return null;
+  if (now >= entry.expiresAt) {
+    cp04AvailabilityCache.delete(fecha);
+    return null;
+  }
+  return entry.result;
+}
+
+// Solo un resultado `ok:true` (una respuesta real y completa de Airtable) se
+// guarda en caché. Un error — incluido el 429 de cuota que motivó este
+// cambio — NUNCA se cachea como si fuera disponibilidad válida: cachear un
+// error congelaría ese error durante todo el TTL en vez de dejar que el
+// siguiente intento vuelva a comprobar el estado real cuando la cuota se
+// restablezca.
+export function cp04SetCachedAvailability(fecha, result, now = Date.now()) {
+  if (!result?.ok) return;
+  cp04AvailabilityCache.set(fecha, { result, expiresAt: now + CP04_AVAILABILITY_CACHE_TTL_MS });
+}
+
+// Invalidación total (no solo de una fecha): se llama tras crear, cancelar
+// o reprogramar una reserva (ver handleReservas). Reprogramar mueve una
+// reserva de una fecha a otra, y la fecha original no viaja en el payload
+// (solo `clave_reserva`) — vaciar todo el mapa es más simple y más seguro
+// que arriesgarse a dejar una fecha desactualizada en caché.
+export function cp04InvalidateAvailabilityCache() {
+  cp04AvailabilityCache.clear();
+}
+
+// Expuesto solo para tests (limpiar estado entre casos), mismo patrón que
+// __resetCrearReservaRateLimitForTests.
+export function __resetAvailabilityCacheForTests() {
+  cp04AvailabilityCache.clear();
 }
 
 async function handleReservas(request, env) {
@@ -725,6 +778,20 @@ async function handleReservas(request, env) {
 
   const makeResult = await forwardToMake(normalizedPayload, env);
   const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+
+  // La disponibilidad cacheada puede haber quedado desactualizada por esta
+  // misma solicitud (crear/cancelar/reprogramar cambian qué slots están
+  // ocupados) — se invalida siempre que se intenta una de estas 3
+  // acciones, sin importar si Make aceptó o rechazó el reenvío: es más
+  // seguro refrescar de más que arriesgarse a servir disponibilidad
+  // obsoleta desde la caché.
+  if (
+    accionSolicitada === "crear_reserva" ||
+    accionSolicitada === "cancelar_reserva" ||
+    accionSolicitada === "reprogramar_reserva"
+  ) {
+    cp04InvalidateAvailabilityCache();
+  }
 
   if (makeResult.configured && !makeResult.ok) {
     return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
