@@ -145,6 +145,58 @@ export const MAKE_VERIFICATION_STEP4B_META = Object.freeze({
   pareceYaCorregido: true,
 });
 
+// PASO 05A (2026-07-17): verificación de unicidad de los 50 escenarios +
+// evaluación de activación segura. SOLO LECTURA vía MCP (scenarios_list) —
+// no se activó, desactivó, ejecutó ni modificó ningún escenario en esta
+// pasada.
+//
+// Unicidad (cruce completo, no una muestra): los 50 IDs y los 50 nombres de
+// `MAKE_INVENTORY` coinciden exactamente, uno a uno, con los 50 escenarios
+// reales devueltos por `scenarios_list` hoy — 0 IDs duplicados, 0 nombres
+// duplicados, 0 escenarios locales sin contrapartida en Make, 0 escenarios
+// en Make sin contrapartida local. Las coincidencias de nombre parecidas
+// detectadas (p. ej. "Recordatorio 24h Antes" / "Recordatorio 2h Antes") son
+// pares de flujos distintos por diseño (recordatorios en dos ventanas de
+// tiempo), no duplicados funcionales. Conclusión: 50 flujos diferentes
+// confirmados — no hace falta ningún blueprint para esta pregunta, porque
+// el acceso de solo lectura a Make ya es la fuente de verdad definitiva.
+//
+// Activación segura evaluada contra las 7 condiciones exigidas por la misión
+// (sin comunicación real, sin cobro, sin modificar datos reales sensibles,
+// sin depender de WhatsApp/Stripe/Telegram, sin errores graves recientes,
+// propósito interno/bajo impacto, sin ejecución inmediata peligrosa):
+// NINGÚN escenario inactivo hoy cumple las 7 a la vez — prácticamente todos
+// dependen de Gmail/WhatsApp/Stripe (comunicación o cobro real) o escriben
+// en Airtable sobre datos reales de reservas/socios. Por eso
+// `flujosActivadosAutonomamente` queda vacío a propósito: activar cualquiera
+// de ellos exigiría antes una decisión humana explícita, no una lectura.
+//
+// Hallazgo transversal urgente (no pedido explícitamente, pero crítico):
+// 25 de los 50 escenarios muestran hoy `isActive=false` en Make pese a
+// figurar `activo: true` en el snapshot local del 2026-07-06 — un cambio
+// externo ajeno a este repositorio. El más grave con diferencia es
+// 📡 API Reservas (5697630): es el ÚNICO escenario con código real conectado
+// a la app (`POST /api/reservas`) y hoy está pausado en Make. Mientras siga
+// así, una reserva real que el Worker reenvíe a su webhook NO generará
+// confirmación por email, evento de Calendar ni registro en Airtable,
+// aunque el Worker no vea ningún error. No se ha tocado nada para
+// investigar o corregir esto — queda como el siguiente paso más urgente.
+export const MAKE_VERIFICATION_STEP5A_META = Object.freeze({
+  verificadoEn: "2026-07-17",
+  metodo: "mcp_make_solo_lectura_scenarios_list",
+  totalMakeReal: 50,
+  totalInventarioLocal: 50,
+  duplicadosDetectados: 0,
+  huerfanosLocalSinMake: 0,
+  huerfanosMakeSinLocal: 0,
+  conclusionUnicidad: "50_flujos_diferentes_confirmados",
+  blueprintsNecesariosParaUnicidad: 0,
+  escenariosConDriftDeActivo: 25,
+  escenarioCriticoConDrift: 5697630,
+  flujosActivadosAutonomamente: [],
+  flujosQueCumplenLas7Condiciones: 0,
+});
+
 // categoria: clasificación arquitectónica. Es un campo DERIVADO por análisis
 // (no un campo que la API de Make devuelva tal cual), documentado aquí
 // mismo por escenario. Ver worker-reservas/docs y las auditorías Make

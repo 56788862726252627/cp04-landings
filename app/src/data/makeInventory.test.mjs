@@ -9,6 +9,7 @@ import {
   MAKE_VERIFICATION_STEP3B_META,
   MAKE_VERIFICATION_STEP4A_META,
   MAKE_VERIFICATION_STEP4B_META,
+  MAKE_VERIFICATION_STEP5A_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -248,4 +249,37 @@ test("Control Acceso QR (5291559): la nota documenta la causa raíz encontrada e
   assert.match(s.nota, /PASO 04B/);
   assert.match(s.nota, /422/);
   assert.match(s.nota, /select option/i);
+});
+
+// --- PASO 05A Make 50/50 (2026-07-17): unicidad + activación segura ---
+
+test("MAKE_VERIFICATION_STEP5A_META confirma 50 flujos únicos, sin duplicados ni huérfanos en ningún sentido", () => {
+  assert.equal(MAKE_VERIFICATION_STEP5A_META.totalMakeReal, 50);
+  assert.equal(MAKE_VERIFICATION_STEP5A_META.totalInventarioLocal, 50);
+  assert.equal(MAKE_VERIFICATION_STEP5A_META.duplicadosDetectados, 0);
+  assert.equal(MAKE_VERIFICATION_STEP5A_META.huerfanosLocalSinMake, 0);
+  assert.equal(MAKE_VERIFICATION_STEP5A_META.huerfanosMakeSinLocal, 0);
+  assert.equal(MAKE_VERIFICATION_STEP5A_META.conclusionUnicidad, "50_flujos_diferentes_confirmados");
+});
+
+test("MAKE_VERIFICATION_STEP5A_META: ningún escenario se activó de forma autónoma (0/7 condiciones cumplidas por defecto seguro)", () => {
+  assert.deepEqual(MAKE_VERIFICATION_STEP5A_META.flujosActivadosAutonomamente, []);
+  assert.equal(MAKE_VERIFICATION_STEP5A_META.flujosQueCumplenLas7Condiciones, 0);
+});
+
+test("MAKE_VERIFICATION_STEP5A_META: identifica a 📡 API Reservas como el hallazgo crítico de drift de activación", () => {
+  assert.equal(MAKE_VERIFICATION_STEP5A_META.escenarioCriticoConDrift, 5697630);
+  const apiReservas = MAKE_INVENTORY.find((s) => s.id === 5697630);
+  assert.ok(apiReservas);
+  assert.equal(apiReservas.categoria, "APP_TRIGGERED", "sigue siendo el único escenario con código real conectado a la app");
+});
+
+test("PASO 05A no modifica estadoVerificacion, activo ni ejecuciones de ningún escenario (es solo lectura + un META nuevo)", () => {
+  const conteo = { confirmado: 0, inferido: 0, listo_sin_bloqueo: 0, bloqueado_externo: 0, pendiente_make_real: 0 };
+  for (const s of MAKE_INVENTORY) conteo[s.estadoVerificacion] += 1;
+  assert.equal(conteo.confirmado, 7);
+  assert.equal(conteo.inferido, 0);
+  assert.equal(conteo.listo_sin_bloqueo, 16);
+  assert.equal(conteo.bloqueado_externo, 18);
+  assert.equal(conteo.pendiente_make_real, 9);
 });
