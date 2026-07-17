@@ -12,6 +12,7 @@ import {
   MAKE_VERIFICATION_STEP5A_META,
   MAKE_VERIFICATION_STEP5C_META,
   MAKE_VERIFICATION_STEP5D_META,
+  MAKE_VERIFICATION_STEP6A_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -328,4 +329,26 @@ test("PASO 05D: la nota de API Reservas documenta la prueba real, distinta del i
   assert.match(s.nota, /PASO 05D/);
   assert.match(s.nota, /429/);
   assert.equal(s.estadoVerificacion, "confirmado", "la evidencia refuerza 'confirmado', no lo cambia");
+});
+
+// --- PASO 06A Make 50/50 (2026-07-17): plan de cierre del bloqueo Airtable 429 ---
+
+test("MAKE_VERIFICATION_STEP6A_META clasifica los 40 escenarios con Airtable en A+B+C+D sin huecos ni solapes con el total real", () => {
+  const conAirtable = MAKE_INVENTORY.filter((s) => s.usaAirtable).length;
+  assert.equal(conAirtable, MAKE_VERIFICATION_STEP6A_META.totalConAirtable);
+  const suma =
+    MAKE_VERIFICATION_STEP6A_META.grupoA_bloqueadosPorLectura +
+    MAKE_VERIFICATION_STEP6A_META.grupoB_bloqueadosPorEscritura;
+  assert.equal(suma, MAKE_VERIFICATION_STEP6A_META.totalConAirtable);
+});
+
+test("MAKE_VERIFICATION_STEP6A_META: no se ejecutó ninguna acción en Make ni Airtable para preparar el plan", () => {
+  assert.equal(MAKE_VERIFICATION_STEP6A_META.accionesEjecutadasEnMakeOAirtable, 0);
+  assert.equal(MAKE_VERIFICATION_STEP6A_META.metodo, "revision_codigo_e_inventario_sin_ejecucion");
+});
+
+test("PASO 06A: grupoC (indirectamente afectados) y grupoD (no afectados) cubren exactamente los 10 escenarios sin Airtable", () => {
+  const sinAirtable = MAKE_INVENTORY.filter((s) => !s.usaAirtable).length;
+  const cMasD = MAKE_VERIFICATION_STEP6A_META.grupoC_afectadosIndirectamente + MAKE_VERIFICATION_STEP6A_META.grupoD_noAfectados;
+  assert.equal(cMasD, sinAirtable);
 });

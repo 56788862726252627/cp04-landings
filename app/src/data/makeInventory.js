@@ -263,6 +263,51 @@ export const MAKE_VERIFICATION_STEP5D_META = Object.freeze({
   causaBloqueoConfirmada: "cuota_airtable_externa",
 });
 
+// PASO 06A (2026-07-17): plan de cierre del bloqueo Airtable 429, a partir
+// de las evidencias ya reunidas en los pasos 01-05D (sin ejecutar Make, sin
+// llamar endpoints reales, sin tocar Airtable). Clasificación de los 40
+// escenarios que usan Airtable (`usaAirtable: true`) por mecanismo real:
+//
+//   A) bloqueados por LECTURA/BÚSQUEDA (34): la mayoría — casi todos hacen
+//      una búsqueda/escaneo de Airtable antes de decidir qué hacer
+//      (comprobar conflicto, buscar cumpleaños, listar impagos, etc.).
+//      Confirmado directamente con evidencia real para 5697630 (Paso 05D),
+//      5291559 (Paso 04B) y los recordatorios 2h/24h (notas ya existentes).
+//      El resto es inferencia razonada por función, no verificación
+//      individual escenario a escenario.
+//   B) bloqueados por ESCRITURA sin búsqueda previa evidenciada (6):
+//      6199248, 5733370, 6323441, 6335117, 6323457, 6335114.
+//   C) afectados INDIRECTAMENTE (2): 6299114 y 6233755 — no llaman a
+//      Airtable ellos mismos, pero su función es monitorizar/auditar el
+//      resto del ecosistema, así que mientras Airtable esté bloqueado su
+//      utilidad práctica también queda degradada.
+//   D) NO afectados (8): 6244975, 5799061, 5798996, 4832095, 6323450,
+//      6323445, 5747703, 6216523 — sin dependencia de Airtable.
+//
+// Hallazgo técnico nuevo de esta pasada (solo lectura de código, nada
+// ejecutado): la disponibilidad de una fecha se consulta a Airtable HASTA
+// 3 VECES sin caché para una única reserva creada con éxito — (1) el
+// frontend al cargar el calendario (GET /api/disponibilidad), (2) el
+// propio Worker al revalidar justo antes de reenviar a Make
+// (`cp04FetchOcupadas` en `handleReservas`), y (3) Make otra vez dentro del
+// escenario (módulo `airtable:ActionSearchRecords`). Ninguna de las 3
+// lecturas está cacheada — la única caché existente en el Worker
+// (`caches.default`) es para idempotencia de 10s, no para el resultado de
+// disponibilidad. Reducir esto a 1-2 lecturas cacheadas (30-60s) bajaría
+// el consumo de cuota de forma directa sin tocar Make ni Airtable hoy.
+export const MAKE_VERIFICATION_STEP6A_META = Object.freeze({
+  planeadoEn: "2026-07-17",
+  metodo: "revision_codigo_e_inventario_sin_ejecucion",
+  totalConAirtable: 40,
+  grupoA_bloqueadosPorLectura: 34,
+  grupoB_bloqueadosPorEscritura: 6,
+  grupoC_afectadosIndirectamente: 2,
+  grupoD_noAfectados: 8,
+  hallazgoDuplicidadLecturas: "hasta_3_lecturas_airtable_sin_cache_por_reserva",
+  decisionRecomendada: "cachear_lecturas_y_esperar_reset_o_upgrade_cuota",
+  accionesEjecutadasEnMakeOAirtable: 0,
+});
+
 // categoria: clasificación arquitectónica. Es un campo DERIVADO por análisis
 // (no un campo que la API de Make devuelva tal cual), documentado aquí
 // mismo por escenario. Ver worker-reservas/docs y las auditorías Make
