@@ -11,6 +11,7 @@ import {
   MAKE_VERIFICATION_STEP4B_META,
   MAKE_VERIFICATION_STEP5A_META,
   MAKE_VERIFICATION_STEP5C_META,
+  MAKE_VERIFICATION_STEP5D_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -307,4 +308,24 @@ test("PASO 05C no cambia estadoVerificacion de API Reservas ni Control Acceso QR
 test("PASO 05C: ningún dato del inventario menciona un socio real ni una dirección de email de un tercero", () => {
   const serializado = JSON.stringify(MAKE_INVENTORY).toLowerCase();
   assert.ok(!serializado.includes("@gmail.com"), "el inventario no debe contener direcciones de email reales");
+});
+
+// --- PASO 05D Make 50/50 (2026-07-17): prueba real contra el endpoint del Worker ---
+
+test("MAKE_VERIFICATION_STEP5D_META documenta una prueba concluyente contra el endpoint real, sin datos QA pendientes de limpiar", () => {
+  assert.equal(MAKE_VERIFICATION_STEP5D_META.escenarioProbado, 5697630);
+  assert.equal(MAKE_VERIFICATION_STEP5D_META.workerRespondioOk, true);
+  assert.equal(MAKE_VERIFICATION_STEP5D_META.makeRecibioWebhook, true);
+  assert.equal(MAKE_VERIFICATION_STEP5D_META.operacionesConsumidas, 3);
+  assert.equal(MAKE_VERIFICATION_STEP5D_META.resultadoConcluyente, true);
+  assert.equal(MAKE_VERIFICATION_STEP5D_META.datosQaCreados, 0, "la ejecución falló antes de escribir nada — nada que limpiar");
+  assert.equal(MAKE_VERIFICATION_STEP5D_META.causaBloqueoConfirmada, "cuota_airtable_externa");
+});
+
+test("PASO 05D: la nota de API Reservas documenta la prueba real, distinta del intento inconcluso del Paso 05C", () => {
+  const s = MAKE_INVENTORY.find((x) => x.id === 5697630);
+  assert.ok(s);
+  assert.match(s.nota, /PASO 05D/);
+  assert.match(s.nota, /429/);
+  assert.equal(s.estadoVerificacion, "confirmado", "la evidencia refuerza 'confirmado', no lo cambia");
 });

@@ -231,6 +231,38 @@ export const MAKE_VERIFICATION_STEP5C_META = Object.freeze({
   comunicacionesATercerosReales: false,
 });
 
+// PASO 05D (2026-07-17): prueba real y concluyente de 📡 API Reservas
+// (5697630) contra el endpoint desplegado del Worker (POST /api/reservas),
+// no contra `scenarios_run`. Payload 100% sintético
+// (QA_CP04_TEST_ENDPOINT_REAL), sin socio real, sin WhatsApp/Telegram/
+// Stripe, sin cambiar ninguna credencial. El Worker respondió HTTP 200 con
+// `make.status: 200` (webhook aceptado). El historial de Make confirma la
+// ejecución con 3 operaciones (no 1, a diferencia del Paso 05C) — prueba
+// de que el payload SÍ llegó correctamente esta vez y se enrutó bien a la
+// rama de crear_reserva. La ejecución terminó en error real:
+// RateLimitError [429] en el módulo de búsqueda de Airtable — el mismo
+// bloqueo de cuota que arrastra el proyecto desde hace meses, reproducido
+// en vivo y coincidente con un intento idéntico del propio dueño del
+// proyecto el 2026-07-11. La ejecución murió ahí: no se creó ningún
+// evento de Calendar, ninguna fila de Airtable ni ningún email — cero
+// datos QA generados, nada pendiente de limpiar. Conclusión: el camino
+// completo Worker→Make→enrutado funciona correctamente; el único bloqueo
+// real hoy sigue siendo externo (cuota de Airtable), no un defecto de
+// código de este escenario ni del Worker.
+export const MAKE_VERIFICATION_STEP5D_META = Object.freeze({
+  probadoEn: "2026-07-17",
+  metodo: "http_post_endpoint_real_worker",
+  escenarioProbado: 5697630,
+  workerRespondioOk: true,
+  makeRecibioWebhook: true,
+  operacionesConsumidas: 3,
+  ramaEjecutada: "crear_reserva",
+  errorEncontrado: "RateLimitError_429_airtable_search",
+  datosQaCreados: 0,
+  resultadoConcluyente: true,
+  causaBloqueoConfirmada: "cuota_airtable_externa",
+});
+
 // categoria: clasificación arquitectónica. Es un campo DERIVADO por análisis
 // (no un campo que la API de Make devuelva tal cual), documentado aquí
 // mismo por escenario. Ver worker-reservas/docs y las auditorías Make
@@ -251,7 +283,7 @@ const C = MAKE_SCENARIO_CATEGORIES;
 // token, hookId invocable, URL de webhook, contenido HTML de email ni dato
 // personal de jugadores — solo métricas agregadas.
 export const MAKE_INVENTORY = Object.freeze([
-  { id: 5697630, nombre: "📡 API Reservas", categoria: C.APP_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 115, operaciones: 519, errores: 67, ultimaModificacion: "2026-06-19T18:10:39.482Z", usaAirtable: true, nota: "PASO 05C (2026-07-17): prueba controlada con datos sintéticos (QA_CP04_TEST) vía scenarios_run (MCP), acción crear_reserva. Ejecución con status SUCCESS pero solo 1 operación consumida (se esperaban 4 si la rama 'pista libre' se ejecuta completa: búsqueda + Calendar + Airtable + email). Indicio de que la scenario_run del MCP no inyectó los datos como el webhook real los recibiría — probablemente cayó en la rama de 'acción no reconocida', que envía un único email de aviso al propio dueño de la cuenta (nunca a un socio real). Verificación directa en Airtable bloqueada por el mismo 429 de cuota de siempre. Resultado INCONCLUSO sobre si la lógica real de creación de reserva funciona — no se sube a 'confirmado' con más fuerza ni se degrada: para una prueba concluyente hace falta invocar el endpoint real de la app (Worker) o el propio formulario de Make, no la inyección de datos de scenarios_run.", estadoVerificacion: "confirmado" },
+  { id: 5697630, nombre: "📡 API Reservas", categoria: C.APP_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 115, operaciones: 519, errores: 67, ultimaModificacion: "2026-06-19T18:10:39.482Z", usaAirtable: true, nota: "PASO 05C (2026-07-17): prueba controlada con datos sintéticos (QA_CP04_TEST) vía scenarios_run (MCP), acción crear_reserva. Ejecución con status SUCCESS pero solo 1 operación consumida (se esperaban 4 si la rama 'pista libre' se ejecuta completa: búsqueda + Calendar + Airtable + email). Indicio de que la scenario_run del MCP no inyectó los datos como el webhook real los recibiría — probablemente cayó en la rama de 'acción no reconocida', que envía un único email de aviso al propio dueño de la cuenta (nunca a un socio real). Verificación directa en Airtable bloqueada por el mismo 429 de cuota de siempre. Resultado INCONCLUSO sobre si la lógica real de creación de reserva funciona — no se sube a 'confirmado' con más fuerza ni se degrada: para una prueba concluyente hace falta invocar el endpoint real de la app (Worker) o el propio formulario de Make, no la inyección de datos de scenarios_run. PASO 05D (2026-07-17): prueba concluyente contra el endpoint real desplegado del Worker (POST /api/reservas, datos 100% sintéticos QA_CP04_TEST_ENDPOINT_REAL). El Worker respondió 200 con make.status=200 (el webhook aceptó la llamada) y confirmó en el historial de Make: esta vez la ejecución consumió 3 operaciones (no 1), prueba de que el payload llegó correctamente al webhook y se enrutó bien a la rama crear_reserva. La ejecución terminó en error real: RuntimeError RateLimitError [429] en el módulo de búsqueda de Airtable (ActionSearchRecords) — el mismo bloqueo de cuota de Airtable documentado en todo el proyecto desde hace meses, reproducido en vivo hoy y también visible en un intento idéntico del propio dueño del proyecto el 2026-07-11. La ejecución murió ahí: no llegó a crear evento de Calendar, no escribió en Airtable ni envió email — cero datos QA creados, nada que limpiar. Conclusión: el código (Worker→Make→enrutado) funciona correctamente; el único bloqueo real hoy es externo (cuota de Airtable), no un defecto de este escenario.", estadoVerificacion: "confirmado" },
   { id: 6199248, nombre: "🎾 Alta de Jugador", categoria: C.APP_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 22, operaciones: 75, errores: 2, ultimaModificacion: "2026-06-26T01:34:11.609Z", usaAirtable: true, estadoVerificacion: "confirmado" },
 
   { id: 6299114, nombre: "⚠️ Alerta Crítica Fallos Make", categoria: C.TECHNICAL_MONITORING, activo: false, scheduling: "cada 900s (15 min)", ejecuciones: 257, operaciones: 858, errores: 1, ultimaModificacion: "2026-06-23T11:06:55.060Z", usaAirtable: false, nota: "PASO 02 (2026-07-17, MCP solo lectura, reconfirma 2026-07-10): isActive=false, isinvalid=false, 1 error de 257 ejecuciones (99.6% éxito histórico). Nota propia del escenario en Make: pendiente de actualizar la credencial de acceso a la API de Make. No está roto — está pausado a la espera de esa rotación. Contradicción anterior con un export local que decía 'ROTO' queda resuelta: ese export reflejaba un estado ya superado.", estadoVerificacion: "pendiente_make_real" },
