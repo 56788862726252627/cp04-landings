@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   MAKE_INVENTORY,
   MAKE_INVENTORY_META,
+  MAKE_VERIFICATION_STATES,
+  MAKE_VERIFICATION_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -95,4 +97,39 @@ test("el escenario 15 (Recordatorio 24h Antes) figura inactivo, consistente con 
   const s15 = MAKE_INVENTORY.find((s) => s.id === 4942506);
   assert.ok(s15);
   assert.equal(s15.activo, false);
+});
+
+// --- PASO 01 Make 50/50 (2026-07-17): estadoVerificacion ---
+
+test("los 50 escenarios traen estadoVerificacion, y es siempre uno de los 5 valores válidos", () => {
+  const validos = new Set(Object.values(MAKE_VERIFICATION_STATES));
+  for (const s of MAKE_INVENTORY) {
+    assert.equal(typeof s.estadoVerificacion, "string", `${s.nombre} sin estadoVerificacion`);
+    assert.ok(validos.has(s.estadoVerificacion), `${s.nombre} tiene un estado inválido: ${s.estadoVerificacion}`);
+  }
+});
+
+test("MAKE_VERIFICATION_STATES expone exactamente los 5 estados pedidos por el roadmap", () => {
+  assert.deepEqual(
+    Object.values(MAKE_VERIFICATION_STATES).sort(),
+    ["bloqueado_externo", "confirmado", "inferido", "listo_sin_bloqueo", "pendiente_make_real"].sort()
+  );
+});
+
+test("reparto real de estadoVerificacion no inventa un 50/50 operativo (solo 4/50 confirmados hoy)", () => {
+  const conteo = { confirmado: 0, inferido: 0, listo_sin_bloqueo: 0, bloqueado_externo: 0, pendiente_make_real: 0 };
+  for (const s of MAKE_INVENTORY) conteo[s.estadoVerificacion] += 1;
+
+  assert.equal(conteo.confirmado, 4, "confirmados debe ser 4/50, no más — no se puede inflar sin evidencia real");
+  assert.equal(conteo.inferido, 4);
+  assert.equal(conteo.listo_sin_bloqueo, 16);
+  assert.equal(conteo.bloqueado_externo, 18);
+  assert.equal(conteo.pendiente_make_real, 8);
+  const total = Object.values(conteo).reduce((a, b) => a + b, 0);
+  assert.equal(total, MAKE_INVENTORY.length);
+});
+
+test("MAKE_VERIFICATION_META deja explícito que la clasificación no requiere conexión a Make", () => {
+  assert.equal(MAKE_VERIFICATION_META.requiereConexionMake, false);
+  assert.equal(typeof MAKE_VERIFICATION_META.clasificadoEn, "string");
 });

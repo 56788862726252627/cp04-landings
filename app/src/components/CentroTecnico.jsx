@@ -12,6 +12,7 @@ import {
   enrichSnapshotScenario,
   enrichLiveScenario,
   computeTotales,
+  computeVerificacionResumen,
   filterScenarios,
   sortScenarios,
   formatMetric,
@@ -47,6 +48,24 @@ export const CP04_MAKE_LIVE_TIMEOUT_MS = 8000;
 // confirmados). Ver worker-reservas/support/makeLiveInventory.js.
 const HEALTH_LABEL = { OK: "OK", ATENCION: "Atención", CRITICO: "Crítico", SIN_DATOS: "Sin datos" };
 const HEALTH_COLOR = { OK: T.accent, ATENCION: T.warning, CRITICO: T.danger, SIN_DATOS: T.textDim };
+
+// PASO 01 Make 50/50 (2026-07-17): etiquetas de la clasificación de
+// verificación (ver src/data/makeInventory.js::MAKE_VERIFICATION_STATES).
+// Es una auditoría manual, no una lectura en vivo de Make.
+const VERIFICATION_LABEL = {
+  confirmado: "Confirmado",
+  inferido: "Inferido — revisar",
+  listo_sin_bloqueo: "Listo, sin probar",
+  bloqueado_externo: "Bloqueado (externo)",
+  pendiente_make_real: "Pendiente en Make",
+};
+const VERIFICATION_COLOR = {
+  confirmado: T.accent,
+  inferido: T.textDim,
+  listo_sin_bloqueo: T.primary,
+  bloqueado_externo: T.warning,
+  pendiente_make_real: T.warning,
+};
 
 const CATEGORY_LABEL = {
   [MAKE_SCENARIO_CATEGORIES.APP_TRIGGERED]: "Disparado por la app",
@@ -217,6 +236,13 @@ export default function CentroTecnico({ selectedRole }) {
 
   const snapshotScenarios = useMemo(() => MAKE_INVENTORY.map(enrichSnapshotScenario), []);
 
+  // PASO 01 Make 50/50: la clasificación de verificación es una auditoría
+  // manual sobre los 50 escenarios conocidos (ver makeInventory.js), no una
+  // métrica operativa — se calcula siempre sobre el snapshot local, sin
+  // importar si el panel de arriba está mostrando datos EN VIVO o SNAPSHOT
+  // para ejecuciones/errores. Un fetch en vivo no cambia esta clasificación.
+  const verificacionResumen = useMemo(() => computeVerificacionResumen(snapshotScenarios), [snapshotScenarios]);
+
   const liveScenariosEnriched = useMemo(() => {
     if (!Array.isArray(liveScenarios)) return null;
     return liveScenarios.map(enrichLiveScenario);
@@ -383,6 +409,40 @@ export default function CentroTecnico({ selectedRole }) {
         </div>
       </Panel>
 
+      {/* A2. VERIFICACIÓN 50/50 — PASO 01 (2026-07-17), auditoría manual, no Make en vivo */}
+      <Panel eyebrow="A2" title="Verificación 50/50 (auditoría manual)">
+        <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
+          Clasificación de auditoría manual del {new Date("2026-07-17").toLocaleDateString("es-ES")}, no una conexión en vivo a Make: nadie ha
+          ejecutado estos 50 escenarios hoy para "confirmarlos". Solo <strong style={{ color: T.text }}>{verificacionResumen.verificados}/{verificacionResumen.total}</strong> están
+          confirmados; el resto sigue pendiente de verificación real en Make.
+        </p>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.confirmado}>{VERIFICATION_LABEL.confirmado}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.verificados}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.listo_sin_bloqueo}>{VERIFICATION_LABEL.listo_sin_bloqueo}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.listosSinBloqueo}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.bloqueado_externo}>{VERIFICATION_LABEL.bloqueado_externo}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.bloqueadosExterno}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.pendiente_make_real}>{VERIFICATION_LABEL.pendiente_make_real}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.pendientesMakeReal}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.inferido}>{VERIFICATION_LABEL.inferido}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.inferidos}</strong>
+          </div>
+        </div>
+        <div style={{ color: T.textDim, fontSize: ".78rem", fontStyle: "italic" }}>
+          {verificacionResumen.pendientesMakeReal + verificacionResumen.bloqueadosExterno} de {verificacionResumen.total} escenarios requieren abrir Make real para poder verificarse — no se ha tocado Make para preparar este panel.
+        </div>
+      </Panel>
+
       {/* C. SALUD DE AUTOMATIZACIONES */}
       <Panel eyebrow="C" title="Salud de automatizaciones">
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
@@ -543,6 +603,9 @@ export default function CentroTecnico({ selectedRole }) {
                 <div><span style={{ color: T.textDim }}>Última modificación:</span> {s.ultimaModificacion ? new Date(s.ultimaModificacion).toLocaleString("es-ES") : "No disponible"}</div>
                 <div><span style={{ color: T.textDim }}>Dependencia principal:</span> {s.dependenciaPrincipal}</div>
                 <div><span style={{ color: T.textDim }}>Fuente del dato:</span> {s.fuenteDeVerdadDato}</div>
+                {s.estadoVerificacion && (
+                  <div><span style={{ color: T.textDim }}>Verificación (auditoría 2026-07-17):</span> {VERIFICATION_LABEL[s.estadoVerificacion] || s.estadoVerificacion}</div>
+                )}
               </div>
               {s.nota && (
                 <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.04)", color: T.textDim, fontSize: ".85rem", lineHeight: 1.5 }}>
