@@ -18,11 +18,11 @@ import {
 
 const enrichedSnapshot = MAKE_INVENTORY.map(enrichSnapshotScenario);
 
-test("computeTotales: 50 escenarios reales, 38 activos, 12 inactivos (snapshot confirmado)", () => {
+test("computeTotales: 50 escenarios reales, 36 activos, 14 inactivos tras el Paso 03B", () => {
   const totales = computeTotales(enrichedSnapshot);
   assert.equal(totales.total, 50);
-  assert.equal(totales.activos, 38);
-  assert.equal(totales.inactivos, 12);
+  assert.equal(totales.activos, 36);
+  assert.equal(totales.inactivos, 14);
   assert.equal(totales.activos + totales.inactivos, totales.total);
 });
 
@@ -69,8 +69,8 @@ test("enrichSnapshotScenario: deriva dependenciaPrincipal desde usaAirtable y et
 test("filterScenarios: cada filtro devuelve exactamente el subconjunto esperado (sin fugas cruzadas)", () => {
   const activos = filterScenarios(enrichedSnapshot, { filtro: "activos" });
   const inactivos = filterScenarios(enrichedSnapshot, { filtro: "inactivos" });
-  assert.equal(activos.length, 38);
-  assert.equal(inactivos.length, 12);
+  assert.equal(activos.length, 36);
+  assert.equal(inactivos.length, 14);
   assert.ok(activos.every((s) => s.activo === true));
   assert.ok(inactivos.every((s) => s.activo === false));
 
@@ -127,11 +127,11 @@ test("sortScenarios: no muta la lista original (copia defensiva)", () => {
 
 // --- PASO 01 Make 50/50 (2026-07-17): computeVerificacionResumen ---
 
-test("computeVerificacionResumen: sobre el snapshot real tras el Paso 02, 5 confirmados y 43 sin confirmar (16+18+9), 2 inferidos", () => {
+test("computeVerificacionResumen: sobre el snapshot real tras el Paso 03B, 7 confirmados, 0 inferidos, 43 sin confirmar (16+18+9)", () => {
   const resumen = computeVerificacionResumen(enrichedSnapshot);
   assert.equal(resumen.total, 50);
-  assert.equal(resumen.verificados, 5);
-  assert.equal(resumen.inferidos, 2);
+  assert.equal(resumen.verificados, 7);
+  assert.equal(resumen.inferidos, 0);
   assert.equal(resumen.listosSinBloqueo, 16);
   assert.equal(resumen.bloqueadosExterno, 18);
   assert.equal(resumen.pendientesMakeReal, 9);
@@ -145,7 +145,7 @@ test("computeVerificacionResumen: sobre el snapshot real tras el Paso 02, 5 conf
 test("computeVerificacionResumen: nunca cuenta listo_sin_bloqueo ni pendiente_make_real como verificado", () => {
   const resumen = computeVerificacionResumen(enrichedSnapshot);
   assert.ok(resumen.verificados < resumen.total, "no puede afirmar que todos están confirmados");
-  assert.equal(resumen.verificados, 5, "verificados es estrictamente el conteo de 'confirmado', nada más");
+  assert.equal(resumen.verificados, 7, "verificados es estrictamente el conteo de 'confirmado', nada más");
 });
 
 test("computeVerificacionResumen: un escenario EN VIVO sin estadoVerificacion se cuenta como sinClasificar, nunca se inventa un estado", () => {

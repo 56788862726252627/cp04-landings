@@ -6,6 +6,7 @@ import {
   MAKE_VERIFICATION_STATES,
   MAKE_VERIFICATION_META,
   MAKE_VERIFICATION_STEP2_META,
+  MAKE_VERIFICATION_STEP3B_META,
   computeErrorRate,
   computeHealth,
   computeCriticality,
@@ -23,11 +24,11 @@ test("todos los IDs son numéricos y únicos (sin duplicados fantasma)", () => {
   for (const id of ids) assert.equal(typeof id, "number");
 });
 
-test("activos + inactivos coincide con el total real (38/12 confirmado en la auditoría)", () => {
+test("activos + inactivos coincide con el total real (36/14 tras el Paso 03B: 2 desactivados por decisión de seguridad)", () => {
   const activos = MAKE_INVENTORY.filter((s) => s.activo).length;
   const inactivos = MAKE_INVENTORY.filter((s) => !s.activo).length;
-  assert.equal(activos, 38);
-  assert.equal(inactivos, 12);
+  assert.equal(activos, 36);
+  assert.equal(inactivos, 14);
   assert.equal(activos + inactivos, MAKE_INVENTORY.length);
 });
 
@@ -117,12 +118,12 @@ test("MAKE_VERIFICATION_STATES expone exactamente los 5 estados pedidos por el r
   );
 });
 
-test("reparto real de estadoVerificacion no inventa un 50/50 operativo (5/50 confirmados tras el Paso 02)", () => {
+test("reparto real de estadoVerificacion no inventa un 50/50 operativo (7/50 confirmados tras el Paso 03B, 0 inferidos)", () => {
   const conteo = { confirmado: 0, inferido: 0, listo_sin_bloqueo: 0, bloqueado_externo: 0, pendiente_make_real: 0 };
   for (const s of MAKE_INVENTORY) conteo[s.estadoVerificacion] += 1;
 
-  assert.equal(conteo.confirmado, 5, "confirmados debe ser 5/50 tras el Paso 02, no más — no se puede inflar sin evidencia real");
-  assert.equal(conteo.inferido, 2);
+  assert.equal(conteo.confirmado, 7, "confirmados debe ser 7/50 tras el Paso 03B, no más — no se puede inflar sin evidencia real");
+  assert.equal(conteo.inferido, 0);
   assert.equal(conteo.listo_sin_bloqueo, 16);
   assert.equal(conteo.bloqueado_externo, 18);
   assert.equal(conteo.pendiente_make_real, 9);
@@ -157,16 +158,35 @@ test("Alerta Crítica Fallos Make (6299114) pasa a pendiente_make_real — pausa
   assert.match(s.nota, /PASO 02/);
 });
 
-test("Email Recuperación de Contraseña SaaS (6323445) sigue inferido — riesgo reconfirmado, decisión humana pendiente", () => {
-  const s = MAKE_INVENTORY.find((x) => x.id === 6323445);
-  assert.ok(s);
-  assert.equal(s.estadoVerificacion, "inferido");
-  assert.match(s.nota, /PASO 02/);
+// Nota histórica: en el Paso 02 (2026-07-17), Email Recuperación de
+// Contraseña SaaS y Chatbot Web Reservas seguían "inferido" a propósito.
+// El Paso 03B (misma fecha) cierra ambos tras confirmarse su desactivación
+// manual en Make — ver los tests de esa sección más abajo.
+
+// --- PASO 03B Make 50/50 (2026-07-17): cierre de los 2 "inferido" restantes ---
+
+test("MAKE_VERIFICATION_STEP3B_META documenta el cierre de los 2 escenarios y que no quedan inferidos", () => {
+  assert.deepEqual(MAKE_VERIFICATION_STEP3B_META.escenariosDesactivados.sort(), [5799061, 6323445].sort());
+  assert.equal(MAKE_VERIFICATION_STEP3B_META.inferidosRestantes, 0);
 });
 
-test("Chatbot Web Reservas (5799061) sigue inferido — NOT_SAFE reconfirmado activo, decisión de producto pendiente", () => {
+test("Email Recuperación de Contraseña SaaS (6323445): desactivado y cerrado, no queda inferido", () => {
+  const s = MAKE_INVENTORY.find((x) => x.id === 6323445);
+  assert.ok(s);
+  assert.equal(s.estadoVerificacion, "confirmado");
+  assert.equal(s.activo, false, "debe reflejar la desactivación real confirmada en Make");
+  assert.match(s.nota, /PASO 03B/);
+});
+
+test("Chatbot Web Reservas (5799061): desactivado y cerrado, no queda inferido", () => {
   const s = MAKE_INVENTORY.find((x) => x.id === 5799061);
   assert.ok(s);
-  assert.equal(s.estadoVerificacion, "inferido");
-  assert.match(s.nota, /PASO 02/);
+  assert.equal(s.estadoVerificacion, "confirmado");
+  assert.equal(s.activo, false, "debe reflejar la desactivación real confirmada en Make");
+  assert.match(s.nota, /PASO 03B/);
+});
+
+test("tras el Paso 03B ya no queda ningún escenario en estado 'inferido'", () => {
+  const inferidos = MAKE_INVENTORY.filter((s) => s.estadoVerificacion === "inferido");
+  assert.equal(inferidos.length, 0);
 });

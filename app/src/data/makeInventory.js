@@ -84,6 +84,23 @@ export const MAKE_VERIFICATION_STEP2_META = Object.freeze({
   siguenInferidos: 2,
 });
 
+// PASO 03B (2026-07-17): cierre de los 2 escenarios que seguían "inferido"
+// tras el Paso 02 (Email Recuperación de Contraseña SaaS, Chatbot Web
+// Reservas). El Paso 03 propuso desactivarlos por decisión de
+// seguridad/producto; el usuario confirma que la desactivación se hizo
+// manualmente en Make. Este paso NO desactivó nada por sí mismo — solo
+// verificó el resultado con una consulta de SOLO LECTURA vía MCP
+// (scenarios_list) que confirma isActive=false en ambos, y actualizó el
+// inventario local para reflejarlo. `estadoVerificacion: "confirmado"` aquí
+// significa "decisión de cierre tomada y verificada", nunca "flujo
+// operativo válido" — ambos quedan inactivos a propósito.
+export const MAKE_VERIFICATION_STEP3B_META = Object.freeze({
+  cerradoEn: "2026-07-17",
+  metodo: "confirmacion_usuario_mas_verificacion_mcp_solo_lectura",
+  escenariosDesactivados: [6323445, 5799061],
+  inferidosRestantes: 0,
+});
+
 // categoria: clasificación arquitectónica. Es un campo DERIVADO por análisis
 // (no un campo que la API de Make devuelva tal cual), documentado aquí
 // mismo por escenario. Ver worker-reservas/docs y las auditorías Make
@@ -146,14 +163,14 @@ export const MAKE_INVENTORY = Object.freeze([
   { id: 5799031, nombre: "🎧 Atención Socio WhatsApp FAQ", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:43:58.075Z", usaAirtable: true, estadoVerificacion: "pendiente_make_real" },
   { id: 5791124, nombre: "🎯 Campaña Flash WhatsApp", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T17:52:05.632Z", usaAirtable: true, estadoVerificacion: "pendiente_make_real" },
   { id: 5733370, nombre: "💰 Facturación y Cobro", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T17:52:57.357Z", usaAirtable: true, estadoVerificacion: "listo_sin_bloqueo" },
-  { id: 5799061, nombre: "💬 Chatbot Web Reservas", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-26T01:38:23.159Z", usaAirtable: false, nota: "PASO 02 (2026-07-17, MCP solo lectura): sigue isActive=true pese a estar clasificado NOT_SAFE (decide reservas reales de forma no determinista vía LLM). Riesgo inmediato bajo hoy — sin disparador en vivo asignado (sin webhook real) y 0 ejecuciones — pero sigue siendo una decisión de producto/seguridad sin cerrar, no algo que este chequeo de solo lectura pueda resolver. Sigue inferido a propósito.", estadoVerificacion: "inferido" },
+  { id: 5799061, nombre: "💬 Chatbot Web Reservas", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-26T01:38:23.159Z", usaAirtable: false, nota: "PASO 03B (2026-07-17): desactivado manualmente en Make por decisión de producto/seguridad (estaba clasificado NOT_SAFE — decidía reservas reales de forma no determinista vía LLM, sin disparador en vivo asignado y sin ejecuciones). Confirmado por lectura MCP tras la desactivación: isActive=false. Es una decisión de cierre tomada y verificada, no una afirmación de que el flujo sea operativo o válido.", estadoVerificacion: "confirmado" },
   { id: 5798996, nombre: "🤖 Bot IA Reservas WhatsApp", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:45:19.306Z", usaAirtable: false, estadoVerificacion: "listo_sin_bloqueo" },
   { id: 4832095, nombre: "🤖 Bot IA Reservas Telegram", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (Telegram watchUpdates)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:44:47.157Z", usaAirtable: false, estadoVerificacion: "listo_sin_bloqueo" },
   { id: 6323457, nombre: "⚖️ Solicitud GDPR Acceso u Olvido de Datos", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T05:27:35.959Z", usaAirtable: true, nota: "Sin blueprint local previo; no conectado a la app.", estadoVerificacion: "pendiente_make_real" },
   { id: 6323450, nombre: "🛡️ Alerta Seguridad Acceso Sospechoso", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T05:27:09.091Z", usaAirtable: false, nota: "Sin blueprint local previo; no conectado a la app.", estadoVerificacion: "bloqueado_externo" },
   { id: 6323441, nombre: "💳 Pago Confirmado Stripe → Cuota + Recibo", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 1, operaciones: 4, errores: 0, ultimaModificacion: "2026-06-29T05:36:04.160Z", usaAirtable: true, nota: "Stripe no está activado en la app (regla del proyecto); solo existe la infraestructura en Make.", estadoVerificacion: "bloqueado_externo" },
   { id: 6335117, nombre: "🔄 Dunning Cobro Recurrente Stripe", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T05:28:36.088Z", usaAirtable: true, nota: "Stripe no está activado en la app.", estadoVerificacion: "bloqueado_externo" },
-  { id: 6323445, nombre: "🔑 Email Recuperación de Contraseña SaaS", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T05:26:47.987Z", usaAirtable: false, nota: "NO conectar: Supabase Auth es la única fuente de verdad de recuperación de contraseña. PASO 02 (2026-07-17, MCP solo lectura): re-confirmado isActive=true CON un disparador real asignado (webhook activo, no simulado), 0 ejecuciones — el riesgo sigue abierto exactamente igual que el 2026-07-10, sin incidente hasta hoy. Requiere una decisión humana (desactivar el escenario en Make o aceptar formalmente el riesgo); no se resuelve solo con lectura. Sigue inferido a propósito.", estadoVerificacion: "inferido" },
+  { id: 6323445, nombre: "🔑 Email Recuperación de Contraseña SaaS", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T05:26:47.987Z", usaAirtable: false, nota: "NO conectar: Supabase Auth es la única fuente de verdad de recuperación de contraseña. PASO 03B (2026-07-17): desactivado manualmente en Make por decisión de seguridad, alineando Make con esta regla de arquitectura (tenía un disparador real asignado y 0 ejecuciones). Confirmado por lectura MCP tras la desactivación: isActive=false. Es una decisión de cierre tomada y verificada, no una afirmación de que el flujo sea operativo o válido.", estadoVerificacion: "confirmado" },
   { id: 6335114, nombre: "📸 Instagram Borrador con IA", categoria: C.EVENT_TRIGGERED, activo: true, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T20:52:56.817Z", usaAirtable: true, nota: "Marketing, sin relación con la app.", estadoVerificacion: "bloqueado_externo" },
   { id: 6335118, nombre: "🔔 Notificación Push PWA", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-25T20:53:52.789Z", usaAirtable: true, nota: "La app no tiene push PWA implementado todavía.", estadoVerificacion: "pendiente_make_real" },
   { id: 5747703, nombre: "📝 Tally → API Reservas", categoria: C.EVENT_TRIGGERED, activo: false, scheduling: "webhook (immediately)", ejecuciones: 0, operaciones: 0, errores: 0, ultimaModificacion: "2026-06-29T18:27:30.571Z", usaAirtable: false, estadoVerificacion: "pendiente_make_real" },
