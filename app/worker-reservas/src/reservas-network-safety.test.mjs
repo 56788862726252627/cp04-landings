@@ -19,6 +19,9 @@ import {
   cp04BuildIdempotentDuplicateResponse,
   __resetIdempotencyStoreForTests,
   CP04_IDEMPOTENCY_TTL_MS,
+  cp04GetRequestId,
+  cp04HashIdempotencyKey,
+  cp04LogTechnicalEvent,
 } from "./index.js";
 import worker from "./index.js";
 
@@ -952,4 +955,220 @@ test("cp04BuildIdempotentDuplicateResponse: forma exacta, reserva_confirmada sie
     reserva_confirmada: false,
     message: "Ya hemos recibido esta solicitud hace unos instantes. Si no ves la confirmación, contacta con recepción antes de volver a intentarlo.",
   });
+});
+
+// Observabilidad y logging técnico coherente (PASO 06E) ---------------------
+//
+// Estos tests comprueban el CONTRATO del log (forma del evento, canal,
+// qué nunca aparece en claro), no la implementación interna — están
+// pensados para seguir siendo válidos aunque cambie el formato exacto del
+// mensaje de consola, mientras se respete cp04LogTechnicalEvent.
+
+function withFakeConsoleError(run) {
+  const original = console.error;
+  const logged = [];
+  console.error = (...args) => logged.push(args);
+  try {
+    return { result: run(), logged };
+  } finally {
+    console.error = original;
+  }
+}
+
+async function withFakeConsoleErrorAsync(run) {
+  const original = console.error;
+  const logged = [];
+  console.error = (...args) => logged.push(args);
+  try {
+    const result = await run();
+    return { result, logged };
+  } finally {
+    console.error = original;
+  }
+}
+
+function loggedEventsFrom(logged) {
+  return logged
+    .filter(([tag]) => tag === "CP04_EVENT")
+    .map(([, jsonStr]) => JSON.parse(jsonStr));
+}
+
+test("cp04LogTechnicalEvent: forma exacta del evento, con defaults null para campos ausentes", () => {
+  const { result, logged } = withFakeConsoleError(() =>
+    cp04LogTechnicalEvent({ event: "test_event", code: "TEST_CODE" })
+  );
+
+  assert.equal(result.event, "test_event");
+  assert.equal(result.action, null);
+  assert.equal(result.code, "TEST_CODE");
+  assert.equal(result.requestId, null);
+  assert.equal(result.idempotencyKeyHash, null);
+  assert.equal(result.retryable, null);
+  assert.equal(result.reserva_confirmada, null);
+  assert.equal(result.origen, null);
+  assert.equal(typeof result.timestamp, "string");
+  assert.ok(!Object.prototype.hasOwnProperty.call(result, "detail"), "sin detail explícito, no debe añadir la clave");
+
+  assert.equal(logged.length, 1);
+  assert.equal(logged[0][0], "CP04_EVENT");
+  assert.deepEqual(JSON.parse(logged[0][1]), result);
+});
+
+test("cp04GetRequestId: usa cf-ray si está presente en la petición", () => {
+  const request = new Request("https://worker.test/api/reservas", {
+    headers: { "cf-ray": "abc123-MAD" },
+  });
+  assert.equal(cp04GetRequestId(request), "abc123-MAD");
+});
+
+test("cp04GetRequestId: sin cf-ray (tests, wrangler dev local) devuelve un valor fijo legible, nunca null/undefined", () => {
+  const request = new Request("https://worker.test/api/reservas");
+  assert.equal(cp04GetRequestId(request), "sin-cf-ray");
+});
+
+test("cp04HashIdempotencyKey: determinista (misma clave -> mismo hash) y sin clave -> null", () => {
+  const key = "crear|qa@example.test|2026-09-11|Pista 1|08:00|600000001";
+  const hashA = cp04HashIdempotencyKey(key);
+  const hashB = cp04HashIdempotencyKey(key);
+  assert.equal(hashA, hashB);
+  assert.equal(typeof hashA, "string");
+  assert.equal(cp04HashIdempotencyKey(null), null);
+  assert.equal(cp04HashIdempotencyKey(""), null);
+});
+
+test("cp04HashIdempotencyKey: claves distintas producen hashes distintos y nunca contienen el email/telefono originales", () => {
+  const keyA = "crear|qa-uno@example.test|2026-09-11|Pista 1|08:00|600000001";
+  const keyB = "crear|qa-dos@example.test|2026-09-11|Pista 1|08:00|600000002";
+  const hashA = cp04HashIdempotencyKey(keyA);
+  const hashB = cp04HashIdempotencyKey(keyB);
+  assert.notEqual(hashA, hashB);
+  assert.equal(hashA.includes("qa-uno"), false);
+  assert.equal(hashA.includes("600000001"), false);
+});
+
+test("Idempotencia: la solicitud duplicada loguea un evento idempotent_duplicate con la clave hasheada, nunca en claro", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetIdempotencyStoreForTests();
+
+  const body = crearReservaBody({
+    jugador: { nombre: "QA Log", apellidos: "Test", email: "qa-log-idem@example.test", telefono: "611222333" },
+  });
+
+  const first = await runReservaFlow(body);
+  assert.equal(first.response.status, 200);
+
+  const { result: second, logged } = await withFakeConsoleErrorAsync(() => runReservaFlow(body));
+  assert.equal(second.response.status, 409);
+  assert.equal(second.json.code, "IDEMPOTENT_DUPLICATE");
+
+  const events = loggedEventsFrom(logged);
+  const dupEvent = events.find((e) => e.event === "idempotent_duplicate");
+  assert.ok(dupEvent, "debe loguear un evento idempotent_duplicate");
+  assert.equal(dupEvent.code, "IDEMPOTENT_DUPLICATE");
+  assert.equal(dupEvent.action, "crear_reserva");
+  assert.equal(dupEvent.retryable, false);
+  assert.equal(dupEvent.reserva_confirmada, false);
+  assert.equal(dupEvent.origen, "idempotencia");
+  assert.equal(typeof dupEvent.idempotencyKeyHash, "string");
+
+  const rawLog = JSON.stringify(logged);
+  assert.equal(rawLog.includes("qa-log-idem@example.test"), false, "el email completo no debe aparecer en ningún log");
+  assert.equal(rawLog.includes("611222333"), false, "el teléfono completo no debe aparecer en ningún log");
+
+  __resetIdempotencyStoreForTests();
+});
+
+test("Airtable 429 en /api/disponibilidad loguea un evento airtable_rate_limit con code y origen correctos", async () => {
+  __resetAvailabilityCacheForTests();
+  let captured = null;
+  const { logged } = await withFakeConsoleErrorAsync(() =>
+    withFakeFetch(
+      async () => new Response(JSON.stringify({ error: { type: "PUBLIC_API_BILLING_LIMIT_EXCEEDED" } }), { status: 429 }),
+      async () => {
+        const env = { ...ENV_BASE, ...FAKE_AIRTABLE_ENV };
+        const response = await worker.fetch(disponibilidadRequest("2026-09-16"), env);
+        captured = { status: response.status, body: await response.json() };
+      }
+    )
+  );
+
+  assert.equal(captured.status, 503);
+  assert.equal(captured.body.code, "AIRTABLE_RATE_LIMIT");
+
+  const events = loggedEventsFrom(logged);
+  const rateLimitEvent = events.find((e) => e.event === "airtable_rate_limit");
+  assert.ok(rateLimitEvent, "debe loguear un evento airtable_rate_limit");
+  assert.equal(rateLimitEvent.code, "AIRTABLE_RATE_LIMIT");
+  assert.equal(rateLimitEvent.origen, "disponibilidad");
+  assert.equal(rateLimitEvent.retryable, true);
+  assert.equal(rateLimitEvent.reserva_confirmada, false);
+
+  // El evento genérico de error (previo a saber que es 429) también debe
+  // haberse logueado, con su propio código — ver nota junto a
+  // CP04_DISPONIBILIDAD_AIRTABLE_ERROR en index.js.
+  const genericEvent = events.find((e) => e.event === "airtable_error");
+  assert.ok(genericEvent, "también debe loguear el evento genérico previo a la clasificación de 429");
+});
+
+test("Rate limit de crear_reserva: la respuesta al cliente no cambia y se loguea un evento rate_limited (mismo criterio que idempotencia)", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetIdempotencyStoreForTests();
+  __resetCrearReservaRateLimitForTests();
+
+  for (let i = 0; i < 30; i += 1) {
+    cp04CheckCrearReservaRateLimit();
+  }
+
+  const body = crearReservaBody({
+    jugador: { nombre: "QA Rate", apellidos: "Test", email: "qa-rate@example.test", telefono: "622333444" },
+  });
+
+  const { result, logged } = await withFakeConsoleErrorAsync(() => runReservaFlow(body));
+
+  assert.equal(result.response.status, 429);
+  assert.deepEqual(result.json, {
+    ok: false,
+    error: "RATE_LIMITED",
+    message: "Demasiadas solicitudes de alta de reserva en poco tiempo. Inténtalo de nuevo en un minuto.",
+  });
+  assert.equal(result.calls.make, 0, "un rate limit no debe llegar a reenviar nada a Make");
+
+  const events = loggedEventsFrom(logged);
+  const rateLimitedEvent = events.find((e) => e.event === "rate_limited");
+  assert.ok(rateLimitedEvent, "debe loguear un evento rate_limited");
+  assert.equal(rateLimitedEvent.code, "RATE_LIMITED");
+  assert.equal(rateLimitedEvent.action, "crear_reserva");
+  assert.equal(rateLimitedEvent.origen, "rate_limiter_crear_reserva");
+  assert.equal(rateLimitedEvent.retryable, true);
+  assert.equal(rateLimitedEvent.reserva_confirmada, false);
+
+  const rawLog = JSON.stringify(logged);
+  assert.equal(rawLog.includes("qa-rate@example.test"), false);
+  assert.equal(rawLog.includes("622333444"), false);
+
+  __resetCrearReservaRateLimitForTests();
+});
+
+test("Make rechaza el reenvío (502): ahora sí queda un rastro server-side (evento make_rejected)", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetIdempotencyStoreForTests();
+
+  const body = crearReservaBody({
+    jugador: { nombre: "QA MakeReject", apellidos: "Test", email: "qa-makereject@example.test", telefono: "633444555" },
+  });
+
+  const { result, logged } = await withFakeConsoleErrorAsync(() =>
+    runReservaFlow(body, { makeStatus: 500, makeBody: { ok: false } })
+  );
+
+  assert.equal(result.response.status, 502);
+
+  const events = loggedEventsFrom(logged);
+  const rejectedEvent = events.find((e) => e.event === "make_rejected");
+  assert.ok(rejectedEvent, "debe loguear un evento make_rejected");
+  assert.equal(rejectedEvent.code, "MAKE_REJECTED");
+  assert.equal(rejectedEvent.action, "crear_reserva");
+  assert.equal(rejectedEvent.reserva_confirmada, false);
+
+  __resetIdempotencyStoreForTests();
 });

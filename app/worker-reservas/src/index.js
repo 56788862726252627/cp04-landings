@@ -58,6 +58,65 @@ function cleanText(value) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
 
+// --- PASO 06E: observabilidad y logging técnico coherente ---
+//
+// Un único formato para todo evento técnico relacionado con rate limiter,
+// caché de disponibilidad, idempotencia, modo degradado de Airtable 429 y
+// errores genéricos: mismo conjunto de campos, mismo canal (console.error,
+// visible en `wrangler tail`/Cloudflare Logs), fácil de filtrar por
+// `event` o `code` en soporte sin tener que recordar el formato distinto
+// de cada punto del código. Nunca lleva nombre, apellidos, email o
+// teléfono en claro — ver cp04HashIdempotencyKey.
+
+// Cloudflare añade la cabecera `cf-ray` a toda petición que pasa por su
+// borde: se reutiliza como identificador de correlación en vez de generar
+// uno propio (evitaría añadir una dependencia solo para esto). Fuera del
+// borde real (tests, `wrangler dev` local) esa cabecera no existe: se usa
+// un valor fijo y legible, nunca null/undefined en el log.
+export function cp04GetRequestId(request) {
+  return request?.headers?.get?.("cf-ray") || "sin-cf-ray";
+}
+
+// Huella corta y no reversible de una clave de idempotencia, para poder
+// correlacionar en los logs "esta solicitud" con "esta otra" sin escribir
+// la clave completa — que para crear_reserva puede incluir email y
+// teléfono normalizados (ver cp04BuildIdempotencyKey). No es un hash
+// criptográfico: no protege ningún secreto, solo evita texto claro de
+// datos personales en un log técnico. FNV-1a de 32 bits, síncrono y
+// determinista — suficiente para agrupar eventos del mismo caso.
+export function cp04HashIdempotencyKey(key) {
+  if (!key) return null;
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < key.length; i++) {
+    hash ^= key.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+// Constructor único del evento técnico. Solo acepta campos ya conocidos y
+// no sensibles (nunca el objeto completo que pase un llamador) — `detail`
+// es el único campo abierto, y se usa exclusivamente para contexto técnico
+// ya filtrado por cada punto de llamada (status HTTP, razón interna,
+// mensaje de excepción), nunca para PII. Devuelve el evento (útil para
+// tests) además de loguearlo.
+export function cp04LogTechnicalEvent(fields) {
+  const event = {
+    event: fields.event,
+    action: fields.action ?? null,
+    code: fields.code ?? null,
+    requestId: fields.requestId ?? null,
+    idempotencyKeyHash: fields.idempotencyKeyHash ?? null,
+    retryable: fields.retryable ?? null,
+    reserva_confirmada: fields.reserva_confirmada ?? null,
+    origen: fields.origen ?? null,
+    timestamp: fields.timestamp ?? new Date().toISOString(),
+    ...(fields.detail !== undefined ? { detail: fields.detail } : {}),
+  };
+  console.error("CP04_EVENT", JSON.stringify(event));
+  return event;
+}
+
 // CP04_DOMINGOS_V1: reglas permanentes de cierre dominical.
 function parseISODateParts(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(cleanText(value));
@@ -485,13 +544,27 @@ const CP04_AIRTABLE_RATE_LIMIT_USER_MESSAGE =
   "El sistema de reservas está temporalmente saturado. Inténtalo de nuevo más tarde o contacta con recepción.";
 
 // Respuesta controlada y uniforme de "modo degradado". `message` es lo
-// único que llega al cliente; `technicalDetail` NUNCA sale del Worker —
-// solo se loguea server-side (mismo patrón que
-// CP04_WORKER_UNHANDLED_ERROR/CP04_DISPONIBILIDAD_AIRTABLE_ERROR), para
-// poder diagnosticar sin filtrar nada interno (ni un token, ni el cuerpo
-// crudo de Airtable/Make) al usuario final.
-export function cp04BuildAirtableDegradedResponse(technicalDetail) {
-  console.error("CP04_AIRTABLE_RATE_LIMIT", JSON.stringify(technicalDetail));
+// único que llega al cliente; el resto de `technicalDetail` NUNCA sale del
+// Worker — solo se loguea server-side, vía cp04LogTechnicalEvent (PASO
+// 06E), y solo los campos ya whitelisteados abajo (nunca el objeto que
+// pase el llamador tal cual), para poder diagnosticar sin filtrar nada
+// interno (ni un token, ni el cuerpo crudo de Airtable/Make) al usuario
+// final.
+export function cp04BuildAirtableDegradedResponse(technicalDetail = {}) {
+  cp04LogTechnicalEvent({
+    event: "airtable_rate_limit",
+    action: technicalDetail.accion ?? null,
+    code: "AIRTABLE_RATE_LIMIT",
+    requestId: technicalDetail.requestId ?? null,
+    retryable: true,
+    reserva_confirmada: false,
+    origen: technicalDetail.origen ?? null,
+    detail: {
+      status: technicalDetail.status ?? null,
+      reason: technicalDetail.reason ?? null,
+      fecha: technicalDetail.fecha ?? null,
+    },
+  });
   return {
     ok: false,
     code: "AIRTABLE_RATE_LIMIT",
@@ -740,6 +813,17 @@ export function __resetCrearReservaRateLimitForTests() {
 // red si ya se consultó esa fecha hace poco. Mismo patrón que el rate
 // limiter de arriba: estado en memoria del propio Worker, sin binding
 // nuevo, sin tocar credenciales.
+// PASO 06E: decisión deliberada de NO loguear cada hit/miss de esta caché
+// (a diferencia de rate limiter/idempotencia/Airtable 429 más arriba).
+// Motivo: un hit/miss ocurre en CADA consulta de disponibilidad — crear,
+// reprogramar y `GET /api/disponibilidad` normal, no solo en un caso raro
+// o de error — así que loguearlo generaría ruido de alto volumen sin
+// ninguna acción de soporte asociada (a diferencia de un 429 degradado o
+// un rechazo de Make, que sí son accionables). La corrección de la caché
+// ya está cubierta por tests (nunca cachea errores, TTL exacto, invalida
+// tras escritura); si en el futuro hiciera falta depurar un problema de
+// caché en producción, el hueco es fácil de llenar reutilizando
+// cp04LogTechnicalEvent con event:"availability_cache_hit"/"_miss".
 export const CP04_AVAILABILITY_CACHE_TTL_MS = 30_000; // 30s — dentro del rango 30-60s pedido
 let cp04AvailabilityCache = new Map(); // fecha -> { result, expiresAt }
 
@@ -810,6 +894,18 @@ async function handleReservas(request, env) {
   const accionSolicitada = cleanText(payload?.accion);
 
   if (accionSolicitada === "crear_reserva" && !cp04CheckCrearReservaRateLimit()) {
+    // PASO 06E: mismo criterio de logging que idempotencia más abajo — ambos
+    // son un rechazo temprano que impide llegar a Make, sin que haya
+    // ocurrido ningún error de Airtable/Make todavía.
+    cp04LogTechnicalEvent({
+      event: "rate_limited",
+      action: "crear_reserva",
+      code: "RATE_LIMITED",
+      requestId: cp04GetRequestId(request),
+      retryable: true,
+      reserva_confirmada: false,
+      origen: "rate_limiter_crear_reserva",
+    });
     return jsonResponse(
       {
         ok: false,
@@ -851,6 +947,19 @@ async function handleReservas(request, env) {
   // error.
   const idempotencyKey = cp04BuildIdempotencyKey(normalizedPayload);
   if (cp04IsIdempotentDuplicate(idempotencyKey)) {
+    // PASO 06E: mismo criterio de logging que el rate limiter de arriba —
+    // idempotencyKeyHash nunca la clave completa (puede incluir email y
+    // teléfono normalizados en crear_reserva, ver cp04BuildIdempotencyKey).
+    cp04LogTechnicalEvent({
+      event: "idempotent_duplicate",
+      action: accionSolicitada,
+      code: "IDEMPOTENT_DUPLICATE",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: false,
+      reserva_confirmada: false,
+      origen: "idempotencia",
+    });
     return jsonResponse(cp04BuildIdempotentDuplicateResponse(), 409, headers);
   }
 
@@ -902,7 +1011,7 @@ async function handleReservas(request, env) {
     // evitar.
     if (!disponibilidad.ok && cp04IsAirtableRateLimited(disponibilidad.status, JSON.stringify(disponibilidad.details ?? disponibilidad.reason ?? ""))) {
       return jsonResponse(
-        cp04BuildAirtableDegradedResponse({ origen: "revalidacion_reserva", accion: accionSolicitada, status: disponibilidad.status, reason: disponibilidad.reason }),
+        cp04BuildAirtableDegradedResponse({ origen: "revalidacion_reserva", accion: accionSolicitada, status: disponibilidad.status, reason: disponibilidad.reason, requestId: cp04GetRequestId(request) }),
         503,
         headers
       );
@@ -935,13 +1044,27 @@ async function handleReservas(request, env) {
   // debe tratarse como una reserva confirmada).
   if (makeResult.configured && cp04IsAirtableRateLimited(makeResult.status, makeResult.bodyText)) {
     return jsonResponse(
-      cp04BuildAirtableDegradedResponse({ origen: "forward_to_make", accion: accionSolicitada, status: makeResult.status }),
+      cp04BuildAirtableDegradedResponse({ origen: "forward_to_make", accion: accionSolicitada, status: makeResult.status, requestId: cp04GetRequestId(request) }),
       503,
       headers
     );
   }
 
   if (makeResult.configured && !makeResult.ok) {
+    // PASO 06E: no tenía logging propio hasta ahora — sin esto, un rechazo
+    // sostenido de Make (webhook mal configurado, cuenta suspendida) no
+    // dejaba ningún rastro server-side, solo el 502 al cliente.
+    cp04LogTechnicalEvent({
+      event: "make_rejected",
+      action: accionSolicitada,
+      code: "MAKE_REJECTED",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: true,
+      reserva_confirmada: false,
+      origen: "forward_to_make",
+      detail: { status: makeResult.status ?? null },
+    });
     return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
   }
 
@@ -1041,12 +1164,27 @@ async function handleDisponibilidad(request, env) {
 
   if (!disponibilidad.ok) {
     // No reenviar disponibilidad.details (cuerpo crudo de error de Airtable)
-    // a un cliente anónimo: solo se loguea server-side, sin datos personales.
-    console.error("CP04_DISPONIBILIDAD_AIRTABLE_ERROR", disponibilidad.reason, disponibilidad.status);
+    // a un cliente anónimo: solo se loguea server-side, sin datos personales,
+    // y solo `reason`/`status` (nunca `details`) — ver cp04LogTechnicalEvent.
+    cp04LogTechnicalEvent({
+      event: "airtable_error",
+      action: "consultar_disponibilidad",
+      code:
+        disponibilidad.reason === "not_configured"
+          ? "AIRTABLE_NOT_CONFIGURED"
+          : disponibilidad.reason === "network_error"
+          ? "AIRTABLE_NETWORK_ERROR"
+          : "AIRTABLE_ERROR",
+      requestId: cp04GetRequestId(request),
+      retryable: disponibilidad.reason !== "not_configured",
+      reserva_confirmada: false,
+      origen: "disponibilidad",
+      detail: { reason: disponibilidad.reason ?? null, status: disponibilidad.status ?? null, fecha },
+    });
 
     if (cp04IsAirtableRateLimited(disponibilidad.status, JSON.stringify(disponibilidad.details ?? disponibilidad.reason ?? ""))) {
       return jsonResponse(
-        cp04BuildAirtableDegradedResponse({ origen: "disponibilidad", fecha, status: disponibilidad.status, reason: disponibilidad.reason }),
+        cp04BuildAirtableDegradedResponse({ origen: "disponibilidad", fecha, status: disponibilidad.status, reason: disponibilidad.reason, requestId: cp04GetRequestId(request) }),
         503,
         headers
       );
@@ -2321,7 +2459,16 @@ export default {
     } catch (error) {
       // No reenviar error?.message (puede incluir detalles internos) a un
       // cliente anónimo: solo se loguea server-side, sin datos personales.
-      console.error("CP04_WORKER_UNHANDLED_ERROR", error?.message || error);
+      cp04LogTechnicalEvent({
+        event: "worker_unhandled_error",
+        action: null,
+        code: "INTERNAL_ERROR",
+        requestId: cp04GetRequestId(request),
+        retryable: false,
+        reserva_confirmada: false,
+        origen: "worker_fetch",
+        detail: { message: String(error?.message || error) },
+      });
       return jsonResponse(
         {
           ok: false,
