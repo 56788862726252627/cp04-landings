@@ -3,9 +3,10 @@
 > ⚠️ **Spanish Law Research es una herramienta auxiliar de investigación normativa y no sustituye la revisión de abogado/DPO real.**
 > Todo lo que se pegue aquí es **investigación preliminar**, no asesoramiento legal. Ningún contenido de este documento debe interpretarse como confirmación de cumplimiento normativo. La decisión final sobre PR #24 y el resto de la cadena de gobernanza depende exclusivamente de la revisión de un abogado/DPO real (ver `EMAIL_SOLICITUD_REVISION_DPO_CLUB_PADEL_04.md`).
 
-**Estado: BORRADOR — plantilla vacía, sin respuestas todavía.** Esta plantilla no contiene ninguna conclusión legal; solo el espacio preparado para que el usuario pegue después lo que obtenga de Spanish Law Research, bloque por bloque.
+**Estado: BORRADOR — 2 de 9 bloques con insumo normativo preliminar (menores, cookies), 7 bloques todavía vacíos.** Esta plantilla no contiene ninguna conclusión legal propia; el contenido de los bloques rellenados es cita directa de normativa aportada por el usuario a partir de Spanish Law Research, no interpretación de este equipo técnico.
 
 **Fecha de preparación:** 2026-07-18
+**Última actualización:** 2026-07-18 — incorporados 2 insumos normativos (menores, cookies)
 
 ---
 
@@ -15,6 +16,30 @@
 2. Pega la respuesta obtenida en el hueco **"Respuesta de Spanish Law Research"** correspondiente, tal cual la entregue la herramienta (sin editarla ni resumirla en ese primer paso).
 3. Rellena tú mismo, después, el resumen de puntos útiles y las dudas que sigan abiertas.
 4. Al final del documento hay una sección para consolidar las preguntas finales que, pese a la investigación auxiliar, deben ir sí o sí al abogado/DPO real.
+
+---
+
+## Insumos preliminares verificados con Spanish Law Research
+
+> **Naturaleza de esta sección: cita directa de normativa, aportada por el usuario a partir de Spanish Law Research. No es interpretación legal de este equipo técnico ni conclusión de cumplimiento. Pendiente de validación por abogado/DPO real antes de aplicarse a ninguna decisión de producto.**
+
+**Fecha de incorporación:** 2026-07-18
+
+### Insumo 1 — Consentimiento de menores en tratamiento de datos personales
+
+- **Identificador:** BOE-A-2018-16673 — Ley Orgánica 3/2018, art. 7.
+- **Contenido aportado:** el consentimiento de menores para tratamiento de datos personales solo puede fundarse en el propio consentimiento del menor cuando sea mayor de 14 años. Para menores de 14 años, si el tratamiento se basa en consentimiento, debe constar el consentimiento de quien tenga la patria potestad o tutela.
+- **Marcadores explícitos derivados de este insumo (no interpretación adicional, restatement directo):**
+  - Menores de 14 años requieren revisión especial y posible consentimiento de quien ostente la patria potestad o tutela.
+  - Mayores de 14 años pueden consentir determinados tratamientos por sí mismos, salvo en los supuestos en que la ley exija expresamente la asistencia de quien ostente la patria potestad o tutela.
+
+### Insumo 2 — Cookies y dispositivos de almacenamiento/recuperación de datos
+
+- **Identificador:** BOE-A-2002-13758 — Ley 34/2002, art. 22.
+- **Contenido aportado:** para cookies o dispositivos de almacenamiento o recuperación de datos, el prestador debe facilitar información clara y completa sobre su uso y obtener consentimiento, salvo almacenamiento/acceso técnico necesario para transmitir una comunicación o prestar un servicio expresamente solicitado.
+- **Marcadores explícitos derivados de este insumo (no interpretación adicional, restatement directo):**
+  - Cookies o almacenamientos no esenciales requieren información clara y consentimiento previo.
+  - Cookies técnicas estrictamente necesarias (transmisión de comunicación o prestación del servicio solicitado) quedan fuera de ese requisito de consentimiento según el texto aportado — su aplicación exacta al caso concreto de Club Pádel 04 (qué cookies/almacenamiento local del service worker PWA entran en esa excepción) **debe ser validada por abogado/DPO real**, no se da por buena aquí.
 
 ---
 
@@ -42,13 +67,16 @@
 - ¿Qué mecanismos de verificación de consentimiento parental se consideran válidos en la práctica española/UE para redes sociales o servicios similares?
 
 **Respuesta de Spanish Law Research:**
-> _(pegar aquí)_
+> BOE-A-2018-16673 — Ley Orgánica 3/2018, art. 7: el consentimiento de menores para tratamiento de datos personales solo puede fundarse en el propio consentimiento del menor cuando sea mayor de 14 años. Para menores de 14 años, si el tratamiento se basa en consentimiento, debe constar el consentimiento de quien tenga la patria potestad o tutela.
 
 **Resumen de puntos útiles:**
-> _(rellenar)_
+> - Menores de 14 años: requieren revisión especial y, si el tratamiento se basa en consentimiento, consentimiento de quien ostente la patria potestad o tutela.
+> - Mayores de 14 años: pueden consentir determinados tratamientos por sí mismos, salvo en los supuestos en que la ley exija expresamente la asistencia de quien ostente la patria potestad o tutela (el insumo no especifica cuáles son esos supuestos para el caso de una capa social deportiva).
 
 **Dudas que siguen abiertas:**
-> _(rellenar)_
+> - El insumo no especifica qué mecanismo de verificación de edad/consentimiento parental se considera válido en la práctica — sigue siendo la pregunta 2 de `PREGUNTAS_ABOGADO_DPO_CLUB_PADEL_04.md`, sin resolver.
+> - No queda claro si el umbral de 14 años, tal como está redactado en el art. 7 LOPDGDD, es el único aplicable o si existe normativa sectorial deporte/menores que lo module (ver pregunta 1 del mismo documento).
+> - No se ha determinado si las funciones concretas de Comunidad Pádel 04 (feed, perfil, partidos abiertos) encajan en "servicios de la sociedad de la información" a efectos de este artículo, ni si alguna de ellas cae en los "supuestos" que exigirían asistencia de patria potestad incluso para mayores de 14 años.
 
 ---
 
@@ -110,13 +138,16 @@
 - ¿Aplica algún régimen distinto si la app funciona también como PWA (service worker, almacenamiento offline)?
 
 **Respuesta de Spanish Law Research:**
-> _(pegar aquí)_
+> BOE-A-2002-13758 — Ley 34/2002, art. 22: para cookies/dispositivos de almacenamiento o recuperación de datos, el prestador debe facilitar información clara y completa sobre su uso y obtener consentimiento, salvo almacenamiento/acceso técnico necesario para transmitir una comunicación o prestar un servicio expresamente solicitado.
 
 **Resumen de puntos útiles:**
-> _(rellenar)_
+> - Cookies o almacenamientos no esenciales: requieren información clara y consentimiento previo del usuario.
+> - Cookies técnicas estrictamente necesarias (transmisión de una comunicación o prestación del servicio expresamente solicitado): el texto aportado las exceptúa del consentimiento — pero su aplicación exacta al caso concreto de Club Pádel 04 debe ser validada por abogado/DPO real, no se da por buena en este documento.
 
 **Dudas que siguen abiertas:**
-> _(rellenar)_
+> - El insumo no dice explícitamente si el almacenamiento del service worker de la PWA (shell estático, página offline) entra en la excepción de "acceso técnico necesario para prestar el servicio solicitado" o si requiere información/consentimiento como cookie no esencial — pendiente de validar.
+> - No se ha contrastado este insumo contra la Guía de Cookies de la AEPD vigente en 2026 (la pregunta de investigación original lo pedía; el insumo aportado es el texto legal de la Ley 34/2002, no la guía interpretativa de la AEPD).
+> - No queda determinado qué elementos concretos de `public/sw.js` y `public/manifest.webmanifest` (ya existentes en el código, ver PR #26) caen en cada categoría — esto requeriría revisión técnica conjunta con el abogado/DPO, no solo normativa.
 
 ---
 
@@ -183,6 +214,26 @@
 
 **Puntos donde parecen divergir o donde conviene que el abogado/DPO desambigüe:**
 > _(rellenar)_
+
+---
+
+## Pendiente de validar por abogado/DPO real
+
+**Estado de cobertura de los 9 bloques a fecha 2026-07-18:**
+
+| Bloque | Estado |
+|---|---|
+| 1 — RGPD/LOPDGDD aplicable | Pendiente de consulta |
+| 2 — Edad mínima y consentimiento de menores | Insumo preliminar incorporado (BOE-A-2018-16673, art. 7) — con dudas abiertas sin resolver |
+| 3 — Necesidad de EIPD/DPIA | Pendiente de consulta |
+| 4 — Derecho de imagen | Pendiente de consulta |
+| 5 — Política de privacidad | Pendiente de consulta |
+| 6 — Cookies | Insumo preliminar incorporado (BOE-A-2002-13758, art. 22) — con dudas abiertas sin resolver |
+| 7 — Términos y condiciones | Pendiente de consulta |
+| 8 — Responsabilidad Club vs. Agencia IA | Pendiente de consulta |
+| 9 — Comunidad social, ranking, torneos y comunicaciones | Pendiente de consulta |
+
+**Incluso en los bloques 2 y 6, con insumo normativo preliminar, ninguna conclusión de este documento debe tratarse como validada.** El texto legal citado es correcto en su literalidad (aportado directamente por el usuario), pero su aplicación al caso concreto de Club Pádel 04 — qué mecanismo de verificación de edad usar, qué elementos técnicos concretos de la PWA caen en cada categoría de cookie, si existe normativa sectorial adicional — sigue sin resolver y requiere criterio profesional humano, no solo la norma citada.
 
 ---
 
