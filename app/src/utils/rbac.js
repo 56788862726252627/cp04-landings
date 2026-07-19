@@ -35,11 +35,16 @@ export const CP04_SUPPORT_ONLY_SECTIONS = ["flujos_make", "soporte"];
 // PASO 07I (2026-07-19): "baja_jugador" se concede a los mismos 3 roles
 // que ya tenían "alta_jugador" — es el mismo componente/formulario (Paso
 // 07C), solo con acceso directo propio en el sidebar. PLAYER nunca lo recibe.
+// PASO 07N (2026-07-20): "lista_espera" — módulo visual preparado para
+// Gestión Lista de Espera (Make ID 5791113), mismos 3 roles que
+// "cierre_pistas" (STAFF/ADMIN/SUPPORT). Es una acción operativa sobre
+// jugadores/reservas, no expone datos personales adicionales a PLAYER, que
+// nunca lo recibe.
 export const CP04_ROLE_PERMISSIONS = {
   PLAYER: ["inicio", "reservas", "torneos", "ranking", "comunidad", "perfil"],
-  STAFF: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "torneos", "comunidad", "perfil"],
-  ADMIN: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "torneos", "ranking", "comunidad", "admin", "perfil"],
-  SUPPORT: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "torneos", "ranking", "comunidad", "admin", "flujos_make", "soporte", "perfil"],
+  STAFF: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "torneos", "comunidad", "perfil"],
+  ADMIN: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "torneos", "ranking", "comunidad", "admin", "perfil"],
+  SUPPORT: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "torneos", "ranking", "comunidad", "admin", "flujos_make", "soporte", "perfil"],
 };
 
 // Fail-closed: cualquier valor que no sea exactamente uno de los 4 roles

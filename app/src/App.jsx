@@ -1427,13 +1427,14 @@ const TRANSLATIONS = {
   "es-ES": {
     "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
     "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
-    // PASO 07G/07I (2026-07-19): solo se añaden a es-ES deliberadamente —
-    // t() ya hace fallback a es-ES cuando un idioma no tiene la clave (ver
-    // función t() más abajo), así que el resto de idiomas mostrará este
-    // mismo texto en español hasta que se traduzca, en vez de la clave
-    // cruda o un string vacío.
+    // PASO 07G/07I/07N (2026-07-19/20): solo se añaden a es-ES
+    // deliberadamente — t() ya hace fallback a es-ES cuando un idioma no
+    // tiene la clave (ver función t() más abajo), así que el resto de
+    // idiomas mostrará este mismo texto en español hasta que se traduzca,
+    // en vez de la clave cruda o un string vacío.
     "nav.cierre_pistas":"Cierre temporal",
     "nav.baja_jugador":"Baja de jugador",
+    "nav.lista_espera":"Lista de espera",
     "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
     "nav.comunidad":"Comunidad",
@@ -3222,6 +3223,11 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
     // Pistas (Paso 07E), antes solo visible como card dentro de "gestion".
     // Mismo gate de rol que "gestion" (ver CP04_ROLE_PERMISSIONS en rbac.js).
     ["cierre_pistas","nav.cierre_pistas","🚧"],
+    // PASO 07N (2026-07-20): módulo visual preparado para Gestión Lista de
+    // Espera (Make ID 5791113, grupo E del mapa App↔Make hasta este paso).
+    // No llama a ningún endpoint real todavía — mismo gate de rol que
+    // "cierre_pistas" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["lista_espera","nav.lista_espera","📋"],
     ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["comunidad","nav.comunidad","👥"],["admin","nav.admin","📊"],
     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
   ];
@@ -4419,6 +4425,172 @@ function CierreTemporalPista() {
   );
 }
 
+// PASO 07N (2026-07-20): módulo visual "Lista de espera" — preparado para
+// integrarse con el escenario Make "📋 Gestión Lista de Espera" (ID
+// 5791113, INTERNAL_OPERATION que ya corre solo en Make cada hora) cuando
+// Airtable esté disponible. A diferencia de Cierre Temporal de Pistas
+// (Paso 07E) o Baja de Jugador (Paso 07C), este módulo NO llama a ningún
+// endpoint del Worker todavía — no existe backend real que lo respalde, y
+// el propio encargo pide explícitamente no llamar endpoints reales ni
+// simular éxito real. Todas las acciones (añadir, promocionar, marcar
+// contactado, eliminar) solo muestran un mensaje local honesto de "acción
+// preparada, pendiente de conexión real" — nunca crean, modifican ni
+// confirman nada real. Gateado a STAFF/ADMIN/SUPPORT (ver rbac.js).
+const CP04_LISTA_ESPERA_PENDIENTE_MSG =
+  "Acción preparada. Pendiente de conexión real cuando Airtable esté disponible.";
+
+function ListaEspera() {
+  const addInitialForm = {
+    nombre: "",
+    apellidos: "",
+    email: "",
+    telefono: "",
+    pista_preferida: "",
+    fecha_preferida: "",
+    observaciones: "",
+  };
+  const [addForm, setAddForm] = useState(addInitialForm);
+  const [addErrors, setAddErrors] = useState({});
+  const [actionMessage, setActionMessage] = useState("");
+
+  function updateAddForm(field, value) {
+    setAddForm((previous) => ({ ...previous, [field]: value }));
+    setAddErrors((previous) => ({ ...previous, [field]: "" }));
+    setActionMessage("");
+  }
+
+  function validateAdd() {
+    const nextErrors = {};
+
+    if (addForm.nombre.trim().length < 2) {
+      nextErrors.nombre = "Introduce un nombre válido.";
+    }
+    if (addForm.apellidos.trim().length < 2) {
+      nextErrors.apellidos = "Introduce apellidos válidos.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim())) {
+      nextErrors.email = "Introduce un email válido.";
+    }
+    if (addForm.telefono.replace(/\D/g, "").length < 9) {
+      nextErrors.telefono = "Introduce un teléfono válido.";
+    }
+
+    return nextErrors;
+  }
+
+  // Validación local solo para dar una experiencia de formulario coherente
+  // con el resto de la app — no hay ningún envío real: nunca se llama a
+  // fetch/authFetch aquí, y el mensaje mostrado nunca dice "añadido" o
+  // "confirmado", siempre "preparado, pendiente de conexión real".
+  function handleAdd(event) {
+    event.preventDefault();
+
+    const nextErrors = validateAdd();
+    setAddErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setActionMessage(`Añadir a lista de espera: ${CP04_LISTA_ESPERA_PENDIENTE_MSG}`);
+  }
+
+  function handlePreparedAction(label) {
+    setActionMessage(`${label}: ${CP04_LISTA_ESPERA_PENDIENTE_MSG}`);
+  }
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Lista de espera"
+        desc="Gestiona jugadores pendientes de plaza o promoción."
+      />
+      <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+        Preparado para integración con Make/Airtable. Validación real pendiente por disponibilidad de Airtable.
+      </Card>
+
+      <Card style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>Añadir jugador a lista de espera</h3>
+        <form onSubmit={handleAdd}>
+          <div className="cp04-grid-2">
+            <div>
+              <label>Nombre</label>
+              <input value={addForm.nombre} onChange={e => updateAddForm("nombre", e.target.value)} autoComplete="given-name" />
+              <FieldError>{addErrors.nombre}</FieldError>
+            </div>
+            <div>
+              <label>Apellidos</label>
+              <input value={addForm.apellidos} onChange={e => updateAddForm("apellidos", e.target.value)} autoComplete="family-name" />
+              <FieldError>{addErrors.apellidos}</FieldError>
+            </div>
+            <div>
+              <label>Email</label>
+              <input type="email" value={addForm.email} onChange={e => updateAddForm("email", e.target.value)} autoComplete="email" />
+              <FieldError>{addErrors.email}</FieldError>
+            </div>
+            <div>
+              <label>Teléfono</label>
+              <input type="tel" value={addForm.telefono} onChange={e => updateAddForm("telefono", e.target.value)} autoComplete="tel" />
+              <FieldError>{addErrors.telefono}</FieldError>
+            </div>
+            <div>
+              <label>Pista preferida (opcional)</label>
+              <select value={addForm.pista_preferida} onChange={e => updateAddForm("pista_preferida", e.target.value)}>
+                <option value="">Sin preferencia</option>
+                <option value="Pista 1">Pista 1</option>
+                <option value="Pista 2">Pista 2</option>
+                <option value="Pista 3">Pista 3</option>
+                <option value="Pista 4">Pista 4</option>
+              </select>
+            </div>
+            <div>
+              <label>Fecha preferida (opcional)</label>
+              <input type="date" value={addForm.fecha_preferida} onChange={e => updateAddForm("fecha_preferida", e.target.value)} />
+            </div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <label>Observaciones (opcional)</label>
+            <textarea value={addForm.observaciones} onChange={e => updateAddForm("observaciones", e.target.value)} rows={3} />
+          </div>
+          <div style={{ marginTop: 22 }}>
+            <Btn
+              type="submit"
+              className="cp04-offboarding-submit-button"
+              style={{
+                width: "100%",
+                background: T.accent,
+                color: "#06100a",
+                fontSize: "1rem",
+                border: "2px solid rgba(6,16,10,.45)",
+                boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+              }}
+            >
+              Añadir a lista de espera
+            </Btn>
+          </div>
+        </form>
+      </Card>
+
+      <Card style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>Acciones sobre la lista</h3>
+        <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+          Estas acciones están preparadas visualmente. No confirman una promoción real ni crean datos reales hasta que la integración con Make/Airtable esté disponible.
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Btn variant="secondary" onClick={() => handlePreparedAction("Promocionar siguiente jugador")}>Promocionar siguiente jugador</Btn>
+          <Btn variant="secondary" onClick={() => handlePreparedAction("Marcar como contactado")}>Marcar como contactado</Btn>
+          <Btn variant="secondary" onClick={() => handlePreparedAction("Eliminar de lista")}>Eliminar de lista</Btn>
+        </div>
+      </Card>
+
+      {actionMessage && (
+        <Card style={{ borderColor: `${T.accent}66`, color: T.accent, fontSize: ".86rem" }}>
+          {actionMessage}
+        </Card>
+      )}
+    </div>
+  );
+}
+
 function Gestion() {
   const [emailConsulta, setEmailConsulta] = useState(() => {
     try {
@@ -5356,6 +5528,14 @@ function AltaJugador({ initialModo = "alta" } = {}) {
               <input type="checkbox" checked={bajaForm.promocionar_siguiente_si_aplica} onChange={e => updateBajaForm("promocionar_siguiente_si_aplica", e.target.checked)} />
               <span>Promocionar al siguiente jugador en lista de espera, si aplica.</span>
             </label>
+            {/* PASO 07N (2026-07-20): nota informativa hacia el nuevo módulo
+                "Lista de espera" del sidebar — no cambia el payload de Baja
+                ni la lógica del checkbox, solo orienta a STAFF/ADMIN/SUPPORT
+                sobre dónde se gestionará la promoción cuando exista
+                integración real. */}
+            <p style={{ color:T.textDim, fontSize:".8rem", marginTop:8, marginBottom:0 }}>
+              La promoción se gestionará desde "Lista de espera" cuando la integración real esté disponible.
+            </p>
             {bajaServerError && <p style={{ color:T.danger, marginTop:16 }}>{bajaServerError}</p>}
             {bajaSuccess && <p style={{ color:T.accent, marginTop:16 }}>Baja registrada correctamente.</p>}
             <div style={{ marginTop:22 }}>
@@ -7332,7 +7512,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,

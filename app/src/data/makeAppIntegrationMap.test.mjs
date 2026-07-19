@@ -100,6 +100,21 @@ test("PASO 07E: Cierre Temporal de Pistas pasa a integrado en app y Worker, pero
   assert.match(cierre.bloqueadorPrincipal, /MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK/);
 });
 
+test("PASO 07N: Gestión Lista de Espera pasa a integrado en app SIN Worker (módulo visual preparado, sin endpoint real)", () => {
+  const listaEspera = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes("Gestión Lista de Espera"));
+  assert.ok(listaEspera);
+  assert.equal(listaEspera.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+  assert.equal(listaEspera.integradoEnApp, true);
+  // Deliberadamente sin Worker: no existe endpoint real que lo respalde
+  // todavía (a diferencia de Baja de Jugador o Cierre Temporal, que sí
+  // tienen handler en worker-reservas/src/index.js). No confirmado
+  // end-to-end: sigue bloqueado por Airtable 429 para su validación real.
+  assert.equal(listaEspera.integradoEnWorker, false);
+  assert.equal(listaEspera.soloInventariado, false);
+  assert.equal(listaEspera.requiereMakeManual, true);
+  assert.match(listaEspera.bloqueadorPrincipal, /Airtable 429/);
+});
+
 test("Control Acceso QR no tiene integración de app detectada (búsqueda exhaustiva de 'QR' sin resultados en src/)", () => {
   const qr = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes("Control Acceso QR"));
   assert.ok(qr);

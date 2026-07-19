@@ -121,3 +121,23 @@ test("simulación de navegación manual por URL/hash: PLAYER forzando 'baja_juga
   assert.notEqual(safeSection, "baja_jugador");
   assert.equal(safeSection, "inicio");
 });
+
+// PASO 07N (2026-07-20): "lista_espera" (módulo visual preparado para
+// Gestión Lista de Espera, Make ID 5791113) — mismo gate de rol que
+// "cierre_pistas" (STAFF/ADMIN/SUPPORT).
+test("PLAYER no puede acceder a lista_espera", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "lista_espera"), false);
+});
+
+test("STAFF, ADMIN y SUPPORT pueden acceder a lista_espera", () => {
+  for (const role of ["STAFF", "ADMIN", "SUPPORT"]) {
+    assert.equal(cp04CanAccessSection(role, "lista_espera"), true, `${role} debería poder acceder a lista_espera`);
+  }
+});
+
+test("simulación de navegación manual por URL/hash: PLAYER forzando 'lista_espera' no salta el guard", () => {
+  const forcedSection = "lista_espera";
+  const safeSection = cp04CanAccessSection("PLAYER", forcedSection) ? forcedSection : cp04GetSafeStartSection("PLAYER");
+  assert.notEqual(safeSection, "lista_espera");
+  assert.equal(safeSection, "inicio");
+});
