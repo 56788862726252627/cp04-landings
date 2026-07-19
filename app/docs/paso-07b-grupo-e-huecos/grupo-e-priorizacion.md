@@ -4,6 +4,8 @@
 
 **Fecha:** 2026-07-19
 
+> **Actualización 2026-07-19 (Paso 07C):** el flujo recomendado como más accionable en este documento (❌ Baja de Jugador + Promoción) **ya se implementó** como flujo app/API preparado y seguro — ver `docs/paso-07c-baja-jugador/baja-jugador-integracion.md`. Pasa de Grupo E a Grupo A en `src/data/makeAppIntegrationMap.js` (código integrado, sin webhook Make configurado todavía — no confirmado end-to-end). El resto de este documento (los otros 11 flujos) sigue vigente sin cambios.
+
 ---
 
 ## Clasificación por decisión (A/B/C/D/E)

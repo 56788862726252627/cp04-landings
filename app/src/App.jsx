@@ -4799,6 +4799,114 @@ function AltaJugador() {
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState("");
 
+  // PASO 07C (2026-07-19): Baja de Jugador + Promoción — misma ruta/gate RBAC
+  // que Alta (STAFF/ADMIN/SUPPORT, ver rbac.js CP04_ROLE_PERMISSIONS), sin
+  // tocar navegación ni permisos. Réplica deliberada del patrón de Alta:
+  // formulario -> validación local -> authFetch -> nunca confirma éxito sin
+  // response.ok && data.ok !== false.
+  const [modo, setModo] = useState("alta");
+  const bajaInitialForm = {
+    nombre: "",
+    apellidos: "",
+    email: "",
+    telefono: "",
+    motivo_baja: "",
+    fecha_baja: "",
+    promocionar_siguiente_si_aplica: false,
+    observaciones: "",
+  };
+  const [bajaForm, setBajaForm] = useState(bajaInitialForm);
+  const [bajaErrors, setBajaErrors] = useState({});
+  const [bajaSending, setBajaSending] = useState(false);
+  const [bajaSuccess, setBajaSuccess] = useState(false);
+  const [bajaServerError, setBajaServerError] = useState("");
+
+  function updateBajaForm(field, value) {
+    setBajaForm((previous) => ({ ...previous, [field]: value }));
+    setBajaErrors((previous) => ({ ...previous, [field]: "" }));
+    setBajaSuccess(false);
+    setBajaServerError("");
+  }
+
+  function validateBaja() {
+    const nextErrors = {};
+
+    if (bajaForm.nombre.trim().length < 2) {
+      nextErrors.nombre = "Introduce un nombre válido.";
+    }
+    if (bajaForm.apellidos.trim().length < 2) {
+      nextErrors.apellidos = "Introduce apellidos válidos.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bajaForm.email.trim())) {
+      nextErrors.email = "Introduce un email válido.";
+    }
+    if (bajaForm.telefono.replace(/\D/g, "").length < 9) {
+      nextErrors.telefono = "Introduce un teléfono válido.";
+    }
+    if (!bajaForm.motivo_baja) {
+      nextErrors.motivo_baja = "Selecciona el motivo de la baja.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bajaForm.fecha_baja || "")) {
+      nextErrors.fecha_baja = "Selecciona la fecha de baja.";
+    }
+
+    return nextErrors;
+  }
+
+  // No confirma ninguna baja como realizada sin respuesta real del backend
+  // (response.ok && data.ok !== false) — mismo criterio defensivo que Alta.
+  // Si el Worker responde 503 "Baja webhook not configured" (webhook Make
+  // todavía sin configurar, ver worker-reservas/src/index.js
+  // handleBajaJugador), se traduce a un mensaje honesto para STAFF/ADMIN en
+  // vez del texto técnico crudo.
+  async function submitBaja(event) {
+    event.preventDefault();
+
+    const nextErrors = validateBaja();
+    setBajaErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setBajaSending(true);
+    setBajaServerError("");
+    setBajaSuccess(false);
+
+    try {
+      const response = await authFetch("/api/jugadores/baja", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: bajaForm.nombre.trim(),
+          apellidos: bajaForm.apellidos.trim(),
+          email: bajaForm.email.trim().toLowerCase(),
+          telefono: bajaForm.telefono.trim(),
+          motivo_baja: bajaForm.motivo_baja,
+          fecha_baja: bajaForm.fecha_baja,
+          promocionar_siguiente_si_aplica: bajaForm.promocionar_siguiente_si_aplica === true,
+          observaciones: bajaForm.observaciones.trim(),
+          origen: "APP_CLUB_PADEL_04",
+          accion: "baja_jugador",
+        }),
+      });
+
+      const data = await readSafeResponse(response);
+
+      if (!response.ok || data?.ok === false) {
+        if (data?.error === "Baja webhook not configured") {
+          throw new Error("La baja de jugador todavía no está configurada en el sistema. Contacta con soporte técnico.");
+        }
+        throw new Error(data?.message || data?.error || "No se pudo completar la baja.");
+      }
+
+      setBajaSuccess(true);
+      setBajaForm(bajaInitialForm);
+    } catch (error) {
+      setBajaServerError(error?.message || "No se pudo completar la baja.");
+    } finally {
+      setBajaSending(false);
+    }
+  }
+
   function updateForm(field, value) {
     setForm((previous) => ({ ...previous, [field]: value }));
     setErrors((previous) => ({ ...previous, [field]: "" }));
@@ -4894,6 +5002,75 @@ function AltaJugador() {
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
       <SectionTitle eyebrow={tx("alta.eyebrow")} title={tx("alta.title")} desc={tx("alta.desc")} />
+      <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
+        <Btn type="button" variant={modo === "alta" ? "primary" : "secondary"} onClick={() => setModo("alta")}>
+          Alta de jugador
+        </Btn>
+        <Btn type="button" variant={modo === "baja" ? "primary" : "secondary"} onClick={() => setModo("baja")}>
+          Baja de jugador
+        </Btn>
+      </div>
+      {modo === "baja" ? (
+        <Card>
+          <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+            Solicitar baja de jugador. Esta acción no se confirmará hasta que el sistema responda correctamente.
+          </p>
+          <form onSubmit={submitBaja}>
+            <div className="cp04-grid-2">
+              <div>
+                <label>Nombre</label>
+                <input value={bajaForm.nombre} onChange={e => updateBajaForm("nombre", e.target.value)} autoComplete="given-name" />
+                <FieldError>{bajaErrors.nombre}</FieldError>
+              </div>
+              <div>
+                <label>Apellidos</label>
+                <input value={bajaForm.apellidos} onChange={e => updateBajaForm("apellidos", e.target.value)} autoComplete="family-name" />
+                <FieldError>{bajaErrors.apellidos}</FieldError>
+              </div>
+              <div>
+                <label>Email</label>
+                <input type="email" value={bajaForm.email} onChange={e => updateBajaForm("email", e.target.value)} autoComplete="email" />
+                <FieldError>{bajaErrors.email}</FieldError>
+              </div>
+              <div>
+                <label>Teléfono</label>
+                <input type="tel" value={bajaForm.telefono} onChange={e => updateBajaForm("telefono", e.target.value)} autoComplete="tel" />
+                <FieldError>{bajaErrors.telefono}</FieldError>
+              </div>
+              <div>
+                <label>Motivo de la baja</label>
+                <select value={bajaForm.motivo_baja} onChange={e => updateBajaForm("motivo_baja", e.target.value)}>
+                  <option value="">Seleccionar…</option>
+                  <option value="Voluntaria">Voluntaria</option>
+                  <option value="Impago">Impago</option>
+                  <option value="Inactividad">Inactividad</option>
+                  <option value="Traslado a otro club">Traslado a otro club</option>
+                  <option value="Otro">Otro</option>
+                </select>
+                <FieldError>{bajaErrors.motivo_baja}</FieldError>
+              </div>
+              <div>
+                <label>Fecha de baja</label>
+                <input type="date" value={bajaForm.fecha_baja} onChange={e => updateBajaForm("fecha_baja", e.target.value)} />
+                <FieldError>{bajaErrors.fecha_baja}</FieldError>
+              </div>
+            </div>
+            <div style={{ marginTop: 18 }}>
+              <label>Observaciones (opcional)</label>
+              <textarea value={bajaForm.observaciones} onChange={e => updateBajaForm("observaciones", e.target.value)} rows={4} />
+            </div>
+            <label style={{ display:"flex", gap:10, alignItems:"flex-start", marginTop:18 }}>
+              <input type="checkbox" checked={bajaForm.promocionar_siguiente_si_aplica} onChange={e => updateBajaForm("promocionar_siguiente_si_aplica", e.target.checked)} />
+              <span>Promocionar al siguiente jugador en lista de espera, si aplica.</span>
+            </label>
+            {bajaServerError && <p style={{ color:T.danger, marginTop:16 }}>{bajaServerError}</p>}
+            {bajaSuccess && <p style={{ color:T.accent, marginTop:16 }}>Baja registrada correctamente.</p>}
+            <div style={{ marginTop:22 }}>
+              <Btn type="submit" disabled={bajaSending}>{bajaSending ? "Enviando…" : "Solicitar baja de jugador"}</Btn>
+            </div>
+          </form>
+        </Card>
+      ) : (
       <Card>
         <form onSubmit={submit}>
           <div className="cp04-grid-2">
@@ -4962,6 +5139,7 @@ function AltaJugador() {
           </div>
         </form>
       </Card>
+      )}
     </div>
   );
 }

@@ -1720,6 +1720,136 @@ async function handleAltaJugador(request, env) {
   );
 }
 
+// PASO 07C (2026-07-19): Baja de Jugador + Promoción — réplica deliberada
+// del patrón de handleAltaJugador (mismo gate RBAC, misma forma de
+// respuesta, mismo criterio de "nunca confirmar sin respuesta real de
+// Make"). MAKE_BAJA_JUGADOR_WEBHOOK todavía no está configurado como
+// secret en ningún entorno (ver wrangler.toml) — mientras no lo esté,
+// este handler responde 503 de forma segura y nunca inventa una URL ni
+// un secreto. Cuando exista el webhook real, no haría falta tocar nada
+// más de esta función: basta con configurar el secret.
+async function handleBajaJugador(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (request.method !== "POST") {
+    return jsonResponse(
+      { ok: false, error: "Method not allowed" },
+      405,
+      { ...headers, Allow: "POST, OPTIONS" }
+    );
+  }
+
+  if (!env.MAKE_BAJA_JUGADOR_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "Baja webhook not configured" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse(
+      { ok: false, error: "Invalid JSON" },
+      400,
+      headers
+    );
+  }
+
+  const clean = (value) =>
+    typeof value === "string" ? value.trim() : value;
+
+  const normalized = {
+    nombre: clean(payload?.nombre),
+    apellidos: clean(payload?.apellidos),
+    email: clean(payload?.email)?.toLowerCase(),
+    telefono: clean(payload?.telefono),
+    motivo_baja: clean(payload?.motivo_baja),
+    fecha_baja: clean(payload?.fecha_baja),
+    promocionar_siguiente_si_aplica: payload?.promocionar_siguiente_si_aplica === true,
+    observaciones: clean(payload?.observaciones || ""),
+    origen: clean(payload?.origen || "APP_CLUB_PADEL_04"),
+    accion: "baja_jugador",
+  };
+
+  const errors = {};
+
+  if (!normalized.nombre || normalized.nombre.length < 2) {
+    errors.nombre = "Nombre inválido";
+  }
+
+  if (!normalized.apellidos || normalized.apellidos.length < 2) {
+    errors.apellidos = "Apellidos inválidos";
+  }
+
+  if (
+    !normalized.email ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized.email)
+  ) {
+    errors.email = "Email inválido";
+  }
+
+  if (
+    !normalized.telefono ||
+    normalized.telefono.replace(/\D/g, "").length < 9
+  ) {
+    errors.telefono = "Teléfono inválido";
+  }
+
+  if (!normalized.motivo_baja) {
+    errors.motivo_baja = "Motivo de baja obligatorio";
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha_baja || "")) {
+    errors.fecha_baja = "Fecha de baja inválida";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return jsonResponse(
+      { ok: false, error: "Validation failed", fields: errors },
+      400,
+      headers
+    );
+  }
+
+  const makeResponse = await fetch(env.MAKE_BAJA_JUGADOR_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(normalized),
+  });
+
+  const responseText = await makeResponse.text();
+
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "Make request failed",
+        status: makeResponse.status,
+      },
+      502,
+      headers
+    );
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      message: "Baja de jugador registrada correctamente",
+      makeResponse: responseText || null,
+    },
+    200,
+    headers
+  );
+}
+
 
 
 
@@ -2388,6 +2518,26 @@ export default {
         }
 
         return await handleAltaJugador(request, env);
+      }
+
+      if (
+        url.pathname === "/api/jugadores/baja" ||
+        url.pathname === "/jugadores/baja"
+      ) {
+        // Baja de jugador es operación de STAFF/ADMIN/SUPPORT, mismo gate
+        // que Alta (ver comentario ahí y en handleReservas).
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["STAFF", "ADMIN", "SUPPORT"]);
+
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+
+        return await handleBajaJugador(request, env);
       }
 
       if (url.pathname.startsWith("/api/auth/")) {

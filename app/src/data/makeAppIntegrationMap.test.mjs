@@ -66,17 +66,24 @@ test("los flujos del grupo E (sin integración visible) nunca se marcan como fun
 
 test("solo los escenarios del grupo A tienen integradoEnApp=true e integradoEnWorker=true", () => {
   const marcadosCompletos = MAKE_APP_INTEGRATION_MAP.filter((s) => s.integradoEnApp && s.integradoEnWorker);
-  assert.equal(marcadosCompletos.length, 2);
+  assert.equal(marcadosCompletos.length, 3);
   for (const s of marcadosCompletos) {
     assert.equal(s.grupo, MAKE_INTEGRATION_GROUPS.APP_Y_WORKER);
   }
 });
 
-test("Baja de Jugador no tiene integración de app detectada (a diferencia de Alta)", () => {
+test("PASO 07C: Baja de Jugador pasa a integrado en app y Worker, pero sigue requiriendo Make manual (webhook sin configurar)", () => {
   const baja = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes("Baja de Jugador"));
   assert.ok(baja);
-  assert.equal(baja.integradoEnApp, false);
-  assert.equal(baja.integradoEnWorker, false);
+  assert.equal(baja.grupo, MAKE_INTEGRATION_GROUPS.APP_Y_WORKER);
+  assert.equal(baja.integradoEnApp, true);
+  assert.equal(baja.integradoEnWorker, true);
+  assert.equal(baja.soloInventariado, false);
+  // No confirmado end-to-end: el webhook real de Make sigue sin configurar,
+  // no se ha probado contra Make/Airtable real (ver worker-reservas/src/index.js
+  // handleBajaJugador y baja-jugador.test.mjs).
+  assert.equal(baja.requiereMakeManual, true);
+  assert.match(baja.bloqueadorPrincipal, /MAKE_BAJA_JUGADOR_WEBHOOK/);
 });
 
 test("Control Acceso QR no tiene integración de app detectada (búsqueda exhaustiva de 'QR' sin resultados en src/)", () => {
