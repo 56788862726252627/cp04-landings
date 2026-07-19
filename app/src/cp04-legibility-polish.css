@@ -68,7 +68,14 @@ body.cp04-role-screen-active .cp04-card {
 }
 
 /* Tarjetas internas y bloques inline con background */
-body.cp04-module-screen-active .cp04-card [style*="background"],
+/* PASO 07L (2026-07-19): excluido `button` del lado module-screen-active
+   de este selector — capturaba también botones de acción con fondo
+   sólido intencional (p. ej. "Solicitar baja de jugador"), forzándoles
+   un fondo oscuro translúcido por encima de su color de marca vía
+   !important y dejando el texto oscuro casi invisible sobre fondo
+   oscuro. El lado role-screen-active (pantalla de login) no causaba
+   este bug y se deja intacto. */
+body.cp04-module-screen-active .cp04-card [style*="background"]:not(button),
 body.cp04-role-screen-active .cp04-card [style*="background"] {
   background:
     linear-gradient(
