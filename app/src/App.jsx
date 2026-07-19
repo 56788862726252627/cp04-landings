@@ -1423,6 +1423,12 @@ const TRANSLATIONS = {
   "es-ES": {
     "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
     "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
+    // PASO 07G (2026-07-19): solo se añade a es-ES deliberadamente — t()
+    // ya hace fallback a es-ES cuando un idioma no tiene la clave (ver
+    // función t() más abajo), así que el resto de idiomas mostrará este
+    // mismo texto en español hasta que se traduzca, en vez de la clave
+    // cruda o un string vacío.
+    "nav.cierre_pistas":"Cierre temporal",
     "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
     "nav.comunidad":"Comunidad",
@@ -3202,6 +3208,10 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
   const navKeys = [
     ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
     ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
+    // PASO 07G (2026-07-19): acceso directo al módulo de Cierre Temporal de
+    // Pistas (Paso 07E), antes solo visible como card dentro de "gestion".
+    // Mismo gate de rol que "gestion" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["cierre_pistas","nav.cierre_pistas","🚧"],
     ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["comunidad","nav.comunidad","👥"],["admin","nav.admin","📊"],
     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
   ];
@@ -4164,19 +4174,21 @@ const CIERRE_PISTA_MOTIVOS = [
   ["otro", "Otro"],
 ];
 
-function Gestion() {
+// PASO 07E (2026-07-19) + PASO 07G (2026-07-19): Cierre Temporal de Pistas
+// — flujo app/API preparado, mismo criterio defensivo que Baja de Jugador
+// (Paso 07C): formulario -> validación local -> authFetch -> nunca
+// confirma el cierre sin response.ok && data.ok !== false, y ni siquiera
+// entonces se afirma "pista cerrada" (el estado enviado y mostrado es
+// siempre "pendiente_confirmacion" — la confirmación real depende del
+// escenario Make 5791133 procesando el cierre en Airtable, fuera de este
+// flujo). Originalmente vivía como card embebido dentro de Gestion(); en
+// el Paso 07G se extrajo a su propio componente de nivel superior para
+// darle un acceso directo en el sidebar ("cierre_pistas") sin duplicar la
+// lógica ni el formulario. Gateado en rbac.js (CP04_ROLE_PERMISSIONS) a
+// STAFF/ADMIN/SUPPORT — PLAYER no lo recibe.
+function CierreTemporalPista() {
   const auth = useAuth();
 
-  // PASO 07E (2026-07-19): Cierre Temporal de Pistas — flujo app/API
-  // preparado, mismo criterio defensivo que Baja de Jugador (Paso 07C):
-  // formulario -> validación local -> authFetch -> nunca confirma el cierre
-  // sin response.ok && data.ok !== false, y ni siquiera entonces se afirma
-  // "pista cerrada" (el estado enviado y mostrado es siempre
-  // "pendiente_confirmacion" — la confirmación real depende del escenario
-  // Make 5791133 procesando el cierre en Airtable, fuera de este flujo).
-  // Vive dentro de la sección "gestion", ya gateada a STAFF/ADMIN/SUPPORT
-  // en rbac.js (CP04_ROLE_PERMISSIONS) — PLAYER no tiene esta sección en su
-  // lista de permisos, así que no puede llegar a este componente.
   const cierreInitialForm = {
     pista: "",
     fecha_inicio: "",
@@ -4300,6 +4312,86 @@ function Gestion() {
     }
   }
 
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Gestión de pistas"
+        title="Cierre temporal de pista"
+        desc="Bloquea una pista (o todas) por mantenimiento, lluvia, evento, torneo, limpieza, obra, incidencia o causa administrativa."
+      />
+      <Card style={{ marginBottom: 20 }}>
+        <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+          Esta acción prepara el cierre, pero no se considerará confirmada hasta recibir respuesta real del sistema.
+        </p>
+        <form onSubmit={submitCierre}>
+          <div className="cp04-grid-2">
+            <div>
+              <label>Pista</label>
+              <select value={cierreForm.pista} onChange={e => updateCierreForm("pista", e.target.value)}>
+                <option value="">Seleccionar…</option>
+                <option value="Pista 1">Pista 1</option>
+                <option value="Pista 2">Pista 2</option>
+                <option value="Pista 3">Pista 3</option>
+                <option value="Pista 4">Pista 4</option>
+                <option value="todas">Todas</option>
+              </select>
+              <FieldError>{cierreErrors.pista}</FieldError>
+            </div>
+            <div>
+              <label>Motivo</label>
+              <select value={cierreForm.motivo} onChange={e => updateCierreForm("motivo", e.target.value)}>
+                <option value="">Seleccionar…</option>
+                {CIERRE_PISTA_MOTIVOS.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <FieldError>{cierreErrors.motivo}</FieldError>
+            </div>
+            <div>
+              <label>Fecha de inicio</label>
+              <input type="date" value={cierreForm.fecha_inicio} onChange={e => updateCierreForm("fecha_inicio", e.target.value)} />
+              <FieldError>{cierreErrors.fecha_inicio}</FieldError>
+            </div>
+            <div>
+              <label>Hora de inicio</label>
+              <input type="time" value={cierreForm.hora_inicio} onChange={e => updateCierreForm("hora_inicio", e.target.value)} />
+              <FieldError>{cierreErrors.hora_inicio}</FieldError>
+            </div>
+            <div>
+              <label>Fecha de fin</label>
+              <input type="date" value={cierreForm.fecha_fin} onChange={e => updateCierreForm("fecha_fin", e.target.value)} />
+              <FieldError>{cierreErrors.fecha_fin}</FieldError>
+            </div>
+            <div>
+              <label>Hora de fin</label>
+              <input type="time" value={cierreForm.hora_fin} onChange={e => updateCierreForm("hora_fin", e.target.value)} />
+              <FieldError>{cierreErrors.hora_fin}</FieldError>
+            </div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <label>Observaciones (opcional)</label>
+            <textarea value={cierreForm.observaciones} onChange={e => updateCierreForm("observaciones", e.target.value)} rows={3} />
+          </div>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 18 }}>
+            <input type="checkbox" checked={cierreForm.notify_players} onChange={e => updateCierreForm("notify_players", e.target.checked)} />
+            <span>Notificar a los jugadores con reserva en ese horario, si aplica.</span>
+          </label>
+          {cierreServerError && <p style={{ color: T.danger, marginTop: 16 }}>{cierreServerError}</p>}
+          {cierreSuccess && (
+            <p style={{ color: T.accent, marginTop: 16 }}>
+              Solicitud de cierre temporal enviada correctamente. No se considera confirmada hasta que el sistema lo confirme.
+            </p>
+          )}
+          <div style={{ marginTop: 22 }}>
+            <Btn type="submit" disabled={cierreSending}>{cierreSending ? "Enviando…" : "Solicitar cierre temporal de pista"}</Btn>
+          </div>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+function Gestion() {
   const [emailConsulta, setEmailConsulta] = useState(() => {
     try {
       return (
@@ -4590,76 +4682,6 @@ function Gestion() {
         title="Listado real de reservas"
         desc="Consulta tus reservas."
       />
-
-      <Card style={{ marginBottom: 20 }}>
-        <h3 style={{ marginTop: 0 }}>Cierre temporal de pista</h3>
-        <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
-          Esta acción prepara el cierre, pero no se considerará confirmada hasta recibir respuesta real del sistema.
-        </p>
-        <form onSubmit={submitCierre}>
-          <div className="cp04-grid-2">
-            <div>
-              <label>Pista</label>
-              <select value={cierreForm.pista} onChange={e => updateCierreForm("pista", e.target.value)}>
-                <option value="">Seleccionar…</option>
-                <option value="Pista 1">Pista 1</option>
-                <option value="Pista 2">Pista 2</option>
-                <option value="Pista 3">Pista 3</option>
-                <option value="Pista 4">Pista 4</option>
-                <option value="todas">Todas</option>
-              </select>
-              <FieldError>{cierreErrors.pista}</FieldError>
-            </div>
-            <div>
-              <label>Motivo</label>
-              <select value={cierreForm.motivo} onChange={e => updateCierreForm("motivo", e.target.value)}>
-                <option value="">Seleccionar…</option>
-                {CIERRE_PISTA_MOTIVOS.map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-              <FieldError>{cierreErrors.motivo}</FieldError>
-            </div>
-            <div>
-              <label>Fecha de inicio</label>
-              <input type="date" value={cierreForm.fecha_inicio} onChange={e => updateCierreForm("fecha_inicio", e.target.value)} />
-              <FieldError>{cierreErrors.fecha_inicio}</FieldError>
-            </div>
-            <div>
-              <label>Hora de inicio</label>
-              <input type="time" value={cierreForm.hora_inicio} onChange={e => updateCierreForm("hora_inicio", e.target.value)} />
-              <FieldError>{cierreErrors.hora_inicio}</FieldError>
-            </div>
-            <div>
-              <label>Fecha de fin</label>
-              <input type="date" value={cierreForm.fecha_fin} onChange={e => updateCierreForm("fecha_fin", e.target.value)} />
-              <FieldError>{cierreErrors.fecha_fin}</FieldError>
-            </div>
-            <div>
-              <label>Hora de fin</label>
-              <input type="time" value={cierreForm.hora_fin} onChange={e => updateCierreForm("hora_fin", e.target.value)} />
-              <FieldError>{cierreErrors.hora_fin}</FieldError>
-            </div>
-          </div>
-          <div style={{ marginTop: 18 }}>
-            <label>Observaciones (opcional)</label>
-            <textarea value={cierreForm.observaciones} onChange={e => updateCierreForm("observaciones", e.target.value)} rows={3} />
-          </div>
-          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 18 }}>
-            <input type="checkbox" checked={cierreForm.notify_players} onChange={e => updateCierreForm("notify_players", e.target.checked)} />
-            <span>Notificar a los jugadores con reserva en ese horario, si aplica.</span>
-          </label>
-          {cierreServerError && <p style={{ color: T.danger, marginTop: 16 }}>{cierreServerError}</p>}
-          {cierreSuccess && (
-            <p style={{ color: T.accent, marginTop: 16 }}>
-              Solicitud de cierre temporal enviada correctamente. No se considera confirmada hasta que el sistema lo confirme.
-            </p>
-          )}
-          <div style={{ marginTop: 22 }}>
-            <Btn type="submit" disabled={cierreSending}>{cierreSending ? "Enviando…" : "Solicitar cierre temporal de pista"}</Btn>
-          </div>
-        </form>
-      </Card>
 
       <Card style={{ marginBottom: 20 }}>
         <h3 style={{ marginTop: 0 }}>
@@ -7235,7 +7257,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,

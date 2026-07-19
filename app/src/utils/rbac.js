@@ -28,11 +28,15 @@ export const CP04_PROTECTED_SECTIONS = [
 // superficie de observabilidad de Make.
 export const CP04_SUPPORT_ONLY_SECTIONS = ["flujos_make", "soporte"];
 
+// PASO 07G (2026-07-19): "cierre_pistas" (Cierre Temporal de Pistas, Paso
+// 07E) se concede a los mismos 3 roles que ya tenían acceso a "gestion"
+// (STAFF/ADMIN/SUPPORT) — es una acción administrativa sobre pistas, no
+// una sección nueva de negocio. PLAYER nunca lo recibe.
 export const CP04_ROLE_PERMISSIONS = {
   PLAYER: ["inicio", "reservas", "torneos", "ranking", "comunidad", "perfil"],
-  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "comunidad", "perfil"],
-  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "comunidad", "admin", "perfil"],
-  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "comunidad", "admin", "flujos_make", "soporte", "perfil"],
+  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "torneos", "comunidad", "perfil"],
+  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "torneos", "ranking", "comunidad", "admin", "perfil"],
+  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "torneos", "ranking", "comunidad", "admin", "flujos_make", "soporte", "perfil"],
 };
 
 // Fail-closed: cualquier valor que no sea exactamente uno de los 4 roles

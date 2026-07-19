@@ -81,3 +81,23 @@ test("CP04_ROLE_PERMISSIONS: ningún rol de negocio (PLAYER/STAFF/ADMIN) incluye
     }
   }
 });
+
+// PASO 07G (2026-07-19): "cierre_pistas" (Cierre Temporal de Pistas, Paso
+// 07E) ahora tiene acceso directo en el sidebar, no solo un card embebido
+// en "gestion" — mismo gate de rol que "gestion" (STAFF/ADMIN/SUPPORT).
+test("PLAYER no puede acceder a cierre_pistas", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "cierre_pistas"), false);
+});
+
+test("STAFF, ADMIN y SUPPORT pueden acceder a cierre_pistas", () => {
+  for (const role of ["STAFF", "ADMIN", "SUPPORT"]) {
+    assert.equal(cp04CanAccessSection(role, "cierre_pistas"), true, `${role} debería poder acceder a cierre_pistas`);
+  }
+});
+
+test("simulación de navegación manual por URL/hash: PLAYER forzando 'cierre_pistas' no salta el guard", () => {
+  const forcedSection = "cierre_pistas";
+  const safeSection = cp04CanAccessSection("PLAYER", forcedSection) ? forcedSection : cp04GetSafeStartSection("PLAYER");
+  assert.notEqual(safeSection, "cierre_pistas");
+  assert.equal(safeSection, "inicio");
+});
