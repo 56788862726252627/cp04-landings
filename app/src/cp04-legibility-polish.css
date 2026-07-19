@@ -382,8 +382,19 @@ body.cp04-role-screen-active select option {
 /* FASE 75 · Centro técnico, tablas y paneles admin más legibles */
 
 /* Contenedores técnicos */
+/* PASO 07M (2026-07-19): excluido `button` del segundo selector — mismo
+   defecto ya corregido en el Paso 07L para cp04-module-screen-active,
+   pero aquí en su variante cp04-module-admin. SUPPORT tiene "Centro
+   técnico" siempre presente en su sidebar (única sección SUPPORT-only),
+   así que `internal-background-detector.js` clasifica CUALQUIER página
+   que SUPPORT esté viendo como cp04-module-admin (esa comprobación va
+   antes que la de "es una pantalla de reservas/jugadores" y gana),
+   incluida Baja de Jugador — no es exclusivo de Centro Técnico/Admin
+   como parecía en el Paso 07L. Sin este `:not(button)`, el botón
+   "Solicitar baja de jugador" volvía a recibir un fondo oscuro forzado
+   por esta regla solo quando el usuario es SUPPORT. */
 body.cp04-module-admin .cp04-card,
-body.cp04-module-admin .cp04-card [style*="background"] {
+body.cp04-module-admin .cp04-card [style*="background"]:not(button) {
   background:
     linear-gradient(
       135deg,
@@ -1267,4 +1278,47 @@ button[aria-label="Siguiente"] * {
   color: #f8fff5 !important;
   -webkit-text-fill-color: #f8fff5 !important;
   font-weight: 850 !important;
+}
+
+/* ===== PASO 07M · RED DE SEGURIDAD DEFINITIVA "SOLICITAR BAJA DE JUGADOR" =====
+   Este botón ya fue capturado por 3 orígenes distintos de reglas globales
+   "catch-all" en pasos anteriores (button genérico en 07H/07K,
+   `.cp04-card [style*="background"]` en 07L, su variante
+   `cp04-module-admin` en este mismo paso — la que realmente afectaba a
+   SUPPORT). En vez de seguir adivinando qué otra regla global podría
+   capturarlo en el futuro, se fuerza aquí de forma definitiva con una
+   clase dedicada y máxima especificidad, cubriendo también el estado
+   disabled (mientras el formulario está incompleto o enviando) para que
+   nunca quede "casi invisible": solo se atenúa con opacidad, nunca pierde
+   el fondo lima ni el texto oscuro. */
+button.cp04-offboarding-submit-button,
+button.cp04-offboarding-submit-button:hover,
+button.cp04-offboarding-submit-button:focus,
+button.cp04-offboarding-submit-button:focus-visible,
+button.cp04-offboarding-submit-button:active {
+  background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-image: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-color: #b6ff00 !important;
+  color: #06100a !important;
+  border-color: rgba(6, 16, 10, .45) !important;
+  box-shadow:
+    0 16px 36px rgba(182, 255, 0, .32),
+    0 0 0 1px rgba(6, 16, 10, .45) !important;
+  text-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+button.cp04-offboarding-submit-button * {
+  color: #06100a !important;
+  -webkit-text-fill-color: #06100a !important;
+}
+
+button.cp04-offboarding-submit-button:disabled {
+  background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-image: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-color: #b6ff00 !important;
+  color: #06100a !important;
+  filter: none !important;
+  opacity: .72 !important;
 }

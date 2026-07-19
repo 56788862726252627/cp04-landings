@@ -513,13 +513,17 @@ function Card({ children, style = {} }) {
   return <div className="cp04-card" style={style}>{children}</div>;
 }
 
-function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {} }) {
+// PASO 07M (2026-07-19): `className` opcional, mezclada con la ya
+// existente "cp04-btn" — por defecto (sin pasar className) el
+// comportamiento es idéntico al de antes de este paso, para no afectar a
+// ningún llamador existente.
+function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {}, className = "" }) {
   const map = {
     primary: { background: `linear-gradient(135deg, ${T.accent}, ${T.accent2})`, color: "#06100a", border: "none", boxShadow: "0 16px 36px rgba(182,255,0,.18)" },
     secondary: { background: "rgba(255,255,255,.055)", color: T.text, border: `1px solid ${T.line}` },
     danger: { background: "rgba(255,94,58,.12)", color: T.danger, border: "1px solid rgba(255,94,58,.30)" },
   };
-  return <button className="cp04-btn" type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 15, fontFamily: T.fontDisplay, fontWeight: 900, letterSpacing: "-.01em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }}>{children}</button>;
+  return <button className={`cp04-btn${className ? ` ${className}` : ""}`} type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 15, fontFamily: T.fontDisplay, fontWeight: 900, letterSpacing: "-.01em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }}>{children}</button>;
 }
 
 
@@ -5355,18 +5359,22 @@ function AltaJugador({ initialModo = "alta" } = {}) {
             {bajaServerError && <p style={{ color:T.danger, marginTop:16 }}>{bajaServerError}</p>}
             {bajaSuccess && <p style={{ color:T.accent, marginTop:16 }}>Baja registrada correctamente.</p>}
             <div style={{ marginTop:22 }}>
-              {/* PASO 07J/07K (2026-07-19): mismo refuerzo de contraste
-                  aplicado en el Paso 07H al botón de Cierre Temporal —
-                  fondo sólido T.accent (en vez del degradado lima->menta
-                  por defecto) más un borde y anillo de sombra oscuros para
-                  máxima definición sobre cualquier fondo, solo en este
-                  botón, sin tocar el componente Btn compartido ni la
-                  lógica de envío. Este formulario vive dentro de la app
-                  autenticada (no en la pantalla de login/rol), así que no
-                  le afecta ninguna regla CSS de `cp04-role-screen-active`. */}
+              {/* PASO 07J/07K/07L/07M (2026-07-19): refuerzo de contraste +
+                  clase dedicada `cp04-offboarding-submit-button` con CSS de
+                  máxima especificidad (ver cp04-legibility-polish.css) como
+                  red de seguridad definitiva — este botón ya fue capturado
+                  por 3 orígenes distintos de reglas globales "catch-all"
+                  (`button` genérico en 07H/07K, `.cp04-card
+                  [style*="background"]` en 07L, su variante
+                  `cp04-module-admin` en 07M, esta última específica de
+                  SUPPORT por tener "Centro técnico" siempre en su
+                  sidebar). Sin cambios en la lógica de envío ni en el
+                  componente Btn compartido más allá de aceptar
+                  `className` opcional. */}
               <Btn
                 type="submit"
                 disabled={bajaSending}
+                className="cp04-offboarding-submit-button"
                 style={{
                   width: "100%",
                   background: T.accent,
