@@ -28,6 +28,17 @@ function fixSelectedCp04ButtonsOnly() {
   const buttons = Array.from(document.querySelectorAll('button'));
 
   buttons.forEach((button) => {
+    // PASO 07K (2026-07-19): este fix por texto estaba pensado para botones
+    // de la pantalla Inicio ("Reprogramar reserva", "Reservar pista", etc.),
+    // pero "Reprogramar reserva" también es el texto literal del item del
+    // sidebar — que ya tiene su propio color coherente (texto oscuro sobre
+    // el degradado lima/menta cuando está activo, igual que el resto de
+    // items). Al forzar aquí `color:#ffffff !important` también sobre el
+    // botón del sidebar, quedaba con texto blanco sobre fondo lima activo,
+    // rompiendo la coherencia visual con los demás items. Se excluye
+    // cualquier botón dentro de `.cp04-sidebar` de este fix heredado.
+    if (button.closest('.cp04-sidebar')) return;
+
     const text = normalizeCp04ButtonText(button.innerText || button.textContent || '');
 
     button.classList.remove('cp04-fix-reservar-pista-btn');

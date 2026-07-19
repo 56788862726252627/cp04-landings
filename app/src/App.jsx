@@ -5355,11 +5355,15 @@ function AltaJugador({ initialModo = "alta" } = {}) {
             {bajaServerError && <p style={{ color:T.danger, marginTop:16 }}>{bajaServerError}</p>}
             {bajaSuccess && <p style={{ color:T.accent, marginTop:16 }}>Baja registrada correctamente.</p>}
             <div style={{ marginTop:22 }}>
-              {/* PASO 07J (2026-07-19): mismo refuerzo de contraste aplicado
-                  en el Paso 07H al botón de Cierre Temporal — fondo sólido
-                  T.accent (en vez del degradado lima->menta por defecto)
-                  más anillo de sombra oscuro, solo en este botón, sin tocar
-                  el componente Btn compartido ni la lógica de envío. */}
+              {/* PASO 07J/07K (2026-07-19): mismo refuerzo de contraste
+                  aplicado en el Paso 07H al botón de Cierre Temporal —
+                  fondo sólido T.accent (en vez del degradado lima->menta
+                  por defecto) más un borde y anillo de sombra oscuros para
+                  máxima definición sobre cualquier fondo, solo en este
+                  botón, sin tocar el componente Btn compartido ni la
+                  lógica de envío. Este formulario vive dentro de la app
+                  autenticada (no en la pantalla de login/rol), así que no
+                  le afecta ninguna regla CSS de `cp04-role-screen-active`. */}
               <Btn
                 type="submit"
                 disabled={bajaSending}
@@ -5368,6 +5372,7 @@ function AltaJugador({ initialModo = "alta" } = {}) {
                   background: T.accent,
                   color: "#06100a",
                   fontSize: "1rem",
+                  border: "2px solid rgba(6,16,10,.45)",
                   boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
                 }}
               >
@@ -7705,7 +7710,16 @@ export default function ClubPadel04SaaSApp() {
               </div>
           {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
-            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
+            {/* PASO 07K (2026-07-19): clase cp04-login-submit-btn añadida
+                para poder forzar su contraste en torcal-role-background.css
+                — esta pantalla activa `body.cp04-role-screen-active`, cuya
+                regla genérica de fondo (`button { background-color:
+                rgba(5,10,18,.22) !important; background-image: none
+                !important }`) anulaba el fondo lima de este botón vía
+                `!important`, dejándolo casi invisible. El estilo inline de
+                abajo no puede ganarle a un `!important` de hoja de
+                estilos, por eso la corrección real vive en el CSS. */}
+            <button type="submit" className="cp04-menu-button cp04-login-submit-btn" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
               Iniciar sesión
             </button>
 
