@@ -4383,7 +4383,25 @@ function CierreTemporalPista() {
             </p>
           )}
           <div style={{ marginTop: 22 }}>
-            <Btn type="submit" disabled={cierreSending}>{cierreSending ? "Enviando…" : "Solicitar cierre temporal de pista"}</Btn>
+            {/* PASO 07H (2026-07-19): contraste reforzado a petición de QA
+                visual en localhost:5175 — fondo sólido T.accent (en vez del
+                degradado lima->menta por defecto de Btn) más un anillo de
+                sombra oscuro, para que el texto casi-negro se lea con más
+                definición. Solo afecta a este botón (style override local,
+                sin tocar el componente Btn compartido ni otros formularios). */}
+            <Btn
+              type="submit"
+              disabled={cierreSending}
+              style={{
+                width: "100%",
+                background: T.accent,
+                color: "#06100a",
+                fontSize: "1rem",
+                boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+              }}
+            >
+              {cierreSending ? "Enviando…" : "Solicitar cierre temporal de pista"}
+            </Btn>
           </div>
         </form>
       </Card>
