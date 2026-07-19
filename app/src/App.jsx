@@ -5274,9 +5274,23 @@ function AltaJugador({ initialModo = "alta" } = {}) {
     }
   }
 
+  // PASO 07J (2026-07-19): el título/subtítulo de la cabecera antes quedaba
+  // fijo en "Alta de jugador" aunque el usuario estuviera en la pestaña de
+  // Baja (entrando desde el sidebar en "baja_jugador", o cambiando de
+  // pestaña manualmente) — confusión visual detectada en validación en
+  // localhost:5175. Se deriva ahora del `modo` activo, igual que ya hacían
+  // los botones de pestaña. Texto de Baja en español literal (sin tx()),
+  // mismo criterio ya documentado en el Paso 07C para el resto de textos
+  // nuevos de esa pestaña.
+  const isBajaMode = modo === "baja";
+  const playerFormTitle = isBajaMode ? "Baja de jugador" : tx("alta.title");
+  const playerFormSubtitle = isBajaMode
+    ? "Solicita la baja de un jugador del club."
+    : tx("alta.desc");
+
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
-      <SectionTitle eyebrow={tx("alta.eyebrow")} title={tx("alta.title")} desc={tx("alta.desc")} />
+      <SectionTitle eyebrow={tx("alta.eyebrow")} title={playerFormTitle} desc={playerFormSubtitle} />
       <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
         <Btn type="button" variant={modo === "alta" ? "primary" : "secondary"} onClick={() => setModo("alta")}>
           Alta de jugador
@@ -5341,7 +5355,24 @@ function AltaJugador({ initialModo = "alta" } = {}) {
             {bajaServerError && <p style={{ color:T.danger, marginTop:16 }}>{bajaServerError}</p>}
             {bajaSuccess && <p style={{ color:T.accent, marginTop:16 }}>Baja registrada correctamente.</p>}
             <div style={{ marginTop:22 }}>
-              <Btn type="submit" disabled={bajaSending}>{bajaSending ? "Enviando…" : "Solicitar baja de jugador"}</Btn>
+              {/* PASO 07J (2026-07-19): mismo refuerzo de contraste aplicado
+                  en el Paso 07H al botón de Cierre Temporal — fondo sólido
+                  T.accent (en vez del degradado lima->menta por defecto)
+                  más anillo de sombra oscuro, solo en este botón, sin tocar
+                  el componente Btn compartido ni la lógica de envío. */}
+              <Btn
+                type="submit"
+                disabled={bajaSending}
+                style={{
+                  width: "100%",
+                  background: T.accent,
+                  color: "#06100a",
+                  fontSize: "1rem",
+                  boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+                }}
+              >
+                {bajaSending ? "Enviando…" : "Solicitar baja de jugador"}
+              </Btn>
             </div>
           </form>
         </Card>
