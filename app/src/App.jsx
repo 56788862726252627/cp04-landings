@@ -1423,12 +1423,13 @@ const TRANSLATIONS = {
   "es-ES": {
     "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
     "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
-    // PASO 07G (2026-07-19): solo se añade a es-ES deliberadamente — t()
-    // ya hace fallback a es-ES cuando un idioma no tiene la clave (ver
+    // PASO 07G/07I (2026-07-19): solo se añaden a es-ES deliberadamente —
+    // t() ya hace fallback a es-ES cuando un idioma no tiene la clave (ver
     // función t() más abajo), así que el resto de idiomas mostrará este
     // mismo texto en español hasta que se traduzca, en vez de la clave
     // cruda o un string vacío.
     "nav.cierre_pistas":"Cierre temporal",
+    "nav.baja_jugador":"Baja de jugador",
     "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
     "nav.comunidad":"Comunidad",
@@ -3207,6 +3208,11 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
   const tx = key => t(key, lang);
   const navKeys = [
     ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
+    // PASO 07I (2026-07-19): acceso directo a Baja de Jugador (Paso 07C),
+    // justo después de Alta de jugador — mismo componente AltaJugador(),
+    // solo cambia la pestaña inicial (ver modules.baja_jugador). Mismo gate
+    // de rol que "alta_jugador" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["baja_jugador","nav.baja_jugador","🧾"],
     ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
     // PASO 07G (2026-07-19): acceso directo al módulo de Cierre Temporal de
     // Pistas (Paso 07E), antes solo visible como card dentro de "gestion".
@@ -5040,7 +5046,14 @@ function Gestion() {
 }
 
 
-function AltaJugador() {
+// PASO 07I (2026-07-19): Baja de Jugador pasa a tener su propio acceso en
+// el sidebar ("baja_jugador"), además del ya existente "alta_jugador".
+// Ambos apuntan al MISMO componente `AltaJugador()` (nunca se duplicó el
+// formulario ni la lógica del Paso 07C) — `initialModo` solo decide qué
+// pestaña se abre primero según desde qué item del sidebar se navegó. El
+// usuario sigue pudiendo cambiar de pestaña libremente una vez dentro,
+// igual que antes de este paso.
+function AltaJugador({ initialModo = "alta" } = {}) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const initialForm = {
@@ -5066,7 +5079,7 @@ function AltaJugador() {
   // tocar navegación ni permisos. Réplica deliberada del patrón de Alta:
   // formulario -> validación local -> authFetch -> nunca confirma éxito sin
   // response.ok && data.ok !== false.
-  const [modo, setModo] = useState("alta");
+  const [modo, setModo] = useState(initialModo === "baja" ? "baja" : "alta");
   const bajaInitialForm = {
     nombre: "",
     apellidos: "",
@@ -7275,7 +7288,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,

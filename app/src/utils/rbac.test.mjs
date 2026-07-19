@@ -101,3 +101,23 @@ test("simulación de navegación manual por URL/hash: PLAYER forzando 'cierre_pi
   assert.notEqual(safeSection, "cierre_pistas");
   assert.equal(safeSection, "inicio");
 });
+
+// PASO 07I (2026-07-19): "baja_jugador" tiene ahora acceso directo en el
+// sidebar (mismo componente AltaJugador() del Paso 07C, solo cambia la
+// pestaña inicial) — mismo gate de rol que "alta_jugador" (STAFF/ADMIN/SUPPORT).
+test("PLAYER no puede acceder a baja_jugador", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "baja_jugador"), false);
+});
+
+test("STAFF, ADMIN y SUPPORT pueden acceder a baja_jugador", () => {
+  for (const role of ["STAFF", "ADMIN", "SUPPORT"]) {
+    assert.equal(cp04CanAccessSection(role, "baja_jugador"), true, `${role} debería poder acceder a baja_jugador`);
+  }
+});
+
+test("simulación de navegación manual por URL/hash: PLAYER forzando 'baja_jugador' no salta el guard", () => {
+  const forcedSection = "baja_jugador";
+  const safeSection = cp04CanAccessSection("PLAYER", forcedSection) ? forcedSection : cp04GetSafeStartSection("PLAYER");
+  assert.notEqual(safeSection, "baja_jugador");
+  assert.equal(safeSection, "inicio");
+});
