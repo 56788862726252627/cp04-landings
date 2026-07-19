@@ -4147,7 +4147,159 @@ function ReprogramarReserva({ setCurrent }) {
   );
 }
 
+// PASO 07E (2026-07-19): motivos válidos de cierre temporal de pista,
+// compartidos entre el select del formulario y la validación local — deben
+// coincidir exactamente con CIERRE_MOTIVOS_VALIDOS en
+// worker-reservas/src/index.js (misma lista, duplicada deliberadamente para
+// no acoplar el bundle del frontend al código del Worker).
+const CIERRE_PISTA_MOTIVOS = [
+  ["mantenimiento", "Mantenimiento"],
+  ["lluvia", "Lluvia"],
+  ["evento", "Evento"],
+  ["torneo", "Torneo"],
+  ["limpieza", "Limpieza"],
+  ["obra", "Obra"],
+  ["incidencia", "Incidencia"],
+  ["administrativo", "Administrativo"],
+  ["otro", "Otro"],
+];
+
 function Gestion() {
+  const auth = useAuth();
+
+  // PASO 07E (2026-07-19): Cierre Temporal de Pistas — flujo app/API
+  // preparado, mismo criterio defensivo que Baja de Jugador (Paso 07C):
+  // formulario -> validación local -> authFetch -> nunca confirma el cierre
+  // sin response.ok && data.ok !== false, y ni siquiera entonces se afirma
+  // "pista cerrada" (el estado enviado y mostrado es siempre
+  // "pendiente_confirmacion" — la confirmación real depende del escenario
+  // Make 5791133 procesando el cierre en Airtable, fuera de este flujo).
+  // Vive dentro de la sección "gestion", ya gateada a STAFF/ADMIN/SUPPORT
+  // en rbac.js (CP04_ROLE_PERMISSIONS) — PLAYER no tiene esta sección en su
+  // lista de permisos, así que no puede llegar a este componente.
+  const cierreInitialForm = {
+    pista: "",
+    fecha_inicio: "",
+    hora_inicio: "",
+    fecha_fin: "",
+    hora_fin: "",
+    motivo: "",
+    observaciones: "",
+    notify_players: true,
+  };
+  const [cierreForm, setCierreForm] = useState(cierreInitialForm);
+  const [cierreErrors, setCierreErrors] = useState({});
+  const [cierreSending, setCierreSending] = useState(false);
+  const [cierreSuccess, setCierreSuccess] = useState(false);
+  const [cierreServerError, setCierreServerError] = useState("");
+
+  function updateCierreForm(field, value) {
+    setCierreForm((previous) => ({ ...previous, [field]: value }));
+    setCierreErrors((previous) => ({ ...previous, [field]: "" }));
+    setCierreSuccess(false);
+    setCierreServerError("");
+  }
+
+  function validateCierre() {
+    const nextErrors = {};
+
+    if (!cierreForm.pista) {
+      nextErrors.pista = "Selecciona la pista a cerrar.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cierreForm.fecha_inicio || "")) {
+      nextErrors.fecha_inicio = "Selecciona la fecha de inicio.";
+    }
+    if (!/^\d{2}:\d{2}$/.test(cierreForm.hora_inicio || "")) {
+      nextErrors.hora_inicio = "Selecciona la hora de inicio.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cierreForm.fecha_fin || "")) {
+      nextErrors.fecha_fin = "Selecciona la fecha de fin.";
+    }
+    if (!/^\d{2}:\d{2}$/.test(cierreForm.hora_fin || "")) {
+      nextErrors.hora_fin = "Selecciona la hora de fin.";
+    }
+    if (
+      !nextErrors.fecha_inicio &&
+      !nextErrors.fecha_fin &&
+      cierreForm.fecha_fin < cierreForm.fecha_inicio
+    ) {
+      nextErrors.fecha_fin = "La fecha de fin no puede ser anterior a la de inicio.";
+    }
+    if (
+      !nextErrors.fecha_inicio &&
+      !nextErrors.fecha_fin &&
+      !nextErrors.hora_inicio &&
+      !nextErrors.hora_fin &&
+      cierreForm.fecha_fin === cierreForm.fecha_inicio &&
+      cierreForm.hora_fin <= cierreForm.hora_inicio
+    ) {
+      nextErrors.hora_fin = "La hora de fin debe ser posterior a la hora de inicio.";
+    }
+    if (!cierreForm.motivo) {
+      nextErrors.motivo = "Selecciona el motivo del cierre.";
+    }
+
+    return nextErrors;
+  }
+
+  // Nunca marca un cierre como confirmado sin respuesta real del backend.
+  // Si el Worker responde 503 "Cierre temporal webhook not configured"
+  // (webhook Make todavía sin configurar, ver worker-reservas/src/index.js
+  // handleCierreTemporalPista), se traduce a un mensaje honesto para
+  // STAFF/ADMIN en vez del texto técnico crudo. Incluso en éxito, el
+  // mensaje mostrado nunca dice "pista cerrada": dice que la solicitud se
+  // envió y queda pendiente de confirmación real.
+  async function submitCierre(event) {
+    event.preventDefault();
+
+    const nextErrors = validateCierre();
+    setCierreErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setCierreSending(true);
+    setCierreServerError("");
+    setCierreSuccess(false);
+
+    try {
+      const response = await authFetch("/api/pistas/cierre-temporal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pista: cierreForm.pista,
+          fecha_inicio: cierreForm.fecha_inicio,
+          hora_inicio: cierreForm.hora_inicio,
+          fecha_fin: cierreForm.fecha_fin,
+          hora_fin: cierreForm.hora_fin,
+          motivo: cierreForm.motivo,
+          observaciones: cierreForm.observaciones.trim(),
+          creado_por: auth.user?.email || "",
+          rol_origen: auth.role || "",
+          notify_players: cierreForm.notify_players === true,
+          origen: "APP_CLUB_PADEL_04",
+          estado: "pendiente_confirmacion",
+          accion: "cierre_temporal_pista",
+        }),
+      });
+
+      const data = await readSafeResponse(response);
+
+      if (!response.ok || data?.ok === false) {
+        if (data?.error === "Cierre temporal webhook not configured") {
+          throw new Error("El cierre temporal de pistas todavía no está configurado en el sistema. Contacta con soporte técnico.");
+        }
+        throw new Error(data?.message || data?.error || "No se pudo enviar la solicitud de cierre temporal.");
+      }
+
+      setCierreSuccess(true);
+      setCierreForm(cierreInitialForm);
+    } catch (error) {
+      setCierreServerError(error?.message || "No se pudo enviar la solicitud de cierre temporal.");
+    } finally {
+      setCierreSending(false);
+    }
+  }
+
   const [emailConsulta, setEmailConsulta] = useState(() => {
     try {
       return (
@@ -4438,6 +4590,76 @@ function Gestion() {
         title="Listado real de reservas"
         desc="Consulta tus reservas."
       />
+
+      <Card style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>Cierre temporal de pista</h3>
+        <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+          Esta acción prepara el cierre, pero no se considerará confirmada hasta recibir respuesta real del sistema.
+        </p>
+        <form onSubmit={submitCierre}>
+          <div className="cp04-grid-2">
+            <div>
+              <label>Pista</label>
+              <select value={cierreForm.pista} onChange={e => updateCierreForm("pista", e.target.value)}>
+                <option value="">Seleccionar…</option>
+                <option value="Pista 1">Pista 1</option>
+                <option value="Pista 2">Pista 2</option>
+                <option value="Pista 3">Pista 3</option>
+                <option value="Pista 4">Pista 4</option>
+                <option value="todas">Todas</option>
+              </select>
+              <FieldError>{cierreErrors.pista}</FieldError>
+            </div>
+            <div>
+              <label>Motivo</label>
+              <select value={cierreForm.motivo} onChange={e => updateCierreForm("motivo", e.target.value)}>
+                <option value="">Seleccionar…</option>
+                {CIERRE_PISTA_MOTIVOS.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <FieldError>{cierreErrors.motivo}</FieldError>
+            </div>
+            <div>
+              <label>Fecha de inicio</label>
+              <input type="date" value={cierreForm.fecha_inicio} onChange={e => updateCierreForm("fecha_inicio", e.target.value)} />
+              <FieldError>{cierreErrors.fecha_inicio}</FieldError>
+            </div>
+            <div>
+              <label>Hora de inicio</label>
+              <input type="time" value={cierreForm.hora_inicio} onChange={e => updateCierreForm("hora_inicio", e.target.value)} />
+              <FieldError>{cierreErrors.hora_inicio}</FieldError>
+            </div>
+            <div>
+              <label>Fecha de fin</label>
+              <input type="date" value={cierreForm.fecha_fin} onChange={e => updateCierreForm("fecha_fin", e.target.value)} />
+              <FieldError>{cierreErrors.fecha_fin}</FieldError>
+            </div>
+            <div>
+              <label>Hora de fin</label>
+              <input type="time" value={cierreForm.hora_fin} onChange={e => updateCierreForm("hora_fin", e.target.value)} />
+              <FieldError>{cierreErrors.hora_fin}</FieldError>
+            </div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <label>Observaciones (opcional)</label>
+            <textarea value={cierreForm.observaciones} onChange={e => updateCierreForm("observaciones", e.target.value)} rows={3} />
+          </div>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 18 }}>
+            <input type="checkbox" checked={cierreForm.notify_players} onChange={e => updateCierreForm("notify_players", e.target.checked)} />
+            <span>Notificar a los jugadores con reserva en ese horario, si aplica.</span>
+          </label>
+          {cierreServerError && <p style={{ color: T.danger, marginTop: 16 }}>{cierreServerError}</p>}
+          {cierreSuccess && (
+            <p style={{ color: T.accent, marginTop: 16 }}>
+              Solicitud de cierre temporal enviada correctamente. No se considera confirmada hasta que el sistema lo confirme.
+            </p>
+          )}
+          <div style={{ marginTop: 22 }}>
+            <Btn type="submit" disabled={cierreSending}>{cierreSending ? "Enviando…" : "Solicitar cierre temporal de pista"}</Btn>
+          </div>
+        </form>
+      </Card>
 
       <Card style={{ marginBottom: 20 }}>
         <h3 style={{ marginTop: 0 }}>

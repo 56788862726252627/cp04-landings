@@ -343,14 +343,14 @@ test("Escenario real EN VIVO completo (50, sin executions/errors): los valores d
   }
 });
 
-test("computeIntegracionResumen: tras el Paso 07C, 3/50 integrados app+Worker (incluye Baja de Jugador), 11/50 sin integración visible", () => {
+test("computeIntegracionResumen: tras el Paso 07E, 4/50 integrados app+Worker (incluye Baja de Jugador y Cierre Temporal de Pistas), 10/50 sin integración visible", () => {
   const resumen = computeIntegracionResumen(MAKE_APP_INTEGRATION_MAP);
   assert.equal(resumen.total, 50);
-  assert.equal(resumen.integradoAppYWorker, 3);
+  assert.equal(resumen.integradoAppYWorker, 4);
   assert.equal(resumen.integradoAppSinWorker, 0);
   assert.equal(resumen.soloCentroTecnico, 1);
   assert.equal(resumen.autonomoMake, 35);
-  assert.equal(resumen.sinIntegracion, 11);
+  assert.equal(resumen.sinIntegracion, 10);
   assert.equal(resumen.sinClasificar, 0);
   const suma = resumen.integradoAppYWorker + resumen.integradoAppSinWorker + resumen.soloCentroTecnico + resumen.autonomoMake + resumen.sinIntegracion + resumen.sinClasificar;
   assert.equal(suma, resumen.total, "los 5 grupos + sinClasificar deben sumar exactamente el total");

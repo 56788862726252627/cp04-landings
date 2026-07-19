@@ -142,3 +142,85 @@ test("extra: fecha de un día anterior a hoy -> unavailable/past_time", () => {
   assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
   assert.equal(result.reason, AVAILABILITY_REASON.PAST_TIME);
 });
+
+// --- PASO 07E: cierre temporal de pista (closures, opcional, default []) ---
+
+test("07E-1. sin closures (default []) el comportamiento no cambia respecto a antes de este paso", () => {
+  const result = evaluate({ startTime: "20:00", durationMinutes: 60 });
+  assert.equal(result.status, AVAILABILITY_STATUS.AVAILABLE);
+  assert.equal(result.reason, null);
+});
+
+test("07E-2. cierre que cubre exactamente el slot solicitado -> unavailable/court_closed", () => {
+  const result = evaluate({
+    startTime: "20:00",
+    durationMinutes: 60,
+    closures: [{ pista: "Pista 1", fecha_inicio: "2026-07-06", hora_inicio: "18:00", fecha_fin: "2026-07-06", hora_fin: "22:00" }],
+  });
+  assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
+  assert.equal(result.reason, AVAILABILITY_REASON.COURT_CLOSED);
+});
+
+test("07E-3. cierre de otra pista no afecta (courtId distinto)", () => {
+  const result = evaluate({
+    startTime: "20:00",
+    durationMinutes: 60,
+    courtId: "Pista 1",
+    closures: [{ pista: "Pista 2", fecha_inicio: "2026-07-06", hora_inicio: "18:00", fecha_fin: "2026-07-06", hora_fin: "22:00" }],
+  });
+  assert.equal(result.status, AVAILABILITY_STATUS.AVAILABLE);
+});
+
+test("07E-4. cierre con pista='todas' bloquea cualquier courtId", () => {
+  const result = evaluate({
+    startTime: "20:00",
+    durationMinutes: 60,
+    courtId: "Pista 3",
+    closures: [{ pista: "todas", fecha_inicio: "2026-07-06", hora_inicio: "18:00", fecha_fin: "2026-07-06", hora_fin: "22:00" }],
+  });
+  assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
+  assert.equal(result.reason, AVAILABILITY_REASON.COURT_CLOSED);
+});
+
+test("07E-5. cierre en otra fecha no afecta", () => {
+  const result = evaluate({
+    date: "2026-07-06",
+    startTime: "20:00",
+    durationMinutes: 60,
+    closures: [{ pista: "Pista 1", fecha_inicio: "2026-07-07", hora_inicio: "00:00", fecha_fin: "2026-07-07", hora_fin: "23:59" }],
+  });
+  assert.equal(result.status, AVAILABILITY_STATUS.AVAILABLE);
+});
+
+test("07E-6. cierre multi-día: día intermedio queda cerrado el día completo (fuera del tramo horario indicado en los bordes)", () => {
+  const result = evaluate({
+    date: "2026-07-07",
+    startTime: "08:00",
+    durationMinutes: 60,
+    closures: [{ pista: "Pista 1", fecha_inicio: "2026-07-06", hora_inicio: "20:00", fecha_fin: "2026-07-08", hora_fin: "10:00" }],
+  });
+  assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
+  assert.equal(result.reason, AVAILABILITY_REASON.COURT_CLOSED);
+});
+
+test("07E-7. cierre multi-día: día de borde final solo bloquea antes de hora_fin, disponible después", () => {
+  const result = evaluate({
+    date: "2026-07-08",
+    startTime: "17:00",
+    durationMinutes: 60,
+    closures: [{ pista: "Pista 1", fecha_inicio: "2026-07-06", hora_inicio: "20:00", fecha_fin: "2026-07-08", hora_fin: "10:00" }],
+  });
+  assert.equal(result.status, AVAILABILITY_STATUS.AVAILABLE);
+});
+
+test("07E-8. cierre bloquea el slot aunque no exista ninguna reserva solapada (distinto de booking_overlap)", () => {
+  const result = evaluate({
+    startTime: "20:00",
+    durationMinutes: 60,
+    existingBookings: [],
+    closures: [{ pista: "Pista 1", fecha_inicio: "2026-07-06", hora_inicio: "18:00", fecha_fin: "2026-07-06", hora_fin: "22:00" }],
+  });
+  assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
+  assert.equal(result.reason, AVAILABILITY_REASON.COURT_CLOSED);
+  assert.notEqual(result.reason, AVAILABILITY_REASON.BOOKING_OVERLAP);
+});

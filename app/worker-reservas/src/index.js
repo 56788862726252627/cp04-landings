@@ -1850,6 +1850,179 @@ async function handleBajaJugador(request, env) {
   );
 }
 
+// PASO 07E (2026-07-19): Cierre Temporal de Pistas — mismo patrón que
+// handleAltaJugador/handleBajaJugador (mismo gate RBAC STAFF/ADMIN/SUPPORT,
+// misma forma de respuesta, mismo criterio de "nunca confirmar sin
+// respuesta real de Make"). MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK todavía no
+// está configurado como secret en ningún entorno (ver wrangler.toml) —
+// mientras no lo esté, este handler responde 503 de forma segura y nunca
+// inventa una URL ni un secreto. `estado` siempre viaja como
+// "pendiente_confirmacion": ni este handler ni la app pueden afirmar que
+// una pista queda cerrada solo porque Make devolvió 200 — esa confirmación
+// depende de que el escenario 5791133 procese el cierre en Airtable/Make,
+// fuera del alcance de este Worker.
+const CIERRE_PISTAS_VALIDAS = ["Pista 1", "Pista 2", "Pista 3", "Pista 4", "todas"];
+const CIERRE_MOTIVOS_VALIDOS = [
+  "mantenimiento",
+  "lluvia",
+  "evento",
+  "torneo",
+  "limpieza",
+  "obra",
+  "incidencia",
+  "administrativo",
+  "otro",
+];
+const CIERRE_ROLES_VALIDOS = ["ADMIN", "STAFF", "SUPPORT"];
+
+async function handleCierreTemporalPista(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (request.method !== "POST") {
+    return jsonResponse(
+      { ok: false, error: "Method not allowed" },
+      405,
+      { ...headers, Allow: "POST, OPTIONS" }
+    );
+  }
+
+  if (!env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "Cierre temporal webhook not configured" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse(
+      { ok: false, error: "Invalid JSON" },
+      400,
+      headers
+    );
+  }
+
+  const clean = (value) =>
+    typeof value === "string" ? value.trim() : value;
+
+  const normalized = {
+    accion: "cierre_temporal_pista",
+    pista: clean(payload?.pista),
+    fecha_inicio: clean(payload?.fecha_inicio),
+    hora_inicio: clean(payload?.hora_inicio),
+    fecha_fin: clean(payload?.fecha_fin),
+    hora_fin: clean(payload?.hora_fin),
+    motivo: clean(payload?.motivo),
+    observaciones: clean(payload?.observaciones || ""),
+    creado_por: clean(payload?.creado_por),
+    rol_origen: clean(payload?.rol_origen),
+    origen: "APP_CLUB_PADEL_04",
+    estado: "pendiente_confirmacion",
+    notify_players: payload?.notify_players === true,
+    bloquear_reservas: true,
+  };
+
+  const errors = {};
+
+  if (!CIERRE_PISTAS_VALIDAS.includes(normalized.pista)) {
+    errors.pista = "Pista inválida";
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha_inicio || "")) {
+    errors.fecha_inicio = "Fecha de inicio inválida";
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(normalized.hora_inicio || "")) {
+    errors.hora_inicio = "Hora de inicio inválida";
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha_fin || "")) {
+    errors.fecha_fin = "Fecha de fin inválida";
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(normalized.hora_fin || "")) {
+    errors.hora_fin = "Hora de fin inválida";
+  }
+
+  if (
+    !errors.fecha_inicio &&
+    !errors.fecha_fin &&
+    normalized.fecha_fin < normalized.fecha_inicio
+  ) {
+    errors.fecha_fin = "La fecha de fin no puede ser anterior a la de inicio";
+  }
+
+  if (
+    !errors.fecha_inicio &&
+    !errors.fecha_fin &&
+    !errors.hora_inicio &&
+    !errors.hora_fin &&
+    normalized.fecha_fin === normalized.fecha_inicio &&
+    normalized.hora_fin <= normalized.hora_inicio
+  ) {
+    errors.hora_fin = "La hora de fin debe ser posterior a la hora de inicio";
+  }
+
+  if (!CIERRE_MOTIVOS_VALIDOS.includes(normalized.motivo)) {
+    errors.motivo = "Motivo inválido";
+  }
+
+  if (!normalized.creado_por || String(normalized.creado_por).length < 3) {
+    errors.creado_por = "Creado_por inválido";
+  }
+
+  if (!CIERRE_ROLES_VALIDOS.includes(normalized.rol_origen)) {
+    errors.rol_origen = "Rol de origen inválido";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return jsonResponse(
+      { ok: false, error: "Validation failed", fields: errors },
+      400,
+      headers
+    );
+  }
+
+  const makeResponse = await fetch(env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(normalized),
+  });
+
+  const responseText = await makeResponse.text();
+
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "Make request failed",
+        status: makeResponse.status,
+      },
+      502,
+      headers
+    );
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      message: "Solicitud de cierre temporal enviada correctamente. Pendiente de confirmación real del sistema.",
+      estado: "pendiente_confirmacion",
+      makeResponse: responseText || null,
+    },
+    200,
+    headers
+  );
+}
+
 
 
 
@@ -2538,6 +2711,27 @@ export default {
         }
 
         return await handleBajaJugador(request, env);
+      }
+
+      if (
+        url.pathname === "/api/pistas/cierre-temporal" ||
+        url.pathname === "/pistas/cierre-temporal"
+      ) {
+        // Cierre temporal de pista es operación de STAFF/ADMIN/SUPPORT,
+        // mismo gate que Alta/Baja de jugador (ver comentario ahí y en
+        // handleReservas).
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["STAFF", "ADMIN", "SUPPORT"]);
+
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+
+        return await handleCierreTemporalPista(request, env);
       }
 
       if (url.pathname.startsWith("/api/auth/")) {

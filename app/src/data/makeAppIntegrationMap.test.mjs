@@ -66,7 +66,7 @@ test("los flujos del grupo E (sin integración visible) nunca se marcan como fun
 
 test("solo los escenarios del grupo A tienen integradoEnApp=true e integradoEnWorker=true", () => {
   const marcadosCompletos = MAKE_APP_INTEGRATION_MAP.filter((s) => s.integradoEnApp && s.integradoEnWorker);
-  assert.equal(marcadosCompletos.length, 3);
+  assert.equal(marcadosCompletos.length, 4);
   for (const s of marcadosCompletos) {
     assert.equal(s.grupo, MAKE_INTEGRATION_GROUPS.APP_Y_WORKER);
   }
@@ -84,6 +84,20 @@ test("PASO 07C: Baja de Jugador pasa a integrado en app y Worker, pero sigue req
   // handleBajaJugador y baja-jugador.test.mjs).
   assert.equal(baja.requiereMakeManual, true);
   assert.match(baja.bloqueadorPrincipal, /MAKE_BAJA_JUGADOR_WEBHOOK/);
+});
+
+test("PASO 07E: Cierre Temporal de Pistas pasa a integrado en app y Worker, pero sigue requiriendo Make manual (webhook sin configurar)", () => {
+  const cierre = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes("Cierre Temporal de Pistas"));
+  assert.ok(cierre);
+  assert.equal(cierre.grupo, MAKE_INTEGRATION_GROUPS.APP_Y_WORKER);
+  assert.equal(cierre.integradoEnApp, true);
+  assert.equal(cierre.integradoEnWorker, true);
+  assert.equal(cierre.soloInventariado, false);
+  // No confirmado end-to-end: el webhook real de Make sigue sin configurar,
+  // no se ha probado contra Make/Airtable real (ver worker-reservas/src/index.js
+  // handleCierreTemporalPista y cierre-temporal-pista.test.mjs).
+  assert.equal(cierre.requiereMakeManual, true);
+  assert.match(cierre.bloqueadorPrincipal, /MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK/);
 });
 
 test("Control Acceso QR no tiene integración de app detectada (búsqueda exhaustiva de 'QR' sin resultados en src/)", () => {
