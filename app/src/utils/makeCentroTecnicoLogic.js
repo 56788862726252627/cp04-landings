@@ -112,6 +112,36 @@ export function computeVerificacionResumen(enriched) {
   };
 }
 
+// Resumen del PASO 07A (Integración App ↔ Make 50/50, 2026-07-19): cuenta
+// cuántos de los 50 escenarios están en cada grupo de integración de código
+// (src/data/makeAppIntegrationMap.js). Eje independiente de
+// computeVerificacionResumen: aquel mide auditoría de Make, este mide si el
+// CÓDIGO de la app/Worker dispara realmente el escenario. Solo lectura —
+// nunca ejecuta ni marca nada como "funcional" por sí mismo.
+export function computeIntegracionResumen(mapa) {
+  const conteo = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+  let sinClasificar = 0;
+
+  for (const s of mapa) {
+    const grupo = s.grupo;
+    if (grupo && Object.prototype.hasOwnProperty.call(conteo, grupo)) {
+      conteo[grupo] += 1;
+    } else {
+      sinClasificar += 1;
+    }
+  }
+
+  return {
+    total: mapa.length,
+    integradoAppYWorker: conteo.A,
+    integradoAppSinWorker: conteo.B,
+    soloCentroTecnico: conteo.C,
+    autonomoMake: conteo.D,
+    sinIntegracion: conteo.E,
+    sinClasificar,
+  };
+}
+
 export function computeTotales(enriched) {
   const total = enriched.length;
   const activos = enriched.filter((s) => s.activo).length;

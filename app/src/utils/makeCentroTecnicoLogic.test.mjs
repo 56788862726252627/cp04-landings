@@ -2,12 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { MAKE_INVENTORY } from "../data/makeInventory.js";
+import { MAKE_APP_INTEGRATION_MAP } from "../data/makeAppIntegrationMap.js";
 import {
   CP04_CRITICALITY_RANK,
   enrichSnapshotScenario,
   enrichLiveScenario,
   computeTotales,
   computeVerificacionResumen,
+  computeIntegracionResumen,
   filterScenarios,
   sortScenarios,
   formatMetric,
@@ -339,4 +341,31 @@ test("Escenario real EN VIVO completo (50, sin executions/errors): los valores d
   for (const texto of [kpiEjecuciones, kpiErrores, kpiTasa, kpiOperaciones]) {
     assert.ok(!texto.includes("null") && !texto.includes("undefined"));
   }
+});
+
+test("computeIntegracionResumen: sobre el mapa Paso 07A, 2/50 integrados app+Worker, 12/50 sin integración visible", () => {
+  const resumen = computeIntegracionResumen(MAKE_APP_INTEGRATION_MAP);
+  assert.equal(resumen.total, 50);
+  assert.equal(resumen.integradoAppYWorker, 2);
+  assert.equal(resumen.integradoAppSinWorker, 0);
+  assert.equal(resumen.soloCentroTecnico, 1);
+  assert.equal(resumen.autonomoMake, 35);
+  assert.equal(resumen.sinIntegracion, 12);
+  assert.equal(resumen.sinClasificar, 0);
+  const suma = resumen.integradoAppYWorker + resumen.integradoAppSinWorker + resumen.soloCentroTecnico + resumen.autonomoMake + resumen.sinIntegracion + resumen.sinClasificar;
+  assert.equal(suma, resumen.total, "los 5 grupos + sinClasificar deben sumar exactamente el total");
+});
+
+test("computeIntegracionResumen: un escenario con grupo desconocido se cuenta en sinClasificar, nunca se inventa un grupo", () => {
+  const resumen = computeIntegracionResumen([{ id: 1, grupo: "Z" }, { id: 2, grupo: "A" }]);
+  assert.equal(resumen.total, 2);
+  assert.equal(resumen.sinClasificar, 1);
+  assert.equal(resumen.integradoAppYWorker, 1);
+});
+
+test("computeIntegracionResumen: lista vacía no rompe y no inventa un total", () => {
+  const resumen = computeIntegracionResumen([]);
+  assert.equal(resumen.total, 0);
+  assert.equal(resumen.integradoAppYWorker, 0);
+  assert.equal(resumen.sinIntegracion, 0);
 });

@@ -5,6 +5,7 @@ import {
   MAKE_INVENTORY_META,
   MAKE_SCENARIO_CATEGORIES,
 } from "../data/makeInventory.js";
+import { MAKE_APP_INTEGRATION_MAP } from "../data/makeAppIntegrationMap.js";
 import { cp04NormalizeRole } from "../utils/rbac.js";
 import { authFetch, getAccessToken } from "../auth/authService.js";
 import { resolveMakeInventorySource, createSingleFlightGuard, describeLiveIssue } from "../utils/makeLiveClient.js";
@@ -13,6 +14,7 @@ import {
   enrichLiveScenario,
   computeTotales,
   computeVerificacionResumen,
+  computeIntegracionResumen,
   filterScenarios,
   sortScenarios,
   formatMetric,
@@ -65,6 +67,22 @@ const VERIFICATION_COLOR = {
   listo_sin_bloqueo: T.primary,
   bloqueado_externo: T.warning,
   pendiente_make_real: T.warning,
+};
+
+// PASO 07A (2026-07-19): eje de integración de código, no de auditoría Make.
+const INTEGRATION_LABEL = {
+  A: "Integrado app + Worker/API",
+  B: "Integrado app, sin Worker confirmado",
+  C: "Solo Centro Técnico / documentación",
+  D: "Autónomo Make (sin disparador de app)",
+  E: "Sin integración visible",
+};
+const INTEGRATION_COLOR = {
+  A: T.accent,
+  B: T.primary,
+  C: T.textDim,
+  D: T.textDim,
+  E: T.warning,
 };
 
 const CATEGORY_LABEL = {
@@ -242,6 +260,11 @@ export default function CentroTecnico({ selectedRole }) {
   // importar si el panel de arriba está mostrando datos EN VIVO o SNAPSHOT
   // para ejecuciones/errores. Un fetch en vivo no cambia esta clasificación.
   const verificacionResumen = useMemo(() => computeVerificacionResumen(snapshotScenarios), [snapshotScenarios]);
+
+  // PASO 07A (2026-07-19): eje independiente de verificacionResumen — no
+  // depende del snapshot en vivo/local de arriba (ver
+  // src/data/makeAppIntegrationMap.js). Solo lectura, no ejecuta nada.
+  const integracionResumen = useMemo(() => computeIntegracionResumen(MAKE_APP_INTEGRATION_MAP), []);
 
   const liveScenariosEnriched = useMemo(() => {
     if (!Array.isArray(liveScenarios)) return null;
@@ -440,6 +463,40 @@ export default function CentroTecnico({ selectedRole }) {
         </div>
         <div style={{ color: T.textDim, fontSize: ".78rem", fontStyle: "italic" }}>
           {verificacionResumen.pendientesMakeReal + verificacionResumen.bloqueadosExterno} de {verificacionResumen.total} escenarios requieren abrir Make real para poder verificarse — no se ha tocado Make para preparar este panel.
+        </div>
+      </Panel>
+
+      {/* A3. INTEGRACIÓN APP ↔ MAKE 50/50 — PASO 07A (2026-07-19), auditoría de código, solo lectura */}
+      <Panel eyebrow="A3" title="Integración App ↔ Make 50/50">
+        <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
+          Eje distinto de "Verificación 50/50" (arriba): esto no dice si un escenario se verificó contra Make, dice si el <strong style={{ color: T.text }}>código</strong> de la app/Worker
+          realmente lo dispara. Solo <strong style={{ color: T.text }}>{integracionResumen.integradoAppYWorker}/{integracionResumen.total}</strong> tienen esa doble confirmación (app + Worker/API). Panel de solo
+          lectura — no ejecuta ningún escenario, no llama a Make ni a Airtable.
+        </p>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.A}>{INTEGRATION_LABEL.A}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.integradoAppYWorker}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.B}>{INTEGRATION_LABEL.B}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.integradoAppSinWorker}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.C}>{INTEGRATION_LABEL.C}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.soloCentroTecnico}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.D}>{INTEGRATION_LABEL.D}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.autonomoMake}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.E}>{INTEGRATION_LABEL.E}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.sinIntegracion}</strong>
+          </div>
+        </div>
+        <div style={{ color: T.textDim, fontSize: ".78rem", fontStyle: "italic" }}>
+          {integracionResumen.sinIntegracion} escenarios sin ningún trigger de app detectado (ver docs/paso-07a-integracion-make-app/make-50-app-integration-summary.md) — no se marcan como funcionales por estar "confirmados" en el panel de arriba: son ejes independientes.
         </div>
       </Panel>
 
