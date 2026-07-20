@@ -53,7 +53,11 @@ body.cp04-module-screen-active .cp04-card::before {
   opacity: 0.08 !important;
 }
 
-body.cp04-module-screen-active .cp04-card [style*="background"] {
+/* PASO 07L (2026-07-19): excluido `button` de este selector — mismo
+   motivo que en cp04-legibility-polish.css: capturaba botones de acción
+   con fondo sólido intencional (p. ej. "Solicitar baja de jugador"),
+   dejando el texto casi invisible sobre un fondo oscuro forzado. */
+body.cp04-module-screen-active .cp04-card [style*="background"]:not(button) {
   background:
     linear-gradient(
       135deg,

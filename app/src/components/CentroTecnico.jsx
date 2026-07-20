@@ -5,13 +5,23 @@ import {
   MAKE_INVENTORY_META,
   MAKE_SCENARIO_CATEGORIES,
 } from "../data/makeInventory.js";
-import { cp04NormalizeRole } from "../utils/rbac.js";
+import { MAKE_APP_INTEGRATION_MAP } from "../data/makeAppIntegrationMap.js";
+import {
+  MAKE_ARCHITECTURE_MATRIX,
+  MAKE_ARCH_ESTADOS,
+  MAKE_ARCH_AREAS,
+  computeArchitectureResumen,
+  filterArchitectureMatrix,
+} from "../data/makeArchitectureMatrix.js";
+import { cp04NormalizeRole, CP04_ROLES } from "../utils/rbac.js";
 import { authFetch, getAccessToken } from "../auth/authService.js";
 import { resolveMakeInventorySource, createSingleFlightGuard, describeLiveIssue } from "../utils/makeLiveClient.js";
 import {
   enrichSnapshotScenario,
   enrichLiveScenario,
   computeTotales,
+  computeVerificacionResumen,
+  computeIntegracionResumen,
   filterScenarios,
   sortScenarios,
   formatMetric,
@@ -47,6 +57,63 @@ export const CP04_MAKE_LIVE_TIMEOUT_MS = 8000;
 // confirmados). Ver worker-reservas/support/makeLiveInventory.js.
 const HEALTH_LABEL = { OK: "OK", ATENCION: "Atención", CRITICO: "Crítico", SIN_DATOS: "Sin datos" };
 const HEALTH_COLOR = { OK: T.accent, ATENCION: T.warning, CRITICO: T.danger, SIN_DATOS: T.textDim };
+
+// PASO 01 Make 50/50 (2026-07-17): etiquetas de la clasificación de
+// verificación (ver src/data/makeInventory.js::MAKE_VERIFICATION_STATES).
+// Es una auditoría manual, no una lectura en vivo de Make.
+const VERIFICATION_LABEL = {
+  confirmado: "Confirmado",
+  inferido: "Inferido — revisar",
+  listo_sin_bloqueo: "Listo, sin probar",
+  bloqueado_externo: "Bloqueado (externo)",
+  pendiente_make_real: "Pendiente en Make",
+};
+const VERIFICATION_COLOR = {
+  confirmado: T.accent,
+  inferido: T.textDim,
+  listo_sin_bloqueo: T.primary,
+  bloqueado_externo: T.warning,
+  pendiente_make_real: T.warning,
+};
+
+// PASO 07A (2026-07-19): eje de integración de código, no de auditoría Make.
+const INTEGRATION_LABEL = {
+  A: "Integrado app + Worker/API",
+  B: "Integrado app, sin Worker confirmado",
+  C: "Solo Centro Técnico / documentación",
+  D: "Autónomo Make (sin disparador de app)",
+  E: "Sin integración visible",
+};
+const INTEGRATION_COLOR = {
+  A: T.accent,
+  B: T.primary,
+  C: T.textDim,
+  D: T.textDim,
+  E: T.warning,
+};
+
+// PASO 08E (2026-07-20): eje de arquitectura App ↔ Make orientado a
+// producto/operación — independiente de VERIFICATION_LABEL (auditoría Make)
+// e INTEGRATION_LABEL (integración de código). Ver src/data/makeArchitectureMatrix.js.
+const ARCH_ESTADO_LABEL = {
+  [MAKE_ARCH_ESTADOS.OPERATIONAL]: "Operativo (E2E validado)",
+  [MAKE_ARCH_ESTADOS.PREPARED]: "Preparado (falta activar)",
+  [MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]: "Bloqueado externamente",
+  [MAKE_ARCH_ESTADOS.PLANNED]: "Planificado (sin interfaz)",
+};
+const ARCH_ESTADO_COLOR = {
+  [MAKE_ARCH_ESTADOS.OPERATIONAL]: T.accent,
+  [MAKE_ARCH_ESTADOS.PREPARED]: T.primary,
+  [MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]: T.warning,
+  [MAKE_ARCH_ESTADOS.PLANNED]: T.textDim,
+};
+
+const ARCH_FILTERS_ESTADO = [
+  { id: "todos", label: "Todos los estados" },
+  ...Object.values(MAKE_ARCH_ESTADOS).map((e) => ({ id: e, label: ARCH_ESTADO_LABEL[e] })),
+];
+const ARCH_FILTERS_AREA = [{ id: "todas", label: "Todas las áreas" }, ...MAKE_ARCH_AREAS.map((a) => ({ id: a, label: a }))];
+const ARCH_FILTERS_ROL = [{ id: "todos", label: "Todos los roles" }, ...CP04_ROLES.map((r) => ({ id: r, label: r }))];
 
 const CATEGORY_LABEL = {
   [MAKE_SCENARIO_CATEGORIES.APP_TRIGGERED]: "Disparado por la app",
@@ -95,6 +162,85 @@ function Badge({ children, color }) {
     >
       {children}
     </span>
+  );
+}
+
+// PASO 08F (2026-07-20): mismo mensaje honesto ya establecido en App.jsx
+// (CP04_PREPARADO_MSG) — duplicado localmente a propósito para no tocar
+// App.jsx (ya validado) ni acoplar este componente a su módulo, que no
+// exporta esa constante.
+const CP04_ARCH_PREPARADO_MSG = "Acción preparada. Pendiente de conexión real cuando Make/Airtable esté disponible.";
+
+// PASO 08F (2026-07-20): simulador local de contrato para los flujos que solo
+// viven en Centro de Automatizaciones (los 10 que pasaron de "planned" a
+// "prepared" en este bloque). Nunca llama a fetch/authFetch ni a ningún
+// servicio externo — toda validación y "resultado" es puramente local. Se
+// desmonta/remonta por flujo vía `key` para que el formulario no arrastre
+// estado de un flujo al seleccionar otro.
+function FormularioLocalFlujo({ flujo }) {
+  const [valor, setValor] = useState("");
+  const [error, setError] = useState("");
+  const [resultado, setResultado] = useState(null);
+
+  const handleProbar = () => {
+    const limpio = valor.trim();
+    if (limpio.length < 3) {
+      setError("Introduce al menos 3 caracteres para simular los datos de entrada del contrato.");
+      setResultado(null);
+      return;
+    }
+    setError("");
+    setResultado({ entradaSimulada: limpio });
+  };
+
+  return (
+    <div style={{ marginTop: 16, padding: 16, borderRadius: 14, border: `1px dashed ${T.primary}66`, background: "rgba(255,255,255,.02)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+        <Badge color={T.primary}>🔒 Modo seguro</Badge>
+        <span style={{ color: T.textDim, fontSize: ".78rem" }}>
+          Simulación local — no se realiza ninguna llamada real a Make, Airtable ni ningún otro servicio externo.
+        </span>
+      </div>
+      <label htmlFor={`arch-form-${flujo.id}`} style={{ display: "block", color: T.textDim, fontSize: ".8rem", marginBottom: 6 }}>
+        Datos de entrada simulados (contrato: {flujo.datosEntrada})
+      </label>
+      <textarea
+        id={`arch-form-${flujo.id}`}
+        aria-label={`Datos de entrada simulados para ${flujo.nombre}`}
+        value={valor}
+        onChange={(e) => {
+          setValor(e.target.value);
+          setResultado(null);
+        }}
+        rows={2}
+        style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text, fontFamily: T.fontBody, resize: "vertical" }}
+      />
+      {error && (
+        <div role="alert" style={{ color: T.danger, fontSize: ".78rem", marginTop: 6 }}>
+          {error}
+        </div>
+      )}
+      <div style={{ marginTop: 10 }}>
+        <button
+          type="button"
+          onClick={handleProbar}
+          style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${T.primary}66`, background: `${T.primary}18`, color: T.primary, fontWeight: 800, fontSize: ".8rem", cursor: "pointer" }}
+        >
+          Probar localmente (sin conexión real)
+        </button>
+      </div>
+      {resultado && (
+        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(182,255,0,.06)", border: `1px solid ${T.accent}44` }}>
+          <div style={{ color: T.text, fontSize: ".85rem", marginBottom: 6 }}>
+            <strong>Entrada simulada:</strong> {resultado.entradaSimulada}
+          </div>
+          <div style={{ color: T.textDim, fontSize: ".85rem", marginBottom: 6 }}>
+            <strong>Resultado esperado (simulado, no ejecutado):</strong> {flujo.resultadoEsperado}
+          </div>
+          <div style={{ color: T.warning, fontWeight: 700, fontSize: ".85rem" }}>{CP04_ARCH_PREPARADO_MSG}</div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -153,6 +299,13 @@ export default function CentroTecnico({ selectedRole }) {
   const [busqueda, setBusqueda] = useState("");
   const [orden, setOrden] = useState("errores");
   const [seleccionado, setSeleccionado] = useState(null);
+
+  // PASO 08E (2026-07-20): filtros del panel A4 (Centro de Automatizaciones),
+  // independientes de los filtros del panel B de arriba.
+  const [archArea, setArchArea] = useState("todas");
+  const [archEstado, setArchEstado] = useState("todos");
+  const [archRol, setArchRol] = useState("todos");
+  const [archSeleccionado, setArchSeleccionado] = useState(null);
 
   // Estado del refresco en vivo. La decisión de qué fuente mostrar (EN VIVO
   // / SNAPSHOT / NO DISPONIBLE) vive en resolveMakeInventorySource (pura,
@@ -216,6 +369,32 @@ export default function CentroTecnico({ selectedRole }) {
   }, [safeRole]);
 
   const snapshotScenarios = useMemo(() => MAKE_INVENTORY.map(enrichSnapshotScenario), []);
+
+  // PASO 01 Make 50/50: la clasificación de verificación es una auditoría
+  // manual sobre los 50 escenarios conocidos (ver makeInventory.js), no una
+  // métrica operativa — se calcula siempre sobre el snapshot local, sin
+  // importar si el panel de arriba está mostrando datos EN VIVO o SNAPSHOT
+  // para ejecuciones/errores. Un fetch en vivo no cambia esta clasificación.
+  const verificacionResumen = useMemo(() => computeVerificacionResumen(snapshotScenarios), [snapshotScenarios]);
+
+  // PASO 07A (2026-07-19): eje independiente de verificacionResumen — no
+  // depende del snapshot en vivo/local de arriba (ver
+  // src/data/makeAppIntegrationMap.js). Solo lectura, no ejecuta nada.
+  const integracionResumen = useMemo(() => computeIntegracionResumen(MAKE_APP_INTEGRATION_MAP), []);
+
+  // PASO 08E (2026-07-20): resumen de arquitectura App ↔ Make, siempre
+  // derivado de MAKE_ARCHITECTURE_MATRIX — nunca escrito a mano. Solo
+  // lectura local, no ejecuta ningún escenario ni llama a Make/Airtable.
+  const arquitecturaResumen = useMemo(() => computeArchitectureResumen(MAKE_ARCHITECTURE_MATRIX), []);
+  const arquitecturaFiltrada = useMemo(
+    () =>
+      filterArchitectureMatrix(MAKE_ARCHITECTURE_MATRIX, {
+        area: archArea === "todas" ? undefined : archArea,
+        estado: archEstado === "todos" ? undefined : archEstado,
+        rol: archRol === "todos" ? undefined : archRol,
+      }),
+    [archArea, archEstado, archRol]
+  );
 
   const liveScenariosEnriched = useMemo(() => {
     if (!Array.isArray(liveScenarios)) return null;
@@ -383,6 +562,177 @@ export default function CentroTecnico({ selectedRole }) {
         </div>
       </Panel>
 
+      {/* A2. VERIFICACIÓN 50/50 — PASO 01 (2026-07-17), auditoría manual, no Make en vivo */}
+      <Panel eyebrow="A2" title="Verificación 50/50 (auditoría manual)">
+        <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
+          Clasificación de auditoría manual del {new Date("2026-07-17").toLocaleDateString("es-ES")}, no una conexión en vivo a Make: nadie ha
+          ejecutado estos 50 escenarios hoy para "confirmarlos". Solo <strong style={{ color: T.text }}>{verificacionResumen.verificados}/{verificacionResumen.total}</strong> están
+          confirmados; el resto sigue pendiente de verificación real en Make.
+        </p>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.confirmado}>{VERIFICATION_LABEL.confirmado}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.verificados}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.listo_sin_bloqueo}>{VERIFICATION_LABEL.listo_sin_bloqueo}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.listosSinBloqueo}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.bloqueado_externo}>{VERIFICATION_LABEL.bloqueado_externo}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.bloqueadosExterno}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.pendiente_make_real}>{VERIFICATION_LABEL.pendiente_make_real}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.pendientesMakeReal}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={VERIFICATION_COLOR.inferido}>{VERIFICATION_LABEL.inferido}</Badge>
+            <strong style={{ color: T.text }}>{verificacionResumen.inferidos}</strong>
+          </div>
+        </div>
+        <div style={{ color: T.textDim, fontSize: ".78rem", fontStyle: "italic" }}>
+          {verificacionResumen.pendientesMakeReal + verificacionResumen.bloqueadosExterno} de {verificacionResumen.total} escenarios requieren abrir Make real para poder verificarse — no se ha tocado Make para preparar este panel.
+        </div>
+      </Panel>
+
+      {/* A3. INTEGRACIÓN APP ↔ MAKE 50/50 — PASO 07A (2026-07-19), auditoría de código, solo lectura */}
+      <Panel eyebrow="A3" title="Integración App ↔ Make 50/50">
+        <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
+          Eje distinto de "Verificación 50/50" (arriba): esto no dice si un escenario se verificó contra Make, dice si el <strong style={{ color: T.text }}>código</strong> de la app/Worker
+          realmente lo dispara. Solo <strong style={{ color: T.text }}>{integracionResumen.integradoAppYWorker}/{integracionResumen.total}</strong> tienen esa doble confirmación (app + Worker/API). Panel de solo
+          lectura — no ejecuta ningún escenario, no llama a Make ni a Airtable.
+        </p>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.A}>{INTEGRATION_LABEL.A}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.integradoAppYWorker}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.B}>{INTEGRATION_LABEL.B}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.integradoAppSinWorker}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.C}>{INTEGRATION_LABEL.C}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.soloCentroTecnico}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.D}>{INTEGRATION_LABEL.D}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.autonomoMake}</strong>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge color={INTEGRATION_COLOR.E}>{INTEGRATION_LABEL.E}</Badge>
+            <strong style={{ color: T.text }}>{integracionResumen.sinIntegracion}</strong>
+          </div>
+        </div>
+        <div style={{ color: T.textDim, fontSize: ".78rem", fontStyle: "italic" }}>
+          {integracionResumen.sinIntegracion} escenarios sin ningún trigger de app detectado (ver docs/paso-07a-integracion-make-app/make-50-app-integration-summary.md) — no se marcan como funcionales por estar "confirmados" en el panel de arriba: son ejes independientes.
+        </div>
+      </Panel>
+
+      {/* A4. CENTRO DE AUTOMATIZACIONES — ARQUITECTURA APP ↔ MAKE 50/50 — PASO 08E (2026-07-20) */}
+      <Panel eyebrow="A4" title="Centro de automatizaciones · Arquitectura App ↔ Make 50/50">
+        <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
+          Tercer eje, distinto de "Verificación 50/50" (A2) e "Integración App ↔ Make" (A3): representa qué puede ver y
+          hacer <strong style={{ color: T.text }}>hoy</strong> un usuario real de la app sobre cada uno de los 50 flujos objetivo, y qué falta para
+          activarlo de verdad. "Representado en la app" no equivale a "operativo E2E" —{" "}
+          <strong style={{ color: T.text }}>solo {arquitecturaResumen.probadosE2E}/{arquitecturaResumen.total}</strong> están validados de extremo a extremo con
+          evidencia objetiva. Panel de solo lectura: ningún botón de esta sección llama a Make, Airtable ni ningún
+          servicio externo.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 18 }}>
+          <KpiCard label="Total flujos objetivo" value={arquitecturaResumen.total} />
+          <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.OPERATIONAL]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.OPERATIONAL]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.OPERATIONAL]} />
+          <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.PREPARED]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.PREPARED]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.PREPARED]} />
+          <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} />
+          <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.PLANNED]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.PLANNED]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.PLANNED]} />
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+          <select aria-label="Filtrar por área" value={archArea} onChange={(e) => setArchArea(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+            {ARCH_FILTERS_AREA.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+          <select aria-label="Filtrar por estado" value={archEstado} onChange={(e) => setArchEstado(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+            {ARCH_FILTERS_ESTADO.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+          <select aria-label="Filtrar por rol autorizado" value={archRol} onChange={(e) => setArchRol(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+            {ARCH_FILTERS_ROL.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+          <span style={{ color: T.textDim, fontSize: ".8rem", alignSelf: "center" }}>{arquitecturaFiltrada.length} de {arquitecturaResumen.total} flujos</span>
+        </div>
+
+        <div style={{ overflowX: "auto" }}>
+          <div style={{ display: "grid", gap: 6, minWidth: 640 }}>
+            {arquitecturaFiltrada.map((f) => (
+              <div
+                key={f.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={archSeleccionado === f.id}
+                aria-label={`${f.nombre} · ${f.area} · ${ARCH_ESTADO_LABEL[f.estado]}`}
+                onClick={() => setArchSeleccionado(archSeleccionado === f.id ? null : f.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setArchSeleccionado(archSeleccionado === f.id ? null : f.id);
+                  }
+                }}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto auto",
+                  gap: 12,
+                  alignItems: "center",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: `1px solid ${archSeleccionado === f.id ? T.accent : T.line}`,
+                  background: archSeleccionado === f.id ? "rgba(182,255,0,.06)" : "rgba(255,255,255,.02)",
+                  cursor: "pointer",
+                }}
+              >
+                <span style={{ color: T.text, fontWeight: 700 }}>{f.nombre}</span>
+                <Badge color={T.primary}>{f.area}</Badge>
+                <Badge color={ARCH_ESTADO_COLOR[f.estado]}>{ARCH_ESTADO_LABEL[f.estado]}</Badge>
+              </div>
+            ))}
+            {arquitecturaFiltrada.length === 0 && <div style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>Sin resultados para este filtro.</div>}
+          </div>
+        </div>
+
+        {archSeleccionado && (() => {
+          const f = MAKE_ARCHITECTURE_MATRIX.find((x) => x.id === archSeleccionado);
+          if (!f) return null;
+          return (
+            <div style={{ marginTop: 16, padding: 18, borderRadius: 16, border: `1px solid ${T.accent}55`, background: "rgba(182,255,0,.04)" }}>
+              <h4 style={{ margin: "0 0 4px", fontFamily: T.fontDisplay }}>{f.nombre}</h4>
+              <p style={{ margin: "0 0 12px", color: T.textDim, fontSize: ".85rem" }}>{f.descripcion}</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, fontSize: ".85rem" }}>
+                <div><span style={{ color: T.textDim }}>Área funcional:</span> {f.area}</div>
+                <div><span style={{ color: T.textDim }}>Estado:</span> {ARCH_ESTADO_LABEL[f.estado]}</div>
+                <div><span style={{ color: T.textDim }}>Roles autorizados:</span> {f.rolesAutorizados.join(", ")}</div>
+                <div><span style={{ color: T.textDim }}>Módulo:</span> {f.modulo}</div>
+                <div><span style={{ color: T.textDim }}>Ruta:</span> {f.ruta}</div>
+                <div><span style={{ color: T.textDim }}>Dependencias externas:</span> {f.dependenciasExternas}</div>
+                <div><span style={{ color: T.textDim }}>¿Requiere webhook?:</span> {f.requiereWebhook ? "Sí" : "No"}</div>
+                <div><span style={{ color: T.textDim }}>¿Interfaz completa?:</span> {f.tieneInterfazCompleta ? "Sí" : "No"}</div>
+                <div><span style={{ color: T.textDim }}>¿Contrato preparado?:</span> {f.tieneContratoPreparado ? "Sí" : "No"}</div>
+                <div><span style={{ color: T.textDim }}>¿Probado E2E?:</span> {f.probadoE2E ? "Sí" : "No"}</div>
+              </div>
+              <div style={{ marginTop: 12, display: "grid", gap: 8, fontSize: ".85rem" }}>
+                <div><span style={{ color: T.textDim }}>Acción iniciadora:</span> {f.accionIniciadora}</div>
+                <div><span style={{ color: T.textDim }}>Datos de entrada esperados:</span> {f.datosEntrada}</div>
+                <div><span style={{ color: T.textDim }}>Resultado esperado:</span> {f.resultadoEsperado}</div>
+                <div><span style={{ color: T.textDim }}>Última validación conocida:</span> {f.ultimaValidacionConocida}</div>
+              </div>
+              <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.04)", color: T.textDim, fontSize: ".85rem", lineHeight: 1.5 }}>
+                ➡️ Siguiente acción necesaria: {f.siguienteAccionNecesaria}
+              </div>
+              {/* PASO 08F: representación visual mínima para los flujos que solo viven en Centro de Automatizaciones */}
+              {f.modulo === "Centro de automatizaciones" && <FormularioLocalFlujo key={f.id} flujo={f} />}
+            </div>
+          );
+        })()}
+      </Panel>
+
       {/* C. SALUD DE AUTOMATIZACIONES */}
       <Panel eyebrow="C" title="Salud de automatizaciones">
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
@@ -543,6 +893,9 @@ export default function CentroTecnico({ selectedRole }) {
                 <div><span style={{ color: T.textDim }}>Última modificación:</span> {s.ultimaModificacion ? new Date(s.ultimaModificacion).toLocaleString("es-ES") : "No disponible"}</div>
                 <div><span style={{ color: T.textDim }}>Dependencia principal:</span> {s.dependenciaPrincipal}</div>
                 <div><span style={{ color: T.textDim }}>Fuente del dato:</span> {s.fuenteDeVerdadDato}</div>
+                {s.estadoVerificacion && (
+                  <div><span style={{ color: T.textDim }}>Verificación (auditoría 2026-07-17):</span> {VERIFICATION_LABEL[s.estadoVerificacion] || s.estadoVerificacion}</div>
+                )}
               </div>
               {s.nota && (
                 <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.04)", color: T.textDim, fontSize: ".85rem", lineHeight: 1.5 }}>
@@ -583,7 +936,10 @@ export default function CentroTecnico({ selectedRole }) {
           <li><strong style={{ color: T.text }}>Recordatorio 2h Antes:</strong> los errores actuales son <code>RateLimitError 429</code> de Airtable — dependencia externa, no un bug del escenario.</li>
           <li><strong style={{ color: T.text }}>Backup Plantilla Drive:</strong> inactivo. No reactivar sin necesidad confirmada.</li>
           <li><strong style={{ color: T.text }}>Alerta Crítica Fallos Make / Mapa de Flujos:</strong> confirmado que cada nombre corresponde a un único escenario real en Make — no hay duplicados ejecutándose en paralelo.</li>
-          <li><strong style={{ color: T.text }}>Recuperación de contraseña:</strong> Supabase Auth es la única fuente de verdad. El escenario Make "Email Recuperación de Contraseña SaaS" no debe conectarse como segundo sistema de recuperación.</li>
+          <li><strong style={{ color: T.text }}>Alerta Crítica Fallos Make (Paso 02, 2026-07-17):</strong> reconciliado por lectura directa en Make — no está roto, está pausado a la espera de rotar una credencial de acceso.</li>
+          <li><strong style={{ color: T.text }}>Recuperación de contraseña:</strong> Supabase Auth es la única fuente de verdad. El escenario Make "Email Recuperación de Contraseña SaaS" no debe conectarse como segundo sistema de recuperación — sigue activo en Make con un disparador real asignado (0 ejecuciones hasta hoy); requiere una decisión humana para desactivarlo o aceptar el riesgo formalmente.</li>
+          <li><strong style={{ color: T.text }}>Chatbot Web Reservas (Paso 02, 2026-07-17):</strong> sigue activo en Make pese a estar clasificado como no seguro (decide reservas sin determinismo vía IA); sin disparador en vivo asignado hoy, pero pendiente de una decisión de producto para desactivarlo formalmente.</li>
+          <li><strong style={{ color: T.text }}>Cierre Temporal de Pistas (Paso 02, 2026-07-17):</strong> confirmado operativo en Make (ejecuciones reales sin errores) — la documentación previa que lo daba como bloqueado por WhatsApp estaba desactualizada.</li>
         </ul>
       </Panel>
     </section>

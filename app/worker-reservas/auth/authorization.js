@@ -221,6 +221,7 @@ export async function requireAuth(request, env, options = {}) {
     return denyResponse(result.reason);
   }
 
+  // eslint-disable-next-line no-unused-vars -- se destructuran para excluirlas de ...auth
   const { authenticated, reason, ...auth } = result;
   return { ok: true, auth };
 }

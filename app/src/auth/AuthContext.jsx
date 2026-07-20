@@ -12,7 +12,7 @@
 // este contexto es solo la representación de UI de esa sesión, tal y como
 // exige el principio "el rol del frontend es solo representación de UI".
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import * as authService from "./authService.js";
 
 const AuthContext = createContext(null);
@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(initial.role);
   const [accessToken, setAccessToken] = useState(() => authService.getAccessToken());
   const [loading, setLoading] = useState(true);
-  const authMode = useRef(authService.getAuthMode()).current;
+  const [authMode] = useState(() => authService.getAuthMode());
 
   const applyResult = useCallback((result) => {
     setUser(result?.user ?? null);

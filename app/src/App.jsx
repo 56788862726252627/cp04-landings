@@ -38,17 +38,16 @@ const GALLERY_REAL_IMAGE_STYLES = `
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
-import { LazyClubGallery } from "./components/lazy/lazyGallery.js";
 import { LazyCP04GuidedTutorial } from "./components/lazy/lazyGuidedTutorial.js";
 import { useAuth } from "./auth/AuthContext.jsx";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 import { authFetch } from "./auth/authService.js";
 import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
+import { cp04BuildReservationError, cp04ReservationErrorMessage } from "./utils/reservationErrors.js";
 import {
   CP04_ROLE_PERMISSIONS,
   CP04_PROTECTED_SECTIONS,
   cp04NormalizeRole,
-  cp04IsProtectedSection,
   cp04CanAccessSection,
   cp04GetSafeStartSection,
 } from "./utils/rbac.js";
@@ -123,18 +122,6 @@ const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18
 const BOOKING_DURATIONS = [60, 90, 120];
 const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
 const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
-
-const BOOKINGS = [
-  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
-  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
-  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
-];
-
-const RANKING = [
-  { pos: 1, name: "Jugador demo 1", elo: 3.85, cat: "Demo", wins: 12, losses: 3 },
-  { pos: 2, name: "Jugador demo 2", elo: 3.72, cat: "Demo", wins: 10, losses: 4 },
-  { pos: 3, name: "Jugador demo 3", elo: 3.61, cat: "Demo", wins: 9, losses: 5 },
-];
 
 const RANKING_PRO = [
   { pos: 1, pareja: "García / Martínez", p1: "Carlos García", p2: "Pedro Martínez", pts: 1250, pj: 24, v: 19, d: 5, racha: 5, nivel: "Avanzado", cat: "Masculino", mov: 0, temporada: "2026" },
@@ -321,17 +308,6 @@ function isSundayISO(value) {
 
 function isPastDateISO(value) {
   return Boolean(value) && value < todayISO();
-}
-
-function minutesFromTime(value) {
-  const match = /^(\d{2}):(\d{2})$/.exec(String(value || ""));
-  if (!match) return Number.NaN;
-  return Number(match[1]) * 60 + Number(match[2]);
-}
-
-function madridCurrentMinutes() {
-  const { hour, minute } = madridDateParts();
-  return Number(hour) * 60 + Number(minute);
 }
 
 // "Ahora" de Madrid, representado como un Date UTC cuyos campos coinciden
@@ -528,7 +504,7 @@ async function sendBooking(payload) {
   });
 
   const data = await readSafeResponse(res);
-  if (!res.ok || data?.ok === false) throw new Error("booking_request_failed");
+  if (!res.ok || data?.ok === false) throw cp04BuildReservationError(data, "booking_request_failed");
   return data;
 }
 
@@ -536,13 +512,17 @@ function Card({ children, style = {} }) {
   return <div className="cp04-card" style={style}>{children}</div>;
 }
 
-function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {} }) {
+// PASO 07M (2026-07-19): `className` opcional, mezclada con la ya
+// existente "cp04-btn" — por defecto (sin pasar className) el
+// comportamiento es idéntico al de antes de este paso, para no afectar a
+// ningún llamador existente.
+function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {}, className = "" }) {
   const map = {
     primary: { background: `linear-gradient(135deg, ${T.accent}, ${T.accent2})`, color: "#06100a", border: "none", boxShadow: "0 16px 36px rgba(182,255,0,.18)" },
     secondary: { background: "rgba(255,255,255,.055)", color: T.text, border: `1px solid ${T.line}` },
     danger: { background: "rgba(255,94,58,.12)", color: T.danger, border: "1px solid rgba(255,94,58,.30)" },
   };
-  return <button className="cp04-btn" type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 15, fontFamily: T.fontDisplay, fontWeight: 900, letterSpacing: "-.01em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }}>{children}</button>;
+  return <button className={`cp04-btn${className ? ` ${className}` : ""}`} type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 15, fontFamily: T.fontDisplay, fontWeight: 900, letterSpacing: "-.01em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }}>{children}</button>;
 }
 
 
@@ -855,14 +835,6 @@ function SectionTitle({ eyebrow, title, desc }) {
   return <div style={{ marginBottom: 30 }}>{eyebrow && <div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".76rem", textTransform: "uppercase", marginBottom: 10 }}>{eyebrow}</div>}<h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(2rem,4vw,3.1rem)", lineHeight: .96, margin: 0, letterSpacing: "-.055em" }}>{title}</h2>{desc && <p style={{ color: T.textDim, lineHeight: 1.75, maxWidth: 760, marginTop: 14, fontSize: "1.02rem" }}>{desc}</p>}</div>;
 }
 
-function Badge({ status }) {
-  const lang = useLang();
-  const tx = key => t(key, lang);
-  const map = { confirmed: [tx("badge.confirmed"), T.accent], pending: [tx("badge.pending"), T.warning], completed: [tx("badge.completed"), T.textDim] };
-  const [label, color] = map[status] || map.pending;
-  return <span className="cp04-badge" style={{ color, background: "rgba(255,255,255,.07)", border: `1px solid ${color}44`, borderRadius: 999, padding: "7px 11px", fontSize: ".74rem", fontWeight: 900 }}>{label}</span>;
-}
-
 function FieldError({ children }) {
   if (!children) return null;
   return <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 6 }}>{children}</div>;
@@ -1006,15 +978,6 @@ function MetricCard({ label, value, sub, trend, color, icon }) {
   );
 }
 
-function ChartTooltip({ x, y, children, visible }) {
-  if (!visible) return null;
-  return (
-    <div style={{ position:"absolute", left:x, top:y, transform:"translate(-50%,-100%)", pointerEvents:"none", zIndex:100, background:"rgba(7,11,20,.95)", border:"1px solid rgba(182,255,0,.35)", borderRadius:10, padding:"7px 11px", whiteSpace:"nowrap", boxShadow:"0 8px 24px rgba(0,0,0,.5)" }}>
-      {children}
-    </div>
-  );
-}
-
 function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
   const col = color || T.accent;
   const [tip, setTip] = useState(null);
@@ -1096,19 +1059,19 @@ function DonutChart({ segments, size = 120, label }) {
   const [tip, setTip] = useState(null);
   if (!segments || !segments.length) return null;
   const total = segments.reduce((s, x) => s + x.v, 0) || 1;
-  let angle = -90;
   const r = 40, cx = 60, cy = 60, stroke = 14;
-  const arcs = segments.map(seg => {
+  const arcs = segments.reduce((acc, seg) => {
     const pct = seg.v / total;
-    const a1 = (angle * Math.PI) / 180;
-    const a2 = ((angle + pct * 360) * Math.PI) / 180;
+    const a1 = (acc.angle * Math.PI) / 180;
+    const a2 = ((acc.angle + pct * 360) * Math.PI) / 180;
     const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
     const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
     const la = pct > 0.5 ? 1 : 0;
     const d = `M ${x1} ${y1} A ${r} ${r} 0 ${la} 1 ${x2} ${y2}`;
-    angle += pct * 360;
-    return { ...seg, d, pct };
-  });
+    acc.list.push({ ...seg, d, pct });
+    acc.angle += pct * 360;
+    return acc;
+  }, { angle: -90, list: [] }).list;
   return (
     <div style={{ display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
       <div style={{ position:"relative", flexShrink:0 }}>
@@ -1188,7 +1151,7 @@ function FlowStatusBadge({ status }) {
   );
 }
 
-function ChartCard({ title, sub, children, action, demo = false, style: cs = {} }) {
+function ChartCard({ title, sub, children, action, style: cs = {} }) {
   const cleanSub = sub ? sub.replace(/ ?·? ?demo/gi, "").replace(/Make/gi, "Procesos").trim() : sub;
   return (
     <div style={{ borderRadius:20, border:`1px solid rgba(255,255,255,.09)`, background:"rgba(11,17,29,.82)", padding:"16px 18px", ...cs }}>
@@ -1210,13 +1173,6 @@ function ChartCard({ title, sub, children, action, demo = false, style: cs = {} 
 // TODO producción: alimentar este dashboard desde backend/proxy seguro.
 // Los datos de Make deben venir de un endpoint propio o webhook,
 // NUNCA de llamadas directas con clave privada desde el frontend.
-const dashboardDataSources = {
-  mode: "demo",
-  make: "demo/prepared",
-  airtable: "prepared",
-  stripe: "prepared",
-  localStorage: "active",
-};
 
 const DEMO_RESERVAS_HOY = [
   { l:"8h", v:1 },{ l:"9h", v:3 },{ l:"10h", v:5 },{ l:"11h", v:4 },
@@ -1416,13 +1372,19 @@ let _globalLang = (() => {
     if (!raw) return _defaultLang;
     const parsed = JSON.parse(raw);
     if (parsed?.code && LANGUAGES_RAW.find(l => l.code === parsed.code)) return parsed;
-  } catch {}
+  } catch {
+    // localStorage puede lanzar en modo privado/Safari; usar el idioma por defecto.
+  }
   return _defaultLang;
 })();
 
 function setGlobalLang(lang) {
   _globalLang = lang || _defaultLang;
-  try { localStorage.setItem("cp04_language", JSON.stringify(_globalLang)); } catch {}
+  try {
+    localStorage.setItem("cp04_language", JSON.stringify(_globalLang));
+  } catch {
+    // localStorage puede lanzar en modo privado/Safari; el idioma sigue en memoria.
+  }
   window.dispatchEvent(new CustomEvent(LANG_CHANGE_EVENT, { detail: { lang: _globalLang } }));
 }
 
@@ -1451,10 +1413,6 @@ const CP04_AUTH_MODES = {
 // RBAC movido a src/utils/rbac.js (fuente única, testeada con node --test,
 // también consumida por Sidebar). Ver import al inicio del archivo.
 
-function cp04RequiresBackendAuth(section) {
-  return cp04IsProtectedSection(section);
-}
-
 function cp04GetStoredAuthMode() {
   try {
     return localStorage.getItem("cp04_auth_mode") || CP04_AUTH_MODES.DEMO;
@@ -1468,6 +1426,22 @@ const TRANSLATIONS = {
   "es-ES": {
     "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
     "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
+    // PASO 07G/07I/07N (2026-07-19/20): solo se añaden a es-ES
+    // deliberadamente — t() ya hace fallback a es-ES cuando un idioma no
+    // tiene la clave (ver función t() más abajo), así que el resto de
+    // idiomas mostrará este mismo texto en español hasta que se traduzca,
+    // en vez de la clave cruda o un string vacío.
+    "nav.cierre_pistas":"Cierre temporal",
+    "nav.baja_jugador":"Baja de jugador",
+    "nav.lista_espera":"Lista de espera",
+    "nav.control_qr":"Control QR / Accesos",
+    "nav.pistas_recordatorios":"Pistas libres y recordatorios",
+    "nav.dashboard_kpi":"Dashboard KPI y NPS",
+    "nav.backups_seguridad":"Backups y seguridad",
+    "nav.comunicaciones_socio":"Comunicaciones y ciclo de socio",
+    "nav.calendario_disponibilidad":"Calendario y disponibilidad",
+    "nav.facturacion_pagos":"Facturación y pagos",
+    "nav.automatizaciones_bots":"Automatizaciones y bots",
     "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
     "nav.comunidad":"Comunidad",
@@ -1666,7 +1640,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Zona reservada para diagnóstico cuando exista backend real.",
     "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
     "soporte.logs_errores":"Errores de integraciones","soporte.logs_alertas":"Alertas técnicas futuras",
-    "soporte.vars_h3":"Variables privadas",
+    "soporte.vars_h3":"Estado de seguridad: variables protegidas",
+    "soporte.vars_no_names":"Los nombres y valores internos no se muestran en la interfaz.",
+    "soporte.vars_validacion":"Validación disponible solo en documentación interna o consola segura.",
   },
   "en-GB": {
     "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
@@ -1869,7 +1845,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
     "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
     "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
-    "soporte.vars_h3":"Private variables",
+    "soporte.vars_h3":"Security status: protected variables",
+    "soporte.vars_no_names":"Internal names and values are not shown in the interface.",
+    "soporte.vars_validacion":"Validation available only in internal documentation or a secure console.",
   },
   "en-US": {
     "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
@@ -2072,7 +2050,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
     "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
     "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
-    "soporte.vars_h3":"Private variables",
+    "soporte.vars_h3":"Security status: protected variables",
+    "soporte.vars_no_names":"Internal names and values are not shown in the interface.",
+    "soporte.vars_validacion":"Validation available only in internal documentation or a secure console.",
   },
   "fr-FR": {
     "nav.inicio":"Accueil","nav.reservar":"Réserver","nav.alta_jugador":"Inscription joueur",
@@ -2271,7 +2251,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Zone réservée au diagnostic quand le backend réel sera disponible.",
     "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
     "soporte.logs_errores":"Erreurs d'intégrations","soporte.logs_alertas":"Alertes techniques futures",
-    "soporte.vars_h3":"Variables privées",
+    "soporte.vars_h3":"État de sécurité : variables protégées",
+    "soporte.vars_no_names":"Les noms et valeurs internes ne sont pas affichés dans l'interface.",
+    "soporte.vars_validacion":"Validation disponible uniquement dans la documentation interne ou une console sécurisée.",
   },
   "it-IT": {
     "nav.inicio":"Inizio","nav.reservar":"Prenota","nav.alta_jugador":"Iscrizione giocatore",
@@ -2470,7 +2452,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Area riservata alla diagnostica quando il backend reale sarà disponibile.",
     "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
     "soporte.logs_errores":"Errori di integrazioni","soporte.logs_alertas":"Avvisi tecnici futuri",
-    "soporte.vars_h3":"Variabili private",
+    "soporte.vars_h3":"Stato di sicurezza: variabili protette",
+    "soporte.vars_no_names":"I nomi e i valori interni non vengono mostrati nell'interfaccia.",
+    "soporte.vars_validacion":"Convalida disponibile solo nella documentazione interna o in una console sicura.",
   },
   "pt-PT": {
     "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Registo de jogador",
@@ -2669,7 +2653,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
     "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
     "soporte.logs_errores":"Erros de integrações","soporte.logs_alertas":"Alertas técnicos futuros",
-    "soporte.vars_h3":"Variáveis privadas",
+    "soporte.vars_h3":"Estado de segurança: variáveis protegidas",
+    "soporte.vars_no_names":"Os nomes e valores internos não são mostrados na interface.",
+    "soporte.vars_validacion":"Validação disponível apenas na documentação interna ou numa consola segura.",
   },
   "pt-BR": {
     "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Cadastro de jogador",
@@ -2868,7 +2854,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
     "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
     "soporte.logs_errores":"Erros de integrações","soporte.logs_alertas":"Alertas técnicos futuros",
-    "soporte.vars_h3":"Variáveis privadas",
+    "soporte.vars_h3":"Estado de segurança: variáveis protegidas",
+    "soporte.vars_no_names":"Os nomes e valores internos não são exibidos na interface.",
+    "soporte.vars_validacion":"Validação disponível apenas na documentação interna ou em um console seguro.",
   },
   "de-DE": {
     "nav.inicio":"Start","nav.reservar":"Buchen","nav.alta_jugador":"Spieler registrieren",
@@ -3067,7 +3055,9 @@ const TRANSLATIONS = {
     "soporte.obs_desc":"Bereich für Diagnose wenn echtes Backend verfügbar ist.",
     "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
     "soporte.logs_errores":"Integrationsfehler","soporte.logs_alertas":"Künftige technische Warnungen",
-    "soporte.vars_h3":"Private Variablen",
+    "soporte.vars_h3":"Sicherheitsstatus: geschützte Variablen",
+    "soporte.vars_no_names":"Interne Namen und Werte werden in der Oberfläche nicht angezeigt.",
+    "soporte.vars_validacion":"Validierung nur in der internen Dokumentation oder einer sicheren Konsole verfügbar.",
   },
 };
 
@@ -3230,8 +3220,43 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
   const tx = key => t(key, lang);
   const navKeys = [
     ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
+    // PASO 07I (2026-07-19): acceso directo a Baja de Jugador (Paso 07C),
+    // justo después de Alta de jugador — mismo componente AltaJugador(),
+    // solo cambia la pestaña inicial (ver modules.baja_jugador). Mismo gate
+    // de rol que "alta_jugador" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["baja_jugador","nav.baja_jugador","🧾"],
     ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
+    // PASO 07G (2026-07-19): acceso directo al módulo de Cierre Temporal de
+    // Pistas (Paso 07E), antes solo visible como card dentro de "gestion".
+    // Mismo gate de rol que "gestion" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["cierre_pistas","nav.cierre_pistas","🚧"],
+    // PASO 07N (2026-07-20): módulo visual preparado para Gestión Lista de
+    // Espera (Make ID 5791113, grupo E del mapa App↔Make hasta este paso).
+    // No llama a ningún endpoint real todavía — mismo gate de rol que
+    // "cierre_pistas" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["lista_espera","nav.lista_espera","📋"],
+    // PASO 07O (2026-07-20): consolidación de módulos de sidebar para 14
+    // escenarios más del inventario Make, agrupados en 4 módulos visuales
+    // (ver docs/paso-07o-sidebar-flujos-50/). "control_qr" y
+    // "pistas_recordatorios" son operación diaria, mismo gate que
+    // "cierre_pistas"/"lista_espera". "dashboard_kpi" y
+    // "backups_seguridad" están gateados como "admin" (ADMIN+SUPPORT, sin
+    // STAFF) — ver CP04_ROLE_PERMISSIONS en rbac.js.
+    ["control_qr","nav.control_qr","🔐"],
+    ["pistas_recordatorios","nav.pistas_recordatorios","🔔"],
+    // PASO 07P (2026-07-20): ampliación de sidebar para 20 escenarios más
+    // del inventario Make (ver docs/paso-07p-ampliacion-sidebar-31-flujos/).
+    // "comunicaciones_socio" y "calendario_disponibilidad" son operación
+    // diaria, mismo gate que "control_qr"/"pistas_recordatorios"
+    // (STAFF/ADMIN/SUPPORT). "facturacion_pagos" y "automatizaciones_bots"
+    // están gateados como "admin" (ADMIN+SUPPORT, sin STAFF).
+    ["comunicaciones_socio","nav.comunicaciones_socio","💌"],
+    ["calendario_disponibilidad","nav.calendario_disponibilidad","🗓️"],
     ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["comunidad","nav.comunidad","👥"],["admin","nav.admin","📊"],
+    ["dashboard_kpi","nav.dashboard_kpi","📈"],
+    ["backups_seguridad","nav.backups_seguridad","🗂️"],
+    ["facturacion_pagos","nav.facturacion_pagos","💳"],
+    ["automatizaciones_bots","nav.automatizaciones_bots","🤖"],
     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
   ];
   // Antes había un mapa de permisos propio y duplicado aquí (menuByRole),
@@ -3636,8 +3661,8 @@ function Reservas() {
       refreshDisponibilidadAfterChange(form.fecha);
       setStatus("success");
       setStep(3);
-    } catch {
-      setStatusMessage(tx("errors.reserva_error"));
+    } catch (err) {
+      setStatusMessage(cp04ReservationErrorMessage(err, tx("errors.reserva_error")));
       setStatus("error");
     } finally {
       sendingRef.current = false;
@@ -3668,6 +3693,14 @@ function Reservas() {
 function CancelarReserva({ setCurrent }) {
   const lang = useLang();
   const tx = key => t(key, lang);
+  const auth = useAuth();
+  // Cancelar es operación de STAFF/ADMIN/SUPPORT (RBAC). Con
+  // CP04_ENFORCE_ROLE_GATES activo en el Worker, solo una sesión backend
+  // real (auth.isAuthenticated, vía Supabase) puede llamar al endpoint
+  // protegido de verdad. El login demo por contraseña de rol no emite
+  // token verificable, así que aquí se simula localmente en vez de
+  // devolver siempre 401 MISSING_TOKEN.
+  const isDemoSession = !auth.isAuthenticated;
   const [clave, setClave] = useState("");
   const [confirmado, setConfirmado] = useState(false);
   const [status, setStatus] = useState("idle");
@@ -3678,7 +3711,13 @@ function CancelarReserva({ setCurrent }) {
   const statusMap = {
     idle: [tx("status.cancelar.idle"), tx("status.cancelar.idle_txt"), T.warning],
     sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt"), T.warning],
-    success: [tx("status.cancelar.exito"), tx("status.cancelar.exito_txt"), T.accent],
+    success: [
+      tx("status.cancelar.exito"),
+      isDemoSession
+        ? "Simulado en modo demo: no se ha cancelado ninguna reserva real."
+        : tx("status.cancelar.exito_txt"),
+      T.accent,
+    ],
     error: [tx("status.cancelar.error"), error || tx("status.cancelar.error_txt"), T.danger],
   };
   const [statusTitle, statusText, statusColor] = statusMap[status];
@@ -3716,10 +3755,19 @@ function CancelarReserva({ setCurrent }) {
     sendingRef.current = true;
 
     try {
-      // Cancelar es operación de STAFF/ADMIN/SUPPORT en la matriz RBAC:
-      // adjunta el token real si existe sesión (preparado para cuando se
-      // active CP04_ENFORCE_ROLE_GATES). En demo, sin token, se comporta
-      // igual que antes.
+      if (isDemoSession) {
+        // Modo demo: no se llama al Worker (siempre respondería 401 al no
+        // haber token real), no se toca ningún dato real. Solo feedback
+        // visual local, dejando claro que es una simulación.
+        await new Promise((resolve) => window.setTimeout(resolve, 600));
+        setClave("");
+        setConfirmado(false);
+        setStatus("success");
+        return;
+      }
+
+      // Adjunta el token real de la sesión backend (Supabase) verificada
+      // por el Worker (CP04_ENFORCE_ROLE_GATES).
       const res = await authFetch(CONFIG.bookingEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -3739,28 +3787,32 @@ function CancelarReserva({ setCurrent }) {
       const data = await readSafeResponse(res);
 
       if (!res.ok || data?.ok === false) {
-        throw new Error("cancel_request_failed");
+        throw cp04BuildReservationError(data, "cancel_request_failed");
       }
 
       setClave("");
       setConfirmado(false);
       setStatus("success");
       refreshDisponibilidadAfterChange();
-    } catch {
-      setError(tx("errors.cancelar_error"));
+    } catch (err) {
+      setError(cp04ReservationErrorMessage(err, tx("errors.cancelar_error")));
       setStatus("error");
     } finally {
       sendingRef.current = false;
     }
   }
 
-  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} /><Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{isDemoSession && <Card style={{ marginBottom:20, borderColor:`${T.warning}66`, color:T.warning, fontSize:".85rem" }}>Modo demo: esta acción se simula localmente, sin llamar al servidor ni afectar a ninguna reserva real.</Card>}<Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
 }
 
 
 function ReprogramarReserva({ setCurrent }) {
   const lang = useLang();
   const tx = key => t(key, lang);
+  const auth = useAuth();
+  // Ver nota equivalente en CancelarReserva: sin sesión backend real, se
+  // simula localmente en vez de llamar al Worker (que devolvería 401).
+  const isDemoSession = !auth.isAuthenticated;
   const [court, setCourt] = useState("Pista 1");
   const [form, setForm] = useState({
     clave_reserva: "",
@@ -3822,6 +3874,19 @@ function ReprogramarReserva({ setCurrent }) {
     setStatusMessage("");
 
     try {
+      if (isDemoSession) {
+        // Modo demo: no se consulta disponibilidad real ni se llama al
+        // Worker (que devolvería 401 al no haber token real). Solo
+        // feedback visual local, sin tocar ningún dato real.
+        await new Promise((resolve) => window.setTimeout(resolve, 600));
+        setStatusMessage(
+          `Simulado en modo demo: ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}. No se ha modificado ninguna reserva real.`,
+        );
+        setStatus("success");
+        setForm((current) => ({ ...current, confirmado: false }));
+        return;
+      }
+
       const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
       const disponibilidad = await fetchDisponibilidad(form.nueva_fecha_reserva);
 
@@ -3842,7 +3907,7 @@ function ReprogramarReserva({ setCurrent }) {
       const data = await readSafeResponse(res);
 
       if (!res.ok || data?.ok === false) {
-        throw new Error("reschedule_request_failed");
+        throw cp04BuildReservationError(data, "reschedule_request_failed");
       }
 
       let destinationConfirmed = false;
@@ -3869,8 +3934,8 @@ function ReprogramarReserva({ setCurrent }) {
       setStatus("success");
       refreshDisponibilidadAfterChange(form.nueva_fecha_reserva);
       setForm((current) => ({ ...current, confirmado: false }));
-    } catch {
-      setStatusMessage(tx("errors.reprog_error"));
+    } catch (err) {
+      setStatusMessage(cp04ReservationErrorMessage(err, tx("errors.reprog_error")));
       setStatus("error");
     } finally {
       sendingRef.current = false;
@@ -3894,6 +3959,12 @@ function ReprogramarReserva({ setCurrent }) {
   return (
     <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}>
       <SectionTitle eyebrow={tx("reprog.eyebrow")} title={tx("reprog.title")} desc={tx("reprog.desc")} />
+
+      {isDemoSession && (
+        <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+          Modo demo: esta acción se simula localmente, sin llamar al servidor ni afectar a ninguna reserva real.
+        </Card>
+      )}
 
       <Card
         style={{
@@ -4089,7 +4160,11 @@ function ReprogramarReserva({ setCurrent }) {
             >
               <Btn
                 type="submit"
-                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+                disabled={
+                  sending ||
+                  (!isDemoSession &&
+                    getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available")
+                }
               >
                 {sending ? tx("reprog.enviando") : tx("reprog.btn")}
               </Btn>
@@ -4126,8 +4201,744 @@ function ReprogramarReserva({ setCurrent }) {
   );
 }
 
+// PASO 07E (2026-07-19): motivos válidos de cierre temporal de pista,
+// compartidos entre el select del formulario y la validación local — deben
+// coincidir exactamente con CIERRE_MOTIVOS_VALIDOS en
+// worker-reservas/src/index.js (misma lista, duplicada deliberadamente para
+// no acoplar el bundle del frontend al código del Worker).
+const CIERRE_PISTA_MOTIVOS = [
+  ["mantenimiento", "Mantenimiento"],
+  ["lluvia", "Lluvia"],
+  ["evento", "Evento"],
+  ["torneo", "Torneo"],
+  ["limpieza", "Limpieza"],
+  ["obra", "Obra"],
+  ["incidencia", "Incidencia"],
+  ["administrativo", "Administrativo"],
+  ["otro", "Otro"],
+];
+
+// PASO 07E (2026-07-19) + PASO 07G (2026-07-19): Cierre Temporal de Pistas
+// — flujo app/API preparado, mismo criterio defensivo que Baja de Jugador
+// (Paso 07C): formulario -> validación local -> authFetch -> nunca
+// confirma el cierre sin response.ok && data.ok !== false, y ni siquiera
+// entonces se afirma "pista cerrada" (el estado enviado y mostrado es
+// siempre "pendiente_confirmacion" — la confirmación real depende del
+// escenario Make 5791133 procesando el cierre en Airtable, fuera de este
+// flujo). Originalmente vivía como card embebido dentro de Gestion(); en
+// el Paso 07G se extrajo a su propio componente de nivel superior para
+// darle un acceso directo en el sidebar ("cierre_pistas") sin duplicar la
+// lógica ni el formulario. Gateado en rbac.js (CP04_ROLE_PERMISSIONS) a
+// STAFF/ADMIN/SUPPORT — PLAYER no lo recibe.
+function CierreTemporalPista() {
+  const auth = useAuth();
+
+  const cierreInitialForm = {
+    pista: "",
+    fecha_inicio: "",
+    hora_inicio: "",
+    fecha_fin: "",
+    hora_fin: "",
+    motivo: "",
+    observaciones: "",
+    notify_players: true,
+  };
+  const [cierreForm, setCierreForm] = useState(cierreInitialForm);
+  const [cierreErrors, setCierreErrors] = useState({});
+  const [cierreSending, setCierreSending] = useState(false);
+  const [cierreSuccess, setCierreSuccess] = useState(false);
+  const [cierreServerError, setCierreServerError] = useState("");
+
+  function updateCierreForm(field, value) {
+    setCierreForm((previous) => ({ ...previous, [field]: value }));
+    setCierreErrors((previous) => ({ ...previous, [field]: "" }));
+    setCierreSuccess(false);
+    setCierreServerError("");
+  }
+
+  function validateCierre() {
+    const nextErrors = {};
+
+    if (!cierreForm.pista) {
+      nextErrors.pista = "Selecciona la pista a cerrar.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cierreForm.fecha_inicio || "")) {
+      nextErrors.fecha_inicio = "Selecciona la fecha de inicio.";
+    }
+    if (!/^\d{2}:\d{2}$/.test(cierreForm.hora_inicio || "")) {
+      nextErrors.hora_inicio = "Selecciona la hora de inicio.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cierreForm.fecha_fin || "")) {
+      nextErrors.fecha_fin = "Selecciona la fecha de fin.";
+    }
+    if (!/^\d{2}:\d{2}$/.test(cierreForm.hora_fin || "")) {
+      nextErrors.hora_fin = "Selecciona la hora de fin.";
+    }
+    if (
+      !nextErrors.fecha_inicio &&
+      !nextErrors.fecha_fin &&
+      cierreForm.fecha_fin < cierreForm.fecha_inicio
+    ) {
+      nextErrors.fecha_fin = "La fecha de fin no puede ser anterior a la de inicio.";
+    }
+    if (
+      !nextErrors.fecha_inicio &&
+      !nextErrors.fecha_fin &&
+      !nextErrors.hora_inicio &&
+      !nextErrors.hora_fin &&
+      cierreForm.fecha_fin === cierreForm.fecha_inicio &&
+      cierreForm.hora_fin <= cierreForm.hora_inicio
+    ) {
+      nextErrors.hora_fin = "La hora de fin debe ser posterior a la hora de inicio.";
+    }
+    if (!cierreForm.motivo) {
+      nextErrors.motivo = "Selecciona el motivo del cierre.";
+    }
+
+    return nextErrors;
+  }
+
+  // Nunca marca un cierre como confirmado sin respuesta real del backend.
+  // Si el Worker responde 503 "Cierre temporal webhook not configured"
+  // (webhook Make todavía sin configurar, ver worker-reservas/src/index.js
+  // handleCierreTemporalPista), se traduce a un mensaje honesto para
+  // STAFF/ADMIN en vez del texto técnico crudo. Incluso en éxito, el
+  // mensaje mostrado nunca dice "pista cerrada": dice que la solicitud se
+  // envió y queda pendiente de confirmación real.
+  async function submitCierre(event) {
+    event.preventDefault();
+
+    const nextErrors = validateCierre();
+    setCierreErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setCierreSending(true);
+    setCierreServerError("");
+    setCierreSuccess(false);
+
+    try {
+      const response = await authFetch("/api/pistas/cierre-temporal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pista: cierreForm.pista,
+          fecha_inicio: cierreForm.fecha_inicio,
+          hora_inicio: cierreForm.hora_inicio,
+          fecha_fin: cierreForm.fecha_fin,
+          hora_fin: cierreForm.hora_fin,
+          motivo: cierreForm.motivo,
+          observaciones: cierreForm.observaciones.trim(),
+          creado_por: auth.user?.email || "",
+          rol_origen: auth.role || "",
+          notify_players: cierreForm.notify_players === true,
+          origen: "APP_CLUB_PADEL_04",
+          estado: "pendiente_confirmacion",
+          accion: "cierre_temporal_pista",
+        }),
+      });
+
+      const data = await readSafeResponse(response);
+
+      if (!response.ok || data?.ok === false) {
+        if (data?.error === "Cierre temporal webhook not configured") {
+          throw new Error("El cierre temporal de pistas todavía no está configurado en el sistema. Contacta con soporte técnico.");
+        }
+        throw new Error(data?.message || data?.error || "No se pudo enviar la solicitud de cierre temporal.");
+      }
+
+      setCierreSuccess(true);
+      setCierreForm(cierreInitialForm);
+    } catch (error) {
+      setCierreServerError(error?.message || "No se pudo enviar la solicitud de cierre temporal.");
+    } finally {
+      setCierreSending(false);
+    }
+  }
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Gestión de pistas"
+        title="Cierre temporal de pista"
+        desc="Bloquea una pista (o todas) por mantenimiento, lluvia, evento, torneo, limpieza, obra, incidencia o causa administrativa."
+      />
+      <Card style={{ marginBottom: 20 }}>
+        <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+          Esta acción prepara el cierre, pero no se considerará confirmada hasta recibir respuesta real del sistema.
+        </p>
+        <form onSubmit={submitCierre}>
+          <div className="cp04-grid-2">
+            <div>
+              <label>Pista</label>
+              <select value={cierreForm.pista} onChange={e => updateCierreForm("pista", e.target.value)}>
+                <option value="">Seleccionar…</option>
+                <option value="Pista 1">Pista 1</option>
+                <option value="Pista 2">Pista 2</option>
+                <option value="Pista 3">Pista 3</option>
+                <option value="Pista 4">Pista 4</option>
+                <option value="todas">Todas</option>
+              </select>
+              <FieldError>{cierreErrors.pista}</FieldError>
+            </div>
+            <div>
+              <label>Motivo</label>
+              <select value={cierreForm.motivo} onChange={e => updateCierreForm("motivo", e.target.value)}>
+                <option value="">Seleccionar…</option>
+                {CIERRE_PISTA_MOTIVOS.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <FieldError>{cierreErrors.motivo}</FieldError>
+            </div>
+            <div>
+              <label>Fecha de inicio</label>
+              <input type="date" value={cierreForm.fecha_inicio} onChange={e => updateCierreForm("fecha_inicio", e.target.value)} />
+              <FieldError>{cierreErrors.fecha_inicio}</FieldError>
+            </div>
+            <div>
+              <label>Hora de inicio</label>
+              <input type="time" value={cierreForm.hora_inicio} onChange={e => updateCierreForm("hora_inicio", e.target.value)} />
+              <FieldError>{cierreErrors.hora_inicio}</FieldError>
+            </div>
+            <div>
+              <label>Fecha de fin</label>
+              <input type="date" value={cierreForm.fecha_fin} onChange={e => updateCierreForm("fecha_fin", e.target.value)} />
+              <FieldError>{cierreErrors.fecha_fin}</FieldError>
+            </div>
+            <div>
+              <label>Hora de fin</label>
+              <input type="time" value={cierreForm.hora_fin} onChange={e => updateCierreForm("hora_fin", e.target.value)} />
+              <FieldError>{cierreErrors.hora_fin}</FieldError>
+            </div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <label>Observaciones (opcional)</label>
+            <textarea value={cierreForm.observaciones} onChange={e => updateCierreForm("observaciones", e.target.value)} rows={3} />
+          </div>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 18 }}>
+            <input type="checkbox" checked={cierreForm.notify_players} onChange={e => updateCierreForm("notify_players", e.target.checked)} />
+            <span>Notificar a los jugadores con reserva en ese horario, si aplica.</span>
+          </label>
+          {cierreServerError && <p style={{ color: T.danger, marginTop: 16 }}>{cierreServerError}</p>}
+          {cierreSuccess && (
+            <p style={{ color: T.accent, marginTop: 16 }}>
+              Solicitud de cierre temporal enviada correctamente. No se considera confirmada hasta que el sistema lo confirme.
+            </p>
+          )}
+          <div style={{ marginTop: 22 }}>
+            {/* PASO 07H (2026-07-19): contraste reforzado a petición de QA
+                visual en localhost:5175 — fondo sólido T.accent (en vez del
+                degradado lima->menta por defecto de Btn) más un anillo de
+                sombra oscuro, para que el texto casi-negro se lea con más
+                definición. Solo afecta a este botón (style override local,
+                sin tocar el componente Btn compartido ni otros formularios). */}
+            <Btn
+              type="submit"
+              disabled={cierreSending}
+              style={{
+                width: "100%",
+                background: T.accent,
+                color: "#06100a",
+                fontSize: "1rem",
+                boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+              }}
+            >
+              {cierreSending ? "Enviando…" : "Solicitar cierre temporal de pista"}
+            </Btn>
+          </div>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07N (2026-07-20): módulo visual "Lista de espera" — preparado para
+// integrarse con el escenario Make "📋 Gestión Lista de Espera" (ID
+// 5791113, INTERNAL_OPERATION que ya corre solo en Make cada hora) cuando
+// Airtable esté disponible. A diferencia de Cierre Temporal de Pistas
+// (Paso 07E) o Baja de Jugador (Paso 07C), este módulo NO llama a ningún
+// endpoint del Worker todavía — no existe backend real que lo respalde, y
+// el propio encargo pide explícitamente no llamar endpoints reales ni
+// simular éxito real. Todas las acciones (añadir, promocionar, marcar
+// contactado, eliminar) solo muestran un mensaje local honesto de "acción
+// preparada, pendiente de conexión real" — nunca crean, modifican ni
+// confirman nada real. Gateado a STAFF/ADMIN/SUPPORT (ver rbac.js).
+const CP04_LISTA_ESPERA_PENDIENTE_MSG =
+  "Acción preparada. Pendiente de conexión real cuando Airtable esté disponible.";
+
+function ListaEspera() {
+  const addInitialForm = {
+    nombre: "",
+    apellidos: "",
+    email: "",
+    telefono: "",
+    pista_preferida: "",
+    fecha_preferida: "",
+    observaciones: "",
+  };
+  const [addForm, setAddForm] = useState(addInitialForm);
+  const [addErrors, setAddErrors] = useState({});
+  const [actionMessage, setActionMessage] = useState("");
+
+  function updateAddForm(field, value) {
+    setAddForm((previous) => ({ ...previous, [field]: value }));
+    setAddErrors((previous) => ({ ...previous, [field]: "" }));
+    setActionMessage("");
+  }
+
+  function validateAdd() {
+    const nextErrors = {};
+
+    if (addForm.nombre.trim().length < 2) {
+      nextErrors.nombre = "Introduce un nombre válido.";
+    }
+    if (addForm.apellidos.trim().length < 2) {
+      nextErrors.apellidos = "Introduce apellidos válidos.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim())) {
+      nextErrors.email = "Introduce un email válido.";
+    }
+    if (addForm.telefono.replace(/\D/g, "").length < 9) {
+      nextErrors.telefono = "Introduce un teléfono válido.";
+    }
+
+    return nextErrors;
+  }
+
+  // Validación local solo para dar una experiencia de formulario coherente
+  // con el resto de la app — no hay ningún envío real: nunca se llama a
+  // fetch/authFetch aquí, y el mensaje mostrado nunca dice "añadido" o
+  // "confirmado", siempre "preparado, pendiente de conexión real".
+  function handleAdd(event) {
+    event.preventDefault();
+
+    const nextErrors = validateAdd();
+    setAddErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setActionMessage(`Añadir a lista de espera: ${CP04_LISTA_ESPERA_PENDIENTE_MSG}`);
+  }
+
+  function handlePreparedAction(label) {
+    setActionMessage(`${label}: ${CP04_LISTA_ESPERA_PENDIENTE_MSG}`);
+  }
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Lista de espera"
+        desc="Gestiona jugadores pendientes de plaza o promoción."
+      />
+      <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+        Preparado para integración con Make/Airtable. Validación real pendiente por disponibilidad de Airtable.
+      </Card>
+
+      <Card style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>Añadir jugador a lista de espera</h3>
+        <form onSubmit={handleAdd}>
+          <div className="cp04-grid-2">
+            <div>
+              <label>Nombre</label>
+              <input value={addForm.nombre} onChange={e => updateAddForm("nombre", e.target.value)} autoComplete="given-name" />
+              <FieldError>{addErrors.nombre}</FieldError>
+            </div>
+            <div>
+              <label>Apellidos</label>
+              <input value={addForm.apellidos} onChange={e => updateAddForm("apellidos", e.target.value)} autoComplete="family-name" />
+              <FieldError>{addErrors.apellidos}</FieldError>
+            </div>
+            <div>
+              <label>Email</label>
+              <input type="email" value={addForm.email} onChange={e => updateAddForm("email", e.target.value)} autoComplete="email" />
+              <FieldError>{addErrors.email}</FieldError>
+            </div>
+            <div>
+              <label>Teléfono</label>
+              <input type="tel" value={addForm.telefono} onChange={e => updateAddForm("telefono", e.target.value)} autoComplete="tel" />
+              <FieldError>{addErrors.telefono}</FieldError>
+            </div>
+            <div>
+              <label>Pista preferida (opcional)</label>
+              <select value={addForm.pista_preferida} onChange={e => updateAddForm("pista_preferida", e.target.value)}>
+                <option value="">Sin preferencia</option>
+                <option value="Pista 1">Pista 1</option>
+                <option value="Pista 2">Pista 2</option>
+                <option value="Pista 3">Pista 3</option>
+                <option value="Pista 4">Pista 4</option>
+              </select>
+            </div>
+            <div>
+              <label>Fecha preferida (opcional)</label>
+              <input type="date" value={addForm.fecha_preferida} onChange={e => updateAddForm("fecha_preferida", e.target.value)} />
+            </div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <label>Observaciones (opcional)</label>
+            <textarea value={addForm.observaciones} onChange={e => updateAddForm("observaciones", e.target.value)} rows={3} />
+          </div>
+          <div style={{ marginTop: 22 }}>
+            <Btn
+              type="submit"
+              className="cp04-offboarding-submit-button"
+              style={{
+                width: "100%",
+                background: T.accent,
+                color: "#06100a",
+                fontSize: "1rem",
+                border: "2px solid rgba(6,16,10,.45)",
+                boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+              }}
+            >
+              Añadir a lista de espera
+            </Btn>
+          </div>
+        </form>
+      </Card>
+
+      <Card style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>Acciones sobre la lista</h3>
+        <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+          Estas acciones están preparadas visualmente. No confirman una promoción real ni crean datos reales hasta que la integración con Make/Airtable esté disponible.
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Btn variant="secondary" onClick={() => handlePreparedAction("Promocionar siguiente jugador")}>Promocionar siguiente jugador</Btn>
+          <Btn variant="secondary" onClick={() => handlePreparedAction("Marcar como contactado")}>Marcar como contactado</Btn>
+          <Btn variant="secondary" onClick={() => handlePreparedAction("Eliminar de lista")}>Eliminar de lista</Btn>
+        </div>
+      </Card>
+
+      {actionMessage && (
+        <Card style={{ borderColor: `${T.accent}66`, color: T.accent, fontSize: ".86rem" }}>
+          {actionMessage}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): mensaje único y helper compartido para las
+// "acciones preparadas" de los 4 módulos nuevos de este paso — evita
+// repetir la misma lógica de estado/mensaje 4 veces (uno por módulo). Cada
+// botón, al pulsarse, solo actualiza un mensaje local honesto: nunca llama
+// a fetch/authFetch, nunca crea/modifica/elimina nada real.
+const CP04_PREPARADO_MSG =
+  "Acción preparada. Pendiente de conexión real cuando Make/Airtable esté disponible.";
+
+function PreparedActionButtons({ actions }) {
+  const [message, setMessage] = useState("");
+  return (
+    <>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        {actions.map((label) => (
+          <Btn key={label} variant="secondary" onClick={() => setMessage(`${label}: ${CP04_PREPARADO_MSG}`)}>
+            {label}
+          </Btn>
+        ))}
+      </div>
+      {message && (
+        <p style={{ color: T.accent, fontSize: ".86rem", marginTop: 16, marginBottom: 0 }}>{message}</p>
+      )}
+    </>
+  );
+}
+
+// Banner de estado honesto reutilizado por los 4 módulos: mismo patrón
+// visual ya usado en Lista de Espera (Paso 07N) y Cierre Temporal (Paso
+// 07E) para no prometer una integración que no existe todavía.
+function IntegrationStatusBanner({ children }) {
+  return (
+    <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+      {children}
+    </Card>
+  );
+}
+
+// PASO 07O (2026-07-20): "Control QR / Accesos" — módulo visual preparado
+// para los escenarios Make "🔐 Control Acceso QR" (5291559) y "🔑
+// Generación QR Acceso" (6244975). Ambos siguen ejecutándose de forma
+// autónoma en Make (Grupo D antes de este paso); este panel no los
+// dispara ni los sustituye, solo prepara un punto de entrada en la app.
+// Gateado a STAFF/ADMIN/SUPPORT (ver rbac.js).
+function ControlQrAccesos() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Seguridad y accesos"
+        title="Control QR / Accesos"
+        desc="Gestiona el acceso al club mediante códigos QR de jugadores."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de activación Make — este panel no ejecuta acciones reales todavía.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🔐 Control Acceso QR — verifica el código QR presentado en la entrada del club.",
+          "🔑 Generación QR Acceso — genera el código QR de acceso para un jugador.",
+          "Ambos siguen ejecutándose de forma autónoma en Make; este panel no los dispara ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Generar QR de acceso", "Verificar acceso"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Pistas libres y recordatorios" — agrupa 4
+// escenarios Make de comunicación proactiva a jugadores: "🚨 Alerta
+// Pistas Libres + Flash Promo" (5736472), "🔔 Recordatorio 24h Antes"
+// (4942506), "⚡ Recordatorio 2h Antes" (5736463) y "🚫 Seguimiento
+// No-Show" (5736797). Gateado a STAFF/ADMIN/SUPPORT.
+function PistasLibresRecordatorios() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Pistas libres y recordatorios"
+        desc="Alertas de huecos libres y recordatorios automáticos a jugadores."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🚨 Alerta Pistas Libres + Flash Promo — avisa cuando queda una pista libre de última hora.",
+          "🔔 Recordatorio 24h Antes / ⚡ Recordatorio 2h Antes — recuerdan a un jugador su reserva próxima.",
+          "🚫 Seguimiento No-Show — registra cuando un jugador no se presenta a su reserva.",
+          "Los 4 escenarios ya corren en Make bloqueados por Airtable 429; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Enviar alerta de pista libre", "Enviar recordatorio manual", "Marcar no-show"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Dashboard KPI y NPS" — agrupa 4 escenarios de
+// métricas: "📋 Dashboard Ejecutivo Diario" (5736800), "📊 Panel KPI
+// Semanal" (5736468), "📊 Informe Mensual" (5791119) y "📊 Análisis NPS
+// Semanal" (5811901). Gateado como "admin" (ADMIN+SUPPORT, sin STAFF) —
+// mismo nivel que la sección Admin ya existente.
+//
+// Deliberadamente NO incluye "⭐ Encuesta Post-Partido" (5736466), aunque
+// temáticamente sea de NPS: esa auditoría previa (Paso 07B) encontró un
+// 89% de tasa de error histórica en Make — integrar su UI ahora
+// propagaría un hallazgo roto. Sigue en Grupo E, sin cambios, hasta que
+// se diagnostique dentro de Make (fuera de alcance de este paso).
+function DashboardKpiNps() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Métricas"
+        title="Dashboard KPI y NPS"
+        desc="Indicadores operativos y satisfacción de jugadores."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "📋 Dashboard Ejecutivo Diario / 📊 Panel KPI Semanal / 📊 Informe Mensual — métricas operativas del club.",
+          "📊 Análisis NPS Semanal — satisfacción de jugadores.",
+          "⭐ Encuesta Post-Partido NO se incluye aquí: auditoría previa detectó 89% de tasa de error en Make — no se reactiva hasta que se diagnostique en Make.",
+          "Los escenarios incluidos ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Actualizar dashboard", "Exportar informe"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Backups y seguridad" — agrupa 4 escenarios de
+// infraestructura: "🔄 Backup Semanal" (6217724), "🗂️ Backup Plantilla
+// Drive" (6216523), "⚖️ Solicitud GDPR Acceso u Olvido de Datos"
+// (6323457) y "🛡️ Alerta Seguridad Acceso Sospechoso" (6323450). Gateado
+// como "admin" (ADMIN+SUPPORT, sin STAFF).
+function BackupsSeguridad() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Infraestructura"
+        title="Backups y seguridad"
+        desc="Copias de seguridad y alertas de seguridad del sistema."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de validación real / credenciales externas.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🔄 Backup Semanal / 🗂️ Backup Plantilla Drive — copias de seguridad periódicas.",
+          "⚖️ Solicitud GDPR Acceso u Olvido de Datos — gestión de solicitudes de privacidad.",
+          "🛡️ Alerta Seguridad Acceso Sospechoso — aviso de accesos sospechosos.",
+          "Los 4 escenarios ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Solicitar backup manual", "Revisar solicitud GDPR", "Revisar alerta de seguridad"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Comunicaciones y ciclo de socio" — agrupa 9
+// escenarios de comunicación proactiva ligada al ciclo de vida del socio:
+// "🔁 Reactivación Inactivos 30d" (5736470), "🎂 Felicitación Cumpleaños"
+// (5811864), "💳 Recordatorio Cuota Mensual" (5791032), "📧 Monitor
+// Prueba Gratuita" (5750308), "❄️ Congelación + Reactivación Membresía"
+// (5812456), "🎁 Bienvenida Nuevo Socio" (5791022), "🔁 Onboarding
+// Secuencial" (5811918), "🎁 Programa de Referidos" (5812297) y "👥
+// Emparejamiento Sin Pareja" (5791128). Gateado a STAFF/ADMIN/SUPPORT
+// (atención al jugador es tarea diaria de STAFF, ver rbac.js).
+function ComunicacionesSocio() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Socios"
+        title="Comunicaciones y ciclo de socio"
+        desc="Avisos y automatizaciones ligadas al ciclo de vida del socio."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🔁 Reactivación Inactivos 30d / ❄️ Congelación + Reactivación Membresía — recuperan socios inactivos o congelados.",
+          "🎂 Felicitación Cumpleaños / 🎁 Bienvenida Nuevo Socio / 🔁 Onboarding Secuencial — comunicaciones de ciclo de vida.",
+          "💳 Recordatorio Cuota Mensual / 📧 Monitor Prueba Gratuita — recordatorios de facturación y prueba gratuita.",
+          "🎁 Programa de Referidos — invita a socios a recomendar el club.",
+          "👥 Emparejamiento Sin Pareja — conecta jugadores sin compañero de partido.",
+          "Los 9 escenarios ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Enviar comunicación preparada", "Revisar socio inactivo", "Emparejar jugador"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Calendario y disponibilidad" — agrupa "🗓️
+// Sincronización Multi-Calendario" (5735907) y "📈 Predicción Ocupación"
+// (5799041). Gateado a STAFF/ADMIN/SUPPORT (disponibilidad es tarea
+// diaria de STAFF).
+function CalendarioDisponibilidadModulo() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Calendario y disponibilidad"
+        desc="Sincronización de calendarios externos y previsión de ocupación."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de integración real con Google Calendar y validación por Airtable 429.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🗓️ Sincronización Multi-Calendario — mantiene coherentes las reservas del club con calendarios externos.",
+          "📈 Predicción Ocupación — estima la ocupación futura de las pistas.",
+          "Ambos escenarios ya corren en Make; este panel no los reactiva ni los sustituye ni sincroniza ningún calendario real todavía.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Sincronizar calendario", "Ver previsión de ocupación"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Facturación y pagos" — agrupa "💰 Facturación y
+// Cobro" (5733370), "💳 Pago Confirmado Stripe → Cuota + Recibo"
+// (6323441), "🔄 Dunning Cobro Recurrente Stripe" (6335117) y "💸 Escalado
+// Impagos" (5811888). Gateado como "admin" (ADMIN+SUPPORT, sin STAFF).
+// No existe ningún código de Stripe en esta rama — este panel nunca debe
+// dar a entender que ya hay pagos reales conectados.
+function FacturacionPagos() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Negocio"
+        title="Facturación y pagos"
+        desc="Cobros, recibos y seguimiento de impagos."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de integración real con Stripe — no ejecuta pagos ni cobros reales todavía.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "💰 Facturación y Cobro — genera facturas/cobros de cuotas.",
+          "💳 Pago Confirmado Stripe → Cuota + Recibo — confirma un pago y emite el recibo correspondiente.",
+          "🔄 Dunning Cobro Recurrente Stripe — reintenta cobros recurrentes fallidos.",
+          "💸 Escalado Impagos — escala impagos persistentes.",
+          "Los 4 escenarios ya corren en Make; este panel no los reactiva, no los sustituye y no ejecuta ningún cobro real.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Ver estado de facturación", "Reintentar cobro", "Revisar impago"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Automatizaciones y bots" — agrupa "🎧 Atención
+// Socio WhatsApp FAQ" (5799031), "🎯 Campaña Flash WhatsApp" (5791124),
+// "🤖 Bot IA Reservas WhatsApp" (5798996), "🤖 Bot IA Reservas Telegram"
+// (4832095) y "📝 Tally → API Reservas" (5747703). Gateado como "admin"
+// (ADMIN+SUPPORT, sin STAFF). No existe integración de WhatsApp Business
+// API, Telegram Bot API ni Tally en esta rama — este panel nunca debe dar
+// a entender que ya hay mensajes reales conectados.
+function AutomatizacionesBots() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Automatizaciones"
+        title="Automatizaciones y bots"
+        desc="Asistentes de WhatsApp, Telegram y formularios externos."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de integración real con WhatsApp Business API, Telegram Bot API y Tally — no envía mensajes reales todavía.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🎧 Atención Socio WhatsApp FAQ — responde preguntas frecuentes de socios por WhatsApp.",
+          "🎯 Campaña Flash WhatsApp — envía promociones flash por WhatsApp.",
+          "🤖 Bot IA Reservas WhatsApp / 🤖 Bot IA Reservas Telegram — asistentes de reserva por chat.",
+          "📝 Tally → API Reservas — recoge reservas desde un formulario externo (Tally).",
+          "Los 5 escenarios ya corren en Make; este panel no los reactiva, no los sustituye y no envía ningún mensaje real.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Revisar conversación preparada", "Enviar campaña de prueba", "Revisar formulario Tally"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function Gestion() {
-  const [emailConsulta, setEmailConsulta] = useState("");
+  const [emailConsulta, setEmailConsulta] = useState(() => {
+    try {
+      return (
+        window.localStorage.getItem("cp04_user_email") ||
+        window.localStorage.getItem("cp04-reservas-email") ||
+        ""
+      );
+    } catch {
+      return "";
+    }
+  });
   const [reservasReales, setReservasReales] = useState([]);
   const [cargandoReservas, setCargandoReservas] = useState(false);
   const [reservasConsultadas, setReservasConsultadas] = useState(false);
@@ -4140,20 +4951,6 @@ function Gestion() {
   const reservasEndpoint =
     import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
     "/api/reservas";
-
-  useEffect(() => {
-    try {
-      const emailGuardado =
-        window.localStorage.getItem("cp04_user_email") ||
-        window.localStorage.getItem("cp04-reservas-email");
-
-      if (emailGuardado) {
-        setEmailConsulta(emailGuardado);
-      }
-    } catch {
-      // El listado puede funcionar aunque localStorage no esté disponible.
-    }
-  }, []);
 
   function normalizarReserva(item) {
     const reserva =
@@ -4761,7 +5558,14 @@ function Gestion() {
 }
 
 
-function AltaJugador() {
+// PASO 07I (2026-07-19): Baja de Jugador pasa a tener su propio acceso en
+// el sidebar ("baja_jugador"), además del ya existente "alta_jugador".
+// Ambos apuntan al MISMO componente `AltaJugador()` (nunca se duplicó el
+// formulario ni la lógica del Paso 07C) — `initialModo` solo decide qué
+// pestaña se abre primero según desde qué item del sidebar se navegó. El
+// usuario sigue pudiendo cambiar de pestaña libremente una vez dentro,
+// igual que antes de este paso.
+function AltaJugador({ initialModo = "alta" } = {}) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const initialForm = {
@@ -4781,6 +5585,114 @@ function AltaJugador() {
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState("");
+
+  // PASO 07C (2026-07-19): Baja de Jugador + Promoción — misma ruta/gate RBAC
+  // que Alta (STAFF/ADMIN/SUPPORT, ver rbac.js CP04_ROLE_PERMISSIONS), sin
+  // tocar navegación ni permisos. Réplica deliberada del patrón de Alta:
+  // formulario -> validación local -> authFetch -> nunca confirma éxito sin
+  // response.ok && data.ok !== false.
+  const [modo, setModo] = useState(initialModo === "baja" ? "baja" : "alta");
+  const bajaInitialForm = {
+    nombre: "",
+    apellidos: "",
+    email: "",
+    telefono: "",
+    motivo_baja: "",
+    fecha_baja: "",
+    promocionar_siguiente_si_aplica: false,
+    observaciones: "",
+  };
+  const [bajaForm, setBajaForm] = useState(bajaInitialForm);
+  const [bajaErrors, setBajaErrors] = useState({});
+  const [bajaSending, setBajaSending] = useState(false);
+  const [bajaSuccess, setBajaSuccess] = useState(false);
+  const [bajaServerError, setBajaServerError] = useState("");
+
+  function updateBajaForm(field, value) {
+    setBajaForm((previous) => ({ ...previous, [field]: value }));
+    setBajaErrors((previous) => ({ ...previous, [field]: "" }));
+    setBajaSuccess(false);
+    setBajaServerError("");
+  }
+
+  function validateBaja() {
+    const nextErrors = {};
+
+    if (bajaForm.nombre.trim().length < 2) {
+      nextErrors.nombre = "Introduce un nombre válido.";
+    }
+    if (bajaForm.apellidos.trim().length < 2) {
+      nextErrors.apellidos = "Introduce apellidos válidos.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bajaForm.email.trim())) {
+      nextErrors.email = "Introduce un email válido.";
+    }
+    if (bajaForm.telefono.replace(/\D/g, "").length < 9) {
+      nextErrors.telefono = "Introduce un teléfono válido.";
+    }
+    if (!bajaForm.motivo_baja) {
+      nextErrors.motivo_baja = "Selecciona el motivo de la baja.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bajaForm.fecha_baja || "")) {
+      nextErrors.fecha_baja = "Selecciona la fecha de baja.";
+    }
+
+    return nextErrors;
+  }
+
+  // No confirma ninguna baja como realizada sin respuesta real del backend
+  // (response.ok && data.ok !== false) — mismo criterio defensivo que Alta.
+  // Si el Worker responde 503 "Baja webhook not configured" (webhook Make
+  // todavía sin configurar, ver worker-reservas/src/index.js
+  // handleBajaJugador), se traduce a un mensaje honesto para STAFF/ADMIN en
+  // vez del texto técnico crudo.
+  async function submitBaja(event) {
+    event.preventDefault();
+
+    const nextErrors = validateBaja();
+    setBajaErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setBajaSending(true);
+    setBajaServerError("");
+    setBajaSuccess(false);
+
+    try {
+      const response = await authFetch("/api/jugadores/baja", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: bajaForm.nombre.trim(),
+          apellidos: bajaForm.apellidos.trim(),
+          email: bajaForm.email.trim().toLowerCase(),
+          telefono: bajaForm.telefono.trim(),
+          motivo_baja: bajaForm.motivo_baja,
+          fecha_baja: bajaForm.fecha_baja,
+          promocionar_siguiente_si_aplica: bajaForm.promocionar_siguiente_si_aplica === true,
+          observaciones: bajaForm.observaciones.trim(),
+          origen: "APP_CLUB_PADEL_04",
+          accion: "baja_jugador",
+        }),
+      });
+
+      const data = await readSafeResponse(response);
+
+      if (!response.ok || data?.ok === false) {
+        if (data?.error === "Baja webhook not configured") {
+          throw new Error("La baja de jugador todavía no está configurada en el sistema. Contacta con soporte técnico.");
+        }
+        throw new Error(data?.message || data?.error || "No se pudo completar la baja.");
+      }
+
+      setBajaSuccess(true);
+      setBajaForm(bajaInitialForm);
+    } catch (error) {
+      setBajaServerError(error?.message || "No se pudo completar la baja.");
+    } finally {
+      setBajaSending(false);
+    }
+  }
 
   function updateForm(field, value) {
     setForm((previous) => ({ ...previous, [field]: value }));
@@ -4874,9 +5786,126 @@ function AltaJugador() {
     }
   }
 
+  // PASO 07J (2026-07-19): el título/subtítulo de la cabecera antes quedaba
+  // fijo en "Alta de jugador" aunque el usuario estuviera en la pestaña de
+  // Baja (entrando desde el sidebar en "baja_jugador", o cambiando de
+  // pestaña manualmente) — confusión visual detectada en validación en
+  // localhost:5175. Se deriva ahora del `modo` activo, igual que ya hacían
+  // los botones de pestaña. Texto de Baja en español literal (sin tx()),
+  // mismo criterio ya documentado en el Paso 07C para el resto de textos
+  // nuevos de esa pestaña.
+  const isBajaMode = modo === "baja";
+  const playerFormTitle = isBajaMode ? "Baja de jugador" : tx("alta.title");
+  const playerFormSubtitle = isBajaMode
+    ? "Solicita la baja de un jugador del club."
+    : tx("alta.desc");
+
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
-      <SectionTitle eyebrow={tx("alta.eyebrow")} title={tx("alta.title")} desc={tx("alta.desc")} />
+      <SectionTitle eyebrow={tx("alta.eyebrow")} title={playerFormTitle} desc={playerFormSubtitle} />
+      <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
+        <Btn type="button" variant={modo === "alta" ? "primary" : "secondary"} onClick={() => setModo("alta")}>
+          Alta de jugador
+        </Btn>
+        <Btn type="button" variant={modo === "baja" ? "primary" : "secondary"} onClick={() => setModo("baja")}>
+          Baja de jugador
+        </Btn>
+      </div>
+      {modo === "baja" ? (
+        <Card>
+          <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+            Solicitar baja de jugador. Esta acción no se confirmará hasta que el sistema responda correctamente.
+          </p>
+          <form onSubmit={submitBaja}>
+            <div className="cp04-grid-2">
+              <div>
+                <label>Nombre</label>
+                <input value={bajaForm.nombre} onChange={e => updateBajaForm("nombre", e.target.value)} autoComplete="given-name" />
+                <FieldError>{bajaErrors.nombre}</FieldError>
+              </div>
+              <div>
+                <label>Apellidos</label>
+                <input value={bajaForm.apellidos} onChange={e => updateBajaForm("apellidos", e.target.value)} autoComplete="family-name" />
+                <FieldError>{bajaErrors.apellidos}</FieldError>
+              </div>
+              <div>
+                <label>Email</label>
+                <input type="email" value={bajaForm.email} onChange={e => updateBajaForm("email", e.target.value)} autoComplete="email" />
+                <FieldError>{bajaErrors.email}</FieldError>
+              </div>
+              <div>
+                <label>Teléfono</label>
+                <input type="tel" value={bajaForm.telefono} onChange={e => updateBajaForm("telefono", e.target.value)} autoComplete="tel" />
+                <FieldError>{bajaErrors.telefono}</FieldError>
+              </div>
+              <div>
+                <label>Motivo de la baja</label>
+                <select value={bajaForm.motivo_baja} onChange={e => updateBajaForm("motivo_baja", e.target.value)}>
+                  <option value="">Seleccionar…</option>
+                  <option value="Voluntaria">Voluntaria</option>
+                  <option value="Impago">Impago</option>
+                  <option value="Inactividad">Inactividad</option>
+                  <option value="Traslado a otro club">Traslado a otro club</option>
+                  <option value="Otro">Otro</option>
+                </select>
+                <FieldError>{bajaErrors.motivo_baja}</FieldError>
+              </div>
+              <div>
+                <label>Fecha de baja</label>
+                <input type="date" value={bajaForm.fecha_baja} onChange={e => updateBajaForm("fecha_baja", e.target.value)} />
+                <FieldError>{bajaErrors.fecha_baja}</FieldError>
+              </div>
+            </div>
+            <div style={{ marginTop: 18 }}>
+              <label>Observaciones (opcional)</label>
+              <textarea value={bajaForm.observaciones} onChange={e => updateBajaForm("observaciones", e.target.value)} rows={4} />
+            </div>
+            <label style={{ display:"flex", gap:10, alignItems:"flex-start", marginTop:18 }}>
+              <input type="checkbox" checked={bajaForm.promocionar_siguiente_si_aplica} onChange={e => updateBajaForm("promocionar_siguiente_si_aplica", e.target.checked)} />
+              <span>Promocionar al siguiente jugador en lista de espera, si aplica.</span>
+            </label>
+            {/* PASO 07N (2026-07-20): nota informativa hacia el nuevo módulo
+                "Lista de espera" del sidebar — no cambia el payload de Baja
+                ni la lógica del checkbox, solo orienta a STAFF/ADMIN/SUPPORT
+                sobre dónde se gestionará la promoción cuando exista
+                integración real. */}
+            <p style={{ color:T.textDim, fontSize:".8rem", marginTop:8, marginBottom:0 }}>
+              La promoción se gestionará desde "Lista de espera" cuando la integración real esté disponible.
+            </p>
+            {bajaServerError && <p style={{ color:T.danger, marginTop:16 }}>{bajaServerError}</p>}
+            {bajaSuccess && <p style={{ color:T.accent, marginTop:16 }}>Baja registrada correctamente.</p>}
+            <div style={{ marginTop:22 }}>
+              {/* PASO 07J/07K/07L/07M (2026-07-19): refuerzo de contraste +
+                  clase dedicada `cp04-offboarding-submit-button` con CSS de
+                  máxima especificidad (ver cp04-legibility-polish.css) como
+                  red de seguridad definitiva — este botón ya fue capturado
+                  por 3 orígenes distintos de reglas globales "catch-all"
+                  (`button` genérico en 07H/07K, `.cp04-card
+                  [style*="background"]` en 07L, su variante
+                  `cp04-module-admin` en 07M, esta última específica de
+                  SUPPORT por tener "Centro técnico" siempre en su
+                  sidebar). Sin cambios en la lógica de envío ni en el
+                  componente Btn compartido más allá de aceptar
+                  `className` opcional. */}
+              <Btn
+                type="submit"
+                disabled={bajaSending}
+                className="cp04-offboarding-submit-button"
+                style={{
+                  width: "100%",
+                  background: T.accent,
+                  color: "#06100a",
+                  fontSize: "1rem",
+                  border: "2px solid rgba(6,16,10,.45)",
+                  boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+                }}
+              >
+                {bajaSending ? "Enviando…" : "Solicitar baja de jugador"}
+              </Btn>
+            </div>
+          </form>
+        </Card>
+      ) : (
       <Card>
         <form onSubmit={submit}>
           <div className="cp04-grid-2">
@@ -4945,6 +5974,7 @@ function AltaJugador() {
           </div>
         </form>
       </Card>
+      )}
     </div>
   );
 }
@@ -5069,10 +6099,7 @@ function torneoGetRoundPadding(round) {
 function Torneos() {
   const lang = useLang();
   const tx = key => t(key, lang);
-  const histRef = useRef(null);
-  if (!histRef.current) {
-    histRef.current = torneoLoadHist();
-  }
+  const [hist, setHist] = useState(() => torneoLoadHist());
 
   const saved = torneoLoadSaved();
   const [formatMode, setFormatMode] = useState(saved?.formatMode ?? "32");
@@ -5093,7 +6120,6 @@ function Torneos() {
   const [noticeErr, setNoticeErr] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
   const [winnerAnim, setWinnerAnim] = useState(null);
-  const [histVersion, setHistVersion] = useState(0);
 
   const currentMax = formatMode !== "custom" ? FORMAT_MAX[formatMode] : null;
 
@@ -5114,23 +6140,21 @@ function Torneos() {
     return "Vacía";
   };
 
-  const getPairById = useCallback((id) => pairs.find(p => p.id === id), [pairs]);
-
   const pushHistory = (action) => {
     try {
       const snap = {
+        // eslint-disable-next-line react-hooks/purity -- pushHistory solo se invoca desde manejadores de clic (onClick), nunca durante el render.
         id: Date.now(),
         ts: new Date().toISOString(),
         action,
         s: { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published },
       };
-      const h = histRef.current ?? { snaps: [], idx: -1 };
-      const snaps = Array.isArray(h.snaps) ? h.snaps : [];
-      const idx = typeof h.idx === "number" ? h.idx : -1;
+      const snaps = Array.isArray(hist.snaps) ? hist.snaps : [];
+      const idx = typeof hist.idx === "number" ? hist.idx : -1;
       const newSnaps = [...snaps.slice(0, idx + 1), snap].slice(-30);
-      histRef.current = { snaps: newSnaps, idx: newSnaps.length - 1 };
-      localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
-      setHistVersion(v => v + 1);
+      const newHist = { snaps: newSnaps, idx: newSnaps.length - 1 };
+      localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
+      setHist(newHist);
     } catch { /* silent */ }
   };
 
@@ -5148,35 +6172,35 @@ function Torneos() {
   };
 
   const handleUndo = () => {
-    const h = histRef.current;
+    const h = hist;
     if (h.idx <= 0) return;
     const ni = h.idx - 1;
-    histRef.current = { ...h, idx: ni };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    const newHist = { ...h, idx: ni };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
     restoreSnap(h.snaps[ni]);
-    setHistVersion(v => v + 1);
+    setHist(newHist);
     showNotice(`↩ Deshecho: ${h.snaps[ni].action}`);
   };
 
   const handleRedo = () => {
-    const h = histRef.current;
+    const h = hist;
     if (h.idx >= h.snaps.length - 1) return;
     const ni = h.idx + 1;
-    histRef.current = { ...h, idx: ni };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    const newHist = { ...h, idx: ni };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
     restoreSnap(h.snaps[ni]);
-    setHistVersion(v => v + 1);
+    setHist(newHist);
     showNotice(`↪ Rehecho: ${h.snaps[ni].action}`);
   };
 
   const handleRestoreVersion = (idx) => {
-    const h = histRef.current;
+    const h = hist;
     const snap = h.snaps[idx];
     if (!snap) return;
-    histRef.current = { ...h, idx };
-    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(histRef.current));
+    const newHist = { ...h, idx };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
     restoreSnap(snap);
-    setHistVersion(v => v + 1);
+    setHist(newHist);
     setShowHistory(false);
     showNotice(`Versión restaurada: ${snap.action}`);
   };
@@ -5216,6 +6240,7 @@ function Torneos() {
     const shuffled = [...pairs].sort(() => Math.random() - 0.5);
     let newBye = null; let newByeDate = null;
     if (shuffled.length % 2 !== 0) {
+      // eslint-disable-next-line react-hooks/purity -- handleReorder solo se invoca desde onClick, nunca durante el render.
       const idx = Math.floor(Math.random() * shuffled.length);
       newBye = shuffled[idx]; newByeDate = new Date().toISOString();
     }
@@ -5252,6 +6277,7 @@ function Torneos() {
     if (currentMax && pairs.length >= currentMax) { showNotice(`Límite alcanzado: ya hay ${currentMax} parejas.`, true); return; }
     if (pairs.length >= 32) { showNotice("Límite: máximo 32 parejas.", true); return; }
     pushHistory("Añadir pareja");
+    // eslint-disable-next-line react-hooks/purity -- handleAddPair solo se invoca desde onClick, nunca durante el render.
     const np = { id: `p${Date.now()}`, player1: "", player2: "" };
     const upd = [...pairs, np];
     setPairs(upd);
@@ -5324,7 +6350,6 @@ function Torneos() {
   bracket.forEach(m => { if (!bracketByRound[m.round]) bracketByRound[m.round] = []; bracketByRound[m.round].push(m); });
   const roundNums = Object.keys(bracketByRound).map(Number).sort((a, b) => a - b);
   const totalRounds = roundNums.length;
-  const hist = histRef.current ?? { snaps: [], idx: -1 };
   const canUndo = hist.idx > 0;
   const canRedo = hist.idx < (hist.snaps?.length ?? 0) - 1;
 
@@ -5585,7 +6610,6 @@ function Torneos() {
                       {matches.map(match => {
                         const pA = pairs.find(p => p.id === match.pairA);
                         const pB = match.pairB ? pairs.find(p => p.id === match.pairB) : null;
-                        const pW = match.winner ? pairs.find(p => p.id === match.winner) : null;
                         const isAnim = winnerAnim === match.id;
                         const isPlayed = !!match.winner;
                         return (
@@ -5972,7 +6996,7 @@ function Ranking() {
 }
 
 function Admin() {
-  const clk = useClock();
+  useClock(); // se mantiene la llamada: dispara el refresco periódico interno del hook (setInterval), aunque este panel no lea su valor de retorno.
   const lang = useLang();
   const tx = key => t(key, lang);
   const kpi = DEMO_KPI;
@@ -6059,7 +7083,7 @@ function AuthProductionStatusPanel() {
 function Soporte() {
   const lang = useLang();
   const tx = key => t(key, lang);
-  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.vars_h3")}</span></h3><PanelList items={[tx("soporte.vars_no_names"), tx("soporte.vars_validacion")]} /></Card></div>;
 }
 
 function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
@@ -6175,7 +7199,11 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
     setTimeout(() => setAvatarMsg(""), 3000);
   }
   function handleAvatarDelete() {
-    try { localStorage.removeItem("cp04_avatar"); } catch {}
+    try {
+      localStorage.removeItem("cp04_avatar");
+    } catch {
+      // localStorage puede lanzar en modo privado/Safari; se limpia igualmente el estado en memoria.
+    }
     setAvatarSrc(null); setAvatarPreview(null); setShowDelConfirm(false);
     setAvatarMsg(tx("perfil.avatar_eliminada"));
     setTimeout(() => setAvatarMsg(""), 3000);
@@ -6820,7 +7848,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,
@@ -7206,7 +8234,16 @@ export default function ClubPadel04SaaSApp() {
               </div>
           {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
-            <button type="submit" className="cp04-menu-button" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
+            {/* PASO 07K (2026-07-19): clase cp04-login-submit-btn añadida
+                para poder forzar su contraste en torcal-role-background.css
+                — esta pantalla activa `body.cp04-role-screen-active`, cuya
+                regla genérica de fondo (`button { background-color:
+                rgba(5,10,18,.22) !important; background-image: none
+                !important }`) anulaba el fondo lima de este botón vía
+                `!important`, dejándolo casi invisible. El estilo inline de
+                abajo no puede ganarle a un `!important` de hoja de
+                estilos, por eso la corrección real vive en el CSS. */}
+            <button type="submit" className="cp04-menu-button cp04-login-submit-btn" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
               Iniciar sesión
             </button>
 

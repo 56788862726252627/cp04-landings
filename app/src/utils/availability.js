@@ -27,6 +27,7 @@ export const AVAILABILITY_REASON = Object.freeze({
   INVALID_DURATION: "invalid_duration",
   INSUFFICIENT_REMAINING_TIME: "insufficient_remaining_time",
   BOOKING_OVERLAP: "booking_overlap",
+  COURT_CLOSED: "court_closed",
 });
 
 function parseISODateParts(value) {
@@ -58,6 +59,31 @@ function bookingMinutes(booking, key, timeKey) {
   return minutesFromTime(booking[timeKey]);
 }
 
+// PASO 07E (2026-07-19): reconoce un cierre temporal de pista (Make ID
+// 5791133, ver src/data/makeAppIntegrationMap.js) como bloqueo local de
+// disponibilidad. Estructura del cierre: { pista, fecha_inicio, hora_inicio,
+// fecha_fin, hora_fin } — mismos nombres de campo que genera el formulario
+// de Gestion() y handleCierreTemporalPista (worker-reservas/src/index.js).
+// "todas" en `pista` cubre cualquier courtId. Los días estrictamente entre
+// fecha_inicio y fecha_fin quedan cerrados el día completo; en los días de
+// borde solo se cierra el tramo horario indicado.
+function closureCoversSlot(closure, courtId, date, requestedStart, requestedEnd) {
+  const pista = closure?.pista;
+  if (pista !== "todas" && pista !== courtId) return false;
+
+  const start = closure?.fecha_inicio;
+  const end = closure?.fecha_fin || start;
+  if (!start || date < start || date > end) return false;
+
+  const dayStartRaw = date === start ? minutesFromTime(closure.hora_inicio) : 0;
+  const dayEndRaw = date === end ? minutesFromTime(closure.hora_fin) : 24 * 60;
+
+  const dayStart = Number.isFinite(dayStartRaw) ? dayStartRaw : 0;
+  const dayEnd = Number.isFinite(dayEndRaw) ? dayEndRaw : 24 * 60;
+
+  return requestedStart < dayEnd && requestedEnd > dayStart;
+}
+
 /**
  * @param {Object} params
  * @param {string} params.date - "YYYY-MM-DD"
@@ -67,6 +93,12 @@ function bookingMinutes(booking, key, timeKey) {
  * @param {Array<{courtId:string,date:string,startTime?:string,endTime?:string,startMinutes?:number,endMinutes?:number}>} [params.existingBookings]
  * @param {{closingMinutes?:number, allowedStartTimes?:string[], allowedDurations?:number[]}} [params.openingHours]
  * @param {Date} [params.currentDateTime] - ver nota de convención arriba
+ * @param {Array<{pista:string,fecha_inicio:string,hora_inicio?:string,fecha_fin?:string,hora_fin?:string}>} [params.closures] -
+ *   cierres temporales de pista (PASO 07E). Opcional y `[]` por defecto: sin
+ *   una fuente real de datos conectada (Make/Airtable), ningún llamador
+ *   existente pasa cierres todavía, así que el comportamiento por defecto
+ *   de esta función no cambia. Preparado para conectarse cuando exista esa
+ *   fuente — ver docs/paso-07e-cierre-temporal-pistas/.
  * @returns {{status:"available"|"occupied"|"unavailable", reason: string|null}}
  */
 export function evaluateSlotAvailability({
@@ -77,6 +109,7 @@ export function evaluateSlotAvailability({
   existingBookings = [],
   openingHours = {},
   currentDateTime = new Date(),
+  closures = [],
 }) {
   // 1. Fecha/hora estructuralmente inválidas.
   const dateParts = parseISODateParts(date);
@@ -123,6 +156,17 @@ export function evaluateSlotAvailability({
   // 6. No queda tiempo suficiente hasta el cierre.
   if (Number.isFinite(openingHours.closingMinutes) && requestedEnd > openingHours.closingMinutes) {
     return { status: AVAILABILITY_STATUS.UNAVAILABLE, reason: AVAILABILITY_REASON.INSUFFICIENT_REMAINING_TIME };
+  }
+
+  // 6b. Cierre temporal de pista activo (PASO 07E). Se comprueba antes que
+  // el solapamiento con reservas: un cierre bloquea el hueco
+  // independientemente de si ya hay o no una reserva ahí.
+  const closedByCourtClosure = closures.some((closure) =>
+    closureCoversSlot(closure, courtId, date, requestedStart, requestedEnd)
+  );
+
+  if (closedByCourtClosure) {
+    return { status: AVAILABILITY_STATUS.UNAVAILABLE, reason: AVAILABILITY_REASON.COURT_CLOSED };
   }
 
   // 7. Solapamiento con una reserva existente (intervalo real, no solo

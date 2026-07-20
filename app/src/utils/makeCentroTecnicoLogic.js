@@ -3,7 +3,7 @@
 // node --test sin harness de render de React, igual que
 // resolveMakeInventorySource / createSingleFlightGuard en makeLiveClient.js.
 
-import { computeErrorRate, computeHealth, computeCriticality, getScenarioNote } from "../data/makeInventory.js";
+import { computeErrorRate, computeHealth, computeCriticality, getScenarioNote, MAKE_VERIFICATION_STATES } from "../data/makeInventory.js";
 
 // Orden de severidad de negocio, no alfabético: ALTA siempre antes que
 // MEDIA, MEDIA siempre antes que BAJA. Un sort por localeCompare() alfabético
@@ -69,6 +69,77 @@ function sumKnown(enriched, field) {
   const known = enriched.filter((s) => typeof s[field] === "number");
   if (enriched.length > 0 && known.length === 0) return null;
   return known.reduce((a, s) => a + s[field], 0);
+}
+
+// Resumen del PASO 01 (Make 50/50, 2026-07-17): cuenta cuántos de los
+// escenarios traen cada `estadoVerificacion`. Es deliberadamente ciego a si
+// la fuente es "live" o "snapshot" — la clasificación de verificación es una
+// auditoría manual sobre los 50 escenarios conocidos, no una métrica
+// operativa que cambie según de dónde vengan ejecuciones/errores.
+//
+// Un escenario en vivo (`enrichLiveScenario`) nunca trae `estadoVerificacion`
+// (Make no devuelve ese campo): se cuenta en `sinClasificar`, nunca se
+// inventa un estado para él. `verificados` es SOLO `confirmado` — nunca se
+// sube el número contando "listo_sin_bloqueo" o "pendiente_make_real" como
+// si ya estuvieran comprobados.
+export function computeVerificacionResumen(enriched) {
+  const conteo = {
+    confirmado: 0,
+    inferido: 0,
+    listo_sin_bloqueo: 0,
+    bloqueado_externo: 0,
+    pendiente_make_real: 0,
+  };
+  let sinClasificar = 0;
+
+  for (const s of enriched) {
+    const estado = s.estadoVerificacion;
+    if (estado && Object.prototype.hasOwnProperty.call(conteo, estado)) {
+      conteo[estado] += 1;
+    } else {
+      sinClasificar += 1;
+    }
+  }
+
+  return {
+    total: enriched.length,
+    verificados: conteo[MAKE_VERIFICATION_STATES.CONFIRMADO],
+    inferidos: conteo[MAKE_VERIFICATION_STATES.INFERIDO],
+    listosSinBloqueo: conteo[MAKE_VERIFICATION_STATES.LISTO_SIN_BLOQUEO],
+    bloqueadosExterno: conteo[MAKE_VERIFICATION_STATES.BLOQUEADO_EXTERNO],
+    pendientesMakeReal: conteo[MAKE_VERIFICATION_STATES.PENDIENTE_MAKE_REAL],
+    sinClasificar,
+  };
+}
+
+// Resumen del PASO 07A (Integración App ↔ Make 50/50, 2026-07-19): cuenta
+// cuántos de los 50 escenarios están en cada grupo de integración de código
+// (src/data/makeAppIntegrationMap.js). Eje independiente de
+// computeVerificacionResumen: aquel mide auditoría de Make, este mide si el
+// CÓDIGO de la app/Worker dispara realmente el escenario. Solo lectura —
+// nunca ejecuta ni marca nada como "funcional" por sí mismo.
+export function computeIntegracionResumen(mapa) {
+  const conteo = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+  let sinClasificar = 0;
+
+  for (const s of mapa) {
+    const grupo = s.grupo;
+    if (grupo && Object.prototype.hasOwnProperty.call(conteo, grupo)) {
+      conteo[grupo] += 1;
+    } else {
+      sinClasificar += 1;
+    }
+  }
+
+  return {
+    total: mapa.length,
+    integradoAppYWorker: conteo.A,
+    integradoAppSinWorker: conteo.B,
+    soloCentroTecnico: conteo.C,
+    autonomoMake: conteo.D,
+    sinIntegracion: conteo.E,
+    sinClasificar,
+  };
 }
 
 export function computeTotales(enriched) {

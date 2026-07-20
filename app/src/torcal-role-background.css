@@ -376,3 +376,39 @@ html body .cp04-sidebar .cp04-language *,
 html body .cp04-sidebar .cp04-language-select * {
   color: #ffffff !important;
 }
+
+/* ===== PASO 07K · FIX BOTÓN "INICIAR SESIÓN" (login con correo personal) =====
+   Mismo motivo que el fix de Perfil más arriba: esta pantalla (login/
+   selección de rol) activa `body.cp04-role-screen-active`, y la regla
+   genérica de fondo de botones más arriba en este archivo
+   (`body.cp04-role-screen-active button { background-color:
+   rgba(5,10,18,.22) !important; background-image: none !important }`)
+   dejaba el CTA principal de "Iniciar sesión" con fondo casi transparente
+   sobre fondo oscuro — prácticamente invisible. Se fuerza aquí el mismo
+   degradado lima/menta premium que ya usa el resto de CTAs de marca, con
+   mayor especificidad para ganarle a esa regla genérica. */
+body.cp04-role-screen-active button.cp04-login-submit-btn,
+body.cp04-role-screen-active button.cp04-login-submit-btn:hover,
+body.cp04-role-screen-active button.cp04-login-submit-btn:focus,
+body.cp04-role-screen-active button.cp04-login-submit-btn:focus-visible,
+body.cp04-role-screen-active button.cp04-login-submit-btn:active {
+  background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-image: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-color: #b6ff00 !important;
+  color: #06100a !important;
+  border-color: rgba(182, 255, 0, .85) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow:
+    0 16px 36px rgba(182, 255, 0, .32),
+    0 0 0 1px rgba(6, 16, 10, .45) !important;
+  opacity: 1 !important;
+}
+
+body.cp04-role-screen-active button.cp04-login-submit-btn * {
+  color: #06100a !important;
+}
+
+body.cp04-role-screen-active button.cp04-login-submit-btn:disabled {
+  opacity: .55 !important;
+}

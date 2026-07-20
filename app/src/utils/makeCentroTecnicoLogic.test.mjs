@@ -2,11 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { MAKE_INVENTORY } from "../data/makeInventory.js";
+import { MAKE_APP_INTEGRATION_MAP } from "../data/makeAppIntegrationMap.js";
 import {
   CP04_CRITICALITY_RANK,
   enrichSnapshotScenario,
   enrichLiveScenario,
   computeTotales,
+  computeVerificacionResumen,
+  computeIntegracionResumen,
   filterScenarios,
   sortScenarios,
   formatMetric,
@@ -17,11 +20,11 @@ import {
 
 const enrichedSnapshot = MAKE_INVENTORY.map(enrichSnapshotScenario);
 
-test("computeTotales: 50 escenarios reales, 38 activos, 12 inactivos (snapshot confirmado)", () => {
+test("computeTotales: 50 escenarios reales, 36 activos, 14 inactivos tras el Paso 03B", () => {
   const totales = computeTotales(enrichedSnapshot);
   assert.equal(totales.total, 50);
-  assert.equal(totales.activos, 38);
-  assert.equal(totales.inactivos, 12);
+  assert.equal(totales.activos, 36);
+  assert.equal(totales.inactivos, 14);
   assert.equal(totales.activos + totales.inactivos, totales.total);
 });
 
@@ -68,8 +71,8 @@ test("enrichSnapshotScenario: deriva dependenciaPrincipal desde usaAirtable y et
 test("filterScenarios: cada filtro devuelve exactamente el subconjunto esperado (sin fugas cruzadas)", () => {
   const activos = filterScenarios(enrichedSnapshot, { filtro: "activos" });
   const inactivos = filterScenarios(enrichedSnapshot, { filtro: "inactivos" });
-  assert.equal(activos.length, 38);
-  assert.equal(inactivos.length, 12);
+  assert.equal(activos.length, 36);
+  assert.equal(inactivos.length, 14);
   assert.ok(activos.every((s) => s.activo === true));
   assert.ok(inactivos.every((s) => s.activo === false));
 
@@ -122,6 +125,48 @@ test("sortScenarios: no muta la lista original (copia defensiva)", () => {
   const copia = [...original];
   sortScenarios(original, "errores");
   assert.deepEqual(original, copia);
+});
+
+// --- PASO 01 Make 50/50 (2026-07-17): computeVerificacionResumen ---
+
+test("computeVerificacionResumen: sobre el snapshot real tras el Paso 03B, 7 confirmados, 0 inferidos, 43 sin confirmar (16+18+9)", () => {
+  const resumen = computeVerificacionResumen(enrichedSnapshot);
+  assert.equal(resumen.total, 50);
+  assert.equal(resumen.verificados, 7);
+  assert.equal(resumen.inferidos, 0);
+  assert.equal(resumen.listosSinBloqueo, 16);
+  assert.equal(resumen.bloqueadosExterno, 18);
+  assert.equal(resumen.pendientesMakeReal, 9);
+  assert.equal(resumen.sinClasificar, 0);
+  assert.equal(
+    resumen.verificados + resumen.inferidos + resumen.listosSinBloqueo + resumen.bloqueadosExterno + resumen.pendientesMakeReal,
+    resumen.total
+  );
+});
+
+test("computeVerificacionResumen: nunca cuenta listo_sin_bloqueo ni pendiente_make_real como verificado", () => {
+  const resumen = computeVerificacionResumen(enrichedSnapshot);
+  assert.ok(resumen.verificados < resumen.total, "no puede afirmar que todos están confirmados");
+  assert.equal(resumen.verificados, 7, "verificados es estrictamente el conteo de 'confirmado', nada más");
+});
+
+test("computeVerificacionResumen: un escenario EN VIVO sin estadoVerificacion se cuenta como sinClasificar, nunca se inventa un estado", () => {
+  const liveSinClasificar = enrichLiveScenario({
+    id: 1, nombre: "X", categoria: "SCHEDULED", activo: true,
+    dependencia_principal: "Airtable", fuente_de_verdad_dato: "confirmado_make_api_live",
+    ejecuciones_acumuladas: 10, operaciones_acumuladas: 20, errores_acumulados: 1, tasa_error: 10,
+  });
+  const resumen = computeVerificacionResumen([liveSinClasificar]);
+  assert.equal(resumen.sinClasificar, 1);
+  assert.equal(resumen.verificados, 0);
+  assert.equal(resumen.total, 1);
+});
+
+test("computeVerificacionResumen: lista vacía no rompe y no inventa un total", () => {
+  const resumen = computeVerificacionResumen([]);
+  assert.equal(resumen.total, 0);
+  assert.equal(resumen.verificados, 0);
+  assert.equal(resumen.sinClasificar, 0);
 });
 
 test("CP04_CRITICALITY_RANK: ALTA > MEDIA > BAJA", () => {
@@ -296,4 +341,31 @@ test("Escenario real EN VIVO completo (50, sin executions/errors): los valores d
   for (const texto of [kpiEjecuciones, kpiErrores, kpiTasa, kpiOperaciones]) {
     assert.ok(!texto.includes("null") && !texto.includes("undefined"));
   }
+});
+
+test("computeIntegracionResumen: tras el Paso 07P, 4/50 integrados app+Worker, 35/50 integrados app sin Worker (40/50 con representación total), 3/50 autónomos Make, 7/50 sin integración visible", () => {
+  const resumen = computeIntegracionResumen(MAKE_APP_INTEGRATION_MAP);
+  assert.equal(resumen.total, 50);
+  assert.equal(resumen.integradoAppYWorker, 4);
+  assert.equal(resumen.integradoAppSinWorker, 35);
+  assert.equal(resumen.soloCentroTecnico, 1);
+  assert.equal(resumen.autonomoMake, 3);
+  assert.equal(resumen.sinIntegracion, 7);
+  assert.equal(resumen.sinClasificar, 0);
+  const suma = resumen.integradoAppYWorker + resumen.integradoAppSinWorker + resumen.soloCentroTecnico + resumen.autonomoMake + resumen.sinIntegracion + resumen.sinClasificar;
+  assert.equal(suma, resumen.total, "los 5 grupos + sinClasificar deben sumar exactamente el total");
+});
+
+test("computeIntegracionResumen: un escenario con grupo desconocido se cuenta en sinClasificar, nunca se inventa un grupo", () => {
+  const resumen = computeIntegracionResumen([{ id: 1, grupo: "Z" }, { id: 2, grupo: "A" }]);
+  assert.equal(resumen.total, 2);
+  assert.equal(resumen.sinClasificar, 1);
+  assert.equal(resumen.integradoAppYWorker, 1);
+});
+
+test("computeIntegracionResumen: lista vacía no rompe y no inventa un total", () => {
+  const resumen = computeIntegracionResumen([]);
+  assert.equal(resumen.total, 0);
+  assert.equal(resumen.integradoAppYWorker, 0);
+  assert.equal(resumen.sinIntegracion, 0);
 });

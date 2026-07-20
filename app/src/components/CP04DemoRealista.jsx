@@ -1,4 +1,3 @@
-import React from "react";
 import { cp04DemoData } from "../data/cp04DemoData";
 import "../styles/cp04-demo-realista.css";
 

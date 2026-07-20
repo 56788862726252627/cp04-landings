@@ -58,6 +58,65 @@ function cleanText(value) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
 }
 
+// --- PASO 06E: observabilidad y logging técnico coherente ---
+//
+// Un único formato para todo evento técnico relacionado con rate limiter,
+// caché de disponibilidad, idempotencia, modo degradado de Airtable 429 y
+// errores genéricos: mismo conjunto de campos, mismo canal (console.error,
+// visible en `wrangler tail`/Cloudflare Logs), fácil de filtrar por
+// `event` o `code` en soporte sin tener que recordar el formato distinto
+// de cada punto del código. Nunca lleva nombre, apellidos, email o
+// teléfono en claro — ver cp04HashIdempotencyKey.
+
+// Cloudflare añade la cabecera `cf-ray` a toda petición que pasa por su
+// borde: se reutiliza como identificador de correlación en vez de generar
+// uno propio (evitaría añadir una dependencia solo para esto). Fuera del
+// borde real (tests, `wrangler dev` local) esa cabecera no existe: se usa
+// un valor fijo y legible, nunca null/undefined en el log.
+export function cp04GetRequestId(request) {
+  return request?.headers?.get?.("cf-ray") || "sin-cf-ray";
+}
+
+// Huella corta y no reversible de una clave de idempotencia, para poder
+// correlacionar en los logs "esta solicitud" con "esta otra" sin escribir
+// la clave completa — que para crear_reserva puede incluir email y
+// teléfono normalizados (ver cp04BuildIdempotencyKey). No es un hash
+// criptográfico: no protege ningún secreto, solo evita texto claro de
+// datos personales en un log técnico. FNV-1a de 32 bits, síncrono y
+// determinista — suficiente para agrupar eventos del mismo caso.
+export function cp04HashIdempotencyKey(key) {
+  if (!key) return null;
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < key.length; i++) {
+    hash ^= key.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+// Constructor único del evento técnico. Solo acepta campos ya conocidos y
+// no sensibles (nunca el objeto completo que pase un llamador) — `detail`
+// es el único campo abierto, y se usa exclusivamente para contexto técnico
+// ya filtrado por cada punto de llamada (status HTTP, razón interna,
+// mensaje de excepción), nunca para PII. Devuelve el evento (útil para
+// tests) además de loguearlo.
+export function cp04LogTechnicalEvent(fields) {
+  const event = {
+    event: fields.event,
+    action: fields.action ?? null,
+    code: fields.code ?? null,
+    requestId: fields.requestId ?? null,
+    idempotencyKeyHash: fields.idempotencyKeyHash ?? null,
+    retryable: fields.retryable ?? null,
+    reserva_confirmada: fields.reserva_confirmada ?? null,
+    origen: fields.origen ?? null,
+    timestamp: fields.timestamp ?? new Date().toISOString(),
+    ...(fields.detail !== undefined ? { detail: fields.detail } : {}),
+  };
+  console.error("CP04_EVENT", JSON.stringify(event));
+  return event;
+}
+
 // CP04_DOMINGOS_V1: reglas permanentes de cierre dominical.
 function parseISODateParts(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(cleanText(value));
@@ -100,7 +159,7 @@ function requestedReservationDate(payload, accion) {
 }
 
 
-function validatePayload(payload) {
+export function validatePayload(payload) {
   const errors = {};
   const accion = cleanText(payload?.accion);
 
@@ -255,6 +314,7 @@ function validatePayload(payload) {
   if (!reserva.fecha) {
     errors.fecha = "Fecha requerida.";
   } else if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(reserva.fecha) ||
     Number.isNaN(selectedDate.getTime()) ||
     selectedDate < today
   ) {
@@ -401,6 +461,7 @@ function normalizePayload(payload) {
 
   return {
     accion: "crear_reserva",
+    clave_reserva: cleanText(payload.clave_reserva || ""),
     club: cleanText(payload.club || "Club Padel 04"),
     origen: cleanText(payload.origen || "frontend"),
     jugador: {
@@ -435,7 +496,17 @@ async function forwardToMake(payload, env) {
     body: JSON.stringify(payload),
   });
 
-  return { configured: true, ok: response.ok, status: response.status };
+  // PASO 06C: se lee el cuerpo de forma segura (nunca lanza) solo para
+  // poder detectar un bloqueo de cuota de Airtable si Make llegara a
+  // reportarlo de forma síncrona en la respuesta del propio webhook.
+  // Evidencia real (Paso 05D): Make normalmente responde 200 de inmediato
+  // (el webhook queda aceptado) y el fallo de Airtable ocurre después, de
+  // forma asíncrona dentro de la ejecución del escenario — el Worker no
+  // puede verlo desde aquí. Esto es una defensa adicional para el caso en
+  // que Make sí lo reporte síncronamente, no el caso esperado hoy.
+  const bodyText = await response.text().catch(() => "");
+
+  return { configured: true, ok: response.ok, status: response.status, bodyText };
 }
 
 async function prepareAirtableWrite(payload, env) {
@@ -452,6 +523,344 @@ async function prepareAirtableWrite(payload, env) {
     status: 200,
     reason: "Reserva confirmada vía Make. Escritura directa Airtable desactivada para evitar duplicados y bloqueos 403."
   };
+}
+
+// PASO 06C (2026-07-17): modo degradado para el bloqueo de cuota de
+// Airtable (HTTP 429 / "PUBLIC_API_BILLING_LIMIT_EXCEEDED" / el
+// "RateLimitError" que reporta Make — ver Paso 05D). Es DELIBERADAMENTE
+// más estrecho que "cualquier fallo de Airtable": Airtable no configurado,
+// un error genérico o una caída de red mantienen el comportamiento
+// existente documentado en cada sitio donde se usa. Solo esta categoría
+// específica de fallo — la única que sabemos, con evidencia real, que
+// significa "la reserva probablemente no se completará al otro lado" — debe
+// impedir avanzar y devolver el mensaje degradado en vez de una falsa
+// confirmación.
+export function cp04IsAirtableRateLimited(status, detailsText) {
+  if (status === 429) return true;
+  return /PUBLIC_API_BILLING_LIMIT_EXCEEDED|RateLimitError/i.test(String(detailsText ?? ""));
+}
+
+const CP04_AIRTABLE_RATE_LIMIT_USER_MESSAGE =
+  "El sistema de reservas está temporalmente saturado. Inténtalo de nuevo más tarde o contacta con recepción.";
+
+// Respuesta controlada y uniforme de "modo degradado". `message` es lo
+// único que llega al cliente; el resto de `technicalDetail` NUNCA sale del
+// Worker — solo se loguea server-side, vía cp04LogTechnicalEvent (PASO
+// 06E), y solo los campos ya whitelisteados abajo (nunca el objeto que
+// pase el llamador tal cual), para poder diagnosticar sin filtrar nada
+// interno (ni un token, ni el cuerpo crudo de Airtable/Make) al usuario
+// final.
+export function cp04BuildAirtableDegradedResponse(technicalDetail = {}) {
+  cp04LogTechnicalEvent({
+    event: "airtable_rate_limit",
+    action: technicalDetail.accion ?? null,
+    code: "AIRTABLE_RATE_LIMIT",
+    requestId: technicalDetail.requestId ?? null,
+    retryable: true,
+    reserva_confirmada: false,
+    origen: technicalDetail.origen ?? null,
+    detail: {
+      status: technicalDetail.status ?? null,
+      reason: technicalDetail.reason ?? null,
+      fecha: technicalDetail.fecha ?? null,
+    },
+  });
+  return {
+    ok: false,
+    code: "AIRTABLE_RATE_LIMIT",
+    retryable: true,
+    reserva_confirmada: false,
+    message: CP04_AIRTABLE_RATE_LIMIT_USER_MESSAGE,
+  };
+}
+
+// Consulta compartida de slots ocupados en Airtable para una fecha, con el
+// mismo filtro (fecha + estado activo) que ya usaba handleDisponibilidad.
+// Extraída para poder reutilizarla también en la revalidación de
+// handleReservas, sin duplicar la query. `ok:false` cubre tanto "Airtable
+// no configurado" como errores de red/HTTP: en ningún caso lanza, siempre
+// devuelve un resultado que el llamador decide cómo tratar.
+export async function cp04FetchOcupadas(env, fecha) {
+  const cached = cp04GetCachedAvailability(fecha);
+  if (cached) return cached;
+
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+    return { ok: false, reason: "not_configured" };
+  }
+
+  const formula = `AND(
+    FIND("${cp04FormulaText(fecha)}|", {clave_slot}) = 1,
+    OR(
+      {estado_reserva} = "pendiente",
+      {estado_reserva} = "confirmada",
+      {estado_reserva} = "reprogramada"
+    )
+  )`;
+
+  const airtableUrl =
+    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+    `?filterByFormula=${encodeURIComponent(formula)}` +
+    `&fields%5B%5D=clave_slot` +
+    `&fields%5B%5D=estado_reserva` +
+    `&fields%5B%5D=fecha_reserva` +
+    `&fields%5B%5D=hora_inicio` +
+    `&fields%5B%5D=hora_fin` +
+    `&fields%5B%5D=Pista`;
+
+  let airtableRes;
+  try {
+    airtableRes = await fetch(airtableUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    });
+  } catch {
+    return { ok: false, reason: "network_error" };
+  }
+
+  const data = await airtableRes.json().catch(() => null);
+
+  if (!airtableRes.ok) {
+    return { ok: false, reason: "airtable_error", status: airtableRes.status, details: data };
+  }
+
+  const records = data?.records || [];
+  const ocupadas = records.map((record) => record.fields?.clave_slot).filter(Boolean);
+
+  const result = { ok: true, records, ocupadas };
+  cp04SetCachedAvailability(fecha, result);
+  return result;
+}
+
+// Comprobación pura (sin red): ¿el slot fecha|pista|hora ya aparece en la
+// lista de ocupadas? Mismo formato de clave que ya usa el frontend
+// (App.jsx: `${fecha}|${pista}|${hora}`) y que Airtable devuelve en
+// clave_slot, para no introducir un segundo formato paralelo.
+export function cp04IsSlotOccupied(ocupadas, fecha, pista, hora) {
+  if (!Array.isArray(ocupadas) || !fecha || !pista || !hora) return false;
+  const claveSlot = `${fecha}|${pista}|${hora}`;
+  return ocupadas.includes(claveSlot);
+}
+
+// Clave de idempotencia derivada de los campos que identifican de forma
+// única la operación solicitada. Pura y determinista: la misma solicitud
+// exacta produce siempre la misma clave, distintas solicitudes (aunque
+// lleguen del mismo jugador) producen claves distintas.
+//
+// PASO 06D (2026-07-17): para crear_reserva, si el propio cliente ya manda
+// una clave_reserva (pruebas controladas, o un futuro cliente que la
+// genere), se respeta tal cual — es la clave más fuerte posible, e
+// idéntica a la que usará Make/Airtable para esa misma reserva. Si no
+// llega, se deriva de forma estable a partir de los datos que identifican
+// la operación (acción + email normalizado + fecha + hora + pista +
+// teléfono), sin incluir nunca nada sensible en logs derivados de esta
+// clave (no lleva nombre/apellidos, solo lo estrictamente necesario para
+// distinguir una operación de otra).
+export function cp04BuildIdempotencyKey(normalizedPayload) {
+  const accion = normalizedPayload?.accion;
+
+  if (accion === "crear_reserva") {
+    const claveExplicita = cleanText(normalizedPayload?.clave_reserva);
+    if (claveExplicita) return `crear|clave|${claveExplicita}`;
+
+    const r = normalizedPayload.reserva || {};
+    const email = cleanText(normalizedPayload.jugador?.email).toLowerCase();
+    const telefono = cleanText(normalizedPayload.jugador?.telefono).replace(/\D/g, "");
+    return `crear|${email}|${r.fecha}|${r.pista}|${r.hora}|${telefono}`;
+  }
+
+  if (accion === "reprogramar_reserva") {
+    return `reprogramar|${normalizedPayload.clave_reserva}|${normalizedPayload.nueva_fecha_reserva}|${normalizedPayload.nueva_hora_inicio}|${normalizedPayload.nueva_pista}`;
+  }
+
+  if (accion === "cancelar_reserva") {
+    return `cancelar|${normalizedPayload.clave_reserva}`;
+  }
+
+  return null;
+}
+
+// PASO 06D: idempotencia de reservas en memoria — mismo patrón que la
+// caché de disponibilidad del Paso 06B (Map a nivel de módulo, TTL
+// configurable, testable con `now` inyectado). Sustituye, en el flujo real
+// de handleReservas más abajo, al mecanismo anterior basado en la Cache
+// API (cp04CheckIdempotency, justo debajo — se mantiene definido y con sus
+// propios tests, solo deja de llamarse desde handleReservas): aquel
+// marcaba la solicitud como "hecha" ANTES de saber si realmente se
+// reenvió, así que un fallo (Make rechaza, degradado 429, etc.) dejaba
+// bloqueada 10s una repetición legítima del mismo usuario — justo lo que
+// esta misión pide evitar.
+//
+// Regla de bloqueo: una clave solo queda marcada (bloqueando repeticiones
+// durante el TTL) cuando la solicitud original terminó en éxito real de
+// reenvío (`ok:true`). Cualquier otro desenlace (validación, slot ya
+// ocupado, degradado 429, Make rechazado) no marca nada — así una
+// repetición legítima tras un fallo nunca queda bloqueada. Limitación
+// aceptada (mismo criterio que el rate limiter de más abajo): esto no
+// cierra la ventana de carrera de dos solicitudes verdaderamente
+// simultáneas, solo la de reintentos secuenciales — suficiente para el
+// caso real (doble clic, reintento tras error de red del cliente).
+export const CP04_IDEMPOTENCY_TTL_MS = 3 * 60 * 1000; // 3 min, dentro del rango 2-5 min pedido
+let cp04IdempotencyStore = new Map(); // clave -> expiresAt (epoch ms)
+
+export function cp04IsIdempotentDuplicate(key, now = Date.now()) {
+  if (!key) return false;
+  const expiresAt = cp04IdempotencyStore.get(key);
+  if (expiresAt === undefined) return false;
+  if (now >= expiresAt) {
+    cp04IdempotencyStore.delete(key);
+    return false;
+  }
+  return true;
+}
+
+export function cp04MarkIdempotentSuccess(key, now = Date.now()) {
+  if (!key) return;
+  cp04IdempotencyStore.set(key, now + CP04_IDEMPOTENCY_TTL_MS);
+}
+
+// Expuesto solo para tests (limpiar estado entre casos), mismo patrón que
+// __resetAvailabilityCacheForTests.
+export function __resetIdempotencyStoreForTests() {
+  cp04IdempotencyStore = new Map();
+}
+
+const CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE =
+  "Ya hemos recibido esta solicitud hace unos instantes. Si no ves la confirmación, contacta con recepción antes de volver a intentarlo.";
+
+// Respuesta uniforme para una repetición detectada. `reserva_confirmada`
+// es siempre false: el Worker nunca tiene evidencia real de que Make haya
+// terminado de procesar la solicitud original (ver Paso 06C/05D — Make
+// acepta el webhook de forma síncrona mucho antes de completar su propia
+// ejecución), así que nunca se puede afirmar una confirmación aquí.
+export function cp04BuildIdempotentDuplicateResponse() {
+  return {
+    ok: false,
+    code: "IDEMPOTENT_DUPLICATE",
+    duplicated: true,
+    retryable: false,
+    reserva_confirmada: false,
+    message: CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE,
+  };
+}
+
+// Idempotencia best-effort usando la Cache API nativa de Workers
+// (`caches.default`): no requiere ningún binding nuevo ni cambio en
+// wrangler.toml. No es una garantía global entre datacenters, pero cubre
+// el caso real más común (doble clic, reintento inmediato del mismo
+// cliente) durante una ventana corta.
+export async function cp04CheckIdempotency(request, normalizedPayload) {
+  const idemKey = cp04BuildIdempotencyKey(normalizedPayload);
+  if (!idemKey) {
+    return { duplicate: false, markDone: async () => {} };
+  }
+
+  const cache = caches.default;
+  const cacheUrl = new URL(request.url);
+  cacheUrl.pathname = `/__cp04_idempotency__/${encodeURIComponent(idemKey)}`;
+  const cacheKey = new Request(cacheUrl.toString());
+
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return { duplicate: true, markDone: async () => {} };
+  }
+
+  return {
+    duplicate: false,
+    markDone: async () => {
+      await cache.put(cacheKey, new Response("1", { headers: { "Cache-Control": "max-age=10" } }));
+    },
+  };
+}
+
+// --- Rate limiting básico defensivo para crear_reserva (in-memory, por
+// isolate) ---
+//
+// Mismo patrón y misma limitación aceptada que checkMakeRateLimit en
+// support/makeLiveInventory.js: protege contra un script que intente saturar
+// el calendario con altas en ráfaga desde un mismo isolate, no contra un
+// ataque distribuido (para eso haría falta un límite a nivel de borde/KV,
+// fuera de alcance de esta fase). El límite es generoso a propósito para no
+// romper pruebas manuales ni demos con varios roles seguidos.
+const CP04_CREAR_RESERVA_RATE_LIMIT_MAX = 30;
+const CP04_CREAR_RESERVA_RATE_LIMIT_WINDOW_MS = 60_000;
+let cp04CrearReservaRateLimitHits = [];
+
+export function cp04CheckCrearReservaRateLimit(now = Date.now()) {
+  cp04CrearReservaRateLimitHits = cp04CrearReservaRateLimitHits.filter(
+    (t) => now - t < CP04_CREAR_RESERVA_RATE_LIMIT_WINDOW_MS
+  );
+  if (cp04CrearReservaRateLimitHits.length >= CP04_CREAR_RESERVA_RATE_LIMIT_MAX) {
+    return false;
+  }
+  cp04CrearReservaRateLimitHits.push(now);
+  return true;
+}
+
+// Expuesto solo para tests (limpiar estado entre casos).
+export function __resetCrearReservaRateLimitForTests() {
+  cp04CrearReservaRateLimitHits = [];
+}
+
+// PASO 06B (2026-07-17): caché en memoria de disponibilidad por fecha, para
+// reducir lecturas repetidas a Airtable mientras dura el bloqueo de cuota
+// (PUBLIC_API_BILLING_LIMIT_EXCEEDED — ver
+// src/data/makeInventory.js::MAKE_VERIFICATION_STEP6A_META). Sin cambiar la
+// lógica funcional de reservas: cp04FetchOcupadas sigue devolviendo
+// exactamente la misma forma de resultado, solo evita repetir la llamada de
+// red si ya se consultó esa fecha hace poco. Mismo patrón que el rate
+// limiter de arriba: estado en memoria del propio Worker, sin binding
+// nuevo, sin tocar credenciales.
+// PASO 06E: decisión deliberada de NO loguear cada hit/miss de esta caché
+// (a diferencia de rate limiter/idempotencia/Airtable 429 más arriba).
+// Motivo: un hit/miss ocurre en CADA consulta de disponibilidad — crear,
+// reprogramar y `GET /api/disponibilidad` normal, no solo en un caso raro
+// o de error — así que loguearlo generaría ruido de alto volumen sin
+// ninguna acción de soporte asociada (a diferencia de un 429 degradado o
+// un rechazo de Make, que sí son accionables). La corrección de la caché
+// ya está cubierta por tests (nunca cachea errores, TTL exacto, invalida
+// tras escritura); si en el futuro hiciera falta depurar un problema de
+// caché en producción, el hueco es fácil de llenar reutilizando
+// cp04LogTechnicalEvent con event:"availability_cache_hit"/"_miss".
+export const CP04_AVAILABILITY_CACHE_TTL_MS = 30_000; // 30s — dentro del rango 30-60s pedido
+let cp04AvailabilityCache = new Map(); // fecha -> { result, expiresAt }
+
+export function cp04GetCachedAvailability(fecha, now = Date.now()) {
+  const entry = cp04AvailabilityCache.get(fecha);
+  if (!entry) return null;
+  if (now >= entry.expiresAt) {
+    cp04AvailabilityCache.delete(fecha);
+    return null;
+  }
+  return entry.result;
+}
+
+// Solo un resultado `ok:true` (una respuesta real y completa de Airtable) se
+// guarda en caché. Un error — incluido el 429 de cuota que motivó este
+// cambio — NUNCA se cachea como si fuera disponibilidad válida: cachear un
+// error congelaría ese error durante todo el TTL en vez de dejar que el
+// siguiente intento vuelva a comprobar el estado real cuando la cuota se
+// restablezca.
+export function cp04SetCachedAvailability(fecha, result, now = Date.now()) {
+  if (!result?.ok) return;
+  cp04AvailabilityCache.set(fecha, { result, expiresAt: now + CP04_AVAILABILITY_CACHE_TTL_MS });
+}
+
+// Invalidación total (no solo de una fecha): se llama tras crear, cancelar
+// o reprogramar una reserva (ver handleReservas). Reprogramar mueve una
+// reserva de una fecha a otra, y la fecha original no viaja en el payload
+// (solo `clave_reserva`) — vaciar todo el mapa es más simple y más seguro
+// que arriesgarse a dejar una fecha desactualizada en caché.
+export function cp04InvalidateAvailabilityCache() {
+  cp04AvailabilityCache.clear();
+}
+
+// Expuesto solo para tests (limpiar estado entre casos), mismo patrón que
+// __resetCrearReservaRateLimitForTests.
+export function __resetAvailabilityCacheForTests() {
+  cp04AvailabilityCache.clear();
 }
 
 async function handleReservas(request, env) {
@@ -483,6 +892,31 @@ async function handleReservas(request, env) {
   // servidor todavía: activarlo hoy sin más rompería el tutorial guiado de
   // STAFF/ADMIN/SUPPORT. Ver informe de auditoría para la decisión pendiente.
   const accionSolicitada = cleanText(payload?.accion);
+
+  if (accionSolicitada === "crear_reserva" && !cp04CheckCrearReservaRateLimit()) {
+    // PASO 06E: mismo criterio de logging que idempotencia más abajo — ambos
+    // son un rechazo temprano que impide llegar a Make, sin que haya
+    // ocurrido ningún error de Airtable/Make todavía.
+    cp04LogTechnicalEvent({
+      event: "rate_limited",
+      action: "crear_reserva",
+      code: "RATE_LIMITED",
+      requestId: cp04GetRequestId(request),
+      retryable: true,
+      reserva_confirmada: false,
+      origen: "rate_limiter_crear_reserva",
+    });
+    return jsonResponse(
+      {
+        ok: false,
+        error: "RATE_LIMITED",
+        message: "Demasiadas solicitudes de alta de reserva en poco tiempo. Inténtalo de nuevo en un minuto.",
+      },
+      429,
+      headers
+    );
+  }
+
   const esAccionDeStaff =
     accionSolicitada === "cancelar_reserva" ||
     accionSolicitada === "reprogramar_reserva";
@@ -501,12 +935,142 @@ async function handleReservas(request, env) {
   }
 
   const normalizedPayload = normalizePayload(payload);
+
+  // Idempotencia: si la misma solicitud exacta ya se procesó hace unos
+  // segundos (doble clic, reintento de red del cliente), no se reenvía a
+  // Make una segunda vez. Se marca como "en curso" ANTES de las llamadas
+  // de red siguientes para cerrar la ventana de carrera entre dos
+  // solicitudes casi simultáneas.
+  // PASO 06D: ver la nota junto a cp04IsIdempotentDuplicate más arriba —
+  // el marcado real de éxito ocurre al final de esta función, nunca aquí,
+  // para no bloquear un reintento legítimo si esta solicitud termina en
+  // error.
+  const idempotencyKey = cp04BuildIdempotencyKey(normalizedPayload);
+  if (cp04IsIdempotentDuplicate(idempotencyKey)) {
+    // PASO 06E: mismo criterio de logging que el rate limiter de arriba —
+    // idempotencyKeyHash nunca la clave completa (puede incluir email y
+    // teléfono normalizados en crear_reserva, ver cp04BuildIdempotencyKey).
+    cp04LogTechnicalEvent({
+      event: "idempotent_duplicate",
+      action: accionSolicitada,
+      code: "IDEMPOTENT_DUPLICATE",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: false,
+      reserva_confirmada: false,
+      origen: "idempotencia",
+    });
+    return jsonResponse(cp04BuildIdempotentDuplicateResponse(), 409, headers);
+  }
+
+  // Revalidación de disponibilidad: vuelve a comprobar contra Airtable
+  // justo antes de reenviar a Make, para reducir (que no eliminar del
+  // todo) la ventana de condición de carrera frente a lo que el frontend
+  // ya comprobó al cargar el formulario. Solo aplica a crear/reprogramar,
+  // que son las únicas acciones que ocupan un slot concreto.
+  //
+  // Si Airtable no responde, no está configurado o está degradado (p. ej.
+  // límite de facturación excedido), NO se bloquea la reserva: se deja
+  // pasar igual que se comportaba el flujo antes de este cambio, para no
+  // convertir un fallo de lectura de Airtable en un corte total de altas.
+  if (accionSolicitada === "crear_reserva" || accionSolicitada === "reprogramar_reserva") {
+    const fechaRevalidar =
+      accionSolicitada === "crear_reserva"
+        ? normalizedPayload.reserva.fecha
+        : normalizedPayload.nueva_fecha_reserva;
+    const pistaRevalidar =
+      accionSolicitada === "crear_reserva"
+        ? normalizedPayload.reserva.pista
+        : normalizedPayload.nueva_pista;
+    const horaRevalidar =
+      accionSolicitada === "crear_reserva"
+        ? normalizedPayload.reserva.hora
+        : normalizedPayload.nueva_hora_inicio;
+
+    const disponibilidad = await cp04FetchOcupadas(env, fechaRevalidar);
+
+    if (disponibilidad.ok && cp04IsSlotOccupied(disponibilidad.ocupadas, fechaRevalidar, pistaRevalidar, horaRevalidar)) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: "SLOT_ALREADY_BOOKED",
+          message: "Ese horario ya no está disponible. Elige otra franja.",
+        },
+        409,
+        headers
+      );
+    }
+
+    // PASO 06C: a diferencia del resto de fallos de Airtable (que siguen
+    // dejando pasar la solicitud, ver nota arriba), un bloqueo de CUOTA
+    // aquí sí debe frenar la solicitud. Evidencia real (Paso 05D): cuando
+    // Airtable está así de saturado, la ejecución de Make también falla
+    // más adelante en su propio paso de Airtable — dejar pasar solo
+    // produciría una respuesta "forwarded" que en realidad nunca llega a
+    // confirmarse, exactamente la falsa confirmación que esta misión pide
+    // evitar.
+    if (!disponibilidad.ok && cp04IsAirtableRateLimited(disponibilidad.status, JSON.stringify(disponibilidad.details ?? disponibilidad.reason ?? ""))) {
+      return jsonResponse(
+        cp04BuildAirtableDegradedResponse({ origen: "revalidacion_reserva", accion: accionSolicitada, status: disponibilidad.status, reason: disponibilidad.reason, requestId: cp04GetRequestId(request) }),
+        503,
+        headers
+      );
+    }
+    // Cualquier otro disponibilidad.ok === false (Airtable no configurado,
+    // error genérico, red caída): se continúa sin revalidar, ver nota arriba.
+  }
+
   const makeResult = await forwardToMake(normalizedPayload, env);
   const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
 
+  // La disponibilidad cacheada puede haber quedado desactualizada por esta
+  // misma solicitud (crear/cancelar/reprogramar cambian qué slots están
+  // ocupados) — se invalida siempre que se intenta una de estas 3
+  // acciones, sin importar si Make aceptó o rechazó el reenvío: es más
+  // seguro refrescar de más que arriesgarse a servir disponibilidad
+  // obsoleta desde la caché.
+  if (
+    accionSolicitada === "crear_reserva" ||
+    accionSolicitada === "cancelar_reserva" ||
+    accionSolicitada === "reprogramar_reserva"
+  ) {
+    cp04InvalidateAvailabilityCache();
+  }
+
+  // PASO 06C: defensa adicional si Make llegara a reportar el bloqueo de
+  // cuota de Airtable de forma síncrona en la respuesta del propio webhook
+  // (ver nota en forwardToMake — hoy Make normalmente responde 200 antes
+  // de que ese fallo ocurra, pero si alguna vez lo reporta aquí, tampoco
+  // debe tratarse como una reserva confirmada).
+  if (makeResult.configured && cp04IsAirtableRateLimited(makeResult.status, makeResult.bodyText)) {
+    return jsonResponse(
+      cp04BuildAirtableDegradedResponse({ origen: "forward_to_make", accion: accionSolicitada, status: makeResult.status, requestId: cp04GetRequestId(request) }),
+      503,
+      headers
+    );
+  }
+
   if (makeResult.configured && !makeResult.ok) {
+    // PASO 06E: no tenía logging propio hasta ahora — sin esto, un rechazo
+    // sostenido de Make (webhook mal configurado, cuenta suspendida) no
+    // dejaba ningún rastro server-side, solo el 502 al cliente.
+    cp04LogTechnicalEvent({
+      event: "make_rejected",
+      action: accionSolicitada,
+      code: "MAKE_REJECTED",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: true,
+      reserva_confirmada: false,
+      origen: "forward_to_make",
+      detail: { status: makeResult.status ?? null },
+    });
     return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
   }
+
+  // PASO 06D: solo aquí, en el único camino de éxito real, se marca la
+  // clave de idempotencia — ver la nota junto a cp04IsIdempotentDuplicate.
+  cp04MarkIdempotentSuccess(idempotencyKey);
 
   return jsonResponse({
     ok: true,
@@ -567,6 +1131,17 @@ async function handleDisponibilidad(request, env) {
     );
   }
 
+  // Endpoint público sin autenticación: valida el formato antes de usar
+  // `fecha` en un filtro de Airtable (defensa en profundidad, además del
+  // escape de cp04FormulaText dentro de cp04FetchOcupadas).
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return jsonResponse(
+      { ok: false, error: "Formato de fecha inválido, use YYYY-MM-DD" },
+      400,
+      headers
+    );
+  }
+
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
     return jsonResponse(
       {
@@ -583,51 +1158,49 @@ async function handleDisponibilidad(request, env) {
     );
   }
 
-  const formula = `AND(
-    FIND("${fecha}|", {clave_slot}) = 1,
-    OR(
-      {estado_reserva} = "pendiente",
-      {estado_reserva} = "confirmada",
-      {estado_reserva} = "reprogramada"
-    )
-  )`;
+  // Consulta compartida con la revalidación de handleReservas (misma
+  // query, mismo filtro por fecha/estado) — ver cp04FetchOcupadas.
+  const disponibilidad = await cp04FetchOcupadas(env, fecha);
 
-  const airtableUrl =
-    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
-    `?filterByFormula=${encodeURIComponent(formula)}` +
-    `&fields%5B%5D=clave_slot` +
-    `&fields%5B%5D=estado_reserva` +
-    `&fields%5B%5D=fecha_reserva` +
-    `&fields%5B%5D=hora_inicio` +
-    `&fields%5B%5D=hora_fin` +
-    `&fields%5B%5D=Pista`;
+  if (!disponibilidad.ok) {
+    // No reenviar disponibilidad.details (cuerpo crudo de error de Airtable)
+    // a un cliente anónimo: solo se loguea server-side, sin datos personales,
+    // y solo `reason`/`status` (nunca `details`) — ver cp04LogTechnicalEvent.
+    cp04LogTechnicalEvent({
+      event: "airtable_error",
+      action: "consultar_disponibilidad",
+      code:
+        disponibilidad.reason === "not_configured"
+          ? "AIRTABLE_NOT_CONFIGURED"
+          : disponibilidad.reason === "network_error"
+          ? "AIRTABLE_NETWORK_ERROR"
+          : "AIRTABLE_ERROR",
+      requestId: cp04GetRequestId(request),
+      retryable: disponibilidad.reason !== "not_configured",
+      reserva_confirmada: false,
+      origen: "disponibilidad",
+      detail: { reason: disponibilidad.reason ?? null, status: disponibilidad.status ?? null, fecha },
+    });
 
-  const airtableRes = await fetch(airtableUrl, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
-      "Content-Type": "application/json"
+    if (cp04IsAirtableRateLimited(disponibilidad.status, JSON.stringify(disponibilidad.details ?? disponibilidad.reason ?? ""))) {
+      return jsonResponse(
+        cp04BuildAirtableDegradedResponse({ origen: "disponibilidad", fecha, status: disponibilidad.status, reason: disponibilidad.reason, requestId: cp04GetRequestId(request) }),
+        503,
+        headers
+      );
     }
-  });
 
-  const data = await airtableRes.json();
-
-  if (!airtableRes.ok) {
     return jsonResponse(
       {
         ok: false,
         error: "Error consultando disponibilidad en Airtable",
-        status: airtableRes.status,
-        details: data
       },
       500,
       headers
     );
   }
 
-  const ocupadas = (data.records || [])
-    .map((record) => record.fields?.clave_slot)
-    .filter(Boolean);
+  const ocupadas = disponibilidad.ocupadas;
 
   // ocupadas_detalle: además de la clave plana (solo hora de inicio, que ya
   // usan otros consumidores), se expone hora_fin de cada reserva existente
@@ -637,7 +1210,7 @@ async function handleDisponibilidad(request, env) {
   // coincidencia exacta de hora de inicio. No añade ni modifica nada en
   // Airtable: solo se lee un campo que ya existe (hora_fin, ya usado en
   // cp04ListReservations más abajo).
-  const ocupadasDetalle = (data.records || [])
+  const ocupadasDetalle = disponibilidad.records
     .map((record) => {
       const fields = record.fields || {};
       const pista = fields.Pista;
@@ -669,7 +1242,7 @@ async function handleDisponibilidad(request, env) {
 }
 
 // CP04_LISTADO_RESERVAS_V1_BEGIN
-function cp04FormulaText(value) {
+export function cp04FormulaText(value) {
   return String(value ?? "")
     .replace(/\\/g, "\\\\")
     .replace(/"/g, '\\"');
@@ -826,7 +1399,7 @@ async function cp04ListReservations(request, env) {
 
     const rawText = await airtableResponse.text();
 
-    let airtableData = {};
+    let airtableData;
 
     try {
       airtableData = rawText
@@ -1147,6 +1720,309 @@ async function handleAltaJugador(request, env) {
   );
 }
 
+// PASO 07C (2026-07-19): Baja de Jugador + Promoción — réplica deliberada
+// del patrón de handleAltaJugador (mismo gate RBAC, misma forma de
+// respuesta, mismo criterio de "nunca confirmar sin respuesta real de
+// Make"). MAKE_BAJA_JUGADOR_WEBHOOK todavía no está configurado como
+// secret en ningún entorno (ver wrangler.toml) — mientras no lo esté,
+// este handler responde 503 de forma segura y nunca inventa una URL ni
+// un secreto. Cuando exista el webhook real, no haría falta tocar nada
+// más de esta función: basta con configurar el secret.
+async function handleBajaJugador(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (request.method !== "POST") {
+    return jsonResponse(
+      { ok: false, error: "Method not allowed" },
+      405,
+      { ...headers, Allow: "POST, OPTIONS" }
+    );
+  }
+
+  if (!env.MAKE_BAJA_JUGADOR_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "Baja webhook not configured" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse(
+      { ok: false, error: "Invalid JSON" },
+      400,
+      headers
+    );
+  }
+
+  const clean = (value) =>
+    typeof value === "string" ? value.trim() : value;
+
+  const normalized = {
+    nombre: clean(payload?.nombre),
+    apellidos: clean(payload?.apellidos),
+    email: clean(payload?.email)?.toLowerCase(),
+    telefono: clean(payload?.telefono),
+    motivo_baja: clean(payload?.motivo_baja),
+    fecha_baja: clean(payload?.fecha_baja),
+    promocionar_siguiente_si_aplica: payload?.promocionar_siguiente_si_aplica === true,
+    observaciones: clean(payload?.observaciones || ""),
+    origen: clean(payload?.origen || "APP_CLUB_PADEL_04"),
+    accion: "baja_jugador",
+  };
+
+  const errors = {};
+
+  if (!normalized.nombre || normalized.nombre.length < 2) {
+    errors.nombre = "Nombre inválido";
+  }
+
+  if (!normalized.apellidos || normalized.apellidos.length < 2) {
+    errors.apellidos = "Apellidos inválidos";
+  }
+
+  if (
+    !normalized.email ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized.email)
+  ) {
+    errors.email = "Email inválido";
+  }
+
+  if (
+    !normalized.telefono ||
+    normalized.telefono.replace(/\D/g, "").length < 9
+  ) {
+    errors.telefono = "Teléfono inválido";
+  }
+
+  if (!normalized.motivo_baja) {
+    errors.motivo_baja = "Motivo de baja obligatorio";
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha_baja || "")) {
+    errors.fecha_baja = "Fecha de baja inválida";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return jsonResponse(
+      { ok: false, error: "Validation failed", fields: errors },
+      400,
+      headers
+    );
+  }
+
+  const makeResponse = await fetch(env.MAKE_BAJA_JUGADOR_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(normalized),
+  });
+
+  const responseText = await makeResponse.text();
+
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "Make request failed",
+        status: makeResponse.status,
+      },
+      502,
+      headers
+    );
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      message: "Baja de jugador registrada correctamente",
+      makeResponse: responseText || null,
+    },
+    200,
+    headers
+  );
+}
+
+// PASO 07E (2026-07-19): Cierre Temporal de Pistas — mismo patrón que
+// handleAltaJugador/handleBajaJugador (mismo gate RBAC STAFF/ADMIN/SUPPORT,
+// misma forma de respuesta, mismo criterio de "nunca confirmar sin
+// respuesta real de Make"). MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK todavía no
+// está configurado como secret en ningún entorno (ver wrangler.toml) —
+// mientras no lo esté, este handler responde 503 de forma segura y nunca
+// inventa una URL ni un secreto. `estado` siempre viaja como
+// "pendiente_confirmacion": ni este handler ni la app pueden afirmar que
+// una pista queda cerrada solo porque Make devolvió 200 — esa confirmación
+// depende de que el escenario 5791133 procese el cierre en Airtable/Make,
+// fuera del alcance de este Worker.
+const CIERRE_PISTAS_VALIDAS = ["Pista 1", "Pista 2", "Pista 3", "Pista 4", "todas"];
+const CIERRE_MOTIVOS_VALIDOS = [
+  "mantenimiento",
+  "lluvia",
+  "evento",
+  "torneo",
+  "limpieza",
+  "obra",
+  "incidencia",
+  "administrativo",
+  "otro",
+];
+const CIERRE_ROLES_VALIDOS = ["ADMIN", "STAFF", "SUPPORT"];
+
+async function handleCierreTemporalPista(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (request.method !== "POST") {
+    return jsonResponse(
+      { ok: false, error: "Method not allowed" },
+      405,
+      { ...headers, Allow: "POST, OPTIONS" }
+    );
+  }
+
+  if (!env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "Cierre temporal webhook not configured" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse(
+      { ok: false, error: "Invalid JSON" },
+      400,
+      headers
+    );
+  }
+
+  const clean = (value) =>
+    typeof value === "string" ? value.trim() : value;
+
+  const normalized = {
+    accion: "cierre_temporal_pista",
+    pista: clean(payload?.pista),
+    fecha_inicio: clean(payload?.fecha_inicio),
+    hora_inicio: clean(payload?.hora_inicio),
+    fecha_fin: clean(payload?.fecha_fin),
+    hora_fin: clean(payload?.hora_fin),
+    motivo: clean(payload?.motivo),
+    observaciones: clean(payload?.observaciones || ""),
+    creado_por: clean(payload?.creado_por),
+    rol_origen: clean(payload?.rol_origen),
+    origen: "APP_CLUB_PADEL_04",
+    estado: "pendiente_confirmacion",
+    notify_players: payload?.notify_players === true,
+    bloquear_reservas: true,
+  };
+
+  const errors = {};
+
+  if (!CIERRE_PISTAS_VALIDAS.includes(normalized.pista)) {
+    errors.pista = "Pista inválida";
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha_inicio || "")) {
+    errors.fecha_inicio = "Fecha de inicio inválida";
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(normalized.hora_inicio || "")) {
+    errors.hora_inicio = "Hora de inicio inválida";
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha_fin || "")) {
+    errors.fecha_fin = "Fecha de fin inválida";
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(normalized.hora_fin || "")) {
+    errors.hora_fin = "Hora de fin inválida";
+  }
+
+  if (
+    !errors.fecha_inicio &&
+    !errors.fecha_fin &&
+    normalized.fecha_fin < normalized.fecha_inicio
+  ) {
+    errors.fecha_fin = "La fecha de fin no puede ser anterior a la de inicio";
+  }
+
+  if (
+    !errors.fecha_inicio &&
+    !errors.fecha_fin &&
+    !errors.hora_inicio &&
+    !errors.hora_fin &&
+    normalized.fecha_fin === normalized.fecha_inicio &&
+    normalized.hora_fin <= normalized.hora_inicio
+  ) {
+    errors.hora_fin = "La hora de fin debe ser posterior a la hora de inicio";
+  }
+
+  if (!CIERRE_MOTIVOS_VALIDOS.includes(normalized.motivo)) {
+    errors.motivo = "Motivo inválido";
+  }
+
+  if (!normalized.creado_por || String(normalized.creado_por).length < 3) {
+    errors.creado_por = "Creado_por inválido";
+  }
+
+  if (!CIERRE_ROLES_VALIDOS.includes(normalized.rol_origen)) {
+    errors.rol_origen = "Rol de origen inválido";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return jsonResponse(
+      { ok: false, error: "Validation failed", fields: errors },
+      400,
+      headers
+    );
+  }
+
+  const makeResponse = await fetch(env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(normalized),
+  });
+
+  const responseText = await makeResponse.text();
+
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "Make request failed",
+        status: makeResponse.status,
+      },
+      502,
+      headers
+    );
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      message: "Solicitud de cierre temporal enviada correctamente. Pendiente de confirmación real del sistema.",
+      estado: "pendiente_confirmacion",
+      makeResponse: responseText || null,
+    },
+    200,
+    headers
+  );
+}
+
 
 
 
@@ -1180,7 +2056,7 @@ async function cp04SupabaseRequest(env, path, options = {}) {
   });
 
   const text = await response.text();
-  let data = null;
+  let data;
 
   try {
     data = text ? JSON.parse(text) : null;
@@ -1334,7 +2210,7 @@ async function handleAuthRoute(request, env, url) {
     });
 
     const text = await response.text();
-    let data = null;
+    let data;
 
     try {
       data = text ? JSON.parse(text) : null;
@@ -1691,7 +2567,7 @@ async function handleAuthRoute(request, env, url) {
     });
 
     const text = await response.text();
-    let data = null;
+    let data;
 
     try {
       data = text ? JSON.parse(text) : null;
@@ -1817,6 +2693,47 @@ export default {
         return await handleAltaJugador(request, env);
       }
 
+      if (
+        url.pathname === "/api/jugadores/baja" ||
+        url.pathname === "/jugadores/baja"
+      ) {
+        // Baja de jugador es operación de STAFF/ADMIN/SUPPORT, mismo gate
+        // que Alta (ver comentario ahí y en handleReservas).
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["STAFF", "ADMIN", "SUPPORT"]);
+
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+
+        return await handleBajaJugador(request, env);
+      }
+
+      if (
+        url.pathname === "/api/pistas/cierre-temporal" ||
+        url.pathname === "/pistas/cierre-temporal"
+      ) {
+        // Cierre temporal de pista es operación de STAFF/ADMIN/SUPPORT,
+        // mismo gate que Alta/Baja de jugador (ver comentario ahí y en
+        // handleReservas).
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["STAFF", "ADMIN", "SUPPORT"]);
+
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+
+        return await handleCierreTemporalPista(request, env);
+      }
+
       if (url.pathname.startsWith("/api/auth/")) {
       return handleAuthRoute(request, env, url);
     }
@@ -1884,11 +2801,22 @@ export default {
         corsHeaders(request, env)
       );
     } catch (error) {
+      // No reenviar error?.message (puede incluir detalles internos) a un
+      // cliente anónimo: solo se loguea server-side, sin datos personales.
+      cp04LogTechnicalEvent({
+        event: "worker_unhandled_error",
+        action: null,
+        code: "INTERNAL_ERROR",
+        requestId: cp04GetRequestId(request),
+        retryable: false,
+        reserva_confirmada: false,
+        origen: "worker_fetch",
+        detail: { message: String(error?.message || error) },
+      });
       return jsonResponse(
         {
           ok: false,
           error: "Internal server error",
-          message: error?.message || "Unknown error"
         },
         500,
         corsHeaders(request, env)
