@@ -6,7 +6,14 @@ import {
   MAKE_SCENARIO_CATEGORIES,
 } from "../data/makeInventory.js";
 import { MAKE_APP_INTEGRATION_MAP } from "../data/makeAppIntegrationMap.js";
-import { cp04NormalizeRole } from "../utils/rbac.js";
+import {
+  MAKE_ARCHITECTURE_MATRIX,
+  MAKE_ARCH_ESTADOS,
+  MAKE_ARCH_AREAS,
+  computeArchitectureResumen,
+  filterArchitectureMatrix,
+} from "../data/makeArchitectureMatrix.js";
+import { cp04NormalizeRole, CP04_ROLES } from "../utils/rbac.js";
 import { authFetch, getAccessToken } from "../auth/authService.js";
 import { resolveMakeInventorySource, createSingleFlightGuard, describeLiveIssue } from "../utils/makeLiveClient.js";
 import {
@@ -84,6 +91,29 @@ const INTEGRATION_COLOR = {
   D: T.textDim,
   E: T.warning,
 };
+
+// PASO 08E (2026-07-20): eje de arquitectura App ↔ Make orientado a
+// producto/operación — independiente de VERIFICATION_LABEL (auditoría Make)
+// e INTEGRATION_LABEL (integración de código). Ver src/data/makeArchitectureMatrix.js.
+const ARCH_ESTADO_LABEL = {
+  [MAKE_ARCH_ESTADOS.OPERATIONAL]: "Operativo (E2E validado)",
+  [MAKE_ARCH_ESTADOS.PREPARED]: "Preparado (falta activar)",
+  [MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]: "Bloqueado externamente",
+  [MAKE_ARCH_ESTADOS.PLANNED]: "Planificado (sin interfaz)",
+};
+const ARCH_ESTADO_COLOR = {
+  [MAKE_ARCH_ESTADOS.OPERATIONAL]: T.accent,
+  [MAKE_ARCH_ESTADOS.PREPARED]: T.primary,
+  [MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]: T.warning,
+  [MAKE_ARCH_ESTADOS.PLANNED]: T.textDim,
+};
+
+const ARCH_FILTERS_ESTADO = [
+  { id: "todos", label: "Todos los estados" },
+  ...Object.values(MAKE_ARCH_ESTADOS).map((e) => ({ id: e, label: ARCH_ESTADO_LABEL[e] })),
+];
+const ARCH_FILTERS_AREA = [{ id: "todas", label: "Todas las áreas" }, ...MAKE_ARCH_AREAS.map((a) => ({ id: a, label: a }))];
+const ARCH_FILTERS_ROL = [{ id: "todos", label: "Todos los roles" }, ...CP04_ROLES.map((r) => ({ id: r, label: r }))];
 
 const CATEGORY_LABEL = {
   [MAKE_SCENARIO_CATEGORIES.APP_TRIGGERED]: "Disparado por la app",
@@ -191,6 +221,13 @@ export default function CentroTecnico({ selectedRole }) {
   const [orden, setOrden] = useState("errores");
   const [seleccionado, setSeleccionado] = useState(null);
 
+  // PASO 08E (2026-07-20): filtros del panel A4 (Centro de Automatizaciones),
+  // independientes de los filtros del panel B de arriba.
+  const [archArea, setArchArea] = useState("todas");
+  const [archEstado, setArchEstado] = useState("todos");
+  const [archRol, setArchRol] = useState("todos");
+  const [archSeleccionado, setArchSeleccionado] = useState(null);
+
   // Estado del refresco en vivo. La decisión de qué fuente mostrar (EN VIVO
   // / SNAPSHOT / NO DISPONIBLE) vive en resolveMakeInventorySource (pura,
   // testeada) para no mentir nunca sobre la frescura real de los datos: si
@@ -265,6 +302,20 @@ export default function CentroTecnico({ selectedRole }) {
   // depende del snapshot en vivo/local de arriba (ver
   // src/data/makeAppIntegrationMap.js). Solo lectura, no ejecuta nada.
   const integracionResumen = useMemo(() => computeIntegracionResumen(MAKE_APP_INTEGRATION_MAP), []);
+
+  // PASO 08E (2026-07-20): resumen de arquitectura App ↔ Make, siempre
+  // derivado de MAKE_ARCHITECTURE_MATRIX — nunca escrito a mano. Solo
+  // lectura local, no ejecuta ningún escenario ni llama a Make/Airtable.
+  const arquitecturaResumen = useMemo(() => computeArchitectureResumen(MAKE_ARCHITECTURE_MATRIX), []);
+  const arquitecturaFiltrada = useMemo(
+    () =>
+      filterArchitectureMatrix(MAKE_ARCHITECTURE_MATRIX, {
+        area: archArea === "todas" ? undefined : archArea,
+        estado: archEstado === "todos" ? undefined : archEstado,
+        rol: archRol === "todos" ? undefined : archRol,
+      }),
+    [archArea, archEstado, archRol]
+  );
 
   const liveScenariosEnriched = useMemo(() => {
     if (!Array.isArray(liveScenarios)) return null;
@@ -498,6 +549,107 @@ export default function CentroTecnico({ selectedRole }) {
         <div style={{ color: T.textDim, fontSize: ".78rem", fontStyle: "italic" }}>
           {integracionResumen.sinIntegracion} escenarios sin ningún trigger de app detectado (ver docs/paso-07a-integracion-make-app/make-50-app-integration-summary.md) — no se marcan como funcionales por estar "confirmados" en el panel de arriba: son ejes independientes.
         </div>
+      </Panel>
+
+      {/* A4. CENTRO DE AUTOMATIZACIONES — ARQUITECTURA APP ↔ MAKE 50/50 — PASO 08E (2026-07-20) */}
+      <Panel eyebrow="A4" title="Centro de automatizaciones · Arquitectura App ↔ Make 50/50">
+        <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
+          Tercer eje, distinto de "Verificación 50/50" (A2) e "Integración App ↔ Make" (A3): representa qué puede ver y
+          hacer <strong style={{ color: T.text }}>hoy</strong> un usuario real de la app sobre cada uno de los 50 flujos objetivo, y qué falta para
+          activarlo de verdad. "Representado en la app" no equivale a "operativo E2E" —{" "}
+          <strong style={{ color: T.text }}>solo {arquitecturaResumen.probadosE2E}/{arquitecturaResumen.total}</strong> están validados de extremo a extremo con
+          evidencia objetiva. Panel de solo lectura: ningún botón de esta sección llama a Make, Airtable ni ningún
+          servicio externo.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 18 }}>
+          <KpiCard label="Total flujos objetivo" value={arquitecturaResumen.total} />
+          <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.OPERATIONAL]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.OPERATIONAL]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.OPERATIONAL]} />
+          <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.PREPARED]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.PREPARED]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.PREPARED]} />
+          <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} />
+          <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.PLANNED]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.PLANNED]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.PLANNED]} />
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+          <select aria-label="Filtrar por área" value={archArea} onChange={(e) => setArchArea(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+            {ARCH_FILTERS_AREA.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+          <select aria-label="Filtrar por estado" value={archEstado} onChange={(e) => setArchEstado(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+            {ARCH_FILTERS_ESTADO.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+          <select aria-label="Filtrar por rol autorizado" value={archRol} onChange={(e) => setArchRol(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+            {ARCH_FILTERS_ROL.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+          <span style={{ color: T.textDim, fontSize: ".8rem", alignSelf: "center" }}>{arquitecturaFiltrada.length} de {arquitecturaResumen.total} flujos</span>
+        </div>
+
+        <div style={{ overflowX: "auto" }}>
+          <div style={{ display: "grid", gap: 6, minWidth: 640 }}>
+            {arquitecturaFiltrada.map((f) => (
+              <div
+                key={f.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={archSeleccionado === f.id}
+                aria-label={`${f.nombre} · ${f.area} · ${ARCH_ESTADO_LABEL[f.estado]}`}
+                onClick={() => setArchSeleccionado(archSeleccionado === f.id ? null : f.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setArchSeleccionado(archSeleccionado === f.id ? null : f.id);
+                  }
+                }}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto auto",
+                  gap: 12,
+                  alignItems: "center",
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: `1px solid ${archSeleccionado === f.id ? T.accent : T.line}`,
+                  background: archSeleccionado === f.id ? "rgba(182,255,0,.06)" : "rgba(255,255,255,.02)",
+                  cursor: "pointer",
+                }}
+              >
+                <span style={{ color: T.text, fontWeight: 700 }}>{f.nombre}</span>
+                <Badge color={T.primary}>{f.area}</Badge>
+                <Badge color={ARCH_ESTADO_COLOR[f.estado]}>{ARCH_ESTADO_LABEL[f.estado]}</Badge>
+              </div>
+            ))}
+            {arquitecturaFiltrada.length === 0 && <div style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>Sin resultados para este filtro.</div>}
+          </div>
+        </div>
+
+        {archSeleccionado && (() => {
+          const f = MAKE_ARCHITECTURE_MATRIX.find((x) => x.id === archSeleccionado);
+          if (!f) return null;
+          return (
+            <div style={{ marginTop: 16, padding: 18, borderRadius: 16, border: `1px solid ${T.accent}55`, background: "rgba(182,255,0,.04)" }}>
+              <h4 style={{ margin: "0 0 4px", fontFamily: T.fontDisplay }}>{f.nombre}</h4>
+              <p style={{ margin: "0 0 12px", color: T.textDim, fontSize: ".85rem" }}>{f.descripcion}</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, fontSize: ".85rem" }}>
+                <div><span style={{ color: T.textDim }}>Área funcional:</span> {f.area}</div>
+                <div><span style={{ color: T.textDim }}>Estado:</span> {ARCH_ESTADO_LABEL[f.estado]}</div>
+                <div><span style={{ color: T.textDim }}>Roles autorizados:</span> {f.rolesAutorizados.join(", ")}</div>
+                <div><span style={{ color: T.textDim }}>Módulo:</span> {f.modulo}</div>
+                <div><span style={{ color: T.textDim }}>Ruta:</span> {f.ruta}</div>
+                <div><span style={{ color: T.textDim }}>Dependencias externas:</span> {f.dependenciasExternas}</div>
+                <div><span style={{ color: T.textDim }}>¿Requiere webhook?:</span> {f.requiereWebhook ? "Sí" : "No"}</div>
+                <div><span style={{ color: T.textDim }}>¿Interfaz completa?:</span> {f.tieneInterfazCompleta ? "Sí" : "No"}</div>
+                <div><span style={{ color: T.textDim }}>¿Contrato preparado?:</span> {f.tieneContratoPreparado ? "Sí" : "No"}</div>
+                <div><span style={{ color: T.textDim }}>¿Probado E2E?:</span> {f.probadoE2E ? "Sí" : "No"}</div>
+              </div>
+              <div style={{ marginTop: 12, display: "grid", gap: 8, fontSize: ".85rem" }}>
+                <div><span style={{ color: T.textDim }}>Acción iniciadora:</span> {f.accionIniciadora}</div>
+                <div><span style={{ color: T.textDim }}>Datos de entrada esperados:</span> {f.datosEntrada}</div>
+                <div><span style={{ color: T.textDim }}>Resultado esperado:</span> {f.resultadoEsperado}</div>
+                <div><span style={{ color: T.textDim }}>Última validación conocida:</span> {f.ultimaValidacionConocida}</div>
+              </div>
+              <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.04)", color: T.textDim, fontSize: ".85rem", lineHeight: 1.5 }}>
+                ➡️ Siguiente acción necesaria: {f.siguienteAccionNecesaria}
+              </div>
+            </div>
+          );
+        })()}
       </Panel>
 
       {/* C. SALUD DE AUTOMATIZACIONES */}
