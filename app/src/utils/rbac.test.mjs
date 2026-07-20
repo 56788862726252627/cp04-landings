@@ -141,3 +141,43 @@ test("simulación de navegación manual por URL/hash: PLAYER forzando 'lista_esp
   assert.notEqual(safeSection, "lista_espera");
   assert.equal(safeSection, "inicio");
 });
+
+// PASO 07O (2026-07-20): consolidación de 4 módulos visuales nuevos.
+// "control_qr" y "pistas_recordatorios" son operación diaria (mismo gate
+// que "cierre_pistas"/"lista_espera": STAFF/ADMIN/SUPPORT). "dashboard_kpi"
+// y "backups_seguridad" son métricas/infraestructura (mismo nivel que
+// "admin": ADMIN + SUPPORT, sin STAFF).
+test("PLAYER no puede acceder a ninguno de los 4 módulos nuevos del Paso 07O", () => {
+  for (const section of ["control_qr", "pistas_recordatorios", "dashboard_kpi", "backups_seguridad"]) {
+    assert.equal(cp04CanAccessSection("PLAYER", section), false, `PLAYER no debería poder acceder a ${section}`);
+  }
+});
+
+test("STAFF, ADMIN y SUPPORT pueden acceder a control_qr y pistas_recordatorios", () => {
+  for (const section of ["control_qr", "pistas_recordatorios"]) {
+    for (const role of ["STAFF", "ADMIN", "SUPPORT"]) {
+      assert.equal(cp04CanAccessSection(role, section), true, `${role} debería poder acceder a ${section}`);
+    }
+  }
+});
+
+test("solo ADMIN y SUPPORT pueden acceder a dashboard_kpi y backups_seguridad — STAFF no", () => {
+  for (const section of ["dashboard_kpi", "backups_seguridad"]) {
+    assert.equal(cp04CanAccessSection("STAFF", section), false, `STAFF no debería poder acceder a ${section}`);
+    assert.equal(cp04CanAccessSection("ADMIN", section), true, `ADMIN debería poder acceder a ${section}`);
+    assert.equal(cp04CanAccessSection("SUPPORT", section), true, `SUPPORT debería poder acceder a ${section}`);
+  }
+});
+
+test("simulación de navegación manual por URL/hash: PLAYER y STAFF forzando los 4 módulos nuevos del Paso 07O no saltan el guard", () => {
+  for (const section of ["control_qr", "pistas_recordatorios"]) {
+    const safeSection = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
+    assert.equal(safeSection, "inicio");
+  }
+  for (const section of ["dashboard_kpi", "backups_seguridad"]) {
+    const safeForPlayer = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
+    assert.equal(safeForPlayer, "inicio");
+    const safeForStaff = cp04CanAccessSection("STAFF", section) ? section : cp04GetSafeStartSection("STAFF");
+    assert.notEqual(safeForStaff, section);
+  }
+});

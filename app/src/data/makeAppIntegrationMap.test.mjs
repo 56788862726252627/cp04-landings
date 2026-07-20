@@ -115,9 +115,67 @@ test("PASO 07N: Gestión Lista de Espera pasa a integrado en app SIN Worker (mó
   assert.match(listaEspera.bloqueadorPrincipal, /Airtable 429/);
 });
 
-test("Control Acceso QR no tiene integración de app detectada (búsqueda exhaustiva de 'QR' sin resultados en src/)", () => {
-  const qr = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes("Control Acceso QR"));
-  assert.ok(qr);
-  assert.equal(qr.integradoEnApp, false);
-  assert.equal(qr.integradoEnWorker, false);
+// PASO 07O (2026-07-20): consolidación de módulos de sidebar para 14
+// escenarios más del inventario, agrupados en 4 módulos visuales nuevos
+// (Control QR/Accesos, Pistas libres y recordatorios, Dashboard KPI y NPS,
+// Backups y seguridad). Ninguno tiene Worker/endpoint real todavía —
+// mismo criterio que Gestión Lista de Espera (Paso 07N): Grupo B,
+// integradoEnApp true, integradoEnWorker false, nunca confirmado
+// end-to-end sin prueba real contra Make/Airtable.
+test("PASO 07O: Control Acceso QR y Generación QR Acceso pasan a integrados en app SIN Worker (módulo Control QR/Accesos)", () => {
+  for (const nombre of ["Control Acceso QR", "Generación QR Acceso"]) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+    assert.equal(escenario.integradoEnApp, true);
+    assert.equal(escenario.integradoEnWorker, false);
+    assert.equal(escenario.soloInventariado, false);
+  }
+});
+
+test("PASO 07O: Alerta Pistas Libres, Recordatorios y Seguimiento No-Show pasan a integrados en app SIN Worker (módulo Pistas libres y recordatorios)", () => {
+  for (const nombre of ["Alerta Pistas Libres", "Recordatorio 24h Antes", "Recordatorio 2h Antes", "Seguimiento No-Show"]) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+    assert.equal(escenario.integradoEnApp, true);
+    assert.equal(escenario.integradoEnWorker, false);
+  }
+});
+
+test("PASO 07O: Dashboard Ejecutivo, Panel KPI, Informe Mensual y Análisis NPS pasan a integrados en app SIN Worker (módulo Dashboard KPI y NPS)", () => {
+  for (const nombre of ["Dashboard Ejecutivo Diario", "Panel KPI Semanal", "Informe Mensual", "Análisis NPS Semanal"]) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+    assert.equal(escenario.integradoEnApp, true);
+    assert.equal(escenario.integradoEnWorker, false);
+  }
+});
+
+test("PASO 07O: Encuesta Post-Partido NO se integra pese a compartir módulo temático con NPS — sigue en Grupo E por su 89% de tasa de error histórica en Make (hallazgo previo, Paso 07B)", () => {
+  const encuesta = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes("Encuesta Post-Partido"));
+  assert.ok(encuesta);
+  assert.equal(encuesta.grupo, MAKE_INTEGRATION_GROUPS.SIN_INTEGRACION);
+  assert.equal(encuesta.integradoEnApp, false);
+  assert.equal(encuesta.soloInventariado, true);
+});
+
+test("PASO 07O: Backup Semanal, Backup Plantilla Drive, Solicitud GDPR y Alerta Seguridad pasan a integrados en app SIN Worker (módulo Backups y seguridad)", () => {
+  for (const nombre of ["Backup Semanal", "Backup Plantilla Drive", "Solicitud GDPR", "Alerta Seguridad Acceso Sospechoso"]) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+    assert.equal(escenario.integradoEnApp, true);
+    assert.equal(escenario.integradoEnWorker, false);
+  }
+});
+
+test("PASO 07O: ningún escenario del Grupo B recién integrado se marca requiereMakeManual=false sin bloqueadorPrincipal honesto", () => {
+  const grupoB = MAKE_APP_INTEGRATION_MAP.filter((s) => s.grupo === MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+  assert.equal(grupoB.length, 15, "Lista de Espera (07N) + 14 escenarios nuevos (07O)");
+  for (const s of grupoB) {
+    assert.equal(s.integradoEnWorker, false, `${s.nombre} es Grupo B pero tiene integradoEnWorker=true`);
+    assert.ok(s.bloqueadorPrincipal && s.bloqueadorPrincipal.length > 0, `${s.nombre} debe documentar su bloqueador`);
+  }
 });

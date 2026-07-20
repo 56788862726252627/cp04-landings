@@ -1435,6 +1435,10 @@ const TRANSLATIONS = {
     "nav.cierre_pistas":"Cierre temporal",
     "nav.baja_jugador":"Baja de jugador",
     "nav.lista_espera":"Lista de espera",
+    "nav.control_qr":"Control QR / Accesos",
+    "nav.pistas_recordatorios":"Pistas libres y recordatorios",
+    "nav.dashboard_kpi":"Dashboard KPI y NPS",
+    "nav.backups_seguridad":"Backups y seguridad",
     "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
     "nav.comunidad":"Comunidad",
@@ -3228,7 +3232,18 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
     // No llama a ningún endpoint real todavía — mismo gate de rol que
     // "cierre_pistas" (ver CP04_ROLE_PERMISSIONS en rbac.js).
     ["lista_espera","nav.lista_espera","📋"],
+    // PASO 07O (2026-07-20): consolidación de módulos de sidebar para 14
+    // escenarios más del inventario Make, agrupados en 4 módulos visuales
+    // (ver docs/paso-07o-sidebar-flujos-50/). "control_qr" y
+    // "pistas_recordatorios" son operación diaria, mismo gate que
+    // "cierre_pistas"/"lista_espera". "dashboard_kpi" y
+    // "backups_seguridad" están gateados como "admin" (ADMIN+SUPPORT, sin
+    // STAFF) — ver CP04_ROLE_PERMISSIONS en rbac.js.
+    ["control_qr","nav.control_qr","🔐"],
+    ["pistas_recordatorios","nav.pistas_recordatorios","🔔"],
     ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["comunidad","nav.comunidad","👥"],["admin","nav.admin","📊"],
+    ["dashboard_kpi","nav.dashboard_kpi","📈"],
+    ["backups_seguridad","nav.backups_seguridad","🗂️"],
     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
   ];
   // Antes había un mapa de permisos propio y duplicado aquí (menuByRole),
@@ -4587,6 +4602,177 @@ function ListaEspera() {
           {actionMessage}
         </Card>
       )}
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): mensaje único y helper compartido para las
+// "acciones preparadas" de los 4 módulos nuevos de este paso — evita
+// repetir la misma lógica de estado/mensaje 4 veces (uno por módulo). Cada
+// botón, al pulsarse, solo actualiza un mensaje local honesto: nunca llama
+// a fetch/authFetch, nunca crea/modifica/elimina nada real.
+const CP04_PREPARADO_MSG =
+  "Acción preparada. Pendiente de conexión real cuando Make/Airtable esté disponible.";
+
+function PreparedActionButtons({ actions }) {
+  const [message, setMessage] = useState("");
+  return (
+    <>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        {actions.map((label) => (
+          <Btn key={label} variant="secondary" onClick={() => setMessage(`${label}: ${CP04_PREPARADO_MSG}`)}>
+            {label}
+          </Btn>
+        ))}
+      </div>
+      {message && (
+        <p style={{ color: T.accent, fontSize: ".86rem", marginTop: 16, marginBottom: 0 }}>{message}</p>
+      )}
+    </>
+  );
+}
+
+// Banner de estado honesto reutilizado por los 4 módulos: mismo patrón
+// visual ya usado en Lista de Espera (Paso 07N) y Cierre Temporal (Paso
+// 07E) para no prometer una integración que no existe todavía.
+function IntegrationStatusBanner({ children }) {
+  return (
+    <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+      {children}
+    </Card>
+  );
+}
+
+// PASO 07O (2026-07-20): "Control QR / Accesos" — módulo visual preparado
+// para los escenarios Make "🔐 Control Acceso QR" (5291559) y "🔑
+// Generación QR Acceso" (6244975). Ambos siguen ejecutándose de forma
+// autónoma en Make (Grupo D antes de este paso); este panel no los
+// dispara ni los sustituye, solo prepara un punto de entrada en la app.
+// Gateado a STAFF/ADMIN/SUPPORT (ver rbac.js).
+function ControlQrAccesos() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Seguridad y accesos"
+        title="Control QR / Accesos"
+        desc="Gestiona el acceso al club mediante códigos QR de jugadores."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de activación Make — este panel no ejecuta acciones reales todavía.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🔐 Control Acceso QR — verifica el código QR presentado en la entrada del club.",
+          "🔑 Generación QR Acceso — genera el código QR de acceso para un jugador.",
+          "Ambos siguen ejecutándose de forma autónoma en Make; este panel no los dispara ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Generar QR de acceso", "Verificar acceso"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Pistas libres y recordatorios" — agrupa 4
+// escenarios Make de comunicación proactiva a jugadores: "🚨 Alerta
+// Pistas Libres + Flash Promo" (5736472), "🔔 Recordatorio 24h Antes"
+// (4942506), "⚡ Recordatorio 2h Antes" (5736463) y "🚫 Seguimiento
+// No-Show" (5736797). Gateado a STAFF/ADMIN/SUPPORT.
+function PistasLibresRecordatorios() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Pistas libres y recordatorios"
+        desc="Alertas de huecos libres y recordatorios automáticos a jugadores."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🚨 Alerta Pistas Libres + Flash Promo — avisa cuando queda una pista libre de última hora.",
+          "🔔 Recordatorio 24h Antes / ⚡ Recordatorio 2h Antes — recuerdan a un jugador su reserva próxima.",
+          "🚫 Seguimiento No-Show — registra cuando un jugador no se presenta a su reserva.",
+          "Los 4 escenarios ya corren en Make bloqueados por Airtable 429; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Enviar alerta de pista libre", "Enviar recordatorio manual", "Marcar no-show"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Dashboard KPI y NPS" — agrupa 4 escenarios de
+// métricas: "📋 Dashboard Ejecutivo Diario" (5736800), "📊 Panel KPI
+// Semanal" (5736468), "📊 Informe Mensual" (5791119) y "📊 Análisis NPS
+// Semanal" (5811901). Gateado como "admin" (ADMIN+SUPPORT, sin STAFF) —
+// mismo nivel que la sección Admin ya existente.
+//
+// Deliberadamente NO incluye "⭐ Encuesta Post-Partido" (5736466), aunque
+// temáticamente sea de NPS: esa auditoría previa (Paso 07B) encontró un
+// 89% de tasa de error histórica en Make — integrar su UI ahora
+// propagaría un hallazgo roto. Sigue en Grupo E, sin cambios, hasta que
+// se diagnostique dentro de Make (fuera de alcance de este paso).
+function DashboardKpiNps() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Métricas"
+        title="Dashboard KPI y NPS"
+        desc="Indicadores operativos y satisfacción de jugadores."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "📋 Dashboard Ejecutivo Diario / 📊 Panel KPI Semanal / 📊 Informe Mensual — métricas operativas del club.",
+          "📊 Análisis NPS Semanal — satisfacción de jugadores.",
+          "⭐ Encuesta Post-Partido NO se incluye aquí: auditoría previa detectó 89% de tasa de error en Make — no se reactiva hasta que se diagnostique en Make.",
+          "Los escenarios incluidos ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Actualizar dashboard", "Exportar informe"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Backups y seguridad" — agrupa 4 escenarios de
+// infraestructura: "🔄 Backup Semanal" (6217724), "🗂️ Backup Plantilla
+// Drive" (6216523), "⚖️ Solicitud GDPR Acceso u Olvido de Datos"
+// (6323457) y "🛡️ Alerta Seguridad Acceso Sospechoso" (6323450). Gateado
+// como "admin" (ADMIN+SUPPORT, sin STAFF).
+function BackupsSeguridad() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Infraestructura"
+        title="Backups y seguridad"
+        desc="Copias de seguridad y alertas de seguridad del sistema."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de validación real / credenciales externas.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🔄 Backup Semanal / 🗂️ Backup Plantilla Drive — copias de seguridad periódicas.",
+          "⚖️ Solicitud GDPR Acceso u Olvido de Datos — gestión de solicitudes de privacidad.",
+          "🛡️ Alerta Seguridad Acceso Sospechoso — aviso de accesos sospechosos.",
+          "Los 4 escenarios ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Solicitar backup manual", "Revisar solicitud GDPR", "Revisar alerta de seguridad"]} />
+        </div>
+      </Card>
     </div>
   );
 }
@@ -7512,7 +7698,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,

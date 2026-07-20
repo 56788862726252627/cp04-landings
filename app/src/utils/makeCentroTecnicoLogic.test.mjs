@@ -343,13 +343,13 @@ test("Escenario real EN VIVO completo (50, sin executions/errors): los valores d
   }
 });
 
-test("computeIntegracionResumen: tras el Paso 07N, 4/50 integrados app+Worker (Baja de Jugador y Cierre Temporal de Pistas), 1/50 integrado app sin Worker (Gestión Lista de Espera), 9/50 sin integración visible", () => {
+test("computeIntegracionResumen: tras el Paso 07O, 4/50 integrados app+Worker, 15/50 integrados app sin Worker (Lista de Espera + 14 módulos nuevos de sidebar), 21/50 autónomos Make, 9/50 sin integración visible", () => {
   const resumen = computeIntegracionResumen(MAKE_APP_INTEGRATION_MAP);
   assert.equal(resumen.total, 50);
   assert.equal(resumen.integradoAppYWorker, 4);
-  assert.equal(resumen.integradoAppSinWorker, 1);
+  assert.equal(resumen.integradoAppSinWorker, 15);
   assert.equal(resumen.soloCentroTecnico, 1);
-  assert.equal(resumen.autonomoMake, 35);
+  assert.equal(resumen.autonomoMake, 21);
   assert.equal(resumen.sinIntegracion, 9);
   assert.equal(resumen.sinClasificar, 0);
   const suma = resumen.integradoAppYWorker + resumen.integradoAppSinWorker + resumen.soloCentroTecnico + resumen.autonomoMake + resumen.sinIntegracion + resumen.sinClasificar;
