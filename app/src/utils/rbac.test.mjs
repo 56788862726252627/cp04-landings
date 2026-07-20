@@ -181,3 +181,49 @@ test("simulación de navegación manual por URL/hash: PLAYER y STAFF forzando lo
     assert.notEqual(safeForStaff, section);
   }
 });
+
+// PASO 07P (2026-07-20): 4 módulos visuales más — "comunicaciones_socio" y
+// "calendario_disponibilidad" (operación diaria, STAFF/ADMIN/SUPPORT),
+// "facturacion_pagos" y "automatizaciones_bots" (gestión/técnico,
+// ADMIN+SUPPORT sin STAFF).
+test("PLAYER no puede acceder a ninguno de los 4 módulos nuevos del Paso 07P", () => {
+  for (const section of ["comunicaciones_socio", "calendario_disponibilidad", "facturacion_pagos", "automatizaciones_bots"]) {
+    assert.equal(cp04CanAccessSection("PLAYER", section), false, `PLAYER no debería poder acceder a ${section}`);
+  }
+});
+
+test("STAFF, ADMIN y SUPPORT pueden acceder a comunicaciones_socio y calendario_disponibilidad", () => {
+  for (const section of ["comunicaciones_socio", "calendario_disponibilidad"]) {
+    for (const role of ["STAFF", "ADMIN", "SUPPORT"]) {
+      assert.equal(cp04CanAccessSection(role, section), true, `${role} debería poder acceder a ${section}`);
+    }
+  }
+});
+
+test("solo ADMIN y SUPPORT pueden acceder a facturacion_pagos y automatizaciones_bots — STAFF no", () => {
+  for (const section of ["facturacion_pagos", "automatizaciones_bots"]) {
+    assert.equal(cp04CanAccessSection("STAFF", section), false, `STAFF no debería poder acceder a ${section}`);
+    assert.equal(cp04CanAccessSection("ADMIN", section), true, `ADMIN debería poder acceder a ${section}`);
+    assert.equal(cp04CanAccessSection("SUPPORT", section), true, `SUPPORT debería poder acceder a ${section}`);
+  }
+});
+
+test("simulación de navegación manual por URL/hash: PLAYER y STAFF forzando los 4 módulos nuevos del Paso 07P no saltan el guard", () => {
+  for (const section of ["comunicaciones_socio", "calendario_disponibilidad"]) {
+    const safeSection = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
+    assert.equal(safeSection, "inicio");
+  }
+  for (const section of ["facturacion_pagos", "automatizaciones_bots"]) {
+    const safeForPlayer = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
+    assert.equal(safeForPlayer, "inicio");
+    const safeForStaff = cp04CanAccessSection("STAFF", section) ? section : cp04GetSafeStartSection("STAFF");
+    assert.notEqual(safeForStaff, section);
+  }
+});
+
+test("Centro Técnico sigue siendo exclusivo de SUPPORT tras el Paso 07P (ni ADMIN ni los nuevos roles de negocio lo reciben)", () => {
+  for (const role of ["PLAYER", "STAFF", "ADMIN"]) {
+    assert.equal(cp04CanAccessSection(role, "flujos_make"), false, `${role} no debería poder acceder a flujos_make`);
+  }
+  assert.equal(cp04CanAccessSection("SUPPORT", "flujos_make"), true);
+});

@@ -171,11 +171,85 @@ test("PASO 07O: Backup Semanal, Backup Plantilla Drive, Solicitud GDPR y Alerta 
   }
 });
 
-test("PASO 07O: ningún escenario del Grupo B recién integrado se marca requiereMakeManual=false sin bloqueadorPrincipal honesto", () => {
+// PASO 07P (2026-07-20): 20 escenarios más, agrupados en 4 módulos
+// visuales nuevos (Comunicaciones y ciclo de socio, Facturación y pagos,
+// Calendario y disponibilidad, Automatizaciones y bots). Mismo criterio
+// que 07N/07O: Grupo B, integradoEnWorker false, nunca confirmado
+// end-to-end.
+test("PASO 07P: 9 escenarios de ciclo de vida del socio pasan a integrados en app SIN Worker (módulo Comunicaciones y ciclo de socio)", () => {
+  for (const nombre of [
+    "Reactivación Inactivos 30d", "Felicitación Cumpleaños", "Recordatorio Cuota Mensual",
+    "Monitor Prueba Gratuita", "Congelación + Reactivación Membresía", "Bienvenida Nuevo Socio",
+    "Onboarding Secuencial", "Programa de Referidos", "Emparejamiento Sin Pareja",
+  ]) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+    assert.equal(escenario.integradoEnApp, true);
+    assert.equal(escenario.integradoEnWorker, false);
+  }
+});
+
+test("PASO 07P: 4 escenarios de facturación pasan a integrados en app SIN Worker, documentando Stripe como pendiente (módulo Facturación y pagos)", () => {
+  for (const nombre of ["Facturación y Cobro", "Pago Confirmado Stripe", "Dunning Cobro Recurrente Stripe", "Escalado Impagos"]) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+    assert.equal(escenario.integradoEnApp, true);
+    assert.equal(escenario.integradoEnWorker, false);
+    assert.match(escenario.bloqueadorPrincipal, /Stripe/, `${nombre} debe documentar que Stripe sigue pendiente`);
+  }
+});
+
+test("PASO 07P: 2 escenarios de calendario pasan a integrados en app SIN Worker (módulo Calendario y disponibilidad)", () => {
+  for (const nombre of ["Sincronización Multi-Calendario", "Predicción Ocupación"]) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+    assert.equal(escenario.integradoEnApp, true);
+    assert.equal(escenario.integradoEnWorker, false);
+  }
+});
+
+test("PASO 07P: 5 escenarios de bots pasan a integrados en app SIN Worker, documentando WhatsApp/Telegram como pendiente (módulo Automatizaciones y bots)", () => {
+  const nombresWhatsapp = ["Atención Socio WhatsApp FAQ", "Campaña Flash WhatsApp", "Bot IA Reservas WhatsApp"];
+  for (const nombre of nombresWhatsapp) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+    assert.match(escenario.bloqueadorPrincipal, /WhatsApp/, `${nombre} debe documentar que WhatsApp sigue pendiente`);
+  }
+  const telegram = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes("Bot IA Reservas Telegram"));
+  assert.ok(telegram);
+  assert.equal(telegram.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+  assert.match(telegram.bloqueadorPrincipal, /Telegram/);
+  const tally = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes("Tally"));
+  assert.ok(tally);
+  assert.equal(tally.grupo, MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
+});
+
+test("PASO 07P: Cruces de Torneo, Resultados y Clasificación, Reto 04 + Puntos, Confirmación Inscripción Torneo, Chatbot Web Reservas y Email Recuperación SaaS siguen SIN integrar (requieren rediseño/decisión fuera de alcance)", () => {
+  for (const nombre of [
+    "Cruces de Torneo", "Resultados y Clasificación", "Reto 04", "Confirmación Inscripción Torneo",
+    "Chatbot Web Reservas", "Email Recuperación de Contraseña SaaS",
+  ]) {
+    const escenario = MAKE_APP_INTEGRATION_MAP.find((s) => s.nombre.includes(nombre));
+    assert.ok(escenario, `${nombre} debe existir en el mapa`);
+    assert.equal(escenario.integradoEnApp, false, `${nombre} no debería integrarse todavía`);
+  }
+});
+
+test("PASO 07P: ningún escenario del Grupo B se marca requiereMakeManual=false sin bloqueadorPrincipal honesto (40/50 con representación de app tras 07N+07O+07P)", () => {
   const grupoB = MAKE_APP_INTEGRATION_MAP.filter((s) => s.grupo === MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER);
-  assert.equal(grupoB.length, 15, "Lista de Espera (07N) + 14 escenarios nuevos (07O)");
+  assert.equal(grupoB.length, 35, "Lista de Espera (07N) + 14 escenarios (07O) + 20 escenarios (07P)");
   for (const s of grupoB) {
     assert.equal(s.integradoEnWorker, false, `${s.nombre} es Grupo B pero tiene integradoEnWorker=true`);
     assert.ok(s.bloqueadorPrincipal && s.bloqueadorPrincipal.length > 0, `${s.nombre} debe documentar su bloqueador`);
   }
+  const representados = MAKE_APP_INTEGRATION_MAP.filter((s) =>
+    s.grupo === MAKE_INTEGRATION_GROUPS.APP_Y_WORKER ||
+    s.grupo === MAKE_INTEGRATION_GROUPS.APP_SIN_WORKER ||
+    s.grupo === MAKE_INTEGRATION_GROUPS.SOLO_CENTRO_TECNICO
+  );
+  assert.equal(representados.length, 40, "A + B + C deben sumar 40/50 tras el Paso 07P");
 });

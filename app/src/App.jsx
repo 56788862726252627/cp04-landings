@@ -1439,6 +1439,10 @@ const TRANSLATIONS = {
     "nav.pistas_recordatorios":"Pistas libres y recordatorios",
     "nav.dashboard_kpi":"Dashboard KPI y NPS",
     "nav.backups_seguridad":"Backups y seguridad",
+    "nav.comunicaciones_socio":"Comunicaciones y ciclo de socio",
+    "nav.calendario_disponibilidad":"Calendario y disponibilidad",
+    "nav.facturacion_pagos":"Facturación y pagos",
+    "nav.automatizaciones_bots":"Automatizaciones y bots",
     "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
     "nav.comunidad":"Comunidad",
@@ -3241,9 +3245,19 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
     // STAFF) — ver CP04_ROLE_PERMISSIONS en rbac.js.
     ["control_qr","nav.control_qr","🔐"],
     ["pistas_recordatorios","nav.pistas_recordatorios","🔔"],
+    // PASO 07P (2026-07-20): ampliación de sidebar para 20 escenarios más
+    // del inventario Make (ver docs/paso-07p-ampliacion-sidebar-31-flujos/).
+    // "comunicaciones_socio" y "calendario_disponibilidad" son operación
+    // diaria, mismo gate que "control_qr"/"pistas_recordatorios"
+    // (STAFF/ADMIN/SUPPORT). "facturacion_pagos" y "automatizaciones_bots"
+    // están gateados como "admin" (ADMIN+SUPPORT, sin STAFF).
+    ["comunicaciones_socio","nav.comunicaciones_socio","💌"],
+    ["calendario_disponibilidad","nav.calendario_disponibilidad","🗓️"],
     ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["comunidad","nav.comunidad","👥"],["admin","nav.admin","📊"],
     ["dashboard_kpi","nav.dashboard_kpi","📈"],
     ["backups_seguridad","nav.backups_seguridad","🗂️"],
+    ["facturacion_pagos","nav.facturacion_pagos","💳"],
+    ["automatizaciones_bots","nav.automatizaciones_bots","🤖"],
     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
   ];
   // Antes había un mapa de permisos propio y duplicado aquí (menuByRole),
@@ -4771,6 +4785,143 @@ function BackupsSeguridad() {
         ]} />
         <div style={{ marginTop: 20 }}>
           <PreparedActionButtons actions={["Solicitar backup manual", "Revisar solicitud GDPR", "Revisar alerta de seguridad"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Comunicaciones y ciclo de socio" — agrupa 9
+// escenarios de comunicación proactiva ligada al ciclo de vida del socio:
+// "🔁 Reactivación Inactivos 30d" (5736470), "🎂 Felicitación Cumpleaños"
+// (5811864), "💳 Recordatorio Cuota Mensual" (5791032), "📧 Monitor
+// Prueba Gratuita" (5750308), "❄️ Congelación + Reactivación Membresía"
+// (5812456), "🎁 Bienvenida Nuevo Socio" (5791022), "🔁 Onboarding
+// Secuencial" (5811918), "🎁 Programa de Referidos" (5812297) y "👥
+// Emparejamiento Sin Pareja" (5791128). Gateado a STAFF/ADMIN/SUPPORT
+// (atención al jugador es tarea diaria de STAFF, ver rbac.js).
+function ComunicacionesSocio() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Socios"
+        title="Comunicaciones y ciclo de socio"
+        desc="Avisos y automatizaciones ligadas al ciclo de vida del socio."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🔁 Reactivación Inactivos 30d / ❄️ Congelación + Reactivación Membresía — recuperan socios inactivos o congelados.",
+          "🎂 Felicitación Cumpleaños / 🎁 Bienvenida Nuevo Socio / 🔁 Onboarding Secuencial — comunicaciones de ciclo de vida.",
+          "💳 Recordatorio Cuota Mensual / 📧 Monitor Prueba Gratuita — recordatorios de facturación y prueba gratuita.",
+          "🎁 Programa de Referidos — invita a socios a recomendar el club.",
+          "👥 Emparejamiento Sin Pareja — conecta jugadores sin compañero de partido.",
+          "Los 9 escenarios ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Enviar comunicación preparada", "Revisar socio inactivo", "Emparejar jugador"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Calendario y disponibilidad" — agrupa "🗓️
+// Sincronización Multi-Calendario" (5735907) y "📈 Predicción Ocupación"
+// (5799041). Gateado a STAFF/ADMIN/SUPPORT (disponibilidad es tarea
+// diaria de STAFF).
+function CalendarioDisponibilidadModulo() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Calendario y disponibilidad"
+        desc="Sincronización de calendarios externos y previsión de ocupación."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de integración real con Google Calendar y validación por Airtable 429.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🗓️ Sincronización Multi-Calendario — mantiene coherentes las reservas del club con calendarios externos.",
+          "📈 Predicción Ocupación — estima la ocupación futura de las pistas.",
+          "Ambos escenarios ya corren en Make; este panel no los reactiva ni los sustituye ni sincroniza ningún calendario real todavía.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Sincronizar calendario", "Ver previsión de ocupación"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Facturación y pagos" — agrupa "💰 Facturación y
+// Cobro" (5733370), "💳 Pago Confirmado Stripe → Cuota + Recibo"
+// (6323441), "🔄 Dunning Cobro Recurrente Stripe" (6335117) y "💸 Escalado
+// Impagos" (5811888). Gateado como "admin" (ADMIN+SUPPORT, sin STAFF).
+// No existe ningún código de Stripe en esta rama — este panel nunca debe
+// dar a entender que ya hay pagos reales conectados.
+function FacturacionPagos() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Negocio"
+        title="Facturación y pagos"
+        desc="Cobros, recibos y seguimiento de impagos."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de integración real con Stripe — no ejecuta pagos ni cobros reales todavía.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "💰 Facturación y Cobro — genera facturas/cobros de cuotas.",
+          "💳 Pago Confirmado Stripe → Cuota + Recibo — confirma un pago y emite el recibo correspondiente.",
+          "🔄 Dunning Cobro Recurrente Stripe — reintenta cobros recurrentes fallidos.",
+          "💸 Escalado Impagos — escala impagos persistentes.",
+          "Los 4 escenarios ya corren en Make; este panel no los reactiva, no los sustituye y no ejecuta ningún cobro real.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Ver estado de facturación", "Reintentar cobro", "Revisar impago"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Automatizaciones y bots" — agrupa "🎧 Atención
+// Socio WhatsApp FAQ" (5799031), "🎯 Campaña Flash WhatsApp" (5791124),
+// "🤖 Bot IA Reservas WhatsApp" (5798996), "🤖 Bot IA Reservas Telegram"
+// (4832095) y "📝 Tally → API Reservas" (5747703). Gateado como "admin"
+// (ADMIN+SUPPORT, sin STAFF). No existe integración de WhatsApp Business
+// API, Telegram Bot API ni Tally en esta rama — este panel nunca debe dar
+// a entender que ya hay mensajes reales conectados.
+function AutomatizacionesBots() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Automatizaciones"
+        title="Automatizaciones y bots"
+        desc="Asistentes de WhatsApp, Telegram y formularios externos."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de integración real con WhatsApp Business API, Telegram Bot API y Tally — no envía mensajes reales todavía.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🎧 Atención Socio WhatsApp FAQ — responde preguntas frecuentes de socios por WhatsApp.",
+          "🎯 Campaña Flash WhatsApp — envía promociones flash por WhatsApp.",
+          "🤖 Bot IA Reservas WhatsApp / 🤖 Bot IA Reservas Telegram — asistentes de reserva por chat.",
+          "📝 Tally → API Reservas — recoge reservas desde un formulario externo (Tally).",
+          "Los 5 escenarios ya corren en Make; este panel no los reactiva, no los sustituye y no envía ningún mensaje real.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Revisar conversación preparada", "Enviar campaña de prueba", "Revisar formulario Tally"]} />
         </div>
       </Card>
     </div>
@@ -7698,7 +7849,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,

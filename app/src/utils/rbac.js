@@ -50,11 +50,21 @@ export const CP04_SUPPORT_ONLY_SECTIONS = ["flujos_make", "soporte"];
 //     sin STAFF) — STAFF no necesita KPIs de negocio ni gestión de
 //     backups/seguridad para su operación diaria.
 // PLAYER nunca recibe ninguno de los 4.
+// PASO 07P (2026-07-20): 4 módulos visuales más, agrupando 20 escenarios
+// más del inventario (ver
+// docs/paso-07p-ampliacion-sidebar-31-flujos/sidebar-31-flujos-restantes.md):
+//   - "comunicaciones_socio" y "calendario_disponibilidad": operación
+//     diaria de atención al jugador, mismos 3 roles que
+//     "cierre_pistas"/"control_qr" (STAFF/ADMIN/SUPPORT).
+//   - "facturacion_pagos" y "automatizaciones_bots": gestión/negocio y
+//     configuración técnica de bots, mismo nivel que "dashboard_kpi"/
+//     "backups_seguridad" (ADMIN + SUPPORT, sin STAFF).
+// PLAYER nunca recibe ninguno de los 4.
 export const CP04_ROLE_PERMISSIONS = {
   PLAYER: ["inicio", "reservas", "torneos", "ranking", "comunidad", "perfil"],
-  STAFF: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "torneos", "comunidad", "perfil"],
-  ADMIN: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "torneos", "ranking", "comunidad", "admin", "dashboard_kpi", "backups_seguridad", "perfil"],
-  SUPPORT: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "torneos", "ranking", "comunidad", "admin", "dashboard_kpi", "backups_seguridad", "flujos_make", "soporte", "perfil"],
+  STAFF: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "comunidad", "perfil"],
+  ADMIN: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "ranking", "comunidad", "admin", "dashboard_kpi", "backups_seguridad", "facturacion_pagos", "automatizaciones_bots", "perfil"],
+  SUPPORT: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "ranking", "comunidad", "admin", "dashboard_kpi", "backups_seguridad", "facturacion_pagos", "automatizaciones_bots", "flujos_make", "soporte", "perfil"],
 };
 
 // Fail-closed: cualquier valor que no sea exactamente uno de los 4 roles
