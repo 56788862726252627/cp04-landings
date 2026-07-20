@@ -4,6 +4,8 @@ Este bloque implementa la arquitectura completa para **representar y gestionar**
 
 **Aviso central, a respetar en toda comunicación sobre este bloque:** *"representado en la app" no equivale a "operativo E2E"*. El objetivo de este bloque es dejar 50/50 flujos arquitectónicamente representados y preparados, **no** declarar 50/50 flujos operativos. Solo **1 de 50** (Alta de Jugador) tiene evidencia objetiva de ejecución E2E real (histórica, previa a este bloque); el resto no se marca como operativo.
 
+> **Actualización Paso 08F (2026-07-20):** los 10 flujos que en este documento aparecían como `planned` (sin ninguna representación visual) recibieron representación mínima real en la interfaz — formulario local de simulación dentro de Centro de Automatizaciones — y pasaron a `prepared`. Ver `../paso-08f-representacion-visual-10-flujos-planned/README.md`. Los números de estado de este documento están actualizados a esa fecha; la tabla `tabla-50-flujos.md` de este mismo directorio se regenera siempre desde la matriz y refleja el estado más reciente.
+
 ## Checkpoint previo
 
 Antes de tocar cualquier archivo se creó un tag Git verificable en el commit base `9a92bc2`:
@@ -29,12 +31,12 @@ Los tres ejes conviven en el mismo `id` de escenario pero **nunca se combinan ni
 
 ## Estados posibles (`MAKE_ARCH_ESTADOS`)
 
-| Estado | Significado | Cuántos hoy |
-|---|---|---|
-| `operational` | Interfaz + contrato + webhook configurados, con evidencia objetiva de ejecución E2E real | 1 |
-| `prepared` | Interfaz y/o contrato preparados en la app; falta activar una integración externa o configurar un webhook | 9 |
-| `externally_blocked` | Preparado, pero bloqueado hoy por una dependencia externa fuera de nuestro control (principalmente Airtable 429) | 30 |
-| `planned` | Sin interfaz de app todavía; requiere una decisión de producto o diseño antes de construirse | 10 |
+| Estado | Significado | Cuántos (Paso 08E) | Cuántos (tras Paso 08F) |
+|---|---|---|---|
+| `operational` | Interfaz + contrato + webhook configurados, con evidencia objetiva de ejecución E2E real | 1 | 1 |
+| `prepared` | Interfaz y/o contrato preparados en la app; falta activar una integración externa o configurar un webhook | 9 | 19 |
+| `externally_blocked` | Preparado, pero bloqueado hoy por una dependencia externa fuera de nuestro control (principalmente Airtable 429) | 30 | 30 |
+| `planned` | Sin interfaz de app todavía; requiere una decisión de producto o diseño antes de construirse | 10 | 0 |
 
 Los contadores de la tabla **siempre** se calculan con `computeArchitectureResumen(MAKE_ARCHITECTURE_MATRIX)` — nunca se escriben a mano. Ver `src/utils/makeCentroTecnicoLogic.js::computeIntegracionResumen` para el mismo criterio ya aplicado al eje de integración de código.
 

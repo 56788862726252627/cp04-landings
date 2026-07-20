@@ -165,6 +165,85 @@ function Badge({ children, color }) {
   );
 }
 
+// PASO 08F (2026-07-20): mismo mensaje honesto ya establecido en App.jsx
+// (CP04_PREPARADO_MSG) — duplicado localmente a propósito para no tocar
+// App.jsx (ya validado) ni acoplar este componente a su módulo, que no
+// exporta esa constante.
+const CP04_ARCH_PREPARADO_MSG = "Acción preparada. Pendiente de conexión real cuando Make/Airtable esté disponible.";
+
+// PASO 08F (2026-07-20): simulador local de contrato para los flujos que solo
+// viven en Centro de Automatizaciones (los 10 que pasaron de "planned" a
+// "prepared" en este bloque). Nunca llama a fetch/authFetch ni a ningún
+// servicio externo — toda validación y "resultado" es puramente local. Se
+// desmonta/remonta por flujo vía `key` para que el formulario no arrastre
+// estado de un flujo al seleccionar otro.
+function FormularioLocalFlujo({ flujo }) {
+  const [valor, setValor] = useState("");
+  const [error, setError] = useState("");
+  const [resultado, setResultado] = useState(null);
+
+  const handleProbar = () => {
+    const limpio = valor.trim();
+    if (limpio.length < 3) {
+      setError("Introduce al menos 3 caracteres para simular los datos de entrada del contrato.");
+      setResultado(null);
+      return;
+    }
+    setError("");
+    setResultado({ entradaSimulada: limpio });
+  };
+
+  return (
+    <div style={{ marginTop: 16, padding: 16, borderRadius: 14, border: `1px dashed ${T.primary}66`, background: "rgba(255,255,255,.02)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+        <Badge color={T.primary}>🔒 Modo seguro</Badge>
+        <span style={{ color: T.textDim, fontSize: ".78rem" }}>
+          Simulación local — no se realiza ninguna llamada real a Make, Airtable ni ningún otro servicio externo.
+        </span>
+      </div>
+      <label htmlFor={`arch-form-${flujo.id}`} style={{ display: "block", color: T.textDim, fontSize: ".8rem", marginBottom: 6 }}>
+        Datos de entrada simulados (contrato: {flujo.datosEntrada})
+      </label>
+      <textarea
+        id={`arch-form-${flujo.id}`}
+        aria-label={`Datos de entrada simulados para ${flujo.nombre}`}
+        value={valor}
+        onChange={(e) => {
+          setValor(e.target.value);
+          setResultado(null);
+        }}
+        rows={2}
+        style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text, fontFamily: T.fontBody, resize: "vertical" }}
+      />
+      {error && (
+        <div role="alert" style={{ color: T.danger, fontSize: ".78rem", marginTop: 6 }}>
+          {error}
+        </div>
+      )}
+      <div style={{ marginTop: 10 }}>
+        <button
+          type="button"
+          onClick={handleProbar}
+          style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${T.primary}66`, background: `${T.primary}18`, color: T.primary, fontWeight: 800, fontSize: ".8rem", cursor: "pointer" }}
+        >
+          Probar localmente (sin conexión real)
+        </button>
+      </div>
+      {resultado && (
+        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(182,255,0,.06)", border: `1px solid ${T.accent}44` }}>
+          <div style={{ color: T.text, fontSize: ".85rem", marginBottom: 6 }}>
+            <strong>Entrada simulada:</strong> {resultado.entradaSimulada}
+          </div>
+          <div style={{ color: T.textDim, fontSize: ".85rem", marginBottom: 6 }}>
+            <strong>Resultado esperado (simulado, no ejecutado):</strong> {flujo.resultadoEsperado}
+          </div>
+          <div style={{ color: T.warning, fontWeight: 700, fontSize: ".85rem" }}>{CP04_ARCH_PREPARADO_MSG}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Panel({ title, eyebrow, children, style = {} }) {
   return (
     <div
@@ -647,6 +726,8 @@ export default function CentroTecnico({ selectedRole }) {
               <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.04)", color: T.textDim, fontSize: ".85rem", lineHeight: 1.5 }}>
                 ➡️ Siguiente acción necesaria: {f.siguienteAccionNecesaria}
               </div>
+              {/* PASO 08F: representación visual mínima para los flujos que solo viven en Centro de Automatizaciones */}
+              {f.modulo === "Centro de automatizaciones" && <FormularioLocalFlujo key={f.id} flujo={f} />}
             </div>
           );
         })()}

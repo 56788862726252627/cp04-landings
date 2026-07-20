@@ -132,9 +132,34 @@ test("filterArchitectureMatrix: filtra por área correctamente", () => {
 });
 
 test("filterArchitectureMatrix: filtra por estado correctamente", () => {
-  const planificados = filterArchitectureMatrix(MAKE_ARCHITECTURE_MATRIX, { estado: MAKE_ARCH_ESTADOS.PLANNED });
-  assert.equal(planificados.length, 10);
-  for (const f of planificados) assert.equal(f.estado, MAKE_ARCH_ESTADOS.PLANNED);
+  const preparados = filterArchitectureMatrix(MAKE_ARCHITECTURE_MATRIX, { estado: MAKE_ARCH_ESTADOS.PREPARED });
+  assert.equal(preparados.length, 19);
+  for (const f of preparados) assert.equal(f.estado, MAKE_ARCH_ESTADOS.PREPARED);
+});
+
+// PASO 08F (2026-07-20): los 10 flujos que en el Paso 08E estaban "planned"
+// (sin ninguna representación en la app) ahora tienen representación visual
+// mínima (formulario local de simulación) dentro de Centro de
+// Automatizaciones — pasan a "prepared", nunca a "operational" sin
+// evidencia real.
+const IDS_MOVIDOS_PASO_08F = [6299114, 6233755, 5791116, 5736466, 4919937, 5330078, 5791374, 5799061, 6323445, 6335114];
+
+test("MAKE_ARCHITECTURE_MATRIX: ya no queda ningún flujo en estado planned tras el Paso 08F", () => {
+  const planificados = MAKE_ARCHITECTURE_MATRIX.filter((f) => f.estado === MAKE_ARCH_ESTADOS.PLANNED);
+  assert.equal(planificados.length, 0);
+});
+
+test("MAKE_ARCHITECTURE_MATRIX: los 10 flujos del Paso 08F pasaron exactamente de planned a prepared, con contrato e interfaz, sin fingir E2E", () => {
+  assert.equal(IDS_MOVIDOS_PASO_08F.length, 10);
+  for (const id of IDS_MOVIDOS_PASO_08F) {
+    const f = MAKE_ARCHITECTURE_MATRIX.find((x) => x.id === id);
+    assert.ok(f, `flujo ${id} no encontrado en la matriz`);
+    assert.equal(f.estado, MAKE_ARCH_ESTADOS.PREPARED, `flujo ${id} debería estar prepared`);
+    assert.equal(f.tieneInterfazCompleta, true, `flujo ${id} debería tener interfaz completa`);
+    assert.equal(f.tieneContratoPreparado, true, `flujo ${id} debería tener contrato preparado`);
+    assert.equal(f.probadoE2E, false, `flujo ${id} no debe fingir validación E2E`);
+    assert.equal(f.modulo, "Centro de automatizaciones", `flujo ${id} debe seguir viviendo en Centro de Automatizaciones`);
+  }
 });
 
 test("filterArchitectureMatrix: filtra por rol autorizado correctamente", () => {
