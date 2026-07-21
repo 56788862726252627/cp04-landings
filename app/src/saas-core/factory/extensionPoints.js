@@ -199,6 +199,19 @@ export const EXTENSION_POINTS = Object.freeze([
     credentialsNeeded: ["ANALYTICS_WRITE_KEY"],
     docsNote: "Mismo contrato que adapters/providerAdapters.js AnalyticsProvider.",
   }),
+  defineExtensionPoint({
+    id: "aiLanguageProvider",
+    label: "Proveedor de IA para interpretación de lenguaje natural",
+    category: "provider",
+    interfaceMethods: ["interpretBusinessDescription"],
+    credentialsNeeded: ["AI_PROVIDER_API_KEY"],
+    limitations: [
+      "Paso 11 (One Prompt Factory · Natural Language Business Builder) implementa un modo determinista local completo que NUNCA depende de este punto",
+      "Cuando se conecte un proveedor real, su salida debe validarse estrictamente y hacer fallback automático al modo determinista ante timeout, error o JSON inválido",
+    ],
+    security: ["Sanitizar y limitar el tamaño del prompt de entrada antes de reenviarlo a cualquier proveedor externo"],
+    docsNote: "Ver src/saas-core/nl-builder/aiProviderContract.js — interfaz + mock + política de fallback ya implementadas en Paso 11.",
+  }),
 ]);
 
 const BY_ID = new Map(EXTENSION_POINTS.map((p) => [p.id, p]));

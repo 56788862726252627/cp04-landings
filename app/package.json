@@ -21,7 +21,13 @@
     "business:report": "node factory-cli/business-report.mjs",
     "business:list": "node factory-cli/business-list.mjs",
     "business:diff": "node factory-cli/business-diff.mjs",
-    "business:doctor": "node factory-cli/business-doctor.mjs"
+    "business:doctor": "node factory-cli/business-doctor.mjs",
+    "business:interpret": "node factory-cli/business-interpret.mjs",
+    "business:ask": "node factory-cli/business-ask.mjs",
+    "business:compose": "node factory-cli/business-compose.mjs",
+    "business:explain": "node factory-cli/business-explain.mjs",
+    "business:recommend": "node factory-cli/business-recommend.mjs",
+    "business:from-prompt": "node factory-cli/business-from-prompt.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
