@@ -1,0 +1,311 @@
+{
+  "businessId": "clinica-dental-sonrisas-de-malaga",
+  "generatedAt": null,
+  "tool": "playwright (opcional, no incluido como dependencia en este paso)",
+  "entries": [
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__landing__mobile",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/",
+      "routeLabel": "Landing pública",
+      "requiresAuth": false,
+      "viewport": {
+        "id": "mobile",
+        "label": "Móvil",
+        "width": 375,
+        "height": 812,
+        "deviceScaleFactor": 3
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__landing__mobile.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__landing__tablet",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/",
+      "routeLabel": "Landing pública",
+      "requiresAuth": false,
+      "viewport": {
+        "id": "tablet",
+        "label": "Tablet",
+        "width": 834,
+        "height": 1194,
+        "deviceScaleFactor": 2
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__landing__tablet.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__landing__laptop",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/",
+      "routeLabel": "Landing pública",
+      "requiresAuth": false,
+      "viewport": {
+        "id": "laptop",
+        "label": "Portátil",
+        "width": 1366,
+        "height": 768,
+        "deviceScaleFactor": 1
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__landing__laptop.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__landing__desktop",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/",
+      "routeLabel": "Landing pública",
+      "requiresAuth": false,
+      "viewport": {
+        "id": "desktop",
+        "label": "Escritorio",
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 1
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__landing__desktop.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__login__mobile",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/login",
+      "routeLabel": "Login demo",
+      "requiresAuth": false,
+      "viewport": {
+        "id": "mobile",
+        "label": "Móvil",
+        "width": 375,
+        "height": 812,
+        "deviceScaleFactor": 3
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__login__mobile.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__login__tablet",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/login",
+      "routeLabel": "Login demo",
+      "requiresAuth": false,
+      "viewport": {
+        "id": "tablet",
+        "label": "Tablet",
+        "width": 834,
+        "height": 1194,
+        "deviceScaleFactor": 2
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__login__tablet.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__login__laptop",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/login",
+      "routeLabel": "Login demo",
+      "requiresAuth": false,
+      "viewport": {
+        "id": "laptop",
+        "label": "Portátil",
+        "width": 1366,
+        "height": 768,
+        "deviceScaleFactor": 1
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__login__laptop.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__login__desktop",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/login",
+      "routeLabel": "Login demo",
+      "requiresAuth": false,
+      "viewport": {
+        "id": "desktop",
+        "label": "Escritorio",
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 1
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__login__desktop.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__inicio__mobile",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/app/inicio",
+      "routeLabel": "Panel de inicio",
+      "requiresAuth": true,
+      "viewport": {
+        "id": "mobile",
+        "label": "Móvil",
+        "width": 375,
+        "height": 812,
+        "deviceScaleFactor": 3
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__inicio__mobile.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__inicio__tablet",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/app/inicio",
+      "routeLabel": "Panel de inicio",
+      "requiresAuth": true,
+      "viewport": {
+        "id": "tablet",
+        "label": "Tablet",
+        "width": 834,
+        "height": 1194,
+        "deviceScaleFactor": 2
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__inicio__tablet.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__inicio__laptop",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/app/inicio",
+      "routeLabel": "Panel de inicio",
+      "requiresAuth": true,
+      "viewport": {
+        "id": "laptop",
+        "label": "Portátil",
+        "width": 1366,
+        "height": 768,
+        "deviceScaleFactor": 1
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__inicio__laptop.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__inicio__desktop",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/app/inicio",
+      "routeLabel": "Panel de inicio",
+      "requiresAuth": true,
+      "viewport": {
+        "id": "desktop",
+        "label": "Escritorio",
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 1
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__inicio__desktop.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__citas__mobile",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/app/citas",
+      "routeLabel": "Agenda/citas",
+      "requiresAuth": true,
+      "viewport": {
+        "id": "mobile",
+        "label": "Móvil",
+        "width": 375,
+        "height": 812,
+        "deviceScaleFactor": 3
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__citas__mobile.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__citas__tablet",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/app/citas",
+      "routeLabel": "Agenda/citas",
+      "requiresAuth": true,
+      "viewport": {
+        "id": "tablet",
+        "label": "Tablet",
+        "width": 834,
+        "height": 1194,
+        "deviceScaleFactor": 2
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__citas__tablet.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__citas__laptop",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/app/citas",
+      "routeLabel": "Agenda/citas",
+      "requiresAuth": true,
+      "viewport": {
+        "id": "laptop",
+        "label": "Portátil",
+        "width": 1366,
+        "height": 768,
+        "deviceScaleFactor": 1
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__citas__laptop.png"
+    },
+    {
+      "name": "clinica-dental-sonrisas-de-malaga__citas__desktop",
+      "businessId": "clinica-dental-sonrisas-de-malaga",
+      "route": "/app/citas",
+      "routeLabel": "Agenda/citas",
+      "requiresAuth": true,
+      "viewport": {
+        "id": "desktop",
+        "label": "Escritorio",
+        "width": 1920,
+        "height": 1080,
+        "deviceScaleFactor": 1
+      },
+      "captured": false,
+      "capturedAt": null,
+      "outputPathHint": "mockups/clinica-dental-sonrisas-de-malaga__citas__desktop.png"
+    }
+  ],
+  "compatibilityNotes": [
+    {
+      "platform": "Android",
+      "vehicle": "PWA instalada / Chrome",
+      "status": "planned"
+    },
+    {
+      "platform": "iOS",
+      "vehicle": "PWA instalada / Safari",
+      "status": "planned"
+    },
+    {
+      "platform": "iPadOS",
+      "vehicle": "PWA instalada / Safari",
+      "status": "planned"
+    },
+    {
+      "platform": "Windows",
+      "vehicle": "PWA instalada / Edge-Chrome",
+      "status": "planned"
+    },
+    {
+      "platform": "macOS",
+      "vehicle": "PWA instalada / Safari-Chrome",
+      "status": "planned"
+    },
+    {
+      "platform": "Linux",
+      "vehicle": "Navegador (Chrome/Firefox), PWA si el navegador lo soporta",
+      "status": "planned"
+    }
+  ]
+}
