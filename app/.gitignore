@@ -1,38 +1,113 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Environment files with local/private values
+# Dependencias y build
+node_modules/
+dist/
 .env
 .env.*
-!.env.example
-
-# Secret material and local credentials
-*.pem
-*.key
-*.p12
-*.pfx
-service-account*.json
-credentials*.json
-secrets*.json
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.log
+
+# Carpetas de copias, auditorías, snapshots y versiones locales
+backups/
+backup*/
+audit/
+audits/
+snapshots/
+releases/
+importaciones/
+docs/comprobaciones-generales/
+
+# Backups fuera de la carpeta app
+../backups/
+../snapshots/
+../releases/
+../importaciones/
+
+# Copias manuales de App y otros archivos
+*.BACKUP*
+*.backup*
+*.bak*
+*.tmp
+*.old
+*.SEGURIDAD*
+*backup*
+*BACKUP*
+*SEGURIDAD*
+*checkpoint*
+
+# JSON temporales, pruebas y comprobaciones locales
+backup_*.json
+backup-*.json
+comprobacion-*.json
+comprobar-*.json
+prueba-*.json
+whoami-*.json
+jugadores-prueba-*.json
+jugadores-por-*.json
+jugadores-id-*.json
+jugadores-final.json
+jugadores-cp04-final.json
+bases-token-*.json
+bases-airtable.json
+bases-final.json
+esquema-token-*.json
+esquema-id-*.json
+tablas-airtable.json
+tablas-final.json
+plantilla_google_drive_backup_cp04.json
+
+# Scripts temporales usados para arreglos puntuales
+comprobar_*.py
+desplegar_*.py
+guardar_*.py
+fix_*.py
+rebuild_*.py
+replace_*.py
+recortar_*.py
+aplicar_*.py
+
+# Carpetas de trabajo de Make / blueprints si no son parte del frontend limpio
+make-blueprints/
+workflows/
+
+# Worker local y backups del worker
+worker-reservas/backups/
+worker-reservas/*.BACKUP*
+worker-reservas/*.backup*
+worker-reservas/*.bak*
+worker-reservas/src/*.BACKUP*
+worker-reservas/src/*.backup*
+worker-reservas/src/*.bak*
+worker-reservas/src/index.js.BACKUP*
+worker-reservas/wrangler.toml.BACKUP*
+worker-reservas/ultima-alta-app.json
+# CP04 generated/cache folders
+.cache/
+.vite/
+.wrangler/
+worker-reservas/.wrangler/
+backups/**/dist/
+backups/**/.wrangler/
+
+# CP04 generated/export packages
+/ENTREGA_FINAL_CLUB_PADEL_04/
+/REVISION_VISUAL_PACK_FINAL_CP04/
+/USO_EXTERNO_PACK_FINAL_CP04/
+../ENTREGA_FINAL_CLUB_PADEL_04/
+../REVISION_VISUAL_PACK_FINAL_CP04/
+../USO_EXTERNO_PACK_FINAL_CP04/
+
+# CP04 deploy/generated previews
+deploy-pages/
+deploy-preview/
+
+# CP04 generated commercial PDF/HTML exports
+pdf-comercial-antequera/
+docs/demo-para-ensenar/
+docs/deploy/
+docs/exportacion-pdf-antequera/
+docs/kit-comercial-activo/
+docs/pdf-comercial-antequera/
+docs/pdf-corto-premium-final/
+
+# CP04 experimental modules not used in production
+src/experimental/

@@ -1,0 +1,500 @@
+src/App.jsx:82:    key: "pistas",
+src/App.jsx:83:    title: "Pistas",
+src/App.jsx:84:    label: "Pistas Club Pádel 04",
+src/App.jsx:85:    src: "/optimized/gallery/cp04/pistas.webp?v=cp04FotosSeparadasFinal2",
+src/App.jsx:113:const COURTS = [
+src/App.jsx:114:  { id: 1, name: "Pista 1", type: "Cristal Pro", price60: 10, price90: 18, price120: 24 },
+src/App.jsx:115:  { id: 2, name: "Pista 2", type: "Cristal Pro", price60: 10, price90: 18, price120: 24 },
+src/App.jsx:116:  { id: 3, name: "Pista 3", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
+src/App.jsx:117:  { id: 4, name: "Pista 4", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
+src/App.jsx:126:  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
+src/App.jsx:127:  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
+src/App.jsx:128:  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
+src/App.jsx:160:  { name: "Calendario", status: "Listo para conexión", detail: "Reservas, disponibilidad y eventos", flow: "Sistema → Calendario" },
+src/App.jsx:166:  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+src/App.jsx:167:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+src/App.jsx:277:function priceFor(courtName, duration) {
+src/App.jsx:278:  const court = COURTS.find((c) => c.name === courtName);
+src/App.jsx:279:  return court?.[`price${duration}`] || 0;
+src/App.jsx:331:function getSlotStatus(fecha, hora, duration = 90) {
+src/App.jsx:332:  if (!fecha || !hora) return "invalid";
+src/App.jsx:333:  if (isSundayISO(fecha)) return "closed";
+src/App.jsx:334:  if (isPastDateISO(fecha)) return "past";
+src/App.jsx:339:  if (fecha === todayISO() && startMinutes <= madridCurrentMinutes()) {
+src/App.jsx:347:  return "available";
+src/App.jsx:360:function validateBooking(form, courtName, tx) {
+src/App.jsx:363:  const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
+src/App.jsx:371:  if (!form.fecha) errors.fecha = _t("errors.fecha");
+src/App.jsx:372:  else if (selectedDate < today) errors.fecha = _t("errors.fecha_pasado");
+src/App.jsx:373:  else if (isSundayISO(form.fecha)) errors.fecha = _t("errors.fecha_domingo");
+src/App.jsx:376:  if (!errors.fecha && !errors.hora && !errors.duracion_minutos) {
+src/App.jsx:377:    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+src/App.jsx:378:    if (slotStatus === "past") errors.hora = _t("errors.hora_pasada");
+src/App.jsx:379:    if (slotStatus === "outside_hours") errors.hora = _t("errors.hora_cierre");
+src/App.jsx:380:    if (slotStatus === "closed") errors.fecha = _t("errors.fecha_domingo");
+src/App.jsx:382:  if (!COURTS.some((court) => court.name === courtName)) errors.pista = _t("errors.pista");
+src/App.jsx:389:function prepareBookingPayload(form, courtName) {
+src/App.jsx:392:  const price = priceFor(courtName, duration);
+src/App.jsx:405:      fecha: form.fecha,
+src/App.jsx:409:      pista: courtName,
+src/App.jsx:418:function validateReschedule(form, courtName, tx) {
+src/App.jsx:423:  const selectedDate = form.nueva_fecha_reserva
+src/App.jsx:424:    ? new Date(`${form.nueva_fecha_reserva}T00:00:00`)
+src/App.jsx:434:  if (!form.nueva_fecha_reserva) {
+src/App.jsx:435:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha");
+src/App.jsx:437:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha_pasado");
+src/App.jsx:438:  } else if (isSundayISO(form.nueva_fecha_reserva)) {
+src/App.jsx:439:    errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+src/App.jsx:450:  if (!errors.nueva_fecha_reserva && !errors.nueva_hora_inicio && !errors.duracion_minutos) {
+src/App.jsx:451:    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+src/App.jsx:452:    if (slotStatus === "past") errors.nueva_hora_inicio = _t("errors.hora_pasada");
+src/App.jsx:453:    if (slotStatus === "outside_hours") errors.nueva_hora_inicio = _t("errors.hora_cierre");
+src/App.jsx:454:    if (slotStatus === "closed") errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+src/App.jsx:457:  if (!COURTS.some((court) => court.name === courtName)) {
+src/App.jsx:458:    errors.nueva_pista = _t("errors.pista");
+src/App.jsx:468:function prepareReschedulePayload(form, courtName) {
+src/App.jsx:475:    nueva_fecha_reserva: form.nueva_fecha_reserva,
+src/App.jsx:478:    nueva_pista: courtName,
+src/App.jsx:479:    pista_nueva: courtName,
+src/App.jsx:511:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+src/App.jsx:512:const DISPONIBILIDAD_UPDATE_EVENT = "cp04:disponibilidad-actualizar";
+src/App.jsx:525:async function fetchDisponibilidad(fecha) {
+src/App.jsx:526:  const params = new URLSearchParams({ fecha, t: String(Date.now()) });
+src/App.jsx:527:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+src/App.jsx:531:    throw new Error("availability_request_failed");
+src/App.jsx:537:function emitDisponibilidadUpdate(fecha) {
+src/App.jsx:538:  window.dispatchEvent(new CustomEvent(DISPONIBILIDAD_UPDATE_EVENT, { detail: { fecha } }));
+src/App.jsx:541:function refreshDisponibilidadAfterChange(fecha) {
+src/App.jsx:542:  emitDisponibilidadUpdate(fecha);
+src/App.jsx:543:  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 1500);
+src/App.jsx:544:  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 4000);
+src/App.jsx:547:function CalendarioDisponibilidad({
+src/App.jsx:549:  selectedCourt,
+src/App.jsx:550:  onSelectSlot,
+src/App.jsx:552:  title = "Calendario de disponibilidad",
+src/App.jsx:553:  description = "Elige fecha, hora y pista disponibles.",
+src/App.jsx:555:  const [fecha, setFecha] = useState(initialDate || todayISO());
+src/App.jsx:562:  const pistas = COURTS.map((c) => c.name);
+src/App.jsx:564:  const consultarDisponibilidad = useCallback(async (fechaConsulta) => {
+src/App.jsx:565:    if (!fechaConsulta) return;
+src/App.jsx:567:    if (isSundayISO(fechaConsulta)) {
+src/App.jsx:574:    if (isPastDateISO(fechaConsulta)) {
+src/App.jsx:577:      setMensaje("La fecha seleccionada ya ha pasado.");
+src/App.jsx:585:      const data = await fetchDisponibilidad(fechaConsulta);
+src/App.jsx:596:      setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
+src/App.jsx:599:      setMensaje("No se pudo actualizar la disponibilidad. Inténtalo de nuevo.");
+src/App.jsx:605:    const timer = window.setTimeout(() => consultarDisponibilidad(fecha), 0);
+src/App.jsx:607:  }, [consultarDisponibilidad, fecha]);
+src/App.jsx:613:        setFecha(initialDate);
+src/App.jsx:621:    function handleDisponibilidadUpdate(event) {
+src/App.jsx:622:      const fechaEvento = event.detail?.fecha;
+src/App.jsx:623:      if (fechaEvento && fechaEvento !== fecha) {
+src/App.jsx:624:        setFecha(fechaEvento);
+src/App.jsx:625:        consultarDisponibilidad(fechaEvento);
+src/App.jsx:628:      consultarDisponibilidad(fecha);
+src/App.jsx:631:    window.addEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+src/App.jsx:634:      window.removeEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+src/App.jsx:636:  }, [consultarDisponibilidad, fecha]);
+src/App.jsx:638:  const cambiarFecha = (value) => {
+src/App.jsx:639:    setFecha(value);
+src/App.jsx:640:    consultarDisponibilidad(value);
+src/App.jsx:655:            aria-label="Fecha disponibilidad"
+src/App.jsx:658:            value={fecha}
+src/App.jsx:659:            onChange={(e) => cambiarFecha(e.target.value)}
+src/App.jsx:672:            onClick={() => consultarDisponibilidad(fecha)}
+src/App.jsx:690:        {pistas.map((pista) => (
+src/App.jsx:691:          <div key={pista} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 14, background: "rgba(255,255,255,.035)" }}>
+src/App.jsx:693:              <strong style={{ color: pista === selectedCourt ? T.accent : T.text }}>{pista}</strong>
+src/App.jsx:695:                {isSundayISO(fecha)
+src/App.jsx:697:                  : `${BOOKING_HOURS.filter((hora) => ocupadasSet.has(`${fecha}|${pista}|${hora}`)).length} ocupadas`}
+src/App.jsx:703:                const clave = `${fecha}|${pista}|${hora}`;
+src/App.jsx:705:                const slotStatus = getSlotStatus(fecha, hora, duration);
+src/App.jsx:706:                const cerrada = slotStatus === "closed";
+src/App.jsx:707:                const pasada = slotStatus === "past";
+src/App.jsx:708:                const fueraHorario = slotStatus === "outside_hours";
+src/App.jsx:709:                const bloqueada = cerrada || pasada || fueraHorario;
+src/App.jsx:715:                    : fueraHorario
+src/App.jsx:721:                const borderColor = cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent;
+src/App.jsx:722:                const background = cerrada || fueraHorario
+src/App.jsx:735:                      onSelectSlot({ fecha, pista, hora });
+src/App.jsx:742:                      color: cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent,
+src/App.jsx:750:                    <small style={{ color: cerrada || fueraHorario ? T.warning : danger ? T.danger : T.textDim }}>
+src/App.jsx:1140:const DEMO_OCUPACION_PISTAS = [
+src/App.jsx:1141:  { l:"Pista 1", v:87, c:"#b6ff00" },
+src/App.jsx:1142:  { l:"Pista 2", v:72, c:"#20e3b2" },
+src/App.jsx:1143:  { l:"Pista 3", v:65, c:"#2f6bff" },
+src/App.jsx:1144:  { l:"Pista 4", v:91, c:"#ffad47" },
+src/App.jsx:1150:  ocupacionMedia: 79,
+src/App.jsx:1184:  { l:"Alerta Pistas", v:521, c:"#b6ff00" },
+src/App.jsx:1198:    "nombre": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1199:    "nombre_final": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1205:    "blueprint": "workflows/27-alerta-pistas-libres-flash-promo/final/Alerta_Pistas_Libres_Flash_Promo_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1243:    "nombre": "📡 API Reservas Club Pádel 04 · FINAL V2 · Crear + Cancelar + Ocupación",
+src/App.jsx:1244:    "nombre_final": "📡 API Reservas Club Pádel 04 · FINAL V2 · Crear + Cancelar + Ocupación",
+src/App.jsx:1250:    "blueprint": "workflows/01-api-reservas/final/API_Reservas_Club_Padel_04_FINAL_V2_Crear_Cancelar_Ocupacion.blueprint.json",
+src/App.jsx:1318:    "nombre": "🏟️ Cierre Temporal de Pistas · Pádel 04 · DEFINITIVO",
+src/App.jsx:1319:    "nombre_final": "🏟️ Cierre Temporal de Pistas · Pádel 04 · DEFINITIVO",
+src/App.jsx:1324:    "funcion": "Bloquea pistas temporalmente por mantenimiento, clima u otras incidencias.",
+src/App.jsx:1325:    "blueprint": "workflows/19-cierre-temporal-pistas/final/Cierre_Temporal_de_Pistas_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1399:    "funcion": "Genera resumen ejecutivo diario con actividad, ocupación y métricas.",
+src/App.jsx:1474:    "funcion": "Gestiona lista de espera y promociona jugadores cuando queda una pista libre.",
+src/App.jsx:1573:    "nombre": "📈 Predicción Ocupación + Precios Dinámicos · Pádel 04 · DEFINITIVO",
+src/App.jsx:1574:    "nombre_final": "📈 Predicción Ocupación + Precios Dinámicos · Pádel 04 · DEFINITIVO",
+src/App.jsx:1580:    "blueprint": "workflows/26-prediccion-ocupacion-precios-dinamicos-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1678:    "nombre": "🗓️ Sincronización Multi-Calendario · Pádel 04",
+src/App.jsx:1679:    "nombre_final": "🗓️ Sincronización Multi-Calendario · Pádel 04",
+src/App.jsx:1684:    "funcion": "Sincroniza reservas confirmadas con Google Calendar y Airtable.",
+src/App.jsx:1685:    "blueprint": "workflows/08-sincronizacion-multi-calendario/final/Sincronizacion_Multi_Calendario_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1924:            { n:"Alerta Pistas", s:"ok" }, { n:"NPS Semanal", s:"warn" }, { n:"Recordatorio Pago", s:"error" },
+src/App.jsx:2243:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+src/App.jsx:2246:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+src/App.jsx:2250:    "home.reservas_hoy":"Reservas hoy","home.ocupacion_media":"Ocupación media",
+src/App.jsx:2256:    "home.vs_ayer":"vs ayer","home.pistas_activas":"4 pistas activas",
+src/App.jsx:2263:    "home.ocupacion_pista":"Ocupación por pista","home.estado_procesos":"Estado de procesos",
+src/App.jsx:2273:    "admin.reservas_mes":"Reservas mes","admin.ocupacion":"Ocupación media",
+src/App.jsx:2278:    "admin.graf_pista":"Ocupación por pista","admin.sub_hoy":"Franja horaria · demo",
+src/App.jsx:2279:    "admin.sub_semana":"Reservas últimos 7 días · demo","admin.sub_pista":"Porcentaje de uso · demo",
+src/App.jsx:2295:    "reservas.nueva":"Nueva reserva","reservas.fecha":"Fecha","reservas.hora":"Hora",
+src/App.jsx:2296:    "reservas.pista":"Pista","reservas.duracion":"Duración","reservas.confirmar":"Confirmar reserva",
+src/App.jsx:2298:    "reprog.clave":"Clave de reserva","reprog.nueva_fecha":"Nueva fecha",
+src/App.jsx:2299:    "reprog.nueva_hora":"Nueva hora de inicio","reprog.nueva_pista":"Nueva pista",
+src/App.jsx:2324:    "alta.fecha_nac":"Fecha de nacimiento","alta.nivel":"Nivel","alta.genero":"Género",
+src/App.jsx:2333:    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
+src/App.jsx:2334:    "reservas.datos_jugador":"Datos del jugador","reservas.fecha_pista":"Fecha, hora y pista",
+src/App.jsx:2341:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
+src/App.jsx:2348:    "status.reserva.exito":"Éxito","status.reserva.exito_txt":"Reserva enviada correctamente. La disponibilidad se está actualizando.",
+src/App.jsx:2354:    "status.reprog.idle":"Pendiente","status.reprog.idle_txt":"Elige una nueva fecha u horario.",
+src/App.jsx:2355:    "status.reprog.enviando":"Reprogramando","status.reprog.enviando_txt":"Estamos comprobando la disponibilidad y actualizando tu reserva.",
+src/App.jsx:2360:    "errors.fecha":"Selecciona una fecha.","errors.fecha_pasado":"La fecha no puede ser anterior a hoy.",
+src/App.jsx:2361:    "errors.fecha_domingo":"El club está cerrado los domingos.",
+src/App.jsx:2365:    "errors.pista":"Selecciona una pista válida.","errors.modalidad":"Selecciona una modalidad válida.",
+src/App.jsx:2368:    "errors.nueva_fecha":"Selecciona la nueva fecha.","errors.nueva_fecha_pasado":"La nueva fecha no puede ser anterior a hoy.",
+src/App.jsx:2372:    "errors.horario_ocupado":"Ese horario acaba de ocuparse. Elige otro hueco libre.",
+src/App.jsx:2376:    "errors.reprog_ocupado":"Ese horario acaba de ocuparse. Selecciona otra franja libre.",
+src/App.jsx:2382:    "cancelar.info3":"Puedes volver al calendario cuando quieras.",
+src/App.jsx:2387:    "reprog.nueva_disponibilidad":"Nueva disponibilidad","reprog.selecciona_franja":"Selecciona una nueva franja disponible.",
+src/App.jsx:2403:    "admin.gestion_eyebrow":"Gestión","admin.gestion_title":"Pistas y clientes",
+src/App.jsx:2405:    "admin.gestion_item1":"Gestión de pistas","admin.gestion_item2":"Clientes y perfiles",
+src/App.jsx:2406:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Reglas de disponibilidad",
+src/App.jsx:2445:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+src/App.jsx:2448:    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, check bookings and ranking.",
+src/App.jsx:2452:    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+src/App.jsx:2458:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+src/App.jsx:2461:    "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
+src/App.jsx:2465:    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+src/App.jsx:2475:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+src/App.jsx:2480:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+src/App.jsx:2481:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+src/App.jsx:2497:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+src/App.jsx:2498:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+src/App.jsx:2499:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+src/App.jsx:2500:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+src/App.jsx:2501:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+src/App.jsx:2526:    "alta.fecha_nac":"Date of birth","alta.nivel":"Level","alta.genero":"Gender",
+src/App.jsx:2535:    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
+src/App.jsx:2536:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+src/App.jsx:2550:    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+src/App.jsx:2557:    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
+src/App.jsx:2562:    "errors.fecha":"Please select a date.","errors.fecha_pasado":"The date cannot be in the past.",
+src/App.jsx:2563:    "errors.fecha_domingo":"The club is closed on Sundays.",
+src/App.jsx:2564:    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
+src/App.jsx:2565:    "errors.hora_pasada":"The selected slot has already passed.",
+src/App.jsx:2567:    "errors.pista":"Please select a valid court.","errors.modalidad":"Please select a valid mode.",
+src/App.jsx:2570:    "errors.nueva_fecha":"Please select the new date.","errors.nueva_fecha_pasado":"The new date cannot be in the past.",
+src/App.jsx:2574:    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
+src/App.jsx:2578:    "errors.reprog_ocupado":"That slot has just been taken. Please select another.",
+src/App.jsx:2584:    "cancelar.info3":"You can return to the calendar whenever you like.",
+src/App.jsx:2589:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+src/App.jsx:2605:    "admin.gestion_eyebrow":"Management","admin.gestion_title":"Courts and clients",
+src/App.jsx:2607:    "admin.gestion_item1":"Court management","admin.gestion_item2":"Clients and profiles",
+src/App.jsx:2608:    "admin.gestion_item3":"Booking history","admin.gestion_item4":"Availability rules",
+src/App.jsx:2610:    "admin.crec_desc":"Area ready to activate processes when backend is available.",
+src/App.jsx:2628:    "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
+src/App.jsx:2647:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+src/App.jsx:2650:    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, view bookings and ranking.",
+src/App.jsx:2654:    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+src/App.jsx:2660:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+src/App.jsx:2663:    "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
+src/App.jsx:2667:    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+src/App.jsx:2677:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+src/App.jsx:2682:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+src/App.jsx:2683:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+src/App.jsx:2699:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+src/App.jsx:2700:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+src/App.jsx:2701:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+src/App.jsx:2702:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+src/App.jsx:2703:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+src/App.jsx:2728:    "alta.fecha_nac":"Date of birth","alta.nivel":"Level","alta.genero":"Gender",
+src/App.jsx:2737:    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
+src/App.jsx:2738:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+src/App.jsx:2752:    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+src/App.jsx:2759:    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
+src/App.jsx:2764:    "errors.fecha":"Please select a date.","errors.fecha_pasado":"The date cannot be in the past.",
+src/App.jsx:2765:    "errors.fecha_domingo":"The club is closed on Sundays.",
+src/App.jsx:2766:    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
+src/App.jsx:2767:    "errors.hora_pasada":"The selected slot has already passed.",
+src/App.jsx:2769:    "errors.pista":"Please select a valid court.","errors.modalidad":"Please select a valid mode.",
+src/App.jsx:2772:    "errors.nueva_fecha":"Please select the new date.","errors.nueva_fecha_pasado":"The new date cannot be in the past.",
+src/App.jsx:2776:    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
+src/App.jsx:2780:    "errors.reprog_ocupado":"That slot has just been taken. Please select another.",
+src/App.jsx:2786:    "cancelar.info3":"You can return to the calendar whenever you like.",
+src/App.jsx:2791:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+src/App.jsx:2807:    "admin.gestion_eyebrow":"Management","admin.gestion_title":"Courts and clients",
+src/App.jsx:2809:    "admin.gestion_item1":"Court management","admin.gestion_item2":"Clients and profiles",
+src/App.jsx:2810:    "admin.gestion_item3":"Booking history","admin.gestion_item4":"Availability rules",
+src/App.jsx:2812:    "admin.crec_desc":"Area ready to activate processes when backend is available.",
+src/App.jsx:2830:    "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
+src/App.jsx:2849:    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
+src/App.jsx:2852:    "role.PLAYER.label":"Joueur / client","role.PLAYER.desc":"Réserver des courts, consulter les réservations et le classement.",
+src/App.jsx:2856:    "home.reservas_hoy":"Réservations auj.","home.ocupacion_media":"Occupation moy.",
+src/App.jsx:2862:    "home.vs_ayer":"vs hier","home.pistas_activas":"4 courts actifs",
+src/App.jsx:2869:    "home.ocupacion_pista":"Occupation par court","home.estado_procesos":"État des processus",
+src/App.jsx:2878:    "admin.reservas_mes":"Réservations du mois","admin.ocupacion":"Occupation moy.",
+src/App.jsx:2883:    "admin.graf_pista":"Occupation par court","admin.sub_hoy":"Créneau · démo",
+src/App.jsx:2884:    "admin.sub_semana":"Réservations 7 jours · démo","admin.sub_pista":"% utilisation · démo",
+src/App.jsx:2897:    "reservas.nueva":"Nouvelle réservation","reservas.fecha":"Date","reservas.hora":"Heure",
+src/App.jsx:2898:    "reservas.pista":"Court","reservas.duracion":"Durée","reservas.confirmar":"Confirmer réservation",
+src/App.jsx:2900:    "reprog.clave":"Clé de réservation","reprog.nueva_fecha":"Nouvelle date",
+src/App.jsx:2901:    "reprog.nueva_hora":"Nouvelle heure de début","reprog.nueva_pista":"Nouveau court",
+src/App.jsx:2926:    "alta.fecha_nac":"Date de naissance","alta.nivel":"Niveau","alta.genero":"Genre",
+src/App.jsx:2936:    "reservas.datos_jugador":"Données du joueur","reservas.fecha_pista":"Date, heure et terrain",
+src/App.jsx:2962:    "errors.fecha":"Veuillez sélectionner une date.","errors.fecha_pasado":"La date ne peut pas être dans le passé.",
+src/App.jsx:2963:    "errors.fecha_domingo":"Le club est fermé le dimanche.",
+src/App.jsx:2967:    "errors.pista":"Veuillez sélectionner un terrain valide.","errors.modalidad":"Veuillez sélectionner un mode valide.",
+src/App.jsx:2970:    "errors.nueva_fecha":"Veuillez sélectionner la nouvelle date.","errors.nueva_fecha_pasado":"La nouvelle date ne peut pas être dans le passé.",
+src/App.jsx:2974:    "errors.horario_ocupado":"Ce créneau vient d'être pris. Veuillez en choisir un autre.",
+src/App.jsx:2989:    "reprog.nueva_disponibilidad":"Nouvelle disponibilité","reprog.selecciona_franja":"Sélectionnez un nouveau créneau disponible.",
+src/App.jsx:3047:    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
+src/App.jsx:3054:    "home.reservas_hoy":"Prenotazioni oggi","home.ocupacion_media":"Occupazione media",
+src/App.jsx:3060:    "home.vs_ayer":"vs ieri","home.pistas_activas":"4 campi attivi",
+src/App.jsx:3067:    "home.ocupacion_pista":"Occupazione per campo","home.estado_procesos":"Stato processi",
+src/App.jsx:3076:    "admin.reservas_mes":"Prenotazioni mensili","admin.ocupacion":"Occupazione media",
+src/App.jsx:3081:    "admin.graf_pista":"Occupazione per campo","admin.sub_hoy":"Fascia oraria · demo",
+src/App.jsx:3082:    "admin.sub_semana":"Prenotazioni 7 giorni · demo","admin.sub_pista":"% utilizzo · demo",
+src/App.jsx:3095:    "reservas.nueva":"Nuova prenotazione","reservas.fecha":"Data","reservas.hora":"Ora",
+src/App.jsx:3096:    "reservas.pista":"Campo","reservas.duracion":"Durata","reservas.confirmar":"Conferma prenotazione",
+src/App.jsx:3098:    "reprog.clave":"Chiave prenotazione","reprog.nueva_fecha":"Nuova data",
+src/App.jsx:3099:    "reprog.nueva_hora":"Nuovo orario di inizio","reprog.nueva_pista":"Nuovo campo",
+src/App.jsx:3124:    "alta.fecha_nac":"Data di nascita","alta.nivel":"Livello","alta.genero":"Genere",
+src/App.jsx:3134:    "reservas.datos_jugador":"Dati del giocatore","reservas.fecha_pista":"Data, ora e campo",
+src/App.jsx:3160:    "errors.fecha":"Seleziona una data.","errors.fecha_pasado":"La data non può essere nel passato.",
+src/App.jsx:3161:    "errors.fecha_domingo":"Il club è chiuso la domenica.",
+src/App.jsx:3165:    "errors.pista":"Seleziona un campo valido.","errors.modalidad":"Seleziona una modalità valida.",
+src/App.jsx:3168:    "errors.nueva_fecha":"Seleziona la nuova data.","errors.nueva_fecha_pasado":"La nuova data non può essere nel passato.",
+src/App.jsx:3172:    "errors.horario_ocupado":"Quella fascia oraria è appena stata occupata. Scegline un'altra.",
+src/App.jsx:3182:    "cancelar.info3":"Puoi tornare al calendario quando vuoi.",
+src/App.jsx:3187:    "reprog.nueva_disponibilidad":"Nuova disponibilità","reprog.selecciona_franja":"Seleziona una nuova fascia disponibile.",
+src/App.jsx:3236:    "nav.cerrar_sesion":"Terminar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
+src/App.jsx:3245:    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
+src/App.jsx:3252:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+src/App.jsx:3258:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 campos ativos",
+src/App.jsx:3265:    "home.ocupacion_pista":"Ocupação por campo","home.estado_procesos":"Estado dos processos",
+src/App.jsx:3274:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+src/App.jsx:3279:    "admin.graf_pista":"Ocupação por campo","admin.sub_hoy":"Faixa horária · demo",
+src/App.jsx:3280:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+src/App.jsx:3293:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Hora",
+src/App.jsx:3294:    "reservas.pista":"Campo","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+src/App.jsx:3296:    "reprog.clave":"Chave de reserva","reprog.nueva_fecha":"Nova data",
+src/App.jsx:3297:    "reprog.nueva_hora":"Nova hora de início","reprog.nueva_pista":"Novo campo",
+src/App.jsx:3322:    "alta.fecha_nac":"Data de nascimento","alta.nivel":"Nível","alta.genero":"Género",
+src/App.jsx:3332:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e campo",
+src/App.jsx:3346:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está a ser atualizada.",
+src/App.jsx:3353:    "status.reprog.enviando":"A reagendar","status.reprog.enviando_txt":"A verificar disponibilidade e a atualizar a sua reserva.",
+src/App.jsx:3358:    "errors.fecha":"Selecione uma data.","errors.fecha_pasado":"A data não pode ser anterior a hoje.",
+src/App.jsx:3359:    "errors.fecha_domingo":"O clube está fechado aos domingos.",
+src/App.jsx:3363:    "errors.pista":"Selecione um campo válido.","errors.modalidad":"Selecione uma modalidade válida.",
+src/App.jsx:3366:    "errors.nueva_fecha":"Selecione a nova data.","errors.nueva_fecha_pasado":"A nova data não pode ser anterior a hoje.",
+src/App.jsx:3370:    "errors.horario_ocupado":"Esse horário acabou de ser ocupado. Escolha outro.",
+src/App.jsx:3385:    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
+src/App.jsx:3404:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+src/App.jsx:3434:    "nav.cerrar_sesion":"Encerrar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
+src/App.jsx:3443:    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
+src/App.jsx:3450:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+src/App.jsx:3456:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 quadras ativas",
+src/App.jsx:3463:    "home.ocupacion_pista":"Ocupação por quadra","home.estado_procesos":"Status dos processos",
+src/App.jsx:3472:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+src/App.jsx:3477:    "admin.graf_pista":"Ocupação por quadra","admin.sub_hoy":"Faixa horária · demo",
+src/App.jsx:3478:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+src/App.jsx:3491:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Horário",
+src/App.jsx:3492:    "reservas.pista":"Quadra","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+src/App.jsx:3494:    "reprog.clave":"Código da reserva","reprog.nueva_fecha":"Nova data",
+src/App.jsx:3495:    "reprog.nueva_hora":"Novo horário de início","reprog.nueva_pista":"Nova quadra",
+src/App.jsx:3520:    "alta.fecha_nac":"Data de nascimento","alta.nivel":"Nível","alta.genero":"Gênero",
+src/App.jsx:3530:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e quadra",
+src/App.jsx:3544:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está sendo atualizada.",
+src/App.jsx:3551:    "status.reprog.enviando":"Remarcando","status.reprog.enviando_txt":"Verificando disponibilidade e atualizando sua reserva.",
+src/App.jsx:3556:    "errors.fecha":"Selecione uma data.","errors.fecha_pasado":"A data não pode ser anterior a hoje.",
+src/App.jsx:3557:    "errors.fecha_domingo":"O clube está fechado aos domingos.",
+src/App.jsx:3560:    "errors.hora_cierre":"A reserva terminaria depois do fechamento do clube.",
+src/App.jsx:3561:    "errors.pista":"Selecione uma quadra válida.","errors.modalidad":"Selecione uma modalidade válida.",
+src/App.jsx:3564:    "errors.nueva_fecha":"Selecione a nova data.","errors.nueva_fecha_pasado":"A nova data não pode ser anterior a hoje.",
+src/App.jsx:3568:    "errors.horario_ocupado":"Esse horário acabou de ser ocupado. Escolha outro.",
+src/App.jsx:3583:    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
+src/App.jsx:3602:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+src/App.jsx:3641:    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
+src/App.jsx:3648:    "home.reservas_hoy":"Buchungen heute","home.ocupacion_media":"Durchschn. Auslastung",
+src/App.jsx:3654:    "home.vs_ayer":"vs gestern","home.pistas_activas":"4 aktive Plätze",
+src/App.jsx:3661:    "home.ocupacion_pista":"Auslastung je Platz","home.estado_procesos":"Prozessstatus",
+src/App.jsx:3670:    "admin.reservas_mes":"Monatliche Buchungen","admin.ocupacion":"Durchschn. Auslastung",
+src/App.jsx:3675:    "admin.graf_pista":"Auslastung je Platz","admin.sub_hoy":"Zeitfenster · Demo",
+src/App.jsx:3676:    "admin.sub_semana":"Buchungen 7 Tage · Demo","admin.sub_pista":"% Nutzung · Demo",
+src/App.jsx:3689:    "reservas.nueva":"Neue Buchung","reservas.fecha":"Datum","reservas.hora":"Uhrzeit",
+src/App.jsx:3690:    "reservas.pista":"Platz","reservas.duracion":"Dauer","reservas.confirmar":"Buchung bestätigen",
+src/App.jsx:3692:    "reprog.clave":"Buchungsschlüssel","reprog.nueva_fecha":"Neues Datum",
+src/App.jsx:3693:    "reprog.nueva_hora":"Neue Startzeit","reprog.nueva_pista":"Neuer Platz",
+src/App.jsx:3718:    "alta.fecha_nac":"Geburtsdatum","alta.nivel":"Niveau","alta.genero":"Geschlecht",
+src/App.jsx:3728:    "reservas.datos_jugador":"Spielerdaten","reservas.fecha_pista":"Datum, Uhrzeit und Platz",
+src/App.jsx:3754:    "errors.fecha":"Bitte wählen Sie ein Datum.","errors.fecha_pasado":"Das Datum darf nicht in der Vergangenheit liegen.",
+src/App.jsx:3755:    "errors.fecha_domingo":"Der Club ist sonntags geschlossen.",
+src/App.jsx:3759:    "errors.pista":"Bitte wählen Sie einen gültigen Platz.","errors.modalidad":"Bitte wählen Sie einen gültigen Modus.",
+src/App.jsx:3762:    "errors.nueva_fecha":"Bitte wählen Sie das neue Datum.","errors.nueva_fecha_pasado":"Das neue Datum darf nicht in der Vergangenheit liegen.",
+src/App.jsx:3766:    "errors.horario_ocupado":"Dieses Zeitfenster wurde gerade belegt. Bitte wählen Sie ein anderes.",
+src/App.jsx:3781:    "reprog.nueva_disponibilidad":"Neue Verfügbarkeit","reprog.selecciona_franja":"Wählen Sie ein neues verfügbares Zeitfenster.",
+src/App.jsx:4257:        <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
+src/App.jsx:4277:        <ChartCard title={tx("home.ocupacion_pista")} sub={tx("home.porcentaje_uso")}>
+src/App.jsx:4278:          <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} unit="%" />
+src/App.jsx:4317:  const [court, setCourt] = useState("Pista 1");
+src/App.jsx:4318:  const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
+src/App.jsx:4322:  const price = priceFor(court, duration);
+src/App.jsx:4323:  const payload = useMemo(() => prepareBookingPayload(form, court), [form, court]);
+src/App.jsx:4341:    const nextErrors = validateBooking(form, court, tx);
+src/App.jsx:4353:    const nextErrors = validateBooking(form, court, tx);
+src/App.jsx:4366:      const slotKey = `${form.fecha}|${court}|${form.hora}`;
+src/App.jsx:4367:      const disponibilidad = await fetchDisponibilidad(form.fecha);
+src/App.jsx:4368:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+src/App.jsx:4369:        setStatusMessage(tx("errors.horario_ocupado"));
+src/App.jsx:4376:      refreshDisponibilidadAfterChange(form.fecha);
+src/App.jsx:4394:  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow={tx("reservas.eyebrow")} title={tx("reservas.title")} desc={tx("reservas.desc")} /><CalendarioDisponibilidad
+src/App.jsx:4395:  initialDate={form.fecha || todayISO()}
+src/App.jsx:4396:  selectedCourt={court}
+src/App.jsx:4398:  onSelectSlot={({ fecha, pista, hora }) => {
+src/App.jsx:4399:    updateForm("fecha", fecha);
+src/App.jsx:4401:    updateForm("pista", pista);
+src/App.jsx:4402:    setCourt(pista);
+src/App.jsx:4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+src/App.jsx:4484:      refreshDisponibilidadAfterChange();
+src/App.jsx:4500:  const [court, setCourt] = useState("Pista 1");
+src/App.jsx:4503:    nueva_fecha_reserva: todayISO(),
+src/App.jsx:4517:    () => prepareReschedulePayload(form, court),
+src/App.jsx:4518:    [form, court],
+src/App.jsx:4536:  function chooseCourt(value) {
+src/App.jsx:4537:    setCourt(value);
+src/App.jsx:4538:    setErrors((current) => ({ ...current, nueva_pista: undefined }));
+src/App.jsx:4547:    const nextErrors = validateReschedule(form, court, tx);
+src/App.jsx:4561:      const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
+src/App.jsx:4562:      const disponibilidad = await fetchDisponibilidad(form.nueva_fecha_reserva);
+src/App.jsx:4564:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+src/App.jsx:4586:        const updatedAvailability = await fetchDisponibilidad(
+src/App.jsx:4587:          form.nueva_fecha_reserva,
+src/App.jsx:4590:        if ((updatedAvailability.ocupadas || []).includes(slotKey)) {
+src/App.jsx:4601:        `Nueva fecha ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}.`,
+src/App.jsx:4604:      refreshDisponibilidadAfterChange(form.nueva_fecha_reserva);
+src/App.jsx:4617:      nueva_fecha_reserva: todayISO(),
+src/App.jsx:4622:    setCourt("Pista 1");
+src/App.jsx:4643:      <CalendarioDisponibilidad
+src/App.jsx:4644:        initialDate={form.nueva_fecha_reserva}
+src/App.jsx:4645:        selectedCourt={court}
+src/App.jsx:4647:        title={tx("reprog.nueva_disponibilidad")}
+src/App.jsx:4649:        onSelectSlot={({ fecha, pista, hora }) => {
+src/App.jsx:4650:          updateForm("nueva_fecha_reserva", fecha);
+src/App.jsx:4652:          chooseCourt(pista);
+src/App.jsx:4689:            <h3 style={{ marginTop: 0 }}>{tx("reprog.nueva_fecha")}</h3>
+src/App.jsx:4691:            <label htmlFor="reprogramar-fecha" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+src/App.jsx:4692:              {tx("reprog.nueva_fecha")}
+src/App.jsx:4695:              id="reprogramar-fecha"
+src/App.jsx:4696:              aria-label={tx("reprog.nueva_fecha")}
+src/App.jsx:4699:              value={form.nueva_fecha_reserva}
+src/App.jsx:4700:              onChange={(event) => updateForm("nueva_fecha_reserva", event.target.value)}
+src/App.jsx:4704:            <FieldError>{errors.nueva_fecha_reserva}</FieldError>
+src/App.jsx:4714:              disabled={sending || isSundayISO(form.nueva_fecha_reserva)}
+src/App.jsx:4720:                  disabled={getSlotStatus(form.nueva_fecha_reserva, hora, duration) !== "available"}
+src/App.jsx:4745:              <strong style={{ display:"block", marginBottom:10 }}>{tx("reprog.nueva_pista")}</strong>
+src/App.jsx:4747:                {COURTS.map((item) => {
+src/App.jsx:4748:                  const isSelected = court === item.name;
+src/App.jsx:4754:                      onClick={() => chooseCourt(item.name)}
+src/App.jsx:4778:              <FieldError>{errors.nueva_pista}</FieldError>
+src/App.jsx:4784:                {formatDateEs(form.nueva_fecha_reserva)} · {form.nueva_hora_inicio}-{nuevaHoraFin} · {court}
+src/App.jsx:4826:                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+src/App.jsx:4849:            Conserva tu clave de reserva. Recibirás un correo con el nuevo horario confirmado.
+src/App.jsx:4854:              Consultar disponibilidad
+src/App.jsx:4870:  const [filtroFecha, setFiltroFecha] = useState("");
+src/App.jsx:4871:  const [filtroPista, setFiltroPista] = useState("");
+src/App.jsx:4903:        `${reserva.fecha_reserva || reserva.fecha || "sin-fecha"}-${
+src/App.jsx:4904:          reserva.pista || reserva.Pista || "sin-pista"
+src/App.jsx:4924:      fecha:
+src/App.jsx:4925:        reserva.fecha_reserva ||
+src/App.jsx:4926:        reserva.fecha ||
+src/App.jsx:4927:        reserva.Fecha ||
+src/App.jsx:4940:      pista:
+src/App.jsx:4941:        reserva.pista ||
+src/App.jsx:4942:        reserva.Pista ||
+src/App.jsx:4957:      fechaCancelacion:
+src/App.jsx:4958:        reserva.fecha_cancelacion ||
+src/App.jsx:5024:          const fechaA = `${a.fecha}T${a.horaInicio || "00:00"}`;
+src/App.jsx:5025:          const fechaB = `${b.fecha}T${b.horaInicio || "00:00"}`;
+src/App.jsx:5026:          return fechaB.localeCompare(fechaA);
+src/App.jsx:5055:  const pistasDisponibles = useMemo(
+src/App.jsx:5059:          .map((reserva) => reserva.pista)
+src/App.jsx:5078:        const coincideFecha =
+src/App.jsx:5079:          !filtroFecha || reserva.fecha === filtroFecha;
+src/App.jsx:5081:        const coincidePista =
+src/App.jsx:5082:          !filtroPista || reserva.pista === filtroPista;
+src/App.jsx:5088:          coincideFecha &&
+src/App.jsx:5089:          coincidePista &&
+src/App.jsx:5095:      filtroFecha,
+src/App.jsx:5096:      filtroPista,
+src/App.jsx:5319:                  Fecha
+src/App.jsx:5323:                  aria-label="Filtrar reservas por fecha"
+src/App.jsx:5325:                  value={filtroFecha}
+src/App.jsx:5327:                    setFiltroFecha(event.target.value)
+src/App.jsx:5340:                  Pista
+src/App.jsx:5344:                  aria-label="Filtrar reservas por pista"
+src/App.jsx:5345:                  value={filtroPista}
+src/App.jsx:5347:                    setFiltroPista(event.target.value)
+src/App.jsx:5352:                  {pistasDisponibles.map((pista) => (
+src/App.jsx:5353:                    <option key={pista} value={pista}>
+src/App.jsx:5354:                      {pista}
+src/App.jsx:5423:                      <th>Fecha</th>
+src/App.jsx:5425:                      <th>Pista</th>
+src/App.jsx:5436:                          {reserva.fecha
+src/App.jsx:5437:                            ? formatDateEs(reserva.fecha)
+src/App.jsx:5448:                        <td>{reserva.pista || "—"}</td>
+src/App.jsx:5504:    fecha_nacimiento: "",
+src/App.jsx:5543:    if (!form.fecha_nacimiento) {
+src/App.jsx:5544:      nextErrors.fecha_nacimiento = "Selecciona la fecha de nacimiento.";
+src/App.jsx:5583:          fecha_nacimiento: form.fecha_nacimiento,
+src/App.jsx:5634:              <label>{tx("alta.fecha_nac")}</label>
+src/App.jsx:5635:              <input type="date" value={form.fecha_nacimiento} onChange={e => updateForm("fecha_nacimiento", e.target.value)} />
+src/App.jsx:5636:              <FieldError>{errors.fecha_nacimiento}</FieldError>
+src/App.jsx:6032:      fechaSorteo: byeDrawDate,
+src/App.jsx:6034:      fechaExportacion: new Date().toISOString(),
+src/App.jsx:6722:        <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
+src/App.jsx:6736:        <ChartCard title={tx("admin.graf_pista")} sub={tx("admin.sub_pista")} demo>
+src/App.jsx:6737:          <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} />
+src/App.jsx:6792:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+src/App.jsx:6894:    if (deporteData.disponibilidad) s += 15;
+src/App.jsx:6992:    { icon:"🎾", desc:"Pista 1 · 10:00 h · 90 min",       fecha:"Hoy" },
+src/App.jsx:6993:    { icon:"🏆", desc:"Torneo interno · Semifinal",         fecha:"Hace 3 días" },
+src/App.jsx:6994:    { icon:"🎾", desc:"Pista 3 · 18:00 h · 60 min",       fecha:"Hace 5 días" },
+src/App.jsx:6995:    { icon:"🔥", desc:"Racha activa de "+metrics.racha+" días", fecha:"Esta semana" },
+src/App.jsx:7263:                  [tx("perfil.deporte_disponibilidad"), deporteData.disponibilidad],
+src/App.jsx:7280:                  { key:"disponibilidad", label:tx("perfil.deporte_disponibilidad"), opts:["Mañanas","Tardes","Noches","Fines de semana","Flexible"] },
+src/App.jsx:7352:                  <div style={{ color:T.textDim, fontSize:".74rem" }}>{act.fecha}</div>
+src/App.jsx:7383:              { key:"mostrar_disp",    label:tx("perfil.privacidad_disponibilidad"),   def:isPlayer },
+src/App.jsx:7416:          Confirmaciones de reserva &nbsp;·&nbsp; recordatorios de partido &nbsp;·&nbsp; torneos &nbsp;·&nbsp; cambios de horario
+src/App.jsx:7519:      desc: "Reservar pistas, consultar reservas y ranking.",
+src/App.jsx:7924:                        Crea tu acceso como jugador para reservar pistas, consultar actividad y gestionar tu perfil.
+src/data/performancePlan.js:25:    "calendario"
+src/data/visualAssets.js:10:    id: "pistas",
+src/data/visualAssets.js:11:    title: "Pistas",
+src/data/visualAssets.js:12:    src: "/optimized/gallery/cp04/pistas.webp",
+src/data/visualAssets.js:13:    original: "/gallery/cp04/pistas.jpg"
+src/data/demoSafeDataset.js:19:  courts: [
+src/data/demoSafeDataset.js:20:    { id: "court-demo-1", name: "Pista 1 · Cristal", type: "Cristal", status: "Disponible demo" },
+src/data/demoSafeDataset.js:21:    { id: "court-demo-2", name: "Pista 2 · Central", type: "Central", status: "Alta demanda demo" },
+src/data/demoSafeDataset.js:22:    { id: "court-demo-3", name: "Pista 3 · Outdoor", type: "Outdoor", status: "Disponible demo" },
+src/data/demoSafeDataset.js:23:    { id: "court-demo-4", name: "Pista 4 · Premium", type: "Premium", status: "Reservada demo" },
+src/data/demoSafeDataset.js:35:      court: "Pista 1 · Cristal",
+src/data/demoSafeDataset.js:43:      court: "Pista 2 · Central",
+src/data/demoSafeDataset.js:51:      court: "Pista 4 · Premium",
+src/data/demoSafeDataset.js:70:    mostUsedCourt: "Pista 2 · Central",

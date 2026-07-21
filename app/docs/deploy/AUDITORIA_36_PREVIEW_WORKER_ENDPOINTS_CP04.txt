@@ -1,0 +1,167 @@
+worker-reservas/wrangler.toml:6:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wrangler.toml:11:# MAKE_RESERVAS_WEBHOOK
+worker-reservas/src/index.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/src/index.js:13:      ...corsHeaders,
+worker-reservas/src/index.js:18:function corsHeaders(request, env) {
+worker-reservas/src/index.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/src/index.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/src/index.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/src/index.js:34:    "Access-Control-Allow-Methods": "POST, OPTIONS",
+worker-reservas/src/index.js:196:        "La hora de fin debe ser posterior.";
+worker-reservas/src/index.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/src/index.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/src/index.js:420:    method: "POST",
+worker-reservas/src/index.js:445:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:447:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/src/index.js:451:  if (request.method === "OPTIONS") {
+worker-reservas/src/index.js:455:  if (request.method !== "POST") {
+worker-reservas/src/index.js:456:    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, { ...headers, Allow: "POST, OPTIONS" });
+worker-reservas/src/index.js:487:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:489:  if (request.method === "OPTIONS") {
+worker-reservas/src/index.js:497:      { ...headers, Allow: "GET, OPTIONS" }
+worker-reservas/src/index.js:523:            corsHeaders(request, env)
+worker-reservas/src/index.js:572:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/src/index.js:655:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:756:    const airtableResponse = await fetch(
+worker-reservas/src/index.js:966:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:968:  if (request.method === "OPTIONS") {
+worker-reservas/src/index.js:972:  if (request.method !== "POST") {
+worker-reservas/src/index.js:976:      { ...headers, Allow: "POST, OPTIONS" }
+worker-reservas/src/index.js:1059:  const makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
+worker-reservas/src/index.js:1060:    method: "POST",
+worker-reservas/src/index.js:1121:async function cp04SupabaseRequest(env, path, options = {}) {
+worker-reservas/src/index.js:1123:  const response = await fetch(`${base}${path}`, {
+worker-reservas/src/index.js:1124:    ...options,
+worker-reservas/src/index.js:1125:    headers: cp04SupabaseHeaders(env, options.headers || {})
+worker-reservas/src/index.js:1172:    corsHeaders(request, env)
+worker-reservas/src/index.js:1231:    corsHeaders(request, env)
+worker-reservas/src/index.js:1236:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:1241:  if (method === "OPTIONS") {
+worker-reservas/src/index.js:1276:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+worker-reservas/src/index.js:1319:  if (path === "/api/auth/logout" && method === "POST") {
+worker-reservas/src/index.js:1348:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/logout`, {
+worker-reservas/src/index.js:1349:      method: "POST",
+worker-reservas/src/index.js:1369:  if (path === "/api/auth/login" && method === "POST") {
+worker-reservas/src/index.js:1400:      method: "POST",
+worker-reservas/src/index.js:1428:  if (path === "/api/auth/register" && method === "POST") {
+worker-reservas/src/index.js:1463:      method: "POST",
+worker-reservas/src/index.js:1496:  if (path === "/api/auth/forgot-password" && method === "POST") {
+worker-reservas/src/index.js:1516:        method: "POST",
+worker-reservas/src/index.js:1536:  if (path === "/api/auth/change-password" && method === "POST") {
+worker-reservas/src/index.js:1562:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+worker-reservas/src/index.js:1614:export default {
+worker-reservas/src/index.js:1615:  async fetch(request, env) {
+worker-reservas/src/index.js:1655:        corsHeaders(request, env)
+worker-reservas/src/index.js:1665:        corsHeaders(request, env)
+worker-reservas/.wrangler/cache/cf.json:1:{"httpProtocol":"HTTP/1.1","clientAcceptEncoding":"gzip, deflate, br","requestPriority":"","edgeRequestKeepAliveStatus":1,"requestHeaderNames":{},"clientTcpRtt":21,"clientQuicRtt":0,"colo":"MAD","asn":12479,"asOrganization":"Jazztel triple play services","country":"ES","isEUCountry":"1","city":"Málaga","continent":"EU","region":"Andalusia","regionCode":"AN","timezone":"Europe/Madrid","longitude":"-4.42034","latitude":"36.72016","postalCode":"29001","tlsVersion":"TLSv1.3","tlsCipher":"AEAD-AES256-GCM-SHA384","tlsClientRandom":"ontrifjaL1wCxO3IO87m10RbR4QkcSXrJJ5v1Ie9Hts=","tlsClientCiphersSha1":"kXrN3VEKDdzz2cPKTQaKzpxVTxQ=","tlsClientExtensionsSha1":"1eY97BUYYO8vDaTfHQywB1pcNdM=","tlsClientExtensionsSha1Le":"u4wtEMFQBY18l3BzHAvORm+KGRw=","tlsExportedAuthenticator":{"clientHandshake":"2606589ff15343629a1fc6d287549878d5c30cb63441e2270ca2826446d681c721175e47eb1050f615f992c8de11103d","serverHandshake":"5a48c06b4ff12e3c01b43c872e2bf930b23b1eb1715604091c872ff38e8d6470ab595c1ccf3febb6028a7dfe7304b79e","clientFinished":"6489d368117d34943f4dcebfb580ca2fa5d257a5b95fdb758ce7f3e8bc9d232d31e54de0a565f3f49cafcef4f1b50c51","serverFinished":"c23ce2658fb2e87860bb2275ef3a2bd889aeb95c68f21904190bb3c874178ed3a8ca358298e1abc445027fa405b53008"},"tlsClientHelloLength":"1605","tlsClientAuth":{"certPresented":"0","certVerified":"NONE","certRevoked":"0","certIssuerDN":"","certSubjectDN":"","certIssuerDNRFC2253":"","certSubjectDNRFC2253":"","certIssuerDNLegacy":"","certSubjectDNLegacy":"","certSerial":"","certIssuerSerial":"","certSKI":"","certIssuerSKI":"","certFingerprintSHA1":"","certFingerprintSHA256":"","certNotBefore":"","certNotAfter":"","certRFC9440":"","certRFC9440TooLarge":false,"certChainRFC9440":"","certChainRFC9440TooLarge":false},"verifiedBotCategory":"","edgeL4":{"deliveryRate":201699},"botManagement":{"corporateProxy":false,"verifiedBot":false,"jsDetection":{"passed":false},"staticResource":false,"detectionIds":{},"score":99}}
+worker-reservas/wrangler.toml0:7:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wrangler.toml0:11:# wrangler secret put MAKE_RESERVAS_WEBHOOK
+worker-reservas/wr4 angler.toml0  :7:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wr4 angler.toml0  :11:# wrangler secret put MAKE_RESERVAS_WEBHOOK
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:42:### POST /api/auth/login
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:70:### POST /api/auth/logout
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:80:### POST /api/auth/register
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:95:### POST /api/auth/forgot-password
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:109:### POST /api/auth/change-password
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:263:- CORS limitado al dominio final.
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:287:- corsHeaders
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:13:      ...corsHeaders,
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:34:    "Access-Control-Allow-Methods": "POST, OPTIONS",
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:182:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:186:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:187:    method: "POST",
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:207:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:209:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:213:  if (request.method === "OPTIONS") {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:217:  if (request.method !== "POST") {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:218:    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, { ...headers, Allow: "POST, OPTIONS" });
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:249:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:251:  if (request.method === "OPTIONS") {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:259:      { ...headers, Allow: "GET, OPTIONS" }
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:308:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:346:export default {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:347:  async fetch(request, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:362:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:372:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:13:      ...corsHeaders,
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:34:    "Access-Control-Allow-Methods": "POST, OPTIONS",
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:182:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:186:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:187:    method: "POST",
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:207:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:209:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:213:  if (request.method === "OPTIONS") {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:217:  if (request.method !== "POST") {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:218:    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, { ...headers, Allow: "POST, OPTIONS" });
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:249:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:251:  if (request.method === "OPTIONS") {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:259:      { ...headers, Allow: "GET, OPTIONS" }
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:308:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:346:export default {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:347:  async fetch(request, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:362:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:372:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:13:      ...corsHeaders,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:34:    "Access-Control-Allow-Methods": "POST, OPTIONS",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:196:        "La hora de fin debe ser posterior.";
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:420:    method: "POST",
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:440:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:442:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:446:  if (request.method === "OPTIONS") {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:450:  if (request.method !== "POST") {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:451:    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, { ...headers, Allow: "POST, OPTIONS" });
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:482:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:484:  if (request.method === "OPTIONS") {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:492:      { ...headers, Allow: "GET, OPTIONS" }
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:518:            corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:567:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:650:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:751:    const airtableResponse = await fetch(
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:959:export default {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:960:  async fetch(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:989:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:999:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:7:function jsonResponse(body, status = 200, corsHeaders = {}) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:13:      ...corsHeaders,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-alta-20260616-054856.js:26:const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+worker-reservas/backups/index-antes-alta-20260616-054856.js:33:    "Access-Control-Allow-Origin": corsOrigin,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:34:    "Access-Control-Allow-Methods": "POST, OPTIONS",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:196:        "La hora de fin debe ser posterior.";
+worker-reservas/backups/index-antes-alta-20260616-054856.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:420:    method: "POST",
+worker-reservas/backups/index-antes-alta-20260616-054856.js:440:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:442:  if (!headers["Access-Control-Allow-Origin"]) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:446:  if (request.method === "OPTIONS") {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:450:  if (request.method !== "POST") {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:451:    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, { ...headers, Allow: "POST, OPTIONS" });
+worker-reservas/backups/index-antes-alta-20260616-054856.js:482:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:484:  if (request.method === "OPTIONS") {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:492:      { ...headers, Allow: "GET, OPTIONS" }
+worker-reservas/backups/index-antes-alta-20260616-054856.js:518:            corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:567:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:650:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:751:    const airtableResponse = await fetch(
+worker-reservas/backups/index-antes-alta-20260616-054856.js:959:export default {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:960:  async fetch(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:989:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:999:        corsHeaders(request, env)

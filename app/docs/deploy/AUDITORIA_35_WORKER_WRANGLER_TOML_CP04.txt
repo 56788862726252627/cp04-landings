@@ -1,0 +1,14 @@
+name = "cp04-reservas-proxy"
+main = "src/index.js"
+compatibility_date = "2026-06-10"
+
+[vars]
+ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+AIRTABLE_BASE_ID = "appyWvzZJLzy0E6aX"
+AIRTABLE_TABLE_ID = "tblBtLjPS3sis28nz"
+
+# Secrets:
+# MAKE_RESERVAS_WEBHOOK
+# AIRTABLE_TOKEN
+
+AIRTABLE_RESERVAS_TABLE="tblBtLjPS3sis28nz"

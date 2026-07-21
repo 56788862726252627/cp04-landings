@@ -1,0 +1,7 @@
+OK hero-portada.png -> /root/cp04-landings/app/pdf-comercial-antequera/assets/img/hero-portada.png
+OK hero-resumen.png -> /root/cp04-landings/app/pdf-comercial-antequera/assets/img/hero-resumen.png
+OK hero-problema.png -> /root/cp04-landings/app/pdf-comercial-antequera/assets/img/hero-problema.png
+OK hero-solucion.jpg -> /root/cp04-landings/app/pdf-comercial-antequera/assets/img/hero-solucion.jpg
+OK hero-beneficios.jpg -> /root/cp04-landings/app/pdf-comercial-antequera/assets/img/hero-beneficios.jpg
+OK hero-economica.jpg -> /root/cp04-landings/app/pdf-comercial-antequera/assets/img/hero-economica.jpg
+OK hero-cierre.jpg -> /root/cp04-landings/app/pdf-comercial-antequera/assets/img/hero-cierre.jpg

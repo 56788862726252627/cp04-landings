@@ -1,0 +1,7 @@
+src/components/lazy/LazyLoadBoundary.jsx:1:import { Suspense } from "react";
+src/components/lazy/LazyLoadBoundary.jsx:12:export default function LazyLoadBoundary({ children, label }) {
+src/components/lazy/LazyLoadBoundary.jsx:14:    <Suspense fallback={<LazyFallback label={label} />}>
+src/components/lazy/LazyLoadBoundary.jsx:16:    </Suspense>
+src/components/lazy/LazySectionShell.jsx:1:export default function LazySectionShell({ title = "Sección", subtitle = "Carga diferida preparada.", children }) {
+src/components/lazy/lazySections.js:3:export const LazySectionShell = lazy(() => import("./LazySectionShell.jsx"));
+src/components/lazy/lazySections.js:5:export const lazySectionsAudit32 = {

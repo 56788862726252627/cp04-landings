@@ -1,0 +1,8 @@
+363:  const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
+372:  else if (selectedDate < today) errors.fecha = _t("errors.fecha_pasado");
+423:  const selectedDate = form.nueva_fecha_reserva
+436:  } else if (selectedDate < today) {
+549:  selectedCourt,
+693:              <strong style={{ color: pista === selectedCourt ? T.accent : T.text }}>{pista}</strong>
+4396:  selectedCourt={court}
+4645:        selectedCourt={court}

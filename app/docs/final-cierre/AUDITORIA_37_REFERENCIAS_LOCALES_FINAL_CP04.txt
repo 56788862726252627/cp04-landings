@@ -1,0 +1,3 @@
+worker-reservas/wrangler.toml:6:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wrangler.toml0:7:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wr4 angler.toml0  :7:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"

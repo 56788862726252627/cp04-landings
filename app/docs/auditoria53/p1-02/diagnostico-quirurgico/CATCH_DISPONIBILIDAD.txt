@@ -1,0 +1,96 @@
+564-  const consultarDisponibilidad = useCallback(async (fechaConsulta) => {
+565-    if (!fechaConsulta) return;
+566-
+567-    if (isSundayISO(fechaConsulta)) {
+568-      setOcupadas([]);
+569-      setEstado("closed");
+570-      setMensaje("Club cerrado los domingos · no se admiten reservas durante todo el día.");
+571-      return;
+572-    }
+573-
+574-    if (isPastDateISO(fechaConsulta)) {
+575-      setOcupadas([]);
+576-      setEstado("past");
+577-      setMensaje("La fecha seleccionada ya ha pasado.");
+578-      return;
+579-    }
+580-
+581-    setEstado("loading");
+582-    setMensaje("");
+583-
+584-    try {
+585-      const data = await fetchDisponibilidad(fechaConsulta);
+586-
+587-      if (data.cerrado === true) {
+588-        setOcupadas([]);
+589-        setEstado("closed");
+590-        setMensaje(data.motivo || "Club cerrado los domingos.");
+591-        return;
+592-      }
+593-
+594-      setOcupadas(data.ocupadas || []);
+595-      setEstado("success");
+596-      setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
+597-    } catch {
+598-      setEstado("error");
+599:      setMensaje("No se pudo actualizar la disponibilidad. Inténtalo de nuevo.");
+600-      setOcupadas([]);
+601-    }
+602-  }, []);
+603-
+604-  useEffect(() => {
+605-    const timer = window.setTimeout(() => consultarDisponibilidad(fecha), 0);
+606-    return () => window.clearTimeout(timer);
+607-  }, [consultarDisponibilidad, fecha]);
+608-
+609-  useEffect(() => {
+610-    const timer = window.setTimeout(() => {
+611-      if (initialDate && initialDate !== lastInitialDateRef.current) {
+612-        lastInitialDateRef.current = initialDate;
+613-        setFecha(initialDate);
+614-      }
+615-    }, 0);
+616-
+617-    return () => window.clearTimeout(timer);
+618-  }, [initialDate]);
+619-
+620-  useEffect(() => {
+621-    function handleDisponibilidadUpdate(event) {
+622-      const fechaEvento = event.detail?.fecha;
+623-      if (fechaEvento && fechaEvento !== fecha) {
+624-        setFecha(fechaEvento);
+625-        consultarDisponibilidad(fechaEvento);
+626-        return;
+627-      }
+628-      consultarDisponibilidad(fecha);
+629-    }
+630-
+631-    window.addEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+632-
+633-    return () => {
+634-      window.removeEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+635-    };
+636-  }, [consultarDisponibilidad, fecha]);
+637-
+638-  const cambiarFecha = (value) => {
+639-    setFecha(value);
+640-    consultarDisponibilidad(value);
+641-  };
+642-
+643-  return (
+644-    <Card style={{ marginBottom: 20, borderColor: `${T.accent}55` }}>
+645-      <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 18 }}>
+646-        <div>
+647-          <h3 style={{ margin: 0 }}>{title}</h3>
+648-          <p style={{ color: T.textDim, margin: "8px 0 0", lineHeight: 1.55 }}>
+649-            {description}
+650-          </p>
+651-        </div>
+652-
+653-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+654-          <input
+655-            aria-label="Fecha disponibilidad"
+656-            type="date"
+657-            min={todayISO()}
+658-            value={fecha}
+659-            onChange={(e) => cambiarFecha(e.target.value)}

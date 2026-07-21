@@ -1,0 +1,392 @@
+==============================================================
+INFORME PLAYTOMIC BENCHMARK · AUDITORÍA PRODUCCIÓN SAAS
+Club Pádel 04 — Sesión: 2026-06-25
+==============================================================
+
+1. RESUMEN EJECUTIVO
+─────────────────────────────────────────────────────────────
+Club Pádel 04 SaaS App ha sido sometida a una auditoría global
+de producción con benchmark funcional inspirado en apps líderes
+de reservas de pádel (Playtomic como referencia funcional, sin
+copiar marca, diseño ni textos propietarios).
+
+Se han auditado 16 fases: arquitectura, seguridad, i18n, UX,
+módulos, roles, gráficas, torneos, ranking, reservas, admin,
+home, soporte, roadmap SaaS y documentación.
+
+Estado pre-auditoría:
+  - App.jsx: 6.739 líneas / 411KB (monolito funcional)
+  - 11 módulos activos con navegación por roles
+  - 8 idiomas configurados + 100+ en selector
+  - Build: OK (vite build sin errores)
+
+Estado post-auditoría:
+  - App.jsx: ~6.820 líneas con mejoras añadidas
+  - 12 módulos (+ Perfil/Ajustes nuevo)
+  - Flujo "Recuperar contraseña" implementado en login
+  - i18n reforzado: +30 claves × 8 idiomas
+  - Build: ✓ OK en 1.17s, 550KB bundle (normal para monolito)
+
+2. ARCHIVOS MODIFICADOS
+─────────────────────────────────────────────────────────────
+  - src/App.jsx (principal — único archivo modificado)
+
+Cambios aplicados:
+  [i18n] Añadidas claves en los 8 idiomas:
+    login.olvide_pwd, login.recuperar_title, login.recuperar_desc,
+    login.recuperar_email, login.recuperar_btn, login.recuperar_enviado,
+    login.recuperar_volver, login.recuperar_preparado,
+    perfil.title, perfil.eyebrow, perfil.sesion, perfil.rol_actual,
+    perfil.cerrar_sesion, perfil.cambiar_pwd, perfil.pwd_actual,
+    perfil.pwd_nueva, perfil.pwd_confirmar, perfil.pwd_guardada,
+    perfil.pwd_error_vacia, perfil.pwd_error_nueva, perfil.pwd_error_coincide,
+    perfil.idioma, perfil.info_demo, perfil.privacidad, perfil.privacidad_desc,
+    perfil.notificaciones, perfil.notif_desc, nav.perfil
+
+  [Componente] Añadido: function Perfil({ selectedRole, onClearRole })
+    → Sección de sesión activa + selector de idioma
+    → Cambio de contraseña (modo demo local con validaciones)
+    → Privacidad (texto RGPD, transparente sobre modo demo)
+    → Notificaciones (preparado para backend real)
+
+  [Módulos] modules map actualizado: + perfil
+
+  [Sidebar] navKeys + menuByRole actualizados:
+    → Perfil visible para todos los roles
+    → PLAYER: inicio, reservas, torneos, ranking, perfil
+    → STAFF: inicio, reservas, alta_jugador, reprogramar, cancelar, gestion, torneos, perfil
+    → ADMIN: inicio, reservas, alta_jugador, reprogramar, cancelar, gestion, torneos, ranking, admin, perfil
+    → SUPPORT: todos + flujos_make + soporte + perfil
+
+  [Login] Flujo "¿Olvidaste tu contraseña?" implementado:
+    → Link visible en el form de contraseña de rol
+    → Estado: idle → form → sent
+    → Form de email con validación de formato
+    → Mensaje seguro: no revela si el email existe
+    → Botón "Volver al inicio de sesión"
+    → Preparado para endpoint: /api/auth/forgot-password
+
+3. BACKUP CREADO
+─────────────────────────────────────────────────────────────
+  backups/playtomic-benchmark-saas-audit-20260625-190708/App.jsx
+  Restaurar: cp backups/playtomic-benchmark-saas-audit-20260625-190708/App.jsx src/App.jsx
+
+4. AUDITORÍA GLOBAL — HALLAZGOS
+─────────────────────────────────────────────────────────────
+
+A. CRÍTICOS para producción (sin backend real):
+  ✗ No hay autenticación real (contraseñas demo en frontend)
+  ✗ No hay base de datos real conectada
+  ✗ No hay sistema de pagos activo
+  ✗ Datos de ranking/reservas son ficticios (demo)
+  ✗ No hay CSRF/rate limiting (requiere backend)
+  ✗ No hay sesiones JWT reales
+
+B. MUY IMPORTANTES:
+  ~ Contraseñas demo visibles en código fuente (aceptable para demo)
+  ~ localStorage como única persistencia (correcto para demo)
+  ~ Sin emails reales de confirmación
+  ~ Sin notificaciones push
+
+C. IMPORTANTES:
+  ~ App.jsx es un monolito de 550KB (funcional, escalable con code splitting)
+  ~ Algunos botones "preparados para backend" sin acción real
+  ~ Sin upload de fotos de perfil
+  ~ Sin formulario de alta de socios con validación RGPD completa
+
+D. YA CORRECTOS (pre-auditoría):
+  ✓ Ningún nombre de herramienta interna visible en zonas públicas
+  ✓ i18n sólido con 8 idiomas y 100+ en selector
+  ✓ Roles diferenciados con menú por rol
+  ✓ Datos de Airtable y webhooks solo en backend/worker
+  ✓ Torneos con bracket funcional, BYE automático, undo/redo
+  ✓ Ranking con podio visual, animaciones, filtros
+  ✓ Gráficas SVG internas (sin dependencias externas)
+  ✓ Responsive 980px y 640px
+  ✓ Estética neón premium consistente
+  ✓ Validaciones de formularios completas
+  ✓ Confirmaciones en acciones destructivas
+  ✓ Mensajes de error localizados
+
+5. FUNCIONES DETECTADAS COMO NECESARIAS
+─────────────────────────────────────────────────────────────
+PRIORIDAD 1 — CRÍTICO:
+  [ ] Backend real con autenticación segura (JWT/session)
+  [ ] Protección real de rutas por rol
+  [ ] Base de datos real (Airtable/Supabase/PostgreSQL)
+  [ ] Reservas reales con disponibilidad en tiempo real
+  [ ] Pagos reales (Stripe)
+
+PRIORIDAD 2 — MUY IMPORTANTE:
+  [ ] Emails transaccionales (confirmaciones, recordatorios)
+  [ ] Panel admin con datos reales
+  [ ] Exportación de datos reales (PDF/CSV)
+  [✓] Perfil de usuario con ajustes (implementado demo)
+  [✓] Recuperar contraseña (flujo UI implementado, preparado para backend)
+
+PRIORIDAD 3 — IMPORTANTE:
+  [ ] Matchmaking / Partidos abiertos
+  [ ] Comunidad / directorio de jugadores
+  [ ] Bonos y membresías
+  [ ] Notificaciones push/email
+  [ ] App PWA / instalable en móvil
+  [ ] Upload de foto de perfil
+
+PRIORIDAD 4 — PREMIUM:
+  [ ] Gamificación (logros, insignias)
+  [ ] Valoraciones post-partido
+  [ ] Chat entre jugadores
+  [ ] Predicción de ocupación con IA
+  [ ] Precios dinámicos por franja horaria
+
+6. FUNCIONES INSPIRADAS EN BENCHMARK SIN COPIAR MARCA
+─────────────────────────────────────────────────────────────
+Referencia funcional analizada: apps líderes de reservas de pádel.
+Ningún texto, logo, paleta, layout ni marca copiada.
+
+Funciones implementadas en versión original Club Pádel 04:
+  → Selector de pista visual con disponibilidad por colores
+  → Resumen de reserva con precio calculado en tiempo real
+  → Estados de reserva: confirmada, pendiente, cancelada, completada
+  → Bracket de torneos con avance visual y animaciones
+  → BYE automático por sorteo para parejas impares
+  → Podio top 3 con animación de campeón
+  → Ranking por parejas con racha, movimiento y temporada
+  → Selector de idioma con búsqueda por nombre/bandera/código
+  → Roles separados con experiencia UX diferenciada
+  → Módulo de perfil/ajustes con cambio de contraseña
+  → Recuperación de acceso sin revelar existencia de email
+
+7. MÓDULOS CREADOS O MEJORADOS
+─────────────────────────────────────────────────────────────
+  [NUEVO] perfil — Perfil y ajustes de cuenta
+    → Sesión activa con rol y selector de idioma
+    → Cambio de contraseña con validaciones (demo local)
+    → Privacidad (RGPD informado)
+    → Notificaciones (preparado para backend)
+
+  [MEJORADO] Login
+    → Link "¿Olvidaste tu contraseña?"
+    → Flujo completo de recuperación con 3 estados
+
+  [MEJORADO] Sidebar
+    → Perfil y ajustes en todos los roles
+
+  [MEJORADO] i18n
+    → +30 claves × 8 idiomas
+    → Fallback a es-ES garantizado
+
+8. MEJORAS DE SEGURIDAD APLICADAS (FRONTEND)
+─────────────────────────────────────────────────────────────
+  ✓ Recuperación de contraseña sin revelar existencia de email
+    ("Si la dirección existe en el sistema..." — mensaje neutro)
+  ✓ Validación de email en forgot password antes de procesar
+  ✓ Validación de contraseña nueva: longitud, mayúscula, minúscula, número
+  ✓ No se guardan contraseñas reales en localStorage
+  ✓ No se muestran tokens ni secretos en UI pública
+  ✓ Contraseñas de demo con autocomplete="current-password/new-password"
+  ✓ Formularios con type="email/password" correctos
+  ✓ No hay dangerouslySetInnerHTML en el código
+  ✓ PROTECTED_SECTIONS correctamente aplicadas por rol
+
+9. SEGURIDAD PENDIENTE PARA PRODUCCIÓN REAL
+─────────────────────────────────────────────────────────────
+  BACKEND (no implementable en frontend):
+  ⚠ Autenticación real con JWT o session cookies httpOnly/Secure
+  ⚠ Rate limiting en endpoints de login y forgot-password
+  ⚠ CSRF tokens en formularios
+  ⚠ Bcrypt/argon2 para contraseñas (nunca en texto plano)
+  ⚠ Validación server-side de todos los inputs
+  ⚠ Logs de auditoría sin datos sensibles (no logear passwords)
+  ⚠ CORS restrictivo en worker/API
+  ⚠ RGPD: consentimiento explícito y política de privacidad real
+  ⚠ HTTPS obligatorio en producción
+  ⚠ Backups cifrados de datos
+
+  FRONTEND (pendiente):
+  ⚠ Content Security Policy (CSP) en headers
+  ⚠ Expiración de sesión local con logout automático
+  ⚠ Subresource Integrity (SRI) para fuentes externas
+  ⚠ Eliminar contraseñas demo del código antes de producción real
+
+10. RECUPERAR CONTRASEÑA — QUÉ SE IMPLEMENTÓ
+─────────────────────────────────────────────────────────────
+  IMPLEMENTADO (frontend funcional):
+  ✓ Link "¿Olvidaste tu contraseña?" en el form de login de rol
+  ✓ Estado forgotPwdStep: idle | form | sent
+  ✓ Formulario de email con validación de formato
+  ✓ Mensaje de éxito neutro (sin revelar si email existe)
+  ✓ Botón "Volver al inicio de sesión"
+  ✓ Traducido en 8 idiomas (claves: login.recuperar_*)
+  ✓ UI limpia y accesible (focus, contraste)
+
+  PENDIENTE PARA BACKEND REAL:
+  ⬜ Endpoint: POST /api/auth/forgot-password { email }
+     → Buscar usuario en DB, generar token con expiración (15-30min)
+     → Enviar email con enlace: /reset-password?token=xxx
+  ⬜ Endpoint: POST /api/auth/reset-password { token, newPassword }
+     → Validar token, verificar expiración, hashear y guardar password
+  ⬜ Pantalla /reset-password en la app con form de nueva contraseña
+
+11. MEJORAS DE HOME
+─────────────────────────────────────────────────────────────
+Estado actual: ✓ Correcto
+  - Reloj y fecha en zona horaria Europe/Madrid con Intl.DateTimeFormat
+  - KPIs: reservas, ocupación, socios, procesos, ingresos, torneos
+  - Gráficas SVG: reservas por hora, evolución semanal, ocupación por pista
+  - Estado operativo sin herramientas internas visibles
+  - Galería fotográfica del club
+  - Accesos rápidos por rol
+  - Hero con animación y responsive completo
+  Pendiente: datos reales desde backend
+
+12. MEJORAS DE RESERVAS
+─────────────────────────────────────────────────────────────
+Estado actual: ✓ Correcto con endpoint real
+  - Selector de fecha, hora, pista, duración y modalidad
+  - Validaciones completas (domingo cerrado, horario de cierre)
+  - Estado de disponibilidad en tiempo real (CalendarioDisponibilidad)
+  - Precio calculado dinámicamente por pista y duración
+  - Flujo de 3 pasos: formulario → resumen → confirmación
+  - Integración con worker Cloudflare real (endpoint /api/reservas)
+  Pendiente: cancelación/reprogramación con backend real, pago Stripe
+
+13. MEJORAS DE TORNEOS
+─────────────────────────────────────────────────────────────
+Estado actual: ✓ Premium — uno de los módulos más avanzados
+  - Bracket eliminatorio visual con animaciones
+  - BYE automático por sorteo para parejas impares
+  - Undo/redo con historial
+  - Autoguardado en localStorage
+  - Exportar JSON/CSV
+  - Imprimir/PDF
+  - Podio 1º/2º/3º con animación de campeón (confeti)
+  - Ranking final del torneo
+  - Estados: borrador, en curso, finalizado
+  - Soporte para 4, 8, 16, 32 parejas y personalizado
+  Pendiente: inscripciones online, torneos multi-fase, calendarios
+
+14. MEJORAS DE RANKING
+─────────────────────────────────────────────────────────────
+Estado actual: ✓ Correcto
+  - Ranking por parejas con categoría, nivel, temporada
+  - Podio visual top 3
+  - Filtros: categoría, nivel, búsqueda
+  - Racha, movimiento en ranking
+  - Exportar CSV
+  - Sistema de puntos configurable (no afirma oficialidad FAP)
+  Pendiente: ranking individual, conectar con datos reales
+
+15. MEJORAS DE ADMIN
+─────────────────────────────────────────────────────────────
+Estado actual: ✓ Correcto para demo
+  - Panel de dirección con KPIs globales
+  - Gráficas: reservas, ocupación, ingresos (demo)
+  - Backup semanal y estado de integraciones
+  Pendiente: datos reales, gestión de usuarios, ingresos reales
+
+16. MEJORAS DE SOPORTE
+─────────────────────────────────────────────────────────────
+Estado actual: ✓ Correcto
+  - Solo visible para SUPPORT
+  - Estado de integraciones (preparado)
+  - Variables de entorno documentadas (sin valores reales)
+  - Logs y observabilidad (preparado)
+  Pendiente: panel de tickets, historial de incidencias
+
+17. MEJORAS DE i18n
+─────────────────────────────────────────────────────────────
+  ✓ 8 idiomas completos: es-ES, en-GB, en-US, fr-FR, it-IT, pt-PT, pt-BR, de-DE
+  ✓ 100+ idiomas en selector con búsqueda por nombre/país/código/bandera
+  ✓ Fallback seguro a es-ES (sin pantalla negra por clave faltante)
+  ✓ Español España como idioma predeterminado
+  ✓ Selector de idioma visible en login y sidebar
+  ✓ Fecha/hora con Intl.DateTimeFormat por zona horaria
+  ✓ Nuevas claves añadidas en sesión: login.recuperar_*, perfil.*, nav.perfil
+
+18. MEJORAS DE GRÁFICAS
+─────────────────────────────────────────────────────────────
+  ✓ Gráficas SVG internas (sin Chart.js ni dependencias externas)
+  ✓ BarChart, LineChart, DonutChart
+  ✓ Tooltips al pasar cursor (SVG title y estado hover)
+  ✓ Estética neón/glass consistente
+  ✓ Responsive por CSS grid
+  ✓ Accesibles con aria-label
+  Pendiente: datos reales desde backend, animaciones de entrada
+
+19. ESTADO RESPONSIVE
+─────────────────────────────────────────────────────────────
+  ✓ Desktop (>1180px): grid 3 columnas
+  ✓ Tablet (980-1180px): grid 2 columnas
+  ✓ Tablet horizontal (<980px): sidebar slide-in, layout 1 columna
+  ✓ Móvil (<640px): padding y radius reducidos
+  ✓ Sidebar móvil con overlay y Escape/botón de cierre
+  ✓ Imágenes con object-fit: cover
+
+20. ROADMAP SAAS COMPLETO
+─────────────────────────────────────────────────────────────
+Ver archivo: ROADMAP_SAAS_CLUB_PADEL_04.txt (detallado)
+
+21. LISTA PRIORIZADA DE TAREAS PENDIENTES
+─────────────────────────────────────────────────────────────
+P1 — Backend real (sin esto no hay producción real):
+  1. Auth: signup, login, logout con JWT/session segura
+  2. Endpoint /api/auth/forgot-password + /api/auth/reset-password
+  3. Base de datos real (Supabase/PostgreSQL recomendado)
+  4. Reservas reales en tiempo real
+  5. Protección de rutas por rol en servidor
+
+P2 — MVP vendible:
+  6. Emails transaccionales (Resend/SendGrid)
+  7. Cancelación/reprogramación real con política de cancel.
+  8. Panel admin con datos reales
+  9. Perfil con foto real (upload a Storage)
+  10. Stripe para pagos de reservas
+
+P3 — SaaS profesional:
+  11. Bonos y membresías con caducidad
+  12. Notificaciones push/email por preferencias
+  13. Matchmaking / partidos abiertos
+  14. Torneos con inscripciones online
+  15. Ranking conectado a resultados reales
+
+P4 — Escala:
+  16. PWA / App instalable
+  17. Multi-club white-label
+  18. WhatsApp bot para reservas
+  19. IA para soporte y predicción
+
+22. CÓMO PROBAR LA APP
+─────────────────────────────────────────────────────────────
+  npm run dev         → Desarrollo en http://localhost:5173
+  npm run build       → Build de producción (verifica errores)
+  npm run preview     → Preview del build
+
+  Flujos a verificar:
+  1. Login como cada rol (jugador04 / staff04 / admin04 / soporte04)
+  2. Click en "¿Olvidaste tu contraseña?" → formulario → mensaje enviado
+  3. Navegación a "Perfil y ajustes" desde sidebar
+  4. Selector de idioma funciona en login y dentro de la app
+  5. Reservar pista: seleccionar fecha, hora, pista → resumen → confirmar
+  6. Torneos: crear bracket → sortear → avanzar ganadores → podio
+  7. Ranking: filtrar por categoría/nivel, buscar jugador
+  8. Admin: ver KPIs y gráficas (rol ADMIN)
+
+23. CÓMO REVERTIR CAMBIOS
+─────────────────────────────────────────────────────────────
+  cp backups/playtomic-benchmark-saas-audit-20260625-190708/App.jsx src/App.jsx
+  npm run build
+
+24. RESULTADO DE npm run build
+─────────────────────────────────────────────────────────────
+  ✓ Ejecutado: 2026-06-25
+  ✓ Sin errores
+  ✓ Sin warnings críticos
+  ✓ Bundle: 550.37 kB (gzip: 142.46 kB) — normal para monolito SPA
+  Advertencia no bloqueante: chunk > 500KB
+    → Solución futura: code splitting con dynamic import() por módulo
+
+==============================================================
+FIN DEL INFORME
+Generado: 2026-06-25 · Club Pádel 04 SaaS App
+==============================================================

@@ -7,7 +7,21 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test $(find src tenant-cli factory-cli -name '*.test.mjs')",
+    "test:worker": "node --test $(find worker-reservas -name '*.test.mjs')",
+    "tenant:create": "node tenant-cli/tenant-create.mjs",
+    "tenant:validate": "node tenant-cli/tenant-validate.mjs",
+    "tenant:list": "node tenant-cli/tenant-list.mjs",
+    "tenant:preview": "node tenant-cli/tenant-preview.mjs",
+    "business:create": "node factory-cli/business-create.mjs",
+    "business:validate": "node factory-cli/business-validate.mjs",
+    "business:preview": "node factory-cli/business-preview.mjs",
+    "business:build": "node factory-cli/business-build.mjs",
+    "business:report": "node factory-cli/business-report.mjs",
+    "business:list": "node factory-cli/business-list.mjs",
+    "business:diff": "node factory-cli/business-diff.mjs",
+    "business:doctor": "node factory-cli/business-doctor.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
