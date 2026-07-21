@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test $(find src tenant-cli factory-cli -name '*.test.mjs')",
+    "test": "node --test $(find src tenant-cli factory-cli research-cli -name '*.test.mjs')",
     "test:worker": "node --test $(find worker-reservas -name '*.test.mjs')",
     "tenant:create": "node tenant-cli/tenant-create.mjs",
     "tenant:validate": "node tenant-cli/tenant-validate.mjs",
@@ -27,7 +27,17 @@
     "business:compose": "node factory-cli/business-compose.mjs",
     "business:explain": "node factory-cli/business-explain.mjs",
     "business:recommend": "node factory-cli/business-recommend.mjs",
-    "business:from-prompt": "node factory-cli/business-from-prompt.mjs"
+    "business:from-prompt": "node factory-cli/business-from-prompt.mjs",
+    "research:plan": "node research-cli/research-plan.mjs",
+    "research:collect": "node research-cli/research-collect.mjs",
+    "research:analyze": "node research-cli/research-analyze.mjs",
+    "research:audit": "node research-cli/research-audit.mjs",
+    "research:report": "node research-cli/research-report.mjs",
+    "research:compare": "node research-cli/research-compare.mjs",
+    "research:doctor": "node research-cli/research-doctor.mjs",
+    "research:enrich-intent": "node research-cli/research-enrich-intent.mjs",
+    "research:enrich-blueprint": "node research-cli/research-enrich-blueprint.mjs",
+    "business:research": "node research-cli/business-research.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
