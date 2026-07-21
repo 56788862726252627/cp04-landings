@@ -34,6 +34,10 @@ export const KNOWN_SECTORS = Object.freeze([
   "hair-salon",
   "beauty",
   "veterinary",
+  "restaurant",
+  "education",
+  "automotive",
+  "real-estate",
   "generic-local-service",
 ]);
 

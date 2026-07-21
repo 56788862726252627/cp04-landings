@@ -1,0 +1,677 @@
+{
+  "sector": "physiotherapy",
+  "seed": "demo-001",
+  "isDemoData": true,
+  "customers": [
+    {
+      "entity": "Customer",
+      "id": "customer_diego-s-nchez-demo",
+      "displayName": "Diego Sánchez (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 3
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_adri-n-g-mez-demo",
+      "displayName": "Adrián Gómez (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 6
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_marcos-l-pez-demo",
+      "displayName": "Marcos López (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 7
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_laura-ruiz-demo",
+      "displayName": "Laura Ruiz (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 1
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_javier-l-pez-demo",
+      "displayName": "Javier López (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 4
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_carlos-lvarez-demo",
+      "displayName": "Carlos Álvarez (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 5
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_irene-moreno-demo",
+      "displayName": "Irene Moreno (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 8
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_laura-moreno-demo",
+      "displayName": "Laura Moreno (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 1
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_luc-a-garc-a-demo",
+      "displayName": "Lucía García (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 7
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_irene-mart-nez-demo",
+      "displayName": "Irene Martínez (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 0
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_ana-fern-ndez-demo",
+      "displayName": "Ana Fernández (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 9
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_mar-a-mart-nez-demo",
+      "displayName": "María Martínez (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 5
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    }
+  ],
+  "professionals": [
+    {
+      "entity": "StaffMember",
+      "id": "staff_sergio-ruiz-demo",
+      "displayName": "Sergio Ruiz (demo)",
+      "role": "fisioterapeuta",
+      "functions": [],
+      "isDemoData": true
+    },
+    {
+      "entity": "StaffMember",
+      "id": "staff_sof-a-s-nchez-demo",
+      "displayName": "Sofía Sánchez (demo)",
+      "role": "fisioterapeuta",
+      "functions": [],
+      "isDemoData": true
+    },
+    {
+      "entity": "StaffMember",
+      "id": "staff_hugo-d-az-demo",
+      "displayName": "Hugo Díaz (demo)",
+      "role": "fisioterapeuta",
+      "functions": [],
+      "isDemoData": true
+    }
+  ],
+  "services": [
+    {
+      "entity": "Service",
+      "id": "service_sesi-n-de-fisioterapia",
+      "name": "Sesión de fisioterapia",
+      "durationMinutes": 45,
+      "priceHint": null,
+      "isDemoData": true
+    },
+    {
+      "entity": "Service",
+      "id": "service_valoraci-n-inicial",
+      "name": "Valoración inicial",
+      "durationMinutes": 45,
+      "priceHint": null,
+      "isDemoData": true
+    },
+    {
+      "entity": "Service",
+      "id": "service_rehabilitaci-n-deportiva",
+      "name": "Rehabilitación deportiva",
+      "durationMinutes": 45,
+      "priceHint": null,
+      "isDemoData": true
+    }
+  ],
+  "resources": [
+    {
+      "entity": "Resource",
+      "id": "resource_consulta-1",
+      "label": "Consulta 1",
+      "kind": "generic",
+      "isDemoData": true
+    },
+    {
+      "entity": "Resource",
+      "id": "resource_consulta-2",
+      "label": "Consulta 2",
+      "kind": "generic",
+      "isDemoData": true
+    },
+    {
+      "entity": "Resource",
+      "id": "resource_consulta-3",
+      "label": "Consulta 3",
+      "kind": "generic",
+      "isDemoData": true
+    }
+  ],
+  "schedules": [
+    {
+      "entity": "ScheduleDay",
+      "day": "lunes",
+      "slots": [
+        "09:00",
+        "11:00",
+        "18:00",
+        "19:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "martes",
+      "slots": [
+        "11:00",
+        "17:00",
+        "18:00",
+        "19:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "miércoles",
+      "slots": [
+        "12:00",
+        "17:00",
+        "18:00",
+        "19:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "jueves",
+      "slots": [
+        "09:00",
+        "10:00",
+        "16:00",
+        "17:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "viernes",
+      "slots": [
+        "10:00",
+        "11:00",
+        "16:00",
+        "17:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "sábado",
+      "slots": [
+        "12:00",
+        "16:00",
+        "18:00",
+        "19:00"
+      ],
+      "isDemoData": true
+    }
+  ],
+  "appointments": [
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_1",
+      "customerId": "customer_diego-s-nchez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_sof-a-s-nchez-demo",
+      "dateLabel": "miércoles",
+      "timeLabel": "10:00",
+      "kind": "Sesión de fisioterapia",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_2",
+      "customerId": "customer_adri-n-g-mez-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_sergio-ruiz-demo",
+      "dateLabel": "lunes",
+      "timeLabel": "16:00",
+      "kind": "Rehabilitación deportiva",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_3",
+      "customerId": "customer_adri-n-g-mez-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_sergio-ruiz-demo",
+      "dateLabel": "martes",
+      "timeLabel": "12:00",
+      "kind": "Sesión de fisioterapia",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_4",
+      "customerId": "customer_luc-a-garc-a-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_sof-a-s-nchez-demo",
+      "dateLabel": "viernes",
+      "timeLabel": "19:00",
+      "kind": "Valoración inicial",
+      "status": "pendiente",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_5",
+      "customerId": "customer_carlos-lvarez-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_sof-a-s-nchez-demo",
+      "dateLabel": "jueves",
+      "timeLabel": "09:00",
+      "kind": "Rehabilitación deportiva",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_6",
+      "customerId": "customer_ana-fern-ndez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_hugo-d-az-demo",
+      "dateLabel": "lunes",
+      "timeLabel": "16:00",
+      "kind": "Sesión de fisioterapia",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_7",
+      "customerId": "customer_irene-moreno-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_hugo-d-az-demo",
+      "dateLabel": "miércoles",
+      "timeLabel": "12:00",
+      "kind": "Valoración inicial",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_8",
+      "customerId": "customer_marcos-l-pez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_hugo-d-az-demo",
+      "dateLabel": "sábado",
+      "timeLabel": "12:00",
+      "kind": "Sesión de fisioterapia",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_9",
+      "customerId": "customer_ana-fern-ndez-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_sof-a-s-nchez-demo",
+      "dateLabel": "sábado",
+      "timeLabel": "17:00",
+      "kind": "Sesión de fisioterapia",
+      "status": "pendiente",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_10",
+      "customerId": "customer_adri-n-g-mez-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_hugo-d-az-demo",
+      "dateLabel": "viernes",
+      "timeLabel": "09:00",
+      "kind": "Sesión de fisioterapia",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_11",
+      "customerId": "customer_marcos-l-pez-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_sof-a-s-nchez-demo",
+      "dateLabel": "viernes",
+      "timeLabel": "11:00",
+      "kind": "Valoración inicial",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_12",
+      "customerId": "customer_laura-ruiz-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_sergio-ruiz-demo",
+      "dateLabel": "martes",
+      "timeLabel": "10:00",
+      "kind": "Rehabilitación deportiva",
+      "status": "pendiente",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_13",
+      "customerId": "customer_javier-l-pez-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_sof-a-s-nchez-demo",
+      "dateLabel": "jueves",
+      "timeLabel": "09:00",
+      "kind": "Valoración inicial",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_14",
+      "customerId": "customer_irene-mart-nez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_sof-a-s-nchez-demo",
+      "dateLabel": "lunes",
+      "timeLabel": "12:00",
+      "kind": "Valoración inicial",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_15",
+      "customerId": "customer_luc-a-garc-a-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_sof-a-s-nchez-demo",
+      "dateLabel": "sábado",
+      "timeLabel": "18:00",
+      "kind": "Sesión de fisioterapia",
+      "status": "confirmada",
+      "isDemoData": true
+    }
+  ],
+  "communications": [
+    {
+      "entity": "Communication",
+      "id": "comm_demo_1",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_1",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_2",
+      "channel": "whatsapp",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_2",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_3",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_3",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_4",
+      "channel": "whatsapp",
+      "template": "recordatorio_cita",
+      "status": "not_sent",
+      "relatedAppointmentId": "appt_demo_4",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_5",
+      "channel": "whatsapp",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_5",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_6",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_6",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_7",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "queued_mock",
+      "relatedAppointmentId": "appt_demo_7",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_8",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_8",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_9",
+      "channel": "whatsapp",
+      "template": "recordatorio_cita",
+      "status": "queued_mock",
+      "relatedAppointmentId": "appt_demo_9",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_10",
+      "channel": "whatsapp",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_10",
+      "isDemoData": true
+    }
+  ],
+  "automations": [
+    {
+      "entity": "Automation",
+      "id": "auto_demo_1",
+      "capability": "alta_cliente",
+      "provider": null,
+      "status": "not_connected",
+      "isDemoData": true
+    },
+    {
+      "entity": "Automation",
+      "id": "auto_demo_2",
+      "capability": "confirmacion",
+      "provider": null,
+      "status": "not_connected",
+      "isDemoData": true
+    },
+    {
+      "entity": "Automation",
+      "id": "auto_demo_3",
+      "capability": "recordatorio",
+      "provider": null,
+      "status": "not_connected",
+      "isDemoData": true
+    }
+  ],
+  "metrics": {
+    "entity": "DemoMetricsSnapshot",
+    "isDemoData": true,
+    "totalCustomers": 12,
+    "totalAppointments": 15,
+    "confirmedAppointments": 8,
+    "cancelledAppointments": 4,
+    "occupancyRateHint": 0.53
+  },
+  "incidents": [
+    {
+      "entity": "DemoIncident",
+      "id": "incident_demo_1",
+      "kind": "retraso_confirmacion",
+      "description": "Confirmación automática tardó más de lo esperado (dato demo)",
+      "relatedAppointmentId": "appt_demo_3",
+      "isDemoData": true
+    },
+    {
+      "entity": "DemoIncident",
+      "id": "incident_demo_2",
+      "kind": "cancelacion_tardia",
+      "description": "Cancelación fuera de la ventana permitida (dato demo)",
+      "relatedAppointmentId": "appt_demo_8",
+      "isDemoData": true
+    },
+    {
+      "entity": "DemoIncident",
+      "id": "incident_demo_3",
+      "kind": "cancelacion_tardia",
+      "description": "Cancelación fuera de la ventana permitida (dato demo)",
+      "relatedAppointmentId": "appt_demo_8",
+      "isDemoData": true
+    }
+  ]
+}

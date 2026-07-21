@@ -12,7 +12,7 @@ import { getPreset, SECTOR_PRESET_IDS } from "../templates/presets.js";
 import { buildTerminology } from "../terminology/terminology.js";
 import { buildSidebarNavigation } from "../modules/moduleRegistry.js";
 
-const ENV_VAR_NAMES_BY_PROVIDER = Object.freeze({
+export const ENV_VAR_NAMES_BY_PROVIDER = Object.freeze({
   automation: ["MAKE_WEBHOOK_URL"],
   dataRepository: ["AIRTABLE_API_KEY", "AIRTABLE_BASE_ID"],
   payments: ["STRIPE_SECRET_KEY"],
