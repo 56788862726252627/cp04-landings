@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test $(find src tenant-cli -name '*.test.mjs')",
+    "test:worker": "node --test $(find worker-reservas -name '*.test.mjs')",
+    "tenant:create": "node tenant-cli/tenant-create.mjs",
+    "tenant:validate": "node tenant-cli/tenant-validate.mjs",
+    "tenant:list": "node tenant-cli/tenant-list.mjs",
+    "tenant:preview": "node tenant-cli/tenant-preview.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
