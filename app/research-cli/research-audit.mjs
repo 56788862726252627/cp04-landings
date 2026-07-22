@@ -9,7 +9,7 @@
 // Paso 13: --url solo se consulta REALMENTE si se pasan A LA VEZ
 // --mode=public-web (o hybrid) Y --allow-network. Sin ambas, cualquier URL
 // produce evidencia "unavailable" (comportamiento idéntico a Paso 12).
-import { parseCliArgs, resolveResearchRequestFromArgs, resolveNetworkOptionsFromArgs, ResearchCliError } from "./lib/researchCli.mjs";
+import { parseCliArgs, resolveResearchRequestFromArgs, resolveNetworkOptionsFromArgs, resolveProviderExecutionOptionsFromArgs, ResearchCliError } from "./lib/researchCli.mjs";
 import { runResearchAudit, RequestValidationError, PolicyViolationError, AuditCollisionError, StrictModeBlockedError } from "../src/saas-core/research/auditOrchestrator.js";
 
 const HELP = `Uso: npm run research:audit -- --demo=<id> | --request=<ruta.json> | --business-name=... --sector=<id> [opciones]
@@ -36,6 +36,17 @@ Opciones:
   --force                          Permite sobrescribir una colisión de archivos
   --strict                         Bloquea (sin escribir nada) si hay contradicciones sin resolver entre evidencias
   --seed=<valor>                   Semilla determinista (por defecto: "default-seed")
+
+Paso 15 — pipeline multiproveedor (opt-in, "legacy" por defecto):
+  --pipeline=legacy|multiprovider  legacy (por defecto): idéntico a Paso 13/14. multiprovider: usa ProviderRegistry+ProviderPipeline
+  --execution=sequential|parallel|fallback   Modo de ejecución del pipeline multiproveedor (por defecto: fallback)
+  --providers=<id>[,<id>...]       Allowlist explícita de proveedores (por defecto: todos los descubiertos)
+  --exclude-providers=<id>[,...]   Excluye proveedores concretos (se acumula con las exclusiones del --profile)
+  --provider-priority=<id:n>[,...] Prioridad explícita por proveedor, p.ej. "seoProvider:5,whoisProvider:60"
+  --profile=<id>                   Perfil sectorial (ver npm run research:profiles -- --list)
+  --max-concurrency=<n>            Límite de concurrencia en --execution=parallel (por defecto: sin límite)
+  --global-timeout=<ms>            Timeout global del pipeline multiproveedor
+  --provider-timeout=<ms>          Timeout individual por proveedor
   --help                           Muestra esta ayuda
 `;
 
@@ -48,9 +59,11 @@ async function main() {
 
   let request;
   let networkOptions;
+  let providerOptions;
   try {
     request = await resolveResearchRequestFromArgs(args);
     networkOptions = resolveNetworkOptionsFromArgs(args);
+    providerOptions = resolveProviderExecutionOptionsFromArgs(args);
   } catch (err) {
     if (err instanceof ResearchCliError) {
       console.error(`Error: ${err.message}`);
@@ -68,13 +81,21 @@ async function main() {
       strict: Boolean(args.strict),
       allowNetwork: networkOptions.allowNetwork,
       networkLimits: networkOptions.networkLimits,
+      pipeline: providerOptions.pipeline,
+      providerPolicyOptions: providerOptions.providerPolicyOptions,
+      profileId: providerOptions.profileId,
     });
-    console.log(`Auditoría "${result.auditId}" completada en ${result.durationMs}ms.`);
+    console.log(`Auditoría "${result.auditId}" completada en ${result.durationMs}ms (pipeline="${result.pipeline}").`);
     console.log(`Score global: ${result.scores.global.score ?? "sin datos"}/100 (${result.scores.global.status}).`);
     console.log(`Evidencias: ${result.evidence.length} · Recomendaciones: ${result.recommendations.length} · Automatizaciones candidatas: ${result.automations.length}.`);
     console.log(`Archivos creados: ${result.filesCreated.length} · actualizados: ${result.filesUpdated.length} · preservados: ${result.filesPreserved.length}.`);
     if (result.dryRun) console.log("(--dry-run: no se escribió nada en disco ni se realizó ninguna petición de red)");
     console.log(result.networkUsed ? `Red REAL usada — URLs consultadas: ${result.consultedUrls.join(", ")}` : "Sin red real (offline / fixtures).");
+    if (result.providerRunSummary) {
+      const summary = result.providerRunSummary;
+      console.log(`Proveedores intentados: ${summary.providers.length} · usado: ${summary.usedProviderId ?? "ninguno"} · perfil: ${summary.profileId ?? "genérico"}.`);
+      if (result.evidenceConflicts.length > 0) console.log(`Conflictos de evidencia entre proveedores: ${result.evidenceConflicts.length} (ver reports/providers.md).`);
+    }
     if (result.limitations.length > 0) console.log(`Limitaciones: ${result.limitations.join(" | ")}`);
   } catch (err) {
     if (err instanceof StrictModeBlockedError) {

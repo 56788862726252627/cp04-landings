@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { resolveResearchRequestFromArgs, resolveFormat, loadResearchRequestFromFile, ResearchCliError, writeOutputOrPrint, runResearchDoctorChecks, resolveNetworkOptionsFromArgs, AVAILABLE_NETWORK_PROVIDERS } from "./researchCli.mjs";
+import { resolveResearchRequestFromArgs, resolveFormat, loadResearchRequestFromFile, ResearchCliError, writeOutputOrPrint, runResearchDoctorChecks, resolveNetworkOptionsFromArgs, AVAILABLE_NETWORK_PROVIDERS, resolveProviderExecutionOptionsFromArgs } from "./researchCli.mjs";
 
 async function withTempDir(fn) {
   const dir = await mkdtemp(path.join(os.tmpdir(), "cp04-research-cli-"));
@@ -105,6 +105,47 @@ test("runResearchDoctorChecks reporta salud completa cuando no hay auditorías p
     assert.ok(checks.some((c) => c.id === "dimension_registry_complete" && c.ok));
     assert.ok(checks.some((c) => c.id === "offline_default_enforced" && c.ok));
   });
+});
+
+test("resolveProviderExecutionOptionsFromArgs (Paso 15): por defecto pipeline='legacy', sin flags", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({});
+  assert.equal(opts.pipeline, "legacy");
+  assert.equal(opts.profileId, null);
+  assert.equal(opts.providerPolicyOptions.execution, "fallback");
+  assert.equal(opts.providerPolicyOptions.includeProviders, null);
+});
+
+test("resolveProviderExecutionOptionsFromArgs: --pipeline=multiprovider --execution=parallel --profile=hotel", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ pipeline: "multiprovider", execution: "parallel", profile: "hotel" });
+  assert.equal(opts.pipeline, "multiprovider");
+  assert.equal(opts.providerPolicyOptions.execution, "parallel");
+  assert.equal(opts.profileId, "hotel");
+});
+
+test("resolveProviderExecutionOptionsFromArgs: --providers y --exclude-providers se parsean como listas", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ providers: "publicWebsiteFetcher,seoProvider", "exclude-providers": "aiContentProvider" });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "seoProvider"]);
+  assert.deepEqual(opts.providerPolicyOptions.excludeProviders, ["aiContentProvider"]);
+});
+
+test("resolveProviderExecutionOptionsFromArgs: --provider-priority='id:5,id2:60' se parsea a un mapa numérico", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "provider-priority": "seoProvider:5,whoisProvider:60" });
+  assert.deepEqual(opts.providerPolicyOptions.providerPriorityOverrides, { seoProvider: 5, whoisProvider: 60 });
+});
+
+test("resolveProviderExecutionOptionsFromArgs: rechaza --pipeline/--execution/--max-concurrency/--provider-priority inválidos", () => {
+  assert.throws(() => resolveProviderExecutionOptionsFromArgs({ pipeline: "no-existe" }), ResearchCliError);
+  assert.throws(() => resolveProviderExecutionOptionsFromArgs({ execution: "no-existe" }), ResearchCliError);
+  assert.throws(() => resolveProviderExecutionOptionsFromArgs({ "max-concurrency": "0" }), ResearchCliError);
+  assert.throws(() => resolveProviderExecutionOptionsFromArgs({ "max-concurrency": "abc" }), ResearchCliError);
+  assert.throws(() => resolveProviderExecutionOptionsFromArgs({ "provider-priority": "sin-dos-puntos" }), ResearchCliError);
+});
+
+test("resolveProviderExecutionOptionsFromArgs: --global-timeout/--provider-timeout/--max-concurrency se convierten a número", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "global-timeout": "5000", "provider-timeout": "2000", "max-concurrency": "3" });
+  assert.equal(opts.providerPolicyOptions.globalTimeoutMs, 5000);
+  assert.equal(opts.providerPolicyOptions.individualTimeoutMs, 2000);
+  assert.equal(opts.providerPolicyOptions.maxConcurrency, 3);
 });
 
 test("runResearchDoctorChecks (Paso 14) reporta los 13 proveedores del registro multiproveedor (1 real, 12 stub) cargados sin error", async () => {

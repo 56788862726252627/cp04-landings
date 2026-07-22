@@ -13,6 +13,7 @@ import {
   renderRiskReportMarkdown,
   renderEvidenceAppendixMarkdown,
   renderAuditReportJson,
+  renderProviderRunSummaryMarkdown,
 } from "./auditReportGenerator.js";
 import { evaluateAllDimensions } from "./dimensionRegistry.js";
 import { computeAllScores } from "./scoringEngine.js";
@@ -59,6 +60,45 @@ test("renderExecutiveReportMarkdown cita el score global y recomendaciones reale
   assert.match(md, /Score global/);
   assert.match(md, /reserva/i);
   assert.match(md, /Nota prudente de ejemplo/);
+});
+
+test("Paso 15 — sin providerRunSummary (legacy), el executive.md NO menciona el pipeline multiproveedor", () => {
+  const data = buildReportData(buildSampleAuditResult());
+  const md = renderExecutiveReportMarkdown(data);
+  assert.doesNotMatch(md, /multiproveedor/);
+});
+
+test("Paso 15 — con providerRunSummary (multiprovider), el executive.md sí lo menciona", () => {
+  const auditResult = { ...buildSampleAuditResult(), providerRunSummary: { profileId: "hotel", executionMode: "fallback", usedProviderId: "publicWebsiteFetcher", providers: [{ providerId: "publicWebsiteFetcher" }], pluginLoadErrors: [] } };
+  const data = buildReportData(auditResult);
+  const md = renderExecutiveReportMarkdown(data);
+  assert.match(md, /Pipeline multiproveedor \(perfil "hotel"\)/);
+});
+
+test("renderProviderRunSummaryMarkdown sin providerRunSummary indica modo legacy explícitamente", () => {
+  const data = buildReportData(buildSampleAuditResult());
+  const md = renderProviderRunSummaryMarkdown(data);
+  assert.match(md, /pipeline="legacy"/);
+});
+
+test("renderProviderRunSummaryMarkdown con datos reales lista proveedores, desglose y conflictos", () => {
+  const auditResult = {
+    ...buildSampleAuditResult(),
+    providerRunSummary: {
+      profileId: "hotel",
+      executionMode: "fallback",
+      usedProviderId: "publicWebsiteFetcher",
+      providers: [{ providerId: "publicWebsiteFetcher", orchestratorStatus: "available", evidenceContributed: 2, priority: 10, errors: [] }],
+      pluginLoadErrors: [],
+    },
+    providerScoreBreakdown: [{ providerId: "publicWebsiteFetcher", evidenceCount: 2, dimensionsContributed: ["branding", "bookingCapability"] }],
+    evidenceConflicts: [{ dimensionId: "trustSignals", label: "Confianza", reason: "positiva y negativa", providersInvolved: ["publicWebsiteFetcher"], confidenceAfterPenalty: 0.5 }],
+  };
+  const data = buildReportData(auditResult);
+  const md = renderProviderRunSummaryMarkdown(data);
+  assert.match(md, /publicWebsiteFetcher/);
+  assert.match(md, /disponible \(evidencia real\)/);
+  assert.match(md, /trustSignals/);
 });
 
 test("renderTechnicalReportMarkdown incluye las 13 categorías y las dimensiones evaluadas", () => {

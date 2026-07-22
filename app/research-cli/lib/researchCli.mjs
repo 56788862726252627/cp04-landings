@@ -66,6 +66,60 @@ export function resolveNetworkOptionsFromArgs(args) {
   return { allowNetwork: Boolean(args["allow-network"]), networkLimits };
 }
 
+// Paso 15 — pipeline multiproveedor: "legacy" (por defecto, sin cambios de
+// comportamiento) o "multiprovider" (opt-in explícito, ver
+// orchestratorProviderBridge.js).
+const PIPELINE_VALUES = Object.freeze(["legacy", "multiprovider"]);
+const EXECUTION_VALUES = Object.freeze(["sequential", "parallel", "fallback"]);
+
+/** "id:50,id2:10" -> {id:50, id2:10}. Lanza ResearchCliError ante formato inválido. */
+function parsePriorityMap(value) {
+  if (value === undefined || value === true) return {};
+  const overrides = {};
+  for (const pair of String(value).split(",").map((s) => s.trim()).filter(Boolean)) {
+    const [id, priority] = pair.split(":").map((s) => s.trim());
+    if (!id || priority === undefined || Number.isNaN(Number(priority))) {
+      throw new ResearchCliError(`--provider-priority="${value}" mal formado. Usa id:prioridad separados por comas, p.ej. "seoProvider:5,whoisProvider:60".`);
+    }
+    overrides[id] = Number(priority);
+  }
+  return overrides;
+}
+
+/**
+ * Resuelve las opciones del pipeline multiproveedor (Paso 15) desde flags
+ * CLI. `pipeline` es SIEMPRE "legacy" salvo `--pipeline=multiprovider`
+ * explícito — mismo principio de seguridad por defecto que `allowNetwork`.
+ */
+export function resolveProviderExecutionOptionsFromArgs(args) {
+  const pipeline = args.pipeline ? String(args.pipeline) : "legacy";
+  if (!PIPELINE_VALUES.includes(pipeline)) {
+    throw new ResearchCliError(`--pipeline desconocido: "${pipeline}". Usa uno de: ${PIPELINE_VALUES.join(", ")}.`);
+  }
+  const execution = args.execution ? String(args.execution) : "fallback";
+  if (!EXECUTION_VALUES.includes(execution)) {
+    throw new ResearchCliError(`--execution desconocido: "${execution}". Usa uno de: ${EXECUTION_VALUES.join(", ")}.`);
+  }
+  const includeProvidersRaw = splitList(args.providers);
+  const maxConcurrency = args["max-concurrency"] !== undefined ? Number(args["max-concurrency"]) : null;
+  if (maxConcurrency !== null && (!Number.isInteger(maxConcurrency) || maxConcurrency < 1)) {
+    throw new ResearchCliError(`--max-concurrency debe ser un entero >= 1 (recibido: "${args["max-concurrency"]}").`);
+  }
+  return {
+    pipeline,
+    profileId: args.profile ? String(args.profile) : null,
+    providerPolicyOptions: {
+      execution,
+      includeProviders: includeProvidersRaw.length > 0 ? includeProvidersRaw : null,
+      excludeProviders: splitList(args["exclude-providers"]),
+      providerPriorityOverrides: parsePriorityMap(args["provider-priority"]),
+      maxConcurrency,
+      globalTimeoutMs: args["global-timeout"] !== undefined ? Number(args["global-timeout"]) : null,
+      individualTimeoutMs: args["provider-timeout"] !== undefined ? Number(args["provider-timeout"]) : null,
+    },
+  };
+}
+
 /** Carga un Research Request desde --request=<ruta.json>, validándolo. */
 export async function loadResearchRequestFromFile(filePath) {
   const raw = await readFile(String(filePath), "utf8").catch((err) => {

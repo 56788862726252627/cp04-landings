@@ -25,6 +25,14 @@ export function buildReportData(auditResult) {
     prudentNote: auditResult.prudentNote,
     networkUsed: auditResult.networkUsed ?? false,
     consultedUrls: auditResult.consultedUrls ?? [],
+    // Paso 15 — presentes solo en modo multiproveedor; en legacy quedan en
+    // sus valores neutros (pipeline: "legacy", el resto null/[]), por lo
+    // que un informe legacy es indistinguible del generado en Paso 12/13/14.
+    pipeline: auditResult.pipeline ?? "legacy",
+    profileId: auditResult.profileId ?? null,
+    providerRunSummary: auditResult.providerRunSummary ?? null,
+    evidenceConflicts: auditResult.evidenceConflicts ?? [],
+    providerScoreBreakdown: auditResult.providerScoreBreakdown ?? [],
     durationMs: auditResult.durationMs,
     generatedAt: auditResult.generatedAt,
   };
@@ -44,6 +52,13 @@ export function renderExecutiveReportMarkdown(reportData) {
     `Score global: **${fmtScore(reportData.scores.global.score)}** (confianza ${Math.round(reportData.scores.global.confidence * 100)}%, cobertura ${Math.round(reportData.scores.global.coverage * 100)}%)`,
     "",
     reportData.networkUsed ? `**Fuentes reales consultadas por red (${reportData.consultedUrls.length}):** ${reportData.consultedUrls.join(", ")}` : "_Auditoría offline: sin conexiones de red reales._",
+    // Paso 15 — solo se añade cuando hubo pipeline multiproveedor
+    // (reportData.providerRunSummary no nulo); en legacy esta línea no se
+    // genera, por lo que el executive.md de una auditoría legacy es
+    // idéntico byte a byte al de Paso 12/13/14.
+    ...(reportData.providerRunSummary
+      ? [`_Pipeline multiproveedor (perfil "${reportData.providerRunSummary.profileId}"): ${reportData.providerRunSummary.providers.length} proveedor(es) intentado(s), usado: ${reportData.providerRunSummary.usedProviderId ?? "ninguno"}. Detalle en reports/providers.md._`]
+      : []),
     "",
     "## Riesgos principales",
     ...(topRisks.length > 0 ? topRisks.map((r) => `- ${r}`) : ["- Sin riesgos detectados con la evidencia disponible."]),
@@ -146,4 +161,56 @@ export function renderEvidenceAppendixMarkdown(reportData) {
 
 export function renderAuditReportJson(reportData) {
   return JSON.stringify(reportData, null, 2) + "\n";
+}
+
+// Paso 15 · Fase 7 — informe del pipeline multiproveedor. Solo se genera
+// (ver auditOrchestrator.js) cuando `pipeline === "multiprovider"`; en
+// legacy `providerRunSummary` es null y esta función no se llama.
+const ORCHESTRATOR_STATUS_LABELS = Object.freeze({
+  available: "disponible (evidencia real)",
+  unavailable: "no disponible (stub/contrato preparado)",
+  skipped: "omitido",
+  failed: "falló",
+  blocked: "bloqueado (circuit breaker)",
+  timed_out: "tiempo agotado",
+  cancelled: "cancelado",
+});
+
+export function renderProviderRunSummaryMarkdown(reportData) {
+  const summary = reportData.providerRunSummary;
+  if (!summary) return "# Proveedores\n\nEsta auditoría se ejecutó en modo legacy (pipeline=\"legacy\"): no se usó el registro multiproveedor.\n";
+
+  const lines = [
+    `# Proveedores — pipeline multiproveedor`,
+    "",
+    `Modo de ejecución: **${summary.executionMode}** · Perfil sectorial: **${summary.profileId ?? "genérico"}** · Proveedor usado: **${summary.usedProviderId ?? "ninguno"}**`,
+    "",
+    "## Proveedores intentados",
+    "",
+    "| Proveedor | Estado | Evidencia aportada | Prioridad | Errores |",
+    "|---|---|---|---|---|",
+  ];
+  for (const p of summary.providers) {
+    const errorText = p.errors.length > 0 ? p.errors.map((e) => e.message).join("; ") : "—";
+    lines.push(`| ${p.providerId} | ${ORCHESTRATOR_STATUS_LABELS[p.orchestratorStatus] ?? p.orchestratorStatus} | ${p.evidenceContributed} | ${p.priority ?? "—"} | ${errorText} |`);
+  }
+  if (summary.providers.length === 0) lines.push("| _ninguno_ | | | | |");
+
+  lines.push("", "## Desglose de evidencia por proveedor", "", "| Proveedor | Evidencias | Dimensiones cubiertas |", "|---|---|---|");
+  for (const b of reportData.providerScoreBreakdown ?? []) lines.push(`| ${b.providerId} | ${b.evidenceCount} | ${b.dimensionsContributed.join(", ")} |`);
+  if (!reportData.providerScoreBreakdown || reportData.providerScoreBreakdown.length === 0) lines.push("| _ninguno_ | | |");
+
+  lines.push("", "## Conflictos de evidencia entre proveedores", "");
+  const conflicts = reportData.evidenceConflicts ?? [];
+  if (conflicts.length === 0) {
+    lines.push("Sin conflictos detectados entre proveedores.");
+  } else {
+    for (const c of conflicts) lines.push(`- **${c.label}** (${c.dimensionId}): ${c.reason} — proveedores implicados: ${c.providersInvolved.join(", ") || "sin atribución"} (confianza tras penalización: ${Math.round(c.confidenceAfterPenalty * 100)}%)`);
+  }
+
+  if (summary.pluginLoadErrors.length > 0) {
+    lines.push("", "## Errores al cargar plugins", "", ...summary.pluginLoadErrors.map((e) => `- ${e.file}: ${e.reason}`));
+  }
+
+  return lines.join("\n") + "\n";
 }
