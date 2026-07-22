@@ -18,6 +18,7 @@ import { EXTENSION_POINTS } from "../../src/saas-core/factory/extensionPoints.js
 import { evaluatePolicy } from "../../src/saas-core/research/researchPolicy.js";
 import { DEFAULT_AUDITS_DIR } from "../../src/saas-core/research/auditOrchestrator.js";
 import { PUBLIC_WEBSITE_FETCHER_PROVIDER } from "../../src/saas-core/research/providers/publicWebsiteFetcher.js";
+import { createProviderRegistry, discoverAndRegisterPlugins } from "../../src/saas-core/research/providers/core/providerRegistry.js";
 
 export { parseCliArgs };
 
@@ -208,6 +209,25 @@ export async function runResearchDoctorChecks({ auditsDir = DEFAULT_AUDITS_DIR }
     checks.push({ id: "public_website_fetcher_provider_loaded", ok: providerHealth.healthy, detail: providerHealth.message });
   } catch (err) {
     checks.push({ id: "public_website_fetcher_provider_loaded", ok: false, detail: `error al cargar el proveedor: ${err.message}` });
+  }
+
+  // Paso 14 — el registro multiproveedor (core/providerRegistry.js) descubre
+  // sus plugins automáticamente desde providers/plugins/; este check confirma
+  // que los 13 (12 stub + 1 real) cargan sin errores, sin listar el resto de
+  // checks existentes (mismo patrón que el check anterior de Paso 13).
+  try {
+    const registry = createProviderRegistry();
+    const pluginsDir = path.resolve("src", "saas-core", "research", "providers", "plugins");
+    const { loaded, errors } = await discoverAndRegisterPlugins(registry, pluginsDir);
+    const stubCount = registry.list().filter((p) => p.status === "stub").length;
+    const realCount = registry.list().filter((p) => p.status === "real").length;
+    checks.push({
+      id: "multiprovider_registry_loaded",
+      ok: errors.length === 0 && loaded.length === 13,
+      detail: errors.length === 0 ? `${loaded.length}/13 proveedores registrados (${realCount} real, ${stubCount} stub)` : `${errors.length} plugin(s) con error: ${errors.map((e) => `${e.file} — ${e.reason}`).join("; ")}`,
+    });
+  } catch (err) {
+    checks.push({ id: "multiprovider_registry_loaded", ok: false, detail: `error al descubrir plugins: ${err.message}` });
   }
 
   let playwrightAvailable = false;

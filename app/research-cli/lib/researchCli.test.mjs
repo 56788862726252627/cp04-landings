@@ -107,6 +107,17 @@ test("runResearchDoctorChecks reporta salud completa cuando no hay auditorías p
   });
 });
 
+test("runResearchDoctorChecks (Paso 14) reporta los 13 proveedores del registro multiproveedor (1 real, 12 stub) cargados sin error", async () => {
+  await withTempDir(async (dir) => {
+    const { ok, checks } = await runResearchDoctorChecks({ auditsDir: path.join(dir, "no-existe-todavia") });
+    assert.equal(ok, true);
+    const check = checks.find((c) => c.id === "multiprovider_registry_loaded");
+    assert.ok(check, "falta el check multiprovider_registry_loaded");
+    assert.equal(check.ok, true);
+    assert.match(check.detail, /13\/13 proveedores registrados \(1 real, 12 stub\)/);
+  });
+});
+
 test("runResearchDoctorChecks detecta un research-request.json corrupto en una auditoría generada", async () => {
   await withTempDir(async (dir) => {
     await import("node:fs/promises").then(({ mkdir }) => mkdir(path.join(dir, "negocio-roto"), { recursive: true }));
