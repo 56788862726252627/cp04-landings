@@ -115,5 +115,25 @@ export function getSectorAuditPreset(presetId) {
   return SECTOR_AUDIT_PRESETS[presetId] ?? (presetId === "generic-local-service" ? GENERIC_AUDIT_PRESET : null);
 }
 
+/**
+ * Paso 15 · Fase 6 — Fusiona un preset base con overrides (p. ej. de un
+ * ProviderSectorProfile de `providers/providerSectorProfiles.js`), sin
+ * mutar ninguno de los dos. Los pesos del override GANAN sobre los del
+ * preset base; el resto de campos (mustNotAutoInfer, prudentNote,
+ * risksToWatch, opportunitiesTemplate) se acumulan, nunca se pierden.
+ * Sigue sin codificar lógica de sector aquí — solo combina datos.
+ * @param {object} basePreset
+ * @param {{dimensionWeights?: object, categoryWeights?: object, priorityDimensions?: string[], mustNotAutoInfer?: string[]}} overrides
+ */
+export function mergeAuditPreset(basePreset, overrides = {}) {
+  return Object.freeze({
+    ...basePreset,
+    priorityDimensions: Object.freeze([...new Set([...basePreset.priorityDimensions, ...(overrides.priorityDimensions ?? [])])]),
+    dimensionWeights: Object.freeze({ ...basePreset.dimensionWeights, ...(overrides.dimensionWeights ?? {}) }),
+    categoryWeights: Object.freeze({ ...basePreset.categoryWeights, ...(overrides.categoryWeights ?? {}) }),
+    mustNotAutoInfer: Object.freeze([...new Set([...basePreset.mustNotAutoInfer, ...(overrides.mustNotAutoInfer ?? [])])]),
+  });
+}
+
 /** Verifica 1:1 con los sectores conocidos de Paso 11 (sin inventar nuevos sectores). */
 export const AUDIT_SECTOR_IDS = Object.freeze([...SECTOR_PRESET_IDS]);

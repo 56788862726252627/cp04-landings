@@ -38,6 +38,8 @@
     "research:doctor": "node research-cli/research-doctor.mjs",
     "research:enrich-intent": "node research-cli/research-enrich-intent.mjs",
     "research:enrich-blueprint": "node research-cli/research-enrich-blueprint.mjs",
+    "research:providers": "node research-cli/research-providers.mjs",
+    "research:profiles": "node research-cli/research-profiles.mjs",
     "business:research": "node research-cli/business-research.mjs"
   },
   "dependencies": {

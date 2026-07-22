@@ -8,7 +8,7 @@
 // Paso 13: con --url --provider publicWebsiteFetcher --allow-network (y
 // --mode=public-web/hybrid) recolecta de verdad contra la red pública.
 // Sin --allow-network, cualquier URL produce evidencia "unavailable".
-import { parseCliArgs, resolveResearchRequestFromArgs, resolveNetworkOptionsFromArgs, writeOutputOrPrint, ResearchCliError } from "./lib/researchCli.mjs";
+import { parseCliArgs, resolveResearchRequestFromArgs, resolveNetworkOptionsFromArgs, resolveProviderExecutionOptionsFromArgs, writeOutputOrPrint, ResearchCliError } from "./lib/researchCli.mjs";
 import { collectEvidence } from "../src/saas-core/research/auditOrchestrator.js";
 import { deduplicateEvidence } from "../src/saas-core/research/evidenceDeduper.js";
 
@@ -24,6 +24,8 @@ Opciones:
   --timeout=<ms> --max-bytes=<n> --max-pages=<n> --respect-robots=true|false --user-agent=<texto>
   --local-files-base-dir=<ruta> Directorio base seguro para --local-file(s)
   --output=<ruta>               Guarda la evidencia (JSON) en un archivo
+  --pipeline=legacy|multiprovider   Paso 15 (por defecto: legacy) — ver npm run research:audit -- --help
+  --execution / --providers / --exclude-providers / --provider-priority / --profile / --max-concurrency / --global-timeout / --provider-timeout
   --help                        Muestra esta ayuda
 `;
 
@@ -36,9 +38,11 @@ async function main() {
 
   let request;
   let networkOptions;
+  let providerOptions;
   try {
     request = await resolveResearchRequestFromArgs(args);
     networkOptions = resolveNetworkOptionsFromArgs(args);
+    providerOptions = resolveProviderExecutionOptionsFromArgs(args);
   } catch (err) {
     if (err instanceof ResearchCliError) {
       console.error(`Error: ${err.message}`);
@@ -48,14 +52,17 @@ async function main() {
     throw err;
   }
 
-  const { evidence: rawEvidence, competitorBundles, limitations, networkUsed, consultedUrls } = await collectEvidence(request, {
+  const { evidence: rawEvidence, competitorBundles, limitations, networkUsed, consultedUrls, providerRunSummary } = await collectEvidence(request, {
     localFilesBaseDir: args["local-files-base-dir"],
     allowNetwork: networkOptions.allowNetwork,
     networkLimits: networkOptions.networkLimits,
+    pipeline: providerOptions.pipeline,
+    providerPolicyOptions: providerOptions.providerPolicyOptions,
+    profileId: providerOptions.profileId,
   });
   const evidence = deduplicateEvidence(rawEvidence);
 
-  await writeOutputOrPrint(args, JSON.stringify({ evidence, competitorBundles, limitations }, null, 2));
+  await writeOutputOrPrint(args, JSON.stringify({ evidence, competitorBundles, limitations, providerRunSummary }, null, 2));
   console.log(`Recolectadas ${evidence.length} evidencia(s) (tras deduplicar), ${competitorBundles.length} paquete(s) de competidor, ${limitations.length} limitación(es).`);
   console.log(networkUsed ? `Red REAL usada — URLs consultadas: ${consultedUrls.join(", ")}` : "Sin red real (offline / fixtures).");
 }

@@ -56,6 +56,27 @@ test("modo parallel ejecuta todos a la vez (más rápido que la suma de sus dela
   assert.ok(elapsed < 110, `se esperaba ejecución paralela (~60ms), tardó ${elapsed}ms`);
 });
 
+test("modo parallel con maxConcurrency=1 ejecuta uno a la vez (tan lento como la suma de los delays)", async () => {
+  const providers = [fakeProvider("a", { delayMs: 40 }), fakeProvider("b", { delayMs: 40 })];
+  const started = Date.now();
+  const outcome = await runProviderPipeline(providers, {}, { mode: "parallel", maxConcurrency: 1 });
+  const elapsed = Date.now() - started;
+  assert.equal(outcome.results.length, 2);
+  assert.ok(elapsed >= 75, `se esperaba ejecución secuencial (~80ms) por el límite de concurrencia, tardó ${elapsed}ms`);
+});
+
+test("modo parallel con maxConcurrency preserva el orden de resultados por índice, no por orden de finalización", async () => {
+  const providers = [fakeProvider("lenta", { delayMs: 40 }), fakeProvider("rapida", { delayMs: 5 }), fakeProvider("media", { delayMs: 20 })];
+  const outcome = await runProviderPipeline(providers, {}, { mode: "parallel", maxConcurrency: 3 });
+  assert.deepEqual(outcome.results.map((r) => r.providerId), ["lenta", "rapida", "media"]);
+});
+
+test("runProviderPipeline rechaza maxConcurrency inválido (0, negativo o no entero)", async () => {
+  await assert.rejects(() => runProviderPipeline([], {}, { mode: "parallel", maxConcurrency: 0 }));
+  await assert.rejects(() => runProviderPipeline([], {}, { mode: "parallel", maxConcurrency: -1 }));
+  await assert.rejects(() => runProviderPipeline([], {}, { mode: "parallel", maxConcurrency: 1.5 }));
+});
+
 test("individualTimeoutMs marca timeout a un proveedor lento sin bloquear el resto", async () => {
   const providers = [fakeProvider("lento", { delayMs: 300 }), fakeProvider("rapido", { delayMs: 5 })];
   const outcome = await runProviderPipeline(providers, {}, { mode: "sequential", individualTimeoutMs: 50 });

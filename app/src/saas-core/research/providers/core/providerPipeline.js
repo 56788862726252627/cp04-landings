@@ -1,4 +1,8 @@
 // Paso 14 · Fase 4 — Pipeline configurable de ejecución de proveedores.
+// Paso 15 · Fase 3 — añade `maxConcurrency` opcional al modo "parallel"
+// (límite de concurrencia real, ver `runWithConcurrencyLimit`); por
+// defecto sigue siendo `null` (sin límite, Promise.all — comportamiento
+// idéntico a Paso 14, sin cambios de comportamiento por defecto).
 //
 // Orquesta la llamada a `collect()` de uno o varios ResearchProvider ya
 // resueltos (normalmente vía `registry.resolveFallbackChain(dimension)`),
@@ -46,15 +50,37 @@ async function runOneProvider(provider, input, { individualTimeoutMs, externalSi
 }
 
 /**
+ * Ejecuta `tasks` (funciones que devuelven Promise) con como mucho
+ * `limit` en vuelo simultáneamente, preservando el orden de `results`
+ * (cada tarea escribe en su propio índice, no en orden de finalización).
+ */
+async function runWithConcurrencyLimit(tasks, limit) {
+  const results = new Array(tasks.length);
+  let nextIndex = 0;
+  async function worker() {
+    while (nextIndex < tasks.length) {
+      const currentIndex = nextIndex++;
+      results[currentIndex] = await tasks[currentIndex]();
+    }
+  }
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
+/**
  * Ejecuta una cadena de proveedores (ya ordenada por prioridad, ver
  * ProviderRegistry.resolveFallbackChain) según `mode`.
  * @param {object[]} providers - cadena ya resuelta (orden = prioridad)
  * @param {unknown} input - se pasa tal cual a cada `collect(input, options)`
- * @param {{mode?: string, globalTimeoutMs?: number, individualTimeoutMs?: number, externalSignal?: AbortSignal}} options
+ * @param {{mode?: string, globalTimeoutMs?: number, individualTimeoutMs?: number, externalSignal?: AbortSignal, maxConcurrency?: number|null}} options
  * @returns {Promise<{mode: string, results: object[], usedProviderId: string|null, cancelled: boolean}>}
  */
-export async function runProviderPipeline(providers, input, { mode = "fallback", globalTimeoutMs, individualTimeoutMs, externalSignal } = {}) {
+export async function runProviderPipeline(providers, input, { mode = "fallback", globalTimeoutMs, individualTimeoutMs, externalSignal, maxConcurrency = null } = {}) {
   if (!EXECUTION_MODES.includes(mode)) throw new Error(`runProviderPipeline: mode desconocido "${mode}" (usa: ${EXECUTION_MODES.join(", ")})`);
+  if (maxConcurrency !== null && (!Number.isInteger(maxConcurrency) || maxConcurrency < 1)) {
+    throw new Error("runProviderPipeline: maxConcurrency debe ser null o un entero >= 1");
+  }
 
   const globalController = new AbortController();
   const combinedSignal = globalController.signal;
@@ -65,7 +91,8 @@ export async function runProviderPipeline(providers, input, { mode = "fallback",
 
   try {
     if (mode === "parallel") {
-      const results = await Promise.all(providers.map((p) => runOneProvider(p, input, { individualTimeoutMs, externalSignal: combinedSignal })));
+      const runners = providers.map((p) => () => runOneProvider(p, input, { individualTimeoutMs, externalSignal: combinedSignal }));
+      const results = maxConcurrency ? await runWithConcurrencyLimit(runners, maxConcurrency) : await Promise.all(runners.map((run) => run()));
       return { mode, results, usedProviderId: null, cancelled: combinedSignal.aborted };
     }
 

@@ -17,9 +17,12 @@ import { slugify } from "../../../tenant-cli/lib/tenantProvisioning.mjs";
 import { assertValidResearchRequest } from "./researchRequestSchema.js";
 import { evaluatePolicy } from "./researchPolicy.js";
 import { buildResearchPlan } from "./researchPlanEngine.js";
-import { getSectorAuditPreset, GENERIC_AUDIT_PRESET } from "./sectorAuditPresets.js";
+import { getSectorAuditPreset, GENERIC_AUDIT_PRESET, mergeAuditPreset } from "./sectorAuditPresets.js";
 import { SOURCE_ADAPTERS } from "./sourceAdapters.js";
 import { collectFromPublicWebsite } from "./providers/publicWebsiteFetcher.js";
+import { collectEvidenceViaProviders } from "./providers/orchestratorProviderBridge.js";
+import { buildEvidenceConflictReport, buildProviderScoreBreakdown } from "./providers/evidenceAggregator.js";
+import { getProviderSectorProfile, getEffectiveAuditPresetForProfile } from "./providers/providerSectorProfiles.js";
 import { createEvidence } from "./evidenceSchema.js";
 import { deduplicateEvidence } from "./evidenceDeduper.js";
 import { evaluateAllDimensions } from "./dimensionRegistry.js";
@@ -27,7 +30,7 @@ import { computeAllScores } from "./scoringEngine.js";
 import { buildRecommendations, buildBacklog, buildImpactEffortMatrix } from "./recommendationEngine.js";
 import { recommendAutomationsFromFindings } from "./researchAutomationCatalog.js";
 import { compareCompetitors } from "./competitorComparison.js";
-import { buildReportData, renderExecutiveReportMarkdown, renderTechnicalReportMarkdown, renderCommercialReportMarkdown, renderOpportunitiesSummaryMarkdown, renderBacklogMarkdown, renderImpactEffortMatrixMarkdown, renderAutomationMapMarkdown, renderRiskReportMarkdown, renderEvidenceAppendixMarkdown, renderAuditReportJson } from "./auditReportGenerator.js";
+import { buildReportData, renderExecutiveReportMarkdown, renderTechnicalReportMarkdown, renderCommercialReportMarkdown, renderOpportunitiesSummaryMarkdown, renderBacklogMarkdown, renderImpactEffortMatrixMarkdown, renderAutomationMapMarkdown, renderRiskReportMarkdown, renderEvidenceAppendixMarkdown, renderAuditReportJson, renderProviderRunSummaryMarkdown } from "./auditReportGenerator.js";
 import { getDemoFixture, getCompetitorFixture } from "./fixtures/demoFixtures.js";
 
 export const DEFAULT_AUDITS_DIR = path.join("src", "saas-core", "research", "audits");
@@ -66,7 +69,10 @@ function classifyLocalFileAdapterId(filePath) {
   return "local_html";
 }
 
-function evidenceForUnavailableUrl(url, customReason) {
+// Paso 15 — exportada para que orchestratorProviderBridge.js (modo
+// multiprovider) produzca la MISMA evidencia "unavailable" que el modo
+// legacy cuando ningún proveedor real responde, sin duplicar el mensaje.
+export function evidenceForUnavailableUrl(url, customReason) {
   const reason = customReason ?? `"${url}" no se consultó: el modo actual es offline o falta --allow-network. Desde Paso 13 existe un proveedor real (publicWebsiteFetcher); pasa --mode=public-web --allow-network para usarlo, o --fixtures para evidencia offline.`;
   return createEvidence({
     sourceId: url,
@@ -130,7 +136,7 @@ async function collectFromFixture(fixtureId, limitations) {
   return collected;
 }
 
-const NETWORK_CAPABLE_MODES = Object.freeze(["public-web", "hybrid"]);
+export const NETWORK_CAPABLE_MODES = Object.freeze(["public-web", "hybrid"]);
 
 /**
  * Exportado para el CLI (research:collect): solo la etapa de recolección,
@@ -143,8 +149,15 @@ const NETWORK_CAPABLE_MODES = Object.freeze(["public-web", "hybrid"]);
  * "unavailable" exactamente igual que en Paso 12 — nunca dispara red por
  * sí solo. Esto es intencional (defensa en profundidad ante un archivo
  * reproducido/compartido).
+ *
+ * Paso 15 — `pipeline: "multiprovider"` (opt-in, por defecto sigue siendo
+ * "legacy") delega la resolución de URLs en `orchestratorProviderBridge.js`
+ * en vez de llamar directamente a `collectFromPublicWebsite`. Con
+ * `pipeline: "legacy"` (o sin indicarlo) el código de esta función es
+ * BYTE A BYTE el mismo camino que en Paso 13/14 — cero riesgo de regresión
+ * para quien no pida explícitamente el modo nuevo.
  */
-export async function collectEvidence(request, { localFilesBaseDir, allowNetwork = false, networkLimits = {} } = {}) {
+export async function collectEvidence(request, { localFilesBaseDir, allowNetwork = false, networkLimits = {}, pipeline = "legacy", providerPolicyOptions = {}, profileId = null, providerRegistry = null, providerCircuitBreaker = null } = {}) {
   const evidence = [];
   const limitations = [];
 
@@ -152,12 +165,36 @@ export async function collectEvidence(request, { localFilesBaseDir, allowNetwork
   const modeAllowsNetwork = NETWORK_CAPABLE_MODES.includes(request.mode);
   const networkEnabled = allowNetwork && modeAllowsNetwork;
 
-  if (urls.length > 0 && networkEnabled) {
+  let providerRunSummary = null;
+  let provenanceIndex = {};
+  let networkUsed = false;
+  let consultedUrls = [];
+
+  if (pipeline === "multiprovider") {
+    const bridgeResult = await collectEvidenceViaProviders(urls, {
+      allowNetwork,
+      modeAllowsNetwork,
+      networkLimits,
+      policyOptions: providerPolicyOptions,
+      profileId,
+      evidenceForUnavailableUrl,
+      registry: providerRegistry,
+      circuitBreaker: providerCircuitBreaker,
+    });
+    evidence.push(...bridgeResult.evidence);
+    limitations.push(...bridgeResult.limitations);
+    providerRunSummary = bridgeResult.providerRunSummary;
+    provenanceIndex = bridgeResult.provenanceIndex;
+    networkUsed = bridgeResult.networkUsed;
+    consultedUrls = bridgeResult.consultedUrls;
+  } else if (urls.length > 0 && networkEnabled) {
     const { evidence: realEvidence, pageResults } = await collectFromPublicWebsite(urls, networkLimits);
     evidence.push(...realEvidence);
     for (const result of pageResults) {
       if (result.status !== "available") limitations.push(`URL real no disponible (${result.errorCode}): ${result.url} — ${result.reason}`);
     }
+    networkUsed = networkEnabled && urls.length > 0;
+    consultedUrls = networkEnabled ? urls : [];
   } else {
     const reasonWhenModeReadyButFlagMissing = "el request pide un modo con red (public-web/hybrid), pero falta --allow-network en esta ejecución: se trata como offline por seguridad.";
     for (const url of urls) {
@@ -197,7 +234,7 @@ export async function collectEvidence(request, { localFilesBaseDir, allowNetwork
     }
   }
 
-  return { evidence, competitorBundles, limitations, networkUsed: networkEnabled && urls.length > 0, consultedUrls: networkEnabled ? urls : [] };
+  return { evidence, competitorBundles, limitations, networkUsed, consultedUrls, providerRunSummary, provenanceIndex };
 }
 
 /**
@@ -205,8 +242,13 @@ export async function collectEvidence(request, { localFilesBaseDir, allowNetwork
  * "map_automations" a partir de evidencia YA recolectada (p.ej. desde
  * evidence.json de un research:collect previo), sin volver a recolectar.
  */
-export function analyzeEvidence(evidence, sectorPresetId, { competitorBundles = [] } = {}) {
-  const preset = getSectorAuditPreset(sectorPresetId) ?? GENERIC_AUDIT_PRESET;
+export function analyzeEvidence(evidence, sectorPresetId, { competitorBundles = [], presetOverrides = null } = {}) {
+  const basePreset = getSectorAuditPreset(sectorPresetId) ?? GENERIC_AUDIT_PRESET;
+  // Paso 15 · Fase 6 — un ProviderSectorProfile (providerSectorProfiles.js)
+  // puede aportar pesos propios por encima del preset de Paso 12, vía
+  // mergeAuditPreset (sectorAuditPresets.js). Sin presetOverrides, el
+  // comportamiento es IDÉNTICO al de Paso 12/13/14 (compatibilidad legacy).
+  const preset = presetOverrides ? mergeAuditPreset(basePreset, presetOverrides) : basePreset;
   const dimensionResults = evaluateAllDimensions(evidence);
   const scores = computeAllScores(dimensionResults, preset);
   const recommendations = buildRecommendations(dimensionResults, { priorityDimensionIds: preset.priorityDimensions, mustNotAutoInfer: preset.mustNotAutoInfer });
@@ -222,7 +264,23 @@ export function analyzeEvidence(evidence, sectorPresetId, { competitorBundles = 
  * Research Request ya construido (buildResearchRequest). No escribe a
  * disco si `dryRun` es true.
  */
-export async function runResearchAudit(request, { localFilesBaseDir, dryRun = false, force = false, strict = false, allowNetwork = false, networkLimits = {}, outputBaseDir = DEFAULT_AUDITS_DIR } = {}) {
+export async function runResearchAudit(
+  request,
+  {
+    localFilesBaseDir,
+    dryRun = false,
+    force = false,
+    strict = false,
+    allowNetwork = false,
+    networkLimits = {},
+    outputBaseDir = DEFAULT_AUDITS_DIR,
+    pipeline = "legacy",
+    providerPolicyOptions = {},
+    profileId = null,
+    providerRegistry = null,
+    providerCircuitBreaker = null,
+  } = {}
+) {
   const startedAt = Date.now();
 
   try {
@@ -239,23 +297,46 @@ export async function runResearchAudit(request, { localFilesBaseDir, dryRun = fa
   // --dry-run NUNCA realiza peticiones de red reales, aunque se pida
   // --allow-network: solo muestra el plan (Fase 4 del enunciado de Paso 13).
   const networkAllowedThisRun = allowNetwork && !dryRun;
-  const { evidence: rawEvidence, competitorBundles, limitations: collectionLimitations, networkUsed, consultedUrls } = await collectEvidence(request, { localFilesBaseDir, allowNetwork: networkAllowedThisRun, networkLimits });
+  const { evidence: rawEvidence, competitorBundles, limitations: collectionLimitations, networkUsed, consultedUrls, providerRunSummary, provenanceIndex } = await collectEvidence(request, {
+    localFilesBaseDir,
+    allowNetwork: networkAllowedThisRun,
+    networkLimits,
+    pipeline,
+    providerPolicyOptions,
+    profileId,
+    providerRegistry,
+    providerCircuitBreaker,
+  });
   const evidence = deduplicateEvidence(rawEvidence);
 
-  const { sectorPresetId, dimensionResults, scores, recommendations, backlog, impactEffortMatrix, automations, competitorComparison, prudentNote } = analyzeEvidence(evidence, request.business?.sector, { competitorBundles });
+  // Paso 15 · Fase 6 — con pipeline multiproveedor, el perfil sectorial
+  // resuelto (explícito por --profile, o el genérico si no se indicó)
+  // aporta pesos propios por encima del preset de Paso 12. En modo legacy
+  // no se resuelve ningún perfil: comportamiento idéntico a Paso 12/13/14.
+  const resolvedProfile = pipeline === "multiprovider" ? getProviderSectorProfile(profileId) : null;
+  const presetOverrides = resolvedProfile ? getEffectiveAuditPresetForProfile(resolvedProfile) : null;
+
+  const { sectorPresetId, dimensionResults, scores, recommendations, backlog, impactEffortMatrix, automations, competitorComparison, prudentNote } = analyzeEvidence(evidence, request.business?.sector, { competitorBundles, presetOverrides });
 
   if (strict) {
     const unresolvedContradictions = Object.values(dimensionResults).flatMap((d) => d.contradictions);
     if (unresolvedContradictions.length > 0) throw new StrictModeBlockedError(unresolvedContradictions);
   }
 
+  // Fase 4/5 — conflictos con atribución de proveedor y desglose de
+  // evidencia por proveedor: solo tienen sentido (provenanceIndex no
+  // vacío) en modo multiproveedor; en legacy quedan como arrays vacíos.
+  const evidenceConflicts = buildEvidenceConflictReport(dimensionResults, provenanceIndex);
+  const providerScoreBreakdown = buildProviderScoreBreakdown(dimensionResults, provenanceIndex);
+
   const missingDimensions = Object.values(dimensionResults).filter((d) => d.status === "unknown").length;
   const limitations = [
     ...collectionLimitations,
     ...(missingDimensions > 0 ? [`${missingDimensions}/45 dimensiones quedan como "unknown" por falta de evidencia (no se infiere sin datos).`] : []),
     networkUsed
-      ? `Se realizaron llamadas de red REALES a ${consultedUrls.length} URL(es) pública(s) mediante el proveedor publicWebsiteFetcher (--allow-network): ${consultedUrls.join(", ")}.`
+      ? `Se realizaron llamadas de red REALES a ${consultedUrls.length} URL(es) pública(s) mediante el proveedor publicWebsiteFetcher (--allow-network, pipeline="${pipeline}").`
       : "Ninguna llamada de red real se realizó durante esta auditoría (modo offline / fixtures locales únicamente).",
+    ...(evidenceConflicts.length > 0 ? [`${evidenceConflicts.length} dimensión(es) con evidencia contradictoria entre fuentes/proveedores — ver evidenceConflicts.`] : []),
   ];
 
   const auditId = slugify(request.business?.name || request.requestId);
@@ -280,6 +361,11 @@ export async function runResearchAudit(request, { localFilesBaseDir, dryRun = fa
     prudentNote,
     networkUsed,
     consultedUrls,
+    pipeline,
+    profileId: resolvedProfile?.id ?? null,
+    providerRunSummary,
+    evidenceConflicts,
+    providerScoreBreakdown,
     durationMs,
     generatedAt,
   };
@@ -292,6 +378,17 @@ export async function runResearchAudit(request, { localFilesBaseDir, dryRun = fa
   const deterministicReportData = { ...reportData };
   delete deterministicReportData.generatedAt;
   delete deterministicReportData.durationMs;
+  // Paso 15 — providerRunSummary.providers[].durationMs es timing real (no
+  // determinista); se excluye del contenido usado para el hash, igual que
+  // generatedAt/durationMs de nivel superior, para que una segunda
+  // ejecución idéntica en modo multiproveedor siga produciendo 0 archivos
+  // actualizados (idempotencia, ver docs/paso-15.../09-...md).
+  if (deterministicReportData.providerRunSummary) {
+    deterministicReportData.providerRunSummary = {
+      ...deterministicReportData.providerRunSummary,
+      providers: deterministicReportData.providerRunSummary.providers.map((p) => ({ providerId: p.providerId, priority: p.priority, providerResultStatus: p.providerResultStatus, orchestratorStatus: p.orchestratorStatus, evidenceContributed: p.evidenceContributed, errors: p.errors, limitations: p.limitations })),
+    };
+  }
 
   const filesToWrite = {
     "research-request.json": JSON.stringify(request, null, 2) + "\n",
@@ -307,6 +404,10 @@ export async function runResearchAudit(request, { localFilesBaseDir, dryRun = fa
     [path.join("reports", "automation-map.md")]: renderAutomationMapMarkdown(deterministicReportData),
     [path.join("reports", "risk-report.md")]: renderRiskReportMarkdown(deterministicReportData),
     [path.join("reports", "evidence-appendix.md")]: renderEvidenceAppendixMarkdown(deterministicReportData),
+    // Solo se escribe en modo multiproveedor: en legacy providerRunSummary
+    // es null y este archivo NO se genera — el set de archivos de una
+    // auditoría legacy queda idéntico al de Paso 12/13/14 (requisito 7).
+    ...(deterministicReportData.providerRunSummary ? { [path.join("reports", "providers.md")]: renderProviderRunSummaryMarkdown(deterministicReportData) } : {}),
   };
 
   const filesCreated = [];
