@@ -28,6 +28,7 @@ export const SOURCE_TYPES = Object.freeze([
   "mock_competitor",
   "business_intent",
   "business_blueprint",
+  "public_website_real", // Paso 13 — proveedor real publicWebsiteFetcher (requiere allowNetwork:true explícito)
 ]);
 
 /** Nunca "confirmed" salvo que la evidencia venga de una fuente directamente observada. */

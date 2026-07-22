@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { resolveResearchRequestFromArgs, resolveFormat, loadResearchRequestFromFile, ResearchCliError, writeOutputOrPrint, runResearchDoctorChecks } from "./researchCli.mjs";
+import { resolveResearchRequestFromArgs, resolveFormat, loadResearchRequestFromFile, ResearchCliError, writeOutputOrPrint, runResearchDoctorChecks, resolveNetworkOptionsFromArgs, AVAILABLE_NETWORK_PROVIDERS } from "./researchCli.mjs";
 
 async function withTempDir(fn) {
   const dir = await mkdtemp(path.join(os.tmpdir(), "cp04-research-cli-"));
@@ -39,6 +39,38 @@ test("resolveResearchRequestFromArgs construye desde flags inline (business-name
 test("resolveResearchRequestFromArgs respeta --online para cambiar el modo", async () => {
   const request = await resolveResearchRequestFromArgs({ "business-name": "X", sector: "dental", online: true });
   assert.equal(request.mode, "online");
+});
+
+test("resolveResearchRequestFromArgs respeta --mode explícito (Paso 13) sobre --online", async () => {
+  const request = await resolveResearchRequestFromArgs({ "business-name": "X", sector: "dental", mode: "public-web" });
+  assert.equal(request.mode, "public-web");
+});
+
+test("resolveResearchRequestFromArgs rechaza --mode desconocido", async () => {
+  await assert.rejects(() => resolveResearchRequestFromArgs({ "business-name": "X", sector: "dental", mode: "modo-inventado" }), ResearchCliError);
+});
+
+test("resolveNetworkOptionsFromArgs: allowNetwork es false por defecto y solo true con --allow-network explícito", () => {
+  assert.equal(resolveNetworkOptionsFromArgs({}).allowNetwork, false);
+  assert.equal(resolveNetworkOptionsFromArgs({ "allow-network": true }).allowNetwork, true);
+});
+
+test("resolveNetworkOptionsFromArgs traduce --timeout/--max-bytes/--max-pages/--user-agent/--respect-robots a networkLimits", () => {
+  const { networkLimits } = resolveNetworkOptionsFromArgs({ timeout: "5000", "max-bytes": "100000", "max-pages": "2", "user-agent": "MiBot/1.0", "respect-robots": "false" });
+  assert.equal(networkLimits.timeoutMs, 5000);
+  assert.equal(networkLimits.maxBytes, 100000);
+  assert.equal(networkLimits.maxPages, 2);
+  assert.equal(networkLimits.userAgent, "MiBot/1.0");
+  assert.equal(networkLimits.respectRobots, false);
+});
+
+test("resolveNetworkOptionsFromArgs rechaza --provider desconocido", () => {
+  assert.throws(() => resolveNetworkOptionsFromArgs({ provider: "proveedor-inventado" }), ResearchCliError);
+  assert.doesNotThrow(() => resolveNetworkOptionsFromArgs({ provider: "publicWebsiteFetcher" }));
+});
+
+test("AVAILABLE_NETWORK_PROVIDERS lista publicWebsiteFetcher", () => {
+  assert.ok(AVAILABLE_NETWORK_PROVIDERS.includes("publicWebsiteFetcher"));
 });
 
 test("resolveFormat acepta json/markdown/summary y rechaza otros valores", () => {
