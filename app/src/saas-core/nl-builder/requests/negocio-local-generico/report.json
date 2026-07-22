@@ -1,0 +1,53 @@
+{
+  "businessId": "negocio-local-generico",
+  "blueprint": {
+    "businessId": "negocio-local-generico",
+    "sector": "generic-local-service",
+    "commercialName": "Negocio Local Genérico"
+  },
+  "filesCreated": [],
+  "filesUpdated": [],
+  "filesPreserved": [],
+  "modulesActivated": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "servicios",
+    "profesionales",
+    "soporte",
+    "configuracion"
+  ],
+  "modulesDiscarded": [],
+  "automationsSelected": [
+    "confirmacion",
+    "recordatorio"
+  ],
+  "integrationsDeclared": [
+    "messaging"
+  ],
+  "demoDataSummary": {
+    "note": "no generado (requiere --execute)"
+  },
+  "reuse": {
+    "note": "100% del catálogo genérico de Paso 09/10; 0 archivos centrales modificados por este negocio"
+  },
+  "manualSteps": [
+    "Confirmar antes de producción: ¿A qué sector pertenece exactamente el negocio (clínica, despacho, club, restaurante, etc.)?",
+    "Confirmar antes de producción: ¿En qué ciudad y país operará el negocio?",
+    "Confirmar antes de producción: ¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?",
+    "Revisar supuesto — business.sector: se asumió \"generic-local-service\" (ningún preset sectorial coincidió; se aplicó el preset genérico de negocio local)",
+    "Revisar supuesto — country/timezone: se asumió \"ES/Europe/Madrid\" (valor por defecto seguro (España/Europe-Madrid) al no detectarse ciudad en el texto)"
+  ],
+  "risks": [],
+  "limitations": [
+    "Análisis únicamente: pasa --execute para materializar el tenant real."
+  ],
+  "durationMs": 54,
+  "compatibility": {
+    "note": "ver app/docs/paso-10-one-prompt-factory/"
+  },
+  "idempotent": false,
+  "dryRun": false,
+  "nextStep": "Ejecutar de nuevo con --execute para generar el tenant, o revisar manualSteps/ambigüedades primero.",
+  "generatedAt": null
+}

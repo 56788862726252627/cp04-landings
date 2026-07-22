@@ -1,0 +1,7 @@
+  7580 src/App.jsx
+    10 src/main.jsx
+    15 src/index.css
+   935 src/cp04-legibility-polish.css
+    27 package.json
+    16 vite.config.js
+  8583 total

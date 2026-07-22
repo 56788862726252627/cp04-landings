@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "businessId": "clinica-dental-sonrisas-de-malaga",
+  "tenantId": "clinica-dental-sonrisas-de-malaga",
+  "commercialName": "Sonrisas de Málaga",
+  "legalName": "Sonrisas de Málaga Clínica Dental S.L. (ficticia)",
+  "sector": "dental",
+  "subsector": "odontologia-general",
+  "country": "ES",
+  "timezone": "Europe/Madrid",
+  "locale": "es-ES",
+  "currencies": [
+    "EUR"
+  ],
+  "publicInfo": {
+    "shortDescription": "Clínica dental ficticia de demostración en Málaga: revisiones, limpieza y ortodoncia.",
+    "website": "https://sonrisas-de-malaga.example",
+    "email": "hola@sonrisas-de-malaga.example",
+    "address": {
+      "city": "Málaga",
+      "region": "Andalucía",
+      "country": "ES"
+    }
+  },
+  "branding": {
+    "logoRef": "assets/logo-placeholder.svg",
+    "colors": {
+      "primary": "#1c6fd6",
+      "accent": "#2fd6b0",
+      "bg": "#ffffff",
+      "surface": "#f4f8fb",
+      "text": "#0c1420"
+    },
+    "fonts": {
+      "display": "'Poppins', sans-serif",
+      "body": "'Inter', sans-serif"
+    },
+    "tone": "cercano-profesional"
+  },
+  "plan": "pro",
+  "modules": [
+    "inicio",
+    "citas",
+    "clientes",
+    "pagos",
+    "automatizaciones",
+    "soporte",
+    "informes",
+    "configuracion",
+    "agenda",
+    "profesionales",
+    "recursos",
+    "servicios",
+    "documentos",
+    "formularios"
+  ],
+  "services": [
+    {
+      "name": "Revisión general",
+      "durationMinutes": 30,
+      "priceHint": 35
+    },
+    {
+      "name": "Limpieza dental",
+      "durationMinutes": 45,
+      "priceHint": 60
+    },
+    {
+      "name": "Ortodoncia (consulta)",
+      "durationMinutes": 30,
+      "priceHint": 40
+    }
+  ],
+  "professionals": [
+    {
+      "name": "Dra. Elena Ruiz (ficticia)",
+      "role": "dentista",
+      "functions": [
+        "odontologia-general"
+      ]
+    },
+    {
+      "name": "Dr. Marcos Vidal (ficticio)",
+      "role": "dentista",
+      "functions": [
+        "ortodoncia"
+      ]
+    },
+    {
+      "name": "Dra. Nuria Campos (ficticia)",
+      "role": "dentista",
+      "functions": [
+        "odontologia-general",
+        "endodoncia"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "name": "Consulta 1",
+      "kind": "consulta"
+    },
+    {
+      "name": "Consulta 2",
+      "kind": "consulta"
+    }
+  ],
+  "schedules": {
+    "enabled": true,
+    "weekdays": {
+      "open": "09:00",
+      "close": "20:00"
+    },
+    "saturday": {
+      "open": "10:00",
+      "close": "14:00"
+    },
+    "sunday": null
+  },
+  "locations": [
+    {
+      "name": "Sonrisas de Málaga — Centro",
+      "city": "Málaga"
+    }
+  ],
+  "automations": [
+    "alta_cliente",
+    "confirmacion",
+    "cancelacion",
+    "recordatorio",
+    "encuesta",
+    "documento",
+    "pago"
+  ],
+  "aiCapabilities": [
+    "demo_data_generation",
+    "landing_copy_draft"
+  ],
+  "integrations": {
+    "automation": {
+      "status": "not_configured",
+      "envVars": [
+        "MAKE_WEBHOOK_URL"
+      ]
+    },
+    "dataRepository": {
+      "status": "not_configured",
+      "envVars": [
+        "AIRTABLE_API_KEY",
+        "AIRTABLE_BASE_ID"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    },
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    },
+    "calendar": {
+      "status": "not_configured",
+      "envVars": [
+        "GOOGLE_CALENDAR_CLIENT_ID"
+      ]
+    }
+  },
+  "pwa": {
+    "shortName": "Sonrisas Málaga",
+    "themeColor": "#1c6fd6",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProposition",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer"
+    ],
+    "ctaLabel": "Pedir cita",
+    "ctaHref": "#contacto"
+  },
+  "demoData": {
+    "enabled": true,
+    "seed": "sonrisas-de-malaga-demo",
+    "sizes": {
+      "customers": 18,
+      "professionals": 3,
+      "appointments": 24,
+      "incidents": 3
+    }
+  },
+  "flags": {},
+  "limits": {
+    "maxUsers": 20,
+    "maxLocations": 1
+  },
+  "privacy": {
+    "regulatedSector": true,
+    "sensitiveDataCategories": [
+      "salud_o_legal_placeholder"
+    ]
+  },
+  "manualSteps": [
+    "Revisión normativa sanitaria/odontológica antes de producción",
+    "Sustituir logotipo/branding placeholder por assets reales"
+  ],
+  "generationMeta": {
+    "generatedBy": "business:create",
+    "sourceInstruction": "Crear una solución SaaS para una clínica dental de Málaga, con tres odontólogos, agenda, pacientes, recordatorios, formularios, landing page, PWA y branding premium.",
+    "notes": "Blueprint de ejemplo Fase 12 (Paso 10): negocio demo ficticio, sin datos reales, sin conexión a proveedores."
+  }
+}

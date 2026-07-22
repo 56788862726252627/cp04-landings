@@ -1,0 +1,7 @@
+src/internal-module-backgrounds.css:27:  --cp04-current-module-bg: url('/images/user-reservas-bg.png');
+src/internal-module-backgrounds.css:31:  --cp04-current-module-bg: url('/images/admin-technical-bg.png');
+src/internal-module-backgrounds.css:35:  --cp04-current-module-bg: url('/images/general-modules-bg.png');
+src/torcal-role-background.css:25:    url('/images/torcal-padel-bg.png');
+src/torcal-role-background.css:103:    url('/images/torcal-padel-bg.png') !important;
+src/torcal-role-background.css:186:    url('/images/torcal-padel-bg.png') !important;
+src/role-background-detector.js:8:const bgImage = "linear-gradient(180deg, rgba(2,6,23,0.00) 0%, rgba(2,6,23,0.03) 45%, rgba(2,6,23,0.12) 100%), url(\'/images/torcal-padel-bg.png\')";

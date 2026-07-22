@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "businessId": "restaurante",
+  "tenantId": "restaurante",
+  "commercialName": "Restaurante",
+  "sector": "restaurant",
+  "country": "ES",
+  "timezone": "Europe/Madrid",
+  "locale": "es-ES",
+  "currencies": [
+    "EUR"
+  ],
+  "plan": "starter",
+  "publicInfo": {
+    "shortDescription": "Restaurante (ES) — 7 módulo(s) habilitado(s)."
+  },
+  "branding": {
+    "logoRef": null,
+    "faviconRef": null,
+    "tone": "cálido-acogedor",
+    "colors": {
+      "primary": "#1d4e89",
+      "accent": "#b23b2e",
+      "bg": "#ffffff",
+      "text": "#0c1420"
+    },
+    "fonts": {
+      "display": "'Inter', sans-serif",
+      "body": "'Inter', sans-serif"
+    }
+  },
+  "modules": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "servicios",
+    "recursos",
+    "soporte",
+    "configuracion"
+  ],
+  "roles": [
+    "cliente",
+    "sala",
+    "direccion",
+    "soporte"
+  ],
+  "permissions": {
+    "cliente": [
+      "citas",
+      "servicios"
+    ],
+    "sala": [
+      "clientes",
+      "citas",
+      "servicios",
+      "recursos"
+    ],
+    "direccion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "servicios",
+      "recursos",
+      "soporte",
+      "configuracion"
+    ],
+    "soporte": [
+      "soporte"
+    ]
+  },
+  "automations": [
+    "confirmacion",
+    "recordatorio",
+    "cancelacion",
+    "encuesta"
+  ],
+  "aiCapabilities": [],
+  "integrations": {
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    }
+  },
+  "pwa": {
+    "shortName": "Restaurante (borrador)",
+    "themeColor": "#b23b2e",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProp",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer",
+      "privacyPlaceholder"
+    ],
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto",
+    "testimonials": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de restaurante.",
+        "isDemo": true
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Qué incluye la solución para restaurante?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "seed": "demo-restaurante-001",
+    "sizes": {}
+  },
+  "flags": {},
+  "limits": {},
+  "privacy": {
+    "regulatedSector": false,
+    "sensitiveDataCategories": []
+  },
+  "manualSteps": [
+    "picos de demanda estacionales (sobre-reserva)",
+    "Confirmar antes de producción: ¿En qué ciudad y país operará el negocio?",
+    "Confirmar antes de producción: ¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?",
+    "Revisar supuesto — country/timezone: se asumió \"ES/Europe/Madrid\" (valor por defecto seguro (España/Europe-Madrid) al no detectarse ciudad en el texto)"
+  ],
+  "generationMeta": {
+    "generatedBy": "nl-builder:business:compose",
+    "sourceIntentRequestId": "intent-c085b86b3073fe07",
+    "seed": "demo-restaurante-001"
+  }
+}

@@ -1,0 +1,22 @@
+5:    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+10:      name="description"
+11:      content="Club Pádel 04: base SaaS para reservas de pistas, ranking, gestión operativa y paneles internos preparados para backend seguro."
+16:    <meta property="og:site_name" content="Club Pádel 04" />
+17:    <meta property="og:title" content="Club Pádel 04 | Reservas y gestión SaaS para pádel" />
+19:      property="og:description"
+23:    <meta property="og:image" content="https://clubpadel04.example/og-image.svg" />
+27:    <meta property="og:image:alt" content="Club Pádel 04, reservas y gestión SaaS para pádel" />
+29:    <meta name="twitter:title" content="Club Pádel 04 | Reservas y gestión SaaS para pádel" />
+31:      name="twitter:description"
+32:      content="Base SaaS para reservas de pistas, ranking y gestión operativa de Club Pádel 04."
+34:    <meta name="twitter:image" content="https://clubpadel04.example/og-image.svg" />
+35:    <title>Club Pádel 04 | Reservas y gestión SaaS para pádel</title>
+36:    <script type="application/ld+json">
+41:        "name": "Club Pádel 04",
+43:        "image": "https://clubpadel04.example/og-image.svg",
+44:        "description": "Base web para reservas de pistas, ranking y gestión operativa de Club Pádel 04.",
+51:    </script>
+52:    <script type="module" crossorigin src="/assets/index-D6IBmBU_.js"></script>
+53:    <link rel="stylesheet" crossorigin href="/assets/index-Cskwu9eL.css">
+56:    <noscript>Club Pádel 04 necesita JavaScript para usar la aplicación de reservas y gestión.</noscript>
+57:    <div id="root"></div>

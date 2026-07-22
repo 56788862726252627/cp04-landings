@@ -1,0 +1,6 @@
+Framework preset: Vite
+Build command: npm run build
+Build output directory: dist
+Node version recomendada: 20
+SPA fallback: dist/_redirects
+Deploy real: NO ejecutado

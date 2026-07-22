@@ -1,0 +1,12 @@
+555:  const [fecha, setFecha] = useState(initialDate || todayISO());
+818:  const [now, setNow] = useState(() => new Date());
+4317:  const [court, setCourt] = useState("Pista 1");
+4500:  const [court, setCourt] = useState("Pista 1");
+4865:  const [reservasReales, setReservasReales] = useState([]);
+4866:  const [cargandoReservas, setCargandoReservas] = useState(false);
+4867:  const [reservasConsultadas, setReservasConsultadas] = useState(false);
+4868:  const [errorReservas, setErrorReservas] = useState("");
+4869:  const [fuenteReservas, setFuenteReservas] = useState("");
+4870:  const [filtroFecha, setFiltroFecha] = useState("");
+4871:  const [filtroPista, setFiltroPista] = useState("");
+5815:  const [byeDrawDate, setByeDrawDate] = useState(() => saved?.byeDrawDate ?? null);

@@ -1,0 +1,57 @@
+7852:               {ltx("login.title").split(" ").slice(0,-1).join(" ")} <span style={{ color:T.accent }}>{ltx("login.title").split(" ").slice(-1)}</span>
+7853:             </h1>
+7854: 
+7855:             <p style={{ color:T.textDim, maxWidth:760, lineHeight:1.7, fontSize:"clamp(1rem, 2vw, 1.18rem)", marginBottom:34 }}>
+7856:               {ltx("login.subtitle")}
+7857:             </p>
+7858: 
+7859:       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:22, marginBottom:26 }}>
+7860:         <form onSubmit={handleUniversalLogin} style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(5,10,18,.72)" }}>
+7861:           <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+7862:             ACCESO REAL
+7863:           </div>
+7864:           <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+7865:             Entrar con correo personal
+7866:           </strong>
+7867:           <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.55 }}>
+7868:             Usa tu email y contraseña. Los roles internos siguen disponibles abajo solo para validación interna.
+7869:           </p>
+7870:           <input
+7871:             type="email"
+7872:             value={loginEmail}
+7873:             onChange={e => setLoginEmail(e.target.value)}
+7874:             placeholder="tu@email.com"
+7875:             autoComplete="email"
+7876:             style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+7877:           />
+
+==========================================================================================
+
+8005:       </div>
+8006: 
+8007: 
+8008:             <div className="cp04-grid-2">
+8009:               {Object.keys(roleConfig).map((roleId) => {
+8010:                 const rl = roleLabels[roleId] || roleConfig[roleId];
+8011:                 return (
+8012:                   <button key={roleId} type="button" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
+8013:                     style={{ textAlign:"left", border:`1px solid ${T.line}`, borderRadius:24, padding:22, background:"rgba(5,10,18,.72)", color:T.text, cursor:"pointer", minHeight:138 }}>
+8014:                     <div className={roleId==="PLAYER" ? "cp04-role-player-id" : undefined} style={{ color: roleId==="PLAYER" ? "#b6ff00" : T.accent, fontWeight:900, letterSpacing:".12em", fontSize:".78rem", marginBottom:8 }}>{roleId}</div>
+8015:                     <strong style={{ display:"block", fontSize:"1.1rem", marginBottom:8 }}>{rl.label}</strong>
+8016:                     <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>
+8017:                   </button>
+8018:                 );
+8019:               })}
+8020:             </div>
+8021: 
+8022:             {pendingRole && (
+8023:               <form onSubmit={confirmRoleAccess} style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+8024:                 <strong style={{ display:"block", marginBottom:8 }}>
+8025:                   {ltx("login.acceder_como")} {roleLabels[pendingRole]?.label || roleConfig[pendingRole]?.label}
+8026:                 </strong>
+8027:                 <p style={{ color:T.textDim, marginTop:0, marginBottom:14 }}>{ltx("login.intro_pwd")}</p>
+8028:                 <input
+8029:                   type={showRolePassword ? "text" : "password"}
+8030:                   value={rolePassword}
+
+==========================================================================================
