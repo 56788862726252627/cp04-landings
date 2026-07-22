@@ -10,7 +10,13 @@ import { createHash } from "node:crypto";
 
 export const RESEARCH_REQUEST_SCHEMA_VERSION = 1;
 
-export const RESEARCH_MODES = Object.freeze(["offline", "online"]);
+// "offline" y "online" existen desde Paso 12. Paso 13 añade "public-web"
+// (usa el proveedor real publicWebsiteFetcher para las URLs declaradas) y
+// "hybrid" (fixtures/archivos locales + URLs reales) — ambos requieren
+// ADEMÁS la bandera de tiempo de ejecución allowNetwork:true
+// (auditOrchestrator.js); sin ella, cualquier modo se comporta como
+// offline para las URLs (evidencia "unavailable"), nunca conecta por sí solo.
+export const RESEARCH_MODES = Object.freeze(["offline", "online", "public-web", "hybrid"]);
 
 export const REQUESTED_DIMENSIONS_WILDCARD = "*";
 

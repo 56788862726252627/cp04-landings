@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildResearchRequest, validateResearchRequest, assertValidResearchRequest, computeRequestId, migrateResearchRequest, RESEARCH_REQUEST_SCHEMA_VERSION } from "./researchRequestSchema.js";
+import { buildResearchRequest, validateResearchRequest, assertValidResearchRequest, computeRequestId, migrateResearchRequest, RESEARCH_REQUEST_SCHEMA_VERSION, RESEARCH_MODES } from "./researchRequestSchema.js";
 
 test("buildResearchRequest produce un Research Request válido con defaults seguros (offline)", () => {
   const request = buildResearchRequest({ business: { name: "Club Pádel Demo", sector: "padel-sports" } });
@@ -23,6 +23,14 @@ test("validateResearchRequest rechaza campos obligatorios ausentes", () => {
   const { valid, errors } = validateResearchRequest({});
   assert.equal(valid, false);
   assert.ok(errors.some((e) => e.path === "business"));
+});
+
+test("RESEARCH_MODES incluye los modos de Paso 12 (offline/online) y los nuevos de Paso 13 (public-web/hybrid)", () => {
+  for (const mode of ["offline", "online", "public-web", "hybrid"]) assert.ok(RESEARCH_MODES.includes(mode), mode);
+  for (const mode of RESEARCH_MODES) {
+    const request = buildResearchRequest({ business: { name: "X", sector: "dental" }, mode });
+    assert.equal(validateResearchRequest(request).valid, true, mode);
+  }
 });
 
 test("validateResearchRequest rechaza un mode desconocido", () => {

@@ -19,6 +19,13 @@ const PRIVATE_IPV4_PATTERNS = [
   /^169\.254\./, // link-local + cloud metadata (169.254.169.254)
   /^0\./, // "this network"
   /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, // CGNAT 100.64.0.0/10
+  /^22[4-9]\.|^23[0-9]\./, // multicast 224.0.0.0/4
+  /^255\.255\.255\.255$/, // broadcast (dirección general)
+  /^192\.0\.0\./, // IETF protocol assignments (RFC6890)
+  /^192\.0\.2\./, // TEST-NET-1 (documentación)
+  /^198\.51\.100\./, // TEST-NET-2 (documentación)
+  /^203\.0\.113\./, // TEST-NET-3 (documentación)
+  /^24[0-9]\.|^25[0-4]\./, // reservado (240.0.0.0/4, excl. broadcast ya cubierto)
 ];
 
 const DANGEROUS_HOSTNAMES = Object.freeze(["localhost", "0.0.0.0", "metadata.google.internal"]);
@@ -35,7 +42,39 @@ function isPrivateIpv4(hostname) {
 
 function isPrivateIpv6(hostname) {
   const normalized = hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  return normalized === "::1" || normalized === "::" || normalized.startsWith("fe80:") || normalized.startsWith("fc") || normalized.startsWith("fd");
+  if (normalized === "::1" || normalized === "::") return true;
+  if (normalized.startsWith("fe80:")) return true; // link-local
+  if (normalized.startsWith("fc") || normalized.startsWith("fd")) return true; // ULA
+  if (normalized.startsWith("ff")) return true; // multicast (ff00::/8)
+  if (normalized.startsWith("::ffff:")) {
+    // IPv4-mapped IPv6: reevaluar la parte IPv4 embebida con las mismas reglas.
+    const embeddedIpv4 = normalized.slice("::ffff:".length);
+    return isIpv4Literal(embeddedIpv4) && isPrivateIpv4(embeddedIpv4);
+  }
+  return false;
+}
+
+/**
+ * Clasifica una dirección IP literal (IPv4 o IPv6, ya resuelta o tal cual
+ * aparece en una URL) como pública o privada/reservada/peligrosa. Reutilizada
+ * tanto por `classifyUrl` (hostname literal en la URL) como por la
+ * validación de IPs resueltas por DNS (ver providers/publicWebsiteFetcher.js),
+ * para no duplicar la lista de rangos en dos sitios.
+ * @param {string} ip
+ * @returns {{safe: boolean, reason: string}}
+ */
+export function classifyIpAddress(ip) {
+  const normalized = String(ip ?? "").trim();
+  if (normalized.length === 0) return { safe: false, reason: "dirección IP vacía" };
+  if (isIpv4Literal(normalized)) {
+    if (isPrivateIpv4(normalized)) return { safe: false, reason: `dirección IPv4 privada/reservada: "${normalized}"` };
+    return { safe: true, reason: "IPv4 pública" };
+  }
+  if (normalized.includes(":")) {
+    if (isPrivateIpv6(normalized)) return { safe: false, reason: `dirección IPv6 privada/reservada: "${normalized}"` };
+    return { safe: true, reason: "IPv6 pública" };
+  }
+  return { safe: false, reason: `no reconocida como dirección IPv4/IPv6 válida: "${normalized}"` };
 }
 
 /**

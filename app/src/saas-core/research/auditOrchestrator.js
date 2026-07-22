@@ -4,6 +4,10 @@
 // escritura ANTES de tocar disco; si hay colisión sin --force, no escribe
 // nada. Todo se escribe DENTRO de `research/audits/<auditId>/`, nunca en
 // `saas-core/businesses/` (territorio de Paso 10) ni en el núcleo.
+//
+// Paso 13 añade el proveedor real `publicWebsiteFetcher` (ver
+// providers/publicWebsiteFetcher.js), gateado por la bandera de tiempo de
+// ejecución `allowNetwork` (nunca por defecto, nunca persistida).
 
 import { mkdir, readFile, writeFile, stat } from "node:fs/promises";
 import path from "node:path";
@@ -15,6 +19,7 @@ import { evaluatePolicy } from "./researchPolicy.js";
 import { buildResearchPlan } from "./researchPlanEngine.js";
 import { getSectorAuditPreset, GENERIC_AUDIT_PRESET } from "./sectorAuditPresets.js";
 import { SOURCE_ADAPTERS } from "./sourceAdapters.js";
+import { collectFromPublicWebsite } from "./providers/publicWebsiteFetcher.js";
 import { createEvidence } from "./evidenceSchema.js";
 import { deduplicateEvidence } from "./evidenceDeduper.js";
 import { evaluateAllDimensions } from "./dimensionRegistry.js";
@@ -61,19 +66,20 @@ function classifyLocalFileAdapterId(filePath) {
   return "local_html";
 }
 
-function evidenceForUnavailableUrl(url) {
+function evidenceForUnavailableUrl(url, customReason) {
+  const reason = customReason ?? `"${url}" no se consultó: el modo actual es offline o falta --allow-network. Desde Paso 13 existe un proveedor real (publicWebsiteFetcher); pasa --mode=public-web --allow-network para usarlo, o --fixtures para evidencia offline.`;
   return createEvidence({
     sourceId: url,
     sourceType: "local_html",
-    title: "Obtención real de URL no implementada en este paso",
-    excerpt: `"${url}" no se consultó: el fetcher público real es solo un contrato (ver factory/extensionPoints.js: publicWebsiteFetcher). Usa --fixtures con una fixture local para obtener evidencia real en este paso.`,
+    title: "URL no consultada (red deshabilitada)",
+    excerpt: reason,
     normalizedContent: url,
     classification: "unavailable",
     relatedDimension: "digitalMaturitySignal",
     signal: { strength: 0, polarity: "neutral" },
     confidence: 0,
-    provenance: "not_implemented",
-    limitations: ["Ninguna conexión de red real se realiza en este paso; usa --fixtures para evidencia real offline."],
+    provenance: "network_disabled",
+    limitations: ["Ninguna conexión de red real se realizó para esta URL en esta ejecución."],
   });
 }
 
@@ -124,13 +130,39 @@ async function collectFromFixture(fixtureId, limitations) {
   return collected;
 }
 
-/** Exportado para el CLI (research:collect): solo la etapa de recolección, sin analizar ni persistir. */
-export async function collectEvidence(request, { localFilesBaseDir } = {}) {
+const NETWORK_CAPABLE_MODES = Object.freeze(["public-web", "hybrid"]);
+
+/**
+ * Exportado para el CLI (research:collect): solo la etapa de recolección,
+ * sin analizar ni persistir.
+ *
+ * `allowNetwork` (Paso 13) es una bandera de TIEMPO DE EJECUCIÓN, nunca
+ * parte del Research Request persistido: aunque un research-request.json
+ * guardado tenga `mode: "public-web"`, releerlo y volver a ejecutar la
+ * auditoría SIN pasar `allowNetwork: true` de nuevo produce evidencia
+ * "unavailable" exactamente igual que en Paso 12 — nunca dispara red por
+ * sí solo. Esto es intencional (defensa en profundidad ante un archivo
+ * reproducido/compartido).
+ */
+export async function collectEvidence(request, { localFilesBaseDir, allowNetwork = false, networkLimits = {} } = {}) {
   const evidence = [];
   const limitations = [];
 
-  for (const url of request.inputs?.urls ?? []) {
-    evidence.push(evidenceForUnavailableUrl(url));
+  const urls = request.inputs?.urls ?? [];
+  const modeAllowsNetwork = NETWORK_CAPABLE_MODES.includes(request.mode);
+  const networkEnabled = allowNetwork && modeAllowsNetwork;
+
+  if (urls.length > 0 && networkEnabled) {
+    const { evidence: realEvidence, pageResults } = await collectFromPublicWebsite(urls, networkLimits);
+    evidence.push(...realEvidence);
+    for (const result of pageResults) {
+      if (result.status !== "available") limitations.push(`URL real no disponible (${result.errorCode}): ${result.url} — ${result.reason}`);
+    }
+  } else {
+    const reasonWhenModeReadyButFlagMissing = "el request pide un modo con red (public-web/hybrid), pero falta --allow-network en esta ejecución: se trata como offline por seguridad.";
+    for (const url of urls) {
+      evidence.push(evidenceForUnavailableUrl(url, modeAllowsNetwork && !allowNetwork ? reasonWhenModeReadyButFlagMissing : undefined));
+    }
   }
 
   for (const filePath of request.inputs?.localFiles ?? []) {
@@ -165,7 +197,7 @@ export async function collectEvidence(request, { localFilesBaseDir } = {}) {
     }
   }
 
-  return { evidence, competitorBundles, limitations };
+  return { evidence, competitorBundles, limitations, networkUsed: networkEnabled && urls.length > 0, consultedUrls: networkEnabled ? urls : [] };
 }
 
 /**
@@ -190,7 +222,7 @@ export function analyzeEvidence(evidence, sectorPresetId, { competitorBundles = 
  * Research Request ya construido (buildResearchRequest). No escribe a
  * disco si `dryRun` es true.
  */
-export async function runResearchAudit(request, { localFilesBaseDir, dryRun = false, force = false, strict = false, outputBaseDir = DEFAULT_AUDITS_DIR } = {}) {
+export async function runResearchAudit(request, { localFilesBaseDir, dryRun = false, force = false, strict = false, allowNetwork = false, networkLimits = {}, outputBaseDir = DEFAULT_AUDITS_DIR } = {}) {
   const startedAt = Date.now();
 
   try {
@@ -204,7 +236,10 @@ export async function runResearchAudit(request, { localFilesBaseDir, dryRun = fa
 
   const plan = buildResearchPlan(request);
 
-  const { evidence: rawEvidence, competitorBundles, limitations: collectionLimitations } = await collectEvidence(request, { localFilesBaseDir });
+  // --dry-run NUNCA realiza peticiones de red reales, aunque se pida
+  // --allow-network: solo muestra el plan (Fase 4 del enunciado de Paso 13).
+  const networkAllowedThisRun = allowNetwork && !dryRun;
+  const { evidence: rawEvidence, competitorBundles, limitations: collectionLimitations, networkUsed, consultedUrls } = await collectEvidence(request, { localFilesBaseDir, allowNetwork: networkAllowedThisRun, networkLimits });
   const evidence = deduplicateEvidence(rawEvidence);
 
   const { sectorPresetId, dimensionResults, scores, recommendations, backlog, impactEffortMatrix, automations, competitorComparison, prudentNote } = analyzeEvidence(evidence, request.business?.sector, { competitorBundles });
@@ -218,7 +253,9 @@ export async function runResearchAudit(request, { localFilesBaseDir, dryRun = fa
   const limitations = [
     ...collectionLimitations,
     ...(missingDimensions > 0 ? [`${missingDimensions}/45 dimensiones quedan como "unknown" por falta de evidencia (no se infiere sin datos).`] : []),
-    "Ninguna llamada de red real se realizó durante esta auditoría (modo offline / fixtures locales únicamente).",
+    networkUsed
+      ? `Se realizaron llamadas de red REALES a ${consultedUrls.length} URL(es) pública(s) mediante el proveedor publicWebsiteFetcher (--allow-network): ${consultedUrls.join(", ")}.`
+      : "Ninguna llamada de red real se realizó durante esta auditoría (modo offline / fixtures locales únicamente).",
   ];
 
   const auditId = slugify(request.business?.name || request.requestId);
@@ -241,6 +278,8 @@ export async function runResearchAudit(request, { localFilesBaseDir, dryRun = fa
     evidence,
     limitations,
     prudentNote,
+    networkUsed,
+    consultedUrls,
     durationMs,
     generatedAt,
   };

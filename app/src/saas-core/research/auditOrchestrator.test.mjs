@@ -35,6 +35,16 @@ test("runResearchAudit --dry-run no escribe ningún archivo", async () => {
   });
 });
 
+test("runResearchAudit --dry-run NUNCA realiza red real aunque se pida allowNetwork:true (Paso 13, Fase 4)", async () => {
+  await withTempDir(async (dir) => {
+    const request = buildResearchRequest({ business: { name: "Negocio Dry Run Red", sector: "dental" }, mode: "public-web", inputs: { urls: ["https://ejemplo-no-deberia-tocarse.invalid/"] } });
+    const result = await runResearchAudit(request, { dryRun: true, allowNetwork: true, outputBaseDir: dir });
+    assert.equal(result.networkUsed, false);
+    const unavailable = result.evidence.find((e) => e.classification === "unavailable");
+    assert.ok(unavailable, "en dry-run, la URL debe quedar 'unavailable' — nunca se consulta de verdad");
+  });
+});
+
 test("runResearchAudit produce evidencia real y scores a partir de una fixture (padel-web-anticuada)", async () => {
   await withTempDir(async (dir) => {
     const request = buildResearchRequest({ business: { name: "Club Pádel Test", sector: "padel-sports" }, inputs: { fixtures: ["padel-web-anticuada"] } });
@@ -86,6 +96,31 @@ test("runResearchAudit sobre una URL sin fixture produce evidencia 'unavailable'
     const result = await runResearchAudit(request, { outputBaseDir: dir });
     const unavailable = result.evidence.find((e) => e.classification === "unavailable");
     assert.ok(unavailable);
+  });
+});
+
+test("runResearchAudit con mode='public-web' pero SIN --allow-network sigue produciendo evidencia 'unavailable' (seguro por defecto)", async () => {
+  await withTempDir(async (dir) => {
+    const request = buildResearchRequest({ business: { name: "X", sector: "dental" }, mode: "public-web", inputs: { urls: ["https://ejemplo-sin-fixture.invalid/"] } });
+    const result = await runResearchAudit(request, { outputBaseDir: dir }); // allowNetwork NO se pasa (default false)
+    assert.equal(result.networkUsed, false);
+    const unavailable = result.evidence.find((e) => e.classification === "unavailable");
+    assert.ok(unavailable);
+  });
+});
+
+test("runResearchAudit con allowNetwork:true pero mode='offline' NO activa red (el modo manda)", async () => {
+  await withTempDir(async (dir) => {
+    const request = buildResearchRequest({ business: { name: "X", sector: "dental" }, mode: "offline", inputs: { urls: ["https://ejemplo-sin-fixture.invalid/"] } });
+    const result = await runResearchAudit(request, { outputBaseDir: dir, allowNetwork: true });
+    assert.equal(result.networkUsed, false);
+  });
+});
+
+test("runResearchAudit con mode='public-web' y allowNetwork:true bloquea SSRF para una URL privada YA en la capa de política (antes de intentar recolectar)", async () => {
+  await withTempDir(async (dir) => {
+    const request = buildResearchRequest({ business: { name: "X", sector: "dental" }, mode: "public-web", inputs: { urls: ["http://127.0.0.1/"] } });
+    await assert.rejects(() => runResearchAudit(request, { outputBaseDir: dir, allowNetwork: true }), PolicyViolationError);
   });
 });
 

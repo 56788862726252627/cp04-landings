@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { classifyUrl, isSafePublicUrl, resolveSafeLocalPath, isSafeLocalPath, ALLOWED_URL_SCHEMES } from "./urlSafety.js";
+import { classifyUrl, isSafePublicUrl, resolveSafeLocalPath, isSafeLocalPath, classifyIpAddress, ALLOWED_URL_SCHEMES } from "./urlSafety.js";
 
 test("classifyUrl acepta una URL https pública normal", () => {
   const result = classifyUrl("https://ejemplo-negocio.invalid/servicios");
@@ -89,4 +89,36 @@ test("resolveSafeLocalPath rechaza bytes nulos", () => {
 test("isSafeLocalPath es un atajo booleano coherente", () => {
   assert.equal(isSafeLocalPath("/tmp/base", "sub/archivo.json"), true);
   assert.equal(isSafeLocalPath("/tmp/base", "../fuera.json"), false);
+});
+
+test("classifyIpAddress bloquea multicast IPv4 (224.0.0.0/4) y broadcast (255.255.255.255)", () => {
+  assert.equal(classifyIpAddress("224.0.0.1").safe, false);
+  assert.equal(classifyIpAddress("239.255.255.255").safe, false);
+  assert.equal(classifyIpAddress("255.255.255.255").safe, false);
+});
+
+test("classifyIpAddress bloquea rangos reservados/documentación IPv4 (TEST-NET-1/2/3, 240.0.0.0/4)", () => {
+  for (const ip of ["192.0.2.1", "198.51.100.1", "203.0.113.1", "240.0.0.1", "250.1.2.3"]) {
+    assert.equal(classifyIpAddress(ip).safe, false, ip);
+  }
+});
+
+test("classifyIpAddress bloquea multicast IPv6 (ff00::/8)", () => {
+  assert.equal(classifyIpAddress("ff02::1").safe, false);
+});
+
+test("classifyIpAddress reevalúa IPv4 mapeada en IPv6 (::ffff:127.0.0.1) con las mismas reglas", () => {
+  assert.equal(classifyIpAddress("::ffff:127.0.0.1").safe, false);
+  assert.equal(classifyIpAddress("::ffff:8.8.8.8").safe, true);
+});
+
+test("classifyIpAddress acepta IPs públicas normales (IPv4 e IPv6)", () => {
+  assert.equal(classifyIpAddress("93.184.216.34").safe, true);
+  assert.equal(classifyIpAddress("2606:2800:220:1:248:1893:25c8:1946").safe, true);
+});
+
+test("classifyIpAddress rechaza entradas vacías o irreconocibles sin lanzar", () => {
+  assert.equal(classifyIpAddress("").safe, false);
+  assert.equal(classifyIpAddress("no-es-una-ip").safe, false);
+  assert.equal(classifyIpAddress(null).safe, false);
 });

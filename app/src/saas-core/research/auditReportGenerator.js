@@ -23,6 +23,8 @@ export function buildReportData(auditResult) {
     evidence: auditResult.evidence,
     limitations: auditResult.limitations,
     prudentNote: auditResult.prudentNote,
+    networkUsed: auditResult.networkUsed ?? false,
+    consultedUrls: auditResult.consultedUrls ?? [],
     durationMs: auditResult.durationMs,
     generatedAt: auditResult.generatedAt,
   };
@@ -40,6 +42,8 @@ export function renderExecutiveReportMarkdown(reportData) {
     `# Informe ejecutivo — ${reportData.businessName || reportData.requestId}`,
     "",
     `Score global: **${fmtScore(reportData.scores.global.score)}** (confianza ${Math.round(reportData.scores.global.confidence * 100)}%, cobertura ${Math.round(reportData.scores.global.coverage * 100)}%)`,
+    "",
+    reportData.networkUsed ? `**Fuentes reales consultadas por red (${reportData.consultedUrls.length}):** ${reportData.consultedUrls.join(", ")}` : "_Auditoría offline: sin conexiones de red reales._",
     "",
     "## Riesgos principales",
     ...(topRisks.length > 0 ? topRisks.map((r) => `- ${r}`) : ["- Sin riesgos detectados con la evidencia disponible."]),

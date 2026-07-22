@@ -9,7 +9,7 @@ import { readFile, writeFile, mkdir, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
 import { parseCliArgs } from "../../tenant-cli/lib/tenantProvisioning.mjs";
-import { buildResearchRequest, validateResearchRequest } from "../../src/saas-core/research/researchRequestSchema.js";
+import { buildResearchRequest, validateResearchRequest, RESEARCH_MODES } from "../../src/saas-core/research/researchRequestSchema.js";
 import { DEMO_FIXTURE_IDS, DEMO_FIXTURES } from "../../src/saas-core/research/fixtures/demoFixtures.js";
 import { SOURCE_ADAPTER_IDS } from "../../src/saas-core/research/sourceAdapters.js";
 import { DIMENSION_IDS } from "../../src/saas-core/research/dimensionRegistry.js";
@@ -17,6 +17,7 @@ import { AUDIT_SECTOR_IDS, SECTOR_AUDIT_PRESETS } from "../../src/saas-core/rese
 import { EXTENSION_POINTS } from "../../src/saas-core/factory/extensionPoints.js";
 import { evaluatePolicy } from "../../src/saas-core/research/researchPolicy.js";
 import { DEFAULT_AUDITS_DIR } from "../../src/saas-core/research/auditOrchestrator.js";
+import { PUBLIC_WEBSITE_FETCHER_PROVIDER } from "../../src/saas-core/research/providers/publicWebsiteFetcher.js";
 
 export { parseCliArgs };
 
@@ -28,6 +29,40 @@ function splitList(value) {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+// Paso 13 — proveedores de red disponibles (solo uno por ahora). --provider
+// es explícito y validado: nunca un valor arbitrario silencioso.
+export const AVAILABLE_NETWORK_PROVIDERS = Object.freeze(["publicWebsiteFetcher"]);
+
+/** --mode explícito (Paso 13) tiene prioridad; si no, --online (Paso 12) o "offline" por defecto. */
+function resolveRequestMode(args) {
+  if (args.mode) {
+    const mode = String(args.mode);
+    if (!["offline", "online", "public-web", "hybrid"].includes(mode)) {
+      throw new ResearchCliError(`--mode desconocido: "${mode}". Usa uno de: offline, online, public-web, hybrid.`);
+    }
+    return mode;
+  }
+  return args.online ? "online" : "offline";
+}
+
+/**
+ * Resuelve las opciones de red de Paso 13 desde flags CLI. `allowNetwork`
+ * es SIEMPRE `false` salvo que el usuario pase `--allow-network`
+ * explícitamente en ESTA invocación — nunca se infiere de `--mode`.
+ */
+export function resolveNetworkOptionsFromArgs(args) {
+  if (args.provider && !AVAILABLE_NETWORK_PROVIDERS.includes(String(args.provider))) {
+    throw new ResearchCliError(`--provider desconocido: "${args.provider}". Disponibles: ${AVAILABLE_NETWORK_PROVIDERS.join(", ")}.`);
+  }
+  const networkLimits = {};
+  if (args.timeout) networkLimits.timeoutMs = Number(args.timeout);
+  if (args["max-bytes"]) networkLimits.maxBytes = Number(args["max-bytes"]);
+  if (args["max-pages"]) networkLimits.maxPages = Number(args["max-pages"]);
+  if (args["user-agent"]) networkLimits.userAgent = String(args["user-agent"]);
+  if (args["respect-robots"] !== undefined) networkLimits.respectRobots = String(args["respect-robots"]) !== "false";
+  return { allowNetwork: Boolean(args["allow-network"]), networkLimits };
 }
 
 /** Carga un Research Request desde --request=<ruta.json>, validándolo. */
@@ -72,7 +107,7 @@ export async function resolveResearchRequestFromArgs(args) {
   }
 
   return buildResearchRequest({
-    mode: args.online ? "online" : "offline",
+    mode: resolveRequestMode(args),
     language: args.language || (demoFixture?.business?.location?.includes("UK") ? "en" : "es"),
     seed: args.seed,
     business: { name: businessName, sector, location: args.location || demoFixture?.business?.location },
@@ -163,6 +198,17 @@ export async function runResearchDoctorChecks({ auditsDir = DEFAULT_AUDITS_DIR }
 
   const offlinePolicy = evaluatePolicy(buildResearchRequest({ business: { name: "doctor-check", sector: "generic-local-service" } }));
   checks.push({ id: "offline_default_enforced", ok: offlinePolicy.mode === "offline", detail: `modo por defecto: ${offlinePolicy.mode}` });
+
+  const requiredModes = ["offline", "online", "public-web", "hybrid"];
+  const modesOk = requiredModes.every((mode) => RESEARCH_MODES.includes(mode));
+  checks.push({ id: "network_modes_registered", ok: modesOk, detail: `modos disponibles: ${RESEARCH_MODES.join(", ")}` });
+
+  try {
+    const providerHealth = await PUBLIC_WEBSITE_FETCHER_PROVIDER.healthCheck();
+    checks.push({ id: "public_website_fetcher_provider_loaded", ok: providerHealth.healthy, detail: providerHealth.message });
+  } catch (err) {
+    checks.push({ id: "public_website_fetcher_provider_loaded", ok: false, detail: `error al cargar el proveedor: ${err.message}` });
+  }
 
   let playwrightAvailable = false;
   try {
