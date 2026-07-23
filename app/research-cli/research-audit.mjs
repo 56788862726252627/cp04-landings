@@ -52,8 +52,17 @@ Paso 16 — SEO Provider real (segundo proveedor real; requiere --pipeline=multi
   --seo / --include-seo            Asegura que seoProvider participa (si ya se indicó --providers explícito)
   --seo-only                       Restringe la ejecución a publicWebsiteFetcher+seoProvider únicamente
   --exclude-seo                    Excluye seoProvider explícitamente de esta ejecución
-  --explain-score                  Imprime la explicación de cada categoría de score (incluido el desglose SEO si lo hay)
-  --show-coverage                  Imprime la cobertura de dimensiones/categorías y, si aplica, del desglose SEO
+
+Paso 17 — Accessibility Provider real (tercer proveedor real; requiere --pipeline=multiprovider):
+  --accessibility / --include-accessibility   Asegura que accessibilityProvider participa
+  --accessibility-only              Restringe la ejecución a publicWebsiteFetcher+accessibilityProvider únicamente
+  --exclude-accessibility           Excluye accessibilityProvider explícitamente de esta ejecución
+  --wcag-level=A|AA                 Filtra qué criterios WCAG mostrar en --explain-accessibility-score (nunca cambia qué se analiza)
+  --explain-accessibility-score     Imprime la explicación de cada grupo del desglose de accesibilidad
+  --show-manual-checks              Lista las comprobaciones marcadas como revisión manual pendiente
+
+  --explain-score                  Imprime la explicación de cada categoría de score (incluido el desglose SEO/accesibilidad si los hay)
+  --show-coverage                  Imprime la cobertura de dimensiones/categorías y, si aplica, de los desgloses SEO/accesibilidad
   --help                           Muestra esta ayuda
 `;
 
@@ -105,6 +114,9 @@ async function main() {
       if (summary.seo) {
         console.log(`SEO: score global ${summary.seo.scoreBreakdown.overall.score ?? "sin datos"}/100 · ${summary.seo.recommendations.length} recomendación(es) (ver reports/seo.md).`);
       }
+      if (summary.accessibility) {
+        console.log(`Accesibilidad: score global ${summary.accessibility.scoreBreakdown.overall.score ?? "sin datos"}/100 · ${summary.accessibility.scoreBreakdown.overall.manualReviewCount} revisión(es) manual(es) pendiente(s) (ver reports/accessibility.md). Puntuación orientativa, no es una certificación.`);
+      }
     }
     if (result.limitations.length > 0) console.log(`Limitaciones: ${result.limitations.join(" | ")}`);
     if (args["explain-score"]) {
@@ -114,6 +126,22 @@ async function main() {
         console.log("  SEO (desglose):");
         for (const g of Object.values(result.providerRunSummary.seo.scoreBreakdown.groups)) console.log(`    ${g.label}: ${g.explanation}`);
       }
+      if (result.providerRunSummary?.accessibility) {
+        console.log("  Accesibilidad (desglose):");
+        for (const g of Object.values(result.providerRunSummary.accessibility.scoreBreakdown.groups)) console.log(`    ${g.label}: ${g.explanation}`);
+      }
+    }
+    if (args["explain-accessibility-score"] && result.providerRunSummary?.accessibility) {
+      const wcagLevel = providerOptions.wcagLevel;
+      console.log("\n--explain-accessibility-score:");
+      for (const g of Object.values(result.providerRunSummary.accessibility.scoreBreakdown.groups)) console.log(`  ${g.label}: ${g.explanation}`);
+      const recos = wcagLevel ? result.providerRunSummary.accessibility.recommendations.filter((r) => r.wcagCriterion?.level === wcagLevel) : result.providerRunSummary.accessibility.recommendations;
+      console.log(`  Recomendaciones${wcagLevel ? ` (nivel WCAG ${wcagLevel})` : ""}: ${recos.length}`);
+    }
+    if (args["show-manual-checks"] && result.providerRunSummary?.accessibility) {
+      const manual = result.providerRunSummary.accessibility.recommendations.filter((r) => r.requiresManualReview);
+      console.log(`\n--show-manual-checks: ${manual.length} comprobación(es) de accesibilidad requieren revisión manual`);
+      for (const r of manual) console.log(`  - ${r.title}${r.wcagCriterion ? ` [WCAG ${r.wcagCriterion.criterion}]` : ""}`);
     }
     if (args["show-coverage"]) {
       console.log("\n--show-coverage:");
@@ -121,6 +149,9 @@ async function main() {
       for (const [category, c] of Object.entries(result.scores.categories)) console.log(`  ${category}: ${Math.round(c.coverage * 100)}%`);
       if (result.providerRunSummary?.seo) {
         console.log(`  SEO (grupos evaluados): ${result.providerRunSummary.seo.scoreBreakdown.overall.groupsEvaluated}/${result.providerRunSummary.seo.scoreBreakdown.overall.groupsTotal}`);
+      }
+      if (result.providerRunSummary?.accessibility) {
+        console.log(`  Accesibilidad (grupos evaluados): ${result.providerRunSummary.accessibility.scoreBreakdown.overall.groupsEvaluated}/${result.providerRunSummary.accessibility.scoreBreakdown.overall.groupsTotal}`);
       }
     }
   } catch (err) {

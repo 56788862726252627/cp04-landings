@@ -30,12 +30,43 @@ import { getProviderSectorProfile, mergePolicyOptionsWithProfile } from "./provi
 
 export const DEFAULT_PLUGINS_DIR = path.resolve("src", "saas-core", "research", "providers", "plugins");
 export const REAL_PROVIDER_ID = "publicWebsiteFetcher";
-// Paso 16 — segundo proveedor real: analiza (nunca descarga) las páginas
-// que REAL_PROVIDER_ID ya recopiló en ESTA misma ejecución.
+// Paso 16/17 — proveedores derivados: analizan (nunca descargan) las
+// páginas que REAL_PROVIDER_ID ya recopiló en ESTA misma ejecución.
+// Orden = orden pedido por el enunciado: publicWebsiteFetcher -> seo -> accessibility.
 export const SEO_PROVIDER_ID = "seoProvider";
+export const ACCESSIBILITY_PROVIDER_ID = "accessibilityProvider";
 
 function emptyRunSummary({ execution, profileId, pluginLoadErrors }) {
-  return { pipeline: "multiprovider", executionMode: execution, profileId, usedProviderId: null, providers: [], pluginLoadErrors, seo: null };
+  return { pipeline: "multiprovider", executionMode: execution, profileId, usedProviderId: null, providers: [], pluginLoadErrors, seo: null, accessibility: null };
+}
+
+/**
+ * Ejecuta un proveedor "derivado" (analiza páginas ya recopiladas, nunca
+ * descarga) como paso EXPLÍCITO tras la cadena genérica — necesario
+ * porque la cadena genérica llama a todos los proveedores con el mismo
+ * input `{urls, limits}`, y estos proveedores necesitan `{pages}`. Solo
+ * se ejecuta si el proveedor sigue habilitado tras política/salud/
+ * circuit breaker Y hay páginas reales que analizar. Reutiliza
+ * `runProviderPipeline` (Paso 14) como mini-pipeline de un proveedor
+ * para heredar timeout/cancelación sin duplicar esa lógica.
+ */
+async function runDerivedPageAnalysisProvider(providerId, { registry, fetchedPages, profileId, policy, circuitBreaker, providerRunEntries }) {
+  const providerDef = registry.get(providerId);
+  if (!providerDef || !registry.isEnabled(providerId) || fetchedPages.length === 0) return null;
+
+  const runResult = await runProviderPipeline([providerDef], { pages: fetchedPages, profileId, sourceProviderId: REAL_PROVIDER_ID }, {
+    mode: "fallback",
+    individualTimeoutMs: policy.individualTimeoutMs ?? undefined,
+    globalTimeoutMs: policy.globalTimeoutMs ?? undefined,
+  });
+  const result = runResult.results[0];
+  circuitBreaker.recordResult(providerId, result.status);
+  const entry = { providerId, priority: providerDef.priority, result, blocked: false };
+  const existingIndex = providerRunEntries.findIndex((e) => e.providerId === providerId);
+  if (existingIndex >= 0) providerRunEntries[existingIndex] = entry;
+  else providerRunEntries.push(entry);
+
+  return result.status === "success" ? { scoreBreakdown: result.metadata.scoreBreakdown, recommendations: result.metadata.recommendations } : null;
 }
 
 /**
@@ -136,37 +167,14 @@ export async function collectEvidenceViaProviders(
   });
 
   const realProviderResultFromChain = runResult.results.find((r) => r.providerId === REAL_PROVIDER_ID);
-
-  // Paso 16 — "publicWebsiteFetcher recopile → seoProvider analice": paso
-  // explícito, SEPARADO de la cadena genérica de arriba (que llama a todo
-  // el mundo con el mismo `{urls, limits}` — seoProvider necesita
-  // `{pages}`, no urls). Solo se ejecuta si:
-  //  (a) seoProvider sigue habilitado tras política/salud/circuit breaker, y
-  //  (b) publicWebsiteFetcher produjo páginas reales EN ESTA MISMA ejecución.
-  // Sin (b), seoProvider ni se invoca (nada que analizar, nunca inventa).
-  const seoProviderDef = registry.get(SEO_PROVIDER_ID);
   const fetchedPages = realProviderResultFromChain?.metadata?.pages ?? [];
-  let seoInsights = null;
-  if (seoProviderDef && registry.isEnabled(SEO_PROVIDER_ID) && fetchedPages.length > 0) {
-    // Reutiliza runProviderPipeline (Paso 14) como mini-pipeline de UN
-    // proveedor, en vez de llamar a collect() a pelo: hereda timeout
-    // individual/global y el mismo mapeo de errores/cancelación que la
-    // cadena principal, sin duplicar esa lógica aquí.
-    const seoRunResult = await runProviderPipeline([seoProviderDef], { pages: fetchedPages, profileId: profile.id, sourceProviderId: REAL_PROVIDER_ID }, {
-      mode: "fallback",
-      individualTimeoutMs: policy.individualTimeoutMs ?? undefined,
-      globalTimeoutMs: policy.globalTimeoutMs ?? undefined,
-    });
-    const seoResult = seoRunResult.results[0];
-    circuitBreaker.recordResult(SEO_PROVIDER_ID, seoResult.status);
-    const seoEntry = { providerId: SEO_PROVIDER_ID, priority: seoProviderDef.priority, result: seoResult, blocked: false };
-    const existingIndex = providerRunEntries.findIndex((e) => e.providerId === SEO_PROVIDER_ID);
-    if (existingIndex >= 0) providerRunEntries[existingIndex] = seoEntry;
-    else providerRunEntries.push(seoEntry);
-    if (seoResult.status === "success") {
-      seoInsights = { scoreBreakdown: seoResult.metadata.scoreBreakdown, recommendations: seoResult.metadata.recommendations };
-    }
-  }
+
+  // Paso 16/17 — "publicWebsiteFetcher recopila -> seoProvider analiza ->
+  // accessibilityProvider analiza": pasos explícitos, en ese orden,
+  // SEPARADOS de la cadena genérica de arriba (ver runDerivedPageAnalysisProvider).
+  const derivedProviderArgs = { registry, fetchedPages, profileId: profile.id, policy, circuitBreaker, providerRunEntries };
+  const seoInsights = await runDerivedPageAnalysisProvider(SEO_PROVIDER_ID, derivedProviderArgs);
+  const accessibilityInsights = await runDerivedPageAnalysisProvider(ACCESSIBILITY_PROVIDER_ID, derivedProviderArgs);
 
   const { evidence, provenanceIndex, providerSummaries } = aggregateProviderResults(providerRunEntries);
 
@@ -198,6 +206,7 @@ export async function collectEvidenceViaProviders(
     providers: providerSummaries,
     pluginLoadErrors,
     seo: seoInsights, // Paso 16 — null si seoProvider no se ejecutó o no produjo resultado; ver seoScoring.js/seoRecommendations.js
+    accessibility: accessibilityInsights, // Paso 17 — null si accessibilityProvider no se ejecutó o no produjo resultado; ver a11yScoring.js/a11yRecommendations.js
   };
 
   return { evidence, provenanceIndex, limitations, networkUsed, consultedUrls: networkUsed ? [...urls] : [], providerRunSummary };
