@@ -31,6 +31,7 @@ export const SOURCE_TYPES = Object.freeze([
   "public_website_real", // Paso 13 — proveedor real publicWebsiteFetcher (requiere allowNetwork:true explícito)
   "seo_analysis_derived", // Paso 16 — proveedor real seoProvider: análisis DERIVADO de un documento ya recopilado (nunca una descarga propia)
   "accessibility_analysis_derived", // Paso 17 — proveedor real accessibilityProvider: análisis DERIVADO de un documento ya recopilado (nunca una descarga propia)
+  "performance_analysis_derived", // Paso 18 — proveedor real performanceProvider: análisis DERIVADO de datos ya recopilados (timing/cabeceras/HTML), nunca una descarga propia
 ]);
 
 /** Nunca "confirmed" salvo que la evidencia venga de una fuente directamente observada. */

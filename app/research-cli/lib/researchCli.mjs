@@ -107,12 +107,13 @@ export function resolveProviderExecutionOptionsFromArgs(args) {
     throw new ResearchCliError(`--max-concurrency debe ser un entero >= 1 (recibido: "${args["max-concurrency"]}").`);
   }
 
-  // Paso 16/17 — atajos de conveniencia para los proveedores derivados
-  // (seoProvider, accessibilityProvider), equivalentes a combinaciones de
-  // --providers/--exclude-providers.
+  // Paso 16/17/18 — atajos de conveniencia para los proveedores derivados
+  // (seoProvider, accessibilityProvider, performanceProvider), equivalentes
+  // a combinaciones de --providers/--exclude-providers.
   const onlyIds = [];
   if (args["seo-only"]) onlyIds.push("seoProvider");
   if (args["accessibility-only"]) onlyIds.push("accessibilityProvider");
+  if (args["performance-only"]) onlyIds.push("performanceProvider");
   if (onlyIds.length > 0) {
     includeProvidersRaw = ["publicWebsiteFetcher", ...onlyIds];
   }
@@ -122,11 +123,17 @@ export function resolveProviderExecutionOptionsFromArgs(args) {
   if ((args.accessibility || args["include-accessibility"]) && includeProvidersRaw.length > 0 && !includeProvidersRaw.includes("accessibilityProvider")) {
     includeProvidersRaw = [...includeProvidersRaw, "accessibilityProvider"];
   }
+  if ((args.performance || args["include-performance"]) && includeProvidersRaw.length > 0 && !includeProvidersRaw.includes("performanceProvider")) {
+    includeProvidersRaw = [...includeProvidersRaw, "performanceProvider"];
+  }
   if (args["exclude-seo"] && !excludeProvidersRaw.includes("seoProvider")) {
     excludeProvidersRaw = [...excludeProvidersRaw, "seoProvider"];
   }
   if (args["exclude-accessibility"] && !excludeProvidersRaw.includes("accessibilityProvider")) {
     excludeProvidersRaw = [...excludeProvidersRaw, "accessibilityProvider"];
+  }
+  if (args["exclude-performance"] && !excludeProvidersRaw.includes("performanceProvider")) {
+    excludeProvidersRaw = [...excludeProvidersRaw, "performanceProvider"];
   }
 
   return {

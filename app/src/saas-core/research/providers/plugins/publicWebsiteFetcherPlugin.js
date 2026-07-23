@@ -32,7 +32,7 @@ export const PROVIDER = defineResearchProvider({
     // (performPinnedRequest tampoco las envía ni las recibe de vuelta).
     const pages = pageResults
       .filter((r) => r.status === "available")
-      .map((r) => ({ url: r.url, httpStatus: r.httpStatus, contentType: r.contentType, body: r.body, headers: r.headers, robotsTxt: r.robotsTxt, redirectChain: r.redirectChain }));
+      .map((r) => ({ url: r.url, httpStatus: r.httpStatus, contentType: r.contentType, body: r.body, headers: r.headers, robotsTxt: r.robotsTxt, redirectChain: r.redirectChain, byteSize: r.byteSize, httpVersion: r.httpVersion, timing: r.timing }));
     return defineProviderResult({
       providerId: PUBLIC_WEBSITE_FETCHER_PROVIDER.id,
       status: allAvailable ? "success" : anyAvailable ? "partial" : "failed",
