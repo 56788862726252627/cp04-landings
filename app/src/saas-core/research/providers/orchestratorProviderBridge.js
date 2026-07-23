@@ -30,9 +30,12 @@ import { getProviderSectorProfile, mergePolicyOptionsWithProfile } from "./provi
 
 export const DEFAULT_PLUGINS_DIR = path.resolve("src", "saas-core", "research", "providers", "plugins");
 export const REAL_PROVIDER_ID = "publicWebsiteFetcher";
+// Paso 16 — segundo proveedor real: analiza (nunca descarga) las páginas
+// que REAL_PROVIDER_ID ya recopiló en ESTA misma ejecución.
+export const SEO_PROVIDER_ID = "seoProvider";
 
 function emptyRunSummary({ execution, profileId, pluginLoadErrors }) {
-  return { pipeline: "multiprovider", executionMode: execution, profileId, usedProviderId: null, providers: [], pluginLoadErrors };
+  return { pipeline: "multiprovider", executionMode: execution, profileId, usedProviderId: null, providers: [], pluginLoadErrors, seo: null };
 }
 
 /**
@@ -132,9 +135,42 @@ export async function collectEvidenceViaProviders(
     return { providerId: r.providerId, priority: providerDef?.priority ?? null, result: r, blocked: justTrippedBreaker };
   });
 
+  const realProviderResultFromChain = runResult.results.find((r) => r.providerId === REAL_PROVIDER_ID);
+
+  // Paso 16 — "publicWebsiteFetcher recopile → seoProvider analice": paso
+  // explícito, SEPARADO de la cadena genérica de arriba (que llama a todo
+  // el mundo con el mismo `{urls, limits}` — seoProvider necesita
+  // `{pages}`, no urls). Solo se ejecuta si:
+  //  (a) seoProvider sigue habilitado tras política/salud/circuit breaker, y
+  //  (b) publicWebsiteFetcher produjo páginas reales EN ESTA MISMA ejecución.
+  // Sin (b), seoProvider ni se invoca (nada que analizar, nunca inventa).
+  const seoProviderDef = registry.get(SEO_PROVIDER_ID);
+  const fetchedPages = realProviderResultFromChain?.metadata?.pages ?? [];
+  let seoInsights = null;
+  if (seoProviderDef && registry.isEnabled(SEO_PROVIDER_ID) && fetchedPages.length > 0) {
+    // Reutiliza runProviderPipeline (Paso 14) como mini-pipeline de UN
+    // proveedor, en vez de llamar a collect() a pelo: hereda timeout
+    // individual/global y el mismo mapeo de errores/cancelación que la
+    // cadena principal, sin duplicar esa lógica aquí.
+    const seoRunResult = await runProviderPipeline([seoProviderDef], { pages: fetchedPages, profileId: profile.id, sourceProviderId: REAL_PROVIDER_ID }, {
+      mode: "fallback",
+      individualTimeoutMs: policy.individualTimeoutMs ?? undefined,
+      globalTimeoutMs: policy.globalTimeoutMs ?? undefined,
+    });
+    const seoResult = seoRunResult.results[0];
+    circuitBreaker.recordResult(SEO_PROVIDER_ID, seoResult.status);
+    const seoEntry = { providerId: SEO_PROVIDER_ID, priority: seoProviderDef.priority, result: seoResult, blocked: false };
+    const existingIndex = providerRunEntries.findIndex((e) => e.providerId === SEO_PROVIDER_ID);
+    if (existingIndex >= 0) providerRunEntries[existingIndex] = seoEntry;
+    else providerRunEntries.push(seoEntry);
+    if (seoResult.status === "success") {
+      seoInsights = { scoreBreakdown: seoResult.metadata.scoreBreakdown, recommendations: seoResult.metadata.recommendations };
+    }
+  }
+
   const { evidence, provenanceIndex, providerSummaries } = aggregateProviderResults(providerRunEntries);
 
-  const realProviderResult = runResult.results.find((r) => r.providerId === REAL_PROVIDER_ID);
+  const realProviderResult = realProviderResultFromChain;
   const realAttempted = Boolean(realProviderResult);
   const realSucceeded = realAttempted && (realProviderResult.status === "success" || realProviderResult.status === "partial");
   const networkUsed = networkEnabled && urls.length > 0 && realAttempted;
@@ -161,6 +197,7 @@ export async function collectEvidenceViaProviders(
     usedProviderId: runResult.usedProviderId ?? null,
     providers: providerSummaries,
     pluginLoadErrors,
+    seo: seoInsights, // Paso 16 — null si seoProvider no se ejecutó o no produjo resultado; ver seoScoring.js/seoRecommendations.js
   };
 
   return { evidence, provenanceIndex, limitations, networkUsed, consultedUrls: networkUsed ? [...urls] : [], providerRunSummary };

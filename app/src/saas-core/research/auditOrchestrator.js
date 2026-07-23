@@ -30,7 +30,7 @@ import { computeAllScores } from "./scoringEngine.js";
 import { buildRecommendations, buildBacklog, buildImpactEffortMatrix } from "./recommendationEngine.js";
 import { recommendAutomationsFromFindings } from "./researchAutomationCatalog.js";
 import { compareCompetitors } from "./competitorComparison.js";
-import { buildReportData, renderExecutiveReportMarkdown, renderTechnicalReportMarkdown, renderCommercialReportMarkdown, renderOpportunitiesSummaryMarkdown, renderBacklogMarkdown, renderImpactEffortMatrixMarkdown, renderAutomationMapMarkdown, renderRiskReportMarkdown, renderEvidenceAppendixMarkdown, renderAuditReportJson, renderProviderRunSummaryMarkdown } from "./auditReportGenerator.js";
+import { buildReportData, renderExecutiveReportMarkdown, renderTechnicalReportMarkdown, renderCommercialReportMarkdown, renderOpportunitiesSummaryMarkdown, renderBacklogMarkdown, renderImpactEffortMatrixMarkdown, renderAutomationMapMarkdown, renderRiskReportMarkdown, renderEvidenceAppendixMarkdown, renderAuditReportJson, renderProviderRunSummaryMarkdown, renderSeoReportMarkdown } from "./auditReportGenerator.js";
 import { getDemoFixture, getCompetitorFixture } from "./fixtures/demoFixtures.js";
 
 export const DEFAULT_AUDITS_DIR = path.join("src", "saas-core", "research", "audits");
@@ -408,6 +408,8 @@ export async function runResearchAudit(
     // es null y este archivo NO se genera — el set de archivos de una
     // auditoría legacy queda idéntico al de Paso 12/13/14 (requisito 7).
     ...(deterministicReportData.providerRunSummary ? { [path.join("reports", "providers.md")]: renderProviderRunSummaryMarkdown(deterministicReportData) } : {}),
+    // Paso 16 — solo se escribe cuando seoProvider produjo un análisis real en esta ejecución.
+    ...(deterministicReportData.providerRunSummary?.seo ? { [path.join("reports", "seo.md")]: renderSeoReportMarkdown(deterministicReportData) } : {}),
   };
 
   const filesCreated = [];
