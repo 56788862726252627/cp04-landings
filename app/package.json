@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test $(find src tenant-cli factory-cli research-cli -name '*.test.mjs')",
+    "test": "node --test $(find src tenant-cli factory-cli research-cli commercial-cli -name '*.test.mjs')",
     "test:worker": "node --test $(find worker-reservas -name '*.test.mjs')",
     "test:real-network": "node --test src/saas-core/research/providers/publicWebsiteFetcher.realnetwork.manual.mjs",
     "tenant:create": "node tenant-cli/tenant-create.mjs",
@@ -43,7 +43,16 @@
     "research:accessibility": "node research-cli/research-accessibility.mjs",
     "research:performance": "node research-cli/research-performance.mjs",
     "research:profiles": "node research-cli/research-profiles.mjs",
-    "business:research": "node research-cli/business-research.mjs"
+    "business:research": "node research-cli/business-research.mjs",
+    "commercial:assess": "node commercial-cli/commercial-assess.mjs",
+    "commercial:roi": "node commercial-cli/commercial-roi.mjs",
+    "commercial:proposal": "node commercial-cli/commercial-proposal.mjs",
+    "commercial:preview": "node commercial-cli/commercial-preview.mjs",
+    "commercial:integrations": "node commercial-cli/commercial-integrations.mjs",
+    "commercial:readiness": "node commercial-cli/commercial-readiness.mjs",
+    "factory:package": "node commercial-cli/factory-package.mjs",
+    "factory:preview": "node commercial-cli/factory-preview.mjs",
+    "factory:proposal": "node commercial-cli/factory-proposal.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",

@@ -1,0 +1,64 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Propuesta comercial — Tablet (Android/iPadOS)</title><style>
+  :root { --fg: #1a1a2e; --bg: #ffffff; --accent: #2b6cb0; --muted: #6b7280; --border: #e5e7eb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, sans-serif; color: var(--fg); background: var(--bg); }
+  .device-frame { margin: 24px auto; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .device-frame .device-label { background: var(--muted); color: white; font-size: 12px; padding: 6px 12px; }
+  .device-frame .device-viewport { padding: 16px; overflow-x: auto; }
+  h1 { font-size: 1.3rem; }
+  h2 { font-size: 1.05rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .disclaimer { font-size: 0.75rem; color: var(--muted); font-style: italic; }
+  .status { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+  @media (max-width: 480px) { table, thead, tbody, th, td, tr { display: block; } th { display: none; } td { padding: 4px 8px; } }
+</style></head><body><div class="device-frame" style="max-width: 834px;">
+  <div class="device-label">Tablet (Android/iPadOS) · ancho simulado 834px</div>
+  <div class="device-viewport"><article class="commercial-proposal">
+  <h1>Propuesta comercial — Club Pádel Demo (Club deportivo)</h1>
+  <p class="disclaimer">Esta propuesta se basa en datos aportados y supuestos declarados — ninguna cifra es un resultado garantizado. Los datos marcados como pendientes/supuestos deben confirmarse con el cliente antes de firmar.</p>
+  <h2>Resumen ejecutivo</h2><p>Propuesta para Club Pádel Demo, perfil "Club deportivo". Puntuación global actual: sin datos/100. Beneficio mensual estimado (escenario central): 889.5 EUR/mes (estimación, no garantizada).</p>
+  <h2>Problemas detectados</h2><ul><li>Sin problemas detectados registrados todavía — pendiente de una auditoría o diagnóstico previo.</li></ul>
+  <h2>Oportunidades</h2><ul><li>Sin oportunidades registradas todavía — pendiente de diagnóstico.</li></ul>
+  <h2>Solución propuesta</h2><p>Implantación de 4 módulo(s) prioritarios para el perfil "Club deportivo", con automatizaciones de recordatorios/reservas y preparación de la capa de pagos/mensajería (Stripe/WhatsApp) para cuando existan credenciales reales.</p>
+  <h2>Módulos incluidos</h2><ul><li>Implantar: reservas online</li>
+<li>Implantar: recordatorios automáticos</li>
+<li>Implantar: gestión de listas de espera</li>
+<li>Implantar: pagos online</li></ul>
+  <h2>Calendario estimado</h2><p>4 semana(s) de implantación de módulos (estimación; los bloqueos de integraciones dependen de terceros y no se incluyen en este plazo).</p>
+  <h2>Inversión</h2><p>900 EUR inicial + 45 EUR/mes de mantenimiento.</p>
+  <h2>Escenarios ROI</h2><ul><li>Conservador: 574.5 EUR/mes, ROI 12m 606%</li>
+<li>Central: 889.5 EUR/mes, ROI 12m 1026%</li>
+<li>Optimista: 1203 EUR/mes, ROI 12m 1444%</li></ul>
+  <h2>Riesgos</h2><ul><li>Los plazos de integraciones externas (Airtable/WhatsApp/Stripe/dominio) dependen de terceros y pueden desviar el calendario.</li>
+<li>Bloqueo activo: Make (automatizaciones, 50 flujos) (depende de Airtable operativo (ver integración 'airtable'))</li>
+<li>Bloqueo activo: Stripe (pagos) (sin STRIPE_SECRET_KEY configurada (paso 5 de la secuencia de trabajo del proyecto))</li>
+<li>Bloqueo activo: WhatsApp Business Cloud API (WhatsApp Business aún no contratado/configurado)</li>
+<li>Bloqueo activo: Dominio propio (dominio aún no comprado)</li>
+<li>Bloqueo activo: Certificado SSL (depende de 'domain')</li>
+<li>Bloqueo activo: Hosting de producción (depende de 'domain')</li>
+<li>Bloqueo activo: Backups (depende de 'hosting')</li>
+<li>Bloqueo activo: Monitorización (depende de 'hosting')</li></ul>
+  <h2>Exclusiones</h2><ul><li>Compra de dominio propio (pendiente, ver checklist de integraciones).</li>
+<li>Contratación de WhatsApp Business Cloud API (pendiente).</li>
+<li>Configuración de Stripe en modo producción (pendiente).</li>
+<li>Migración de datos históricos no cubiertos por el alcance acordado.</li>
+<li>Soporte fuera del horario acordado en el contrato de mantenimiento.</li></ul>
+  <h2>Responsabilidades del cliente</h2><ul><li>Proporcionar acceso a las cuentas/credenciales necesarias (Airtable, Stripe, WhatsApp, dominio) cuando corresponda.</li>
+<li>Validar el contenido (textos, precios, horarios) antes de la publicación.</li>
+<li>Designar una persona de contacto para pruebas de aceptación.</li></ul>
+  <h2>Próximos pasos</h2><ul><li>Validar los datos y supuestos marcados como pendientes.</li>
+<li>Confirmar el perfil sectorial y el alcance de módulos.</li>
+<li>Acordar términos e iniciar implantación.</li></ul>
+  <h2>Información pendiente de confirmar</h2><ul><li>Dato de negocio pendiente: auditScores</li>
+<li>Dato ROI pendiente: conversionRate</li>
+<li>Dato ROI pendiente: currentMonthlyRevenue</li>
+<li>Supuesto usado (a confirmar con el cliente): averageTicket = 35</li>
+<li>Supuesto usado (a confirmar con el cliente): monthlyBookings = 250</li>
+<li>Supuesto usado (a confirmar con el cliente): noShowRate = 0.12</li>
+<li>Supuesto usado (a confirmar con el cliente): adminHoursPerWeek = 8</li>
+<li>Supuesto usado (a confirmar con el cliente): hourlyCost = 15</li>
+<li>Supuesto usado (a confirmar con el cliente): implementationCost = 900</li>
+<li>Supuesto usado (a confirmar con el cliente): monthlyMaintenanceCost = 45</li></ul>
+</article></div>
+</div></body></html>
