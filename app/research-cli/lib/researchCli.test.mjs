@@ -153,6 +153,36 @@ test("Paso 16 — resolveProviderExecutionOptionsFromArgs: --exclude-seo excluye
   assert.deepEqual(opts.providerPolicyOptions.excludeProviders, ["seoProvider"]);
 });
 
+test("Paso 17 — resolveProviderExecutionOptionsFromArgs: --accessibility-only restringe la allowlist a publicWebsiteFetcher+accessibilityProvider", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "accessibility-only": true });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "accessibilityProvider"]);
+});
+
+test("Paso 17 — resolveProviderExecutionOptionsFromArgs: --seo-only y --accessibility-only combinados incluyen los 3 proveedores reales", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "seo-only": true, "accessibility-only": true });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "seoProvider", "accessibilityProvider"]);
+});
+
+test("Paso 17 — resolveProviderExecutionOptionsFromArgs: --accessibility/--include-accessibility añaden accessibilityProvider a una allowlist ya explícita", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ providers: "publicWebsiteFetcher,whoisProvider", accessibility: true });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "whoisProvider", "accessibilityProvider"]);
+});
+
+test("Paso 17 — resolveProviderExecutionOptionsFromArgs: --exclude-accessibility excluye accessibilityProvider explícitamente", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "exclude-accessibility": true });
+  assert.deepEqual(opts.providerPolicyOptions.excludeProviders, ["accessibilityProvider"]);
+});
+
+test("Paso 17 — resolveProviderExecutionOptionsFromArgs: --wcag-level=A|AA se normaliza a mayúsculas; sin el flag, null", () => {
+  assert.equal(resolveProviderExecutionOptionsFromArgs({}).wcagLevel, null);
+  assert.equal(resolveProviderExecutionOptionsFromArgs({ "wcag-level": "a" }).wcagLevel, "A");
+  assert.equal(resolveProviderExecutionOptionsFromArgs({ "wcag-level": "AA" }).wcagLevel, "AA");
+});
+
+test("Paso 17 — resolveProviderExecutionOptionsFromArgs: rechaza --wcag-level desconocido", () => {
+  assert.throws(() => resolveProviderExecutionOptionsFromArgs({ "wcag-level": "AAA" }), ResearchCliError);
+});
+
 test("resolveProviderExecutionOptionsFromArgs: rechaza --pipeline/--execution/--max-concurrency/--provider-priority inválidos", () => {
   assert.throws(() => resolveProviderExecutionOptionsFromArgs({ pipeline: "no-existe" }), ResearchCliError);
   assert.throws(() => resolveProviderExecutionOptionsFromArgs({ execution: "no-existe" }), ResearchCliError);
@@ -168,14 +198,14 @@ test("resolveProviderExecutionOptionsFromArgs: --global-timeout/--provider-timeo
   assert.equal(opts.providerPolicyOptions.maxConcurrency, 3);
 });
 
-test("runResearchDoctorChecks (Paso 16) reporta los 13 proveedores del registro multiproveedor (2 real: publicWebsiteFetcher+seoProvider, 11 stub) cargados sin error", async () => {
+test("runResearchDoctorChecks (Paso 17) reporta los 13 proveedores del registro multiproveedor (3 real: publicWebsiteFetcher+seoProvider+accessibilityProvider, 10 stub) cargados sin error", async () => {
   await withTempDir(async (dir) => {
     const { ok, checks } = await runResearchDoctorChecks({ auditsDir: path.join(dir, "no-existe-todavia") });
     assert.equal(ok, true);
     const check = checks.find((c) => c.id === "multiprovider_registry_loaded");
     assert.ok(check, "falta el check multiprovider_registry_loaded");
     assert.equal(check.ok, true);
-    assert.match(check.detail, /13\/13 proveedores registrados \(2 real, 11 stub\)/);
+    assert.match(check.detail, /13\/13 proveedores registrados \(3 real, 10 stub\)/);
   });
 });
 

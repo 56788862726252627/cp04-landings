@@ -255,3 +255,51 @@ export function renderSeoReportMarkdown(reportData) {
 
   return lines.join("\n") + "\n";
 }
+
+// Paso 17 · Fase 5/7 — informe de accesibilidad dedicado. Solo se genera
+// (ver auditOrchestrator.js) cuando `providerRunSummary.accessibility` no
+// es null. Incluye SIEMPRE el disclaimer legal: una puntuación
+// automática nunca certifica conformidad WCAG ni sustituye una auditoría
+// humana completa.
+const A11Y_SEVERITY_LABELS = Object.freeze({ critical: "Crítico", high: "Alto", medium: "Medio", low: "Bajo", opportunity: "Oportunidad", manual_review: "Revisión manual pendiente" });
+
+export function renderAccessibilityReportMarkdown(reportData) {
+  const a11y = reportData.providerRunSummary?.accessibility;
+  if (!a11y) return "# Accesibilidad\n\nEsta auditoría no incluye análisis de accesibilidad (pipeline legacy, o accessibilityProvider no se ejecutó en esta ejecución).\n";
+
+  const lines = [
+    "# Informe de accesibilidad",
+    "",
+    `> ${a11y.scoreBreakdown.disclaimer}`,
+    "",
+    `Score de accesibilidad global: **${a11y.scoreBreakdown.overall.score === null ? "sin datos" : `${a11y.scoreBreakdown.overall.score}/100`}** (confianza ${Math.round(a11y.scoreBreakdown.overall.confidence * 100)}%, cobertura de grupos ${Math.round(a11y.scoreBreakdown.overall.coverage * 100)}%, ${a11y.scoreBreakdown.overall.manualReviewCount} hallazgo(s) pendiente(s) de revisión manual)`,
+    "",
+    "## Desglose por grupo",
+    "",
+    "| Grupo | Score | Confianza | Cobertura | Hallazgos | Revisión manual |",
+    "|---|---|---|---|---|---|",
+  ];
+  for (const group of Object.values(a11y.scoreBreakdown.groups)) {
+    lines.push(`| ${group.label} | ${group.score === null ? "sin datos" : `${group.score}/100`} | ${Math.round(group.confidence * 100)}% | ${Math.round(group.coverage * 100)}% | ${group.findingsCount} | ${group.manualReviewCount} |`);
+  }
+
+  lines.push("", "## Recomendaciones de accesibilidad", "");
+  const recosBySeverity = {};
+  for (const r of a11y.recommendations) (recosBySeverity[r.severity] ??= []).push(r);
+  const orderedSeverities = ["critical", "high", "medium", "low", "opportunity", "manual_review"];
+  let anyRecommendation = false;
+  for (const severity of orderedSeverities) {
+    const group = recosBySeverity[severity] ?? [];
+    if (group.length === 0) continue;
+    anyRecommendation = true;
+    lines.push(`### ${A11Y_SEVERITY_LABELS[severity]} (${group.length})`, "");
+    for (const r of group) {
+      const wcagText = r.wcagCriterion ? ` [WCAG ${r.wcagCriterion.criterion} (${r.wcagCriterion.level})]` : "";
+      lines.push(`- **${r.title}**${wcagText} — esfuerzo ${r.effort}, confianza ${Math.round(r.confidence * 100)}%. ${r.explanation} _(${r.affectedUrls.length} URL(s) afectada(s))_`);
+    }
+    lines.push("");
+  }
+  if (!anyRecommendation) lines.push("Sin recomendaciones de accesibilidad: ningún hallazgo negativo, oportunidad ni revisión manual pendiente.");
+
+  return lines.join("\n") + "\n";
+}

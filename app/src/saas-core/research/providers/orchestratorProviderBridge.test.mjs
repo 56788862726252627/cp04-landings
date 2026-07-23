@@ -4,11 +4,12 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { collectEvidenceViaProviders, REAL_PROVIDER_ID, SEO_PROVIDER_ID, DEFAULT_PLUGINS_DIR } from "./orchestratorProviderBridge.js";
+import { collectEvidenceViaProviders, REAL_PROVIDER_ID, SEO_PROVIDER_ID, ACCESSIBILITY_PROVIDER_ID, DEFAULT_PLUGINS_DIR } from "./orchestratorProviderBridge.js";
 import { createProviderRegistry } from "./core/providerRegistry.js";
 import { createProviderCircuitBreaker } from "./providerCircuitBreaker.js";
 import { defineResearchProvider, defineProviderCapabilities, defineProviderResult, defineProviderHealth } from "./core/providerTypes.js";
 import { createEvidence } from "../evidenceSchema.js";
+import { PROVIDER as ACCESSIBILITY_PROVIDER } from "./plugins/accessibilityProviderPlugin.js";
 import { PROVIDER as SEO_PROVIDER } from "./plugins/seoProviderPlugin.js";
 
 function fakeUnavailable(url, reason) {
@@ -341,5 +342,95 @@ test("Paso 16 — idempotencia: dos ejecuciones sobre el mismo HTML producen el 
 
   const ids1 = out1.evidence.filter((e) => e.sourceType === "seo_analysis_derived").map((e) => e.evidenceId).sort();
   const ids2 = out2.evidence.filter((e) => e.sourceType === "seo_analysis_derived").map((e) => e.evidenceId).sort();
+  assert.deepEqual(ids1, ids2);
+});
+
+// ---------------------------------------------------------------------
+// Paso 17 — publicWebsiteFetcher -> seoProvider -> accessibilityProvider (real)
+// ---------------------------------------------------------------------
+
+test("Paso 17 — los TRES proveedores reales producen evidencia diferenciada y deduplicada, con procedencia preservada", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  registry.register(SEO_PROVIDER);
+  registry.register(ACCESSIBILITY_PROVIDER);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, policyOptions: { execution: "sequential" }, registry, evidenceForUnavailableUrl: noop });
+
+  const summaries = out.providerRunSummary.providers;
+  assert.equal(summaries.find((p) => p.providerId === REAL_PROVIDER_ID).orchestratorStatus, "available");
+  assert.equal(summaries.find((p) => p.providerId === SEO_PROVIDER_ID).orchestratorStatus, "available");
+  assert.equal(summaries.find((p) => p.providerId === ACCESSIBILITY_PROVIDER_ID).orchestratorStatus, "available");
+
+  const byProvider = { fetcher: [], seo: [], a11y: [] };
+  for (const [evId, prov] of Object.entries(out.provenanceIndex)) {
+    if (prov.providerId === REAL_PROVIDER_ID) byProvider.fetcher.push(evId);
+    if (prov.providerId === SEO_PROVIDER_ID) byProvider.seo.push(evId);
+    if (prov.providerId === ACCESSIBILITY_PROVIDER_ID) byProvider.a11y.push(evId);
+  }
+  assert.ok(byProvider.fetcher.length > 0);
+  assert.ok(byProvider.seo.length > 0);
+  assert.ok(byProvider.a11y.length > 0);
+  const allIds = [...byProvider.fetcher, ...byProvider.seo, ...byProvider.a11y];
+  assert.equal(new Set(allIds).size, allIds.length, "ningún evidenceId debería solaparse entre los 3 proveedores");
+
+  assert.ok(out.evidence.some((e) => e.sourceType === "accessibility_analysis_derived"));
+  assert.ok(out.providerRunSummary.accessibility, "providerRunSummary.accessibility debe estar poblado");
+  assert.ok(out.providerRunSummary.accessibility.scoreBreakdown.overall.groupsTotal === 9);
+});
+
+test("Paso 17 — sin páginas recopiladas, accessibilityProvider se marca 'skipped' y nunca aporta evidencia inventada", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  registry.register(ACCESSIBILITY_PROVIDER);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: false, modeAllowsNetwork: true, registry, evidenceForUnavailableUrl: noop });
+  const a11ySummary = out.providerRunSummary.providers.find((p) => p.providerId === ACCESSIBILITY_PROVIDER_ID);
+  assert.equal(a11ySummary.orchestratorStatus, "skipped");
+  assert.equal(out.evidence.filter((e) => e.sourceType === "accessibility_analysis_derived").length, 0);
+});
+
+test("Paso 17 — accessibilityProvider excluido por perfil no se invoca aunque publicWebsiteFetcher tenga éxito", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  registry.register(ACCESSIBILITY_PROVIDER);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, policyOptions: { excludeProviders: [ACCESSIBILITY_PROVIDER_ID] }, registry, evidenceForUnavailableUrl: noop });
+  const a11ySummary = out.providerRunSummary.providers.find((p) => p.providerId === ACCESSIBILITY_PROVIDER_ID);
+  assert.equal(a11ySummary, undefined);
+});
+
+test("Paso 17 — accessibilityProvider respeta individualTimeoutMs (hereda el timeout del pipeline)", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  const slowA11yProvider = defineResearchProvider({
+    id: ACCESSIBILITY_PROVIDER_ID,
+    status: "real",
+    priority: 20,
+    capabilities: defineProviderCapabilities({ dimensions: ["accessibility"] }),
+    async collect() {
+      await new Promise((r) => setTimeout(r, 200));
+      return defineProviderResult({ providerId: ACCESSIBILITY_PROVIDER_ID, status: "success", evidence: [] });
+    },
+    async healthCheck() {
+      return defineProviderHealth({ healthy: true, mode: "real", message: "ok" });
+    },
+  });
+  registry.register(slowA11yProvider);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, policyOptions: { individualTimeoutMs: 20 }, registry, evidenceForUnavailableUrl: noop });
+  const a11ySummary = out.providerRunSummary.providers.find((p) => p.providerId === ACCESSIBILITY_PROVIDER_ID);
+  assert.equal(a11ySummary.orchestratorStatus, "timed_out");
+});
+
+test("Paso 17 — idempotencia: dos ejecuciones sobre el mismo HTML producen el mismo conjunto de evidenceId de accessibilityProvider", async () => {
+  const registry1 = createProviderRegistry();
+  registry1.register(fakeRealProviderWithPages());
+  registry1.register(ACCESSIBILITY_PROVIDER);
+  const out1 = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, registry: registry1, evidenceForUnavailableUrl: noop });
+
+  const registry2 = createProviderRegistry();
+  registry2.register(fakeRealProviderWithPages());
+  registry2.register(ACCESSIBILITY_PROVIDER);
+  const out2 = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, registry: registry2, evidenceForUnavailableUrl: noop });
+
+  const ids1 = out1.evidence.filter((e) => e.sourceType === "accessibility_analysis_derived").map((e) => e.evidenceId).sort();
+  const ids2 = out2.evidence.filter((e) => e.sourceType === "accessibility_analysis_derived").map((e) => e.evidenceId).sort();
   assert.deepEqual(ids1, ids2);
 });

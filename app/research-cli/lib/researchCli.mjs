@@ -107,16 +107,26 @@ export function resolveProviderExecutionOptionsFromArgs(args) {
     throw new ResearchCliError(`--max-concurrency debe ser un entero >= 1 (recibido: "${args["max-concurrency"]}").`);
   }
 
-  // Paso 16 — atajos de conveniencia para el segundo proveedor real
-  // (seoProvider), equivalentes a combinaciones de --providers/--exclude-providers.
-  if (args["seo-only"]) {
-    includeProvidersRaw = ["publicWebsiteFetcher", "seoProvider"];
+  // Paso 16/17 — atajos de conveniencia para los proveedores derivados
+  // (seoProvider, accessibilityProvider), equivalentes a combinaciones de
+  // --providers/--exclude-providers.
+  const onlyIds = [];
+  if (args["seo-only"]) onlyIds.push("seoProvider");
+  if (args["accessibility-only"]) onlyIds.push("accessibilityProvider");
+  if (onlyIds.length > 0) {
+    includeProvidersRaw = ["publicWebsiteFetcher", ...onlyIds];
   }
   if ((args.seo || args["include-seo"]) && includeProvidersRaw.length > 0 && !includeProvidersRaw.includes("seoProvider")) {
     includeProvidersRaw = [...includeProvidersRaw, "seoProvider"];
   }
+  if ((args.accessibility || args["include-accessibility"]) && includeProvidersRaw.length > 0 && !includeProvidersRaw.includes("accessibilityProvider")) {
+    includeProvidersRaw = [...includeProvidersRaw, "accessibilityProvider"];
+  }
   if (args["exclude-seo"] && !excludeProvidersRaw.includes("seoProvider")) {
     excludeProvidersRaw = [...excludeProvidersRaw, "seoProvider"];
+  }
+  if (args["exclude-accessibility"] && !excludeProvidersRaw.includes("accessibilityProvider")) {
+    excludeProvidersRaw = [...excludeProvidersRaw, "accessibilityProvider"];
   }
 
   return {
@@ -131,7 +141,19 @@ export function resolveProviderExecutionOptionsFromArgs(args) {
       globalTimeoutMs: args["global-timeout"] !== undefined ? Number(args["global-timeout"]) : null,
       individualTimeoutMs: args["provider-timeout"] !== undefined ? Number(args["provider-timeout"]) : null,
     },
+    wcagLevel: resolveWcagLevel(args),
   };
+}
+
+// Paso 17 — --wcag-level filtra QUÉ criterios mostrar en salidas del CLI
+// (research:accessibility/--explain-accessibility-score); nunca cambia
+// qué comprobaciones ejecuta a11yAnalyzer.js (todas se ejecutan siempre).
+const WCAG_LEVELS = Object.freeze(["A", "AA"]);
+function resolveWcagLevel(args) {
+  if (args["wcag-level"] === undefined) return null;
+  const level = String(args["wcag-level"]).toUpperCase();
+  if (!WCAG_LEVELS.includes(level)) throw new ResearchCliError(`--wcag-level desconocido: "${args["wcag-level"]}". Usa uno de: ${WCAG_LEVELS.join(", ")}.`);
+  return level;
 }
 
 /** Carga un Research Request desde --request=<ruta.json>, validándolo. */
