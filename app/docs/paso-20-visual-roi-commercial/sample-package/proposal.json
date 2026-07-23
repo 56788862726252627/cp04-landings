@@ -1,0 +1,437 @@
+{
+  "title": "Propuesta comercial — Club Pádel Demo (Club deportivo)",
+  "executiveSummary": "Propuesta para Club Pádel Demo, perfil \"Club deportivo\". Puntuación global actual: sin datos/100. Beneficio mensual estimado (escenario central): 889.5 EUR/mes (estimación, no garantizada).",
+  "currentSituation": {
+    "businessName": "Club Pádel Demo",
+    "profileLabel": "Club deportivo",
+    "overallScore": null,
+    "categoriesEvaluated": 0,
+    "categoriesTotal": 0
+  },
+  "problemsDetected": [
+    {
+      "title": "Sin problemas detectados registrados todavía — pendiente de una auditoría o diagnóstico previo.",
+      "severity": "pending"
+    }
+  ],
+  "opportunities": [
+    {
+      "title": "Sin oportunidades registradas todavía — pendiente de diagnóstico."
+    }
+  ],
+  "proposedSolution": "Implantación de 4 módulo(s) prioritarios para el perfil \"Club deportivo\", con automatizaciones de recordatorios/reservas y preparación de la capa de pagos/mensajería (Stripe/WhatsApp) para cuando existan credenciales reales.",
+  "includedModules": [
+    "Implantar: reservas online",
+    "Implantar: recordatorios automáticos",
+    "Implantar: gestión de listas de espera",
+    "Implantar: pagos online"
+  ],
+  "automations": [],
+  "implementationPlan": [
+    {
+      "order": 1,
+      "title": "Implantar: reservas online",
+      "type": "module"
+    },
+    {
+      "order": 2,
+      "title": "Implantar: recordatorios automáticos",
+      "type": "module"
+    },
+    {
+      "order": 3,
+      "title": "Implantar: gestión de listas de espera",
+      "type": "module"
+    },
+    {
+      "order": 4,
+      "title": "Implantar: pagos online",
+      "type": "module"
+    },
+    {
+      "order": 5,
+      "title": "Resolver bloqueo de \"Make (automatizaciones, 50 flujos)\"",
+      "type": "integration_blocker"
+    },
+    {
+      "order": 6,
+      "title": "Resolver bloqueo de \"Stripe (pagos)\"",
+      "type": "integration_blocker"
+    },
+    {
+      "order": 7,
+      "title": "Resolver bloqueo de \"WhatsApp Business Cloud API\"",
+      "type": "integration_blocker"
+    },
+    {
+      "order": 8,
+      "title": "Resolver bloqueo de \"Dominio propio\"",
+      "type": "integration_blocker"
+    },
+    {
+      "order": 9,
+      "title": "Resolver bloqueo de \"Certificado SSL\"",
+      "type": "integration_blocker"
+    },
+    {
+      "order": 10,
+      "title": "Resolver bloqueo de \"Hosting de producción\"",
+      "type": "integration_blocker"
+    },
+    {
+      "order": 11,
+      "title": "Resolver bloqueo de \"Backups\"",
+      "type": "integration_blocker"
+    },
+    {
+      "order": 12,
+      "title": "Resolver bloqueo de \"Monitorización\"",
+      "type": "integration_blocker"
+    }
+  ],
+  "estimatedCalendar": "4 semana(s) de implantación de módulos (estimación; los bloqueos de integraciones dependen de terceros y no se incluyen en este plazo).",
+  "initialInvestment": {
+    "value": 900,
+    "source": "assumed",
+    "currency": "EUR"
+  },
+  "monthlyMaintenance": {
+    "value": 45,
+    "source": "assumed",
+    "currency": "EUR"
+  },
+  "roiScenarios": {
+    "conservative": {
+      "label": "Conservador",
+      "hoursSavedPerMonth": {
+        "value": 17.3,
+        "source": "calculated",
+        "formula": "adminHoursPerWeek × (52/12) × hoursSavedFactor(escenario)",
+        "assumption": "Se asume que las automatizaciones propuestas eliminan el 50% de las horas administrativas actuales dedicadas a tareas automatizables (escenario conservador).",
+        "unit": "horas/mes",
+        "confidence": 0.55
+      },
+      "economicSavingsPerMonth": {
+        "value": 259.5,
+        "source": "calculated",
+        "formula": "hoursSavedPerMonth × hourlyCost",
+        "assumption": null,
+        "unit": "EUR/mes",
+        "confidence": 0.5
+      },
+      "noShowSavingsPerMonth": {
+        "value": 315,
+        "source": "calculated",
+        "formula": "averageTicket × monthlyBookings × noShowRate × noShowReduction(escenario)",
+        "assumption": "Se asume que los recordatorios/confirmaciones automáticas reducen los no-shows en un 30% (escenario conservador).",
+        "unit": "EUR/mes",
+        "confidence": 0.55
+      },
+      "potentialRevenueIncrease": {
+        "value": null,
+        "source": "unavailable",
+        "formula": null,
+        "assumption": "Falta currentMonthlyRevenue para estimar un incremento potencial de ingresos.",
+        "unit": "EUR/mes",
+        "confidence": 0
+      },
+      "totalMonthlyBenefit": {
+        "value": 574.5,
+        "source": "calculated",
+        "formula": "economicSavingsPerMonth + noShowSavingsPerMonth + potentialRevenueIncrease",
+        "assumption": null,
+        "unit": "EUR/mes",
+        "confidence": 0.55
+      },
+      "paybackMonths": {
+        "value": 1.7,
+        "source": "calculated",
+        "formula": "implementationCost / (totalMonthlyBenefit − monthlyMaintenanceCost)",
+        "assumption": null,
+        "unit": "meses",
+        "confidence": 0.55
+      },
+      "roi3Months": {
+        "value": 76.5,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 3 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.55
+      },
+      "roi6Months": {
+        "value": 253,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 6 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.55
+      },
+      "roi12Months": {
+        "value": 606,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 12 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.55
+      }
+    },
+    "central": {
+      "label": "Central",
+      "hoursSavedPerMonth": {
+        "value": 24.3,
+        "source": "calculated",
+        "formula": "adminHoursPerWeek × (52/12) × hoursSavedFactor(escenario)",
+        "assumption": "Se asume que las automatizaciones propuestas eliminan el 70% de las horas administrativas actuales dedicadas a tareas automatizables (escenario central).",
+        "unit": "horas/mes",
+        "confidence": 0.65
+      },
+      "economicSavingsPerMonth": {
+        "value": 364.5,
+        "source": "calculated",
+        "formula": "hoursSavedPerMonth × hourlyCost",
+        "assumption": null,
+        "unit": "EUR/mes",
+        "confidence": 0.5
+      },
+      "noShowSavingsPerMonth": {
+        "value": 525,
+        "source": "calculated",
+        "formula": "averageTicket × monthlyBookings × noShowRate × noShowReduction(escenario)",
+        "assumption": "Se asume que los recordatorios/confirmaciones automáticas reducen los no-shows en un 50% (escenario central).",
+        "unit": "EUR/mes",
+        "confidence": 0.65
+      },
+      "potentialRevenueIncrease": {
+        "value": null,
+        "source": "unavailable",
+        "formula": null,
+        "assumption": "Falta currentMonthlyRevenue para estimar un incremento potencial de ingresos.",
+        "unit": "EUR/mes",
+        "confidence": 0
+      },
+      "totalMonthlyBenefit": {
+        "value": 889.5,
+        "source": "calculated",
+        "formula": "economicSavingsPerMonth + noShowSavingsPerMonth + potentialRevenueIncrease",
+        "assumption": null,
+        "unit": "EUR/mes",
+        "confidence": 0.65
+      },
+      "paybackMonths": {
+        "value": 1.1,
+        "source": "calculated",
+        "formula": "implementationCost / (totalMonthlyBenefit − monthlyMaintenanceCost)",
+        "assumption": null,
+        "unit": "meses",
+        "confidence": 0.65
+      },
+      "roi3Months": {
+        "value": 181.5,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 3 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.65
+      },
+      "roi6Months": {
+        "value": 463,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 6 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.65
+      },
+      "roi12Months": {
+        "value": 1026,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 12 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.65
+      }
+    },
+    "optimistic": {
+      "label": "Optimista",
+      "hoursSavedPerMonth": {
+        "value": 31.2,
+        "source": "calculated",
+        "formula": "adminHoursPerWeek × (52/12) × hoursSavedFactor(escenario)",
+        "assumption": "Se asume que las automatizaciones propuestas eliminan el 90% de las horas administrativas actuales dedicadas a tareas automatizables (escenario optimista).",
+        "unit": "horas/mes",
+        "confidence": 0.45
+      },
+      "economicSavingsPerMonth": {
+        "value": 468,
+        "source": "calculated",
+        "formula": "hoursSavedPerMonth × hourlyCost",
+        "assumption": null,
+        "unit": "EUR/mes",
+        "confidence": 0.45
+      },
+      "noShowSavingsPerMonth": {
+        "value": 735,
+        "source": "calculated",
+        "formula": "averageTicket × monthlyBookings × noShowRate × noShowReduction(escenario)",
+        "assumption": "Se asume que los recordatorios/confirmaciones automáticas reducen los no-shows en un 70% (escenario optimista).",
+        "unit": "EUR/mes",
+        "confidence": 0.45
+      },
+      "potentialRevenueIncrease": {
+        "value": null,
+        "source": "unavailable",
+        "formula": null,
+        "assumption": "Falta currentMonthlyRevenue para estimar un incremento potencial de ingresos.",
+        "unit": "EUR/mes",
+        "confidence": 0
+      },
+      "totalMonthlyBenefit": {
+        "value": 1203,
+        "source": "calculated",
+        "formula": "economicSavingsPerMonth + noShowSavingsPerMonth + potentialRevenueIncrease",
+        "assumption": null,
+        "unit": "EUR/mes",
+        "confidence": 0.45
+      },
+      "paybackMonths": {
+        "value": 0.8,
+        "source": "calculated",
+        "formula": "implementationCost / (totalMonthlyBenefit − monthlyMaintenanceCost)",
+        "assumption": null,
+        "unit": "meses",
+        "confidence": 0.45
+      },
+      "roi3Months": {
+        "value": 286,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 3 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.45
+      },
+      "roi6Months": {
+        "value": 672,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 6 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.45
+      },
+      "roi12Months": {
+        "value": 1444,
+        "source": "calculated",
+        "formula": "((totalMonthlyBenefit − monthlyMaintenanceCost) × 12 − implementationCost) / implementationCost",
+        "assumption": null,
+        "unit": "%",
+        "confidence": 0.45
+      }
+    }
+  },
+  "risks": [
+    {
+      "title": "Los plazos de integraciones externas (Airtable/WhatsApp/Stripe/dominio) dependen de terceros y pueden desviar el calendario.",
+      "severity": "medium"
+    },
+    {
+      "title": "Bloqueo activo: Make (automatizaciones, 50 flujos) (depende de Airtable operativo (ver integración 'airtable'))",
+      "severity": "medium"
+    },
+    {
+      "title": "Bloqueo activo: Stripe (pagos) (sin STRIPE_SECRET_KEY configurada (paso 5 de la secuencia de trabajo del proyecto))",
+      "severity": "medium"
+    },
+    {
+      "title": "Bloqueo activo: WhatsApp Business Cloud API (WhatsApp Business aún no contratado/configurado)",
+      "severity": "medium"
+    },
+    {
+      "title": "Bloqueo activo: Dominio propio (dominio aún no comprado)",
+      "severity": "medium"
+    },
+    {
+      "title": "Bloqueo activo: Certificado SSL (depende de 'domain')",
+      "severity": "medium"
+    },
+    {
+      "title": "Bloqueo activo: Hosting de producción (depende de 'domain')",
+      "severity": "medium"
+    },
+    {
+      "title": "Bloqueo activo: Backups (depende de 'hosting')",
+      "severity": "medium"
+    },
+    {
+      "title": "Bloqueo activo: Monitorización (depende de 'hosting')",
+      "severity": "medium"
+    }
+  ],
+  "dependencies": [
+    {
+      "integration": "Make (automatizaciones, 50 flujos)",
+      "blockedBy": "depende de Airtable operativo (ver integración 'airtable')"
+    },
+    {
+      "integration": "Stripe (pagos)",
+      "blockedBy": "sin STRIPE_SECRET_KEY configurada (paso 5 de la secuencia de trabajo del proyecto)"
+    },
+    {
+      "integration": "WhatsApp Business Cloud API",
+      "blockedBy": "WhatsApp Business aún no contratado/configurado"
+    },
+    {
+      "integration": "Dominio propio",
+      "blockedBy": "dominio aún no comprado"
+    },
+    {
+      "integration": "Certificado SSL",
+      "blockedBy": "depende de 'domain'"
+    },
+    {
+      "integration": "Hosting de producción",
+      "blockedBy": "depende de 'domain'"
+    },
+    {
+      "integration": "Backups",
+      "blockedBy": "depende de 'hosting'"
+    },
+    {
+      "integration": "Monitorización",
+      "blockedBy": "depende de 'hosting'"
+    }
+  ],
+  "exclusions": [
+    "Compra de dominio propio (pendiente, ver checklist de integraciones).",
+    "Contratación de WhatsApp Business Cloud API (pendiente).",
+    "Configuración de Stripe en modo producción (pendiente).",
+    "Migración de datos históricos no cubiertos por el alcance acordado.",
+    "Soporte fuera del horario acordado en el contrato de mantenimiento."
+  ],
+  "clientResponsibilities": [
+    "Proporcionar acceso a las cuentas/credenciales necesarias (Airtable, Stripe, WhatsApp, dominio) cuando corresponda.",
+    "Validar el contenido (textos, precios, horarios) antes de la publicación.",
+    "Designar una persona de contacto para pruebas de aceptación."
+  ],
+  "terms": {
+    "validityDays": 30,
+    "paymentTerms": "50% al inicio, 50% a la entrega — configurable por acuerdo comercial.",
+    "currency": "EUR"
+  },
+  "nextSteps": [
+    "Validar los datos y supuestos marcados como pendientes.",
+    "Confirmar el perfil sectorial y el alcance de módulos.",
+    "Acordar términos e iniciar implantación."
+  ],
+  "pendingInformation": [
+    "Dato de negocio pendiente: auditScores",
+    "Dato ROI pendiente: conversionRate",
+    "Dato ROI pendiente: currentMonthlyRevenue",
+    "Supuesto usado (a confirmar con el cliente): averageTicket = 35",
+    "Supuesto usado (a confirmar con el cliente): monthlyBookings = 250",
+    "Supuesto usado (a confirmar con el cliente): noShowRate = 0.12",
+    "Supuesto usado (a confirmar con el cliente): adminHoursPerWeek = 8",
+    "Supuesto usado (a confirmar con el cliente): hourlyCost = 15",
+    "Supuesto usado (a confirmar con el cliente): implementationCost = 900",
+    "Supuesto usado (a confirmar con el cliente): monthlyMaintenanceCost = 45"
+  ],
+  "disclaimer": "Esta propuesta se basa en datos aportados y supuestos declarados — ninguna cifra es un resultado garantizado. Los datos marcados como pendientes/supuestos deben confirmarse con el cliente antes de firmar."
+}
