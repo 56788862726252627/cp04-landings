@@ -281,11 +281,28 @@ async function fetchRobotsTxt(origin, options, transportFn) {
  *   incluso en tests: solo se sustituye qué hace la resolución DNS o el
  *   transporte, nunca la decisión de si algo es seguro.
  */
+// Paso 16 — subconjunto de cabeceras de respuesta seguro de reexponer a
+// analizadores posteriores (p. ej. seoProvider): ninguna es sensible (son
+// cabeceras de una respuesta HTTP pública ya descargada), y NUNCA se
+// reenvían cookies/autenticación (performPinnedRequest tampoco las envía).
+const SEO_RELEVANT_RESPONSE_HEADERS = Object.freeze(["x-robots-tag", "content-language"]);
+
+function extractSeoRelevantHeaders(rawHeaders) {
+  const headers = {};
+  for (const name of SEO_RELEVANT_RESPONSE_HEADERS) headers[name] = rawHeaders?.[name] ?? null;
+  return headers;
+}
+
 export async function fetchPublicWebsite(rawUrl, limits = {}, testHooks = {}) {
   const config = { ...DEFAULT_FETCHER_LIMITS, ...limits };
   const transportFn = testHooks.transportFn ?? performPinnedRequest;
   const redirectChain = [];
   let currentUrl = rawUrl;
+  // Paso 16 — se recuerda el ÚLTIMO robots.txt consultado (el del origen
+  // final tras redirecciones) para reexponerlo en el resultado "available"
+  // sin volver a pedirlo: ya se descargó dentro de este mismo bucle para
+  // decidir ROBOTS_DISALLOWED, solo se deja de descartar.
+  let lastRobotsResult = { available: false, content: "" };
 
   for (let redirectCount = 0; redirectCount <= config.maxRedirects; redirectCount++) {
     let normalized;
@@ -302,6 +319,7 @@ export async function fetchPublicWebsite(rawUrl, limits = {}, testHooks = {}) {
 
     if (config.respectRobots) {
       const robots = await fetchRobotsTxt(validation.url.origin, { ...config, ...testHooks }, transportFn);
+      lastRobotsResult = robots;
       if (robots.available) {
         const uaToken = config.userAgent.split("/")[0];
         const allowed = isPathAllowedByRobots(robots.content, uaToken, validation.url.pathname);
@@ -356,6 +374,12 @@ export async function fetchPublicWebsite(rawUrl, limits = {}, testHooks = {}) {
       redirectChain,
       fetchedAt: new Date().toISOString(),
       contentHash: createHash("sha256").update(response.body, "utf8").digest("hex"),
+      // Paso 16 — reexpuestos para analizadores posteriores (seoProvider):
+      // NO son una segunda descarga, son datos ya obtenidos en este mismo
+      // fetch (cabeceras de la respuesta ya recibida, robots.txt ya
+      // consultado más arriba en esta misma función).
+      headers: extractSeoRelevantHeaders(response.headers),
+      robotsTxt: lastRobotsResult,
     };
   }
 

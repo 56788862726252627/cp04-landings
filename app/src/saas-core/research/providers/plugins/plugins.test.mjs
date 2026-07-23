@@ -5,9 +5,10 @@ import path from "node:path";
 import { createProviderRegistry, discoverAndRegisterPlugins } from "../core/providerRegistry.js";
 import { DIMENSION_IDS } from "../../dimensionRegistry.js";
 
+// Paso 16 — seoProvider dejó de ser stub (ahora es un proveedor real,
+// ver plugins/seoProviderPlugin.js): 11 stubs siguen pendientes.
 const STUB_PLUGIN_MODULES = [
   "lighthouseProviderPlugin.js",
-  "seoProviderPlugin.js",
   "performanceProviderPlugin.js",
   "accessibilityProviderPlugin.js",
   "socialProviderPlugin.js",
@@ -20,14 +21,14 @@ const STUB_PLUGIN_MODULES = [
   "aiContentProviderPlugin.js",
 ];
 
-test("existen exactamente los 12 módulos de proveedores stub del enunciado (Fase 3)", async () => {
+test("existen exactamente los 11 módulos de proveedores stub restantes (Fase 3 de Paso 14, tras convertir seoProvider en real en Paso 16)", async () => {
   for (const file of STUB_PLUGIN_MODULES) {
     const mod = await import(`./${file}`);
     assert.ok(mod.PROVIDER, `${file} debe exportar PROVIDER`);
   }
 });
 
-test("cada proveedor stub declara status='stub', capabilities con dimensiones válidas (o '*'), y un collect() que nunca lanza", async () => {
+test("cada proveedor stub restante declara status='stub', capabilities con dimensiones válidas (o '*'), y un collect() que nunca lanza", async () => {
   for (const file of STUB_PLUGIN_MODULES) {
     const { PROVIDER } = await import(`./${file}`);
     assert.equal(PROVIDER.status, "stub", file);
@@ -39,27 +40,32 @@ test("cada proveedor stub declara status='stub', capabilities con dimensiones v�
   }
 });
 
-test("cada proveedor stub tiene un id único (sin colisiones entre los 12)", async () => {
+test("cada proveedor stub restante tiene un id único (sin colisiones entre los 11)", async () => {
   const ids = new Set();
   for (const file of STUB_PLUGIN_MODULES) {
     const { PROVIDER } = await import(`./${file}`);
     assert.ok(!ids.has(PROVIDER.id), `id duplicado: ${PROVIDER.id}`);
     ids.add(PROVIDER.id);
   }
-  assert.equal(ids.size, 12);
+  assert.equal(ids.size, 11);
 });
 
-test("discoverAndRegisterPlugins carga automáticamente los 13 proveedores reales (12 stub + 1 real) desde el directorio real de plugins, sin listarlos a mano", async () => {
+test("discoverAndRegisterPlugins carga automáticamente los 13 proveedores (11 stub + 2 real: publicWebsiteFetcher y seoProvider) desde el directorio real de plugins, sin listarlos a mano", async () => {
   const registry = createProviderRegistry();
   const pluginsDir = path.resolve("src/saas-core/research/providers/plugins");
   const { loaded, errors } = await discoverAndRegisterPlugins(registry, pluginsDir);
   assert.deepEqual(errors, [], JSON.stringify(errors));
   assert.equal(loaded.length, 13, `se esperaban 13 proveedores, se cargaron: ${loaded.join(", ")}`);
   assert.ok(loaded.includes("publicWebsiteFetcher"));
+  assert.ok(loaded.includes("seoProvider"));
   const realProvider = registry.get("publicWebsiteFetcher");
   assert.equal(realProvider.status, "real");
+  const seoProvider = registry.get("seoProvider");
+  assert.equal(seoProvider.status, "real");
   const stubCount = registry.list().filter((p) => p.status === "stub").length;
-  assert.equal(stubCount, 12);
+  assert.equal(stubCount, 11);
+  const realCount = registry.list().filter((p) => p.status === "real").length;
+  assert.equal(realCount, 2);
 });
 
 test("tras el auto-descubrimiento, resolveFallbackChain('performance') incluye lighthouseProvider/performanceProvider/speedProvider en orden de prioridad", async () => {

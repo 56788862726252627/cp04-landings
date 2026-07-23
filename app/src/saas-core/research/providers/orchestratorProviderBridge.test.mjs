@@ -4,11 +4,12 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { collectEvidenceViaProviders, REAL_PROVIDER_ID, DEFAULT_PLUGINS_DIR } from "./orchestratorProviderBridge.js";
+import { collectEvidenceViaProviders, REAL_PROVIDER_ID, SEO_PROVIDER_ID, DEFAULT_PLUGINS_DIR } from "./orchestratorProviderBridge.js";
 import { createProviderRegistry } from "./core/providerRegistry.js";
 import { createProviderCircuitBreaker } from "./providerCircuitBreaker.js";
 import { defineResearchProvider, defineProviderCapabilities, defineProviderResult, defineProviderHealth } from "./core/providerTypes.js";
 import { createEvidence } from "../evidenceSchema.js";
+import { PROVIDER as SEO_PROVIDER } from "./plugins/seoProviderPlugin.js";
 
 function fakeUnavailable(url, reason) {
   return createEvidence({
@@ -54,6 +55,24 @@ function makeRealEvidence(url) {
     signal: { strength: 0.7, polarity: "positive" },
     confidence: 0.7,
     provenance: url,
+  });
+}
+
+function fakeRealProviderWithPages({ status = "success", pages } = {}) {
+  return defineResearchProvider({
+    id: REAL_PROVIDER_ID,
+    status: "real",
+    priority: 10,
+    capabilities: defineProviderCapabilities({ dimensions: ["*"] }),
+    async collect(input) {
+      const urls = input.urls ?? [];
+      const resolvedPages = pages ?? urls.map((u) => ({ url: u, httpStatus: 200, contentType: "text/html", body: "<html><head><title>t</title></head></html>", headers: {}, robotsTxt: { available: false, content: "" }, redirectChain: [] }));
+      const evidence = status === "success" ? urls.map((u) => makeRealEvidence(u)) : [];
+      return defineProviderResult({ providerId: REAL_PROVIDER_ID, status, evidence, metadata: { pages: status === "success" ? resolvedPages : [] } });
+    },
+    async healthCheck() {
+      return defineProviderHealth({ healthy: true, mode: "real", message: "ok" });
+    },
   });
 }
 
@@ -210,4 +229,117 @@ test("un plugin corrupto en pluginsDir se reporta en pluginLoadErrors y en limit
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+// ---------------------------------------------------------------------
+// Paso 16 — publicWebsiteFetcher recopila -> seoProvider analiza (real)
+// ---------------------------------------------------------------------
+
+test("Paso 16 — publicWebsiteFetcher y seoProvider producen evidencia diferenciada, deduplicada, con procedencia distinta por proveedor", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  registry.register(SEO_PROVIDER);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, policyOptions: { execution: "sequential" }, registry, evidenceForUnavailableUrl: noop });
+
+  const fromFetcher = out.providerRunSummary.providers.find((p) => p.providerId === REAL_PROVIDER_ID);
+  const fromSeo = out.providerRunSummary.providers.find((p) => p.providerId === SEO_PROVIDER_ID);
+  assert.equal(fromFetcher.orchestratorStatus, "available");
+  assert.equal(fromSeo.orchestratorStatus, "available");
+  assert.ok(fromFetcher.evidenceContributed > 0);
+  assert.ok(fromSeo.evidenceContributed > 0);
+
+  // Evidencias diferenciadas por sourceType/procedencia, no mezcladas.
+  const seoEvidenceIds = Object.entries(out.provenanceIndex).filter(([, v]) => v.providerId === SEO_PROVIDER_ID).map(([id]) => id);
+  const fetcherEvidenceIds = Object.entries(out.provenanceIndex).filter(([, v]) => v.providerId === REAL_PROVIDER_ID).map(([id]) => id);
+  assert.ok(seoEvidenceIds.length > 0);
+  assert.ok(fetcherEvidenceIds.length > 0);
+  const overlap = seoEvidenceIds.filter((id) => fetcherEvidenceIds.includes(id));
+  assert.deepEqual(overlap, [], "las evidencias de cada proveedor deben quedar deduplicadas sin mezclarse ni perder procedencia");
+
+  const seoEvidence = out.evidence.filter((e) => e.sourceType === "seo_analysis_derived");
+  assert.ok(seoEvidence.length > 0);
+
+  assert.ok(out.providerRunSummary.seo, "providerRunSummary.seo debe estar poblado tras un análisis SEO con éxito");
+  assert.ok(out.providerRunSummary.seo.scoreBreakdown.overall.score !== undefined);
+  assert.ok(Array.isArray(out.providerRunSummary.seo.recommendations));
+});
+
+test("Paso 16 — sin páginas recopiladas (sin red), seoProvider se marca 'skipped' y nunca aporta evidencia inventada", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  registry.register(SEO_PROVIDER);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: false, modeAllowsNetwork: true, registry, evidenceForUnavailableUrl: noop });
+  // Sin --allow-network, publicWebsiteFetcher se desactiva ANTES de resolver
+  // la cadena; seoProvider sigue habilitado y SÍ se intenta (vía la cadena
+  // genérica, con {urls,limits} en vez de {pages}) — su propio contrato
+  // (seoProviderPlugin.js) responde "skipped" al no recibir `pages`, nunca
+  // inventa hallazgos. El paso explícito post-cadena tampoco lo reinvoca
+  // (no hay `fetchedPages`, ver collectEvidenceViaProviders).
+  const seoSummary = out.providerRunSummary.providers.find((p) => p.providerId === SEO_PROVIDER_ID);
+  assert.equal(seoSummary.orchestratorStatus, "skipped");
+  assert.equal(seoSummary.evidenceContributed, 0);
+  assert.equal(out.evidence.filter((e) => e.sourceType === "seo_analysis_derived").length, 0);
+});
+
+test("Paso 16 — seoProvider excluido por perfil no se invoca aunque publicWebsiteFetcher tenga éxito", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  registry.register(SEO_PROVIDER);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, policyOptions: { excludeProviders: [SEO_PROVIDER_ID] }, registry, evidenceForUnavailableUrl: noop });
+  const seoSummary = out.providerRunSummary.providers.find((p) => p.providerId === SEO_PROVIDER_ID);
+  assert.equal(seoSummary, undefined);
+});
+
+test("Paso 16 — modo fallback (por defecto): publicWebsiteFetcher detiene la cadena principal, pero seoProvider igualmente analiza sus páginas", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  registry.register(SEO_PROVIDER);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, registry, evidenceForUnavailableUrl: noop }); // execution por defecto: fallback
+  const seoSummary = out.providerRunSummary.providers.find((p) => p.providerId === SEO_PROVIDER_ID);
+  assert.ok(seoSummary, "seoProvider debe ejecutarse como paso explícito aunque el modo fallback no lo alcance en la cadena genérica");
+  assert.equal(seoSummary.orchestratorStatus, "available");
+});
+
+test("Paso 16 — seoProvider respeta individualTimeoutMs (hereda el timeout del pipeline, no lo bypassa)", async () => {
+  const registry = createProviderRegistry();
+  registry.register(fakeRealProviderWithPages());
+  const slowSeoProvider = defineResearchProvider({
+    id: SEO_PROVIDER_ID,
+    status: "real",
+    priority: 15,
+    capabilities: defineProviderCapabilities({ dimensions: ["seoTechnical", "seoContent", "seoLocal"] }),
+    async collect() {
+      await new Promise((r) => setTimeout(r, 200));
+      return defineProviderResult({ providerId: SEO_PROVIDER_ID, status: "success", evidence: [] });
+    },
+    async healthCheck() {
+      return defineProviderHealth({ healthy: true, mode: "real", message: "ok" });
+    },
+  });
+  registry.register(slowSeoProvider);
+  const out = await collectEvidenceViaProviders(["https://x.example/"], {
+    allowNetwork: true,
+    modeAllowsNetwork: true,
+    policyOptions: { individualTimeoutMs: 20 },
+    registry,
+    evidenceForUnavailableUrl: noop,
+  });
+  const seoSummary = out.providerRunSummary.providers.find((p) => p.providerId === SEO_PROVIDER_ID);
+  assert.equal(seoSummary.orchestratorStatus, "timed_out");
+});
+
+test("Paso 16 — idempotencia: dos ejecuciones sobre el mismo HTML producen el mismo conjunto de evidenceId de seoProvider", async () => {
+  const registry1 = createProviderRegistry();
+  registry1.register(fakeRealProviderWithPages());
+  registry1.register(SEO_PROVIDER);
+  const out1 = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, registry: registry1, evidenceForUnavailableUrl: noop });
+
+  const registry2 = createProviderRegistry();
+  registry2.register(fakeRealProviderWithPages());
+  registry2.register(SEO_PROVIDER);
+  const out2 = await collectEvidenceViaProviders(["https://x.example/"], { allowNetwork: true, modeAllowsNetwork: true, registry: registry2, evidenceForUnavailableUrl: noop });
+
+  const ids1 = out1.evidence.filter((e) => e.sourceType === "seo_analysis_derived").map((e) => e.evidenceId).sort();
+  const ids2 = out2.evidence.filter((e) => e.sourceType === "seo_analysis_derived").map((e) => e.evidenceId).sort();
+  assert.deepEqual(ids1, ids2);
 });

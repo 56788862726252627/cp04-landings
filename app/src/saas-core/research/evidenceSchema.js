@@ -29,6 +29,7 @@ export const SOURCE_TYPES = Object.freeze([
   "business_intent",
   "business_blueprint",
   "public_website_real", // Paso 13 — proveedor real publicWebsiteFetcher (requiere allowNetwork:true explícito)
+  "seo_analysis_derived", // Paso 16 — proveedor real seoProvider: análisis DERIVADO de un documento ya recopilado (nunca una descarga propia)
 ]);
 
 /** Nunca "confirmed" salvo que la evidencia venga de una fuente directamente observada. */

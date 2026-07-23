@@ -100,18 +100,32 @@ export function resolveProviderExecutionOptionsFromArgs(args) {
   if (!EXECUTION_VALUES.includes(execution)) {
     throw new ResearchCliError(`--execution desconocido: "${execution}". Usa uno de: ${EXECUTION_VALUES.join(", ")}.`);
   }
-  const includeProvidersRaw = splitList(args.providers);
+  let includeProvidersRaw = splitList(args.providers);
+  let excludeProvidersRaw = splitList(args["exclude-providers"]);
   const maxConcurrency = args["max-concurrency"] !== undefined ? Number(args["max-concurrency"]) : null;
   if (maxConcurrency !== null && (!Number.isInteger(maxConcurrency) || maxConcurrency < 1)) {
     throw new ResearchCliError(`--max-concurrency debe ser un entero >= 1 (recibido: "${args["max-concurrency"]}").`);
   }
+
+  // Paso 16 — atajos de conveniencia para el segundo proveedor real
+  // (seoProvider), equivalentes a combinaciones de --providers/--exclude-providers.
+  if (args["seo-only"]) {
+    includeProvidersRaw = ["publicWebsiteFetcher", "seoProvider"];
+  }
+  if ((args.seo || args["include-seo"]) && includeProvidersRaw.length > 0 && !includeProvidersRaw.includes("seoProvider")) {
+    includeProvidersRaw = [...includeProvidersRaw, "seoProvider"];
+  }
+  if (args["exclude-seo"] && !excludeProvidersRaw.includes("seoProvider")) {
+    excludeProvidersRaw = [...excludeProvidersRaw, "seoProvider"];
+  }
+
   return {
     pipeline,
     profileId: args.profile ? String(args.profile) : null,
     providerPolicyOptions: {
       execution,
       includeProviders: includeProvidersRaw.length > 0 ? includeProvidersRaw : null,
-      excludeProviders: splitList(args["exclude-providers"]),
+      excludeProviders: excludeProvidersRaw,
       providerPriorityOverrides: parsePriorityMap(args["provider-priority"]),
       maxConcurrency,
       globalTimeoutMs: args["global-timeout"] !== undefined ? Number(args["global-timeout"]) : null,

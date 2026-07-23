@@ -133,6 +133,26 @@ test("resolveProviderExecutionOptionsFromArgs: --provider-priority='id:5,id2:60'
   assert.deepEqual(opts.providerPolicyOptions.providerPriorityOverrides, { seoProvider: 5, whoisProvider: 60 });
 });
 
+test("Paso 16 — resolveProviderExecutionOptionsFromArgs: --seo-only restringe la allowlist a publicWebsiteFetcher+seoProvider", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "seo-only": true });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "seoProvider"]);
+});
+
+test("Paso 16 — resolveProviderExecutionOptionsFromArgs: --seo/--include-seo añaden seoProvider a una allowlist ya explícita", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ providers: "publicWebsiteFetcher,whoisProvider", seo: true });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "whoisProvider", "seoProvider"]);
+});
+
+test("Paso 16 — resolveProviderExecutionOptionsFromArgs: --seo sin --providers no restringe nada (includeProviders sigue null = todos)", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ seo: true });
+  assert.equal(opts.providerPolicyOptions.includeProviders, null);
+});
+
+test("Paso 16 — resolveProviderExecutionOptionsFromArgs: --exclude-seo excluye seoProvider explícitamente", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "exclude-seo": true });
+  assert.deepEqual(opts.providerPolicyOptions.excludeProviders, ["seoProvider"]);
+});
+
 test("resolveProviderExecutionOptionsFromArgs: rechaza --pipeline/--execution/--max-concurrency/--provider-priority inválidos", () => {
   assert.throws(() => resolveProviderExecutionOptionsFromArgs({ pipeline: "no-existe" }), ResearchCliError);
   assert.throws(() => resolveProviderExecutionOptionsFromArgs({ execution: "no-existe" }), ResearchCliError);
@@ -148,14 +168,14 @@ test("resolveProviderExecutionOptionsFromArgs: --global-timeout/--provider-timeo
   assert.equal(opts.providerPolicyOptions.maxConcurrency, 3);
 });
 
-test("runResearchDoctorChecks (Paso 14) reporta los 13 proveedores del registro multiproveedor (1 real, 12 stub) cargados sin error", async () => {
+test("runResearchDoctorChecks (Paso 16) reporta los 13 proveedores del registro multiproveedor (2 real: publicWebsiteFetcher+seoProvider, 11 stub) cargados sin error", async () => {
   await withTempDir(async (dir) => {
     const { ok, checks } = await runResearchDoctorChecks({ auditsDir: path.join(dir, "no-existe-todavia") });
     assert.equal(ok, true);
     const check = checks.find((c) => c.id === "multiprovider_registry_loaded");
     assert.ok(check, "falta el check multiprovider_registry_loaded");
     assert.equal(check.ok, true);
-    assert.match(check.detail, /13\/13 proveedores registrados \(1 real, 12 stub\)/);
+    assert.match(check.detail, /13\/13 proveedores registrados \(2 real, 11 stub\)/);
   });
 });
 

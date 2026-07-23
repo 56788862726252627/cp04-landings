@@ -214,3 +214,44 @@ export function renderProviderRunSummaryMarkdown(reportData) {
 
   return lines.join("\n") + "\n";
 }
+
+// Paso 16 · Fase 5/7 — informe SEO dedicado. Solo se genera (ver
+// auditOrchestrator.js) cuando `providerRunSummary.seo` no es null, es
+// decir, cuando seoProvider analizó páginas reales en esta ejecución.
+const SEO_SEVERITY_LABELS = Object.freeze({ critical: "Crítico", high: "Alto", medium: "Medio", low: "Bajo", opportunity: "Oportunidad", not_evaluable: "No evaluable" });
+
+export function renderSeoReportMarkdown(reportData) {
+  const seo = reportData.providerRunSummary?.seo;
+  if (!seo) return "# SEO\n\nEsta auditoría no incluye análisis SEO (pipeline legacy, o seoProvider no se ejecutó en esta ejecución).\n";
+
+  const lines = [
+    "# Informe SEO",
+    "",
+    `Score SEO global: **${seo.scoreBreakdown.overall.score === null ? "sin datos" : `${seo.scoreBreakdown.overall.score}/100`}** (confianza ${Math.round(seo.scoreBreakdown.overall.confidence * 100)}%, cobertura de grupos ${Math.round(seo.scoreBreakdown.overall.coverage * 100)}%)`,
+    "",
+    "## Desglose por grupo",
+    "",
+    "| Grupo | Score | Confianza | Cobertura | Hallazgos |",
+    "|---|---|---|---|---|",
+  ];
+  for (const group of Object.values(seo.scoreBreakdown.groups)) {
+    lines.push(`| ${group.label} | ${group.score === null ? "sin datos" : `${group.score}/100`} | ${Math.round(group.confidence * 100)}% | ${Math.round(group.coverage * 100)}% | ${group.findingsCount} |`);
+  }
+
+  lines.push("", "## Recomendaciones SEO", "");
+  const recosBySeverity = {};
+  for (const r of seo.recommendations) (recosBySeverity[r.severity] ??= []).push(r);
+  const orderedSeverities = ["critical", "high", "medium", "low", "opportunity"];
+  let anyRecommendation = false;
+  for (const severity of orderedSeverities) {
+    const group = recosBySeverity[severity] ?? [];
+    if (group.length === 0) continue;
+    anyRecommendation = true;
+    lines.push(`### ${SEO_SEVERITY_LABELS[severity]} (${group.length})`, "");
+    for (const r of group) lines.push(`- **${r.title}** — esfuerzo ${r.effort}, confianza ${Math.round(r.confidence * 100)}%. ${r.explanation} _(${r.affectedUrls.length} URL(s) afectada(s))_`);
+    lines.push("");
+  }
+  if (!anyRecommendation) lines.push("Sin recomendaciones SEO: ningún hallazgo negativo ni oportunidad detectados.");
+
+  return lines.join("\n") + "\n";
+}

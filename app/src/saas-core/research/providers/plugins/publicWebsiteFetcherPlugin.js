@@ -25,13 +25,21 @@ export const PROVIDER = defineResearchProvider({
     const { evidence, pageResults, consultedUrls } = await PUBLIC_WEBSITE_FETCHER_PROVIDER.collect(urls, limits);
     const anyAvailable = pageResults.some((r) => r.status === "available");
     const allAvailable = pageResults.every((r) => r.status === "available");
+    // Paso 16 — "documento web normalizado" para analizadores posteriores
+    // en la MISMA ejecución del puente (p. ej. seoProvider): un
+    // subconjunto saneado de las páginas YA descargadas, nunca una
+    // segunda descarga. Nunca incluye cookies/cabeceras de autenticación
+    // (performPinnedRequest tampoco las envía ni las recibe de vuelta).
+    const pages = pageResults
+      .filter((r) => r.status === "available")
+      .map((r) => ({ url: r.url, httpStatus: r.httpStatus, contentType: r.contentType, body: r.body, headers: r.headers, robotsTxt: r.robotsTxt, redirectChain: r.redirectChain }));
     return defineProviderResult({
       providerId: PUBLIC_WEBSITE_FETCHER_PROVIDER.id,
       status: allAvailable ? "success" : anyAvailable ? "partial" : "failed",
       evidence,
       errors: pageResults.filter((r) => r.status !== "available").map((r) => ({ message: `${r.url}: ${r.errorCode} — ${r.reason}` })),
       durationMs: Date.now() - startedAt,
-      metadata: { consultedUrls },
+      metadata: { consultedUrls, pages },
     });
   },
   async healthCheck() {

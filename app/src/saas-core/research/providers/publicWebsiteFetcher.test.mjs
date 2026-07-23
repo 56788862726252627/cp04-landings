@@ -117,6 +117,31 @@ test("fetchPublicWebsite: contenido disponible con transporte simulado (sin red 
   assert.ok(result.contentHash);
 });
 
+test("Paso 16 — fetchPublicWebsite reexpone cabeceras SEO relevantes (x-robots-tag, content-language) sin segunda petición", async () => {
+  const html = "<html><head><title>t</title></head><body></body></html>";
+  const transportFn = async () => ({ statusCode: 200, headers: { "content-type": "text/html", "x-robots-tag": "noindex", "content-language": "es" }, contentType: "text/html", body: html, byteSize: html.length });
+  const result = await fetchPublicWebsite(`http://${FAKE_PUBLIC_HOST}/`, { respectRobots: false }, { lookupFn: publicLookup(), transportFn });
+  assert.equal(result.headers["x-robots-tag"], "noindex");
+  assert.equal(result.headers["content-language"], "es");
+});
+
+test("Paso 16 — fetchPublicWebsite reexpone robots.txt ya consultado (available:false si no existe, sin volver a pedirlo)", async () => {
+  const html = "<html></html>";
+  let robotsRequests = 0;
+  const transportFn = async (url) => {
+    if (url.pathname === "/robots.txt") {
+      robotsRequests++;
+      return { statusCode: 200, headers: { "content-type": "text/plain" }, contentType: "text/plain", body: "User-agent: *\nDisallow: /privado\nSitemap: https://example.invalid/sitemap.xml\n", byteSize: 10 };
+    }
+    return { statusCode: 200, headers: { "content-type": "text/html" }, contentType: "text/html", body: html, byteSize: html.length };
+  };
+  const result = await fetchPublicWebsite(`http://${FAKE_PUBLIC_HOST}/`, { respectRobots: true }, { lookupFn: publicLookup(), transportFn });
+  assert.equal(result.status, "available");
+  assert.equal(result.robotsTxt.available, true);
+  assert.match(result.robotsTxt.content, /Sitemap:/);
+  assert.equal(robotsRequests, 1, "robots.txt no debería pedirse más de una vez para servir este resultado");
+});
+
 test("fetchPublicWebsite sigue una redirección segura y la revalida (no solo la URL inicial)", async () => {
   let call = 0;
   const transportFn = async () => {
