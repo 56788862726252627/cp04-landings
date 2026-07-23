@@ -147,6 +147,12 @@ export function performPinnedRequest(url, pinnedAddress, family, { timeoutMs, ma
     const transport = url.protocol === "https:" ? https : http;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    // Paso 18 — timing REAL medido por este cliente HTTP (Node), no una
+    // simulación de navegador: incluye conexión TCP/TLS (DNS ya está
+    // pinneado, ver validateUrlForRealFetch) hasta la llegada de
+    // cabeceras/cuerpo completo. Se expone tal cual, nunca como "TTFB"
+    // en el sentido estricto de Web Vitals (que mide desde el navegador).
+    const requestStartedAt = Date.now();
 
     const req = transport.request(
       {
@@ -168,6 +174,7 @@ export function performPinnedRequest(url, pinnedAddress, family, { timeoutMs, ma
         timeout: timeoutMs,
       },
       (res) => {
+        const headersReceivedAt = Date.now();
         const contentType = String(res.headers["content-type"] || "").split(";")[0].trim().toLowerCase();
         const chunks = [];
         let received = 0;
@@ -192,9 +199,11 @@ export function performPinnedRequest(url, pinnedAddress, family, { timeoutMs, ma
           resolve({
             statusCode: res.statusCode,
             headers: res.headers,
+            httpVersion: res.httpVersion ?? null,
             contentType,
             body: Buffer.concat(chunks).toString("utf8"),
             byteSize: received,
+            timing: { timeToHeadersMs: headersReceivedAt - requestStartedAt, totalMs: Date.now() - requestStartedAt },
           });
         });
 
@@ -281,15 +290,33 @@ async function fetchRobotsTxt(origin, options, transportFn) {
  *   incluso en tests: solo se sustituye qué hace la resolución DNS o el
  *   transporte, nunca la decisión de si algo es seguro.
  */
-// Paso 16 — subconjunto de cabeceras de respuesta seguro de reexponer a
-// analizadores posteriores (p. ej. seoProvider): ninguna es sensible (son
-// cabeceras de una respuesta HTTP pública ya descargada), y NUNCA se
-// reenvían cookies/autenticación (performPinnedRequest tampoco las envía).
-const SEO_RELEVANT_RESPONSE_HEADERS = Object.freeze(["x-robots-tag", "content-language"]);
+// Paso 16/18 — subconjunto de cabeceras de respuesta seguro de reexponer
+// a analizadores posteriores (seoProvider, performanceProvider): ninguna
+// es sensible (son cabeceras de una respuesta HTTP pública ya
+// descargada), y NUNCA se reenvían cookies/autenticación
+// (performPinnedRequest tampoco las envía).
+const ANALYZABLE_RESPONSE_HEADERS = Object.freeze([
+  "x-robots-tag",
+  "content-language",
+  "content-length",
+  "content-encoding",
+  "cache-control",
+  "expires",
+  "etag",
+  "last-modified",
+  "vary",
+  "connection",
+  // Paso 18 — señales públicas de CDN/entrega (ninguna sensible): solo se
+  // usan para "CDN solo si existe evidencia pública", nunca se infiere sin ellas.
+  "cf-ray",
+  "x-cache",
+  "x-served-by",
+  "via",
+]);
 
-function extractSeoRelevantHeaders(rawHeaders) {
+function extractAnalyzableHeaders(rawHeaders) {
   const headers = {};
-  for (const name of SEO_RELEVANT_RESPONSE_HEADERS) headers[name] = rawHeaders?.[name] ?? null;
+  for (const name of ANALYZABLE_RESPONSE_HEADERS) headers[name] = rawHeaders?.[name] ?? null;
   return headers;
 }
 
@@ -374,12 +401,15 @@ export async function fetchPublicWebsite(rawUrl, limits = {}, testHooks = {}) {
       redirectChain,
       fetchedAt: new Date().toISOString(),
       contentHash: createHash("sha256").update(response.body, "utf8").digest("hex"),
-      // Paso 16 — reexpuestos para analizadores posteriores (seoProvider):
-      // NO son una segunda descarga, son datos ya obtenidos en este mismo
-      // fetch (cabeceras de la respuesta ya recibida, robots.txt ya
-      // consultado más arriba en esta misma función).
-      headers: extractSeoRelevantHeaders(response.headers),
+      // Paso 16/18 — reexpuestos para analizadores posteriores (seoProvider,
+      // performanceProvider): NO son una segunda descarga, son datos ya
+      // obtenidos en este mismo fetch (cabeceras de la respuesta ya
+      // recibida, robots.txt ya consultado más arriba, timing REAL medido
+      // por performPinnedRequest durante ESTA petición).
+      headers: extractAnalyzableHeaders(response.headers),
       robotsTxt: lastRobotsResult,
+      httpVersion: response.httpVersion ?? null,
+      timing: response.timing ?? null,
     };
   }
 

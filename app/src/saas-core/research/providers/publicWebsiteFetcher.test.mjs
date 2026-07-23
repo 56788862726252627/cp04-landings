@@ -125,6 +125,50 @@ test("Paso 16 — fetchPublicWebsite reexpone cabeceras SEO relevantes (x-robots
   assert.equal(result.headers["content-language"], "es");
 });
 
+test("Paso 18 — fetchPublicWebsite reexpone cabeceras de rendimiento (content-length, content-encoding, cache-control, etag...) sin segunda petición", async () => {
+  const html = "<html><head><title>t</title></head><body></body></html>";
+  const transportFn = async () => ({
+    statusCode: 200,
+    headers: { "content-type": "text/html", "content-length": String(html.length), "content-encoding": "gzip", "cache-control": "max-age=3600", etag: '"abc123"', "last-modified": "Mon, 01 Jan 2024 00:00:00 GMT", vary: "Accept-Encoding" },
+    contentType: "text/html",
+    body: html,
+    byteSize: html.length,
+  });
+  const result = await fetchPublicWebsite(`http://${FAKE_PUBLIC_HOST}/`, { respectRobots: false }, { lookupFn: publicLookup(), transportFn });
+  assert.equal(result.headers["content-length"], String(html.length));
+  assert.equal(result.headers["content-encoding"], "gzip");
+  assert.equal(result.headers["cache-control"], "max-age=3600");
+  assert.equal(result.headers.etag, '"abc123"');
+  assert.equal(result.headers["last-modified"], "Mon, 01 Jan 2024 00:00:00 GMT");
+  assert.equal(result.headers.vary, "Accept-Encoding");
+});
+
+test("Paso 18 — performPinnedRequest mide timing real (timeToHeadersMs <= totalMs) contra un servidor local real", async () => {
+  await new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      setTimeout(() => {
+        res.writeHead(200, { "content-type": "text/html" });
+        res.end("<html></html>");
+      }, 20);
+    });
+    server.listen(0, "127.0.0.1", async () => {
+      try {
+        const port = server.address().port;
+        const url = new URL(`http://127.0.0.1:${port}/`);
+        const response = await performPinnedRequest(url, "127.0.0.1", 4, { timeoutMs: 5000, maxBytes: 1_000_000, userAgent: "test" });
+        assert.ok(response.timing.timeToHeadersMs >= 15, `timeToHeadersMs=${response.timing.timeToHeadersMs}`);
+        assert.ok(response.timing.totalMs >= response.timing.timeToHeadersMs);
+        assert.equal(response.httpVersion, "1.1");
+        resolve();
+      } catch (err) {
+        reject(err);
+      } finally {
+        server.close();
+      }
+    });
+  });
+});
+
 test("Paso 16 — fetchPublicWebsite reexpone robots.txt ya consultado (available:false si no existe, sin volver a pedirlo)", async () => {
   const html = "<html></html>";
   let robotsRequests = 0;

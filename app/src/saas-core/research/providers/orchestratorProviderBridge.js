@@ -30,14 +30,15 @@ import { getProviderSectorProfile, mergePolicyOptionsWithProfile } from "./provi
 
 export const DEFAULT_PLUGINS_DIR = path.resolve("src", "saas-core", "research", "providers", "plugins");
 export const REAL_PROVIDER_ID = "publicWebsiteFetcher";
-// Paso 16/17 — proveedores derivados: analizan (nunca descargan) las
+// Paso 16/17/18 — proveedores derivados: analizan (nunca descargan) las
 // páginas que REAL_PROVIDER_ID ya recopiló en ESTA misma ejecución.
-// Orden = orden pedido por el enunciado: publicWebsiteFetcher -> seo -> accessibility.
+// Orden = orden pedido por el enunciado: publicWebsiteFetcher -> seo -> accessibility -> performance.
 export const SEO_PROVIDER_ID = "seoProvider";
 export const ACCESSIBILITY_PROVIDER_ID = "accessibilityProvider";
+export const PERFORMANCE_PROVIDER_ID = "performanceProvider";
 
 function emptyRunSummary({ execution, profileId, pluginLoadErrors }) {
-  return { pipeline: "multiprovider", executionMode: execution, profileId, usedProviderId: null, providers: [], pluginLoadErrors, seo: null, accessibility: null };
+  return { pipeline: "multiprovider", executionMode: execution, profileId, usedProviderId: null, providers: [], pluginLoadErrors, seo: null, accessibility: null, performance: null };
 }
 
 /**
@@ -169,12 +170,14 @@ export async function collectEvidenceViaProviders(
   const realProviderResultFromChain = runResult.results.find((r) => r.providerId === REAL_PROVIDER_ID);
   const fetchedPages = realProviderResultFromChain?.metadata?.pages ?? [];
 
-  // Paso 16/17 — "publicWebsiteFetcher recopila -> seoProvider analiza ->
-  // accessibilityProvider analiza": pasos explícitos, en ese orden,
-  // SEPARADOS de la cadena genérica de arriba (ver runDerivedPageAnalysisProvider).
+  // Paso 16/17/18 — "publicWebsiteFetcher recopila -> seoProvider analiza ->
+  // accessibilityProvider analiza -> performanceProvider analiza": pasos
+  // explícitos, en ese orden, SEPARADOS de la cadena genérica de arriba
+  // (ver runDerivedPageAnalysisProvider).
   const derivedProviderArgs = { registry, fetchedPages, profileId: profile.id, policy, circuitBreaker, providerRunEntries };
   const seoInsights = await runDerivedPageAnalysisProvider(SEO_PROVIDER_ID, derivedProviderArgs);
   const accessibilityInsights = await runDerivedPageAnalysisProvider(ACCESSIBILITY_PROVIDER_ID, derivedProviderArgs);
+  const performanceInsights = await runDerivedPageAnalysisProvider(PERFORMANCE_PROVIDER_ID, derivedProviderArgs);
 
   const { evidence, provenanceIndex, providerSummaries } = aggregateProviderResults(providerRunEntries);
 
@@ -207,6 +210,7 @@ export async function collectEvidenceViaProviders(
     pluginLoadErrors,
     seo: seoInsights, // Paso 16 — null si seoProvider no se ejecutó o no produjo resultado; ver seoScoring.js/seoRecommendations.js
     accessibility: accessibilityInsights, // Paso 17 — null si accessibilityProvider no se ejecutó o no produjo resultado; ver a11yScoring.js/a11yRecommendations.js
+    performance: performanceInsights, // Paso 18 — null si performanceProvider no se ejecutó o no produjo resultado; ver perfScoring.js/perfRecommendations.js
   };
 
   return { evidence, provenanceIndex, limitations, networkUsed, consultedUrls: networkUsed ? [...urls] : [], providerRunSummary };

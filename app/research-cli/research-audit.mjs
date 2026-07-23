@@ -61,8 +61,15 @@ Paso 17 — Accessibility Provider real (tercer proveedor real; requiere --pipel
   --explain-accessibility-score     Imprime la explicación de cada grupo del desglose de accesibilidad
   --show-manual-checks              Lista las comprobaciones marcadas como revisión manual pendiente
 
-  --explain-score                  Imprime la explicación de cada categoría de score (incluido el desglose SEO/accesibilidad si los hay)
-  --show-coverage                  Imprime la cobertura de dimensiones/categorías y, si aplica, de los desgloses SEO/accesibilidad
+Paso 18 — Performance Provider real (cuarto proveedor real; requiere --pipeline=multiprovider):
+  --performance / --include-performance   Asegura que performanceProvider participa
+  --performance-only                Restringe la ejecución a publicWebsiteFetcher+performanceProvider únicamente
+  --exclude-performance              Excluye performanceProvider explícitamente de esta ejecución
+  --explain-performance-score        Imprime la explicación de cada grupo del desglose de rendimiento
+  --show-unmeasured                  Lista las métricas de rendimiento no medibles con esta herramienta (not_measured/browser_test_required)
+
+  --explain-score                  Imprime la explicación de cada categoría de score (incluido el desglose SEO/accesibilidad/rendimiento si los hay)
+  --show-coverage                  Imprime la cobertura de dimensiones/categorías y, si aplica, de los desgloses SEO/accesibilidad/rendimiento
   --help                           Muestra esta ayuda
 `;
 
@@ -117,6 +124,9 @@ async function main() {
       if (summary.accessibility) {
         console.log(`Accesibilidad: score global ${summary.accessibility.scoreBreakdown.overall.score ?? "sin datos"}/100 · ${summary.accessibility.scoreBreakdown.overall.manualReviewCount} revisión(es) manual(es) pendiente(s) (ver reports/accessibility.md). Puntuación orientativa, no es una certificación.`);
       }
+      if (summary.performance) {
+        console.log(`Rendimiento: score global ${summary.performance.scoreBreakdown.overall.score ?? "sin datos"}/100 · ${summary.performance.scoreBreakdown.overall.unmeasuredCount} métrica(s) no medible(s) con esta herramienta (ver reports/performance.md). No es Lighthouse ni mide Core Web Vitals.`);
+      }
     }
     if (result.limitations.length > 0) console.log(`Limitaciones: ${result.limitations.join(" | ")}`);
     if (args["explain-score"]) {
@@ -130,6 +140,21 @@ async function main() {
         console.log("  Accesibilidad (desglose):");
         for (const g of Object.values(result.providerRunSummary.accessibility.scoreBreakdown.groups)) console.log(`    ${g.label}: ${g.explanation}`);
       }
+      if (result.providerRunSummary?.performance) {
+        console.log("  Rendimiento (desglose):");
+        for (const g of Object.values(result.providerRunSummary.performance.scoreBreakdown.groups)) console.log(`    ${g.label}: ${g.explanation}`);
+      }
+    }
+    if (args["explain-performance-score"] && result.providerRunSummary?.performance) {
+      console.log("\n--explain-performance-score:");
+      for (const g of Object.values(result.providerRunSummary.performance.scoreBreakdown.groups)) console.log(`  ${g.label}: ${g.explanation}`);
+      console.log(`  ${result.providerRunSummary.performance.scoreBreakdown.disclaimer}`);
+      console.log(`  Recomendaciones: ${result.providerRunSummary.performance.recommendations.length}`);
+    }
+    if (args["show-unmeasured"] && result.providerRunSummary?.performance) {
+      const unmeasured = result.providerRunSummary.performance.recommendations.filter((r) => r.severity === "not_measured" || r.severity === "browser_test_required");
+      console.log(`\n--show-unmeasured: ${unmeasured.length} métrica(s) de rendimiento no medible(s) con esta herramienta`);
+      for (const r of unmeasured) console.log(`  - ${r.title} (${r.severity === "browser_test_required" ? "requiere prueba de navegador" : "no medido"})`);
     }
     if (args["explain-accessibility-score"] && result.providerRunSummary?.accessibility) {
       const wcagLevel = providerOptions.wcagLevel;
@@ -152,6 +177,9 @@ async function main() {
       }
       if (result.providerRunSummary?.accessibility) {
         console.log(`  Accesibilidad (grupos evaluados): ${result.providerRunSummary.accessibility.scoreBreakdown.overall.groupsEvaluated}/${result.providerRunSummary.accessibility.scoreBreakdown.overall.groupsTotal}`);
+      }
+      if (result.providerRunSummary?.performance) {
+        console.log(`  Rendimiento (grupos evaluados): ${result.providerRunSummary.performance.scoreBreakdown.overall.groupsEvaluated}/${result.providerRunSummary.performance.scoreBreakdown.overall.groupsTotal}`);
       }
     }
   } catch (err) {

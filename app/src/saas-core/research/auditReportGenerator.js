@@ -303,3 +303,48 @@ export function renderAccessibilityReportMarkdown(reportData) {
 
   return lines.join("\n") + "\n";
 }
+
+// Paso 18 · Fase 5/7 — informe de rendimiento dedicado. Solo se genera
+// (ver auditOrchestrator.js) cuando `providerRunSummary.performance` no
+// es null. Incluye SIEMPRE el disclaimer: no es Lighthouse ni PageSpeed
+// Insights, no mide Core Web Vitals, no sustituye una prueba de
+// navegador real.
+const PERF_SEVERITY_LABELS = Object.freeze({ critical: "Crítico", high: "Alto", medium: "Medio", low: "Bajo", opportunity: "Oportunidad", not_measured: "No medido con esta herramienta", browser_test_required: "Requiere prueba de navegador (pendiente)" });
+
+export function renderPerformanceReportMarkdown(reportData) {
+  const perf = reportData.providerRunSummary?.performance;
+  if (!perf) return "# Rendimiento\n\nEsta auditoría no incluye análisis de rendimiento (pipeline legacy, o performanceProvider no se ejecutó en esta ejecución).\n";
+
+  const lines = [
+    "# Informe de rendimiento",
+    "",
+    `> ${perf.scoreBreakdown.disclaimer}`,
+    "",
+    `Score de rendimiento global: **${perf.scoreBreakdown.overall.score === null ? "sin datos" : `${perf.scoreBreakdown.overall.score}/100`}** (confianza ${Math.round(perf.scoreBreakdown.overall.confidence * 100)}%, cobertura de grupos ${Math.round(perf.scoreBreakdown.overall.coverage * 100)}%, ${perf.scoreBreakdown.overall.unmeasuredCount} métrica(s) no medible(s) con esta herramienta)`,
+    "",
+    "## Desglose por grupo",
+    "",
+    "| Grupo | Score | Confianza | Cobertura | Hallazgos | No medidos |",
+    "|---|---|---|---|---|---|",
+  ];
+  for (const group of Object.values(perf.scoreBreakdown.groups)) {
+    lines.push(`| ${group.label} | ${group.score === null ? "sin datos" : `${group.score}/100`} | ${Math.round(group.confidence * 100)}% | ${Math.round(group.coverage * 100)}% | ${group.findingsCount} | ${group.unmeasuredCount} |`);
+  }
+
+  lines.push("", "## Recomendaciones de rendimiento", "");
+  const recosBySeverity = {};
+  for (const r of perf.recommendations) (recosBySeverity[r.severity] ??= []).push(r);
+  const orderedSeverities = ["critical", "high", "medium", "low", "opportunity", "not_measured", "browser_test_required"];
+  let anyRecommendation = false;
+  for (const severity of orderedSeverities) {
+    const group = recosBySeverity[severity] ?? [];
+    if (group.length === 0) continue;
+    anyRecommendation = true;
+    lines.push(`### ${PERF_SEVERITY_LABELS[severity]} (${group.length})`, "");
+    for (const r of group) lines.push(`- **${r.title}** — esfuerzo ${r.effort}, confianza ${Math.round(r.confidence * 100)}%. ${r.explanation} _(${r.affectedUrls.length} URL(s) afectada(s))_`);
+    lines.push("");
+  }
+  if (!anyRecommendation) lines.push("Sin recomendaciones de rendimiento: ningún hallazgo negativo, oportunidad ni prueba pendiente detectados.");
+
+  return lines.join("\n") + "\n";
+}

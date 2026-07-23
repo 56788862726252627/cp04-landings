@@ -173,6 +173,26 @@ test("Paso 17 — resolveProviderExecutionOptionsFromArgs: --exclude-accessibili
   assert.deepEqual(opts.providerPolicyOptions.excludeProviders, ["accessibilityProvider"]);
 });
 
+test("Paso 18 — resolveProviderExecutionOptionsFromArgs: --performance-only restringe la allowlist a publicWebsiteFetcher+performanceProvider", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "performance-only": true });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "performanceProvider"]);
+});
+
+test("Paso 18 — resolveProviderExecutionOptionsFromArgs: --seo-only, --accessibility-only y --performance-only combinados incluyen los 4 proveedores reales", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "seo-only": true, "accessibility-only": true, "performance-only": true });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "seoProvider", "accessibilityProvider", "performanceProvider"]);
+});
+
+test("Paso 18 — resolveProviderExecutionOptionsFromArgs: --performance/--include-performance añaden performanceProvider a una allowlist ya explícita", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ providers: "publicWebsiteFetcher,whoisProvider", performance: true });
+  assert.deepEqual(opts.providerPolicyOptions.includeProviders, ["publicWebsiteFetcher", "whoisProvider", "performanceProvider"]);
+});
+
+test("Paso 18 — resolveProviderExecutionOptionsFromArgs: --exclude-performance excluye performanceProvider explícitamente", () => {
+  const opts = resolveProviderExecutionOptionsFromArgs({ "exclude-performance": true });
+  assert.deepEqual(opts.providerPolicyOptions.excludeProviders, ["performanceProvider"]);
+});
+
 test("Paso 17 — resolveProviderExecutionOptionsFromArgs: --wcag-level=A|AA se normaliza a mayúsculas; sin el flag, null", () => {
   assert.equal(resolveProviderExecutionOptionsFromArgs({}).wcagLevel, null);
   assert.equal(resolveProviderExecutionOptionsFromArgs({ "wcag-level": "a" }).wcagLevel, "A");
@@ -198,14 +218,14 @@ test("resolveProviderExecutionOptionsFromArgs: --global-timeout/--provider-timeo
   assert.equal(opts.providerPolicyOptions.maxConcurrency, 3);
 });
 
-test("runResearchDoctorChecks (Paso 17) reporta los 13 proveedores del registro multiproveedor (3 real: publicWebsiteFetcher+seoProvider+accessibilityProvider, 10 stub) cargados sin error", async () => {
+test("runResearchDoctorChecks (Paso 18) reporta los 13 proveedores del registro multiproveedor (4 real: publicWebsiteFetcher+seoProvider+accessibilityProvider+performanceProvider, 9 stub) cargados sin error", async () => {
   await withTempDir(async (dir) => {
     const { ok, checks } = await runResearchDoctorChecks({ auditsDir: path.join(dir, "no-existe-todavia") });
     assert.equal(ok, true);
     const check = checks.find((c) => c.id === "multiprovider_registry_loaded");
     assert.ok(check, "falta el check multiprovider_registry_loaded");
     assert.equal(check.ok, true);
-    assert.match(check.detail, /13\/13 proveedores registrados \(3 real, 10 stub\)/);
+    assert.match(check.detail, /13\/13 proveedores registrados \(4 real, 9 stub\)/);
   });
 });
 
