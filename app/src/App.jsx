@@ -3464,7 +3464,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
         })}
       </nav>
       {onClearRole && (
-        <button className="cp04-menu-button" type="button" onClick={onClearRole}
+        <button className="cp04-menu-button cp04-sidebar-logout-btn" type="button" onClick={onClearRole}
           style={{ width:"100%", marginTop:14, marginBottom:10, justifyContent:"center", borderColor:"rgba(182,255,0,.32)" }}>
           🚪 {tx("nav.cerrar_sesion")}
         </button>
