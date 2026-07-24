@@ -831,7 +831,14 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn * {
   -webkit-text-fill-color: rgba(255,255,255,.86) !important;
 }
 
-/* Perfil y ajustes: quitar rojo/burdeos permanente */
+/* Perfil y ajustes: quitar rojo/burdeos permanente
+   (color eliminado de este bloque: [aria-label*="Perfil"] tiene la
+   misma especificidad que la regla genérica del sidebar pero aparece
+   después en el archivo, así que ganaba tanto en normal como en
+   hover y dejaba a "Perfil y ajustes" con un blanco ligeramente
+   distinto al resto de módulos. Sin declaración de color aquí, cae
+   en la misma regla genérica que usan Inicio/Reservas/Comunidad/etc,
+   igual en los 4 roles — ver docs/mejora-2-visual-identity-audit-20260724/11-*.md) */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn,
@@ -842,7 +849,6 @@ body.cp04-module-screen-active .cp04-sidebar button[title*="Perfil"],
 body.cp04-role-screen-active .cp04-sidebar button[title*="Perfil"] {
   background: rgba(5,10,18,.72) !important;
   border-color: rgba(255,255,255,.11) !important;
-  color: rgba(255,255,255,.86) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
 }
 
