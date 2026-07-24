@@ -15,5 +15,13 @@
 ## Fase 5 — guía visual maestra V1: DONE (37 puntos, ver doc. 05)
 ## Fase 6 — propuesta multisector: DONE (branding.config.json, ver doc. 06)
 ## Fase 7 — documentación: DONE (8 documentos + HTML visual)
-## Fase 8 — validación técnica: en curso
-## Git y PR: pendiente
+## Fase 8 — validación técnica: DONE (1302/1302 tests, lint sin errores nuevos, build correcto)
+## Git y PR (Mejora 2): DONE — PR #52
+
+## Cierre definitivo (2026-07-24, ver doc. 09)
+- Contraste Perfil/idioma: DONE (torcal-role-background.css, 7 valores)
+- Verdes/rojos secundarios: DONE (normalización selectiva, 5 tokens nuevos en theme.js)
+- Duplicados/huérfanos: DONE (vite.svg/react.svg eliminados; resto sin tocar)
+- Validación responsive: DONE (revisión de código, sin cambios de layout)
+- Validación técnica final: DONE
+- Git y PR de cierre: en curso

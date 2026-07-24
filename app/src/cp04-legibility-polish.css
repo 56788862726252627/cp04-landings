@@ -46,7 +46,7 @@ body.cp04-role-screen-active small {
 /* Etiquetas verdes premium */
 body.cp04-module-screen-active [style*="letterSpacing"],
 body.cp04-role-screen-active [style*="letterSpacing"] {
-  color: #b7ff22 !important;
+  color: #b6ff00 !important;
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65) !important;
 }
 
@@ -143,7 +143,7 @@ body.cp04-module-screen-active input[type="checkbox"],
 body.cp04-role-screen-active input[type="checkbox"] {
   width: 18px !important;
   height: 18px !important;
-  accent-color: #b7ff00 !important;
+  accent-color: #b6ff00 !important;
 }
 
 /* Sidebar */
@@ -204,7 +204,7 @@ body.cp04-module-screen-active td {
 
 body.cp04-module-screen-active code,
 body.cp04-module-screen-active pre {
-  color: #b7ff22 !important;
+  color: #b6ff00 !important;
   background: rgba(4, 9, 16, 0.58) !important;
   border: 1px solid rgba(182,255,0,0.18) !important;
   border-radius: 8px !important;
@@ -446,7 +446,7 @@ body.cp04-module-screen-active code {
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  color: #c8ff4d !important;
+  color: #b6ff00 !important;
   background: rgba(5, 10, 18, 0.70) !important;
   border: 1px solid rgba(182, 255, 0, 0.20) !important;
   padding: 4px 8px !important;
@@ -542,8 +542,8 @@ body.cp04-role-screen-active .cp04-sidebar button[data-active="true"] {
   background:
     linear-gradient(
       135deg,
-      #b7ff00,
-      #26eba6
+      #b6ff00,
+      #2df5a3
     ) !important;
   border-color: rgba(230, 255, 160, 0.90) !important;
   text-shadow: none !important;
@@ -796,7 +796,7 @@ body.cp04-module-screen-active .cp04-sidebar button[aria-current="page"],
 body.cp04-module-screen-active .cp04-sidebar button[data-active="true"],
 body.cp04-role-screen-active .cp04-sidebar button[aria-current="page"],
 body.cp04-role-screen-active .cp04-sidebar button[data-active="true"] {
-  background: linear-gradient(135deg, #b6ff00, #2ee59d) !important;
+  background: linear-gradient(135deg, #b6ff00, #2df5a3) !important;
   border-color: rgba(182,255,0,.55) !important;
   color: #061006 !important;
   box-shadow: 0 14px 34px rgba(182,255,0,.22) !important;
@@ -857,7 +857,7 @@ body.cp04-module-screen-active .cp04-sidebar button[aria-current="page"],
 body.cp04-module-screen-active .cp04-sidebar button[data-active="true"],
 body.cp04-role-screen-active .cp04-sidebar button[aria-current="page"],
 body.cp04-role-screen-active .cp04-sidebar button[data-active="true"] {
-  background: linear-gradient(135deg, #b6ff00, #2ee59d) !important;
+  background: linear-gradient(135deg, #b6ff00, #2df5a3) !important;
   border-color: rgba(182,255,0,.55) !important;
   color: #061006 !important;
 }
@@ -946,7 +946,7 @@ body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[dat
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[data-active="true"],
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[data-active="true"],
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[data-active="true"] {
-  background: linear-gradient(135deg, #b6ff00, #2ee59d) !important;
+  background: linear-gradient(135deg, #b6ff00, #2df5a3) !important;
   border-color: rgba(182,255,0,.55) !important;
   color: #061006 !important;
   -webkit-text-fill-color: #061006 !important;

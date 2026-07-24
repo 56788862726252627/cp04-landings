@@ -186,7 +186,7 @@ body.cp04-role-screen-active h1 + p {
 /* Mantener el encabezado superior visible */
 body.cp04-role-screen-active .cp04-badge,
 body.cp04-role-screen-active code {
-  color: #baff00 !important;
+  color: #b6ff00 !important;
 }
 
 /* Mejor integración visual en tablet */
@@ -317,7 +317,7 @@ body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].ac
 body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"][aria-current="page"]:hover {
   background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
   border-color: rgba(182, 255, 0, .96) !important;
-  color: #ffffff !important;
+  color: #05080d !important;
   box-shadow:
     0 0 0 1px rgba(182, 255, 0, .35),
     0 0 24px rgba(182, 255, 0, .28),
@@ -327,7 +327,7 @@ body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"][ar
 body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].is-active *,
 body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"].active *,
 body.cp04-role-screen-active .cp04-sidebar button[data-tour="sidebar-perfil"][aria-current="page"] * {
-  color: #ffffff !important;
+  color: #05080d !important;
 }
 
 /* AUDITORIA 29 · REFUERZO FINAL ANTI-ROJO PERFIL + IDIOMA */
@@ -340,14 +340,14 @@ html body .cp04-sidebar [data-tour="sidebar-perfil"][aria-current="page"] {
   background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
   background-color: #b6ff00 !important;
   border-color: rgba(182,255,0,.98) !important;
-  color: #ffffff !important;
+  color: #05080d !important;
   transition: none !important;
   animation: none !important;
   box-shadow: 0 0 0 1px rgba(182,255,0,.35), 0 0 22px rgba(182,255,0,.25) !important;
 }
 
 html body .cp04-sidebar [data-tour="sidebar-perfil"] * {
-  color: #ffffff !important;
+  color: #05080d !important;
   transition: none !important;
   animation: none !important;
 }
@@ -377,7 +377,7 @@ html body .cp04-sidebar [data-tour="sidebar-perfil"].is-active,
 html body .cp04-sidebar [data-tour="sidebar-perfil"].is-active *,
 html body .cp04-sidebar [data-tour="sidebar-perfil"][aria-current="page"],
 html body .cp04-sidebar [data-tour="sidebar-perfil"][aria-current="page"] * {
-  color: #ffffff !important;
+  color: #05080d !important;
 }
 
 /* AUDITORIA 29 · Refuerzo Torcal: Idioma / Español verde neón */
@@ -400,7 +400,7 @@ html body .cp04-sidebar .cp04-language-select:hover {
   background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
   background-color: #b6ff00 !important;
   border-color: rgba(182,255,0,.98) !important;
-  color: #ffffff !important;
+  color: #05080d !important;
   box-shadow:
     0 0 0 1px rgba(182,255,0,.35),
     0 0 22px rgba(182,255,0,.22),
@@ -416,7 +416,7 @@ html body .cp04-sidebar [aria-label*="idioma" i] *,
 html body .cp04-sidebar [aria-label*="language" i] *,
 html body .cp04-sidebar .cp04-language *,
 html body .cp04-sidebar .cp04-language-select * {
-  color: #ffffff !important;
+  color: #05080d !important;
 }
 
 /* ===== PASO 07K · FIX BOTÓN "INICIAR SESIÓN" (login con correo personal) =====

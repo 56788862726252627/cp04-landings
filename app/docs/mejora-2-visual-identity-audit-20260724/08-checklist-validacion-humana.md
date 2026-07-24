@@ -35,7 +35,7 @@ visual explícita.
 - [ ] Validación física en un dispositivo **iOS** real (iPhone/iPad) —
       no se ha podido comprobar en esta sesión.
 - [ ] Confirmación visual de que el botón "Perfil" y el selector de
-      idioma en la pantalla de login **no** muestran el mismo problema
-      de contraste (aplazado, ver doc. 04) — si SÍ lo muestran, es la
-      prueba de que la Fase 3 identificó correctamente que ese caso
-      queda pendiente de una corrección dedicada futura.
+      idioma en la pantalla de login **ya no** muestran el problema de
+      contraste (corregido en código el 2026-07-24, ver doc. 09) — en
+      los 4 roles (PLAYER/STAFF/ADMIN/SUPPORT), y que el hover no ha
+      vuelto a ponerse rojo en ningún estado.

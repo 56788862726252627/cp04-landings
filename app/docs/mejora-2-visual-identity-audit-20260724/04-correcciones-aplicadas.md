@@ -30,23 +30,19 @@
 
 **Validado**: mismas comprobaciones que el punto 1.
 
-## Aplazadas (documentadas, NO aplicadas en esta mejora)
+## Resueltas en el cierre definitivo (2026-07-24, ver doc. 09)
 
 ### 3. Mismo bug de contraste en el botón "Perfil" y el selector de idioma (`torcal-role-background.css`)
 
-**Por qué no se corrige ahora**: protegido por 4-5 capas de reglas `!important` superpuestas de una auditoría histórica ("AUDITORIA 29 · FIX FINAL HOVER PERFIL NO ROJO") que ya resolvió un bug de "hover rojo" en este mismo elemento. Modificar estas reglas sin un plan de pruebas dedicado (idealmente con validación visual real, no solo lectura de código) tiene riesgo real de reintroducir ese bug ya corregido. Ver doc. 03 para el detalle técnico completo.
-
-**Recomendación para la mejora futura dedicada**: aislar visualmente el botón "Perfil" en un entorno de prueba, revisar las 5 capas de reglas una por una, y cambiar `color: #ffffff` a `color: #05080d` solo en las reglas que coinciden con el fondo degradado lima/menta — validando en cada paso que el hover no vuelve a ponerse rojo.
+**Estado: corregido.** Ver doc. 09 para el detalle completo — incluye el hallazgo de que `src/App.css` (donde se había leído originalmente este bloque) no está importado por ningún archivo, y que el archivo que realmente gana la cascada es `torcal-role-background.css`. 7 valores `color: #ffffff` cambiados a `color: #05080d`, sin tocar ninguna otra propiedad ni selector.
 
 ### 4. Verdes y rojos inconsistentes (5 tonos de cada uno en `App.jsx`)
 
-**Por qué no se corrige ahora**: normalizarlos a los tokens únicos de `theme.js` (`T.accent2` para verde, `T.danger` para rojo) implicaría tocar docenas de puntos dispersos en un archivo de 8499 líneas — calificado explícitamente como "sustitución masiva de colores" y "refactor grande", fuera del alcance permitido en esta mejora.
-
-**Recomendación**: una mejora futura dedicada a "normalización de paleta", con una pasada sistemática archivo por archivo, revisando visualmente cada cambio antes de aplicarlo.
+**Estado: normalizado de forma selectiva.** Ver doc. 09 — no fue sustitución masiva ciega: cada ocurrencia se revisó en contexto, se unificaron solo los duplicados por deriva (mismo rol, valores ligeramente distintos) y se conservaron como variantes intencionales los degradados decorativos distintos (CTA "Reservar pista", botón "Siguiente" del tutorial). 5 tokens nuevos y puramente aditivos en `theme.js`.
 
 ### 5. Duplicados y recursos huérfanos (96 MB en `candidatas/`, 6 archivos de galería duplicados, componente `ClubGallery.jsx` no usado)
 
-**Por qué no se corrige ahora**: la regla de seguridad explícita de esta mejora prohíbe "eliminación masiva de activos" y "movimiento masivo de archivos" sin aprobación humana previa. Ver doc. 02 para las tablas completas de qué archivar/conservar/revisar.
+**Estado: reclasificado, sin eliminación masiva.** Ver doc. 09 — solo se eliminaron `src/assets/vite.svg` y `src/assets/react.svg` (scaffolding de plantilla sin ninguna referencia, verificado con build/tests antes y después). El resto (candidatas/, duplicados de galería, `ClubGallery.jsx`, `icons.svg`) permanece exactamente igual que en doc. 02, sin tocar, tal como exige la regla de seguridad de esta tarea.
 
 ### 6. Estilos inline repetidos (el mismo bloque de estilo 9 veces en el componente de barra lateral)
 
