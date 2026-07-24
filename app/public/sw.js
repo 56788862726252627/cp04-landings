@@ -6,8 +6,12 @@
 // arriesgar servir datos de reservas/roles obsoletos o cacheados.
 //
 // Versionado de caché: subir CACHE_VERSION invalida toda caché anterior
-// (el paso "activate" borra cualquier caché con nombre distinto).
-const CACHE_VERSION = "v1";
+// (el paso "activate" borra cualquier caché con nombre distinto). Subido a
+// v2 al sustituir el icono de la app (rayo morado -> logo oficial): es el
+// mecanismo que fuerza a Android/navegadores a dejar de servir el favicon
+// antiguo cacheado — ver docs/paso-app-icon-branding/ para el procedimiento
+// completo de invalidación de icono en cada plataforma.
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `cp04-static-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
 
@@ -15,7 +19,9 @@ const PRECACHE_URLS = [
   "/",
   OFFLINE_URL,
   "/manifest.webmanifest",
-  "/favicon.svg",
+  "/favicon.ico",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {
