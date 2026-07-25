@@ -14,29 +14,6 @@ body {
   min-height: 100svh;
 }
 
-/* Auditoría 32 · Lazy section shell seguro */
-.cp04-lazy-section-shell {
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 24px;
-  padding: 24px;
-  background: rgba(5, 12, 22, .62);
-  backdrop-filter: blur(18px);
-}
-
-.cp04-lazy-section-shell__header h2 {
-  margin: 6px 0 8px;
-}
-
-.cp04-lazy-section-shell__header p {
-  margin: 0;
-  color: #D7FBE8;
-  opacity: .92;
-}
-
-.cp04-lazy-section-shell__content {
-  margin-top: 18px;
-}
-
 /* Auditoría 32 · Lazy loading fallback seguro */
 .cp04-lazy-fallback {
   display: flex;
