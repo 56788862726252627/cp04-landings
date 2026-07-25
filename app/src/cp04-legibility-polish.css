@@ -384,15 +384,14 @@ body.cp04-role-screen-active select option {
 /* Contenedores técnicos */
 /* PASO 07M (2026-07-19): excluido `button` del segundo selector — mismo
    defecto ya corregido en el Paso 07L para cp04-module-screen-active,
-   pero aquí en su variante cp04-module-admin. SUPPORT tiene "Centro
-   técnico" siempre presente en su sidebar (única sección SUPPORT-only),
-   así que `internal-background-detector.js` clasifica CUALQUIER página
-   que SUPPORT esté viendo como cp04-module-admin (esa comprobación va
-   antes que la de "es una pantalla de reservas/jugadores" y gana),
-   incluida Baja de Jugador — no es exclusivo de Centro Técnico/Admin
-   como parecía en el Paso 07L. Sin este `:not(button)`, el botón
-   "Solicitar baja de jugador" volvía a recibir un fondo oscuro forzado
-   por esta regla solo quando el usuario es SUPPORT. */
+   pero aquí en su variante cp04-module-admin. SUPPORT recibe siempre
+   cp04-module-admin en cualquier módulo que vea, incluida Baja de
+   Jugador — no es exclusivo de Centro Técnico/Admin como parecía en el
+   Paso 07L (ver Mejora 2.4: cp04-module-admin ahora se deriva del rol
+   vía src/utils/screenState.js, ya no escaneando texto, pero replica a
+   propósito este mismo comportamiento por rol). Sin este `:not(button)`,
+   el botón "Solicitar baja de jugador" volvía a recibir un fondo oscuro
+   forzado por esta regla solo cuando el usuario es SUPPORT. */
 body.cp04-module-admin .cp04-card,
 body.cp04-module-admin .cp04-card [style*="background"]:not(button) {
   background:
