@@ -778,7 +778,52 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.05) !important;
 }
 
-/* Hover común premium */
+/* Mejora 2.2 (2026-07-25): "Cerrar sesión" usa className="cp04-menu-button
+   cp04-sidebar-logout-btn" pero solo recibe box-model (padding/display/
+   font-weight/border-radius) del selector de clase .cp04-menu-button en
+   App.css — un archivo huérfano sin ningún <link>/import real (ver
+   docs/mejora-2-visual-identity-audit-20260724/12-*). El resto de módulos
+   del sidebar reciben ese box-model vía estilo inline en el propio JSX, así
+   que nunca dependieron de App.css. Sin esta regla, "Cerrar sesión" se
+   renderiza con el <button> por defecto del navegador (padding ~1px 6px,
+   font-weight 400, ~19px de alto) en vez de la altura/ritmo del resto de
+   módulos (~41px). Se fija aquí, sin tocar color/fondo (ya correctos
+   arriba) ni el destino/acción del botón. */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 12px 14px !important;
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+
+/* Mejora 2.2 (2026-07-25): caja de icono estable para todos los módulos
+   del sidebar. Los iconos son en su mayoría emoji (ancho renderizado
+   uniforme, ~17px) pero dos módulos ("Reprogramar reserva" ↻,
+   "Cancelar reserva" ✕) usan un carácter Unicode normal, más estrecho
+   (~11px) — sin caja fija, su icono queda visualmente descentrado
+   frente al resto. Se fija un ancho de caja común; el icono en sí no
+   cambia (mismo carácter, mismo significado). */
+.cp04-sidebar .cp04-menu-button > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+/* Hover común premium
+   (Mejora 2.2, 2026-07-25: sin transform propio — antes fijaba
+   translateY(-1px) aquí mientras el resto de módulos del sidebar usa
+   translateX(2px) en la regla genérica de hover; con especificidad más
+   alta por clase, Soporte/Perfil/Cerrar sesión "flotaban" hacia arriba en
+   vez de desplazarse igual que Inicio/Reservas/etc. Al no declarar
+   transform aquí, heredan el mismo translateX(2px) que ya usa todo el
+   sidebar — un único movimiento de hover en los 4 roles.) */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:hover,
@@ -791,7 +836,6 @@ body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn:hove
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn:hover {
   border-color: rgba(182,255,0,.34) !important;
   color: #ffffff !important;
-  transform: translateY(-1px);
 }
 
 /* Estado activo: solo el botón activo debe ser verde */
