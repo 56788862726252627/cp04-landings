@@ -234,113 +234,20 @@ body.cp04-module-screen-active .cp04-gallery-caption small:empty {
   }
 }
 
-/* FIX ESTRICTO SOLO 2 BOTONES: "Reservar pista" e "Ir a reservas" */
-button.cp04-fix-reservar-pista-btn,
-button.cp04-fix-ir-reservas-btn {
-  color: #061006 !important;
-  background:
-    linear-gradient(
-      135deg,
-      #b7ff00 0%,
-      #7cff2f 48%,
-      #26eba6 100%
-    ) !important;
-  border: 1px solid rgba(230, 255, 160, 0.95) !important;
-  box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.42),
-    0 0 0 1px rgba(255, 255, 255, 0.24) inset,
-    0 0 30px rgba(182, 255, 0, 0.28) !important;
-  text-shadow: none !important;
-  font-weight: 950 !important;
-  opacity: 1 !important;
-  filter: none !important;
-}
+/* Mejora 2.5 (Prompt 3, 2026-07-26): se retiran las reglas exclusivas de
+   `.cp04-fix-reservar-pista-btn` / `.cp04-fix-ir-reservas-btn`. Ninguna de
+   las dos llegó a asignarse nunca desde JS/JSX — ni con el script antiguo
+   (cp04-two-buttons-fix.js, ya eliminado: buscaba los textos exactos
+   "reservar pista" e "ir a reservas", que ningún botón real de la app
+   produce; "home.ir_reservas" es una clave de traducción huérfana, nunca
+   invocada con tx()) ni ahora, que las clases se asignan de forma estática
+   en el JSX de cada botón real. Ver
+   docs/mejora-2-visual-identity-audit-20260724/16-*.md */
 
-button.cp04-fix-reservar-pista-btn *,
-button.cp04-fix-ir-reservas-btn * {
-  color: #061006 !important;
-  text-shadow: none !important;
-  font-weight: 950 !important;
-  opacity: 1 !important;
-}
-
-button.cp04-fix-reservar-pista-btn:hover,
-button.cp04-fix-ir-reservas-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.06) saturate(1.08) !important;
-  box-shadow:
-    0 18px 42px rgba(0, 0, 0, 0.46),
-    0 0 0 1px rgba(255, 255, 255, 0.28) inset,
-    0 0 38px rgba(182, 255, 0, 0.34) !important;
-}
-
-/* FIX FINAL ESTRICTO: texto blanco SOLO en "Reservar pista" e "Ir a reservas" */
-button.cp04-fix-reservar-pista-btn,
-button.cp04-fix-ir-reservas-btn,
-button.cp04-fix-reservar-pista-btn *,
-button.cp04-fix-ir-reservas-btn * {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65) !important;
-  font-weight: 950 !important;
-  opacity: 1 !important;
-}
-
-/* Mantener fondo premium pero con texto blanco */
-button.cp04-fix-reservar-pista-btn,
-button.cp04-fix-ir-reservas-btn {
-  background:
-    linear-gradient(
-      135deg,
-      rgba(24, 31, 46, 0.88),
-      rgba(8, 13, 25, 0.78)
-    ) !important;
-  border: 1px solid rgba(255, 255, 255, 0.28) !important;
-  box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 0 24px rgba(182, 255, 0, 0.14) !important;
-}
-
-/* FIX DEFINITIVO SOLO BOTONES: Reservar pista / Ir a reservas */
+/* FIX ESTRICTO: texto blanco SOLO en botones concretos (Dar de alta,
+   Pista 1, Reprogramar reserva, Consultar reservas) */
 button.cp04-fix-white-action-btn,
 button.cp04-fix-white-action-btn *,
-button.cp04-fix-reservar-pista-btn,
-button.cp04-fix-reservar-pista-btn *,
-button.cp04-fix-ir-reservas-btn,
-button.cp04-fix-ir-reservas-btn * {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.75) !important;
-  font-weight: 950 !important;
-  opacity: 1 !important;
-}
-
-/* FIX ESTRICTO: texto blanco SOLO en Reservar pista, Ir a reservas, Dar de alta y Pista 1 */
-button.cp04-fix-white-action-btn,
-button.cp04-fix-white-action-btn *,
-button.cp04-fix-reservar-pista-btn,
-button.cp04-fix-reservar-pista-btn *,
-button.cp04-fix-ir-reservas-btn,
-button.cp04-fix-ir-reservas-btn *,
-button.cp04-fix-dar-alta-btn,
-button.cp04-fix-dar-alta-btn *,
-button.cp04-fix-pista-1-btn,
-button.cp04-fix-pista-1-btn * {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.75) !important;
-  font-weight: 950 !important;
-  opacity: 1 !important;
-}
-
-/* FIX ESTRICTO: texto blanco SOLO en botones concretos */
-button.cp04-fix-white-action-btn,
-button.cp04-fix-white-action-btn *,
-button.cp04-fix-reservar-pista-btn,
-button.cp04-fix-reservar-pista-btn *,
-button.cp04-fix-ir-reservas-btn,
-button.cp04-fix-ir-reservas-btn *,
 button.cp04-fix-dar-alta-btn,
 button.cp04-fix-dar-alta-btn *,
 button.cp04-fix-pista-1-btn,
@@ -353,6 +260,27 @@ button.cp04-fix-consultar-reservas-btn * {
   fill: #ffffff !important;
   text-shadow: 0 2px 10px rgba(0,0,0,0.75) !important;
   font-weight: 950 !important;
+  opacity: 1 !important;
+}
+
+/* "Consultar reservas" empieza deshabilitado (sin email introducido) y
+   "Dar de alta" se deshabilita mientras se envía — sin este bloque, la
+   regla genérica de texto deshabilitado (más abajo, "Texto deshabilitado
+   mínimo visible") tiene más especificidad que la de arriba y gana,
+   dejando el texto en gris apagado en vez de blanco. El script antiguo
+   no tenía este problema porque forzaba el color con estilo inline
+   (siempre gana sobre cualquier regla de hoja de estilos). */
+body.cp04-module-screen-active button.cp04-fix-white-action-btn:disabled,
+body.cp04-role-screen-active button.cp04-fix-white-action-btn:disabled,
+body.cp04-module-screen-active button.cp04-fix-dar-alta-btn:disabled,
+body.cp04-role-screen-active button.cp04-fix-dar-alta-btn:disabled,
+body.cp04-module-screen-active button.cp04-fix-pista-1-btn:disabled,
+body.cp04-role-screen-active button.cp04-fix-pista-1-btn:disabled,
+body.cp04-module-screen-active button.cp04-fix-reprogramar-reserva-btn:disabled,
+body.cp04-role-screen-active button.cp04-fix-reprogramar-reserva-btn:disabled,
+body.cp04-module-screen-active button.cp04-fix-consultar-reservas-btn:disabled,
+body.cp04-role-screen-active button.cp04-fix-consultar-reservas-btn:disabled {
+  color: #ffffff !important;
   opacity: 1 !important;
 }
 
@@ -666,7 +594,23 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn {
   border-color: rgba(255, 120, 140, 0.26) !important;
 }
 
-/* FIX FINAL ESTRICTO: texto blanco SOLO en botón Entrar del login */
+/* Mejora 2.5 (Prompt 3, 2026-07-26): el botón "Entrar" del login por rol
+   (App.jsx, formulario de contraseña por rol) tenía su color de texto
+   forzado por dos scripts independientes (cp04-sidebar-fix.js y
+   cp04-login-enter-white-final.js, ambos eliminados), los dos con el
+   mismo defecto: solo actuaban cuando el texto del botón era
+   exactamente "entrar" (español/portugués). En inglés ("Enter"),
+   francés ("Entrer"), italiano ("Entra") y alemán ("Eintreten") ningún
+   script coincidía, así que el botón se quedaba con el
+   `color:"#071000"` (oscuro) que tenía en el JSX — sobre el fondo
+   oscuro que le impone incondicionalmente
+   `body.cp04-role-screen-active button` (torcal-role-background.css),
+   el texto quedaba invisible. Confirmado visualmente antes de este
+   cambio. Corregido en el propio JSX (`color:"#ffffff"`, sin depender
+   de ningún idioma) y aquí se mantiene una única regla, ya no
+   necesaria para el color (fijado inline) pero sí para el resto de
+   refuerzos visuales que ya tenía. Ver
+   docs/mejora-2-visual-identity-audit-20260724/16-*.md */
 button.cp04-login-entrar-white-btn,
 button.cp04-login-entrar-white-btn *,
 body.cp04-role-screen-active button.cp04-login-entrar-white-btn,
@@ -676,44 +620,6 @@ body.cp04-role-screen-active button.cp04-login-entrar-white-btn * {
   font-weight: 950 !important;
   opacity: 1 !important;
   text-shadow: 0 2px 12px rgba(0,0,0,0.80) !important;
-}
-
-/* FIX DEFINITIVO: botón "Entrar" del formulario de login por rol */
-button.cp04-login-entrar-definitivo,
-button.cp04-login-entrar-definitivo:disabled,
-button.cp04-login-entrar-definitivo[disabled],
-button.cp04-login-entrar-definitivo *,
-button.cp04-login-entrar-definitivo:disabled *,
-button.cp04-login-entrar-definitivo[disabled] * {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  fill: #ffffff !important;
-  opacity: 1 !important;
-  filter: none !important;
-  font-weight: 950 !important;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.85) !important;
-}
-
-button.cp04-login-entrar-definitivo {
-  background: linear-gradient(135deg, rgba(24,31,46,0.92), rgba(8,13,25,0.86)) !important;
-  border: 1px solid rgba(255,255,255,0.36) !important;
-  box-shadow:
-    0 12px 30px rgba(0,0,0,0.36),
-    inset 0 1px 0 rgba(255,255,255,0.14) !important;
-}
-
-/* CP04 · Fix definitivo texto blanco botón Entrar login por rol */
-button.cp04-login-enter-white-final,
-button.cp04-login-enter-white-final *,
-body.cp04-role-screen-active button.cp04-login-enter-white-final,
-body.cp04-role-screen-active button.cp04-login-enter-white-final * {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  fill: #ffffff !important;
-  font-weight: 950 !important;
-  opacity: 1 !important;
-  filter: none !important;
-  text-shadow: 0 2px 12px rgba(0,0,0,.82) !important;
 }
 
 
