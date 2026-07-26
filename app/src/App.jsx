@@ -4219,8 +4219,8 @@ function CierreTemporalPista() {
         <form onSubmit={submitCierre}>
           <div className="cp04-grid-2">
             <div>
-              <label>Pista</label>
-              <select value={cierreForm.pista} onChange={e => updateCierreForm("pista", e.target.value)}>
+              <label htmlFor="cierre-pista">Pista</label>
+              <select id="cierre-pista" value={cierreForm.pista} onChange={e => updateCierreForm("pista", e.target.value)}>
                 <option value="">Seleccionar…</option>
                 <option value="Pista 1">Pista 1</option>
                 <option value="Pista 2">Pista 2</option>
@@ -4231,8 +4231,8 @@ function CierreTemporalPista() {
               <FieldError>{cierreErrors.pista}</FieldError>
             </div>
             <div>
-              <label>Motivo</label>
-              <select value={cierreForm.motivo} onChange={e => updateCierreForm("motivo", e.target.value)}>
+              <label htmlFor="cierre-motivo">Motivo</label>
+              <select id="cierre-motivo" value={cierreForm.motivo} onChange={e => updateCierreForm("motivo", e.target.value)}>
                 <option value="">Seleccionar…</option>
                 {CIERRE_PISTA_MOTIVOS.map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
@@ -4241,29 +4241,29 @@ function CierreTemporalPista() {
               <FieldError>{cierreErrors.motivo}</FieldError>
             </div>
             <div>
-              <label>Fecha de inicio</label>
-              <input type="date" value={cierreForm.fecha_inicio} onChange={e => updateCierreForm("fecha_inicio", e.target.value)} />
+              <label htmlFor="cierre-fecha-inicio">Fecha de inicio</label>
+              <input id="cierre-fecha-inicio" type="date" value={cierreForm.fecha_inicio} onChange={e => updateCierreForm("fecha_inicio", e.target.value)} />
               <FieldError>{cierreErrors.fecha_inicio}</FieldError>
             </div>
             <div>
-              <label>Hora de inicio</label>
-              <input type="time" value={cierreForm.hora_inicio} onChange={e => updateCierreForm("hora_inicio", e.target.value)} />
+              <label htmlFor="cierre-hora-inicio">Hora de inicio</label>
+              <input id="cierre-hora-inicio" type="time" value={cierreForm.hora_inicio} onChange={e => updateCierreForm("hora_inicio", e.target.value)} />
               <FieldError>{cierreErrors.hora_inicio}</FieldError>
             </div>
             <div>
-              <label>Fecha de fin</label>
-              <input type="date" value={cierreForm.fecha_fin} onChange={e => updateCierreForm("fecha_fin", e.target.value)} />
+              <label htmlFor="cierre-fecha-fin">Fecha de fin</label>
+              <input id="cierre-fecha-fin" type="date" value={cierreForm.fecha_fin} onChange={e => updateCierreForm("fecha_fin", e.target.value)} />
               <FieldError>{cierreErrors.fecha_fin}</FieldError>
             </div>
             <div>
-              <label>Hora de fin</label>
-              <input type="time" value={cierreForm.hora_fin} onChange={e => updateCierreForm("hora_fin", e.target.value)} />
+              <label htmlFor="cierre-hora-fin">Hora de fin</label>
+              <input id="cierre-hora-fin" type="time" value={cierreForm.hora_fin} onChange={e => updateCierreForm("hora_fin", e.target.value)} />
               <FieldError>{cierreErrors.hora_fin}</FieldError>
             </div>
           </div>
           <div style={{ marginTop: 18 }}>
-            <label>Observaciones (opcional)</label>
-            <textarea value={cierreForm.observaciones} onChange={e => updateCierreForm("observaciones", e.target.value)} rows={3} />
+            <label htmlFor="cierre-observaciones">Observaciones (opcional)</label>
+            <textarea id="cierre-observaciones" value={cierreForm.observaciones} onChange={e => updateCierreForm("observaciones", e.target.value)} rows={3} />
           </div>
           <label style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 18 }}>
             <input type="checkbox" checked={cierreForm.notify_players} onChange={e => updateCierreForm("notify_players", e.target.checked)} />
@@ -4390,28 +4390,28 @@ function ListaEspera() {
         <form onSubmit={handleAdd}>
           <div className="cp04-grid-2">
             <div>
-              <label>Nombre</label>
-              <input value={addForm.nombre} onChange={e => updateAddForm("nombre", e.target.value)} autoComplete="given-name" />
+              <label htmlFor="espera-nombre">Nombre</label>
+              <input id="espera-nombre" value={addForm.nombre} onChange={e => updateAddForm("nombre", e.target.value)} autoComplete="given-name" />
               <FieldError>{addErrors.nombre}</FieldError>
             </div>
             <div>
-              <label>Apellidos</label>
-              <input value={addForm.apellidos} onChange={e => updateAddForm("apellidos", e.target.value)} autoComplete="family-name" />
+              <label htmlFor="espera-apellidos">Apellidos</label>
+              <input id="espera-apellidos" value={addForm.apellidos} onChange={e => updateAddForm("apellidos", e.target.value)} autoComplete="family-name" />
               <FieldError>{addErrors.apellidos}</FieldError>
             </div>
             <div>
-              <label>Email</label>
-              <input type="email" value={addForm.email} onChange={e => updateAddForm("email", e.target.value)} autoComplete="email" />
+              <label htmlFor="espera-email">Email</label>
+              <input id="espera-email" type="email" value={addForm.email} onChange={e => updateAddForm("email", e.target.value)} autoComplete="email" />
               <FieldError>{addErrors.email}</FieldError>
             </div>
             <div>
-              <label>Teléfono</label>
-              <input type="tel" value={addForm.telefono} onChange={e => updateAddForm("telefono", e.target.value)} autoComplete="tel" />
+              <label htmlFor="espera-telefono">Teléfono</label>
+              <input id="espera-telefono" type="tel" value={addForm.telefono} onChange={e => updateAddForm("telefono", e.target.value)} autoComplete="tel" />
               <FieldError>{addErrors.telefono}</FieldError>
             </div>
             <div>
-              <label>Pista preferida (opcional)</label>
-              <select value={addForm.pista_preferida} onChange={e => updateAddForm("pista_preferida", e.target.value)}>
+              <label htmlFor="espera-pista">Pista preferida (opcional)</label>
+              <select id="espera-pista" value={addForm.pista_preferida} onChange={e => updateAddForm("pista_preferida", e.target.value)}>
                 <option value="">Sin preferencia</option>
                 <option value="Pista 1">Pista 1</option>
                 <option value="Pista 2">Pista 2</option>
@@ -4420,13 +4420,13 @@ function ListaEspera() {
               </select>
             </div>
             <div>
-              <label>Fecha preferida (opcional)</label>
-              <input type="date" value={addForm.fecha_preferida} onChange={e => updateAddForm("fecha_preferida", e.target.value)} />
+              <label htmlFor="espera-fecha">Fecha preferida (opcional)</label>
+              <input id="espera-fecha" type="date" value={addForm.fecha_preferida} onChange={e => updateAddForm("fecha_preferida", e.target.value)} />
             </div>
           </div>
           <div style={{ marginTop: 18 }}>
-            <label>Observaciones (opcional)</label>
-            <textarea value={addForm.observaciones} onChange={e => updateAddForm("observaciones", e.target.value)} rows={3} />
+            <label htmlFor="espera-observaciones">Observaciones (opcional)</label>
+            <textarea id="espera-observaciones" value={addForm.observaciones} onChange={e => updateAddForm("observaciones", e.target.value)} rows={3} />
           </div>
           <div style={{ marginTop: 22 }}>
             <Btn
@@ -5669,28 +5669,28 @@ function AltaJugador({ initialModo = "alta" } = {}) {
           <form onSubmit={submitBaja}>
             <div className="cp04-grid-2">
               <div>
-                <label>Nombre</label>
-                <input value={bajaForm.nombre} onChange={e => updateBajaForm("nombre", e.target.value)} autoComplete="given-name" />
+                <label htmlFor="baja-nombre">Nombre</label>
+                <input id="baja-nombre" value={bajaForm.nombre} onChange={e => updateBajaForm("nombre", e.target.value)} autoComplete="given-name" />
                 <FieldError>{bajaErrors.nombre}</FieldError>
               </div>
               <div>
-                <label>Apellidos</label>
-                <input value={bajaForm.apellidos} onChange={e => updateBajaForm("apellidos", e.target.value)} autoComplete="family-name" />
+                <label htmlFor="baja-apellidos">Apellidos</label>
+                <input id="baja-apellidos" value={bajaForm.apellidos} onChange={e => updateBajaForm("apellidos", e.target.value)} autoComplete="family-name" />
                 <FieldError>{bajaErrors.apellidos}</FieldError>
               </div>
               <div>
-                <label>Email</label>
-                <input type="email" value={bajaForm.email} onChange={e => updateBajaForm("email", e.target.value)} autoComplete="email" />
+                <label htmlFor="baja-email">Email</label>
+                <input id="baja-email" type="email" value={bajaForm.email} onChange={e => updateBajaForm("email", e.target.value)} autoComplete="email" />
                 <FieldError>{bajaErrors.email}</FieldError>
               </div>
               <div>
-                <label>Teléfono</label>
-                <input type="tel" value={bajaForm.telefono} onChange={e => updateBajaForm("telefono", e.target.value)} autoComplete="tel" />
+                <label htmlFor="baja-telefono">Teléfono</label>
+                <input id="baja-telefono" type="tel" value={bajaForm.telefono} onChange={e => updateBajaForm("telefono", e.target.value)} autoComplete="tel" />
                 <FieldError>{bajaErrors.telefono}</FieldError>
               </div>
               <div>
-                <label>Motivo de la baja</label>
-                <select value={bajaForm.motivo_baja} onChange={e => updateBajaForm("motivo_baja", e.target.value)}>
+                <label htmlFor="baja-motivo">Motivo de la baja</label>
+                <select id="baja-motivo" value={bajaForm.motivo_baja} onChange={e => updateBajaForm("motivo_baja", e.target.value)}>
                   <option value="">Seleccionar…</option>
                   <option value="Voluntaria">Voluntaria</option>
                   <option value="Impago">Impago</option>
@@ -5701,14 +5701,14 @@ function AltaJugador({ initialModo = "alta" } = {}) {
                 <FieldError>{bajaErrors.motivo_baja}</FieldError>
               </div>
               <div>
-                <label>Fecha de baja</label>
-                <input type="date" value={bajaForm.fecha_baja} onChange={e => updateBajaForm("fecha_baja", e.target.value)} />
+                <label htmlFor="baja-fecha">Fecha de baja</label>
+                <input id="baja-fecha" type="date" value={bajaForm.fecha_baja} onChange={e => updateBajaForm("fecha_baja", e.target.value)} />
                 <FieldError>{bajaErrors.fecha_baja}</FieldError>
               </div>
             </div>
             <div style={{ marginTop: 18 }}>
-              <label>Observaciones (opcional)</label>
-              <textarea value={bajaForm.observaciones} onChange={e => updateBajaForm("observaciones", e.target.value)} rows={4} />
+              <label htmlFor="baja-observaciones">Observaciones (opcional)</label>
+              <textarea id="baja-observaciones" value={bajaForm.observaciones} onChange={e => updateBajaForm("observaciones", e.target.value)} rows={4} />
             </div>
             <label style={{ display:"flex", gap:10, alignItems:"flex-start", marginTop:18 }}>
               <input type="checkbox" checked={bajaForm.promocionar_siguiente_si_aplica} onChange={e => updateBajaForm("promocionar_siguiente_si_aplica", e.target.checked)} />
@@ -5760,33 +5760,33 @@ function AltaJugador({ initialModo = "alta" } = {}) {
         <form onSubmit={submit}>
           <div className="cp04-grid-2">
             <div>
-              <label>{tx("alta.nombre")}</label>
-              <input value={form.nombre} onChange={e => updateForm("nombre", e.target.value)} autoComplete="given-name" />
+              <label htmlFor="alta-nombre">{tx("alta.nombre")}</label>
+              <input id="alta-nombre" value={form.nombre} onChange={e => updateForm("nombre", e.target.value)} autoComplete="given-name" />
               <FieldError>{errors.nombre}</FieldError>
             </div>
             <div>
-              <label>{tx("alta.apellidos")}</label>
-              <input value={form.apellidos} onChange={e => updateForm("apellidos", e.target.value)} autoComplete="family-name" />
+              <label htmlFor="alta-apellidos">{tx("alta.apellidos")}</label>
+              <input id="alta-apellidos" value={form.apellidos} onChange={e => updateForm("apellidos", e.target.value)} autoComplete="family-name" />
               <FieldError>{errors.apellidos}</FieldError>
             </div>
             <div>
-              <label>{tx("alta.email")}</label>
-              <input type="email" value={form.email} onChange={e => updateForm("email", e.target.value)} autoComplete="email" />
+              <label htmlFor="alta-email">{tx("alta.email")}</label>
+              <input id="alta-email" type="email" value={form.email} onChange={e => updateForm("email", e.target.value)} autoComplete="email" />
               <FieldError>{errors.email}</FieldError>
             </div>
             <div>
-              <label>{tx("alta.telefono")}</label>
-              <input type="tel" value={form.telefono} onChange={e => updateForm("telefono", e.target.value)} autoComplete="tel" />
+              <label htmlFor="alta-telefono">{tx("alta.telefono")}</label>
+              <input id="alta-telefono" type="tel" value={form.telefono} onChange={e => updateForm("telefono", e.target.value)} autoComplete="tel" />
               <FieldError>{errors.telefono}</FieldError>
             </div>
             <div>
-              <label>{tx("alta.fecha_nac")}</label>
-              <input type="date" value={form.fecha_nacimiento} onChange={e => updateForm("fecha_nacimiento", e.target.value)} />
+              <label htmlFor="alta-fecha-nac">{tx("alta.fecha_nac")}</label>
+              <input id="alta-fecha-nac" type="date" value={form.fecha_nacimiento} onChange={e => updateForm("fecha_nacimiento", e.target.value)} />
               <FieldError>{errors.fecha_nacimiento}</FieldError>
             </div>
             <div>
-              <label>{tx("alta.nivel")}</label>
-              <select value={form.nivel} onChange={e => updateForm("nivel", e.target.value)}>
+              <label htmlFor="alta-nivel">{tx("alta.nivel")}</label>
+              <select id="alta-nivel" value={form.nivel} onChange={e => updateForm("nivel", e.target.value)}>
                 <option value="">{tx("alta.seleccionar")}</option>
                 <option value="Iniciación">Iniciación</option>
                 <option value="Básico">Básico</option>
@@ -5797,8 +5797,8 @@ function AltaJugador({ initialModo = "alta" } = {}) {
               <FieldError>{errors.nivel}</FieldError>
             </div>
             <div>
-              <label>{tx("alta.genero")}</label>
-              <select value={form.genero} onChange={e => updateForm("genero", e.target.value)}>
+              <label htmlFor="alta-genero">{tx("alta.genero")}</label>
+              <select id="alta-genero" value={form.genero} onChange={e => updateForm("genero", e.target.value)}>
                 <option value="">{tx("alta.seleccionar")}</option>
                 <option value="Masculino">Masculino</option>
                 <option value="Femenino">Femenino</option>
@@ -5809,8 +5809,8 @@ function AltaJugador({ initialModo = "alta" } = {}) {
             </div>
           </div>
           <div style={{ marginTop: 18 }}>
-            <label>{tx("alta.comentarios")}</label>
-            <textarea value={form.comentarios} onChange={e => updateForm("comentarios", e.target.value)} rows={4} />
+            <label htmlFor="alta-comentarios">{tx("alta.comentarios")}</label>
+            <textarea id="alta-comentarios" value={form.comentarios} onChange={e => updateForm("comentarios", e.target.value)} rows={4} />
           </div>
           <label style={{ display:"flex", gap:10, alignItems:"flex-start", marginTop:18 }}>
             <input type="checkbox" checked={form.acepta_condiciones} onChange={e => updateForm("acepta_condiciones", e.target.checked)} />
@@ -7622,6 +7622,11 @@ function PwaStatusBanners() {
 
   if (!isOffline && !updateRegistration) return null;
 
+  // Prompt 4 (Mejora 2.6, 2026-07-26): el botón interno usaba
+  // background:"rgba(0,0,0,.12)" — sobre el fondo de aviso (T.danger o
+  // T.accent) eso da contraste 4.02:1, justo por debajo del 4.5:1 de
+  // WCAG AA (medido). Quitado el overlay: el texto hereda directamente
+  // el color ya elegido a propósito para cada fondo (>6:1 medido).
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 200, display: "flex", flexDirection: "column", gap: 2 }}>
       {isOffline && (
@@ -7631,7 +7636,7 @@ function PwaStatusBanners() {
             type="button"
             onClick={retryConnection}
             disabled={checkingConnection}
-            style={{ minHeight: 36, padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,.3)", background: "rgba(0,0,0,.12)", color: "inherit", fontWeight: 800, cursor: checkingConnection ? "wait" : "pointer" }}
+            style={{ minHeight: 36, padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,.3)", background: "transparent", color: "inherit", fontWeight: 800, cursor: checkingConnection ? "wait" : "pointer" }}
           >
             {checkingConnection ? "Comprobando…" : "Reintentar"}
           </button>
@@ -7643,7 +7648,7 @@ function PwaStatusBanners() {
           <button
             type="button"
             onClick={applyUpdate}
-            style={{ minHeight: 36, padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,.3)", background: "rgba(0,0,0,.12)", color: "inherit", fontWeight: 800, cursor: "pointer" }}
+            style={{ minHeight: 36, padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,.3)", background: "transparent", color: "inherit", fontWeight: 800, cursor: "pointer" }}
           >
             Actualizar ahora
           </button>
@@ -8159,7 +8164,7 @@ export default function ClubPadel04SaaSApp() {
                       {registerError && <div style={{ color:T.dangerText, marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
 
                       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-                        <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
+                        <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button cp04-login-submit-btn" style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
                           Crear cuenta
                         </button>
                         <button type="button" className="cp04-menu-button" onClick={closeRegister} style={{ background:"transparent", border:`1px solid ${T.line}` }}>
@@ -8275,8 +8280,8 @@ export default function ClubPadel04SaaSApp() {
                       />
                       {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
-                        <button type="submit" className="cp04-menu-button"
-                          style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
+                        <button type="submit" className="cp04-menu-button cp04-login-entrar-white-btn"
+                          style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
                           {ltx("login.recuperar_btn")}
                         </button>
                         <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
