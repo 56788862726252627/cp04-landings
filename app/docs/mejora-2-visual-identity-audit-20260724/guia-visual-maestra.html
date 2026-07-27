@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Guía visual maestra V1 · Club Pádel 04</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root { --bg:#05080d; --surface:#0b111d; --surface2:#111a2b; --accent:#b6ff00; --accent2:#20e3b2; --primary:#2f6bff; --text:#ffffff; --textDim:#9aa8bd; --danger:#ff5e3a; --warning:#ffad47; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, sans-serif; line-height:1.6; }
+  header { padding: 48px 24px 24px; text-align:center; border-bottom: 1px solid rgba(255,255,255,.1); }
+  header img { width:140px; height:140px; border-radius:50%; box-shadow: 0 0 0 4px rgba(182,255,0,.25), 0 20px 60px rgba(0,0,0,.5); }
+  h1 { font-size: 1.8rem; margin: 20px 0 4px; }
+  .subtitle { color: var(--textDim); }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; }
+  section { margin-bottom: 56px; }
+  h2 { color: var(--accent); border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 8px; font-size: 1.3rem; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top:16px; }
+  .swatch { border-radius: 12px; padding: 16px; border: 1px solid rgba(255,255,255,.12); background: var(--surface); }
+  .swatch-color { height: 56px; border-radius: 8px; margin-bottom: 10px; }
+  .swatch code { font-size: .78rem; color: var(--textDim); }
+  .icon-row { display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; margin-top:16px; }
+  .icon-row .icon-box { text-align:center; }
+  .icon-row img { display:block; background:var(--bg); border-radius: 20%; border: 1px solid rgba(255,255,255,.1); }
+  .icon-row span { display:block; font-size:.7rem; color:var(--textDim); margin-top:4px; }
+  .before-after { display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+  .demo-btn { display:inline-block; padding: 14px 20px; border-radius: 14px; font-weight:900; text-align:center; width:100%; }
+  .bad { background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%); color:#ffffff; }
+  .good { background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%); color:#05080d; }
+  .ratio { text-align:center; margin-top:8px; font-size:.85rem; color: var(--textDim); }
+  .badge { display:inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight:700; margin-left:8px; }
+  .badge.confirmed { background: rgba(32,227,178,.18); color: var(--accent2); border:1px solid rgba(32,227,178,.4); }
+  .badge.proposal { background: rgba(47,107,255,.18); color: #8fb1ff; border:1px solid rgba(47,107,255,.4); }
+  .badge.pending { background: rgba(255,173,71,.18); color: var(--warning); border:1px solid rgba(255,173,71,.4); }
+  table { width:100%; border-collapse: collapse; margin-top:12px; font-size:.9rem; }
+  th, td { text-align:left; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  th { color: var(--textDim); font-weight:600; }
+  .disclaimer { font-size:.82rem; color: var(--textDim); font-style: italic; }
+  ul.checklist { list-style:none; padding:0; }
+  ul.checklist li { padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,.08); }
+  ul.checklist li::before { content:"☐ "; color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <img src="../../public/icons/icon-192.png" alt="Logotipo oficial Club Pádel 04" />
+  <h1>Guía visual maestra V1</h1>
+  <p class="subtitle">Club Pádel 04 · Mejora 2 — Auditoría y normalización de identidad visual</p>
+</header>
+
+<main>
+  <section>
+    <h2>1. Logotipo <span class="badge confirmed">Confirmado</span></h2>
+    <p>Insignia circular oficial: fondo azul marino oscuro, fotografía de pista de pádel, "CLUB PÁDEL" en blanco, "04" en verde lima, "ANTEQUERA" en la base.</p>
+  </section>
+
+  <section>
+    <h2>2. Paleta de color <span class="badge confirmed">Confirmado</span></h2>
+    <div class="grid">
+      <div class="swatch"><div class="swatch-color" style="background:#05080d"></div>bg<br><code>#05080d</code></div>
+      <div class="swatch"><div class="swatch-color" style="background:#0b111d"></div>surface<br><code>#0b111d</code></div>
+      <div class="swatch"><div class="swatch-color" style="background:#b6ff00"></div>accent<br><code>#b6ff00</code></div>
+      <div class="swatch"><div class="swatch-color" style="background:#20e3b2"></div>accent2<br><code>#20e3b2</code></div>
+      <div class="swatch"><div class="swatch-color" style="background:#2f6bff"></div>primary<br><code>#2f6bff</code></div>
+      <div class="swatch"><div class="swatch-color" style="background:#ff5e3a"></div>danger<br><code>#ff5e3a</code></div>
+      <div class="swatch"><div class="swatch-color" style="background:#ffad47"></div>warning<br><code>#ffad47</code></div>
+    </div>
+    <p class="disclaimer">Fuente: <code>src/theme.js</code>. Ver documento 03/05 para las inconsistencias detectadas (5 verdes, 5 rojos no normalizados) — no corregidas en esta mejora.</p>
+  </section>
+
+  <section>
+    <h2>3. Iconos de la aplicación (Mejora 1) <span class="badge confirmed">Confirmado</span></h2>
+    <div class="icon-row">
+      <div class="icon-box"><img src="../../public/icons/icon-32.png" width="32" height="32" alt="icon 32"><span>32px</span></div>
+      <div class="icon-box"><img src="../../public/icons/icon-48.png" width="48" height="48" alt="icon 48"><span>48px</span></div>
+      <div class="icon-box"><img src="../../public/icons/icon-72.png" width="72" height="72" alt="icon 72"><span>72px</span></div>
+      <div class="icon-box"><img src="../../public/icons/icon-96.png" width="96" height="96" alt="icon 96"><span>96px</span></div>
+      <div class="icon-box"><img src="../../public/icons/icon-128.png" width="128" height="128" alt="icon 128"><span>128px</span></div>
+      <div class="icon-box"><img src="../../public/icons/icon-192.png" width="192" height="192" alt="icon 192"><span>192px (maskable)</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Corrección de contraste aplicada en esta mejora <span class="badge confirmed">Corregido</span></h2>
+    <div class="before-after">
+      <div>
+        <div class="demo-btn bad">🎾 Reservas (antes)</div>
+        <p class="ratio">Blanco sobre degradado: contraste 1.21-1.43<br>(mínimo WCAG AA: 4.5) ❌</p>
+      </div>
+      <div>
+        <div class="demo-btn good">🎾 Reservas (después)</div>
+        <p class="ratio">Oscuro (#05080d) sobre el mismo degradado: contraste 14.0-16.5 ✅</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Estado de la Mejora 2 — resumen</h2>
+    <table>
+      <thead><tr><th>Punto</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td>Inventario de recursos visuales</td><td><span class="badge confirmed">94 recursos catalogados</span></td></tr>
+        <tr><td>Duplicados exactos</td><td><span class="badge pending">2 grupos detectados</span></td></tr>
+        <tr><td>Contraste barra lateral</td><td><span class="badge confirmed">Corregido</span></td></tr>
+        <tr><td>Fondos internos (WebP)</td><td><span class="badge confirmed">Conectado</span></td></tr>
+        <tr><td>Botón "Perfil" (login)</td><td><span class="badge pending">Aplazado — riesgo de regresión</span></td></tr>
+        <tr><td>Paleta verde/rojo</td><td><span class="badge pending">Documentado, no normalizado</span></td></tr>
+        <tr><td>branding.config.json</td><td><span class="badge proposal">Propuesta, no conectada</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>6. Checklist de validación humana pendiente</h2>
+    <ul class="checklist">
+      <li>Texto oscuro legible en el módulo activo de la barra lateral</li>
+      <li>Fondos de login/módulos internos se ven igual que antes (solo más rápidos)</li>
+      <li>Sin desbordamiento horizontal en móvil/tablet/escritorio</li>
+      <li>Validación física en iOS (pendiente, no realizada en esta sesión)</li>
+    </ul>
+    <p class="disclaimer">Ver documento 08 para el checklist completo. Ningún punto se declara validado sin confirmación humana explícita.</p>
+  </section>
+
+  <footer class="disclaimer">
+    <p>Generado automáticamente como parte de la Mejora 2 (auditoría de identidad visual). No se ha generado ningún PDF — este HTML es la fuente preparada para exportación posterior (imprimir a PDF desde el navegador), siguiendo el mismo criterio ya usado en la Mejora 1.</p>
+  </footer>
+</main>
+</body>
+</html>
