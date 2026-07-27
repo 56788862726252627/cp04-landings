@@ -7,43 +7,20 @@ function normalizeCp04SidebarText(text) {
     .trim();
 }
 
-function fixCp04SidebarOnly() {
-  const sidebar = document.querySelector('.cp04-sidebar');
-  if (!sidebar) return;
-
-  const buttons = Array.from(sidebar.querySelectorAll('button'));
-
-  buttons.forEach((button) => {
-    const text = normalizeCp04SidebarText(button.innerText || button.textContent || '');
-
-    button.classList.remove('cp04-sidebar-soporte-btn');
-    button.classList.remove('cp04-sidebar-logout-btn');
-
-    if (text.includes('soporte')) {
-      button.classList.add('cp04-sidebar-soporte-btn');
-    }
-
-    if (text.includes('cerrar sesion')) {
-      button.classList.add('cp04-sidebar-logout-btn');
-    }
-  });
-}
-
-fixCp04SidebarOnly();
-
-setTimeout(fixCp04SidebarOnly, 100);
-setTimeout(fixCp04SidebarOnly, 500);
-setTimeout(fixCp04SidebarOnly, 1200);
-
-new MutationObserver(fixCp04SidebarOnly).observe(document.body, {
-  childList: true,
-  subtree: true,
-  characterData: true
-});
-
-window.addEventListener('load', fixCp04SidebarOnly);
-window.addEventListener('popstate', fixCp04SidebarOnly);
-window.addEventListener('hashchange', fixCp04SidebarOnly);
+/* Mejora 2.2 (2026-07-25): fixCp04SidebarOnly() vivía aquí y asignaba
+   cp04-sidebar-soporte-btn / cp04-sidebar-logout-btn haciendo matching de
+   texto en español ("soporte", "cerrar sesion") sobre el DOM ya renderizado.
+   Es el mismo patrón de "tratamiento CSS/JS exclusivo" ya identificado como
+   causa raíz real para "Perfil y ajustes" (ver
+   docs/mejora-2-visual-identity-audit-20260724/12-*): en cualquier idioma
+   distinto del español ("Support", "Sign out", "Support", "Suporte",
+   "Supporto"...) el texto no contiene la subcadena española, así que el
+   MutationObserver quitaba la clase (classList.remove primero) y nunca la
+   volvía a poner — dejando "Cerrar sesión"/"Sign out" con el <button> por
+   defecto del navegador (~19px de alto) en 6 de los 7 idiomas del selector.
+   Sustituido por classNames estables en el propio JSX del Sidebar
+   (id==="soporte" para Soporte; cp04-sidebar-logout-btn ya estaba fijo en
+   el JSX del botón de logout), que no dependen del idioma activo. */
 
 /* FIX FINAL: botón Entrar del login en blanco */
 function fixCp04EntrarLoginButtonFinal() {

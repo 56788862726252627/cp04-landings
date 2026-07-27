@@ -3289,9 +3289,10 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
               onClick={() => onNavigate(id)}
               aria-current={current === id ? "page" : undefined}
               aria-label={`${label}`}
-              className={`cp04-menu-button ${current===id ? "is-active" : ""}`}
+              className={`cp04-menu-button ${current===id ? "is-active" : ""} ${id==="soporte" ? "cp04-sidebar-soporte-btn" : ""}`.replace(/\s+/g," ").trim()}
               style={{
                 display:"flex",
+                alignItems:"center",
                 gap:10,
                 width:"100%",
                 background: current===id
