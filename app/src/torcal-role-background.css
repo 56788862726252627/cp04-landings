@@ -23,6 +23,24 @@ body.cp04-role-screen-active::before {
       rgba(2, 6, 23, 0.72) 100%
     ),
     url('/images/torcal-padel-bg.png');
+  /* Mejora 2: WebP ya generado en Mejora 1/Paso 20 pero nunca conectado
+     (2.12 MB PNG vs 150 KB WebP, mismo encuadre). Mismo patrón ya
+     probado en projects/club-padel-04/landing/src/styles.css: declarar
+     el PNG primero (arriba) como fallback universal, y esta segunda
+     declaración de background-image la ignoran por completo los
+     navegadores sin soporte de image-set() (no reconocen la función),
+     dejando intacto el PNG de arriba — nunca se rompe el fondo. */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.18) 0%,
+      rgba(2, 6, 23, 0.32) 45%,
+      rgba(2, 6, 23, 0.72) 100%
+    ),
+    image-set(
+      url('/optimized/images/torcal-padel-bg.webp') type('image/webp'),
+      url('/images/torcal-padel-bg.png') type('image/png')
+    );
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -101,6 +119,18 @@ body.cp04-role-screen-active #root > div {
       rgba(2, 6, 23, 0.18) 100%
     ),
     url('/images/torcal-padel-bg.png') !important;
+  /* Mejora 2: ver comentario equivalente más arriba en este archivo. */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.00) 0%,
+      rgba(2, 6, 23, 0.06) 40%,
+      rgba(2, 6, 23, 0.18) 100%
+    ),
+    image-set(
+      url('/optimized/images/torcal-padel-bg.webp') type('image/webp'),
+      url('/images/torcal-padel-bg.png') type('image/png')
+    ) !important;
   background-size: cover !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
@@ -184,6 +214,18 @@ body.cp04-role-screen-active #root > div {
       rgba(2, 6, 23, 0.16) 100%
     ),
     url('/images/torcal-padel-bg.png') !important;
+  /* Mejora 2: ver comentario equivalente más arriba en este archivo. */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.00) 0%,
+      rgba(2, 6, 23, 0.04) 42%,
+      rgba(2, 6, 23, 0.16) 100%
+    ),
+    image-set(
+      url('/optimized/images/torcal-padel-bg.webp') type('image/webp'),
+      url('/images/torcal-padel-bg.png') type('image/png')
+    ) !important;
   background-size: cover !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;

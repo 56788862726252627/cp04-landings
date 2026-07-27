@@ -3296,7 +3296,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                     "important"
                   );
                   e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
-                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                  e.currentTarget.style.setProperty("color", "#05080d", "important");
                   e.currentTarget.style.setProperty(
                     "box-shadow",
                     "0 0 0 1px rgba(182,255,0,.35), 0 0 24px rgba(182,255,0,.28), 0 12px 30px rgba(0,0,0,.28)",
@@ -3314,7 +3314,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                     "important"
                   );
                   e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
-                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                  e.currentTarget.style.setProperty("color", "#05080d", "important");
                 }
               }}
               onPointerUpCapture={(e) => {
@@ -3333,7 +3333,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                     "important"
                   );
                   e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
-                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                  e.currentTarget.style.setProperty("color", "#05080d", "important");
                   e.currentTarget.style.setProperty(
                     "box-shadow",
                     "0 0 0 1px rgba(182,255,0,.35), 0 0 24px rgba(182,255,0,.28), 0 12px 30px rgba(0,0,0,.28)",
@@ -3349,7 +3349,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                     "important"
                   );
                   e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
-                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                  e.currentTarget.style.setProperty("color", "#05080d", "important");
                 }
               }}
               onTouchStart={(e) => {
@@ -3360,7 +3360,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                     "important"
                   );
                   e.currentTarget.style.setProperty("border-color", "rgba(182,255,0,.96)", "important");
-                  e.currentTarget.style.setProperty("color", "#ffffff", "important");
+                  e.currentTarget.style.setProperty("color", "#05080d", "important");
                 }
               }}
               onClick={() => onNavigate(id)}
@@ -3380,7 +3380,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                 );
                 e.currentTarget.style.setProperty(
                   "color",
-                  isActive ? "#ffffff" : "#ffffff",
+                  isActive ? "#05080d" : "#ffffff",
                   "important"
                 );
                 e.currentTarget.style.setProperty(
@@ -3407,7 +3407,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                 );
                 e.currentTarget.style.setProperty(
                   "color",
-                  isActive ? "#ffffff" : "#ffffff",
+                  isActive ? "#05080d" : "#ffffff",
                   "important"
                 );
               }}
@@ -3427,7 +3427,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                 );
                 e.currentTarget.style.setProperty(
                   "color",
-                  isActive ? "#ffffff" : T.textDim,
+                  isActive ? "#05080d" : T.textDim,
                   "important"
                 );
                 e.currentTarget.style.setProperty(
@@ -3448,7 +3448,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                 background: current===id
                   ? "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)"
                   : "rgba(7,11,20,.72)",
-                color: current===id ? "#ffffff" : T.textDim,
+                color: current===id ? "#05080d" : T.textDim,
                 border:`1px solid ${current===id ? "rgba(182,255,0,.92)" : T.line}`,
                 borderRadius:14,
                 padding:"12px 14px",
