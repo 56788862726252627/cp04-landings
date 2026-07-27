@@ -749,20 +749,7 @@ body .cp04-player-role-card .cp04-role-player-desc {
 
 /* Soporte: estado base neutro, sin verde permanente */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn {
-  background: rgba(5,10,18,.72) !important;
-  border-color: rgba(255,255,255,.11) !important;
-  color: rgba(255,255,255,.82) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
-}
-
-/* Perfil: estado base premium neutro, sin rojo permanente */
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn {
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn {
   background: rgba(5,10,18,.72) !important;
   border-color: rgba(255,255,255,.11) !important;
   color: rgba(255,255,255,.82) !important;
@@ -826,12 +813,6 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn {
    sidebar — un único movimiento de hover en los 4 roles.) */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:hover,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:hover,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:hover,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn:hover,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn:hover,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn:hover,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn:hover,
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn:hover,
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn:hover {
   border-color: rgba(182,255,0,.34) !important;
@@ -865,12 +846,8 @@ body.cp04-role-screen-active .cp04-sidebar button[data-active="true"] * {
 /* Soporte y Centro técnico: texto blanco en estado base */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn,
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn *,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn * {
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn * {
   color: rgba(255,255,255,.86) !important;
   -webkit-text-fill-color: rgba(255,255,255,.86) !important;
 }
@@ -883,10 +860,6 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn * {
    distinto al resto de módulos. Sin declaración de color aquí, cae
    en la misma regla genérica que usan Inicio/Reservas/Comunidad/etc,
    igual en los 4 roles — ver docs/mejora-2-visual-identity-audit-20260724/11-*.md) */
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn,
 body.cp04-module-screen-active .cp04-sidebar button[aria-label*="Perfil"],
 body.cp04-role-screen-active .cp04-sidebar button[aria-label*="Perfil"],
 body.cp04-module-screen-active .cp04-sidebar button[title*="Perfil"],
@@ -894,15 +867,6 @@ body.cp04-role-screen-active .cp04-sidebar button[title*="Perfil"] {
   background: rgba(5,10,18,.72) !important;
   border-color: rgba(255,255,255,.11) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06) !important;
-}
-
-/* Perfil y ajustes: texto interno blanco/neutro */
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn *,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-profile-btn *,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn *,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-perfil-btn * {
-  color: rgba(255,255,255,.86) !important;
-  -webkit-text-fill-color: rgba(255,255,255,.86) !important;
 }
 
 /* Reforzar que solo el botón activo sea verde */
@@ -952,9 +916,7 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([
 
 /* Soporte base: neutralizar verde/borde/brillo */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn {
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn {
   background: rgba(7,12,22,.82) !important;
   border: 1px solid rgba(255,255,255,.10) !important;
   outline: none !important;
@@ -965,9 +927,7 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn {
 
 /* Texto, icono y spans internos de Soporte en blanco */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn *,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn *,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn * {
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn * {
   color: rgba(255,255,255,.94) !important;
   -webkit-text-fill-color: rgba(255,255,255,.94) !important;
   text-shadow: none !important;
@@ -976,12 +936,8 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn * {
 /* Quitar filo verde también en focus/hover si no está activo */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):hover,
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):hover,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([aria-current="page"]):not([data-active="true"]):hover,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([aria-current="page"]):not([data-active="true"]):hover,
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):focus,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):focus,
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([aria-current="page"]):not([data-active="true"]):focus,
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([aria-current="page"]):not([data-active="true"]):focus {
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn:not([aria-current="page"]):not([data-active="true"]):focus {
   background: rgba(7,12,22,.84) !important;
   border-color: rgba(255,255,255,.12) !important;
   outline: none !important;
@@ -993,12 +949,8 @@ body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn:not([
 /* Soporte activo: solo si realmente está activo puede usar verde */
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[aria-current="page"],
 body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[aria-current="page"],
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[aria-current="page"],
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[aria-current="page"],
 body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[data-active="true"],
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[data-active="true"],
-body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[data-active="true"],
-body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-support-btn[data-active="true"] {
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-soporte-btn[data-active="true"] {
   background: linear-gradient(135deg, #b6ff00, #2df5a3) !important;
   border-color: rgba(182,255,0,.55) !important;
   color: #061006 !important;
