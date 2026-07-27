@@ -14,7 +14,12 @@ export const T = {
   textDim: "#9aa8bd",
   line: "rgba(255,255,255,0.10)",
   danger: "#ff5e3a",
+  dangerText: "#ff8b8b",
+  dangerBorder: "#ff6b6b",
   warning: "#ffad47",
+  trendUp: "#4ade80",
+  trendDown: "#f87171",
+  metricPositive: "#34d399",
   fontDisplay: "'Syne', sans-serif",
   fontBody: "'DM Sans', sans-serif",
 };

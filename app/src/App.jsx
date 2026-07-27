@@ -1136,9 +1136,9 @@ function HorizontalBarChart({ data, color, unit = "" }) {
 
 function FlowStatusBadge({ status }) {
   const map = {
-    ok:      { label:"OK",     col:T.accent,   dot:"#b6ff00" },
-    warn:    { label:"Revisar",col:T.warning,  dot:"#ffad47" },
-    error:   { label:"Error",  col:T.danger,   dot:"#ff5e3a" },
+    ok:      { label:"OK",     col:T.accent,   dot:T.accent },
+    warn:    { label:"Revisar",col:T.warning,  dot:T.warning },
+    error:   { label:"Error",  col:T.danger,   dot:T.danger },
     paused:  { label:"Pausa",  col:"#9aa8bd",  dot:"#9aa8bd" },
     pending: { label:"Pend.",  col:"#9aa8bd",  dot:"#9aa8bd" },
   };
@@ -1184,7 +1184,7 @@ const DEMO_RESERVAS_SEMANA = [12, 18, 24, 19, 27, 31, 22];
 
 const DEMO_OCUPACION_PISTAS = [
   { l:"Pista 1", v:87, c:"#b6ff00" },
-  { l:"Pista 2", v:72, c:"#20e3b2" },
+  { l:"Pista 2", v:72, c:T.accent2 },
   { l:"Pista 3", v:65, c:"#2f6bff" },
   { l:"Pista 4", v:91, c:"#ffad47" },
 ];
@@ -3542,7 +3542,7 @@ function Inicio({ navigate, selectedRole }) {
         <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
         <MetricCard label={tx("home.socios_activos")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
         <MetricCard label={tx("home.procesos_activos")} value={`${kpi.makeActivos}/43`} sub={`${kpi.makeErrores} ${kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
-        <MetricCard label={tx("home.ingresos_mes")} value={`${kpi.ingresosMes}€`} sub={tx("home.estimacion_mensual")} trend={12} color="#34d399" icon="💶" />
+        <MetricCard label={tx("home.ingresos_mes")} value={`${kpi.ingresosMes}€`} sub={tx("home.estimacion_mensual")} trend={12} color={T.metricPositive} icon="💶" />
         <MetricCard label={tx("home.torneos_activos")} value={kpi.torneosActivos} sub={tx("home.en_curso")} trend={null} color={T.warning} icon="🏆" />
       </div>
 
@@ -6376,7 +6376,7 @@ function Torneos() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
           {published && (
-            <span style={{ background: "linear-gradient(135deg,#b6ff00,#31e89f)", color: "#061000", fontWeight: 900, padding: "6px 14px", borderRadius: 999, fontSize: ".8rem" }}>✅ Publicado</span>
+            <span style={{ background: "linear-gradient(135deg,#b6ff00,#2df5a3)", color: "#061000", fontWeight: 900, padding: "6px 14px", borderRadius: 999, fontSize: ".8rem" }}>✅ Publicado</span>
           )}
           <div style={{ display: "flex", gap: 6 }}>
             <button type="button" onClick={handleUndo} disabled={!canUndo} title="Deshacer (Ctrl+Z)"
@@ -6396,7 +6396,7 @@ function Torneos() {
 
       {/* NOTICE */}
       {notice && (
-        <div className="cp04-slide-notice" style={{ background: noticeErr ? "rgba(255,60,60,.12)" : "rgba(182,255,0,.09)", border: `1px solid ${noticeErr ? "rgba(255,80,80,.5)" : "rgba(182,255,0,.4)"}`, borderRadius: 14, padding: "11px 18px", marginBottom: 20, color: noticeErr ? "#ff8b8b" : "#b6ff00", fontWeight: 700, fontSize: ".9rem" }}>
+        <div className="cp04-slide-notice" style={{ background: noticeErr ? "rgba(255,60,60,.12)" : "rgba(182,255,0,.09)", border: `1px solid ${noticeErr ? "rgba(255,80,80,.5)" : "rgba(182,255,0,.4)"}`, borderRadius: 14, padding: "11px 18px", marginBottom: 20, color: noticeErr ? T.dangerText : "#b6ff00", fontWeight: 700, fontSize: ".9rem" }}>
           {notice}
         </div>
       )}
@@ -6429,13 +6429,13 @@ function Torneos() {
               </p>
               <div style={{ display: "flex", gap: 8 }}>
                 <input type="number" value={customInput} onChange={e => { setCustomInput(e.target.value); setCustomError(""); }}
-                  style={{ padding: "9px 13px", borderRadius: 10, border: `1px solid ${customError ? "#ff5050" : T.line}`, background: "rgba(255,255,255,.06)", color: T.text, width: 120, outline: "none", fontSize: ".9rem" }}
+                  style={{ padding: "9px 13px", borderRadius: 10, border: `1px solid ${customError ? T.dangerBorder : T.line}`, background: "rgba(255,255,255,.06)", color: T.text, width: 120, outline: "none", fontSize: ".9rem" }}
                   placeholder={customMode === "players" ? "ej: 18" : "ej: 9"} />
                 <button type="button" className="cp04-control-btn primary" onClick={applyCustom} style={{ width: "auto", padding: "9px 18px" }}>Aplicar</button>
               </div>
             </div>
           </div>
-          {customError && <p style={{ color: "#ff8b8b", margin: "10px 0 0", fontSize: ".82rem", fontWeight: 700 }}>⚠️ {customError}</p>}
+          {customError && <p style={{ color: T.dangerText, margin: "10px 0 0", fontSize: ".82rem", fontWeight: 700 }}>⚠️ {customError}</p>}
           <p style={{ color: T.textDim, fontSize: ".78rem", marginTop: 12, marginBottom: 0, lineHeight: 1.55 }}>
             Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Si el número es impar se sorteará automáticamente un pase directo (BYE).
           </p>
@@ -6708,7 +6708,7 @@ function Torneos() {
                         <td>
                           {isBye ? <span style={{ background: "rgba(182,255,0,.14)", color: T.accent, fontWeight: 800, padding: "2px 8px", borderRadius: 5, fontSize: ".72rem" }}>BYE</span>
                             : isW ? <span style={{ background: "rgba(182,255,0,.14)", color: T.accent, fontWeight: 800, padding: "2px 8px", borderRadius: 5, fontSize: ".72rem" }}>✅ Avanza</span>
-                            : isL ? <span style={{ background: "rgba(255,60,60,.1)", color: "#ff8b8b", fontWeight: 700, padding: "2px 8px", borderRadius: 5, fontSize: ".72rem" }}>Eliminada</span>
+                            : isL ? <span style={{ background: "rgba(255,60,60,.1)", color: T.dangerText, fontWeight: 700, padding: "2px 8px", borderRadius: 5, fontSize: ".72rem" }}>Eliminada</span>
                             : <span style={{ color: "rgba(255,255,255,.3)", fontSize: ".72rem" }}>Pendiente</span>}
                         </td>
                       </tr>
@@ -6760,14 +6760,14 @@ function RankingAvatar({ name, color = T.accent, size = 34 }) {
 }
 
 function MovArrow({ mov }) {
-  if (mov > 0) return <span className="cp04-rank-arrow-up" style={{ color: "#4ade80", fontWeight: 900, fontSize: ".8rem" }}>▲{mov}</span>;
-  if (mov < 0) return <span style={{ color: "#f87171", fontWeight: 900, fontSize: ".8rem" }}>▼{Math.abs(mov)}</span>;
+  if (mov > 0) return <span className="cp04-rank-arrow-up" style={{ color: T.trendUp, fontWeight: 900, fontSize: ".8rem" }}>▲{mov}</span>;
+  if (mov < 0) return <span style={{ color: T.trendDown, fontWeight: 900, fontSize: ".8rem" }}>▼{Math.abs(mov)}</span>;
   return <span style={{ color: T.textDim, fontWeight: 700, fontSize: ".8rem" }}>—</span>;
 }
 
 function RachaBadge({ racha }) {
-  if (racha > 0) return <span style={{ color: "#4ade80", fontWeight: 900, fontSize: ".78rem" }}>🔥 +{racha}</span>;
-  if (racha < 0) return <span style={{ color: "#f87171", fontWeight: 900, fontSize: ".78rem" }}>❄️ {racha}</span>;
+  if (racha > 0) return <span style={{ color: T.trendUp, fontWeight: 900, fontSize: ".78rem" }}>🔥 +{racha}</span>;
+  if (racha < 0) return <span style={{ color: T.trendDown, fontWeight: 900, fontSize: ".78rem" }}>❄️ {racha}</span>;
   return <span style={{ color: T.textDim, fontSize: ".78rem" }}>—</span>;
 }
 
@@ -6784,7 +6784,7 @@ function Ranking() {
     { key:"medio",      label: tx("ranking.medio") },
     { key:"avanzado",   label: tx("ranking.avanzado") },
   ];
-  const NIVEL_COLORS = { "Avanzado":"#b6ff00", "Medio":"#20e3b2", "Iniciación":"#a78bfa" };
+  const NIVEL_COLORS = { "Avanzado":"#b6ff00", "Medio":T.accent2, "Iniciación":"#a78bfa" };
 
   const [cat, setCat] = useState("general");
   const [search, setSearch] = useState("");
@@ -6897,7 +6897,7 @@ function Ranking() {
                       <div style={{ color:T.textDim, fontSize:".64rem", textTransform:"uppercase", letterSpacing:".06em" }}>{tx("ranking.pts")}</div>
                     </div>
                     <div style={{ textAlign:"center" }}>
-                      <div style={{ fontFamily:T.fontDisplay, fontWeight:900, color:"#4ade80", fontSize:"1.25rem" }}>{p.v}</div>
+                      <div style={{ fontFamily:T.fontDisplay, fontWeight:900, color:T.trendUp, fontSize:"1.25rem" }}>{p.v}</div>
                       <div style={{ color:T.textDim, fontSize:".64rem", textTransform:"uppercase", letterSpacing:".06em" }}>{tx("ranking.v")}</div>
                     </div>
                     <div style={{ textAlign:"center" }}>
@@ -6959,8 +6959,8 @@ function Ranking() {
                         <span style={{ fontFamily:T.fontDisplay, fontWeight:900, color:T.accent, fontSize:"1rem" }}>{p.pts}</span>
                       </td>
                       <td style={{ textAlign:"center", color:T.textDim, fontSize:".84rem" }}>{p.pj}</td>
-                      <td style={{ textAlign:"center", color:"#4ade80", fontWeight:900, fontSize:".84rem" }}>{p.v}</td>
-                      <td style={{ textAlign:"center", color:"#f87171", fontSize:".84rem" }}>{p.d}</td>
+                      <td style={{ textAlign:"center", color:T.trendUp, fontWeight:900, fontSize:".84rem" }}>{p.v}</td>
+                      <td style={{ textAlign:"center", color:T.trendDown, fontSize:".84rem" }}>{p.d}</td>
                       <td style={{ textAlign:"center" }}><RachaBadge racha={p.racha} /></td>
                       <td style={{ textAlign:"center" }}><MovArrow mov={p.mov} /></td>
                     </tr>
@@ -7016,7 +7016,7 @@ function Admin() {
         <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
         <MetricCard label={tx("admin.socios")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
         <MetricCard label={tx("admin.procesos")} value={`${kpi.makeActivos}/43`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
-        <MetricCard label={tx("admin.backup")} value={kpi.ultimoBackup} sub={tx("admin.prox_lunes")} trend={null} color="#34d399" icon="💾" />
+        <MetricCard label={tx("admin.backup")} value={kpi.ultimoBackup} sub={tx("admin.prox_lunes")} trend={null} color={T.metricPositive} icon="💾" />
       </div>
 
       {/* GRÁFICAS ADMIN */}
@@ -8198,7 +8198,7 @@ export default function ClubPadel04SaaSApp() {
             onChange={e => setLoginEmail(e.target.value)}
             placeholder="tu@email.com"
             autoComplete="email"
-            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
           />
           <input
             type={showLoginPassword ? "text" : "password"}
@@ -8206,7 +8206,7 @@ export default function ClubPadel04SaaSApp() {
             onChange={e => setLoginPassword(e.target.value)}
             placeholder={ltx("login.password")}
             autoComplete="current-password"
-            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
           />
 
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 }}>
@@ -8232,7 +8232,7 @@ export default function ClubPadel04SaaSApp() {
                   {ltx("login.olvide_pwd")}
                 </button>
               </div>
-          {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
+          {loginError && <div style={{ color:T.dangerText, marginBottom:12, fontWeight:800 }}>{loginError}</div>}
           <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
             {/* PASO 07K (2026-07-19): clase cp04-login-submit-btn añadida
                 para poder forzar su contraste en torcal-role-background.css
@@ -8294,7 +8294,7 @@ export default function ClubPadel04SaaSApp() {
                         style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
                       />
 
-                      {registerError && <div style={{ color:"#ff8b8b", marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
+                      {registerError && <div style={{ color:T.dangerText, marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
 
                       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
                         <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
@@ -8365,7 +8365,7 @@ export default function ClubPadel04SaaSApp() {
                   onChange={e => setRolePassword(e.target.value)}
                   placeholder={ltx("login.password")}
                   autoFocus
-                  style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${roleError?"#ff6b6b":T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+                  style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${roleError?T.dangerBorder:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
                 />
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
                   <button type="button" onClick={() => setShowRolePassword(v => !v)}
@@ -8381,7 +8381,7 @@ export default function ClubPadel04SaaSApp() {
                   <input type="checkbox" checked={rememberRole} onChange={e => setRememberRole(e.target.checked)} style={{ width:18, height:18, accentColor:T.accent }} />
                   {ltx("login.guardar_sesion")}
                 </label>
-                {roleError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{roleError}</div>}
+                {roleError && <div style={{ color:T.dangerText, marginBottom:12, fontWeight:800 }}>{roleError}</div>}
                 <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                   <button type="submit" className="cp04-menu-button"
                     style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>

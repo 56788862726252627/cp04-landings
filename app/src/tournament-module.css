@@ -101,7 +101,7 @@
   justify-content: center;
   border-radius: 10px;
   margin-right: 8px;
-  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  background: linear-gradient(135deg, #b6ff00, #2df5a3);
   color: #06100a;
   font-weight: 950;
 }
@@ -233,7 +233,7 @@
 }
 
 .cp04-control-btn.primary {
-  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  background: linear-gradient(135deg, #b6ff00, #2df5a3);
   color: #06100a !important;
   -webkit-text-fill-color: #06100a !important;
 }
@@ -388,7 +388,7 @@
 }
 
 .cp04-format-pill.is-active {
-  background: linear-gradient(135deg, #b6ff00, #31e89f) !important;
+  background: linear-gradient(135deg, #b6ff00, #2df5a3) !important;
   color: #06100a !important;
   -webkit-text-fill-color: #06100a !important;
   border-color: rgba(255,255,255,.35) !important;
@@ -401,7 +401,7 @@
 }
 
 .cp04-tournament-action.is-active {
-  background: linear-gradient(135deg, #b6ff00, #31e89f) !important;
+  background: linear-gradient(135deg, #b6ff00, #2df5a3) !important;
   color: #06100a !important;
   -webkit-text-fill-color: #06100a !important;
   box-shadow: 0 14px 34px rgba(182,255,0,.16), inset 0 1px 0 rgba(255,255,255,.24) !important;
@@ -648,7 +648,7 @@
 }
 
 .cp04-status-published {
-  background: linear-gradient(135deg, #b6ff00, #31e89f) !important;
+  background: linear-gradient(135deg, #b6ff00, #2df5a3) !important;
   color: #06100a !important;
   font-weight: 950 !important;
 }
@@ -752,7 +752,7 @@
   font-weight: 950;
   cursor: pointer;
   color: #06100a;
-  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  background: linear-gradient(135deg, #b6ff00, #2df5a3);
 }
 
 .cp04-custom-players-box small {
@@ -789,7 +789,7 @@
 
 .cp04-pair-manager-head span {
   color: #06100a;
-  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  background: linear-gradient(135deg, #b6ff00, #2df5a3);
   border-radius: 999px;
   padding: 7px 12px;
   font-weight: 950;
@@ -1001,7 +1001,7 @@
 .cp04-full-ranking-head span {
   padding: 9px 14px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  background: linear-gradient(135deg, #b6ff00, #2df5a3);
   color: #06100a;
   font-weight: 950;
   white-space: nowrap;
@@ -1038,7 +1038,7 @@
   border: 0;
   border-radius: 14px;
   padding: 0 18px;
-  background: linear-gradient(135deg, #b6ff00, #31e89f);
+  background: linear-gradient(135deg, #b6ff00, #2df5a3);
   color: #06100a;
   font-weight: 950;
   cursor: pointer;

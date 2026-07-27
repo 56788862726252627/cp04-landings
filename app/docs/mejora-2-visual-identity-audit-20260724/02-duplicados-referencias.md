@@ -64,3 +64,8 @@ activa tienen resolución adecuada para su uso (verificado con `PIL`).
 - `src/data/visualAssets.js` + `src/components/ClubGallery.jsx`: ¿se planeaba usar este componente en algún módulo futuro (p. ej. una vista de galería más completa que la actual inline en `App.jsx`)? Si no, es candidato a eliminarse; si sí, es candidato a conectarse.
 - `public/icons.svg` (sprite social): ¿existe intención de añadir botones de compartir en redes? Si no, candidato a archivar.
 - `src/assets/hero.png`: sin contexto de qué prototipo representaba — revisar antes de decidir si conservar como referencia histórica o eliminar.
+- `src/App.css` (584 líneas): descubierto en el cierre definitivo del 2026-07-24 (ver doc. 09) — **0 referencias/imports en todo el proyecto**, confirmado con `grep`. No es scaffolding (contiene historial real de correcciones de contraste), por lo que no se elimina en esta tarea pese a estar huérfano — decisión de limpieza para una mejora futura dedicada.
+
+### 5. Actualización 2026-07-24 (cierre definitivo, ver doc. 09)
+
+- `src/assets/vite.svg` y `src/assets/react.svg` — reclasificados de "resto de scaffolding" (categoría 4) a **eliminados**: 0 referencias confirmadas, cubiertos por Git, `npm run build` y `npm test` (1302/1302) verificados idénticos antes y después de borrarlos.
