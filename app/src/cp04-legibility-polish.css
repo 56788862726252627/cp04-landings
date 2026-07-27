@@ -563,9 +563,12 @@ body.cp04-role-screen-active header {
   -webkit-backdrop-filter: blur(10px) saturate(118%) !important;
 }
 
-/* Cerrar sesión más legible y menos plano */
-body.cp04-module-screen-active .cp04-sidebar button:last-child,
-body.cp04-role-screen-active .cp04-sidebar button:last-child {
+/* Cerrar sesión más legible y menos plano
+   (antes usaba :last-child, que por estructura real del DOM también
+   coincidía con el botón Perfil y con el trigger del selector de
+   idioma — ver docs/mejora-2-visual-identity-audit-20260724/10-*.md) */
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn {
   color: rgba(255, 255, 255, 0.94) !important;
   background:
     linear-gradient(
@@ -576,8 +579,8 @@ body.cp04-role-screen-active .cp04-sidebar button:last-child {
   border-color: rgba(255, 120, 140, 0.28) !important;
 }
 
-body.cp04-module-screen-active .cp04-sidebar button:last-child:hover,
-body.cp04-role-screen-active .cp04-sidebar button:last-child:hover {
+body.cp04-module-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn:hover,
+body.cp04-role-screen-active .cp04-sidebar button.cp04-sidebar-logout-btn:hover {
   background:
     linear-gradient(
       135deg,
