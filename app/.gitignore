@@ -111,3 +111,8 @@ docs/pdf-corto-premium-final/
 
 # CP04 experimental modules not used in production
 src/experimental/
+
+# App 3 · Fábrica de entregables — el paquete de demo (output/clientes/**)
+# se versiona como evidencia legible (Markdown/HTML/SVG/JSON), pero el
+# .tar regenerable en cada "npm run app3:demo" no aporta nada versionado.
+output/clientes/*.tar

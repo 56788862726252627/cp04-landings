@@ -52,7 +52,10 @@
     "commercial:readiness": "node commercial-cli/commercial-readiness.mjs",
     "factory:package": "node commercial-cli/factory-package.mjs",
     "factory:preview": "node commercial-cli/factory-preview.mjs",
-    "factory:proposal": "node commercial-cli/factory-proposal.mjs"
+    "factory:proposal": "node commercial-cli/factory-proposal.mjs",
+    "app3:demo": "node app3-cli/app3-demo.mjs",
+    "app3:demo:validate": "node app3-cli/app3-demo-validate.mjs",
+    "app3:demo:report": "node app3-cli/app3-demo-report.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
