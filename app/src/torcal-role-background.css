@@ -87,7 +87,28 @@ body.cp04-role-screen-active .cp04-card::before {
   opacity: 0.18 !important;
 }
 
-body.cp04-role-screen-active [style*="background"] {
+/* Prompt 4 (Mejora 2.6, 2026-07-26): excluidos los elementos
+   role="status" (los avisos de "sin conexión" y "nueva versión
+   disponible" de PwaStatusBanners, App.jsx) — este selector por
+   atributo `[style*="background"]` es intencionadamente amplio (da
+   aspecto "cristal" a cualquier tarjeta/botón con fondo inline en la
+   pantalla de rol), pero al no distinguir el propósito de cada
+   elemento también capturaba estos dos avisos, cuyo `color` inline
+   (#2a0700 sobre naranja, #06100a sobre lima — ambos con contraste
+   real >6:1, medido) estaba pensado para SU fondo original, no para el
+   fondo oscuro genérico que esta regla les imponía. Resultado medido
+   antes del fix: contraste ~1.07:1 en el aviso de "sin conexión" y su
+   botón "Reintentar" — prácticamente ilegible.
+   La exclusión usa `:not(:where(...))`, no `:not(...)` a secas: un
+   `:not()` normal habría subido la especificidad de esta regla por
+   encima de `.cp04-login-submit-btn`/`.cp04-login-entrar-white-btn`
+   (los fixes ya existentes para "Iniciar sesión"/"Crear cuenta"/
+   "Entrar"/"Enviar instrucciones"), rompiéndolos de nuevo — detectado
+   y corregido dentro de esta misma sesión, ver
+   docs/mejora-2-visual-identity-audit-20260724/17-*.md. `:where()`
+   tiene especificidad cero siempre, así que esta regla conserva
+   exactamente la misma especificidad que tenía antes de excluir nada. */
+body.cp04-role-screen-active [style*="background"]:not(:where([role="status"], [role="status"] *)) {
   background-color: rgba(8, 13, 25, 0.24) !important;
 }
 
@@ -156,10 +177,17 @@ body.cp04-role-screen-active .cp04-card::before {
   opacity: 0.08 !important;
 }
 
-/* Tarjetas de rol más transparentes */
+/* Tarjetas de rol más transparentes
+   (Prompt 4, Mejora 2.6, 2026-07-26: excluidos los botones dentro de un
+   role="status" — "Reintentar"/"Actualizar ahora" de PwaStatusBanners —
+   mismo motivo y misma técnica de :not(:where(...)) que la regla de
+   [style*="background"] más arriba: sin excluirlos, este selector por
+   elemento `button` les imponía el mismo fondo oscuro genérico incluso
+   después de aquel fix, dejando el contraste en 4.02:1 en vez de >6:1.
+   Ver docs/mejora-2-visual-identity-audit-20260724/17-*.md) */
 body.cp04-role-screen-active .cp04-card .cp04-card,
-body.cp04-role-screen-active button,
-body.cp04-role-screen-active [role="button"] {
+body.cp04-role-screen-active button:not(:where([role="status"] *)),
+body.cp04-role-screen-active [role="button"]:not(:where([role="status"] *)) {
   background-color: rgba(5, 10, 18, 0.22) !important;
   background-image: none !important;
   backdrop-filter: blur(4px) !important;
