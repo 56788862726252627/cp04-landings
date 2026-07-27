@@ -66,7 +66,8 @@ test("el módulo de Torneos no implementa Round Robin (solo eliminación directa
   assert.equal(/round.?robin/i.test(torneoSection), false);
 });
 
-test("el módulo Torneos no aplica ningún filtro de rol dentro del componente (confirma el hallazgo documentado: el gate real es solo a nivel de módulo, en cp04CanAccessSection)", () => {
-  const torneosComponent = torneoSection.match(/function Torneos\(\) \{[\s\S]*/)?.[0] || "";
-  assert.equal(/selectedRole/.test(torneosComponent), false);
+test("el módulo Torneos ahora recibe selectedRole y lo usa para el permiso de acción tournaments:manage (hallazgo del Prompt 7, corregido en el Prompt 8 — ver rbacActionHardening.test.mjs)", () => {
+  const torneosComponent = torneoSection.match(/function Torneos\(\{ selectedRole \}[\s\S]*/)?.[0] || "";
+  assert.ok(torneosComponent, "Torneos debe declarar selectedRole como prop");
+  assert.match(torneosComponent, /cp04Can\(selectedRole, "tournaments:manage"\)/);
 });

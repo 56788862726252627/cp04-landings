@@ -47,6 +47,7 @@ import {
   cp04GetSafeStartSection,
 } from "./utils/rbac.js";
 import { cp04ComputeScreenState } from "./utils/screenState.js";
+import { cp04Can } from "./utils/permissions.js";
 import { cp04ApplyScreenState } from "./cp04-apply-screen-state.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
 import { LazyComunidad } from "./components/lazy/lazyComunidad.js";
@@ -5958,9 +5959,17 @@ function torneoGetRoundPadding(round) {
   return (Math.pow(2, round - 1) - 1) * (MATCH_H + BASE_GAP) / 2;
 }
 
-function Torneos() {
+function Torneos({ selectedRole } = {}) {
   const lang = useLang();
   const tx = key => t(key, lang);
+  // Hallazgo prioritario del Prompt 7: los 4 roles con acceso al módulo
+  // "torneos" veían y podían ejecutar los mismos controles de gestión. La
+  // gestión (crear/editar/eliminar/reordenar/autoasignar/publicar/marcar
+  // ganador/exportar/deshacer) queda reservada a quien tenga el permiso de
+  // acción "tournaments:manage" (ver src/utils/permissions.js); ver el
+  // cuadro, las parejas y la clasificación sigue disponible para todos los
+  // roles que ya podían abrir este módulo — eso no cambia.
+  const canManage = cp04Can(selectedRole, "tournaments:manage");
   const [hist, setHist] = useState(() => torneoLoadHist());
 
   const saved = torneoLoadSaved();
@@ -6033,6 +6042,7 @@ function Torneos() {
   };
 
   const handleUndo = () => {
+    if (!canManage) return;
     const h = hist;
     if (h.idx <= 0) return;
     const ni = h.idx - 1;
@@ -6044,6 +6054,7 @@ function Torneos() {
   };
 
   const handleRedo = () => {
+    if (!canManage) return;
     const h = hist;
     if (h.idx >= h.snaps.length - 1) return;
     const ni = h.idx + 1;
@@ -6055,6 +6066,7 @@ function Torneos() {
   };
 
   const handleRestoreVersion = (idx) => {
+    if (!canManage) return;
     const h = hist;
     const snap = h.snaps[idx];
     if (!snap) return;
@@ -6067,6 +6079,7 @@ function Torneos() {
   };
 
   const applyFormat = (fmt) => {
+    if (!canManage) return;
     pushHistory(`Cambio de formato → ${fmt}`);
     setFormatMode(fmt); setCustomError("");
     if (fmt !== "custom") {
@@ -6076,6 +6089,7 @@ function Torneos() {
   };
 
   const applyCustom = () => {
+    if (!canManage) return;
     const raw = parseInt(customInput, 10);
     if (isNaN(raw) || raw < 1) { setCustomError("Introduce un número válido."); return; }
     let pc;
@@ -6097,6 +6111,7 @@ function Torneos() {
   };
 
   const handleReorder = () => {
+    if (!canManage) return;
     pushHistory("Reordenar cruces");
     const shuffled = [...pairs].sort(() => Math.random() - 0.5);
     let newBye = null; let newByeDate = null;
@@ -6111,6 +6126,7 @@ function Torneos() {
   };
 
   const handleAutoAssign = () => {
+    if (!canManage) return;
     pushHistory("Autoasignar nombres");
     const updated = pairs.map((p, i) => {
       if (p.player1 && p.player2) return p;
@@ -6122,11 +6138,13 @@ function Torneos() {
   };
 
   const handleSave = () => {
+    if (!canManage) return;
     pushHistory("Guardar cuadro");
     showNotice("💾 Cuadro guardado en este dispositivo.");
   };
 
   const handlePublish = () => {
+    if (!canManage) return;
     const next = !published;
     pushHistory(next ? "Publicar torneo" : "Despublicar torneo");
     setPublished(next);
@@ -6134,6 +6152,7 @@ function Torneos() {
   };
 
   const handleAddPair = () => {
+    if (!canManage) return;
     if (currentMax && pairs.length >= currentMax) { showNotice(`Límite alcanzado: ya hay ${currentMax} parejas.`, true); return; }
     if (pairs.length >= 32) { showNotice("Límite: máximo 32 parejas.", true); return; }
     pushHistory("Añadir pareja");
@@ -6144,6 +6163,7 @@ function Torneos() {
   };
 
   const handleDeletePair = (id) => {
+    if (!canManage) return;
     pushHistory("Eliminar pareja");
     const deleted = pairs.find(p => p.id === id);
     const upd = pairs.filter(p => p.id !== id);
@@ -6162,6 +6182,7 @@ function Torneos() {
   };
 
   const handleEditSave = () => {
+    if (!canManage) return;
     pushHistory("Editar pareja");
     const upd = pairs.map(p => p.id === editingId ? { ...p, player1: editForm.p1, player2: editForm.p2 } : p);
     setPairs(upd); setEditingId(null);
@@ -6169,6 +6190,7 @@ function Torneos() {
   };
 
   const handleMarkWinner = (matchId, winnerId) => {
+    if (!canManage) return;
     pushHistory("Marcar ganador");
     const nb = torneoAdvanceWinner(bracket, matchId, winnerId);
     setBracket(nb);
@@ -6181,6 +6203,7 @@ function Torneos() {
   };
 
   const handleExportJSON = () => {
+    if (!canManage) return;
     const data = {
       nombreTorneo: `Torneo Club Pádel 04 · ${pairs.length} parejas`,
       numJugadores: pairs.length * 2, numParejas: pairs.length, formato: formatMode,
@@ -6205,6 +6228,7 @@ function Torneos() {
   };
 
   const handleExportCSV = () => {
+    if (!canManage) return;
     const lines = ["#,Jugador 1,Jugador 2"];
     pairs.forEach((p, i) => lines.push(`${i + 1},"${p.player1 || ""}","${p.player2 || ""}"`));
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
@@ -6246,6 +6270,7 @@ function Torneos() {
           {published && (
             <span style={{ background: "linear-gradient(135deg,#b6ff00,#2df5a3)", color: "#061000", fontWeight: 900, padding: "6px 14px", borderRadius: 999, fontSize: ".8rem" }}>✅ Publicado</span>
           )}
+          {canManage && (
           <div style={{ display: "flex", gap: 6 }}>
             <button type="button" onClick={handleUndo} disabled={!canUndo} title="Deshacer (Ctrl+Z)"
               style={{ border: `1px solid ${canUndo ? "rgba(182,255,0,.35)" : "rgba(255,255,255,.1)"}`, background: "none", color: canUndo ? "#b6ff00" : "rgba(255,255,255,.25)", borderRadius: 10, padding: "6px 12px", cursor: canUndo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
@@ -6256,7 +6281,8 @@ function Torneos() {
               ↪ Rehacer
             </button>
           </div>
-          {savedAt && (
+          )}
+          {savedAt && canManage && (
             <span style={{ color: "rgba(255,255,255,.38)", fontSize: ".7rem" }}>💾 Guardado {savedAt.toLocaleTimeString("es-ES")}</span>
           )}
         </div>
@@ -6269,7 +6295,15 @@ function Torneos() {
         </div>
       )}
 
+      {/* SOLO LECTURA: aviso para roles sin permiso de gestión (todos salvo ADMIN) */}
+      {!canManage && (
+        <div style={{ background: "rgba(255,255,255,.04)", border: `1px solid ${T.line}`, borderRadius: 14, padding: "11px 16px", marginBottom: 20, color: T.textDim, fontSize: ".86rem" }}>
+          👁 Estás viendo este torneo en modo solo lectura. Crear, editar, reordenar, publicar y marcar resultados está reservado a Administración.
+        </div>
+      )}
+
       {/* FORMAT SELECTOR */}
+      {canManage && (
       <div style={{ marginBottom: 22 }}>
         <p style={{ color: T.textDim, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 10, fontWeight: 700 }}>Formato del torneo</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -6278,9 +6312,10 @@ function Torneos() {
           ))}
         </div>
       </div>
+      )}
 
       {/* CUSTOM FORMAT PANEL */}
-      {formatMode === "custom" && (
+      {canManage && formatMode === "custom" && (
         <Card style={{ marginBottom: 22 }}>
           <h3 style={{ marginTop: 0, marginBottom: 14, fontSize: "1rem" }}>Formato personalizado</h3>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
@@ -6323,7 +6358,7 @@ function Torneos() {
       )}
 
       {/* MAIN GRID: pairs + controls */}
-      <div className="cp04-tournament-grid">
+      <div className={canManage ? "cp04-tournament-grid" : ""}>
 
         {/* Pair list */}
         <div className="cp04-tournament-panel">
@@ -6332,7 +6367,9 @@ function Torneos() {
               Parejas{" "}
               <span style={{ color: T.accent, fontSize: ".85rem", fontWeight: 700 }}>{pairs.length}{currentMax ? `/${currentMax}` : ""}</span>
             </h3>
-            <button type="button" className="cp04-control-btn primary" onClick={handleAddPair} style={{ width: "auto", padding: "7px 14px", fontSize: ".85rem" }}>＋ Añadir</button>
+            {canManage && (
+              <button type="button" className="cp04-control-btn primary" onClick={handleAddPair} style={{ width: "auto", padding: "7px 14px", fontSize: ".85rem" }}>＋ Añadir</button>
+            )}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 440, overflowY: "auto", paddingRight: 2 }}>
@@ -6366,9 +6403,11 @@ function Torneos() {
                         : <span style={{ color: "rgba(255,255,255,.28)", fontStyle: "italic" }}>Vacía</span>}
                       {byePair?.id === pair.id && <span style={{ marginLeft: 6, color: T.accent, fontSize: ".68rem", fontWeight: 800, background: "rgba(182,255,0,.14)", padding: "1px 6px", borderRadius: 4 }}>BYE</span>}
                     </span>
+                    {canManage && (
                     <button type="button" title="Editar" onClick={() => { setEditingId(pair.id); setEditForm({ p1: pair.player1, p2: pair.player2 }); }}
                       style={{ background: "none", border: "none", color: "rgba(255,255,255,.38)", cursor: "pointer", padding: "2px 5px", fontSize: ".82rem" }}>✏️</button>
-                    {deleteId === pair.id ? (
+                    )}
+                    {canManage && (deleteId === pair.id ? (
                       <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
                         <button type="button" onClick={() => handleDeletePair(pair.id)}
                           style={{ background: "rgba(220,50,50,.85)", border: "none", color: "#fff", borderRadius: 5, padding: "3px 8px", cursor: "pointer", fontSize: ".75rem", fontWeight: 700 }}>Eliminar</button>
@@ -6378,7 +6417,7 @@ function Torneos() {
                     ) : (
                       <button type="button" title="Eliminar" onClick={() => setDeleteId(pair.id)}
                         style={{ background: "none", border: "none", color: "rgba(255,100,100,.5)", cursor: "pointer", padding: "2px 5px", fontSize: ".82rem" }}>✕</button>
-                    )}
+                    ))}
                   </div>
                 )}
               </div>
@@ -6386,7 +6425,8 @@ function Torneos() {
           </div>
         </div>
 
-        {/* Controls sidebar */}
+        {/* Controls sidebar — reservado a quien tenga tournaments:manage (ver canManage) */}
+        {canManage && (
         <div className="cp04-tournament-side">
           <div className="cp04-tournament-control">
             <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: ".95rem" }}>Controles</h3>
@@ -6453,6 +6493,7 @@ function Torneos() {
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* BRACKET */}
@@ -6505,7 +6546,7 @@ function Torneos() {
                                   <span style={{ flex: 1, fontSize: ".78rem", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: match.winner === match.pairA ? 800 : 400, color: match.winner === match.pairA ? T.accent : match.winner ? "rgba(255,255,255,.32)" : "#fff", textDecoration: match.winner && match.winner !== match.pairA ? "line-through" : "none" }}>
                                     {match.winner === match.pairA && "🏆 "}{pA ? pairLabel(pA) : <em style={{ color: "rgba(255,255,255,.28)" }}>Por definir</em>}
                                   </span>
-                                  {!match.winner && pA && pA.player1 && match.pairB && (
+                                  {canManage && !match.winner && pA && pA.player1 && match.pairB && (
                                     <button type="button" onClick={() => handleMarkWinner(match.id, match.pairA)}
                                       style={{ background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, borderRadius: 5, padding: "2px 7px", cursor: "pointer", fontSize: ".66rem", fontWeight: 800, flexShrink: 0 }}>
                                       ✓A
@@ -6518,7 +6559,7 @@ function Torneos() {
                                   <span style={{ flex: 1, fontSize: ".78rem", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: match.winner === match.pairB ? 800 : 400, color: match.winner === match.pairB ? T.accent : match.winner ? "rgba(255,255,255,.32)" : "#fff", textDecoration: match.winner && match.winner !== match.pairB ? "line-through" : "none" }}>
                                     {match.winner === match.pairB && "🏆 "}{pB ? pairLabel(pB) : <em style={{ color: "rgba(255,255,255,.28)" }}>Por definir</em>}
                                   </span>
-                                  {!match.winner && pB && pB.player1 && match.pairA && (
+                                  {canManage && !match.winner && pB && pB.player1 && match.pairA && (
                                     <button type="button" onClick={() => handleMarkWinner(match.id, match.pairB)}
                                       style={{ background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, borderRadius: 5, padding: "2px 7px", cursor: "pointer", fontSize: ".66rem", fontWeight: 800, flexShrink: 0 }}>
                                       ✓B
@@ -7721,7 +7762,7 @@ export default function ClubPadel04SaaSApp() {
     }
   }, [auth.isAuthenticated, auth.role]);
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,
