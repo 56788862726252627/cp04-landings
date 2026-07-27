@@ -1,0 +1,194 @@
+{
+  "auth:login": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "auth:logout": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "auth:forgot_password": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "auth:change_role_demo": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "language:change": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:create": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:view": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:reprogram": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:cancel": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:close_court": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:waitlist": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:qr_access": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:availability": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "reservations:court_reminders": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "players:create": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "players:disable": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "tournaments:view": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "tournaments:join": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "tournaments:manage": {
+    "PLAYER": false,
+    "STAFF": false,
+    "ADMIN": true,
+    "SUPPORT": false
+  },
+  "ranking:view": {
+    "PLAYER": true,
+    "STAFF": false,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "community:view": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "community:moderate": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "admin:view_kpi": {
+    "PLAYER": false,
+    "STAFF": false,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "admin:dashboard_kpi": {
+    "PLAYER": false,
+    "STAFF": false,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "admin:billing": {
+    "PLAYER": false,
+    "STAFF": false,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "admin:backups": {
+    "PLAYER": false,
+    "STAFF": false,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "admin:automation": {
+    "PLAYER": false,
+    "STAFF": false,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "admin:member_comms": {
+    "PLAYER": false,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "support:technical_center": {
+    "PLAYER": false,
+    "STAFF": false,
+    "ADMIN": false,
+    "SUPPORT": true
+  },
+  "support:panel": {
+    "PLAYER": false,
+    "STAFF": false,
+    "ADMIN": false,
+    "SUPPORT": true
+  },
+  "profile:view": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  },
+  "profile:edit": {
+    "PLAYER": true,
+    "STAFF": true,
+    "ADMIN": true,
+    "SUPPORT": true
+  }
+}
