@@ -1072,12 +1072,27 @@ body.cp04-role-screen-active .cp04-card h4 {
 /* =========================================================
    FIX FINAL · Tutorial guiado · Botón Siguiente visible
    Corrige contraste en ADMIN / SUPPORT / cualquier rol
-   ========================================================= */
 
-/* Botón principal del tutorial: Siguiente */
-.cp04-tour-btn[aria-label="Siguiente"],
-.cp04-tour-btn-next,
-button[aria-label="Siguiente"] {
+   Prompt 5 (Mejora 2.7, 2026-07-26): este bloque tenía dos generaciones
+   de "fix" superpuestas. La primera apuntaba a `[aria-label="Siguiente"]`
+   — un valor que NUNCA existió: el aria-label real del botón (ver
+   CP04GuidedTutorial.jsx) es "Paso siguiente" o "Finalizar tutorial"
+   según el paso, así que esa regla jamás coincidió con nada. La segunda
+   generación ("FIX FINAL 2") compensaba eso con `button:nth-of-type(2)`
+   — un selector por POSICIÓN, no por identidad. Pero "Atrás" solo se
+   renderiza a partir del paso 2 (`{!isFirst && <button ...>Atrás</button>}`),
+   así que en el paso 1 el botón en la posición 2 del DOM es "Saltar", no
+   "Siguiente": el degradado lima + texto oscuro pensado para "Siguiente"
+   se aplicaba a "Saltar" (confirmado con Chromium: en el paso 1 de
+   cualquier rol, "Saltar" salía con el estilo de botón principal y
+   "Siguiente" con el de botón secundario — invertido). Sustituido por
+   selectores de aria-label correctos (estables, no dependen de la
+   posición ni del idioma — el tutorial no está traducido, ver riesgos
+   residuales en docs/mejora-2-visual-identity-audit-20260724/18-*.md). */
+
+/* Botón principal del tutorial: Siguiente / Finalizar */
+button[aria-label="Paso siguiente"],
+button[aria-label="Finalizar tutorial"] {
   background: linear-gradient(135deg, #b6ff00 0%, #9eff00 45%, #d8ff4d 100%) !important;
   color: #071000 !important;
   -webkit-text-fill-color: #071000 !important;
@@ -1091,10 +1106,16 @@ button[aria-label="Siguiente"] {
     inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
 }
 
+button[aria-label="Paso siguiente"] *,
+button[aria-label="Finalizar tutorial"] * {
+  color: #071000 !important;
+  -webkit-text-fill-color: #071000 !important;
+  text-shadow: none !important;
+}
+
 /* Aunque el botón quede disabled por lógica temporal, que nunca sea ilegible */
-.cp04-tour-btn[aria-label="Siguiente"]:disabled,
-.cp04-tour-btn-next:disabled,
-button[aria-label="Siguiente"]:disabled {
+button[aria-label="Paso siguiente"]:disabled,
+button[aria-label="Finalizar tutorial"]:disabled {
   background: linear-gradient(135deg, #b6ff00 0%, #9eff00 45%, #d8ff4d 100%) !important;
   color: #071000 !important;
   -webkit-text-fill-color: #071000 !important;
@@ -1112,82 +1133,16 @@ button[aria-label="Siguiente"]:disabled {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Botones secundarios del tutorial siempre legibles */
+/* Botones secundarios del tutorial siempre legibles (Atrás, Saltar,
+   No mostrar más) — `.cp04-tour-btn` los cubre a los 4 por igual; la
+   regla de arriba gana después para Siguiente/Finalizar por
+   especificidad de atributo + orden de cascada. */
 .cp04-tour-btn,
-.cp04-tour-tip button,
-button[aria-label="Atrás"],
-button[aria-label="Saltar"],
-button[aria-label="No mostrar más"] {
+.cp04-tour-tip button {
   color: #f8fff5 !important;
   -webkit-text-fill-color: #f8fff5 !important;
   font-weight: 850 !important;
   text-shadow: 0 1px 2px rgba(0,0,0,.55) !important;
-}
-
-/* Mantener Siguiente por encima de la regla general */
-.cp04-tour-btn[aria-label="Siguiente"],
-.cp04-tour-btn[aria-label="Siguiente"] *,
-.cp04-tour-btn-next,
-.cp04-tour-btn-next *,
-button[aria-label="Siguiente"],
-button[aria-label="Siguiente"] * {
-  color: #071000 !important;
-  -webkit-text-fill-color: #071000 !important;
-  text-shadow: none !important;
-}
-
-/* =========================================================
-   FIX FINAL 2 · Tutorial guiado · Siguiente verde neón real
-   Aplica también cuando el botón no tiene aria-label/clase exacta
-   ========================================================= */
-
-.cp04-tour-tip button:nth-of-type(2),
-.cp04-guided-tutorial button:nth-of-type(2),
-[class*="tour"] button:nth-of-type(2) {
-  background: linear-gradient(135deg, #b6ff00 0%, #9eff00 45%, #d8ff4d 100%) !important;
-  color: #071000 !important;
-  -webkit-text-fill-color: #071000 !important;
-  font-weight: 950 !important;
-  opacity: 1 !important;
-  filter: none !important;
-  text-shadow: none !important;
-  border: 1px solid rgba(214, 255, 79, 0.96) !important;
-  box-shadow:
-    0 14px 34px rgba(182, 255, 0, 0.30),
-    inset 0 1px 0 rgba(255,255,255,0.45) !important;
-}
-
-/* Si Siguiente queda marcado como disabled, mantenerlo visible */
-.cp04-tour-tip button:nth-of-type(2):disabled,
-.cp04-guided-tutorial button:nth-of-type(2):disabled,
-[class*="tour"] button:nth-of-type(2):disabled {
-  background: linear-gradient(135deg, #b6ff00 0%, #9eff00 45%, #d8ff4d 100%) !important;
-  color: #071000 !important;
-  -webkit-text-fill-color: #071000 !important;
-  opacity: 1 !important;
-  filter: none !important;
-  cursor: pointer !important;
-}
-
-/* Refuerzo para texto interno de Siguiente */
-.cp04-tour-tip button:nth-of-type(2) *,
-.cp04-guided-tutorial button:nth-of-type(2) *,
-[class*="tour"] button:nth-of-type(2) * {
-  color: #071000 !important;
-  -webkit-text-fill-color: #071000 !important;
-  text-shadow: none !important;
-}
-
-/* Botones secundarios: mantener contraste premium */
-.cp04-tour-tip button:nth-of-type(1),
-.cp04-tour-tip button:nth-of-type(3),
-.cp04-guided-tutorial button:nth-of-type(1),
-.cp04-guided-tutorial button:nth-of-type(3),
-[class*="tour"] button:nth-of-type(1),
-[class*="tour"] button:nth-of-type(3) {
-  color: #f8fff5 !important;
-  -webkit-text-fill-color: #f8fff5 !important;
-  font-weight: 850 !important;
 }
 
 /* ===== PASO 07M · RED DE SEGURIDAD DEFINITIVA "SOLICITAR BAJA DE JUGADOR" =====
