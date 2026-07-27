@@ -5856,6 +5856,18 @@ const FORMAT_MAX = { "16": 8, "32": 16, "64": 32 };
 const MATCH_H = 78;
 const BASE_GAP = 10;
 
+// Date.now() puede repetir el mismo milisegundo entre dos clics rápidos
+// (doble pulsación real u onClick disparado dos veces). Como Date.now()
+// se usaba directamente como id de pareja y como key de React en el
+// historial, esa colisión duplicaba ids/keys en lugar de crear dos
+// entradas distintas. Un contador incremental por módulo garantiza
+// unicidad aunque el reloj no avance entre dos llamadas.
+let torneoIdSeq = 0;
+function torneoUid(prefix) {
+  torneoIdSeq += 1;
+  return `${prefix}${Date.now()}_${torneoIdSeq}`;
+}
+
 function torneoLoadSaved() {
   try {
     const raw = JSON.parse(localStorage.getItem(TORNEO_STORE) || "null");
@@ -5993,8 +6005,7 @@ function Torneos() {
   const pushHistory = (action) => {
     try {
       const snap = {
-        // eslint-disable-next-line react-hooks/purity -- pushHistory solo se invoca desde manejadores de clic (onClick), nunca durante el render.
-        id: Date.now(),
+        id: torneoUid("h"),
         ts: new Date().toISOString(),
         action,
         s: { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published },
@@ -6090,7 +6101,6 @@ function Torneos() {
     const shuffled = [...pairs].sort(() => Math.random() - 0.5);
     let newBye = null; let newByeDate = null;
     if (shuffled.length % 2 !== 0) {
-      // eslint-disable-next-line react-hooks/purity -- handleReorder solo se invoca desde onClick, nunca durante el render.
       const idx = Math.floor(Math.random() * shuffled.length);
       newBye = shuffled[idx]; newByeDate = new Date().toISOString();
     }
@@ -6127,8 +6137,7 @@ function Torneos() {
     if (currentMax && pairs.length >= currentMax) { showNotice(`Límite alcanzado: ya hay ${currentMax} parejas.`, true); return; }
     if (pairs.length >= 32) { showNotice("Límite: máximo 32 parejas.", true); return; }
     pushHistory("Añadir pareja");
-    // eslint-disable-next-line react-hooks/purity -- handleAddPair solo se invoca desde onClick, nunca durante el render.
-    const np = { id: `p${Date.now()}`, player1: "", player2: "" };
+    const np = { id: torneoUid("p"), player1: "", player2: "" };
     const upd = [...pairs, np];
     setPairs(upd);
     if (upd.length % 2 === 0 && byePair) { setByePair(null); setByeDrawDate(null); }
@@ -6136,11 +6145,20 @@ function Torneos() {
 
   const handleDeletePair = (id) => {
     pushHistory("Eliminar pareja");
+    const deleted = pairs.find(p => p.id === id);
     const upd = pairs.filter(p => p.id !== id);
     let nb = byePair; let nd = byeDrawDate;
     if (byePair?.id === id || (byePair && upd.length % 2 === 0)) { nb = null; nd = null; }
+    // Cualquier partido donde la pareja eliminada figure como pairA/pairB
+    // se retira del cuadro (incluye las rondas posteriores a las que ya
+    // hubiera avanzado como ganadora): dejar ese partido a medias
+    // mostraría un "ganador" que ya no existe en `pairs`.
+    const affectsBracket = bracket.some(m => (m.pairA === id || m.pairB === id) && (m.winner || m.round > 1));
     const newBrk = bracket.filter(m => m.pairA !== id && m.pairB !== id);
     setPairs(upd); setBracket(newBrk); setByePair(nb); setByeDrawDate(nd); setDeleteId(null);
+    if (affectsBracket) {
+      showNotice(`⚠️ "${pairLabel(deleted)}" tenía resultados en el cuadro: se han invalidado los partidos y rondas posteriores que dependían de ella.`, true);
+    }
   };
 
   const handleEditSave = () => {
