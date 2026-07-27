@@ -1,12 +1,10 @@
 import './cp04-login-enter-white-final.js';
 import './tournament-module.css';
-import './internal-background-detector';
 import './internal-module-backgrounds.css';
 import './cp04-two-buttons-fix';
 import './cp04-sidebar-fix';
 import './cp04-legibility-polish.css';
 import './torcal-role-background.css';
-import './role-background-detector';
 
 const GALLERY_REAL_IMAGE_STYLES = `
   .cp04-gallery-card,
@@ -51,6 +49,8 @@ import {
   cp04CanAccessSection,
   cp04GetSafeStartSection,
 } from "./utils/rbac.js";
+import { cp04ComputeScreenState } from "./utils/screenState.js";
+import { cp04ApplyScreenState } from "./cp04-apply-screen-state.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
 import { LazyComunidad } from "./components/lazy/lazyComunidad.js";
 import { T } from "./theme.js";
@@ -7706,6 +7706,18 @@ export default function ClubPadel04SaaSApp() {
   const safeCurrentSection = cp04CanAccessSection(selectedRole, current)
     ? current
     : cp04GetSafeStartSection(selectedRole);
+
+  // Estado de pantalla (rol/módulo activo -> clases y fondo del body) —
+  // única fuente de verdad, ver src/utils/screenState.js. Sustituye a los
+  // antiguos internal-background-detector.js / role-background-detector.js,
+  // que escaneaban document.body.innerText en español y fallaban en
+  // idiomas cuya traducción no contuviera esas palabras exactas (ver
+  // docs/mejora-2-visual-identity-audit-20260724/14-*.md). Aquí depende
+  // solo de selectedRole/safeCurrentSection, nunca del idioma activo.
+  useEffect(() => {
+    const screenState = cp04ComputeScreenState({ selectedRole, moduleId: safeCurrentSection });
+    cp04ApplyScreenState(screenState);
+  }, [selectedRole, safeCurrentSection]);
 
   // Las contraseñas demo ya no viven aquí: están aisladas en
   // src/auth/demoAuthAdapter.js, gateadas por isDemoAuthAllowed() (solo
