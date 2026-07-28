@@ -293,3 +293,46 @@ test("integración real: empaqueta el output real de DemoOrchestrator (Prompt 2/
     assert.ok(result.packagedCount > 0);
   });
 });
+
+test("Prompt 6/6 · un manifiesto de origen manipulado con path traversal (../) queda excluido sin leer el archivo fuera de sourceBaseDir", async () => {
+  await withTempDir(async (dir) => {
+    const sourceDir = path.join(dir, "source");
+    await buildSyntheticSourceDir(sourceDir);
+
+    // Archivo "secreto" fuera de sourceBaseDir, que un manifiesto manipulado intentaría exfiltrar.
+    const secretPath = path.join(dir, "secreto-fuera-del-proyecto.txt");
+    const secretContent = "esto NUNCA debería acabar en el paquete final";
+    await writeFile(secretPath, secretContent, "utf8");
+
+    const manifestPath = path.join(sourceDir, "manifest", "manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    manifest.items.push({
+      id: "exfiltracion", deliverableType: "informe", format: "markdown",
+      path: "../secreto-fuera-del-proyecto.txt", status: "validated", checksum: sha(Buffer.from(secretContent, "utf8")),
+    });
+    await writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
+
+    const targetDir = path.join(dir, "target");
+    const result = await cp04BuildFinalExportPackage({ sourceBaseDir: sourceDir, targetBaseDir: targetDir, projectName: "X" });
+    assert.ok(result.failed.some((f) => f.id === "exfiltracion" && /path traversal/.test(f.reason)));
+
+    // Confirmar que el contenido del secreto no aparece en ningún archivo del paquete.
+    const zipBuffer = await readFile(path.join(targetDir, result.zipPath));
+    assert.doesNotMatch(zipBuffer.toString("latin1"), /esto NUNCA debería/);
+  });
+});
+
+test("Prompt 6/6 · un manifiesto de origen con una ruta absoluta ajena también queda excluido", async () => {
+  await withTempDir(async (dir) => {
+    const sourceDir = path.join(dir, "source");
+    await buildSyntheticSourceDir(sourceDir);
+
+    const manifestPath = path.join(sourceDir, "manifest", "manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    manifest.items.push({ id: "absoluta", deliverableType: "informe", format: "markdown", path: "/etc/hostname", status: "validated", checksum: "x".repeat(64) });
+    await writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
+
+    const result = await cp04BuildFinalExportPackage({ sourceBaseDir: sourceDir, targetBaseDir: path.join(dir, "target"), projectName: "X" });
+    assert.ok(result.failed.some((f) => f.id === "absoluta" && /path traversal/.test(f.reason)));
+  });
+});

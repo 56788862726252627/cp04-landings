@@ -18,6 +18,9 @@ const MIN_OOXML_BYTES = 800; // un .docx/.pptx real de verdad, aunque mínimo, s
 
 export const CP04_DOCX_REQUIRED_ENTRIES = Object.freeze(["[Content_Types].xml", "_rels/.rels", "word/document.xml"]);
 export const CP04_PPTX_REQUIRED_ENTRIES = Object.freeze(["[Content_Types].xml", "ppt/presentation.xml", "ppt/_rels/presentation.xml.rels"]);
+// 100 MB por entrada: muy por encima de cualquier documento real generado por
+// esta fábrica, pero suficientemente bajo para descartar una "zip bomb" antes de descomprimirla.
+export const CP04_MAX_OOXML_ENTRY_BYTES = 100 * 1024 * 1024;
 
 /**
  * @param {Buffer} buffer
@@ -97,6 +100,21 @@ export async function cp04ValidateOoxmlBuffer(buffer, format) {
       continue;
     }
     if (!file.dir) {
+      // Guarda contra "zip bomb": jszip ya conoce el tamaño real
+      // descomprimido de cada entrada (metadato del propio contenedor
+      // ZIP) sin necesidad de descomprimirla. Se comprueba ANTES de
+      // llamar a `.async()` — este validador puede recibir binarios de
+      // un `sourceBaseDir` no controlado por esta sesión (Prompt 6/6,
+      // vía ExportPackageManager/CLI). `_data` es un campo interno de
+      // jszip (no documentado); si algún día deja de existir, se
+      // degrada sin más a "no se pudo comprobar el tamaño" en vez de
+      // romper la validación — nunca bloquea un archivo legítimo por
+      // un fallo de esta comprobación best-effort.
+      const declaredSize = file._data?.uncompressedSize;
+      if (typeof declaredSize === "number" && declaredSize > CP04_MAX_OOXML_ENTRY_BYTES) {
+        errors.push(`la parte "${entry}" declara un tamaño descomprimido de ${declaredSize} bytes, por encima del límite de seguridad (${CP04_MAX_OOXML_ENTRY_BYTES}) — posible "zip bomb", no se descomprime`);
+        continue;
+      }
       const content = await file.async("string");
       if (!content || content.trim().length === 0) errors.push(`la parte "${entry}" está vacía`);
       else if (!content.includes("<?xml")) errors.push(`la parte "${entry}" no parece XML válido (sin declaración <?xml)`);
