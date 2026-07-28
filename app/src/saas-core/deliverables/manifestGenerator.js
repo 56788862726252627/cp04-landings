@@ -9,11 +9,41 @@
 // El checksum usa `node:crypto` (ya en Node, cero dependencias nuevas)
 // — nunca un hash inventado a mano.
 
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
+import { writeFile, rename, unlink } from "node:fs/promises";
+import path from "node:path";
+import process from "node:process";
 
 function checksumOf(content) {
   const text = typeof content === "string" ? content : JSON.stringify(content ?? "");
   return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+/**
+ * Escribe un manifiesto de forma atómica: escribe primero a un archivo
+ * temporal en el MISMO directorio y lo renombra sobre el destino final.
+ * `rename()` es atómico dentro de un mismo sistema de archivos (POSIX) —
+ * el archivo final queda o con el contenido nuevo completo, o con el
+ * contenido anterior intacto; nunca a medio escribir, ni siquiera si el
+ * proceso se corta abruptamente (p. ej. signal 9) durante la escritura.
+ *
+ * Sin esto, `writeFile()` trunca el archivo antes de escribir el
+ * contenido nuevo — un corte a mitad deja el manifiesto vacío o
+ * incompleto, perdiendo el historial de versiones anterior (que
+ * `loadPreviousManifest`/`loadPreviousMockupsManifest` no puede
+ * distinguir de "no existe todavía" — solo capturan JSON.parse
+ * fallando, no la causa).
+ */
+export async function cp04WriteManifestAtomic(filePath, content) {
+  const dir = path.dirname(filePath);
+  const tmpPath = path.join(dir, `.${path.basename(filePath)}.tmp-${process.pid}-${randomBytes(4).toString("hex")}`);
+  try {
+    await writeFile(tmpPath, content, "utf8");
+    await rename(tmpPath, filePath);
+  } catch (error) {
+    await unlink(tmpPath).catch(() => {});
+    throw error;
+  }
 }
 
 /**

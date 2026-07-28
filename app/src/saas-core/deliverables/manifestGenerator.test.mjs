@@ -1,6 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cp04GenerateManifest, cp04ValidateManifest, cp04DiffManifests } from "./manifestGenerator.js";
+import path from "node:path";
+import { tmpdir } from "node:os";
+import { mkdtemp, rm, readFile, readdir, writeFile } from "node:fs/promises";
+import { cp04GenerateManifest, cp04ValidateManifest, cp04DiffManifests, cp04WriteManifestAtomic } from "./manifestGenerator.js";
+
+async function withTempDir(fn) {
+  const dir = await mkdtemp(path.join(tmpdir(), "cp04-manifest-atomic-"));
+  try {
+    await fn(dir);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
 
 const SAMPLE_ENTRIES = [
   { id: "a1", deliverableType: "logotipo", format: "SVG", content: "<svg>1</svg>", path: "Agencia IA/Clientes/X/Logos/a1.svg" },
@@ -65,4 +77,52 @@ test("cp04DiffManifests con el segundo manifiesto vacío detecta que todo se eli
   const diff = cp04DiffManifests(v1, { items: [] });
   assert.equal(diff.removed.length, 2);
   assert.equal(diff.added.length, 0);
+});
+
+test("Prompt 3.5 · cp04WriteManifestAtomic escribe el contenido exacto en el destino final", async () => {
+  await withTempDir(async (dir) => {
+    const target = path.join(dir, "manifest.json");
+    await cp04WriteManifestAtomic(target, '{"version":1}');
+    const onDisk = await readFile(target, "utf8");
+    assert.equal(onDisk, '{"version":1}');
+  });
+});
+
+test("Prompt 3.5 · cp04WriteManifestAtomic no deja ningún archivo temporal residual tras un éxito", async () => {
+  await withTempDir(async (dir) => {
+    const target = path.join(dir, "manifest.json");
+    await cp04WriteManifestAtomic(target, '{"version":1}');
+    const files = await readdir(dir);
+    assert.deepEqual(files, ["manifest.json"], "no debería quedar ningún .tmp-* en el directorio");
+  });
+});
+
+test("Prompt 3.5 · cp04WriteManifestAtomic sobrescribe por completo el contenido anterior (nunca mezcla)", async () => {
+  await withTempDir(async (dir) => {
+    const target = path.join(dir, "manifest.json");
+    await cp04WriteManifestAtomic(target, "contenido largo original con mucho texto de relleno");
+    await cp04WriteManifestAtomic(target, "corto");
+    const onDisk = await readFile(target, "utf8");
+    assert.equal(onDisk, "corto", "rename() reemplaza el archivo entero, no puede quedar basura del contenido anterior más largo");
+  });
+});
+
+test("Prompt 3.5 · cp04WriteManifestAtomic: si el directorio destino no existe, falla sin dejar temporales huérfanos ni tocar nada", async () => {
+  await withTempDir(async (dir) => {
+    const target = path.join(dir, "no-existe", "manifest.json");
+    await assert.rejects(() => cp04WriteManifestAtomic(target, "x"));
+    const files = await readdir(dir);
+    assert.deepEqual(files, [], "ningún archivo temporal debería sobrevivir en el directorio padre tras el fallo");
+  });
+});
+
+test("Prompt 3.5 · cp04WriteManifestAtomic: un archivo previo válido nunca queda en un estado a medias (simulación de escritura completa o nula)", async () => {
+  await withTempDir(async (dir) => {
+    const target = path.join(dir, "manifest.json");
+    await writeFile(target, '{"version":1,"items":["a","b","c"]}', "utf8");
+    await cp04WriteManifestAtomic(target, '{"version":2,"items":["a","b","c","d"]}');
+    const onDisk = JSON.parse(await readFile(target, "utf8"));
+    assert.equal(onDisk.version, 2);
+    assert.equal(onDisk.items.length, 4);
+  });
 });

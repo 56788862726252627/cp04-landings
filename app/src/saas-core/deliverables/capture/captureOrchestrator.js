@@ -23,7 +23,7 @@ import { cp04CreateScreenshotEngine } from "./screenshotEngine.js";
 import { cp04ComposeMockupFrame } from "./mockupCompositor.js";
 import { CP04_VIEWPORT_REGISTRY } from "./viewportRegistry.js";
 import { cp04CreateDeliverablesFactory } from "../index.js";
-import { cp04ValidateManifest, cp04DiffManifests } from "../manifestGenerator.js";
+import { cp04ValidateManifest, cp04DiffManifests, cp04WriteManifestAtomic } from "../manifestGenerator.js";
 import { cp04BuildDemoProject } from "../demo/demoProject.js";
 
 function checksumOfContent(content) {
@@ -215,7 +215,7 @@ export async function cp04RunMockupCaptureFlow(options = {}) {
   if (!manifestValidation.valid) throw new Error(`Manifiesto de capturas inválido: ${manifestValidation.errors.join("; ")}`);
 
   await mkdir(path.join(baseDir, "mockups"), { recursive: true });
-  await writeFile(path.join(baseDir, "mockups", "mockups-manifest.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  await cp04WriteManifestAtomic(path.join(baseDir, "mockups", "mockups-manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
 
   // Cola Drive en modo disabled/dry-run — nunca sube nada (Prompt 1/6).
   const factory = cp04CreateDeliverablesFactory({ env: options.env });
