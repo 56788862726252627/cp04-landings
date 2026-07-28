@@ -28,6 +28,7 @@ import { cp04CreateDeliverablesFactory } from "../index.js";
 import { cp04GenerateManifest, cp04ValidateManifest, cp04DiffManifests, cp04WriteManifestAtomic } from "../manifestGenerator.js";
 import { cp04GenerateSvgPreview } from "../previewGenerator.js";
 import { CP04_DELIVERABLE_TYPES } from "../deliverablesCatalog.js";
+import { cp04IsFormatImplemented } from "../exportFormats.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -177,14 +178,19 @@ export async function cp04BuildDemoPackage(project = cp04BuildDemoProject()) {
   }
 
   // Formatos pedidos por el catálogo que este demo NO puede generar hoy
-  // (PDF/DOCX/PPTX/PNG/JPG/WebP/MP4/GIF) — se registran explícitamente,
-  // nunca se crea un archivo con la extensión equivocada.
+  // (PNG/JPG/WebP/MP4/GIF — sin motor de rasterizado instalado) — se
+  // registran explícitamente, nunca se crea un archivo con la extensión
+  // equivocada. Desde el Prompt 4/6, PDF/DOCX/PPTX SÍ tienen motor real
+  // (ver exportFormats.js) — una combinación que este demo en concreto
+  // no pida (p. ej. "informe" en PDF, cuando aquí se genera en Markdown)
+  // no es "no implementada", solo no solicitada por este demo — por eso
+  // se consulta el registro real (`cp04IsFormatImplemented`) y no una
+  // lista fija que podría desincronizarse silenciosamente.
   for (const [typeId, type] of Object.entries(CP04_DELIVERABLE_TYPES)) {
     for (const formatId of type.formats) {
       const alreadyRequested = requests.some((r) => r.deliverableType === typeId && r.format === formatId);
       if (alreadyRequested) continue;
-      const isImplemented = ["markdown", "html", "svg"].includes(formatId);
-      if (!isImplemented) {
+      if (!cp04IsFormatImplemented(formatId)) {
         notImplemented.push({ deliverableType: typeId, format: formatId, status: "not_implemented", reason: `pendiente de motor real para "${formatId}"` });
       }
     }

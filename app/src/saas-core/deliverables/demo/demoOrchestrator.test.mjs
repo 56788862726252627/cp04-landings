@@ -23,7 +23,7 @@ test("cp04BuildDemoPackage genera entregables en memoria usando solo formatos im
   for (const entry of entries) {
     assert.ok(["markdown", "html", "svg"].includes(entry.format), `formato inesperado: ${entry.format}`);
   }
-  assert.ok(notImplemented.length > 0, "debe haber formatos pendientes registrados (pdf/docx/pptx/png/jpg/webp/mp4/gif)");
+  assert.ok(notImplemented.length > 0, "debe haber formatos pendientes registrados (png/jpg/webp/mp4/gif — PDF/DOCX/PPTX ya tienen motor real desde el Prompt 4/6)");
   for (const pending of notImplemented) {
     assert.equal(pending.status, "not_implemented");
     assert.ok(pending.reason);
@@ -65,10 +65,14 @@ test("Fase 8 #4: si el contenido cambia (nuevo proyecto con otro texto), la sigu
   await withTempDir(async (dir) => {
     const first = await cp04RunDemoFlow({ baseDir: dir, skipArchive: true });
     // Simula un cambio de contenido real reescribiendo el manifiesto previo
-    // con un checksum distinto para un item, forzando que el diff detecte un cambio.
+    // con un checksum distinto para un item, forzando que el diff detecte un
+    // cambio. cp04DiffManifests compara versionChecksum (Prompt 4/6, con
+    // fallback a checksum) — hay que alterar ambos para que la simulación
+    // sea honesta, igual que en captureOrchestrator.test.mjs.
     const manifestPath = path.join(dir, "manifest", "manifest.json");
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
     manifest.items[0].checksum = "0".repeat(64);
+    manifest.items[0].versionChecksum = "0".repeat(64);
     await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
 
     const second = await cp04RunDemoFlow({ baseDir: dir, skipArchive: true });
@@ -113,12 +117,18 @@ test("Fase 8 #7: genera SVG real (logo, icono, fondo, banner y 8 previews de moc
 test("Fase 8 #8/#9: registra los formatos no implementados sin crear ningún archivo con extensión falsa", async () => {
   await withTempDir(async (dir) => {
     const result = await cp04RunDemoFlow({ baseDir: dir, skipArchive: true });
-    assert.ok(result.notImplemented.some((n) => n.format === "pdf"));
+    // PDF/DOCX/PPTX ya tienen motor real (Prompt 4/6) — este demo en
+    // concreto no los solicita, así que no deben figurar como "no
+    // implementados" (ese estado es solo para formatos sin motor real).
+    assert.equal(result.notImplemented.some((n) => n.format === "pdf"), false);
+    assert.equal(result.notImplemented.some((n) => n.format === "docx"), false);
+    assert.equal(result.notImplemented.some((n) => n.format === "pptx"), false);
     assert.ok(result.notImplemented.some((n) => n.format === "png"));
-    // Ningún .pdf/.png/etc. debe existir en el árbol de salida.
+    // Ningún .png/etc. de un formato sin motor real debe existir en el árbol de salida
+    // (.pdf/.docx/.pptx no aplica aquí: este demo no los solicita, no es que estén prohibidos).
     const allText = await readdir(dir, { recursive: true }).catch(() => []);
     for (const file of allText) {
-      for (const ext of [".pdf", ".png", ".docx", ".pptx", ".webp", ".mp4", ".gif"]) {
+      for (const ext of [".png", ".webp", ".mp4", ".gif"]) {
         assert.equal(String(file).endsWith(ext), false, `no debería existir ${file}`);
       }
     }

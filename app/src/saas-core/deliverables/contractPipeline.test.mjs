@@ -50,7 +50,8 @@ test("cp04GenerateContract con campos inválidos falla explicando qué falta, si
   assert.match(result.reason, /partyB/);
 });
 
-test("cp04GenerateContract en PDF declara not_implemented (nunca finge un contrato firmable en binario)", () => {
+test("cp04GenerateContract (camino de texto síncrono) no produce binario — PDF/DOCX reales viven en ExportManager (Prompt 4/6, ver exportManager.test.mjs)", () => {
   const result = cp04GenerateContract(VALID_CONTRACT, "pdf");
-  assert.equal(result.status, "not_implemented");
+  assert.equal(result.status, "failed");
+  assert.match(result.reason, /DocumentPipeline solo produce markdown\/html/);
 });

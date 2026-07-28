@@ -25,14 +25,17 @@ export function cp04ValidateContractFields(contract) {
 }
 
 /**
+ * Construye el spec `{title, meta, sections}` de un contrato ya validado
+ * — extraído como función propia (Prompt 4/6) para que tanto el camino
+ * de texto (`cp04GenerateContract`, markdown/html vía DocumentPipeline)
+ * como el binario (PDF/DOCX vía ExportManager) partan del mismo
+ * contenido, sin duplicar la plantilla en dos sitios.
  * @param {{partyA:string, partyB:string, effectiveDate:string, scope:string, terms?:string[]}} contract
- * @param {string} [formatId]
+ * @returns {{valid:boolean, errors?:string[], spec?:object}}
  */
-export function cp04GenerateContract(contract, formatId = "markdown") {
+export function cp04BuildContractSpec(contract) {
   const validation = cp04ValidateContractFields(contract);
-  if (!validation.valid) {
-    return { status: "failed", reason: `contrato inválido: ${validation.errors.join("; ")}`, format: formatId };
-  }
+  if (!validation.valid) return { valid: false, errors: validation.errors };
 
   const terms = Array.isArray(contract.terms) && contract.terms.length > 0
     ? contract.terms.map((t, i) => `${i + 1}. ${t}`).join("\n")
@@ -48,6 +51,17 @@ export function cp04GenerateContract(contract, formatId = "markdown") {
       { heading: "Aviso", body: "Este documento es un borrador generado automáticamente. No constituye asesoría legal ni tiene validez de firma hasta su revisión y formalización por las partes." },
     ],
   };
+  return { valid: true, spec };
+}
 
-  return cp04GenerateDocument(spec, formatId);
+/**
+ * @param {{partyA:string, partyB:string, effectiveDate:string, scope:string, terms?:string[]}} contract
+ * @param {string} [formatId]
+ */
+export function cp04GenerateContract(contract, formatId = "markdown") {
+  const built = cp04BuildContractSpec(contract);
+  if (!built.valid) {
+    return { status: "failed", reason: `contrato inválido: ${built.errors.join("; ")}`, format: formatId };
+  }
+  return cp04GenerateDocument(built.spec, formatId);
 }

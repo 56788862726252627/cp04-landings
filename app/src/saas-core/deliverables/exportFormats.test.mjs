@@ -21,10 +21,10 @@ test("cp04GetExportFormat es insensible a mayúsculas y devuelve null para un fo
   assert.equal(cp04GetExportFormat("no-existe"), null);
 });
 
-test("solo markdown/html/svg están implementados hoy (cero dependencias, cero red) — el resto declara honestamente not_implemented", () => {
-  assert.deepEqual(cp04ListImplementedFormats().sort(), ["html", "markdown", "svg"]);
+test("markdown/html/svg/pdf/docx/pptx están implementados hoy (Prompt 1/6 + motores reales del Prompt 4/6, sin red) — el resto declara honestamente not_implemented", () => {
+  assert.deepEqual(cp04ListImplementedFormats().sort(), ["docx", "html", "markdown", "pdf", "pptx", "svg"]);
   const pending = cp04ListPendingFormats().sort();
-  assert.deepEqual(pending, ["docx", "gif", "jpg", "mp4", "pdf", "png", "pptx", "webp"]);
+  assert.deepEqual(pending, ["gif", "jpg", "mp4", "png", "webp"]);
 });
 
 test("cada formato no implementado declara requiresDependency (nunca queda en blanco sin explicar por qué)", () => {

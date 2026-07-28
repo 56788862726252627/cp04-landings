@@ -13,8 +13,14 @@ import { createHash, randomBytes } from "node:crypto";
 import { writeFile, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { Buffer } from "node:buffer";
 
 function checksumOf(content) {
+  // Contenido binario (PDF/DOCX/PPTX real, Prompt 4/6): hash directo de
+  // los bytes reales — JSON.stringify(buffer) también sería determinista
+  // (serializa cada byte), pero es un rodeo innecesario y mucho más
+  // costoso para binarios de varios KB/MB.
+  if (Buffer.isBuffer(content)) return createHash("sha256").update(content).digest("hex");
   const text = typeof content === "string" ? content : JSON.stringify(content ?? "");
   return createHash("sha256").update(text, "utf8").digest("hex");
 }
@@ -47,7 +53,17 @@ export async function cp04WriteManifestAtomic(filePath, content) {
 }
 
 /**
- * @param {{id:string, deliverableType:string, format:string, content:any, path:string, status:string}[]} entries
+ * @param {{id:string, deliverableType:string, format:string, content:any, versionContent?:any, path:string, status:string}[]} entries - `versionContent`
+ * opcional (Prompt 4/6): contenido alternativo usado SOLO para calcular
+ * `versionChecksum` — necesario para binarios (PDF/DOCX/PPTX) cuyas
+ * librerías embeben un timestamp de creación no determinista dentro del
+ * propio archivo (`docProps/core.xml` en OOXML), lo que impediría que
+ * dos generaciones con el MISMO contenido real produjeran el mismo
+ * checksum. `checksum` (integridad del archivo en disco) no cambia; se
+ * añade `versionChecksum` (identidad de contenido, para decidir si hay
+ * que subir de versión) calculado sobre `versionContent` si se aporta,
+ * o sobre el propio `content` si no (mismo patrón ya usado en
+ * `captureOrchestrator.js`, aquí generalizado al módulo compartido).
  * @param {{projectId:string, projectName:string, version?:number}} meta
  */
 export function cp04GenerateManifest(entries, meta) {
@@ -58,13 +74,16 @@ export function cp04GenerateManifest(entries, meta) {
     if (!entry || !entry.id || !entry.deliverableType || !entry.format) {
       throw new TypeError("cada entry del manifiesto necesita id, deliverableType y format");
     }
+    const checksum = checksumOf(entry.content);
+    const versionChecksum = entry.versionContent !== undefined ? checksumOf(entry.versionContent) : checksum;
     return Object.freeze({
       id: entry.id,
       deliverableType: entry.deliverableType,
       format: String(entry.format).toLowerCase(),
       path: entry.path || null,
       status: entry.status || "completed",
-      checksum: checksumOf(entry.content),
+      checksum,
+      versionChecksum,
     });
   });
 

@@ -10,11 +10,42 @@
 import { cp04GetDeliverableType, cp04IsFormatValidForDeliverable } from "./deliverablesCatalog.js";
 import { cp04GetExportFormat } from "./exportFormats.js";
 import { cp04GenerateDocument } from "./documentPipeline.js";
-import { cp04GenerateContract } from "./contractPipeline.js";
+import { cp04GenerateContract, cp04BuildContractSpec } from "./contractPipeline.js";
 import { cp04GeneratePresentation } from "./presentationPipeline.js";
 import { cp04GenerateMockup } from "./mockupPipeline.js";
 import { cp04GenerateSvgPreview } from "./previewGenerator.js";
 import { cp04CreateAssetRegistry } from "./assetRegistry.js";
+import { cp04GeneratePdf } from "./pdfPipeline.js";
+import { cp04GenerateDocx } from "./docxPipeline.js";
+import { cp04GeneratePptx } from "./pptxPipeline.js";
+
+const BINARY_FORMATS = Object.freeze(["pdf", "docx", "pptx"]);
+
+/**
+ * Genera un entregable binario (PDF/DOCX/PPTX) real reutilizando el
+ * mismo contenido (spec/deck) que ya usan los pipelines de texto —
+ * nunca duplica la plantilla, solo cambia el renderer final.
+ */
+async function generateBinaryDeliverable(pipeline, payload, formatId) {
+  if (pipeline === "contract") {
+    const built = cp04BuildContractSpec(payload);
+    if (!built.valid) return { status: "failed", reason: `contrato inválido: ${built.errors.join("; ")}`, format: formatId };
+    if (formatId === "pdf") return cp04GeneratePdf(built.spec);
+    if (formatId === "docx") return cp04GenerateDocx(built.spec);
+    return { status: "failed", reason: `ContractPipeline no produce "${formatId}" en binario`, format: formatId };
+  }
+  if (pipeline === "document") {
+    if (formatId === "pdf") return cp04GeneratePdf(payload);
+    if (formatId === "docx") return cp04GenerateDocx(payload);
+    return { status: "failed", reason: `DocumentPipeline no produce "${formatId}" en binario`, format: formatId };
+  }
+  if (pipeline === "presentation") {
+    if (formatId === "pdf") return cp04GeneratePdf(payload);
+    if (formatId === "pptx") return cp04GeneratePptx(payload);
+    return { status: "failed", reason: `PresentationPipeline no produce "${formatId}" en binario`, format: formatId };
+  }
+  return { status: "failed", reason: `el pipeline "${pipeline}" no tiene un motor binario conectado`, format: formatId };
+}
 
 /**
  * @param {{registry?: ReturnType<typeof cp04CreateAssetRegistry>}} [options]
@@ -41,7 +72,10 @@ export function cp04CreateExportManager(options = {}) {
     }
 
     let result;
-    switch (type.pipeline) {
+    if (BINARY_FORMATS.includes(formatMeta.id) && ["contract", "document", "presentation"].includes(type.pipeline)) {
+      result = await generateBinaryDeliverable(type.pipeline, payload, formatMeta.id);
+      if (result.status === "completed") result.content = result.buffer;
+    } else switch (type.pipeline) {
       case "contract":
         result = cp04GenerateContract(payload, format);
         break;
