@@ -4,6 +4,7 @@
 - **Rama:** `app3/prompt-3.5-hardening-gate-20260728`
 - **Continúa de:** [03-capturas-reales-mockups-20260727.md](03-capturas-reales-mockups-20260727.md)
 - **No añade funcionalidad comercial. No inicia el Prompt 4/6.**
+- **Estado de integración:** PR [#71](https://github.com/56788862726252627/cp04-landings/pull/71) — commit `dcfc00f`, fusionado por merge commit `416a6e4` sobre `docs/resultado-merge-pr52-66-20260727`. **Gate 3.5: APROBADO.** Condición para iniciar el Prompt 4/6: cumplida (sin deuda crítica pendiente en las 14 áreas auditadas).
 
 ## Objetivo
 
