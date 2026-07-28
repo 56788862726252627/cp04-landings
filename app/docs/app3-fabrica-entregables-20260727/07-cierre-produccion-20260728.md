@@ -4,6 +4,7 @@
 - **Rama:** `app3/prompt-6-cierre-produccion-20260728`
 - **Continúa de:** [06-empaquetado-final-20260728.md](06-empaquetado-final-20260728.md)
 - **Cierra App 3** (6/6 prompts + Gate 3.5).
+- **Estado de integración final:** cadena completa `#68 → #69 → #70 → #71 → #72 → #73 → #74 → #75` — **las 8 PR están `MERGED`** sobre `docs/resultado-merge-pr52-66-20260727`. SHA final: `27d94de551addbfbb3481b8bdefa28d52ad3378e` (merge de #75, commit `7f4d6f5`). SHA de merge de #74 (Prompt 5/6, commit `cfa265c`): `76e478073fbaaf41d283561246e2e2f73e0a39d6`. **App 3 queda cerrada al 100 % técnicamente.**
 
 ## 1. Auditoría completa de la arquitectura
 
@@ -132,4 +133,4 @@ App 3 se diseñó desde el Prompt 1/6 para no ser específico de Club Pádel 04 
 
 ## Estado final de App 3
 
-**6/6 prompts + Gate 3.5, todos con PR propia.** Pendiente de autorización de merge de la cadena completa (#68-#75).
+**6/6 prompts + Gate 3.5, cadena completa `#68-#75` integrada y `MERGED`.** App 3 cerrada al 100 % técnicamente. Sin PR de App 3 pendientes.
