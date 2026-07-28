@@ -56,7 +56,8 @@
     "app3:demo": "node app3-cli/app3-demo.mjs",
     "app3:demo:validate": "node app3-cli/app3-demo-validate.mjs",
     "app3:demo:report": "node app3-cli/app3-demo-report.mjs",
-    "app3:demo4": "node app3-cli/app3-demo4.mjs"
+    "app3:demo4": "node app3-cli/app3-demo4.mjs",
+    "app3:package": "node app3-cli/app3-package.mjs"
   },
   "dependencies": {
     "docx": "^9.7.1",
