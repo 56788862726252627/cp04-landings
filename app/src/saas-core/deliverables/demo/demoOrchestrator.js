@@ -25,7 +25,7 @@ import { cp04BuildDemoProject, CP04_DEMO_CLIENT_SLUG } from "./demoProject.js";
 import { cp04ListMockupSpecsWithStatus } from "./mockupSpecs.js";
 import { cp04ValidatePackageAgainstDenylist } from "./denylist.js";
 import { cp04CreateDeliverablesFactory } from "../index.js";
-import { cp04GenerateManifest, cp04ValidateManifest, cp04DiffManifests } from "../manifestGenerator.js";
+import { cp04GenerateManifest, cp04ValidateManifest, cp04DiffManifests, cp04WriteManifestAtomic } from "../manifestGenerator.js";
 import { cp04GenerateSvgPreview } from "../previewGenerator.js";
 import { CP04_DELIVERABLE_TYPES } from "../deliverablesCatalog.js";
 
@@ -349,7 +349,7 @@ export async function cp04RunDemoFlow(options = {}) {
   ].join("\n") + "\n";
   await writeFile(path.join(baseDir, "auditorias", "validacion.md"), auditContent, "utf8");
 
-  await writeFile(path.join(baseDir, "manifest", "manifest.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
+  await cp04WriteManifestAtomic(path.join(baseDir, "manifest", "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
   await writeFile(path.join(baseDir, "manifest", "manifest.jsonl"), manifest.items.map((i) => JSON.stringify(i)).join("\n") + "\n", "utf8");
   await appendFile(
     path.join(baseDir, "manifest", "history.jsonl"),
