@@ -39,10 +39,10 @@ test("escapa HTML en el body (evita inyección básica)", () => {
   assert.equal(result.content.includes("<img src=x"), false);
 });
 
-test("un formato no implementado (pdf) devuelve not_implemented sin fingir el binario", () => {
+test("DocumentPipeline (camino de texto síncrono) no produce PDF — el PDF real vive en PdfPipeline/ExportManager (Prompt 4/6)", () => {
   const result = cp04GenerateDocument(SAMPLE_SPEC, "pdf");
-  assert.equal(result.status, "not_implemented");
-  assert.ok(result.reason);
+  assert.equal(result.status, "failed");
+  assert.match(result.reason, /DocumentPipeline solo produce markdown\/html/);
 });
 
 test("un formato desconocido falla de forma explícita", () => {

@@ -1,35 +1,42 @@
+// Prompt 1/6: cp04GeneratePdf era un adaptador "siempre not_implemented"
+// gobernado por CP04_PDF_ENGINE_MODULE. Prompt 4/6: motor real (pdfkit)
+// vía binary/pdfEngine.js — ver docs/app3-fabrica-entregables-20260727/
+// 05-motores-binarios-20260728.md. Estos tests prueban el contrato
+// nuevo; la validación estructural profunda del PDF vive en
+// binary/pdfEngine.test.mjs y binary/binaryValidator.test.mjs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cp04IsPdfEngineConfigured, cp04GeneratePdf } from "./pdfPipeline.js";
+import { cp04GeneratePdf } from "./pdfPipeline.js";
+import { cp04ValidatePdfBuffer } from "./binary/binaryValidator.js";
 
-test("cp04IsPdfEngineConfigured es false sin CP04_PDF_ENGINE_MODULE", () => {
-  assert.equal(cp04IsPdfEngineConfigured({}), false);
-});
-
-test("cp04IsPdfEngineConfigured es true solo cuando se declara explícitamente", () => {
-  assert.equal(cp04IsPdfEngineConfigured({ CP04_PDF_ENGINE_MODULE: "algun-modulo" }), true);
-});
-
-test("cp04GeneratePdf sin spec.content falla, no genera nada", () => {
-  const result = cp04GeneratePdf(null, {});
+test("cp04GeneratePdf sin payload falla, no genera nada", async () => {
+  const result = await cp04GeneratePdf(null);
   assert.equal(result.status, "failed");
 });
 
-test("cp04GeneratePdf sin motor configurado (caso por defecto de este entorno) devuelve not_implemented, nunca 'completed'", () => {
-  const result = cp04GeneratePdf({ content: "# Documento" }, {});
-  assert.equal(result.status, "not_implemented");
-  assert.ok(result.reason);
+test("cp04GeneratePdf con un payload sin sections ni slides falla con un mensaje claro", async () => {
+  const result = await cp04GeneratePdf({ title: "X" });
+  assert.equal(result.status, "failed");
+  assert.match(result.reason, /sections.*slides|slides.*sections/);
 });
 
-test("cp04GeneratePdf incluso con CP04_PDF_ENGINE_MODULE declarado sigue en not_implemented en este prompt (no se conecta ningún motor real)", () => {
-  const result = cp04GeneratePdf({ content: "# Documento" }, { CP04_PDF_ENGINE_MODULE: "algun-modulo" });
-  assert.equal(result.status, "not_implemented");
+test("cp04GeneratePdf con spec.sections (documento/contrato) produce un PDF real y válido", async () => {
+  const result = await cp04GeneratePdf({ title: "Documento", sections: [{ heading: "Intro", body: "Contenido real." }] });
+  assert.equal(result.status, "completed");
+  assert.equal(result.format, "pdf");
+  const validation = cp04ValidatePdfBuffer(result.buffer);
+  assert.equal(validation.state, "validated", JSON.stringify(validation.errors));
 });
 
-test("nunca devuelve status 'completed' bajo ninguna combinación de entorno en este prompt (ningún PDF real se finge)", () => {
-  const combos = [{}, { CP04_PDF_ENGINE_MODULE: "x" }, { CP04_PDF_ENGINE_MODULE: "" }];
-  for (const env of combos) {
-    const result = cp04GeneratePdf({ content: "texto" }, env);
-    assert.notEqual(result.status, "completed");
-  }
+test("cp04GeneratePdf con deck.slides (presentación) produce un PDF real tipo folleto, una sección por diapositiva", async () => {
+  const result = await cp04GeneratePdf({ title: "Deck", slides: [{ title: "Uno", bullets: ["a"] }, { title: "Dos", bullets: ["b"] }] });
+  assert.equal(result.status, "completed");
+  const validation = cp04ValidatePdfBuffer(result.buffer);
+  assert.equal(validation.state, "validated", JSON.stringify(validation.errors));
+});
+
+test("cp04GeneratePdf nunca genera un PDF vacío o con 0 páginas", async () => {
+  const result = await cp04GeneratePdf({ title: "X", sections: [{ heading: "H", body: "b" }] });
+  const validation = cp04ValidatePdfBuffer(result.buffer);
+  assert.ok(validation.pageCount >= 1);
 });

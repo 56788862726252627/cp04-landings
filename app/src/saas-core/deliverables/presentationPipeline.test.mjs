@@ -42,8 +42,8 @@ test("genera HTML real con una <section> por diapositiva", () => {
   assert.equal(sections.length, 2);
 });
 
-test("en PPTX declara not_implemented, conservando el recuento de diapositivas ya validado", () => {
+test("PresentationPipeline (camino de texto síncrono) no produce PPTX — el PPTX real vive en PptxPipeline/ExportManager (Prompt 4/6)", () => {
   const result = cp04GeneratePresentation(VALID_DECK, "pptx");
-  assert.equal(result.status, "not_implemented");
-  assert.equal(result.slideCount, 2);
+  assert.equal(result.status, "failed");
+  assert.match(result.reason, /PresentationPipeline solo produce markdown\/html/);
 });

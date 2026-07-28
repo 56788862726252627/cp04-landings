@@ -126,3 +126,21 @@ test("Prompt 3.5 · cp04WriteManifestAtomic: un archivo previo válido nunca que
     assert.equal(onDisk.items.length, 4);
   });
 });
+
+test("Prompt 4/6 · cp04GenerateManifest: versionContent permite idempotencia de contenido cuando el binario embebe un timestamp no determinista", () => {
+  const entries = [
+    { id: "a", deliverableType: "propuesta_comercial", format: "pdf", content: Buffer.from("bytes-run-1-distintos-por-timestamp"), versionContent: "spec-estable" },
+  ];
+  const m1 = cp04GenerateManifest(entries, { projectId: "p1" });
+  const entries2 = [
+    { id: "a", deliverableType: "propuesta_comercial", format: "pdf", content: Buffer.from("bytes-run-2-distintos-por-timestamp-pero-mas-largos"), versionContent: "spec-estable" },
+  ];
+  const m2 = cp04GenerateManifest(entries2, { projectId: "p1" });
+  assert.notEqual(m1.items[0].checksum, m2.items[0].checksum, "el checksum de integridad SÍ debe diferir (los bytes reales son distintos)");
+  assert.equal(m1.items[0].versionChecksum, m2.items[0].versionChecksum, "el versionChecksum debe coincidir (el versionContent no cambió)");
+});
+
+test("Prompt 4/6 · cp04GenerateManifest: sin versionContent, versionChecksum coincide con checksum (comportamiento del Prompt 1/6 intacto)", () => {
+  const manifest = cp04GenerateManifest(SAMPLE_ENTRIES, { projectId: "p1" });
+  for (const item of manifest.items) assert.equal(item.versionChecksum, item.checksum);
+});

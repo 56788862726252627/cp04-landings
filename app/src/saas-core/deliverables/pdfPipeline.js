@@ -1,41 +1,35 @@
-// App 3 · Prompt 1/6 — PdfPipeline.
+// App 3 · Prompt 1/6 (stub) → Prompt 4/6 (motor real) — PdfPipeline.
 //
-// Interfaz para generación real de PDF. Hoy NO hay ninguna librería de
-// renderizado de PDF instalada en este entorno (pdfkit/puppeteer/etc.)
-// — instalar una implicaría una dependencia nueva y, en el caso de un
-// motor basado en navegador, un coste de proceso no justificado para
-// este prompt. `cp04GeneratePdf` es por tanto un adaptador "siempre
-// not_implemented" por defecto, con la misma forma de contrato que
-// tendrá el adaptador real el día que se conecte — así ExportManager no
-// tiene que cambiar cuando eso ocurra.
+// Punto de integración único de PDF, reutilizado por los pipelines de
+// documento/contrato (spec `{title, sections}`) y de presentación
+// (deck `{title, slides}`) — un solo motor real (`binary/pdfEngine.js`,
+// `pdfkit`), sin duplicar lógica de renderizado por tipo de entregable.
 //
-// Nota de diseño: Torneos (Club Pádel 04) ya resuelve "imprimir/PDF" en
-// el navegador con `window.print()` (diálogo nativo) — eso es válido
-// solo dentro de una pestaña de navegador con interacción del usuario,
-// no sirve para generar un PDF en un pipeline de servidor/Node como
-// este. Son dos problemas distintos, no se confunden aquí.
+// Hasta el Prompt 4/6 esto era un adaptador "siempre not_implemented"
+// a la espera de una librería real. Ya no: `pdfkit` es pura JS, sin
+// dependencias nativas, sin red en tiempo de ejecución (ver
+// docs/app3-fabrica-entregables-20260727/05-motores-binarios-20260728.md
+// para el detalle de la decisión). El punto de extensión por
+// `CP04_PDF_ENGINE_MODULE` queda retirado: no tiene sentido seguir
+// declarando un motor "pendiente de configurar" cuando ya hay uno real
+// y por defecto.
 
-export function cp04IsPdfEngineConfigured(env = {}) {
-  return Boolean(env.CP04_PDF_ENGINE_MODULE);
-}
+import { cp04GeneratePdfFromSpec, cp04GeneratePdfFromDeck } from "./binary/pdfEngine.js";
 
 /**
- * @param {{content:string, title?:string}} spec - contenido ya generado (p. ej. por DocumentPipeline) que se querría convertir a PDF.
- * @param {object} [env]
- * @returns {{status:"not_implemented"|"completed", reason?:string}}
+ * @param {{title:string, sections?:object[], slides?:object[]}} payload - documento/contrato (`sections`) o presentación (`slides`).
+ * @returns {Promise<{status:"completed"|"failed", format:"pdf", buffer?:Buffer, pageCount?:number, reason?:string}>}
  */
-export function cp04GeneratePdf(spec, env = {}) {
-  if (!spec || !spec.content) {
-    return { status: "failed", reason: "cp04GeneratePdf requiere spec.content (el documento ya generado en markdown/html)" };
+export async function cp04GeneratePdf(payload) {
+  if (!payload) return { status: "failed", format: "pdf", reason: "cp04GeneratePdf requiere un documento o una presentación" };
+
+  if (Array.isArray(payload.slides)) {
+    const result = await cp04GeneratePdfFromDeck(payload);
+    return { ...result, format: "pdf" };
   }
-  if (!cp04IsPdfEngineConfigured(env)) {
-    return {
-      status: "not_implemented",
-      reason: "no hay motor de PDF configurado (CP04_PDF_ENGINE_MODULE) — este entorno no instala librerías de renderizado de PDF por defecto, coste 0€ y sin dependencias nuevas",
-    };
+  if (Array.isArray(payload.sections)) {
+    const result = await cp04GeneratePdfFromSpec(payload);
+    return { ...result, format: "pdf" };
   }
-  // Punto de extensión: cuando exista un motor real, env.CP04_PDF_ENGINE_MODULE
-  // apuntaría a un adaptador inyectable que implemente { render(spec) }.
-  // No se implementa aquí — API lista, sin simular un PDF que no existe.
-  return { status: "not_implemented", reason: "motor de PDF declarado pero sin implementación conectada en este prompt" };
+  return { status: "failed", format: "pdf", reason: "cp04GeneratePdf requiere payload.sections (documento/contrato) o payload.slides (presentación)" };
 }

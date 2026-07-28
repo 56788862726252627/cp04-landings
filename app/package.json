@@ -55,9 +55,14 @@
     "factory:proposal": "node commercial-cli/factory-proposal.mjs",
     "app3:demo": "node app3-cli/app3-demo.mjs",
     "app3:demo:validate": "node app3-cli/app3-demo-validate.mjs",
-    "app3:demo:report": "node app3-cli/app3-demo-report.mjs"
+    "app3:demo:report": "node app3-cli/app3-demo-report.mjs",
+    "app3:demo4": "node app3-cli/app3-demo4.mjs"
   },
   "dependencies": {
+    "docx": "^9.7.1",
+    "jszip": "^3.10.1",
+    "pdfkit": "^0.19.1",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
