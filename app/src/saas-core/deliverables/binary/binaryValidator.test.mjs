@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
-import { cp04ValidatePdfBuffer, cp04ValidateOoxmlBuffer, CP04_BINARY_MIME } from "./binaryValidator.js";
+import JSZip from "jszip";
+import { cp04ValidatePdfBuffer, cp04ValidateOoxmlBuffer, CP04_BINARY_MIME, CP04_MAX_OOXML_ENTRY_BYTES } from "./binaryValidator.js";
 import { cp04GeneratePdfFromSpec } from "./pdfEngine.js";
 import { cp04GenerateDocxFromSpec } from "./docxEngine.js";
 import { cp04GeneratePptxFromDeck } from "./pptxEngine.js";
@@ -80,7 +81,6 @@ test("cp04ValidateOoxmlBuffer: un DOCX truncado (ZIP incompleto) se detecta como
 
 test("cp04ValidateOoxmlBuffer: un PPTX sin ninguna diapositiva real (manipulado) se detecta como 'incomplete'", async () => {
   const { buffer } = await cp04GeneratePptxFromDeck(DECK);
-  const JSZip = (await import("jszip")).default;
   const zip = await JSZip.loadAsync(buffer);
   for (const name of Object.keys(zip.files)) {
     if (/^ppt\/slides\/slide\d+\.xml$/.test(name)) zip.remove(name);
@@ -95,4 +95,23 @@ test("CP04_BINARY_MIME declara el MIME real de los 3 formatos", () => {
   assert.equal(CP04_BINARY_MIME.pdf, "application/pdf");
   assert.equal(CP04_BINARY_MIME.docx, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
   assert.equal(CP04_BINARY_MIME.pptx, "application/vnd.openxmlformats-officedocument.presentationml.presentation");
+});
+
+test("Prompt 6/6 · cp04ValidateOoxmlBuffer rechaza una entrada que declara un tamaño descomprimido por encima del límite de seguridad ('zip bomb'), sin descomprimirla", async () => {
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", '<?xml version="1.0"?><Types/>');
+  zip.file("_rels/.rels", '<?xml version="1.0"?><Relationships/>');
+  // Altamente comprimible (todo ceros) — el .zip resultante es pequeño, pero
+  // declara un tamaño descomprimido mayor que el límite de seguridad.
+  const huge = Buffer.alloc(CP04_MAX_OOXML_ENTRY_BYTES + 1024, 0);
+  zip.file("word/document.xml", huge, { compression: "DEFLATE" });
+  const buffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+
+  const start = Date.now();
+  const result = await cp04ValidateOoxmlBuffer(buffer, "docx");
+  const elapsedMs = Date.now() - start;
+
+  assert.notEqual(result.state, "validated");
+  assert.match(result.errors.join(";"), /zip bomb/);
+  assert.ok(elapsedMs < 2000, `debería rechazarse casi al instante sin descomprimir (tardó ${elapsedMs}ms)`);
 });

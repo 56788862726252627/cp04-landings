@@ -139,8 +139,25 @@ export async function cp04BuildFinalExportPackage({ sourceBaseDir, targetBaseDir
   const packagedFiles = [];
   const failed = [];
 
+  const resolvedSourceBaseDir = path.resolve(sourceBaseDir);
+
   for (const item of sourceItems) {
-    const sourcePath = path.join(sourceBaseDir, item.path);
+    // Confinamiento de ruta: `item.path` viene de un manifiesto de
+    // origen que, a través del CLI (--source=<ruta>), podría apuntar a
+    // un directorio no controlado por esta sesión. Un manifiesto
+    // manipulado con "../../../etc/passwd" (o una ruta absoluta) no
+    // debe poder hacer que este módulo lea ni empaquete un archivo
+    // fuera de sourceBaseDir — se verifica ANTES de tocar el disco, no
+    // después. path.resolve() normaliza ".." y rutas absolutas por
+    // igual; se exige el separador de ruta como límite exacto para que
+    // "/origen-otro" no cuele como si fuera un prefijo válido de
+    // "/origen".
+    const sourcePath = path.resolve(sourceBaseDir, item.path);
+    if (sourcePath !== resolvedSourceBaseDir && !sourcePath.startsWith(resolvedSourceBaseDir + path.sep)) {
+      failed.push({ id: item.id, deliverableType: item.deliverableType, path: item.path, reason: "la ruta de origen se sale de sourceBaseDir (posible path traversal) — excluida sin leerla" });
+      continue;
+    }
+
     let buffer;
     try {
       buffer = await readFile(sourcePath);
