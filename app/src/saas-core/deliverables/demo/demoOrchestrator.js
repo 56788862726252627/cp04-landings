@@ -246,8 +246,8 @@ function buildIndexHtml(project, manifest) {
   const rows = manifest.items
     .map((item) => `<tr><td>${item.deliverableType}</td><td>${item.format}</td><td>${item.status}</td><td><a href="${item.path}">${item.path}</a></td></tr>`)
     .join("\n");
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${project.displayName} — Paquete de entregables</title>
-<style>body{font-family:sans-serif;background:#05080d;color:#f1f5f9;padding:32px} table{border-collapse:collapse;width:100%} td,th{border:1px solid #334155;padding:6px 10px;font-size:.85rem} a{color:#7dd3fc}</style>
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${project.displayName} — Paquete de entregables</title>
+<style>body{font-family:sans-serif;background:#05080d;color:#f1f5f9;padding:32px} table{border-collapse:collapse;width:100%;table-layout:fixed} td,th{border:1px solid #334155;padding:6px 10px;font-size:.85rem;word-break:break-word;overflow-wrap:anywhere} a{color:#7dd3fc}</style>
 </head><body>
 <h1>${project.displayName}</h1>
 <p>${project.description}</p>

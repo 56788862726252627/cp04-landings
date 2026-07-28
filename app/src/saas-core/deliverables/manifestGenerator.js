@@ -68,10 +68,19 @@ export function cp04ValidateManifest(manifest) {
   return { valid: errors.length === 0, errors };
 }
 
-/** Compara dos manifiestos del mismo proyecto y devuelve qué items son nuevos, cuáles cambiaron de checksum y cuáles ya no están — base de un futuro control de versiones real. */
+/**
+ * Compara dos manifiestos del mismo proyecto y devuelve qué items son nuevos, cuáles cambiaron y cuáles ya no están.
+ *
+ * Usa `versionChecksum` cuando el item lo declara (checksum "de identidad
+ * de contenido", que excluye campos honestos pero volátiles como una marca
+ * de tiempo de captura) y cae a `checksum` (el hash real del archivo en
+ * disco) si no — así un item sin `versionChecksum` (p. ej. los del
+ * Prompt 1/6) se compara exactamente igual que antes.
+ */
 export function cp04DiffManifests(previous, next) {
   const prevById = new Map((previous?.items || []).map((i) => [i.id, i]));
   const nextById = new Map((next?.items || []).map((i) => [i.id, i]));
+  const versionKeyOf = (item) => item.versionChecksum ?? item.checksum;
 
   const added = [];
   const changed = [];
@@ -80,7 +89,7 @@ export function cp04DiffManifests(previous, next) {
   for (const [id, item] of nextById) {
     const prevItem = prevById.get(id);
     if (!prevItem) added.push(item);
-    else if (prevItem.checksum !== item.checksum) changed.push({ id, from: prevItem.checksum, to: item.checksum });
+    else if (versionKeyOf(prevItem) !== versionKeyOf(item)) changed.push({ id, from: prevItem.checksum, to: item.checksum });
   }
   for (const [id, item] of prevById) {
     if (!nextById.has(id)) removed.push(item);
