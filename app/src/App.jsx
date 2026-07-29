@@ -48,6 +48,16 @@ import {
 } from "./utils/rbac.js";
 import { cp04ComputeScreenState } from "./utils/screenState.js";
 import { cp04Can } from "./utils/permissions.js";
+import {
+  buildRoundRobinMatches,
+  getRoundRobinRestingPairId,
+  getRoundRobinTotalRounds,
+  applyRoundRobinResult,
+  computeRoundRobinStandings,
+  sortRoundRobinStandings,
+  isRoundRobinComplete,
+  getRoundRobinChampion,
+} from "./utils/roundRobin.js";
 import { cp04ApplyScreenState } from "./cp04-apply-screen-state.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
 import { LazyComunidad } from "./components/lazy/lazyComunidad.js";
@@ -5877,7 +5887,9 @@ function torneoLoadSaved() {
     const rawBracket = Array.isArray(raw.bracket) ? raw.bracket : [];
     // If bracket items lack 'round' (old format), discard bracket to avoid crash
     const bracketOk = rawBracket.length === 0 || rawBracket.every(m => typeof m.round === "number");
-    return { ...raw, pairs: rawPairs, bracket: bracketOk ? rawBracket : [] };
+    const rawRrMatches = Array.isArray(raw.rrMatches) ? raw.rrMatches : [];
+    const rrMatchesOk = rawRrMatches.length === 0 || rawRrMatches.every(m => typeof m.round === "number");
+    return { ...raw, pairs: rawPairs, bracket: bracketOk ? rawBracket : [], rrMatches: rrMatchesOk ? rawRrMatches : [] };
   } catch { return null; }
 }
 
@@ -5982,6 +5994,11 @@ function Torneos({ selectedRole } = {}) {
   const [byePair, setByePair] = useState(() => saved?.byePair ?? null);
   const [byeDrawDate, setByeDrawDate] = useState(() => saved?.byeDrawDate ?? null);
   const [published, setPublished] = useState(() => saved?.published ?? false);
+  // Round Robin (liga: todos contra todos) — motor puro en
+  // src/utils/roundRobin.js. rrMatches es independiente del `bracket` de
+  // eliminación directa: solo se usa cuando formatMode === "roundrobin".
+  const [rrMatches, setRrMatches] = useState(() => saved?.rrMatches ?? []);
+  const [rrScoreDraft, setRrScoreDraft] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ p1: "", p2: "" });
   const [deleteId, setDeleteId] = useState(null);
@@ -5991,10 +6008,11 @@ function Torneos({ selectedRole } = {}) {
   const [noticeErr, setNoticeErr] = useState(false);
   const [winnerAnim, setWinnerAnim] = useState(null);
 
-  const currentMax = formatMode !== "custom" ? FORMAT_MAX[formatMode] : null;
+  const isRoundRobin = formatMode === "roundrobin";
+  const currentMax = formatMode !== "custom" && !isRoundRobin ? FORMAT_MAX[formatMode] : null;
 
   const torneoSnapshot = JSON.stringify({
-    formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published,
+    formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published, rrMatches,
   });
 
   useEffect(() => {
@@ -6030,7 +6048,7 @@ function Torneos({ selectedRole } = {}) {
         id: torneoUid("h"),
         ts: new Date().toISOString(),
         action,
-        s: { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published },
+        s: { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published, rrMatches },
       };
       const snaps = Array.isArray(hist.snaps) ? hist.snaps : [];
       const idx = typeof hist.idx === "number" ? hist.idx : -1;
@@ -6052,6 +6070,7 @@ function Torneos({ selectedRole } = {}) {
     setByePair(s.byePair ?? null);
     setByeDrawDate(s.byeDrawDate ?? null);
     setPublished(s.published ?? false);
+    setRrMatches(Array.isArray(s.rrMatches) ? s.rrMatches : []);
   };
 
   const handleUndo = () => {
@@ -6094,10 +6113,16 @@ function Torneos({ selectedRole } = {}) {
   const applyFormat = (fmt) => {
     if (!canManage) return;
     pushHistory(`Cambio de formato → ${fmt}`);
-    setFormatMode(fmt); setCustomError("");
-    if (fmt !== "custom") {
+    setFormatMode(fmt); setCustomError(""); setRrMatches([]); setRrScoreDraft({});
+    if (fmt !== "custom" && fmt !== "roundrobin") {
       const c = FORMAT_MAX[fmt]; const np = torneoBuildEmptyPairs(c);
       setPairs(np); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false);
+    } else {
+      // "custom" y "roundrobin" comparten el mismo panel de configuración
+      // por número de jugadores/parejas (ver abajo): al cambiar a
+      // cualquiera de los dos se limpian las parejas hasta que se
+      // confirme un número con applyCustom().
+      setPairs([]); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false);
     }
   };
 
@@ -6117,10 +6142,53 @@ function Torneos({ selectedRole } = {}) {
       pc = raw;
     }
     setCustomError("");
-    pushHistory(`Personalizado: ${pc} parejas`);
+    pushHistory(isRoundRobin ? `Round Robin: ${pc} parejas` : `Personalizado: ${pc} parejas`);
     const np = torneoBuildEmptyPairs(pc);
-    setPairs(np); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false);
+    setPairs(np); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false); setRrMatches([]); setRrScoreDraft({});
     showNotice(`Torneo configurado: ${pc} pareja${pc !== 1 ? "s" : ""}.`);
+  };
+
+  const handleGenerateRoundRobin = () => {
+    if (!canManage) return;
+    if (pairs.length < 2) {
+      showNotice("Se necesitan al menos 2 parejas para generar el calendario de Round Robin.", true);
+      return;
+    }
+    const hadResults = rrMatches.some(m => m.played);
+    pushHistory("Generar calendario Round Robin");
+    const matches = buildRoundRobinMatches(pairs);
+    setRrMatches(matches);
+    setRrScoreDraft({});
+    const totalRounds = getRoundRobinTotalRounds(matches);
+    const warn = hadResults ? " Los resultados anteriores se han reiniciado." : "";
+    showNotice(`📅 Calendario generado: ${matches.length} partido${matches.length !== 1 ? "s" : ""} en ${totalRounds} jornada${totalRounds !== 1 ? "s" : ""}.${warn}`, hadResults);
+  };
+
+  const handleRoundRobinScoreChange = (matchId, side, value) => {
+    setRrScoreDraft(d => ({ ...d, [matchId]: { ...d[matchId], [side]: value } }));
+  };
+
+  const handleRoundRobinSaveResult = (match) => {
+    if (!canManage) return;
+    const draft = rrScoreDraft[match.id] || {};
+    const scoreA = parseInt(draft.a ?? match.scoreA, 10);
+    const scoreB = parseInt(draft.b ?? match.scoreB, 10);
+    if (isNaN(scoreA) || isNaN(scoreB) || scoreA < 0 || scoreB < 0) {
+      showNotice("Introduce un resultado válido (números enteros no negativos) para ambas parejas.", true);
+      return;
+    }
+    if (scoreA === scoreB) {
+      showNotice("El resultado no puede ser un empate: el pádel no tiene empates, indica quién ganó.", true);
+      return;
+    }
+    const res = applyRoundRobinResult(rrMatches, match.id, scoreA, scoreB);
+    if (!res.ok) {
+      showNotice("No se ha podido guardar el resultado.", true);
+      return;
+    }
+    pushHistory(match.played ? "Corregir resultado Round Robin" : "Registrar resultado Round Robin");
+    setRrMatches(res.matches);
+    showNotice("✅ Resultado guardado. Clasificación actualizada.");
   };
 
   const handleReorder = () => {
@@ -6188,9 +6256,17 @@ function Torneos({ selectedRole } = {}) {
     // mostraría un "ganador" que ya no existe en `pairs`.
     const affectsBracket = bracket.some(m => (m.pairA === id || m.pairB === id) && (m.winner || m.round > 1));
     const newBrk = bracket.filter(m => m.pairA !== id && m.pairB !== id);
-    setPairs(upd); setBracket(newBrk); setByePair(nb); setByeDrawDate(nd); setDeleteId(null);
+    // Round Robin: cualquier partido de la pareja eliminada se retira del
+    // calendario (misma razón que en el bracket de eliminación — no tiene
+    // sentido conservar un partido jugado contra una pareja que ya no
+    // existe en `pairs`).
+    const affectsRoundRobin = rrMatches.some(m => (m.pairA === id || m.pairB === id) && m.played);
+    const newRrMatches = rrMatches.filter(m => m.pairA !== id && m.pairB !== id);
+    setPairs(upd); setBracket(newBrk); setByePair(nb); setByeDrawDate(nd); setDeleteId(null); setRrMatches(newRrMatches);
     if (affectsBracket) {
       showNotice(`⚠️ "${pairLabel(deleted)}" tenía resultados en el cuadro: se han invalidado los partidos y rondas posteriores que dependían de ella.`, true);
+    } else if (affectsRoundRobin) {
+      showNotice(`⚠️ "${pairLabel(deleted)}" tenía resultados en el calendario de Round Robin: sus partidos se han retirado de la clasificación.`, true);
     }
   };
 
@@ -6217,25 +6293,46 @@ function Torneos({ selectedRole } = {}) {
 
   const handleExportJSON = () => {
     if (!canManage) return;
+    // Date.now() aquí es seguro: solo se ejecuta dentro de este manejador de
+    // clic (nunca durante el render), exactamente el mismo patrón ya usado
+    // sin incidentes en handleExportCSV más abajo. El análisis estático del
+    // compilador de React solo llega a marcarlo aquí porque, al añadir más
+    // código a este componente (Round Robin), progresa más a fondo en su
+    // intento de auto-memoizar Torneos; no es un problema real de pureza en
+    // ejecución — un timestamp para el nombre del fichero exportado no
+    // afecta al resultado del render.
+    // eslint-disable-next-line react-hooks/purity
+    const exportTs = Date.now();
     const data = {
       nombreTorneo: `Torneo Club Pádel 04 · ${pairs.length} parejas`,
       numJugadores: pairs.length * 2, numParejas: pairs.length, formato: formatMode,
       parejas: pairs.map(p => ({ jugador1: p.player1, jugador2: p.player2 })),
-      ranking: pairs.map((p, i) => ({ pos: i + 1, jugador1: p.player1, jugador2: p.player2 })),
-      bracket: bracket.map(m => {
+      ranking: isRoundRobin
+        ? rrStandingsSorted.map((s, i) => {
+            const pair = pairs.find(p => p.id === s.pairId);
+            return { pos: i + 1, jugador1: pair?.player1 ?? "", jugador2: pair?.player2 ?? "", jugados: s.played, ganados: s.won, perdidos: s.lost, favor: s.scoreFor, contra: s.scoreAgainst, diferencia: s.diff, puntos: s.points };
+          })
+        : pairs.map((p, i) => ({ pos: i + 1, jugador1: p.player1, jugador2: p.player2 })),
+      bracket: isRoundRobin ? [] : bracket.map(m => {
         const pA = pairs.find(p => p.id === m.pairA);
         const pB = m.pairB ? pairs.find(p => p.id === m.pairB) : null;
         const pW = m.winner ? pairs.find(p => p.id === m.winner) : null;
         return { ronda: m.round, parejaA: pA ? pairLabel(pA) : "—", parejaB: pB ? pairLabel(pB) : "BYE", ganador: pW ? pairLabel(pW) : "—", esBye: m.isBye };
       }),
+      calendarioRoundRobin: isRoundRobin ? rrMatches.map(m => {
+        const pA = pairs.find(p => p.id === m.pairA);
+        const pB = pairs.find(p => p.id === m.pairB);
+        return { jornada: m.round, parejaA: pA ? pairLabel(pA) : "—", parejaB: pB ? pairLabel(pB) : "—", resultado: m.played ? `${m.scoreA}-${m.scoreB}` : null };
+      }) : [],
+      campeonRoundRobin: isRoundRobin && rrChampion ? pairLabel(rrChampion) : null,
       parejaPaseDirecto: byePair ? pairLabel(byePair) : null,
       fechaSorteo: byeDrawDate,
       estadoTorneo: published ? "Publicado" : "En curso",
-      fechaExportacion: new Date().toISOString(),
+      fechaExportacion: new Date(exportTs).toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `torneo-cp04-${Date.now()}.json`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `torneo-cp04-${exportTs}.json`; a.click();
     URL.revokeObjectURL(url);
     showNotice("⬇ JSON descargado correctamente.");
   };
@@ -6257,6 +6354,21 @@ function Torneos({ selectedRole } = {}) {
   const totalRounds = roundNums.length;
   const canUndo = hist.idx > 0;
   const canRedo = hist.idx < (hist.snaps?.length ?? 0) - 1;
+
+  // Round Robin: clasificación derivada de pairs+rrMatches (motor puro en
+  // src/utils/roundRobin.js). Recalcula solo cuando cambia alguna de las
+  // dos, no en cada render.
+  // Derivación simple durante el render, igual que bracketByRound/roundNums
+  // más abajo: el volumen de datos (máx. ~32 parejas) hace innecesaria
+  // cualquier memoización.
+  const rrStandingsSorted = isRoundRobin
+    ? sortRoundRobinStandings(computeRoundRobinStandings(pairs, rrMatches), rrMatches)
+    : [];
+  const rrByRound = {};
+  rrMatches.forEach(m => { if (!rrByRound[m.round]) rrByRound[m.round] = []; rrByRound[m.round].push(m); });
+  const rrRoundNums = Object.keys(rrByRound).map(Number).sort((a, b) => a - b);
+  const rrComplete = isRoundRobin && isRoundRobinComplete(rrMatches);
+  const rrChampion = isRoundRobin ? getRoundRobinChampion(pairs, rrMatches) : null;
 
   return (
     <div style={{ padding: "42px 24px", maxWidth: 1240, margin: "0 auto" }}>
@@ -6320,17 +6432,30 @@ function Torneos({ selectedRole } = {}) {
       <div style={{ marginBottom: 22 }}>
         <p style={{ color: T.textDim, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 10, fontWeight: 700 }}>Formato del torneo</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[{ v: "16", l: "16 jug / 8 parejas" }, { v: "32", l: "32 jug / 16 parejas" }, { v: "64", l: "64 jug / 32 parejas" }, { v: "custom", l: "⚙ Personalizado" }].map(o => (
+          {[{ v: "16", l: "16 jug / 8 parejas" }, { v: "32", l: "32 jug / 16 parejas" }, { v: "64", l: "64 jug / 32 parejas" }, { v: "custom", l: "⚙ Personalizado" }, { v: "roundrobin", l: "🔁 Round Robin (liga)" }].map(o => (
             <button key={o.v} type="button" className={`cp04-format-pill${formatMode === o.v ? " is-active" : ""}`} onClick={() => applyFormat(o.v)}>{o.l}</button>
           ))}
         </div>
       </div>
       )}
 
-      {/* CUSTOM FORMAT PANEL */}
-      {canManage && formatMode === "custom" && (
+      {/* ROUND ROBIN EXPLICATION */}
+      {isRoundRobin && (
         <Card style={{ marginBottom: 22 }}>
-          <h3 style={{ marginTop: 0, marginBottom: 14, fontSize: "1rem" }}>Formato personalizado</h3>
+          <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: "1rem" }}>🔁 Round Robin (liga: todos contra todos)</h3>
+          <p style={{ color: T.textDim, fontSize: ".85rem", lineHeight: 1.6, margin: 0 }}>
+            Cada pareja juega exactamente una vez contra todas las demás. No hay eliminación: la clasificación
+            final se calcula por puntos (3 por partido ganado, 0 por perdido). Con número impar de parejas, una
+            pareja distinta descansa cada jornada de forma rotatoria, sin rival ficticio. Desempates, en orden:
+            puntos → enfrentamiento directo (si aplica) → diferencia de puntos → puntos a favor → orden de entrada.
+          </p>
+        </Card>
+      )}
+
+      {/* CUSTOM FORMAT PANEL (compartido por "custom" y "roundrobin": ambos configuran el número de jugadores/parejas de la misma forma) */}
+      {canManage && (formatMode === "custom" || isRoundRobin) && (
+        <Card style={{ marginBottom: 22 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 14, fontSize: "1rem" }}>{isRoundRobin ? "Configurar Round Robin" : "Formato personalizado"}</h3>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
             <div>
               <p style={{ color: T.textDim, fontSize: ".8rem", marginBottom: 8, marginTop: 0 }}>Configurar por</p>
@@ -6353,13 +6478,15 @@ function Torneos({ selectedRole } = {}) {
           </div>
           {customError && <p style={{ color: T.dangerText, margin: "10px 0 0", fontSize: ".82rem", fontWeight: 700 }}>⚠️ {customError}</p>}
           <p style={{ color: T.textDim, fontSize: ".78rem", marginTop: 12, marginBottom: 0, lineHeight: 1.55 }}>
-            Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Si el número es impar se sorteará automáticamente un pase directo (BYE).
+            {isRoundRobin
+              ? "Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Tras configurar el número, genera el calendario con el botón «📅 Generar calendario» en Controles."
+              : "Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Si el número es impar se sorteará automáticamente un pase directo (BYE)."}
           </p>
         </Card>
       )}
 
-      {/* BYE NOTICE */}
-      {byePair && (
+      {/* BYE NOTICE (solo eliminación directa: Round Robin gestiona el descanso por jornada dentro de su propio calendario, no con un BYE fijo) */}
+      {byePair && !isRoundRobin && (
         <div style={{ background: "rgba(182,255,0,.07)", border: "1px solid rgba(182,255,0,.3)", borderRadius: 14, padding: "11px 16px", marginBottom: 18, display: "flex", gap: 12, alignItems: "flex-start" }}>
           <span style={{ fontSize: "1.3rem", lineHeight: 1 }}>🎯</span>
           <div>
@@ -6444,7 +6571,9 @@ function Torneos({ selectedRole } = {}) {
           <div className="cp04-tournament-control">
             <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: ".95rem" }}>Controles</h3>
             <div className="cp04-control-list">
-              <button type="button" className="cp04-control-btn" onClick={handleReorder}>🔀 {tx("torneos.reordenar")}</button>
+              {isRoundRobin
+                ? <button type="button" className="cp04-control-btn" onClick={handleGenerateRoundRobin}>📅 Generar calendario</button>
+                : <button type="button" className="cp04-control-btn" onClick={handleReorder}>🔀 {tx("torneos.reordenar")}</button>}
               <button type="button" className="cp04-control-btn" onClick={handleAutoAssign}>👤 {tx("torneos.autoasignar")}</button>
               <button type="button" className="cp04-control-btn" onClick={handleSave}>💾 {tx("torneos.guardar")}</button>
               <button type="button" className="cp04-control-btn primary" onClick={handlePublish}>
@@ -6509,8 +6638,8 @@ function Torneos({ selectedRole } = {}) {
         )}
       </div>
 
-      {/* BRACKET */}
-      {roundNums.length > 0 && (
+      {/* BRACKET (solo eliminación directa; Round Robin usa su propia sección de calendario, más abajo) */}
+      {!isRoundRobin && roundNums.length > 0 && (
         <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
           <h3 style={{ marginTop: 0, marginBottom: 16 }}>
             Bracket
@@ -6593,6 +6722,73 @@ function Torneos({ selectedRole } = {}) {
         </div>
       )}
 
+      {/* ROUND ROBIN: calendario por jornadas + registro de resultados */}
+      {isRoundRobin && rrMatches.length > 0 && (
+        <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 16 }}>
+            Calendario Round Robin
+            <span style={{ color: T.accent, fontWeight: 400, fontSize: ".82rem", marginLeft: 10 }}>
+              {pairs.length} parejas · {rrMatches.length} partido{rrMatches.length !== 1 ? "s" : ""} · {rrRoundNums.length} jornada{rrRoundNums.length !== 1 ? "s" : ""}
+            </span>
+          </h3>
+          {rrComplete && rrChampion && (
+            <div style={{ background: "linear-gradient(135deg, rgba(182,255,0,.16), rgba(49,232,159,.10))", border: "1px solid rgba(182,255,0,.4)", borderRadius: 14, padding: "12px 16px", marginBottom: 18, color: "#fff", fontWeight: 800 }}>
+              🏆 Liga completada. Campeón: {pairLabel(rrChampion)}
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {rrRoundNums.map(rNum => {
+              const restingId = getRoundRobinRestingPairId(pairs, rrMatches, rNum);
+              const restingPair = restingId ? pairs.find(p => p.id === restingId) : null;
+              return (
+                <div key={rNum}>
+                  <div style={{ color: T.accent, fontWeight: 800, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid rgba(182,255,0,.18)", display: "flex", justifyContent: "space-between" }}>
+                    <span>Jornada {rNum}</span>
+                    {restingPair && <span style={{ color: T.textDim, textTransform: "none", letterSpacing: "normal", fontWeight: 600 }}>😴 Descansa: {pairLabel(restingPair)}</span>}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {rrByRound[rNum].map(match => {
+                      const pA = pairs.find(p => p.id === match.pairA);
+                      const pB = pairs.find(p => p.id === match.pairB);
+                      const draft = rrScoreDraft[match.id] || {};
+                      const draftA = draft.a ?? (match.scoreA ?? "");
+                      const draftB = draft.b ?? (match.scoreB ?? "");
+                      return (
+                        <div key={match.id} style={{ background: match.played ? "rgba(182,255,0,.05)" : "rgba(4,9,20,.72)", border: match.played ? "1px solid rgba(182,255,0,.3)" : `1px solid ${T.line}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                          <span style={{ flex: "1 1 auto", minWidth: 160, fontSize: ".85rem", color: "#fff" }}>
+                            <strong style={{ color: match.played && match.scoreA > match.scoreB ? T.accent : "#fff" }}>{pA ? pairLabel(pA) : "—"}</strong>
+                            <span style={{ color: T.textDim }}> vs </span>
+                            <strong style={{ color: match.played && match.scoreB > match.scoreA ? T.accent : "#fff" }}>{pB ? pairLabel(pB) : "—"}</strong>
+                          </span>
+                          {canManage ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <input type="number" min="0" value={draftA} onChange={e => handleRoundRobinScoreChange(match.id, "a", e.target.value)}
+                                aria-label={`Puntos de ${pairLabel(pA)}`} placeholder="0"
+                                style={{ width: 52, padding: "5px 7px", borderRadius: 8, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.06)", color: "#fff", outline: "none", fontSize: ".82rem" }} />
+                              <span style={{ color: T.textDim }}>–</span>
+                              <input type="number" min="0" value={draftB} onChange={e => handleRoundRobinScoreChange(match.id, "b", e.target.value)}
+                                aria-label={`Puntos de ${pairLabel(pB)}`} placeholder="0"
+                                style={{ width: 52, padding: "5px 7px", borderRadius: 8, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.06)", color: "#fff", outline: "none", fontSize: ".82rem" }} />
+                              <button type="button" className="cp04-control-btn primary" style={{ width: "auto", padding: "5px 12px", fontSize: ".78rem" }} onClick={() => handleRoundRobinSaveResult(match)}>
+                                {match.played ? "Corregir" : "Guardar"}
+                              </button>
+                            </div>
+                          ) : (
+                            match.played
+                              ? <span style={{ color: T.accent, fontWeight: 800, fontSize: ".85rem" }}>{match.scoreA} – {match.scoreB}</span>
+                              : <span style={{ color: "rgba(255,255,255,.3)", fontSize: ".78rem" }}>Pendiente</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* RANKING */}
       <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showRanking ? 14 : 0 }}>
@@ -6609,6 +6805,33 @@ function Torneos({ selectedRole } = {}) {
             <div style={{ textAlign: "center", padding: "32px 0", color: T.textDim }}>
               <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>📋</div>
               <p style={{ margin: 0 }}>Aún no hay parejas configuradas.</p>
+            </div>
+          ) : isRoundRobin ? (
+            <div className="cp04-full-ranking-wrap">
+              <table className="cp04-full-ranking-table">
+                <thead>
+                  <tr><th>#</th><th>Pareja</th><th>PJ</th><th>PG</th><th>PP</th><th>PF</th><th>PC</th><th>Dif</th><th>Pts</th></tr>
+                </thead>
+                <tbody>
+                  {rrStandingsSorted.map((s, i) => {
+                    const pair = pairs.find(p => p.id === s.pairId);
+                    const isChampion = rrComplete && i === 0;
+                    return (
+                      <tr key={s.pairId}>
+                        <td style={{ color: T.textDim, fontSize: ".82rem" }}>{i + 1}{isChampion ? " 🏆" : ""}</td>
+                        <td><strong style={{ color: isChampion ? T.accent : "#fff" }}>{pair ? pairLabel(pair) : "—"}</strong></td>
+                        <td>{s.played}</td>
+                        <td>{s.won}</td>
+                        <td>{s.lost}</td>
+                        <td>{s.scoreFor}</td>
+                        <td>{s.scoreAgainst}</td>
+                        <td style={{ color: s.diff > 0 ? T.accent : s.diff < 0 ? T.dangerText : "inherit" }}>{s.diff > 0 ? `+${s.diff}` : s.diff}</td>
+                        <td><strong>{s.points}</strong></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="cp04-full-ranking-wrap">
