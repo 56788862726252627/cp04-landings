@@ -5989,16 +5989,29 @@ function Torneos({ selectedRole } = {}) {
   const [showHistory, setShowHistory] = useState(false);
   const [notice, setNotice] = useState("");
   const [noticeErr, setNoticeErr] = useState(false);
-  const [savedAt, setSavedAt] = useState(null);
   const [winnerAnim, setWinnerAnim] = useState(null);
 
   const currentMax = formatMode !== "custom" ? FORMAT_MAX[formatMode] : null;
 
+  const torneoSnapshot = JSON.stringify({
+    formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published,
+  });
+
   useEffect(() => {
-    const s = { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published };
-    localStorage.setItem(TORNEO_STORE, JSON.stringify(s));
+    localStorage.setItem(TORNEO_STORE, torneoSnapshot);
+  }, [torneoSnapshot]);
+
+  // savedAt es puramente informativo para el indicador "Guardado HH:MM:SS".
+  // Se ajusta durante el render (patrón "Storing information from previous
+  // renders" de React: https://react.dev/reference/react/useState#storing-information-from-previous-renders),
+  // no dentro de un efecto: evita el setState síncrono en efecto sin
+  // necesitar un segundo render encadenado ni dependencias artificiales.
+  const [prevTorneoSnapshot, setPrevTorneoSnapshot] = useState(torneoSnapshot);
+  const [savedAt, setSavedAt] = useState(() => new Date());
+  if (torneoSnapshot !== prevTorneoSnapshot) {
+    setPrevTorneoSnapshot(torneoSnapshot);
     setSavedAt(new Date());
-  }, [pairs, bracket, byePair, byeDrawDate, published, formatMode, customMode, customInput]);
+  }
 
   const showNotice = (msg, err = false) => {
     setNotice(msg); setNoticeErr(err);
