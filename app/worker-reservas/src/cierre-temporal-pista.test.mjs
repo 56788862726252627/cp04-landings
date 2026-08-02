@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import worker from "./index.js";
+import worker, { __resetIdempotencyStoreForTests } from "./index.js";
 
 // PASO 07E (2026-07-19): tests de handleCierreTemporalPista
 // (worker-reservas/src/index.js), réplica del patrón de Alta/Baja de
@@ -134,6 +134,7 @@ test("handleCierreTemporalPista: rechaza rol_origen fuera de ADMIN/STAFF/SUPPORT
 });
 
 test("handleCierreTemporalPista: acepta pista='todas' (cierre de todas las pistas)", async () => {
+  __resetIdempotencyStoreForTests();
   await withFakeFetch(
     async () => new Response("OK", { status: 200 }),
     async () => {
@@ -147,6 +148,7 @@ test("handleCierreTemporalPista: acepta pista='todas' (cierre de todas las pista
 });
 
 test("handleCierreTemporalPista: payload válido reenvía a MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK con accion/estado/origen correctos y nunca confirma cierre real", async () => {
+  __resetIdempotencyStoreForTests();
   let capturedBody = null;
   let capturedUrl = null;
 
@@ -183,6 +185,7 @@ test("handleCierreTemporalPista: payload válido reenvía a MAKE_CIERRE_TEMPORAL
 });
 
 test("handleCierreTemporalPista: nunca confirma éxito si el webhook de Make responde con error (502, ok:false)", async () => {
+  __resetIdempotencyStoreForTests();
   await withFakeFetch(
     async () => new Response("Internal Error", { status: 500 }),
     async () => {
@@ -194,6 +197,61 @@ test("handleCierreTemporalPista: nunca confirma éxito si el webhook de Make res
       assert.equal(response.status, 502);
       assert.equal(data.ok, false);
       assert.notEqual(data.estado, "confirmado");
+    }
+  );
+});
+
+// CORRECCIÓN 2026-08-02 (audit/make-50-operational-readiness-20260802/06-BLOCKERS.md):
+// mismo hallazgo y misma corrección ya aplicada a Alta/Baja de Jugador —
+// handleCierreTemporalPista reenviaba duplicados sin deduplicar. Ahora
+// reutiliza cp04IsIdempotentDuplicate/cp04MarkIdempotentSuccess (mismo
+// mecanismo que los otros 3 handlers).
+test("handleCierreTemporalPista: segunda solicitud idéntica (misma pista/ventana) dentro del TTL -> 409 IDEMPOTENT_DUPLICATE, no reenvía a Make", async () => {
+  __resetIdempotencyStoreForTests();
+  let callCount = 0;
+
+  await withFakeFetch(
+    async () => {
+      callCount += 1;
+      return new Response("OK", { status: 200 });
+    },
+    async () => {
+      const first = await worker.fetch(cierreRequest(VALID_BODY), {
+        MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK: "https://hook.example.test/fake-cierre",
+      });
+      const second = await worker.fetch(cierreRequest(VALID_BODY), {
+        MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK: "https://hook.example.test/fake-cierre",
+      });
+      const secondData = await second.json();
+
+      assert.equal(first.status, 200);
+      assert.equal(second.status, 409);
+      assert.equal(secondData.code, "IDEMPOTENT_DUPLICATE");
+      assert.equal(callCount, 1, "el segundo envío no debería llegar a fetch/Make");
+    }
+  );
+});
+
+test("handleCierreTemporalPista: una pista distinta en la misma ventana NO se confunde con un duplicado (clave distinta)", async () => {
+  __resetIdempotencyStoreForTests();
+  let callCount = 0;
+
+  await withFakeFetch(
+    async () => {
+      callCount += 1;
+      return new Response("OK", { status: 200 });
+    },
+    async () => {
+      const first = await worker.fetch(cierreRequest(VALID_BODY), {
+        MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK: "https://hook.example.test/fake-cierre",
+      });
+      const second = await worker.fetch(cierreRequest({ ...VALID_BODY, pista: "Pista 3" }), {
+        MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK: "https://hook.example.test/fake-cierre",
+      });
+
+      assert.equal(first.status, 200);
+      assert.equal(second.status, 200);
+      assert.equal(callCount, 2, "pistas distintas deben procesarse las dos");
     }
   );
 });

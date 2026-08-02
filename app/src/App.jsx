@@ -48,6 +48,7 @@ import {
 } from "./utils/rbac.js";
 import { cp04ComputeScreenState } from "./utils/screenState.js";
 import { cp04Can } from "./utils/permissions.js";
+import { computeMasterCounters } from "./data/makeMasterRegistry.js";
 import { cp04ApplyScreenState } from "./cp04-apply-screen-state.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
 import { LazyComunidad } from "./components/lazy/lazyComunidad.js";
@@ -1197,14 +1198,19 @@ const DEMO_KPI = {
   ingresosMes: 4820,
   alertasCriticas: 0,
   incidenciasAbiertas: 1,
-  makeActivos: 38,
   makeErrores: 2,
-  makePausados: 3,
   tasaExitoMake: 97.4,
   ultimoBackup: "Lun 07:00",
   qrGenerados: 24,
   exportaciones: 7,
 };
+
+// Fuente única de verdad de los 50 flujos Make (src/data/makeMasterRegistry.js).
+// Nunca hardcodear el total, "conectados" ni ningún otro desglose aquí — todo
+// se deriva de MAKE_MASTER_REGISTRY. `total`/`totalEsperado` son ambos 50 hoy
+// (registroCompleto=true); `conectados` es un dato independiente, nunca
+// mezclado en el mismo ratio que el total.
+const MAKE_FLUJOS_COUNTERS = computeMasterCounters();
 
 
 
@@ -1470,7 +1476,7 @@ const TRANSLATIONS = {
     "home.este_mes":"este mes","home.incidencia":"incidencia","home.incidencias_s":"incidencias",
     "home.franja_horaria":"Franja horaria","home.tendencia_semanal":"Tendencia semanal",
     "home.porcentaje_uso":"Porcentaje de uso","home.procesos_conectados":"procesos conectados",
-    "home.activos":"Activos","home.pausados":"Pausados","home.incidencias":"Incidencias",
+    "home.activos":"Activos","home.pausados":"Pausados","home.incidencias":"Incidencias","home.flujos_totales":"flujos totales","home.conectados":"conectados",
     "home.reservas_hora":"Reservas por hora — hoy","home.reservas_7dias":"Reservas últimos 7 días",
     "home.ocupacion_pista":"Ocupación por pista","home.estado_procesos":"Estado de procesos",
     "home.club_operativo":"Club de pádel","home.hero_accent":"operativo",
@@ -1605,7 +1611,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Estado de procesos","flujos.por_estado":"Por estado de conexión",
     "flujos.actividad_24h":"Actividad últimas 24h","flujos.por_hora":"Por hora del día",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"ejecuciones",
-    "flujos.por_categoria":"Procesos por categoría","flujos.distribucion":"Distribución de los 43 procesos",
+    "flujos.por_categoria":"Procesos por categoría","flujos.distribucion":"Distribución de los 50 procesos",
     "flujos.mas_activos":"Procesos más activos","flujos.con_incidencias":"Procesos con incidencias",
     "flujos.sin_errores":"✅ Sin errores registrados","flujos.criticos":"Estado de procesos críticos",
     "flujos.estado_op":"Estado operativo","flujos.todos_flujos":"Todos los flujos",
@@ -1675,7 +1681,7 @@ const TRANSLATIONS = {
     "home.este_mes":"this month","home.incidencia":"incident","home.incidencias_s":"incidents",
     "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
     "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
-    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents",
+    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents","home.flujos_totales":"total flows","home.conectados":"connected",
     "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
     "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
     "home.club_operativo":"Padel club","home.hero_accent":"operational",
@@ -1810,7 +1816,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Process status","flujos.por_estado":"By connection status",
     "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"executions",
-    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 43 processes",
+    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 50 processes",
     "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
     "flujos.sin_errores":"✅ No errors recorded","flujos.criticos":"Critical process status",
     "flujos.estado_op":"Operational status","flujos.todos_flujos":"All processes",
@@ -1880,7 +1886,7 @@ const TRANSLATIONS = {
     "home.este_mes":"this month","home.incidencia":"incident","home.incidencias_s":"incidents",
     "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
     "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
-    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents",
+    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents","home.flujos_totales":"total flows","home.conectados":"connected",
     "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
     "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
     "home.club_operativo":"Padel club","home.hero_accent":"operational",
@@ -2015,7 +2021,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Process status","flujos.por_estado":"By connection status",
     "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"executions",
-    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 43 processes",
+    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 50 processes",
     "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
     "flujos.sin_errores":"✅ No errors recorded","flujos.criticos":"Critical process status",
     "flujos.estado_op":"Operational status","flujos.todos_flujos":"All processes",
@@ -2085,7 +2091,7 @@ const TRANSLATIONS = {
     "home.este_mes":"ce mois","home.incidencia":"incident","home.incidencias_s":"incidents",
     "home.franja_horaria":"Créneau horaire","home.tendencia_semanal":"Tendance hebdomadaire",
     "home.porcentaje_uso":"% d'utilisation","home.procesos_conectados":"processus connectés",
-    "home.activos":"Actifs","home.pausados":"En pause","home.incidencias":"Incidents",
+    "home.activos":"Actifs","home.pausados":"En pause","home.incidencias":"Incidents","home.flujos_totales":"flux au total","home.conectados":"connectés",
     "home.reservas_hora":"Réservations par heure — auj.","home.reservas_7dias":"Réservations 7 derniers jours",
     "home.ocupacion_pista":"Occupation par court","home.estado_procesos":"État des processus",
     "home.club_operativo":"Club de padel","home.hero_accent":"opérationnel",
@@ -2216,7 +2222,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"État des processus","flujos.por_estado":"Par état de connexion",
     "flujos.actividad_24h":"Activité dernières 24h","flujos.por_hora":"Par heure de la journée",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"exécutions",
-    "flujos.por_categoria":"Processus par catégorie","flujos.distribucion":"Répartition des 43 processus",
+    "flujos.por_categoria":"Processus par catégorie","flujos.distribucion":"Répartition des 50 processus",
     "flujos.mas_activos":"Processus les plus actifs","flujos.con_incidencias":"Processus avec incidents",
     "flujos.sin_errores":"✅ Aucune erreur enregistrée","flujos.criticos":"État des processus critiques",
     "flujos.estado_op":"État opérationnel","flujos.todos_flujos":"Tous les processus",
@@ -2286,7 +2292,7 @@ const TRANSLATIONS = {
     "home.este_mes":"questo mese","home.incidencia":"incidente","home.incidencias_s":"incidenti",
     "home.franja_horaria":"Fascia oraria","home.tendencia_semanal":"Tendenza settimanale",
     "home.porcentaje_uso":"% utilizzo","home.procesos_conectados":"processi connessi",
-    "home.activos":"Attivi","home.pausados":"In pausa","home.incidencias":"Incidenti",
+    "home.activos":"Attivi","home.pausados":"In pausa","home.incidencias":"Incidenti","home.flujos_totales":"flussi totali","home.conectados":"connessi",
     "home.reservas_hora":"Prenotazioni per ora — oggi","home.reservas_7dias":"Prenotazioni ultimi 7 giorni",
     "home.ocupacion_pista":"Occupazione per campo","home.estado_procesos":"Stato processi",
     "home.club_operativo":"Club di padel","home.hero_accent":"operativo",
@@ -2417,7 +2423,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Stato processi","flujos.por_estado":"Per stato di connessione",
     "flujos.actividad_24h":"Attività ultime 24h","flujos.por_hora":"Per ora del giorno",
     "flujos.total_24h_label":"Totale 24h","flujos.ejecuciones":"esecuzioni",
-    "flujos.por_categoria":"Processi per categoria","flujos.distribucion":"Distribuzione dei 43 processi",
+    "flujos.por_categoria":"Processi per categoria","flujos.distribucion":"Distribuzione dei 50 processi",
     "flujos.mas_activos":"Processi più attivi","flujos.con_incidencias":"Processi con incidenti",
     "flujos.sin_errores":"✅ Nessun errore registrato","flujos.criticos":"Stato processi critici",
     "flujos.estado_op":"Stato operativo","flujos.todos_flujos":"Tutti i processi",
@@ -2487,7 +2493,7 @@ const TRANSLATIONS = {
     "home.este_mes":"este mês","home.incidencia":"incidente","home.incidencias_s":"incidentes",
     "home.franja_horaria":"Faixa horária","home.tendencia_semanal":"Tendência semanal",
     "home.porcentaje_uso":"% utilização","home.procesos_conectados":"processos conectados",
-    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes",
+    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes","home.flujos_totales":"fluxos totais","home.conectados":"conectados",
     "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
     "home.ocupacion_pista":"Ocupação por campo","home.estado_procesos":"Estado dos processos",
     "home.club_operativo":"Clube de padel","home.hero_accent":"operacional",
@@ -2618,7 +2624,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Estado dos processos","flujos.por_estado":"Por estado de ligação",
     "flujos.actividad_24h":"Atividade últimas 24h","flujos.por_hora":"Por hora do dia",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"execuções",
-    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 43 processos",
+    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 50 processos",
     "flujos.mas_activos":"Processos mais ativos","flujos.con_incidencias":"Processos com incidentes",
     "flujos.sin_errores":"✅ Sem erros registados","flujos.criticos":"Estado dos processos críticos",
     "flujos.estado_op":"Estado operacional","flujos.todos_flujos":"Todos os processos",
@@ -2688,7 +2694,7 @@ const TRANSLATIONS = {
     "home.este_mes":"este mês","home.incidencia":"incidente","home.incidencias_s":"incidentes",
     "home.franja_horaria":"Faixa horária","home.tendencia_semanal":"Tendência semanal",
     "home.porcentaje_uso":"% utilização","home.procesos_conectados":"processos conectados",
-    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes",
+    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes","home.flujos_totales":"fluxos totais","home.conectados":"conectados",
     "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
     "home.ocupacion_pista":"Ocupação por quadra","home.estado_procesos":"Status dos processos",
     "home.club_operativo":"Clube de padel","home.hero_accent":"operacional",
@@ -2819,7 +2825,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Status dos processos","flujos.por_estado":"Por status de conexão",
     "flujos.actividad_24h":"Atividade últimas 24h","flujos.por_hora":"Por hora do dia",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"execuções",
-    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 43 processos",
+    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 50 processos",
     "flujos.mas_activos":"Processos mais ativos","flujos.con_incidencias":"Processos com incidentes",
     "flujos.sin_errores":"✅ Sem erros registrados","flujos.criticos":"Status dos processos críticos",
     "flujos.estado_op":"Status operacional","flujos.todos_flujos":"Todos os processos",
@@ -2889,7 +2895,7 @@ const TRANSLATIONS = {
     "home.este_mes":"diesen Monat","home.incidencia":"Vorfall","home.incidencias_s":"Vorfälle",
     "home.franja_horaria":"Zeitfenster","home.tendencia_semanal":"Wöchentlicher Trend",
     "home.porcentaje_uso":"% Nutzung","home.procesos_conectados":"verbundene Prozesse",
-    "home.activos":"Aktiv","home.pausados":"Pausiert","home.incidencias":"Vorfälle",
+    "home.activos":"Aktiv","home.pausados":"Pausiert","home.incidencias":"Vorfälle","home.flujos_totales":"Abläufe insgesamt","home.conectados":"verbunden",
     "home.reservas_hora":"Buchungen pro Stunde — heute","home.reservas_7dias":"Buchungen letzte 7 Tage",
     "home.ocupacion_pista":"Auslastung je Platz","home.estado_procesos":"Prozessstatus",
     "home.club_operativo":"Padel-Club","home.hero_accent":"in Betrieb",
@@ -3020,7 +3026,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Prozessstatus","flujos.por_estado":"Nach Verbindungsstatus",
     "flujos.actividad_24h":"Aktivität letzte 24h","flujos.por_hora":"Nach Tageszeit",
     "flujos.total_24h_label":"Gesamt 24h","flujos.ejecuciones":"Ausführungen",
-    "flujos.por_categoria":"Prozesse nach Kategorie","flujos.distribucion":"Verteilung der 43 Prozesse",
+    "flujos.por_categoria":"Prozesse nach Kategorie","flujos.distribucion":"Verteilung der 50 Prozesse",
     "flujos.mas_activos":"Aktivste Prozesse","flujos.con_incidencias":"Prozesse mit Vorfällen",
     "flujos.sin_errores":"✅ Keine Fehler registriert","flujos.criticos":"Status kritischer Prozesse",
     "flujos.estado_op":"Betriebsstatus","flujos.todos_flujos":"Alle Prozesse",
@@ -3331,7 +3337,7 @@ function Inicio({ navigate, selectedRole }) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const kpi = DEMO_KPI;
-  const makeOk = kpi.makeActivos >= 35;
+  const makeOk = MAKE_FLUJOS_COUNTERS.registroCompleto;
   const makeStatus = kpi.makeErrores > 3 ? "error" : kpi.makeErrores > 0 ? "warn" : "ok";
   const diasCortos = tx("home.dias_semana").split(",");
   const diasLargo = tx("home.dias_largo").split(",");
@@ -3389,7 +3395,7 @@ function Inicio({ navigate, selectedRole }) {
         <MetricCard label={tx("home.reservas_hoy")} value={kpi.reservasHoy} sub={`vs 10 ${tx("home.vs_ayer")}`} trend={20} icon="🎾" />
         <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
         <MetricCard label={tx("home.socios_activos")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
-        <MetricCard label={tx("home.procesos_activos")} value={`${kpi.makeActivos}/43`} sub={`${kpi.makeErrores} ${kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
+        <MetricCard label={tx("home.procesos_activos")} value={`${MAKE_FLUJOS_COUNTERS.total}/${MAKE_FLUJOS_COUNTERS.totalEsperado}`} sub={`${MAKE_FLUJOS_COUNTERS.conectados} ${tx("home.conectados")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
         <MetricCard label={tx("home.ingresos_mes")} value={`${kpi.ingresosMes}€`} sub={tx("home.estimacion_mensual")} trend={12} color={T.metricPositive} icon="💶" />
         <MetricCard label={tx("home.torneos_activos")} value={kpi.torneosActivos} sub={tx("home.en_curso")} trend={null} color={T.warning} icon="🏆" />
       </div>
@@ -3410,11 +3416,10 @@ function Inicio({ navigate, selectedRole }) {
         <ChartCard title={tx("home.ocupacion_pista")} sub={tx("home.porcentaje_uso")}>
           <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} unit="%" />
         </ChartCard>
-        <ChartCard title={tx("home.estado_procesos")} sub={`43 ${tx("home.procesos_conectados")}`}>
+        <ChartCard title={tx("home.estado_procesos")} sub={`${MAKE_FLUJOS_COUNTERS.total} ${tx("home.flujos_totales")}`}>
           <DonutChart size={100} label="Sistema" segments={[
-            { l: tx("home.activos"),      v: kpi.makeActivos,  c: T.accent },
-            { l: tx("home.pausados"),     v: kpi.makePausados, c: T.warning },
-            { l: tx("home.incidencias"),  v: kpi.makeErrores,  c: T.danger },
+            { l: tx("home.activos"),      v: MAKE_FLUJOS_COUNTERS.conectados, c: T.accent },
+            { l: tx("home.pausados"),     v: MAKE_FLUJOS_COUNTERS.total - MAKE_FLUJOS_COUNTERS.conectados, c: T.warning },
           ]} />
         </ChartCard>
       </div>
@@ -6924,7 +6929,7 @@ function Admin() {
         <MetricCard label={tx("admin.reservas_mes")} value="268" sub={`vs 241 ${tx("admin.vs_mes_anterior")}`} trend={11} icon="🎾" />
         <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
         <MetricCard label={tx("admin.socios")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
-        <MetricCard label={tx("admin.procesos")} value={`${kpi.makeActivos}/43`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
+        <MetricCard label={tx("admin.procesos")} value={`${MAKE_FLUJOS_COUNTERS.total}/${MAKE_FLUJOS_COUNTERS.totalEsperado}`} sub={`${MAKE_FLUJOS_COUNTERS.conectados} ${tx("home.conectados")} · ${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
         <MetricCard label={tx("admin.backup")} value={kpi.ultimoBackup} sub={tx("admin.prox_lunes")} trend={null} color={T.metricPositive} icon="💾" />
       </div>
 

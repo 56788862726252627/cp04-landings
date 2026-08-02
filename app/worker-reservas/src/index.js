@@ -682,6 +682,37 @@ export function cp04BuildIdempotencyKey(normalizedPayload) {
   return null;
 }
 
+// AUDITORÍA 2026-08-02 (audit/make-50-operational-readiness-20260802/):
+// handleAltaJugador no tenía ninguna protección de duplicados (hallazgo
+// confirmado por test: worker-reservas/src/alta-jugador-e2e.test.mjs,
+// "reenvía dos veces el mismo payload"). Reutiliza el mismo mecanismo ya
+// probado de cp04IsIdempotentDuplicate/cp04MarkIdempotentSuccess que usa
+// handleReservas — no un adaptador nuevo. Clave = email + teléfono
+// normalizados (suficiente para distinguir un alta de otra, sin incluir
+// nombre/apellidos en la clave).
+export function cp04BuildAltaJugadorIdempotencyKey(normalized) {
+  const email = cleanText(normalized?.email).toLowerCase();
+  const telefono = cleanText(normalized?.telefono).replace(/\D/g, "");
+  return `alta_jugador|${email}|${telefono}`;
+}
+
+// Mismo hallazgo y misma corrección que Alta de Jugador (ver más arriba),
+// aplicado a Baja de Jugador — réplica deliberada del mismo patrón.
+export function cp04BuildBajaJugadorIdempotencyKey(normalized) {
+  const email = cleanText(normalized?.email).toLowerCase();
+  const telefono = cleanText(normalized?.telefono).replace(/\D/g, "");
+  return `baja_jugador|${email}|${telefono}`;
+}
+
+// AUDITORÍA 2026-08-02 (audit/make-50-operational-readiness-20260802/06-BLOCKERS.md,
+// hallazgo pendiente de Oleada 1): mismo patrón aplicado a Cierre Temporal
+// de Pistas. Aquí no hay email/teléfono — la identidad de la operación es
+// "qué pista, en qué ventana exacta" (mismo criterio que crear_reserva:
+// fecha+pista+hora), no quién la solicita.
+export function cp04BuildCierreTemporalPistaIdempotencyKey(normalized) {
+  return `cierre_temporal_pista|${normalized?.pista}|${normalized?.fecha_inicio}|${normalized?.hora_inicio}|${normalized?.fecha_fin}|${normalized?.hora_fin}`;
+}
+
 // PASO 06D: idempotencia de reservas en memoria — mismo patrón que la
 // caché de disponibilidad del Paso 06B (Map a nivel de módulo, TTL
 // configurable, testable con `now` inyectado). Sustituye, en el flujo real
@@ -742,6 +773,45 @@ export function cp04BuildIdempotentDuplicateResponse() {
     duplicated: true,
     retryable: false,
     reserva_confirmada: false,
+    message: CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE,
+  };
+}
+
+// Mismo criterio que cp04BuildIdempotentDuplicateResponse, adaptado a Alta
+// de Jugador: `alta_confirmada` (no `reserva_confirmada`) siempre false por
+// el mismo motivo — el Worker nunca sabe si Make terminó de procesar el
+// alta original.
+export function cp04BuildAltaJugadorIdempotentDuplicateResponse() {
+  return {
+    ok: false,
+    code: "IDEMPOTENT_DUPLICATE",
+    duplicated: true,
+    retryable: false,
+    alta_confirmada: false,
+    message: CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE,
+  };
+}
+
+// Misma forma, adaptada a Baja de Jugador (`baja_confirmada`).
+export function cp04BuildBajaJugadorIdempotentDuplicateResponse() {
+  return {
+    ok: false,
+    code: "IDEMPOTENT_DUPLICATE",
+    duplicated: true,
+    retryable: false,
+    baja_confirmada: false,
+    message: CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE,
+  };
+}
+
+// Misma forma, adaptada a Cierre Temporal de Pistas (`cierre_confirmado`).
+export function cp04BuildCierreTemporalPistaIdempotentDuplicateResponse() {
+  return {
+    ok: false,
+    code: "IDEMPOTENT_DUPLICATE",
+    duplicated: true,
+    retryable: false,
+    cierre_confirmado: false,
     message: CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE,
   };
 }
@@ -1689,6 +1759,24 @@ async function handleAltaJugador(request, env) {
     );
   }
 
+  // Idempotencia: mismo criterio que handleReservas (PASO 06D) — el marcado
+  // de éxito ocurre solo tras un reenvío real con ok:true, nunca aquí, para
+  // no bloquear un reintento legítimo si esta solicitud termina en error.
+  const idempotencyKey = cp04BuildAltaJugadorIdempotencyKey(normalized);
+  if (cp04IsIdempotentDuplicate(idempotencyKey)) {
+    cp04LogTechnicalEvent({
+      event: "idempotent_duplicate",
+      action: "alta_jugador",
+      code: "IDEMPOTENT_DUPLICATE",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: false,
+      reserva_confirmada: false,
+      origen: "idempotencia",
+    });
+    return jsonResponse(cp04BuildAltaJugadorIdempotentDuplicateResponse(), 409, headers);
+  }
+
   const makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1708,6 +1796,8 @@ async function handleAltaJugador(request, env) {
       headers
     );
   }
+
+  cp04MarkIdempotentSuccess(idempotencyKey);
 
   return jsonResponse(
     {
@@ -1819,6 +1909,21 @@ async function handleBajaJugador(request, env) {
     );
   }
 
+  const idempotencyKey = cp04BuildBajaJugadorIdempotencyKey(normalized);
+  if (cp04IsIdempotentDuplicate(idempotencyKey)) {
+    cp04LogTechnicalEvent({
+      event: "idempotent_duplicate",
+      action: "baja_jugador",
+      code: "IDEMPOTENT_DUPLICATE",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: false,
+      reserva_confirmada: false,
+      origen: "idempotencia",
+    });
+    return jsonResponse(cp04BuildBajaJugadorIdempotentDuplicateResponse(), 409, headers);
+  }
+
   const makeResponse = await fetch(env.MAKE_BAJA_JUGADOR_WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1838,6 +1943,8 @@ async function handleBajaJugador(request, env) {
       headers
     );
   }
+
+  cp04MarkIdempotentSuccess(idempotencyKey);
 
   return jsonResponse(
     {
@@ -1991,6 +2098,21 @@ async function handleCierreTemporalPista(request, env) {
     );
   }
 
+  const idempotencyKey = cp04BuildCierreTemporalPistaIdempotencyKey(normalized);
+  if (cp04IsIdempotentDuplicate(idempotencyKey)) {
+    cp04LogTechnicalEvent({
+      event: "idempotent_duplicate",
+      action: "cierre_temporal_pista",
+      code: "IDEMPOTENT_DUPLICATE",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: false,
+      reserva_confirmada: false,
+      origen: "idempotencia",
+    });
+    return jsonResponse(cp04BuildCierreTemporalPistaIdempotentDuplicateResponse(), 409, headers);
+  }
+
   const makeResponse = await fetch(env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -2010,6 +2132,8 @@ async function handleCierreTemporalPista(request, env) {
       headers
     );
   }
+
+  cp04MarkIdempotentSuccess(idempotencyKey);
 
   return jsonResponse(
     {
