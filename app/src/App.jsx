@@ -4087,6 +4087,7 @@ const CIERRE_PISTA_MOTIVOS = [
 // STAFF/ADMIN/SUPPORT — PLAYER no lo recibe.
 function CierreTemporalPista() {
   const auth = useAuth();
+  const isDemoSession = !auth.isAuthenticated;
 
   const cierreInitialForm = {
     pista: "",
@@ -4218,7 +4219,12 @@ function CierreTemporalPista() {
         title="Cierre temporal de pista"
         desc="Bloquea una pista (o todas) por mantenimiento, lluvia, evento, torneo, limpieza, obra, incidencia o causa administrativa."
       />
-      <Card style={{ marginBottom: 20 }}>
+      {isDemoSession ? (
+        <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+          Cierre temporal de pistas requiere sesión activa con cuenta real. En modo demo no es posible realizar esta operación.
+        </Card>
+      ) : (
+        <Card style={{ marginBottom: 20 }}>
         <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
           Esta acción prepara el cierre, pero no se considerará confirmada hasta recibir respuesta real del sistema.
         </p>
@@ -4303,7 +4309,8 @@ function CierreTemporalPista() {
             </Btn>
           </div>
         </form>
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }
@@ -5433,6 +5440,8 @@ function Gestion() {
 function AltaJugador({ initialModo = "alta" } = {}) {
   const lang = useLang();
   const tx = key => t(key, lang);
+  const auth = useAuth();
+  const isDemoSession = !auth.isAuthenticated;
   const initialForm = {
     nombre: "",
     apellidos: "",
@@ -5668,6 +5677,12 @@ function AltaJugador({ initialModo = "alta" } = {}) {
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
       <SectionTitle eyebrow={tx("alta.eyebrow")} title={playerFormTitle} desc={playerFormSubtitle} />
+      {isDemoSession ? (
+        <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+          Alta y baja de jugadores requiere sesión activa con cuenta real. En modo demo no es posible realizar estas operaciones.
+        </Card>
+      ) : (
+      <>
       <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
         <Btn type="button" variant={modo === "alta" ? "primary" : "secondary"} onClick={() => setModo("alta")}>
           Alta de jugador
@@ -5839,6 +5854,8 @@ function AltaJugador({ initialModo = "alta" } = {}) {
           </div>
         </form>
       </Card>
+      )}
+      </>
       )}
     </div>
   );
