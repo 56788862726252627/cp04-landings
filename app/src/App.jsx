@@ -4200,7 +4200,7 @@ function CierreTemporalPista() {
         if (data?.error === "Cierre temporal webhook not configured") {
           throw new Error("El cierre temporal de pistas todavía no está configurado en el sistema. Contacta con soporte técnico.");
         }
-        throw new Error(data?.message || data?.error || "No se pudo enviar la solicitud de cierre temporal.");
+        throw new Error(data?.message || "No se pudo enviar la solicitud de cierre temporal.");
       }
 
       setCierreSuccess(true);
