@@ -4783,6 +4783,8 @@ function AutomatizacionesBots() {
 }
 
 function Gestion() {
+  const auth = useAuth();
+  const isDemoSession = !auth.isAuthenticated;
   const [emailConsulta, setEmailConsulta] = useState(() => {
     try {
       return (
@@ -5074,75 +5076,82 @@ function Gestion() {
         desc="Consulta tus reservas."
       />
 
-      <Card style={{ marginBottom: 20 }}>
-        <h3 style={{ marginTop: 0 }}>
-          Consultar mis reservas
-        </h3>
+      {isDemoSession ? (
+        <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+          Listado real de reservas requiere sesión activa con cuenta real.
+          En modo demo no es posible consultar reservas reales.
+        </Card>
+      ) : (
+        <Card style={{ marginBottom: 20 }}>
+          <h3 style={{ marginTop: 0 }}>
+            Consultar mis reservas
+          </h3>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "minmax(220px, 1fr) auto",
-            gap: 12,
-            alignItems: "end",
-          }}
-        >
-          <label>
-            <span
-              style={{
-                display: "block",
-                color: T.textDim,
-                marginBottom: 7,
-              }}
-            >
-              Email
-            </span>
-
-            <input
-              aria-label="Correo para consultar reservas"
-              type="email"
-              placeholder="tu-correo@ejemplo.com"
-              value={emailConsulta}
-              autoComplete="email"
-              onChange={(event) => {
-                setEmailConsulta(event.target.value);
-                setErrorReservas("");
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  cargarReservas();
-                }
-              }}
-            />
-          </label>
-
-          <Btn
-            disabled={
-              cargandoReservas ||
-              !emailConsulta.trim()
-            }
-            onClick={cargarReservas}
-            className="cp04-fix-white-action-btn cp04-fix-consultar-reservas-btn"
-          >
-            {cargandoReservas
-              ? "Consultando..."
-              : "Consultar reservas"}
-          </Btn>
-        </div>
-
-        {errorReservas && (
           <div
-            role="alert"
             style={{
-              marginTop: 14,
-              color: T.danger,
+              display: "grid",
+              gridTemplateColumns:
+                "minmax(220px, 1fr) auto",
+              gap: 12,
+              alignItems: "end",
             }}
           >
-            {errorReservas}
+            <label>
+              <span
+                style={{
+                  display: "block",
+                  color: T.textDim,
+                  marginBottom: 7,
+                }}
+              >
+                Email
+              </span>
+
+              <input
+                aria-label="Correo para consultar reservas"
+                type="email"
+                placeholder="tu-correo@ejemplo.com"
+                value={emailConsulta}
+                autoComplete="email"
+                onChange={(event) => {
+                  setEmailConsulta(event.target.value);
+                  setErrorReservas("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    cargarReservas();
+                  }
+                }}
+              />
+            </label>
+
+            <Btn
+              disabled={
+                cargandoReservas ||
+                !emailConsulta.trim()
+              }
+              onClick={cargarReservas}
+              className="cp04-fix-white-action-btn cp04-fix-consultar-reservas-btn"
+            >
+              {cargandoReservas
+                ? "Consultando..."
+                : "Consultar reservas"}
+            </Btn>
           </div>
-        )}
-      </Card>
+
+          {errorReservas && (
+            <div
+              role="alert"
+              style={{
+                marginTop: 14,
+                color: T.danger,
+              }}
+            >
+              {errorReservas}
+            </div>
+          )}
+        </Card>
+      )}
 
       {reservasConsultadas && !errorReservas && (
         <>
