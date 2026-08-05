@@ -2215,14 +2215,36 @@ function cp04MapSupabaseUserToCp04(user, fallbackRole = "PLAYER") {
   });
 }
 
+const CP04_SUPABASE_MSG_MAP = {
+  "invalid login credentials": "Credenciales incorrectas. Verifica tu email y contraseña.",
+  "email not confirmed": "Cuenta pendiente de confirmación. Revisa tu correo y confirma tu dirección antes de iniciar sesión.",
+  "user already registered": "Este correo ya está registrado. Prueba a iniciar sesión.",
+  "password should be at least 6 characters": "La contraseña debe tener al menos 6 caracteres.",
+  "signup requires a valid password": "La contraseña introducida no es válida.",
+  "user not found": "No se encontró un usuario con ese correo.",
+  "email rate limit exceeded": "Se han enviado demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+  "token has expired or is invalid": "El enlace ha caducado o no es válido. Solicita uno nuevo.",
+  "for security purposes, you can only request this once every 60 seconds": "Por seguridad, espera al menos 60 segundos antes de solicitar otro correo.",
+};
+
+function cp04TranslateSupabaseMsg(msg) {
+  if (!msg) return msg;
+  const key = String(msg).toLowerCase().trim();
+  for (const [pattern, translation] of Object.entries(CP04_SUPABASE_MSG_MAP)) {
+    if (key.includes(pattern)) return translation;
+  }
+  return msg;
+}
+
 function cp04SupabaseErrorResponse(request, env, result, fallbackMessage = "Error de autenticación.") {
+  const rawMsg = result?.data?.msg || result?.data?.message;
   return jsonResponse(
     {
       ok: false,
       auth_ready: true,
       provider: "supabase",
       error: result?.data?.error || result?.data?.error_description || "SUPABASE_AUTH_ERROR",
-      message: result?.data?.msg || result?.data?.message || fallbackMessage,
+      message: cp04TranslateSupabaseMsg(rawMsg) || fallbackMessage,
       status: result?.status || 500
     },
     result?.status || 500,
@@ -2585,6 +2607,7 @@ async function handleAuthRoute(request, env, url) {
       body: JSON.stringify({
         email,
         password,
+        email_redirect_to: String(env.APP_PUBLIC_URL || "").replace(/\/+$/, "") + "/",
         data: {
           nombre,
           telefono,

@@ -7778,6 +7778,19 @@ export default function ClubPadel04SaaSApp() {
   const [registerError, setRegisterError] = useState("");
   const [registerDone, setRegisterDone] = useState(() => localStorage.getItem("cp04_register_done") === "true");
 
+  const [recoveryToken, setRecoveryToken] = useState(() => {
+    const hash = window.location.hash;
+    if (!hash) return null;
+    const params = new URLSearchParams(hash.slice(1));
+    const token = params.get("access_token");
+    const type = params.get("type");
+    return token && type === "recovery" ? token : null;
+  });
+  const [recoveryStep, setRecoveryStep] = useState("form");
+  const [recoveryPassword, setRecoveryPassword] = useState("");
+  const [recoveryConfirm, setRecoveryConfirm] = useState("");
+  const [recoveryError, setRecoveryError] = useState("");
+
   // La restauración de sesión real (¿sigue siendo válido el token guardado?)
   // ya no vive aquí: la posee AuthContext (src/auth/AuthContext.jsx), que la
   // dispara una sola vez al montar la app completa. Este efecto solo hace de
@@ -7792,6 +7805,13 @@ export default function ClubPadel04SaaSApp() {
       setLoginError("");
     }
   }, [auth.isAuthenticated, auth.role]);
+
+  useEffect(() => {
+    if (recoveryToken) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, [recoveryToken]);
+
   const menuButtonRef = useRef(null);
   const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
@@ -8037,6 +8057,37 @@ export default function ClubPadel04SaaSApp() {
     setForgotPwdEmailError("");
   }
 
+  async function handleRecoverySubmit(e) {
+    e.preventDefault();
+    if (!recoveryPassword || recoveryPassword.length < 6) {
+      setRecoveryError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+    if (recoveryPassword !== recoveryConfirm) {
+      setRecoveryError("Las contraseñas no coinciden.");
+      return;
+    }
+    setRecoveryStep("loading");
+    setRecoveryError("");
+    try {
+      const resp = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${recoveryToken}` },
+        body: JSON.stringify({ newPassword: recoveryPassword }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (data?.ok) {
+        setRecoveryStep("done");
+      } else {
+        setRecoveryError(data?.message || "No se pudo cambiar la contraseña. Inténtalo de nuevo.");
+        setRecoveryStep("form");
+      }
+    } catch {
+      setRecoveryError("Error de red. Inténtalo de nuevo.");
+      setRecoveryStep("form");
+    }
+  }
+
   async function handleForgotPwdSubmit(e) {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(forgotPwdEmail.trim())) {
@@ -8103,6 +8154,55 @@ export default function ClubPadel04SaaSApp() {
   const loginClock = useClock();
   const loginLang = useLang();
   const ltx = key => t(key, loginLang);
+
+  if (recoveryToken) {
+    return (
+      <>
+        <style>{globalStyles}</style>
+        <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:"radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), #050910", color:"white" }}>
+          <section style={{ width:"min(480px, 100%)", border:"1px solid rgba(255,255,255,.12)", borderRadius:34, padding:"clamp(24px, 4vw, 48px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
+            <div style={{ color:T.accent, fontWeight:900, letterSpacing:".1em", fontSize:".78rem", marginBottom:12 }}>CLUB PÁDEL 04</div>
+            {recoveryStep === "done" ? (
+              <>
+                <div style={{ color:T.accent, fontSize:"1.8rem", marginBottom:12 }}>✓</div>
+                <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:10 }}>Contraseña actualizada</strong>
+                <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:22 }}>Tu contraseña ha sido cambiada correctamente. Ya puedes iniciar sesión con tus nuevas credenciales.</p>
+                <button type="button" className="cp04-menu-button cp04-login-submit-btn" onClick={() => { setRecoveryToken(null); setRecoveryStep("form"); setRecoveryPassword(""); setRecoveryConfirm(""); setRecoveryError(""); }} style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
+                  Ir al inicio de sesión
+                </button>
+              </>
+            ) : (
+              <form onSubmit={handleRecoverySubmit}>
+                <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>Establecer nueva contraseña</strong>
+                <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>Introduce tu nueva contraseña. Mínimo 6 caracteres.</p>
+                <input
+                  type="password"
+                  value={recoveryPassword}
+                  onChange={e => { setRecoveryPassword(e.target.value); setRecoveryError(""); }}
+                  placeholder="Nueva contraseña"
+                  autoComplete="new-password"
+                  autoFocus
+                  style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${recoveryError?T.dangerBorder:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+                />
+                <input
+                  type="password"
+                  value={recoveryConfirm}
+                  onChange={e => { setRecoveryConfirm(e.target.value); setRecoveryError(""); }}
+                  placeholder="Confirmar contraseña"
+                  autoComplete="new-password"
+                  style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${recoveryError?T.dangerBorder:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+                />
+                {recoveryError && <div style={{ color:T.dangerText, marginBottom:12, fontWeight:800, fontSize:".86rem" }}>{recoveryError}</div>}
+                <button type="submit" disabled={recoveryStep === "loading"} className="cp04-menu-button cp04-login-submit-btn" style={{ background:T.accent, color:"#071000", fontWeight:900, opacity: recoveryStep === "loading" ? 0.7 : 1 }}>
+                  {recoveryStep === "loading" ? "Guardando..." : "Guardar contraseña"}
+                </button>
+              </form>
+            )}
+          </section>
+        </main>
+      </>
+    );
+  }
 
   if (!selectedRole) {
     const roleLabels = {
