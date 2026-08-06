@@ -11,5 +11,7 @@ CP04_ENFORCE_ROLE_GATES = "true"
 # Secrets:
 # MAKE_RESERVAS_WEBHOOK
 # AIRTABLE_TOKEN
+# MAKE_ALTA_JUGADOR_WEBHOOK (usado por handleAltaJugador, POST /api/jugadores/alta)
+# MAKE_BAJA_JUGADOR_WEBHOOK (usado por handleBajaJugador, POST /api/jugadores/baja — todavía no configurado, ver comentario en el propio handler)
 
 AIRTABLE_RESERVAS_TABLE="tblBtLjPS3sis28nz"

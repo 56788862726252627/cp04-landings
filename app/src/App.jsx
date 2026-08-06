@@ -5615,6 +5615,9 @@ function AltaJugador({ initialModo = "alta" } = {}) {
     try {
       // Alta de jugador es operación de STAFF/ADMIN/SUPPORT: adjunta el
       // token real si existe sesión (preparado para CP04_ENFORCE_ROLE_GATES).
+      // request_id: generado en el cliente para idempotencia real (si el
+      // envío se reintenta con el mismo request_id, el backend/Make puede
+      // reconocerlo como la misma solicitud en vez de crear un duplicado).
       const response = await authFetch("/api/jugadores/alta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -5629,6 +5632,7 @@ function AltaJugador({ initialModo = "alta" } = {}) {
           comentarios: form.comentarios.trim(),
           acepta_condiciones: form.acepta_condiciones,
           origen: "app",
+          request_id: crypto.randomUUID(),
         }),
       });
 

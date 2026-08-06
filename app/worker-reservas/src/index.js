@@ -1633,19 +1633,33 @@ async function handleAltaJugador(request, env) {
   const clean = (value) =>
     typeof value === "string" ? value.trim() : value;
 
+  // request_id: si la app ya manda uno (recomendado, para idempotencia real
+  // extremo a extremo) se conserva tal cual; si no, el Worker genera uno de
+  // respaldo. Un request_id generado aquí sigue sin proteger contra
+  // reintentos de red del propio cliente (ver CONTRATO_API_ALTA_JUGADOR.md,
+  // auditoría 2026-08-07) pero es mejor que no tener ninguno.
+  const requestId =
+    clean(payload?.request_id) || crypto.randomUUID();
+
   const normalized = {
     nombre: clean(payload?.nombre),
     apellidos: clean(payload?.apellidos),
     email: clean(payload?.email)?.toLowerCase(),
-    telefono: clean(payload?.telefono),
-    fecha_nacimiento: clean(payload?.fecha_nacimiento),
-    nivel: clean(payload?.nivel),
-    genero: clean(payload?.genero),
+    telefono: clean(payload?.telefono) || "",
+    fecha_nacimiento: clean(payload?.fecha_nacimiento) || "",
+    nivel: clean(payload?.nivel) || "",
+    genero: clean(payload?.genero) || "",
     comentarios: clean(payload?.comentarios || ""),
     acepta_condiciones: payload?.acepta_condiciones === true,
     origen: clean(payload?.origen || "app"),
+    request_id: requestId,
   };
 
+  // Campos obligatorios según el contrato de Alta General de Jugador
+  // (auditoría 2026-08-07): nombre, apellidos, email, acepta_condiciones.
+  // telefono/fecha_nacimiento/nivel/genero pasan a ser opcionales — antes
+  // este handler los exigía todos, lo que rechazaba altas válidas según el
+  // nuevo contrato.
   const errors = {};
 
   if (!normalized.nombre || normalized.nombre.length < 2) {
@@ -1664,18 +1678,11 @@ async function handleAltaJugador(request, env) {
   }
 
   if (
-    !normalized.telefono ||
-    normalized.telefono.replace(/\D/g, "").length < 9
+    normalized.fecha_nacimiento &&
+    !/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha_nacimiento)
   ) {
-    errors.telefono = "Teléfono inválido";
-  }
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha_nacimiento || "")) {
     errors.fecha_nacimiento = "Fecha inválida";
   }
-
-  if (!normalized.nivel) errors.nivel = "Nivel obligatorio";
-  if (!normalized.genero) errors.genero = "Género obligatorio";
 
   if (!normalized.acepta_condiciones) {
     errors.acepta_condiciones = "Aceptación obligatoria";
@@ -1683,26 +1690,68 @@ async function handleAltaJugador(request, env) {
 
   if (Object.keys(errors).length > 0) {
     return jsonResponse(
-      { ok: false, error: "Validation failed", fields: errors },
+      {
+        ok: false,
+        status: "VALIDATION_ERROR",
+        error: "Validation failed",
+        fields: errors,
+        request_id: requestId,
+      },
       400,
       headers
     );
   }
 
-  const makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(normalized),
-  });
+  let makeResponse;
+
+  try {
+    makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(normalized),
+    });
+  } catch {
+    // Fallo real de red hacia Make (no una respuesta HTTP de Make): esto sí
+    // es un 502 legítimo, distinto de un 400/409/500 que Make devuelva con
+    // intención (ver hallazgo de la auditoría 2026-08-07).
+    return jsonResponse(
+      { ok: false, status: "INTERNAL_ERROR", error: "Make unreachable", request_id: requestId },
+      502,
+      headers
+    );
+  }
 
   const responseText = await makeResponse.text();
+  let makeBody;
+
+  try {
+    makeBody = responseText ? JSON.parse(responseText) : null;
+  } catch {
+    makeBody = null;
+  }
+
+  // Antes, cualquier respuesta de Make que no fuera 2xx se colapsaba en un
+  // 502 genérico "Make request failed", perdiendo los 400 (validación), 409
+  // (ya existe) y 500 (error interno) que el propio blueprint de Make ya
+  // devuelve diferenciados. Ahora, si Make respondió con un body JSON
+  // reconocible (tiene "ok" booleano), se reenvía tal cual con su código
+  // HTTP real. Solo se usa 502 si Make devolvió algo no interpretable.
+  if (makeBody && typeof makeBody.ok === "boolean") {
+    return jsonResponse(
+      { ...makeBody, request_id: makeBody.request_id || requestId },
+      makeResponse.status,
+      headers
+    );
+  }
 
   if (!makeResponse.ok) {
     return jsonResponse(
       {
         ok: false,
+        status: "INTERNAL_ERROR",
         error: "Make request failed",
-        status: makeResponse.status,
+        makeStatus: makeResponse.status,
+        request_id: requestId,
       },
       502,
       headers
@@ -1712,8 +1761,9 @@ async function handleAltaJugador(request, env) {
   return jsonResponse(
     {
       ok: true,
+      status: "CREATED",
       message: "Jugador registrado correctamente",
-      makeResponse: responseText || null,
+      request_id: requestId,
     },
     200,
     headers
