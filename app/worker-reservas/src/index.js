@@ -1777,15 +1777,110 @@ async function handleAltaJugador(request, env) {
     return jsonResponse(cp04BuildAltaJugadorIdempotentDuplicateResponse(), 409, headers);
   }
 
-  const makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(normalized),
-  });
+  let makeResponse;
+
+  try {
+    makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(normalized),
+    });
+  } catch {
+    // Fallo real de red hacia Make (no una respuesta HTTP de Make): antes
+    // de este cambio, un fetch() sin resolver aquí dejaba la petición
+    // colgada sin cabeceras CORS ni respuesta, y el frontend se quedaba
+    // "cargando" indefinidamente en vez de recibir un error controlado.
+    return jsonResponse(
+      { ok: false, error: "Make unreachable" },
+      502,
+      headers
+    );
+  }
 
   const responseText = await makeResponse.text();
 
   if (!makeResponse.ok) {
+    // 409 PLAYER_ALREADY_EXISTS es un resultado empresarial controlado de Make
+    // (el jugador ya existe y está activo): se preserva el código de negocio
+    // en vez de convertirlo en un error técnico genérico 502. Cualquier otro
+    // status no-2xx de Make sí es un fallo técnico (502).
+    if (makeResponse.status === 409) {
+      let makeData = null;
+      try { makeData = JSON.parse(responseText); } catch { /* passthrough */ }
+
+      if (
+        makeData?.status === "PLAYER_ALREADY_EXISTS" ||
+        // Fallback para body malformado (p.ej. objeto Airtable embebido en
+        // string JSON rompe el parser): si el JSON no pudo parsearse o no
+        // tiene un status utilizable, se comprueba la cadena exacta en el
+        // texto crudo antes de clasificar como PLAYER_ALREADY_EXISTS.
+        (makeData?.status == null && responseText.includes('"PLAYER_ALREADY_EXISTS"'))
+      ) {
+        return jsonResponse(
+          {
+            ok: false,
+            code: "PLAYER_ALREADY_EXISTS",
+            message: "Este jugador ya está registrado y activo.",
+            player_id: makeData?.player_id || makeData?.ID_Jugador || null,
+            email_jugador: makeData?.email_jugador || null,
+          },
+          409,
+          headers
+        );
+      }
+    }
+
+    // 400 con body empresarial de Make (módulo 150 "VALIDATION_ERROR"):
+    // mismo patrón que el bloque 5xx — se preserva el mensaje empresarial y el
+    // HTTP 400 original en vez de enmascararlo como 502 genérico.
+    if (makeResponse.status === 400) {
+      let make4xxData = null;
+      try { make4xxData = JSON.parse(responseText); } catch { /* passthrough */ }
+
+      if (
+        make4xxData?.ok === false &&
+        typeof make4xxData?.message === "string" &&
+        make4xxData.message.length > 0
+      ) {
+        return jsonResponse(
+          {
+            ok: false,
+            code: make4xxData.status || "VALIDATION_ERROR",
+            message: make4xxData.message,
+            request_id: make4xxData.request_id || null,
+          },
+          400,
+          headers
+        );
+      }
+    }
+
+    // 5xx con body empresarial de Make (p.ej. módulo 140 "Estado no reconocido"):
+    // se preserva el mensaje y el código HTTP original en vez de enmascararlo
+    // como 502 genérico. Guardia estricta: exige ok===false y message no vacío
+    // para evitar promover errores técnicos inesperados a mensajes de negocio.
+    if (makeResponse.status >= 500) {
+      let make5xxData = null;
+      try { make5xxData = JSON.parse(responseText); } catch { /* passthrough */ }
+
+      if (
+        make5xxData?.ok === false &&
+        typeof make5xxData?.message === "string" &&
+        make5xxData.message.length > 0
+      ) {
+        return jsonResponse(
+          {
+            ok: false,
+            code: make5xxData.status || "MAKE_ERROR",
+            message: make5xxData.message,
+            request_id: make5xxData.request_id || null,
+          },
+          makeResponse.status,
+          headers
+        );
+      }
+    }
+
     return jsonResponse(
       {
         ok: false,

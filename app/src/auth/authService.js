@@ -35,14 +35,37 @@ const STORAGE_KEYS = {
   user: "cp04_user",
   role: "cp04_role",
   userEmail: "cp04_user_email",
+  expiresAt: "cp04_token_expires_at",
 };
 
+// MEJORA 2026-08-08 (diagnóstico E2E Alta de jugador: STAFF autenticado
+// pero el Worker rechazaba la petición antes de llegar a Make): sin esta
+// marca de expiración no había forma de saber, antes de enviar una
+// petición, si el access_token seguía siendo válido. authFetch() lo
+// enviaba igual y dejaba que el Worker lo rechazase con 401.
 let state = {
   accessToken: null,
   refreshToken: null,
   user: null,
   role: null,
+  expiresAt: null,
 };
+
+// Margen de seguridad: si al access_token le quedan menos de 30s de vida,
+// se trata como si ya hubiera caducado y se refresca antes de usarlo, para
+// no perder una petición por una carrera de milisegundos.
+const REFRESH_SKEW_MS = 30_000;
+
+function computeExpiresAt(expiresInSeconds) {
+  const seconds = Number(expiresInSeconds);
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  return Date.now() + seconds * 1000;
+}
+
+function isAccessTokenExpiringSoon() {
+  if (!state.accessToken || !state.expiresAt) return false;
+  return Date.now() >= state.expiresAt - REFRESH_SKEW_MS;
+}
 
 function safeLocalStorage() {
   try {
@@ -62,6 +85,12 @@ function persist() {
       storage.setItem(STORAGE_KEYS.authMode, "supabase_real");
     } else {
       storage.removeItem(STORAGE_KEYS.accessToken);
+    }
+
+    if (state.expiresAt) {
+      storage.setItem(STORAGE_KEYS.expiresAt, String(state.expiresAt));
+    } else {
+      storage.removeItem(STORAGE_KEYS.expiresAt);
     }
 
     if (state.refreshToken) {
@@ -98,6 +127,7 @@ function clearPersisted() {
     storage.removeItem(STORAGE_KEYS.user);
     storage.removeItem(STORAGE_KEYS.userEmail);
     storage.removeItem(STORAGE_KEYS.role);
+    storage.removeItem(STORAGE_KEYS.expiresAt);
   } catch {
     // Nada que hacer si el almacenamiento no está disponible.
   }
@@ -112,17 +142,19 @@ function restoreFromStorage() {
     const refreshToken = storage.getItem(STORAGE_KEYS.refreshToken);
     const rawUser = storage.getItem(STORAGE_KEYS.user);
     const role = storage.getItem(STORAGE_KEYS.role);
+    const rawExpiresAt = storage.getItem(STORAGE_KEYS.expiresAt);
 
     state = {
       accessToken: accessToken || null,
       refreshToken: refreshToken || null,
       user: rawUser ? JSON.parse(rawUser) : null,
       role: role || null,
+      expiresAt: rawExpiresAt ? Number(rawExpiresAt) : null,
     };
   } catch {
     // Si el JSON guardado está corrupto, arrancamos sin sesión (fail-closed)
     // en vez de propagar un usuario a medio parsear.
-    state = { accessToken: null, refreshToken: null, user: null, role: null };
+    state = { accessToken: null, refreshToken: null, user: null, role: null, expiresAt: null };
   }
 }
 
@@ -170,6 +202,7 @@ export async function login(email, password) {
     refreshToken: data.refresh_token || null,
     user,
     role: data.role || user?.role || null,
+    expiresAt: computeExpiresAt(data.expires_in),
   };
   persist();
 
@@ -218,7 +251,7 @@ export async function logout(options = {}) {
   const scope = options.scope === "global" ? "global" : "local";
   const tokenToInvalidate = state.accessToken;
 
-  state = { accessToken: null, refreshToken: null, user: null, role: null };
+  state = { accessToken: null, refreshToken: null, user: null, role: null, expiresAt: null };
   clearPersisted();
 
   if (!tokenToInvalidate) {
@@ -260,7 +293,7 @@ export async function getSession() {
     // arrancar): no se puede confirmar la sesión, pero tampoco se debe
     // dejar una promesa sin capturar ni un estado a medias. Se trata igual
     // que un token inválido: fail-closed.
-    state = { accessToken: null, refreshToken: null, user: null, role: null };
+    state = { accessToken: null, refreshToken: null, user: null, role: null, expiresAt: null };
     clearPersisted();
     return { ok: false, error: "UPSTREAM_ERROR" };
   }
@@ -269,7 +302,7 @@ export async function getSession() {
 
   if (!response.ok || !data?.ok) {
     // Token inválido/expirado: se limpia la sesión, nunca se deja "a medias".
-    state = { accessToken: null, refreshToken: null, user: null, role: null };
+    state = { accessToken: null, refreshToken: null, user: null, role: null, expiresAt: null };
     clearPersisted();
     return { ok: false, error: data?.error || "SESSION_INVALID", authReady: data?.auth_ready !== false };
   }
@@ -280,11 +313,14 @@ export async function getSession() {
   return { ok: true, user: state.user, role: state.role };
 }
 
-export async function refreshSession() {
-  if (!state.refreshToken) {
-    return { ok: false, error: "MISSING_REFRESH_TOKEN" };
-  }
+// MEJORA 2026-08-08: se deduplica con un único in-flight por si dos
+// peticiones concurrentes detectan a la vez un token caducado (authFetch
+// proactivo + reactivo, o dos authFetch en paralelo) — evita dos llamadas
+// simultáneas a /api/auth/refresh, que con un refresh_token de un solo uso
+// (rotación) haría que la segunda fallara por una carrera innecesaria.
+let refreshInFlight = null;
 
+async function performRefresh() {
   let response;
   try {
     response = await fetch(AUTH_ENDPOINTS.refresh, {
@@ -299,6 +335,13 @@ export async function refreshSession() {
   const data = await readJsonSafe(response);
 
   if (!response.ok || !data?.ok) {
+    // Refresh inválido/caducado: no se deja un access_token "zombie" en el
+    // estado (fail-closed, mismo criterio que getSession() con un token
+    // inválido). Así, la siguiente petición autenticada falla de forma
+    // clara y controlada en vez de reintentar indefinidamente con un
+    // refresh_token que ya no sirve.
+    state = { accessToken: null, refreshToken: null, user: null, role: null, expiresAt: null };
+    clearPersisted();
     return {
       ok: false,
       authReady: data?.auth_ready !== false,
@@ -311,10 +354,25 @@ export async function refreshSession() {
     ...state,
     accessToken: data.access_token || state.accessToken,
     refreshToken: data.refresh_token || state.refreshToken,
+    expiresAt: computeExpiresAt(data.expires_in),
   };
   persist();
 
   return { ok: true };
+}
+
+export async function refreshSession() {
+  if (!state.refreshToken) {
+    return { ok: false, error: "MISSING_REFRESH_TOKEN" };
+  }
+
+  if (!refreshInFlight) {
+    refreshInFlight = performRefresh().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+
+  return refreshInFlight;
 }
 
 export async function forgotPassword(email) {
@@ -375,26 +433,58 @@ export function getAccessToken() {
   return state.accessToken;
 }
 
-// authFetch: wrapper mínimo sobre fetch() que adjunta
-// `Authorization: Bearer <access_token>` cuando existe sesión, y no hace
-// nada más. No decide qué endpoints son públicos ni protegidos (eso lo
-// decide quien llama, usando fetch() normal para lo público y authFetch()
-// para lo protegido); no transforma la respuesta ni intercepta 401 (el
-// manejo de errores sigue en cada call site, igual que hoy). Así, en modo
-// demo (sin access_token real) el comportamiento es idéntico al actual:
-// la petición sale sin cabecera Authorization.
-export async function authFetch(url, options = {}) {
-  const token = getAccessToken();
-  const headers = { ...(options.headers || {}) };
+// Si el access_token está a menos de REFRESH_SKEW_MS de caducar, intenta
+// refrescarlo ANTES de construir la petición. No es "no-op silencioso" si
+// falla: performRefresh() ya deja la sesión limpia (fail-closed) en ese
+// caso, así que la petición que sigue sale sin token y el backend responde
+// su 401 propio, igual que si nunca hubiera habido sesión.
+async function ensureFreshAccessToken() {
+  if (!state.accessToken || !state.refreshToken) return;
+  if (!isAccessTokenExpiringSoon()) return;
+  await refreshSession();
+}
 
-  // Nunca "Bearer " vacío/null/undefined: si no hay token, se omite la
-  // cabecera por completo y el backend responde su propio fail-closed
-  // (401 MISSING_TOKEN), igual que si se llamara sin este helper.
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+// authFetch: wrapper sobre fetch() que adjunta
+// `Authorization: Bearer <access_token>` cuando existe sesión. No decide
+// qué endpoints son públicos ni protegidos (eso lo decide quien llama,
+// usando fetch() normal para lo público y authFetch() para lo protegido).
+// Así, en modo demo (sin access_token real) el comportamiento es idéntico
+// al actual: la petición sale sin cabecera Authorization.
+//
+// MEJORA 2026-08-08: además de adjuntar el token, ahora:
+//  1) refresca proactivamente si el token está a punto de caducar
+//     (ensureFreshAccessToken, antes de construir la petición);
+//  2) si aun así el backend responde 401 y había un refresh_token
+//     disponible, intenta refrescar UNA vez y reintenta la MISMA petición
+//     UNA vez. Si el segundo intento también falla (con el motivo que sea),
+//     esa respuesta se devuelve tal cual — nunca hay un tercer intento ni
+//     bucle. El manejo de la respuesta final sigue siendo responsabilidad
+//     de cada call site, igual que antes.
+export async function authFetch(url, options = {}) {
+  await ensureFreshAccessToken();
+
+  const buildHeaders = () => {
+    const headers = { ...(options.headers || {}) };
+    const token = getAccessToken();
+    // Nunca "Bearer " vacío/null/undefined: si no hay token, se omite la
+    // cabecera por completo y el backend responde su propio fail-closed
+    // (401 MISSING_TOKEN), igual que si se llamara sin este helper.
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  };
+
+  let response = await fetch(url, { ...options, headers: buildHeaders() });
+
+  if (response.status === 401 && state.refreshToken) {
+    const refreshed = await refreshSession();
+    if (refreshed.ok) {
+      response = await fetch(url, { ...options, headers: buildHeaders() });
+    }
   }
 
-  return fetch(url, { ...options, headers });
+  return response;
 }
 
 export function getCurrentUser() {

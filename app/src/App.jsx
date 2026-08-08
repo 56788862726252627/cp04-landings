@@ -48,6 +48,7 @@ import {
 } from "./utils/rbac.js";
 import { cp04ComputeScreenState } from "./utils/screenState.js";
 import { cp04Can } from "./utils/permissions.js";
+import { sanitizeCsvCell } from "./utils/csvSanitize.js";
 import { computeMasterCounters } from "./data/makeMasterRegistry.js";
 import { cp04ApplyScreenState } from "./cp04-apply-screen-state.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
@@ -6020,7 +6021,7 @@ function Torneos({ selectedRole } = {}) {
   const [showHistory, setShowHistory] = useState(false);
   const [notice, setNotice] = useState("");
   const [noticeErr, setNoticeErr] = useState(false);
-  const [savedAt, setSavedAt] = useState(null);
+  const savedAtRef = useRef(null);
   const [winnerAnim, setWinnerAnim] = useState(null);
 
   const currentMax = formatMode !== "custom" ? FORMAT_MAX[formatMode] : null;
@@ -6028,7 +6029,7 @@ function Torneos({ selectedRole } = {}) {
   useEffect(() => {
     const s = { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published };
     localStorage.setItem(TORNEO_STORE, JSON.stringify(s));
-    setSavedAt(new Date());
+    savedAtRef.current = new Date();
   }, [pairs, bracket, byePair, byeDrawDate, published, formatMode, customMode, customInput]);
 
   const showNotice = (msg, err = false) => {
@@ -6261,7 +6262,7 @@ function Torneos({ selectedRole } = {}) {
   const handleExportCSV = () => {
     if (!canManage) return;
     const lines = ["#,Jugador 1,Jugador 2"];
-    pairs.forEach((p, i) => lines.push(`${i + 1},"${p.player1 || ""}","${p.player2 || ""}"`));
+    pairs.forEach((p, i) => lines.push(`${i + 1},"${sanitizeCsvCell(p.player1)}","${sanitizeCsvCell(p.player2)}"`));
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `parejas-cp04-${Date.now()}.csv`; a.click();
@@ -6313,8 +6314,8 @@ function Torneos({ selectedRole } = {}) {
             </button>
           </div>
           )}
-          {savedAt && canManage && (
-            <span style={{ color: "rgba(255,255,255,.38)", fontSize: ".7rem" }}>💾 Guardado {savedAt.toLocaleTimeString("es-ES")}</span>
+          {savedAtRef.current && canManage && (
+            <span style={{ color: "rgba(255,255,255,.38)", fontSize: ".7rem" }}>💾 Guardado {savedAtRef.current.toLocaleTimeString("es-ES")}</span>
           )}
         </div>
       </div>

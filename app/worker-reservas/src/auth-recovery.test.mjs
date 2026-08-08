@@ -172,6 +172,40 @@ test("login: credenciales inválidas -> mensaje de Supabase traducido al españo
   );
 });
 
+// MEJORA 2026-08-08 (diagnóstico E2E Alta de jugador, mejora AUTH PRE-E2E):
+// verifySupabaseIdentity ya tenía este test (auth/authorization.test.mjs) para
+// el gate de rutas mutables, pero /api/auth/login usa una función de mapeo
+// distinta (cp04MapSupabaseUserToCp04) para construir la respuesta de login.
+// Cierra el mismo principio ("solo app_metadata.role es de confianza") en el
+// tramo que faltaba cubrir.
+test("login: rol solo en user_metadata (no en app_metadata) -> se ignora, degrada a PLAYER", async () => {
+  await withFakeFetch(
+    async () =>
+      fakeSupabaseResponse(200, {
+        access_token: "fake-access-token-e2e-test",
+        refresh_token: "fake-refresh-token-e2e-test",
+        expires_in: 3600,
+        token_type: "bearer",
+        user: {
+          id: "user-1",
+          email: "staff@example.test",
+          user_metadata: { role: "STAFF" }, // editable por el propio usuario: no es de confianza
+          app_metadata: {}, // nunca asignado por un service_role en este caso
+        },
+      }),
+    async () => {
+      const response = await worker.fetch(
+        authRequest("/api/auth/login", { email: "staff@example.test", password: "loquesea" }),
+        SUPABASE_ENV
+      );
+      const data = await response.json();
+      assert.equal(response.status, 200);
+      assert.equal(data.role, "PLAYER");
+      assert.equal(data.user.role, "PLAYER");
+    }
+  );
+});
+
 test("register: mensaje 'ya registrado' -> traducido al español", async () => {
   await withFakeFetch(
     async () => fakeSupabaseResponse(400, { msg: "User already registered" }),
