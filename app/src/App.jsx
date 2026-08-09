@@ -6364,6 +6364,7 @@ function Torneos({ selectedRole } = {}) {
               </p>
               <div style={{ display: "flex", gap: 8 }}>
                 <input type="number" value={customInput} onChange={e => { setCustomInput(e.target.value); setCustomError(""); }}
+                  aria-label={customMode === "players" ? "Número de jugadores (par, 2–64)" : "Número de parejas (1–32)"}
                   style={{ padding: "9px 13px", borderRadius: 10, border: `1px solid ${customError ? T.dangerBorder : T.line}`, background: "rgba(255,255,255,.06)", color: T.text, width: 120, outline: "none", fontSize: ".9rem" }}
                   placeholder={customMode === "players" ? "ej: 18" : "ej: 9"} />
                 <button type="button" className="cp04-control-btn primary" onClick={applyCustom} style={{ width: "auto", padding: "9px 18px" }}>Aplicar</button>
@@ -6580,6 +6581,7 @@ function Torneos({ selectedRole } = {}) {
                                   </span>
                                   {canManage && !match.winner && pA && pA.player1 && match.pairB && (
                                     <button type="button" onClick={() => handleMarkWinner(match.id, match.pairA)}
+                                      aria-label={`Marcar ganador: ${pairLabel(pA)}`}
                                       style={{ background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, borderRadius: 5, padding: "2px 7px", cursor: "pointer", fontSize: ".66rem", fontWeight: 800, flexShrink: 0 }}>
                                       ✓A
                                     </button>
@@ -6593,6 +6595,7 @@ function Torneos({ selectedRole } = {}) {
                                   </span>
                                   {canManage && !match.winner && pB && pB.player1 && match.pairA && (
                                     <button type="button" onClick={() => handleMarkWinner(match.id, match.pairB)}
+                                      aria-label={`Marcar ganador: ${pairLabel(pB)}`}
                                       style={{ background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, borderRadius: 5, padding: "2px 7px", cursor: "pointer", fontSize: ".66rem", fontWeight: 800, flexShrink: 0 }}>
                                       ✓B
                                     </button>
@@ -6633,7 +6636,7 @@ function Torneos({ selectedRole } = {}) {
             <div className="cp04-full-ranking-wrap">
               <table className="cp04-full-ranking-table">
                 <thead>
-                  <tr><th>#</th><th>Jugador 1</th><th>Jugador 2</th><th>Estado</th></tr>
+                  <tr><th scope="col">#</th><th scope="col">Jugador 1</th><th scope="col">Jugador 2</th><th scope="col">Estado</th></tr>
                 </thead>
                 <tbody>
                   {pairs.map((pair, i) => {
@@ -6785,6 +6788,7 @@ function Ranking() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={tx("ranking.filtrar")}
+            aria-label={tx("ranking.filtrar")}
             style={{ width:"100%", paddingLeft:32, background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:10, color:"#fff", fontSize:".82rem", padding:"9px 12px 9px 32px", outline:"none", fontFamily:"inherit", minHeight:"unset" }}
           />
           <span style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:T.textDim, fontSize:".9rem", pointerEvents:"none" }}>🔍</span>
@@ -6792,6 +6796,7 @@ function Ranking() {
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           {CATS.map(c => (
             <button key={c.key} type="button" onClick={() => setCat(c.key)}
+              aria-pressed={cat === c.key}
               style={{ background: cat===c.key ? T.accent : "rgba(255,255,255,.06)", color: cat===c.key ? "#06100a" : T.textDim, border: `1px solid ${cat===c.key ? T.accent : "rgba(255,255,255,.12)"}`, borderRadius:8, padding:"6px 13px", cursor:"pointer", fontWeight:900, fontSize:".76rem", fontFamily:"inherit", transition:"all .15s" }}>
               {c.label}
             </button>
@@ -6864,15 +6869,15 @@ function Ranking() {
             <table className="cp04-table" style={{ minWidth:580 }}>
               <thead>
                 <tr>
-                  <th style={{ width:36 }}>{tx("ranking.pos")}</th>
-                  <th>{tx("ranking.pareja")}</th>
-                  <th style={{ textAlign:"center" }}>{tx("ranking.pts")}</th>
-                  <th style={{ textAlign:"center" }}>{tx("ranking.pj")}</th>
-                  <th style={{ textAlign:"center" }}>{tx("ranking.v")}</th>
-                  <th style={{ textAlign:"center" }}>{tx("ranking.d")}</th>
-                  <th style={{ textAlign:"center" }}>{tx("ranking.racha")}</th>
-                  <th style={{ textAlign:"center", display:"none" }} className="cp04-rank-nivel">{tx("ranking.nivel")}</th>
-                  <th style={{ textAlign:"center" }}>{tx("ranking.mov")}</th>
+                  <th scope="col" style={{ width:36 }}>{tx("ranking.pos")}</th>
+                  <th scope="col">{tx("ranking.pareja")}</th>
+                  <th scope="col" style={{ textAlign:"center" }}>{tx("ranking.pts")}</th>
+                  <th scope="col" style={{ textAlign:"center" }}>{tx("ranking.pj")}</th>
+                  <th scope="col" style={{ textAlign:"center" }}>{tx("ranking.v")}</th>
+                  <th scope="col" style={{ textAlign:"center" }}>{tx("ranking.d")}</th>
+                  <th scope="col" style={{ textAlign:"center" }}>{tx("ranking.racha")}</th>
+                  <th scope="col" style={{ textAlign:"center", display:"none" }} className="cp04-rank-nivel">{tx("ranking.nivel")}</th>
+                  <th scope="col" style={{ textAlign:"center" }}>{tx("ranking.mov")}</th>
                 </tr>
               </thead>
               <tbody>
