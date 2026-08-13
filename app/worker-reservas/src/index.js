@@ -11,7 +11,15 @@ import {
   checkMakeRateLimit,
 } from "../support/makeLiveInventory.js";
 
-const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+// Bloque BOOKING_HOURS (2026-08-13): antes dejaba fuera 13:00-16:00 (hueco
+// de mediodía). App.jsx ya amplió su propia constante equivalente al mismo
+// horario continuo 08:00-22:00 (ver src/App.jsx:121) — esta lista debe
+// permanecer idéntica a esa, valor por valor, para que ninguna hora que la
+// UI ofrezca como reservable sea rechazada aquí con "Hora invalida."
+// (crear_reserva, validatePayload más abajo). reprogramar_reserva no usa
+// esta lista (solo valida formato HH:MM, ver el bloque `accion ===
+// "reprogramar_reserva"`), así que no necesitaba cambio.
+const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 const BOOKING_DURATIONS = [60, 90, 120];
 const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
 const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];

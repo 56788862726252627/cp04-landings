@@ -84,6 +84,48 @@ test("validatePayload: crear_reserva con hora fuera de la lista permitida", () =
   assert.equal(validatePayload(payload).hora, "Hora invalida.");
 });
 
+// Bloque BOOKING_HOURS (2026-08-13): 08:00-22:00 continuo, alineado con
+// App.jsx:121 — antes 13:00-16:00 (hueco de mediodía) no estaba en la
+// lista del Worker aunque la UI ya los ofreciera, lo que habría producido
+// "Hora invalida." (422) en una reserva real a esas horas.
+
+test("validatePayload: crear_reserva acepta las 4 horas de mediodía recién añadidas (13:00-16:00)", () => {
+  for (const hora of ["13:00", "14:00", "15:00", "16:00"]) {
+    const payload = baseCrearReserva({ reserva: { ...baseCrearReserva().reserva, hora } });
+    assert.equal(validatePayload(payload).hora, undefined, `${hora} debería ser válida`);
+  }
+});
+
+test("validatePayload: crear_reserva sigue aceptando 08:00 (extremo inferior del rango, sin regresión)", () => {
+  const payload = baseCrearReserva({ reserva: { ...baseCrearReserva().reserva, hora: "08:00" } });
+  assert.equal(validatePayload(payload).hora, undefined);
+});
+
+test("validatePayload: crear_reserva sigue aceptando 22:00 (extremo superior del rango, sin regresión)", () => {
+  const payload = baseCrearReserva({ reserva: { ...baseCrearReserva().reserva, hora: "22:00" } });
+  assert.equal(validatePayload(payload).hora, undefined);
+});
+
+test("validatePayload: crear_reserva sigue rechazando horas fuera de 08:00-22:00 (07:00 y 23:00, límite no ampliado)", () => {
+  for (const hora of ["07:00", "23:00"]) {
+    const payload = baseCrearReserva({ reserva: { ...baseCrearReserva().reserva, hora } });
+    assert.equal(validatePayload(payload).hora, "Hora invalida.", `${hora} debería seguir siendo inválida`);
+  }
+});
+
+test("validatePayload: crear_reserva acepta el conjunto continuo completo 08:00-22:00 (15 horas), una a una", () => {
+  const horasEsperadas = [
+    "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00",
+    "17:00", "18:00", "19:00", "20:00", "21:00", "22:00",
+  ];
+  assert.equal(horasEsperadas.length, 15);
+
+  for (const hora of horasEsperadas) {
+    const payload = baseCrearReserva({ reserva: { ...baseCrearReserva().reserva, hora } });
+    assert.equal(validatePayload(payload).hora, undefined, `${hora} debería ser válida`);
+  }
+});
+
 test("validatePayload: crear_reserva con duración no permitida", () => {
   const payload = baseCrearReserva({ reserva: { ...baseCrearReserva().reserva, duracion_minutos: 45 } });
   assert.equal(validatePayload(payload).duracion_minutos, "Duracion invalida.");

@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 
 import { evaluateSlotAvailability, AVAILABILITY_STATUS, AVAILABILITY_REASON } from "./availability.js";
 
-// Cierre 23:00, apertura discreta (con hueco de mediodía, como en el
-// proyecto real: BOOKING_HOURS deja fuera 13:00-16:00), duraciones válidas
-// 60/90/120 — igual que la configuración real de Club Pádel 04.
+// Cierre 23:00, apertura discreta con hueco de mediodía (13:00-16:00
+// excluido) — fixture propio de este test para comprobar que el motor
+// rechaza correctamente un startTime fuera de allowedStartTimes. NO refleja
+// BOOKING_HOURS de App.jsx (que sí incluye 13:00-16:00, ver fix
+// vite-watcher-fix 2026-08-10), duraciones válidas 60/90/120.
 const OPENING_HOURS = {
   closingMinutes: 23 * 60,
   allowedStartTimes: ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"],
@@ -223,4 +225,88 @@ test("07E-8. cierre bloquea el slot aunque no exista ninguna reserva solapada (d
   assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
   assert.equal(result.reason, AVAILABILITY_REASON.COURT_CLOSED);
   assert.notEqual(result.reason, AVAILABILITY_REASON.BOOKING_OVERLAP);
+});
+
+// --- Réplica exacta de la config real de producción (App.jsx) -------------
+//
+// A diferencia del fixture OPENING_HOURS de arriba (que deja fuera
+// 13:00-16:00 a propósito, solo para probar el motor genérico), esto es una
+// copia literal de BOOKING_HOURS/BOOKING_DURATIONS/CLUB_CLOSING_MINUTES tal
+// como están hoy en App.jsx:121-129, para reproducir EXACTAMENTE la llamada
+// real que hacen CalendarioDisponibilidad (App.jsx ~línea 766) y
+// getSlotStatus (App.jsx:338, usado por los <select> de hora en Reservar y
+// Reprogramar). Si BOOKING_HOURS cambia en App.jsx, esta lista debe
+// actualizarse a mano en el mismo cambio.
+const REAL_BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+const REAL_OPENING_HOURS = {
+  closingMinutes: 23 * 60,
+  allowedStartTimes: REAL_BOOKING_HOURS,
+  allowedDurations: [60, 90, 120],
+};
+
+// Valor inicial real del formulario en Reservas()/ReprogramarReserva()
+// (App.jsx:3457 y 3675: `duracion_minutos: "90"`) — el que ve cualquier
+// usuario al abrir la pantalla, antes de tocar el selector de duración.
+const REAL_UI_DEFAULT_DURATION = 90;
+
+function evaluateReal({ startTime, durationMinutes, date = "2026-07-06", courtId = "Pista 1", existingBookings = [] }) {
+  return evaluateSlotAvailability({
+    date,
+    startTime,
+    durationMinutes,
+    courtId,
+    existingBookings,
+    openingHours: REAL_OPENING_HOURS,
+    currentDateTime: NOW,
+  });
+}
+
+test("UI-real 1. estado inicial de la pantalla (duración por defecto 90 min, sin tocar el selector): 22:00 aparece 'No disponible' en las 4 pistas — esto es el comportamiento esperado, no un bug (22:00+90 supera el cierre de 23:00)", () => {
+  for (const pista of ["Pista 1", "Pista 2", "Pista 3", "Pista 4"]) {
+    const result = evaluateReal({ startTime: "22:00", durationMinutes: REAL_UI_DEFAULT_DURATION, courtId: pista });
+    assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE, `${pista}: ${result.status}/${result.reason}`);
+    assert.equal(result.reason, AVAILABILITY_REASON.INSUFFICIENT_REMAINING_TIME, `${pista}: ${result.status}/${result.reason}`);
+  }
+});
+
+test("UI-real 2. tras cambiar el selector de duración a 60 min, 22:00 pasa a disponible en las 4 pistas (la UI reacciona correctamente al cambio de duración)", () => {
+  for (const pista of ["Pista 1", "Pista 2", "Pista 3", "Pista 4"]) {
+    const result = evaluateReal({ startTime: "22:00", durationMinutes: 60, courtId: pista });
+    assert.equal(result.status, AVAILABILITY_STATUS.AVAILABLE, `${pista}: ${result.status}/${result.reason}`);
+  }
+});
+
+test("UI-real 3. 22:00 + 90 min sigue bloqueado explícitamente (no solo por el default)", () => {
+  const result = evaluateReal({ startTime: "22:00", durationMinutes: 90 });
+  assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
+  assert.equal(result.reason, AVAILABILITY_REASON.INSUFFICIENT_REMAINING_TIME);
+});
+
+test("UI-real 4. 22:00 + 120 min bloqueado", () => {
+  const result = evaluateReal({ startTime: "22:00", durationMinutes: 120 });
+  assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
+  assert.equal(result.reason, AVAILABILITY_REASON.INSUFFICIENT_REMAINING_TIME);
+});
+
+test("UI-real 5. 21:00 admite 60/90/120 sin ocupación previa", () => {
+  for (const durationMinutes of [60, 90, 120]) {
+    const result = evaluateReal({ startTime: "21:00", durationMinutes });
+    assert.equal(result.status, AVAILABILITY_STATUS.AVAILABLE, `21:00+${durationMinutes}: ${result.status}/${result.reason}`);
+  }
+});
+
+test("UI-real 6. 23:00 nunca es un inicio válido (no está en BOOKING_HOURS)", () => {
+  assert.equal(REAL_BOOKING_HOURS.includes("23:00"), false);
+  const result = evaluateReal({ startTime: "23:00", durationMinutes: 60 });
+  assert.equal(result.status, AVAILABILITY_STATUS.UNAVAILABLE);
+  assert.equal(result.reason, AVAILABILITY_REASON.OUTSIDE_OPENING_HOURS);
+});
+
+test("UI-real 7. 13:00-16:00 disponibles en las 4 pistas con la duración por defecto de la UI (90 min), sin ocupación", () => {
+  for (const pista of ["Pista 1", "Pista 2", "Pista 3", "Pista 4"]) {
+    for (const startTime of ["13:00", "14:00", "15:00", "16:00"]) {
+      const result = evaluateReal({ startTime, durationMinutes: REAL_UI_DEFAULT_DURATION, courtId: pista });
+      assert.equal(result.status, AVAILABILITY_STATUS.AVAILABLE, `${pista} ${startTime}: ${result.status}/${result.reason}`);
+    }
+  }
 });
