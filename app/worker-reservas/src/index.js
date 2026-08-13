@@ -588,6 +588,131 @@ export function cp04BuildAirtableDegradedResponse(technicalDetail = {}) {
 // handleReservas, sin duplicar la query. `ok:false` cubre tanto "Airtable
 // no configurado" como errores de red/HTTP: en ningún caso lanza, siempre
 // devuelve un resultado que el llamador decide cómo tratar.
+// FASE 2 (2026-08-12, "bloqueo real de disponibilidad"): un cierre
+// temporal ACTIVO con bloquear_reservas=true debe ocupar los mismos slots
+// que ya usa /api/disponibilidad y la revalidación de /api/reservas, sin
+// tocar su formato (`clave_slot` = `fecha|pista|hora`) ni a sus
+// consumidores (cp04IsSlotOccupied, handleDisponibilidad, handleReservas)
+// -- se fusiona en el mismo array `ocupadas`, así que ningún llamador
+// existente necesita cambiar para quedar protegido.
+
+// Suma minutos a una hora "HH:MM" (formato ya usado en todo el sistema).
+// Sin gestión de cruce de día más allá de un modulo 24h simple -- el
+// último inicio posible (22:00) + la duración máxima (120 min) = 24:00
+// exacto, nunca cruza a un dia siguiente real dentro de BOOKING_HOURS.
+export function cp04AddMinutesToHora(hora, minutos) {
+  const [h, m] = String(hora).split(":").map(Number);
+  const total = h * 60 + m + Number(minutos);
+  const hh = Math.floor(total / 60) % 24;
+  const mm = total % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
+// Intersección real de intervalos (misma fórmula ya diseñada y aprobada:
+// reserva_inicio < cierre_fin AND reserva_fin > cierre_inicio), adaptada a
+// datetime completo para que un cierre multi-día se compare correctamente
+// sin importar si `slot.fecha` es su primer, último o un día intermedio.
+// Toques exactos en el límite (una reserva que termina justo cuando
+// empieza el cierre, o que empieza justo cuando termina) NO se consideran
+// solape -- son adyacentes, no se pisan.
+export function cp04CierreBloqueaSlot(cierre, slot) {
+  if (!cierre || !slot) return false;
+
+  const mismaPista = cierre.pista === "todas" || cierre.pista === slot.pista;
+  if (!mismaPista) return false;
+
+  const cierreFechaInicio = String(cierre.fecha_inicio || "").slice(0, 10);
+  const cierreFechaFin = String(cierre.fecha_fin || "").slice(0, 10);
+
+  const cierreInicioMs = Date.parse(`${cierreFechaInicio}T${cierre.hora_inicio}:00`);
+  const cierreFinMs = Date.parse(`${cierreFechaFin}T${cierre.hora_fin}:00`);
+  const reservaInicioMs = Date.parse(`${slot.fecha}T${slot.horaInicio}:00`);
+  const reservaFinMs = Date.parse(`${slot.fecha}T${slot.horaFin}:00`);
+
+  if ([cierreInicioMs, cierreFinMs, reservaInicioMs, reservaFinMs].some(Number.isNaN)) {
+    return false;
+  }
+
+  return reservaInicioMs < cierreFinMs && reservaFinMs > cierreInicioMs;
+}
+
+// Consulta persistente (Airtable, tabla CIERRES_TEMPORALES) de cierres
+// ACTIVOS + bloquear_reservas=true cuya ventana incluye `fecha`. Filtrar
+// por fecha en la propia fórmula excluye de forma natural los cierres ya
+// expirados respecto a esa fecha (requisito C) sin necesitar un job
+// aparte que reescriba `estado` a FINALIZADO.
+export async function cp04FetchCierresActivos(env, fecha) {
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_CIERRES_TABLE_ID) {
+    return { ok: false, reason: "not_configured" };
+  }
+
+  const formula =
+    `AND({estado}='ACTIVO', {bloquear_reservas}=TRUE(), ` +
+    `{fecha_inicio}<=DATETIME_PARSE('${fecha}','YYYY-MM-DD'), ` +
+    `{fecha_fin}>=DATETIME_PARSE('${fecha}','YYYY-MM-DD'))`;
+
+  const url =
+    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_CIERRES_TABLE_ID}` +
+    `?filterByFormula=${encodeURIComponent(formula)}` +
+    `&fields%5B%5D=pista&fields%5B%5D=fecha_inicio&fields%5B%5D=hora_inicio` +
+    `&fields%5B%5D=fecha_fin&fields%5B%5D=hora_fin`;
+
+  let airtableRes;
+  try {
+    airtableRes = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}` },
+    });
+  } catch {
+    return { ok: false, reason: "network_error" };
+  }
+
+  const data = await airtableRes.json().catch(() => null);
+
+  if (!airtableRes.ok) {
+    return { ok: false, reason: "airtable_error", status: airtableRes.status, details: data };
+  }
+
+  const records = data?.records || [];
+  const cierres = records.map((record) => ({
+    pista: record.fields?.pista || null,
+    fecha_inicio: record.fields?.fecha_inicio || null,
+    hora_inicio: record.fields?.hora_inicio || null,
+    fecha_fin: record.fields?.fecha_fin || null,
+    hora_fin: record.fields?.hora_fin || null,
+  }));
+
+  return { ok: true, cierres };
+}
+
+// Expande la lista de cierres activos a claves `fecha|pista|hora` en el
+// mismo formato que ya usa `ocupadas`. Comprueba con la duración MÁXIMA
+// (BOOKING_DURATIONS, 120 min) como ventana de reserva candidata: es la
+// comprobación más conservadora (si una reserva de 120 min no solapa,
+// ninguna duración más corta empezando a la misma hora solapa tampoco),
+// para que /api/disponibilidad nunca muestre como libre un hueco que
+// después sería rechazado al confirmar.
+export function cp04ClaveSlotsBloqueadosPorCierres(cierres, fecha) {
+  if (!Array.isArray(cierres) || !cierres.length) return [];
+
+  const duracionMaxima = Math.max(...BOOKING_DURATIONS);
+  const bloqueadas = [];
+
+  for (const cierre of cierres) {
+    const pistasAfectadas = cierre.pista === "todas" ? COURTS : [cierre.pista];
+    for (const pista of pistasAfectadas) {
+      for (const hora of BOOKING_HOURS) {
+        const horaFin = cp04AddMinutesToHora(hora, duracionMaxima);
+        if (cp04CierreBloqueaSlot(cierre, { pista, fecha, horaInicio: hora, horaFin })) {
+          bloqueadas.push(`${fecha}|${pista}|${hora}`);
+        }
+      }
+    }
+  }
+
+  return bloqueadas;
+}
+
 export async function cp04FetchOcupadas(env, fecha) {
   const cached = cp04GetCachedAvailability(fecha);
   if (cached) return cached;
@@ -635,7 +760,31 @@ export async function cp04FetchOcupadas(env, fecha) {
   }
 
   const records = data?.records || [];
-  const ocupadas = records.map((record) => record.fields?.clave_slot).filter(Boolean);
+  const ocupadasReservas = records.map((record) => record.fields?.clave_slot).filter(Boolean);
+
+  // Cierres temporales: mismo criterio "fail-open" ya establecido arriba
+  // para las propias reservas (si Airtable no responde, no se bloquea el
+  // sistema entero) -- si no se puede leer CIERRES_TEMPORALES, se degrada
+  // a "sin cierres conocidos" en vez de fallar toda la disponibilidad.
+  // Nota: si el storage de cierres no está configurado, Fase 1 tampoco
+  // permite CREAR ningún cierre (mismas variables de entorno), así que
+  // "no configurado" nunca puede ocultar un cierre real que sí exista.
+  const cierresResult = await cp04FetchCierresActivos(env, fecha);
+  const ocupadasCierres = cierresResult.ok
+    ? cp04ClaveSlotsBloqueadosPorCierres(cierresResult.cierres, fecha)
+    : [];
+
+  if (!cierresResult.ok && cierresResult.reason !== "not_configured") {
+    cp04LogTechnicalEvent({
+      event: "cierres_fetch_failed",
+      action: "disponibilidad",
+      code: cierresResult.reason,
+      retryable: true,
+      detail: "No se pudieron leer cierres temporales activos; disponibilidad calculada solo con reservas.",
+    });
+  }
+
+  const ocupadas = Array.from(new Set([...ocupadasReservas, ...ocupadasCierres]));
 
   const result = { ok: true, records, ocupadas };
   cp04SetCachedAvailability(fecha, result);
@@ -822,6 +971,150 @@ export function cp04BuildCierreTemporalPistaIdempotentDuplicateResponse() {
     cierre_confirmado: false,
     message: CP04_IDEMPOTENT_DUPLICATE_USER_MESSAGE,
   };
+}
+
+// FASE 1 (auditoria "Worker = fuente de verdad" del Cierre Temporal de
+// Pistas, 2026-08-12): persistencia real en Airtable, tabla dedicada
+// CIERRES_TEMPORALES (todavia no creada en produccion -- ver
+// AIRTABLE_CIERRES_TABLE_ID mas abajo, ausente a proposito en esta fase).
+// Mientras esa tabla no exista/estas variables no esten configuradas, el
+// endpoint responde 503 de forma segura, igual que ya hace con el webhook
+// de Make -- nunca finge persistencia que no ocurrio.
+//
+// Normaliza el registro crudo que devuelve la API de Airtable (forma
+// {id, fields, createdTime}) a un objeto plano y estable, para no acoplar
+// el resto del codigo a la forma exacta de la respuesta de Airtable.
+export function cp04NormalizeCierreRecord(airtableRecord) {
+  const fields = airtableRecord?.fields || {};
+  return {
+    airtable_record_id: airtableRecord?.id || null,
+    id_cierre: fields.ID_cierre || null,
+    clave_idempotente: fields.clave_idempotente || null,
+    estado: fields.estado || null,
+    pista: fields.pista || null,
+    fecha_inicio: fields.fecha_inicio || null,
+    hora_inicio: fields.hora_inicio || null,
+    fecha_fin: fields.fecha_fin || null,
+    hora_fin: fields.hora_fin || null,
+    motivo: fields.motivo || null,
+    observaciones: fields.observaciones || "",
+    creado_por: fields.creado_por || null,
+    rol_origen: fields.rol_origen || null,
+    notify_players: fields.notify_players === true,
+    bloquear_reservas: fields.bloquear_reservas !== false,
+    created_at: fields.created_at || null,
+    updated_at: fields.updated_at || null,
+    cancelled_at: fields.cancelled_at || null,
+  };
+}
+
+// Busqueda persistente (autoritativa, sobrevive reinicios de Worker y
+// nuevas instancias de Cloudflare) de un cierre ya ACTIVO con la misma
+// clave de idempotencia. `ok:false` cubre tanto "storage no configurado"
+// como fallo de red/Airtable -- en ningun caso se trata como "encontrado":
+// el llamador decide si continuar el intento de creacion o no.
+export async function cp04FindCierreActivoPersistido(env, claveIdempotente) {
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_CIERRES_TABLE_ID) {
+    return { ok: false, reason: "not_configured" };
+  }
+  if (!claveIdempotente) {
+    return { ok: false, reason: "invalid_key" };
+  }
+
+  const formula = `AND({clave_idempotente}='${claveIdempotente}', {estado}='ACTIVO')`;
+  const url =
+    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_CIERRES_TABLE_ID}` +
+    `?filterByFormula=${encodeURIComponent(formula)}&maxRecords=1`;
+
+  let airtableRes;
+  try {
+    airtableRes = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}` },
+    });
+  } catch {
+    return { ok: false, reason: "network_error" };
+  }
+
+  const data = await airtableRes.json().catch(() => null);
+
+  if (!airtableRes.ok) {
+    return { ok: false, reason: "airtable_error", status: airtableRes.status, details: data };
+  }
+
+  const record = data?.records?.[0] || null;
+  return {
+    ok: true,
+    found: Boolean(record),
+    record: record ? cp04NormalizeCierreRecord(record) : null,
+  };
+}
+
+// Crea el registro real del cierre en Airtable. `estado` siempre nace en
+// "ACTIVO" y `bloquear_reservas` siempre en `true` -- un cierre creado ya
+// bloquea, sin depender de que Make (mas adelante, solo notificacion)
+// llegue a procesarlo. `ID_cierre` se genera de forma deterministica a
+// partir de la fecha de inicio y la huella de la clave de idempotencia
+// (cp04HashIdempotencyKey, ya usado para logs tecnicos) -- legible y
+// estable, sin depender de un autonumber de Airtable.
+export async function cp04CreateCierreTemporal(env, normalized, claveIdempotente) {
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_CIERRES_TABLE_ID) {
+    return { ok: false, reason: "not_configured" };
+  }
+
+  const motivoAirtable = cp04MotivoCierreToAirtableLabel(normalized.motivo);
+  if (!motivoAirtable) {
+    // Defensa en profundidad: con la validación previa de
+    // CIERRE_MOTIVOS_VALIDOS esto no debería ser alcanzable nunca, pero
+    // si lo fuera, nunca se escribe un motivo sin traducir a Airtable.
+    return { ok: false, reason: "invalid_motivo" };
+  }
+
+  const nowIso = new Date().toISOString();
+  const idCierre = `CIERRE-${String(normalized.fecha_inicio).replace(/-/g, "")}-${cp04HashIdempotencyKey(claveIdempotente)}`;
+
+  const fields = {
+    ID_cierre: idCierre,
+    clave_idempotente: claveIdempotente,
+    estado: "ACTIVO",
+    pista: normalized.pista,
+    fecha_inicio: normalized.fecha_inicio,
+    hora_inicio: normalized.hora_inicio,
+    fecha_fin: normalized.fecha_fin,
+    hora_fin: normalized.hora_fin,
+    motivo: motivoAirtable,
+    observaciones: normalized.observaciones || "",
+    creado_por: normalized.creado_por,
+    rol_origen: normalized.rol_origen,
+    notify_players: normalized.notify_players === true,
+    bloquear_reservas: true,
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+
+  const url = `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_CIERRES_TABLE_ID}`;
+
+  let airtableRes;
+  try {
+    airtableRes = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields, typecast: true }),
+    });
+  } catch {
+    return { ok: false, reason: "network_error" };
+  }
+
+  const data = await airtableRes.json().catch(() => null);
+
+  if (!airtableRes.ok) {
+    return { ok: false, reason: "airtable_error", status: airtableRes.status, details: data };
+  }
+
+  return { ok: true, record: cp04NormalizeCierreRecord(data) };
 }
 
 // Idempotencia best-effort usando la Cache API nativa de Workers
@@ -2060,17 +2353,23 @@ async function handleBajaJugador(request, env) {
   );
 }
 
-// PASO 07E (2026-07-19): Cierre Temporal de Pistas — mismo patrón que
-// handleAltaJugador/handleBajaJugador (mismo gate RBAC STAFF/ADMIN/SUPPORT,
-// misma forma de respuesta, mismo criterio de "nunca confirmar sin
-// respuesta real de Make"). MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK todavía no
-// está configurado como secret en ningún entorno (ver wrangler.toml) —
-// mientras no lo esté, este handler responde 503 de forma segura y nunca
-// inventa una URL ni un secreto. `estado` siempre viaja como
-// "pendiente_confirmacion": ni este handler ni la app pueden afirmar que
-// una pista queda cerrada solo porque Make devolvió 200 — esa confirmación
-// depende de que el escenario 5791133 procese el cierre en Airtable/Make,
-// fuera del alcance de este Worker.
+// PASO 07E (2026-07-19): Cierre Temporal de Pistas — mismo gate RBAC
+// STAFF/ADMIN/SUPPORT que Alta/Baja de Jugador.
+//
+// FASE 1 (2026-08-12, auditoría "Worker = fuente de verdad"): el Worker
+// dejó de ser un simple reenviador a Make. Ahora persiste el cierre en
+// Airtable (tabla CIERRES_TEMPORALES, ver AIRTABLE_CIERRES_TABLE_ID) ANTES
+// de notificar — un cierre creado ya está `estado:"activo"` y bloqueando
+// de verdad, sin depender de que Make lo procese. Make pasa a ser
+// exclusivamente notificación best-effort (scenario 5791133): si falla o
+// el webhook no está configurado, el cierre NUNCA se deshace, y la
+// respuesta lo refleja con honestidad (`notificacion_make:false` +
+// `aviso`) en vez de fingir un fallo total. Mientras
+// AIRTABLE_CIERRES_TABLE_ID no exista (tabla aún no creada en
+// producción), el endpoint responde 503 "Cierre temporal storage not
+// configured" de forma segura, sin inventar persistencia que no ocurrió —
+// mismo criterio de "nunca confirmar sin respaldo real" que ya regía
+// antes para el webhook de Make.
 const CIERRE_PISTAS_VALIDAS = ["Pista 1", "Pista 2", "Pista 3", "Pista 4", "todas"];
 const CIERRE_MOTIVOS_VALIDOS = [
   "mantenimiento",
@@ -2085,6 +2384,37 @@ const CIERRE_MOTIVOS_VALIDOS = [
 ];
 const CIERRE_ROLES_VALIDOS = ["ADMIN", "STAFF", "SUPPORT"];
 
+// FASE 2 · corrección hallazgo K.1 (2026-08-12): el contrato público
+// (frontend, validación, CIERRE_MOTIVOS_VALIDOS de arriba) sigue en
+// minúsculas a propósito -- no se toca, cero motivo para romper algo que
+// ya funciona. El campo Single select real de CIERRES_TEMPORALES en
+// Airtable usa las mismas 9 palabras pero con la inicial en mayúscula.
+// Este mapa es una tabla CERRADA y explícita (no una capitalización
+// genérica): solo estos 9 valores exactos se traducen; cualquier otra
+// cosa (que ya no debería llegar aquí, dado que la validación de arriba
+// la rechazaría antes) devuelve null en vez de inventar una etiqueta
+// nueva -- así nunca se le puede colar a Airtable una opción arbitraria
+// vía `typecast: true`.
+const CIERRE_MOTIVO_AIRTABLE_LABEL = {
+  mantenimiento: "Mantenimiento",
+  lluvia: "Lluvia",
+  evento: "Evento",
+  torneo: "Torneo",
+  limpieza: "Limpieza",
+  obra: "Obra",
+  incidencia: "Incidencia",
+  administrativo: "Administrativo",
+  otro: "Otro",
+};
+
+// Traduce el motivo interno (ya validado contra CIERRE_MOTIVOS_VALIDOS) a
+// la etiqueta exacta del Single select real de Airtable. `null` si el
+// valor no está en la tabla cerrada de arriba -- nunca capitaliza a
+// ciegas ni deja pasar un valor no reconocido.
+export function cp04MotivoCierreToAirtableLabel(motivoInterno) {
+  return CIERRE_MOTIVO_AIRTABLE_LABEL[motivoInterno] ?? null;
+}
+
 async function handleCierreTemporalPista(request, env) {
   const headers = corsHeaders(request, env);
 
@@ -2097,14 +2427,6 @@ async function handleCierreTemporalPista(request, env) {
       { ok: false, error: "Method not allowed" },
       405,
       { ...headers, Allow: "POST, OPTIONS" }
-    );
-  }
-
-  if (!env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK) {
-    return jsonResponse(
-      { ok: false, error: "Cierre temporal webhook not configured" },
-      503,
-      headers
     );
   }
 
@@ -2202,6 +2524,11 @@ async function handleCierreTemporalPista(request, env) {
   }
 
   const idempotencyKey = cp04BuildCierreTemporalPistaIdempotencyKey(normalized);
+
+  // Deduplicacion rapida en memoria (mismo isolate, TTL 3 min) -- optimizacion
+  // de latencia para el caso comun de doble-clic/reintento inmediato. La
+  // garantia real de "no crear dos veces el mismo cierre" es la busqueda
+  // persistente de abajo, que sobrevive reinicios y nuevas instancias.
   if (cp04IsIdempotentDuplicate(idempotencyKey)) {
     cp04LogTechnicalEvent({
       event: "idempotent_duplicate",
@@ -2216,38 +2543,105 @@ async function handleCierreTemporalPista(request, env) {
     return jsonResponse(cp04BuildCierreTemporalPistaIdempotentDuplicateResponse(), 409, headers);
   }
 
-  const makeResponse = await fetch(env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(normalized),
-  });
+  // Busqueda persistente en Airtable. `existing.ok===false` (storage no
+  // configurado o fallo de red) NO se trata como duplicado -- no bloquear
+  // una creacion legitima solo porque la comprobacion de duplicados fallo;
+  // si el problema es real, la creacion de abajo tambien fallara y se
+  // reportara con su propio error.
+  const existing = await cp04FindCierreActivoPersistido(env, idempotencyKey);
+  if (existing.ok && existing.found) {
+    cp04LogTechnicalEvent({
+      event: "idempotent_duplicate",
+      action: "cierre_temporal_pista",
+      code: "IDEMPOTENT_DUPLICATE",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: false,
+      reserva_confirmada: false,
+      origen: "idempotencia_persistida",
+    });
+    cp04MarkIdempotentSuccess(idempotencyKey);
+    return jsonResponse(cp04BuildCierreTemporalPistaIdempotentDuplicateResponse(), 409, headers);
+  }
 
-  const responseText = await makeResponse.text();
+  const created = await cp04CreateCierreTemporal(env, normalized, idempotencyKey);
 
-  if (!makeResponse.ok) {
-    return jsonResponse(
-      {
-        ok: false,
-        error: "Make request failed",
-        status: makeResponse.status,
+  if (!created.ok) {
+    if (created.reason === "not_configured") {
+      return jsonResponse(
+        { ok: false, error: "Cierre temporal storage not configured" },
+        503,
+        headers
+      );
+    }
+    // Hallazgo 2026-08-12 (E2E real -> 502 "No se pudo registrar el
+    // cierre"): esta rama descartaba created.status/created.details sin
+    // dejar rastro alguno, imposibilitando diagnosticar un fallo real de
+    // Airtable despues del hecho. Se registra server-side (nunca al
+    // cliente, mismo criterio que cp04FetchOcupadas/handleDisponibilidad
+    // con disponibilidad.details) el tipo/mensaje de error de Airtable si
+    // vienen en el body, sin loguear AIRTABLE_TOKEN ni el payload
+    // completo con datos personales.
+    cp04LogTechnicalEvent({
+      event: "cierre_temporal_persist_failed",
+      action: "cierre_temporal_pista",
+      code: created.reason || "unknown",
+      requestId: cp04GetRequestId(request),
+      idempotencyKeyHash: cp04HashIdempotencyKey(idempotencyKey),
+      retryable: created.reason === "network_error",
+      reserva_confirmada: false,
+      origen: "cierre_temporal_persistencia",
+      detail: {
+        reason: created.reason ?? null,
+        status: created.status ?? null,
+        airtableErrorType: created.details?.error?.type ?? null,
+        airtableErrorMessage: created.details?.error?.message ?? null,
       },
+    });
+    return jsonResponse(
+      { ok: false, error: "No se pudo registrar el cierre" },
       502,
       headers
     );
   }
 
+  // A partir de aqui el cierre YA esta persistido y activo -- bloquea de
+  // verdad (ver Fase 2, disponibilidad). Make pasa a ser exclusivamente
+  // notificacion best-effort: si falla o no esta configurado, el cierre
+  // NUNCA se deshace ni se revierte, y la respuesta lo refleja con
+  // honestidad en vez de fingir un fallo total.
   cp04MarkIdempotentSuccess(idempotencyKey);
 
-  return jsonResponse(
-    {
-      ok: true,
-      message: "Solicitud de cierre temporal enviada correctamente. Pendiente de confirmación real del sistema.",
-      estado: "pendiente_confirmacion",
-      makeResponse: responseText || null,
-    },
-    200,
-    headers
-  );
+  let notificacionMake = false;
+  let makeResponseText = null;
+
+  if (env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK) {
+    try {
+      const makeResponse = await fetch(env.MAKE_CIERRE_TEMPORAL_PISTA_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...normalized, cierre_id: created.record.id_cierre }),
+      });
+      makeResponseText = await makeResponse.text();
+      notificacionMake = makeResponse.ok;
+    } catch {
+      notificacionMake = false;
+    }
+  }
+
+  const responseBody = {
+    ok: true,
+    estado: "activo",
+    cierre_id: created.record.id_cierre,
+    notificacion_make: notificacionMake,
+    makeResponse: makeResponseText,
+  };
+
+  if (!notificacionMake) {
+    responseBody.aviso = "El cierre ya está activo; la notificación no pudo enviarse.";
+  }
+
+  return jsonResponse(responseBody, 200, headers);
 }
 
 

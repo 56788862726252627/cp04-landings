@@ -2,12 +2,17 @@ name = "cp04-reservas-proxy"
 main = "src/index.js"
 compatibility_date = "2026-06-10"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [vars]
 ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173,http://localhost:5174,http://localhost:5175"
 AIRTABLE_BASE_ID = "appyWvzZJLzy0E6aX"
 AIRTABLE_TABLE_ID = "tblBtLjPS3sis28nz"
 CP04_ENFORCE_ROLE_GATES = "true"
 APP_PUBLIC_URL = "https://club-padel-04.pages.dev"
+AIRTABLE_CIERRES_TABLE_ID = "tblzlOcjO5vFiXdbB"
 
 # Secrets:
 # MAKE_RESERVAS_WEBHOOK
