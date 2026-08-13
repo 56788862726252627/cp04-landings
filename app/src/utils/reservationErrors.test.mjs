@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 
 import {
   CP04_AIRTABLE_RATE_LIMIT_CODE,
+  CP04_AUTH_SESSION_EXPIRED_CODES,
+  CP04_AUTH_ACCOUNT_ISSUE_CODES,
+  CP04_SESSION_EXPIRED_MESSAGE,
   cp04BuildReservationError,
   cp04ReservationErrorMessage,
 } from "./reservationErrors.js";
@@ -78,4 +81,74 @@ test("cp04ReservationErrorMessage: para cualquier otro error, se mantiene el men
 test("cp04ReservationErrorMessage: un error sin .code (p. ej. lanzado directamente con new Error, camino de reintentos agotados) usa el fallback", () => {
   const err = new Error("reschedule_not_confirmed");
   assert.equal(cp04ReservationErrorMessage(err, "Mensaje traducido de reprogramar"), "Mensaje traducido de reprogramar");
+});
+
+// Inconsistencia 2 (auditoría App↔API Reservas, 2026-08-12): sesión
+// caducada durante Cancelar/Reprogramar (el Worker responde con
+// error:MISSING_TOKEN/INVALID_TOKEN/ROLE_NOT_ASSIGNED, ver
+// worker-reservas/auth/authorization.js::denyResponse) ya no debe mostrar
+// el mensaje genérico de "revisa la clave", que dirigía al usuario a la
+// causa equivocada.
+
+test("CP04_AUTH_SESSION_EXPIRED_CODES coincide exactamente con los motivos de sesión inválida/ausente del Worker", () => {
+  assert.deepEqual(CP04_AUTH_SESSION_EXPIRED_CODES, ["MISSING_TOKEN", "INVALID_TOKEN"]);
+});
+
+test("CP04_AUTH_ACCOUNT_ISSUE_CODES coincide exactamente con el motivo de cuenta sin rol asignado del Worker", () => {
+  assert.deepEqual(CP04_AUTH_ACCOUNT_ISSUE_CODES, ["ROLE_NOT_ASSIGNED"]);
+});
+
+for (const authCode of ["MISSING_TOKEN", "INVALID_TOKEN"]) {
+  test(`cp04BuildReservationError + cp04ReservationErrorMessage: error:${authCode} muestra "sesión ha caducado", nunca el mensaje de clave`, () => {
+    const data = { ok: false, error: authCode, message: "Token inválido o expirado." };
+    const error = cp04BuildReservationError(data, "cancel_request_failed");
+
+    assert.equal(error.message, CP04_SESSION_EXPIRED_MESSAGE);
+    assert.equal(error.authCode, authCode);
+
+    const shown = cp04ReservationErrorMessage(error, "Revisa la clave e inténtalo de nuevo.");
+    assert.equal(shown, CP04_SESSION_EXPIRED_MESSAGE);
+    assert.notEqual(shown, "Revisa la clave e inténtalo de nuevo.");
+  });
+}
+
+test("cp04BuildReservationError + cp04ReservationErrorMessage: error:ROLE_NOT_ASSIGNED muestra el mensaje real del backend (no es un caso de sesión caducada, no comparte ese mensaje)", () => {
+  const data = { ok: false, error: "ROLE_NOT_ASSIGNED", message: "La cuenta no tiene un rol asignado en el sistema." };
+  const error = cp04BuildReservationError(data, "cancel_request_failed");
+
+  assert.equal(error.message, "La cuenta no tiene un rol asignado en el sistema.");
+  assert.notEqual(error.message, CP04_SESSION_EXPIRED_MESSAGE);
+  assert.equal(error.authCode, "ROLE_NOT_ASSIGNED");
+
+  const shown = cp04ReservationErrorMessage(error, "Revisa la clave e inténtalo de nuevo.");
+  assert.equal(shown, "La cuenta no tiene un rol asignado en el sistema.");
+});
+
+test("cp04BuildReservationError: error:ROLE_NOT_ASSIGNED sin message usa el fallback (nunca un mensaje vacío ni inventado)", () => {
+  const error = cp04BuildReservationError({ ok: false, error: "ROLE_NOT_ASSIGNED" }, "cancel_request_failed");
+  assert.equal(error.message, "cancel_request_failed");
+  assert.equal(error.authCode, null);
+});
+
+test("cp04BuildReservationError: error:INSUFFICIENT_ROLE (rol autenticado insuficiente, no sesión caducada ni cuenta sin rol) sigue usando el fallback genérico sin cambios", () => {
+  const error = cp04BuildReservationError(
+    { ok: false, error: "INSUFFICIENT_ROLE", message: "Tu rol no tiene permiso para esta operación." },
+    "cancel_request_failed"
+  );
+  assert.equal(error.message, "cancel_request_failed");
+  assert.equal(error.authCode, null);
+});
+
+test("errores reales de clave de reserva (SLOT_ALREADY_BOOKED, IDEMPOTENT_DUPLICATE) siguen intactos: no se confunden con fallos de autenticación", () => {
+  const slotOcupado = cp04BuildReservationError(
+    { ok: false, error: "SLOT_ALREADY_BOOKED", message: "Ese horario ya no está disponible. Elige otra franja." },
+    "reschedule_request_failed"
+  );
+  const duplicado = cp04BuildReservationError({ ok: false, error: "IDEMPOTENT_DUPLICATE" }, "cancel_request_failed");
+
+  assert.equal(slotOcupado.authCode, null);
+  assert.equal(cp04ReservationErrorMessage(slotOcupado, "Mensaje traducido de reprogramar"), "Mensaje traducido de reprogramar");
+
+  assert.equal(duplicado.authCode, null);
+  assert.equal(cp04ReservationErrorMessage(duplicado, "Mensaje traducido de cancelar"), "Mensaje traducido de cancelar");
 });

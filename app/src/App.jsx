@@ -3764,24 +3764,16 @@ function ReprogramarReserva({ setCurrent }) {
         throw cp04BuildReservationError(data, "reschedule_request_failed");
       }
 
-      let destinationConfirmed = false;
-
-      for (let attempt = 0; attempt < 15; attempt += 1) {
-        await new Promise((resolve) => window.setTimeout(resolve, 2000));
-        const updatedAvailability = await fetchDisponibilidad(
-          form.nueva_fecha_reserva,
-        );
-
-        if ((updatedAvailability.ocupadas || []).includes(slotKey)) {
-          destinationConfirmed = true;
-          break;
-        }
-      }
-
-      if (!destinationConfirmed) {
-        throw new Error("reschedule_not_confirmed");
-      }
-
+      // La respuesta ok:true del Worker es la confirmación autoritativa
+      // (mismo criterio que crear_reserva/Alta/Baja/Cierre Temporal): no se
+      // vuelve a comprobar disponibilidad para decidir éxito/error. Antes,
+      // un sondeo bloqueante de hasta 30s aquí podía convertir una
+      // reprogramación ya confirmada por el Worker en un falso error de
+      // "reschedule_not_confirmed" si la propagación a /api/disponibilidad
+      // tardaba más de lo esperado. El refresco de disponibilidad sigue
+      // ocurriendo (refreshDisponibilidadAfterChange más abajo), pero ahora
+      // es solo un efecto secundario informativo, nunca una condición de
+      // éxito.
       setStatusMessage(
         `Nueva fecha ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}.`,
       );
