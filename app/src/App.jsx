@@ -5350,12 +5350,12 @@ function Gestion() {
                 <table className="cp04-table">
                   <thead>
                     <tr>
-                      <th>Fecha</th>
-                      <th>Hora</th>
-                      <th>Pista</th>
-                      <th>Jugador</th>
-                      <th>Estado</th>
-                      <th>Clave</th>
+                      <th scope="col">Fecha</th>
+                      <th scope="col">Hora</th>
+                      <th scope="col">Pista</th>
+                      <th scope="col">Jugador</th>
+                      <th scope="col">Estado</th>
+                      <th scope="col">Clave</th>
                     </tr>
                   </thead>
 
