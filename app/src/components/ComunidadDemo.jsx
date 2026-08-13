@@ -9,19 +9,49 @@ import {
   DEMO_OPEN_MATCHES,
   DEMO_MODERATION_QUEUE,
 } from "../data/comunidadDemoData.js";
+import {
+  communityHasSocialConsent,
+  communityGrantSocialConsent,
+  communityRevokeSocialConsent,
+  communityIsBlocked,
+  communityBlockUser,
+  communityUnblockUser,
+} from "../utils/communityBridge.js";
 
 // Club Pádel 04 · Comunidad (demo/mock interno)
 //
 // Integración SOLO visual del bloque social (Feed, Perfil, Amigos, Partidos
-// abiertos, Moderación, Consentimiento) documentado en
-// app/docs/club-padel-04/comunidad/. No hay persistencia real: todo el
-// estado vive en memoria de React y se pierde al recargar. No hay ninguna
-// llamada a Supabase, Make, Airtable, Stripe ni WhatsApp — los botones
-// "demo" solo cambian estado local para ilustrar el flujo.
+// abiertos, Moderación) documentado en app/docs/club-padel-04/comunidad/.
+// Sin persistencia real entre sesiones (se pierde al recargar) y sin
+// ninguna llamada a Supabase, Make, Airtable, Stripe ni WhatsApp.
+//
+// EXCEPCIÓN (Fase 1, 2026-08-13): Consentimiento y Bloqueo YA NO son
+// togglés visuales — aplican las reglas reales de
+// app/projects/club-padel-04/community-logic/ (ver src/utils/communityBridge.js)
+// dentro de la memoria de esta pestaña del navegador. Amistad/seguidores,
+// feed y moderación siguen siendo puramente visuales, sin cambios en esta
+// fase.
 //
 // No debe usarse con menores activos ni datos reales hasta que el PR #24
 // (revisión legal externa + decisión de negocio sobre menores) se resuelva.
 // Ver DECISION_MENORES_Y_REVISION_LEGAL_COMUNIDAD_PADEL_04.md.
+
+// Semilla del store de community-logic con los datos demo estáticos —
+// deliberadamente a nivel de módulo, no dentro del componente ni en un
+// useEffect: los módulos ES solo se evalúan una vez (los reimport
+// posteriores reutilizan la misma instancia), así que esto corre
+// exactamente una vez por carga de página, antes de que exista ningún
+// render, sin violar las reglas de pureza de render de React ni necesitar
+// ninguna variable de guarda. Mismo criterio de "no inventar reglas
+// nuevas" que el resto del puente: solo llama a las funciones reales.
+if (DEMO_PLAYER.consentimientoSocial) {
+  communityGrantSocialConsent(DEMO_PLAYER.id);
+}
+for (const f of DEMO_FRIENDS) {
+  if (f.estado === "bloqueado") {
+    communityBlockUser(DEMO_PLAYER.id, f.id);
+  }
+}
 
 const TABS = [
   { id: "feed", label: "Feed", icon: "📰" },
@@ -114,31 +144,48 @@ function DemoNotice() {
   );
 }
 
-function FeedTab({ posts, onReport, onBlock }) {
+// isBlockedFn (Fase 1): permite reflejar en el propio Feed si el autor de
+// un post ya está bloqueado (barrera 1 — deshabilita la acción antes de
+// que se intente), aunque el post en sí siga siendo un dato demo estático.
+function FeedTab({ posts, onReport, onBlock, isBlockedFn }) {
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      {posts.map((post) => (
-        <div key={post.id} className="cp04-card" style={{ padding: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-            <strong style={{ color: T.accent }}>{post.autor}</strong>
-            {post.estado === "reportado" ? (
-              <Chip tone="danger">Reportado / en revisión</Chip>
-            ) : (
-              <Chip tone="accent">Publicado (demo)</Chip>
-            )}
+      {posts.map((post) => {
+        const bloqueado = isBlockedFn(post.autorId);
+        return (
+          <div key={post.id} className="cp04-card" style={{ padding: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <strong style={{ color: T.accent }}>{post.autor}</strong>
+              {bloqueado ? (
+                <Chip tone="danger">Bloqueado</Chip>
+              ) : post.estado === "reportado" ? (
+                <Chip tone="danger">Reportado / en revisión</Chip>
+              ) : (
+                <Chip tone="accent">Publicado (demo)</Chip>
+              )}
+            </div>
+            <p style={{ margin: "0 0 12px", color: T.textDim, lineHeight: 1.6 }}>{post.texto}</p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <DemoButton onClick={() => onReport(post.id)}>Reportar demo</DemoButton>
+              <DemoButton
+                onClick={() => onBlock(post.autorId, post.autor)}
+                variant="danger"
+                disabled={bloqueado}
+              >
+                {bloqueado ? "Ya bloqueado" : "Bloquear"}
+              </DemoButton>
+            </div>
           </div>
-          <p style={{ margin: "0 0 12px", color: T.textDim, lineHeight: 1.6 }}>{post.texto}</p>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <DemoButton onClick={() => onReport(post.id)}>Reportar demo</DemoButton>
-            <DemoButton onClick={() => onBlock(post.autor)} variant="danger">Bloquear demo</DemoButton>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-function PerfilTab({ player, onTogglePrivacy }) {
+// `hasSocial` (Fase 1): sustituye a player.consentimientoSocial como fuente
+// de este chip — misma fuente única de verdad que ConsentimientoTab, para
+// no mostrar dos estados de consentimiento distintos en la misma pantalla.
+function PerfilTab({ player, hasSocial, onTogglePrivacy }) {
   return (
     <div className="cp04-card" style={{ padding: 22 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
@@ -148,7 +195,7 @@ function PerfilTab({ player, onTogglePrivacy }) {
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {player.perfilVisible ? <Chip tone="accent">Perfil visible (demo)</Chip> : <Chip tone="warning">Perfil privado</Chip>}
-          {!player.consentimientoSocial && <Chip tone="danger">Sin consentimiento social</Chip>}
+          {!hasSocial && <Chip tone="danger">Sin consentimiento social</Chip>}
         </div>
       </div>
       <p style={{ color: T.textDim, fontSize: ".85rem", lineHeight: 1.6, marginBottom: 14 }}>
@@ -161,28 +208,42 @@ function PerfilTab({ player, onTogglePrivacy }) {
   );
 }
 
-function AmigosTab({ friends, onAccept, onReject }) {
-  const estadoChip = (estado) => {
-    if (estado === "solicitud_pendiente") return <Chip tone="warning">Solicitud de amistad demo</Chip>;
-    if (estado === "bloqueado") return <Chip tone="danger">Bloqueado</Chip>;
-    return <Chip tone="accent">Amigo (demo)</Chip>;
-  };
+// isBlockedFn/onUnblock (Fase 1): el badge "Bloqueado" y la acción de
+// desbloquear ya no dependen de `f.estado` (dato demo estático) sino del
+// estado real de community-logic — misma fuente única de verdad que
+// FeedTab/ConsentimientoTab. `estado` sigue gobernando solicitud/amigo
+// (amistad completa queda para una fase posterior).
+function AmigosTab({ friends, onAccept, onReject, isBlockedFn, onUnblock }) {
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      {friends.map((f) => (
-        <div key={f.id} className="cp04-card" style={{ padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <strong>{f.nombre}</strong>
-            {estadoChip(f.estado)}
-          </div>
-          {f.estado === "solicitud_pendiente" && (
-            <div style={{ display: "flex", gap: 8 }}>
-              <DemoButton variant="primary" onClick={() => onAccept(f.id)}>Aceptar (demo)</DemoButton>
-              <DemoButton onClick={() => onReject(f.id)}>Rechazar (demo)</DemoButton>
+      {friends.map((f) => {
+        const bloqueado = isBlockedFn(f.id);
+        return (
+          <div key={f.id} className="cp04-card" style={{ padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <strong>{f.nombre}</strong>
+              {bloqueado ? (
+                <Chip tone="danger">Bloqueado</Chip>
+              ) : f.estado === "solicitud_pendiente" ? (
+                <Chip tone="warning">Solicitud de amistad demo</Chip>
+              ) : (
+                <Chip tone="accent">Amigo (demo)</Chip>
+              )}
             </div>
-          )}
-        </div>
-      ))}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {bloqueado && (
+                <DemoButton onClick={() => onUnblock(f.id, f.nombre)}>Desbloquear</DemoButton>
+              )}
+              {!bloqueado && f.estado === "solicitud_pendiente" && (
+                <>
+                  <DemoButton variant="primary" onClick={() => onAccept(f.id)}>Aceptar (demo)</DemoButton>
+                  <DemoButton onClick={() => onReject(f.id)}>Rechazar (demo)</DemoButton>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -233,23 +294,33 @@ function ModeracionTab({ queue, role, onReview }) {
   );
 }
 
-function ConsentimientoTab({ player }) {
+// Fase 1: hasSocial ya no es un booleano de React — se lee en cada
+// render directamente de community-logic vía el puente (fuente única de
+// verdad, ver communityBridge.js). onGrant/onRevoke llaman a las mismas
+// funciones reales que usa el resto de esta pantalla.
+function ConsentimientoTab({ hasSocial, onGrant, onRevoke, error }) {
   return (
     <div className="cp04-card" style={{ padding: 22 }}>
-      <h3 style={{ margin: "0 0 10px", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>Estado de consentimiento (demo)</h3>
+      <h3 style={{ margin: "0 0 10px", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>Estado de consentimiento</h3>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-        {player.consentimientoSocial ? (
-          <Chip tone="accent">Consentimiento otorgado (demo)</Chip>
+        {hasSocial ? (
+          <Chip tone="accent">Consentimiento otorgado</Chip>
         ) : (
           <Chip tone="danger">Sin consentimiento social</Chip>
         )}
       </div>
-      <p style={{ color: T.textDim, lineHeight: 1.65 }}>
-        Este panel refleja, en modo mock, el estado documentado en{" "}
-        <code>CONSENTIMIENTO_PRIVACIDAD_COMUNIDAD_PADEL_04.md</code>. No hay flujo de recogida de
-        consentimiento real conectado — activarlo con usuarios reales (y en particular con menores)
-        requiere resolver antes el bloqueo legal externo del PR #24.
+      <p style={{ color: T.textDim, lineHeight: 1.65, marginBottom: 14 }}>
+        Este estado ya aplica las reglas reales de <code>community-logic</code> (consentimiento
+        real, en memoria de esta pestaña — no hay persistencia entre sesiones ni conexión a
+        Supabase/Airtable todavía). Coincide con lo documentado en{" "}
+        <code>CONSENTIMIENTO_PRIVACIDAD_COMUNIDAD_PADEL_04.md</code>. Activarlo con usuarios reales
+        (y en particular con menores) requiere resolver antes el bloqueo legal externo del PR #24.
       </p>
+      {error && <p style={{ color: T.danger, marginBottom: 14 }}>{error}</p>}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <DemoButton variant="primary" disabled={hasSocial} onClick={onGrant}>Otorgar consentimiento</DemoButton>
+        <DemoButton variant="danger" disabled={!hasSocial} onClick={onRevoke}>Revocar consentimiento</DemoButton>
+      </div>
     </div>
   );
 }
@@ -262,14 +333,67 @@ export default function ComunidadDemo({ selectedRole }) {
   const [joinedMatches, setJoinedMatches] = useState([]);
   const [moderationQueue, setModerationQueue] = useState(DEMO_MODERATION_QUEUE);
   const [lastAction, setLastAction] = useState("");
+  const [communityError, setCommunityError] = useState("");
+  // Fase 1: el estado real de consentimiento/bloqueo vive en el store de
+  // community-logic (vía communityBridge.js), no en useState. Este
+  // contador solo fuerza un re-render tras cada mutación real — nunca
+  // duplica ni cachea el propio dato de negocio. La semilla inicial (ver
+  // arriba, a nivel de módulo) ya está aplicada antes de este primer
+  // render, así que no hace falta ningún efecto de arranque aquí.
+  const [communityVersion, setCommunityVersion] = useState(0);
+  const bumpCommunity = () => setCommunityVersion((v) => v + 1);
 
   function reportPost(postId) {
     setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, estado: "reportado" } : p)));
     setLastAction(`Publicación ${postId} marcada como reportada (demo, solo local).`);
   }
 
-  function blockAuthor(nombre) {
-    setLastAction(`${nombre} bloqueado en modo demo (solo local, sin efecto real).`);
+  // Fase 1: bloqueo real vía community-logic (doble barrera + deshace
+  // amistad/seguimiento existente, ver communityBridge.js). Un error real
+  // (p. ej. ya estaba bloqueado) se muestra tal cual, nunca se convierte
+  // en éxito ni se silencia.
+  function blockAuthor(autorId, nombre) {
+    const result = communityBlockUser(DEMO_PLAYER.id, autorId);
+    if (!result.ok) {
+      setCommunityError(result.error);
+      setLastAction("");
+      return;
+    }
+    setCommunityError("");
+    setLastAction(`${nombre} bloqueado (real, en memoria de esta sesión del navegador).`);
+    bumpCommunity();
+  }
+
+  function unblockFriend(friendId, nombre) {
+    const result = communityUnblockUser(DEMO_PLAYER.id, friendId);
+    if (!result.ok) {
+      setCommunityError(result.error);
+      setLastAction("");
+      return;
+    }
+    setCommunityError("");
+    setLastAction(`${nombre} desbloqueado (real, en memoria de esta sesión del navegador).`);
+    bumpCommunity();
+  }
+
+  function grantConsent() {
+    const result = communityGrantSocialConsent(DEMO_PLAYER.id);
+    if (!result.ok) {
+      setCommunityError(result.error);
+      return;
+    }
+    setCommunityError("");
+    bumpCommunity();
+  }
+
+  function revokeConsent() {
+    const result = communityRevokeSocialConsent(DEMO_PLAYER.id);
+    if (!result.ok) {
+      setCommunityError(result.error);
+      return;
+    }
+    setCommunityError("");
+    bumpCommunity();
   }
 
   function togglePrivacy() {
@@ -292,6 +416,13 @@ export default function ComunidadDemo({ selectedRole }) {
     setModerationQueue((prev) => prev.filter((r) => r.id !== id));
     setLastAction(`Reporte ${id} revisado en modo demo (solo local, sin efecto real).`);
   }
+
+  // communityVersion se lee aquí (sin usarlo directamente) solo para que
+  // React sepa que debe re-renderizar tras cada mutación real del store —
+  // el valor real siempre se pide de nuevo al puente, nunca se cachea.
+  void communityVersion;
+  const hasSocial = communityHasSocialConsent(DEMO_PLAYER.id);
+  const isBlockedByMe = (userId) => communityIsBlocked(DEMO_PLAYER.id, userId);
 
   return (
     <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}>
@@ -341,13 +472,28 @@ export default function ComunidadDemo({ selectedRole }) {
           {lastAction}
         </p>
       )}
+      {communityError && (
+        <p role="alert" style={{ color: T.danger, fontSize: ".82rem", marginBottom: 16 }}>
+          {communityError}
+        </p>
+      )}
 
-      {tab === "feed" && <FeedTab posts={posts} onReport={reportPost} onBlock={blockAuthor} />}
-      {tab === "perfil" && <PerfilTab player={player} onTogglePrivacy={togglePrivacy} />}
-      {tab === "amigos" && <AmigosTab friends={friends} onAccept={acceptFriend} onReject={rejectFriend} />}
+      {tab === "feed" && <FeedTab posts={posts} onReport={reportPost} onBlock={blockAuthor} isBlockedFn={isBlockedByMe} />}
+      {tab === "perfil" && <PerfilTab player={player} hasSocial={hasSocial} onTogglePrivacy={togglePrivacy} />}
+      {tab === "amigos" && (
+        <AmigosTab
+          friends={friends}
+          onAccept={acceptFriend}
+          onReject={rejectFriend}
+          isBlockedFn={isBlockedByMe}
+          onUnblock={unblockFriend}
+        />
+      )}
       {tab === "partidos" && <PartidosTab matches={DEMO_OPEN_MATCHES} joined={joinedMatches} onJoin={joinMatch} />}
       {tab === "moderacion" && <ModeracionTab queue={moderationQueue} role={selectedRole} onReview={reviewReport} />}
-      {tab === "consentimiento" && <ConsentimientoTab player={player} />}
+      {tab === "consentimiento" && (
+        <ConsentimientoTab hasSocial={hasSocial} onGrant={grantConsent} onRevoke={revokeConsent} error={communityError} />
+      )}
 
       <p style={{ marginTop: 32, color: T.textDim, fontSize: ".76rem", lineHeight: 1.6, borderTop: `1px solid ${T.line}`, paddingTop: 16 }}>
         Staff demo de referencia: {DEMO_STAFF.nombre} ({DEMO_STAFF.rol}). Todos los nombres, publicaciones,

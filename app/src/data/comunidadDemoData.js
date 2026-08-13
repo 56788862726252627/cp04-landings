@@ -30,22 +30,30 @@ export const DEMO_FRIENDS = [
   { id: "amigo-3", nombre: "Jugador Demo 4", estado: "bloqueado" },
 ];
 
+// `autorId` (2026-08-13, integración real de Comunidad Fase 1): coincide
+// con los `id` de DEMO_PLAYER/DEMO_FRIENDS de más abajo — hace falta un id
+// estable, no el nombre visible, para que el bloqueo real de
+// community-logic (por id de usuario) sepa a quién bloquear. El nombre
+// (`autor`) sigue siendo solo para mostrar en pantalla.
 export const DEMO_POSTS = [
   {
     id: "post-1",
     autor: "Jugador Demo",
+    autorId: "demo-player-1",
     texto: "¡Buena sesión de pádel esta mañana! (publicación demo)",
     estado: "publicado",
   },
   {
     id: "post-2",
     autor: "Jugador Demo 2",
+    autorId: "amigo-1",
     texto: "Buscando pareja para dobles el sábado (publicación demo)",
     estado: "publicado",
   },
   {
     id: "post-3",
     autor: "Jugador Demo 3",
+    autorId: "amigo-2",
     texto: "Publicación demo marcada como reportada para mostrar el flujo de moderación",
     estado: "reportado",
   },
