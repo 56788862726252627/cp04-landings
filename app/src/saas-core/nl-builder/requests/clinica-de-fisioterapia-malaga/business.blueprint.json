@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "businessId": "clinica-de-fisioterapia-malaga",
+  "tenantId": "clinica-de-fisioterapia-malaga",
+  "commercialName": "Clínica De Fisioterapia Málaga",
+  "sector": "physiotherapy",
+  "country": "ES",
+  "timezone": "Europe/Madrid",
+  "locale": "es-ES",
+  "currencies": [
+    "EUR"
+  ],
+  "plan": "pro",
+  "publicInfo": {
+    "shortDescription": "Clínica de fisioterapia en Málaga (ES) — 17 módulo(s) habilitado(s)."
+  },
+  "branding": {
+    "logoRef": null,
+    "faviconRef": null,
+    "tone": "cercano-profesional",
+    "colors": {
+      "primary": "#1d4e89",
+      "accent": "#1f7a34",
+      "bg": "#ffffff",
+      "text": "#0c1420"
+    },
+    "fonts": {
+      "display": "'Inter', sans-serif",
+      "body": "'Inter', sans-serif"
+    }
+  },
+  "modules": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "pagos",
+    "facturacion",
+    "bonos",
+    "documentos",
+    "expedientes",
+    "servicios",
+    "profesionales",
+    "soporte",
+    "leads",
+    "recordatorios",
+    "dashboard",
+    "configuracion",
+    "landing",
+    "pwa"
+  ],
+  "roles": [
+    "paciente",
+    "recepcion",
+    "fisioterapeuta",
+    "direccion",
+    "soporte"
+  ],
+  "permissions": {
+    "paciente": [
+      "citas",
+      "documentos",
+      "servicios",
+      "landing",
+      "pwa"
+    ],
+    "recepcion": [
+      "clientes",
+      "citas",
+      "pagos",
+      "facturacion",
+      "bonos",
+      "servicios",
+      "profesionales",
+      "leads",
+      "recordatorios"
+    ],
+    "fisioterapeuta": [
+      "clientes",
+      "citas",
+      "documentos",
+      "expedientes",
+      "servicios",
+      "profesionales",
+      "recordatorios"
+    ],
+    "direccion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "pagos",
+      "facturacion",
+      "bonos",
+      "documentos",
+      "expedientes",
+      "servicios",
+      "profesionales",
+      "soporte",
+      "leads",
+      "recordatorios",
+      "dashboard",
+      "configuracion",
+      "landing",
+      "pwa"
+    ],
+    "soporte": [
+      "soporte"
+    ]
+  },
+  "automations": [
+    "confirmacion",
+    "recordatorio",
+    "cancelacion",
+    "seguimiento",
+    "recuperacion"
+  ],
+  "aiCapabilities": [],
+  "integrations": {
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    }
+  },
+  "pwa": {
+    "shortName": "Clínica De Fisioterapia ",
+    "themeColor": "#1f7a34",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProp",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer",
+      "privacyPlaceholder"
+    ],
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto",
+    "testimonials": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de clínica de fisioterapia.",
+        "isDemo": true
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Qué incluye la solución para clínica de fisioterapia?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "seed": "demo-001",
+    "sizes": {}
+  },
+  "flags": {},
+  "limits": {},
+  "privacy": {
+    "regulatedSector": true,
+    "sensitiveDataCategories": [
+      "health"
+    ]
+  },
+  "manualSteps": [
+    "datos de salud sujetos a normativa reforzada",
+    "Confirmar antes de producción: ¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?"
+  ],
+  "generationMeta": {
+    "generatedBy": "nl-builder:business:compose",
+    "sourceIntentRequestId": "intent-31959a034111e5fc",
+    "seed": "demo-001"
+  }
+}

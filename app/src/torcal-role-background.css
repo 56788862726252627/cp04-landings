@@ -1,0 +1,410 @@
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body.cp04-role-screen-active {
+  background: #020617 !important;
+  overflow-x: hidden;
+}
+
+body.cp04-role-screen-active::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.18) 0%,
+      rgba(2, 6, 23, 0.32) 45%,
+      rgba(2, 6, 23, 0.72) 100%
+    ),
+    url('/images/torcal-padel-bg.png');
+  /* Mejora 2: WebP ya generado en Mejora 1/Paso 20 pero nunca conectado
+     (2.12 MB PNG vs 150 KB WebP, mismo encuadre). Mismo patrón ya
+     probado en projects/club-padel-04/landing/src/styles.css: declarar
+     el PNG primero (arriba) como fallback universal, y esta segunda
+     declaración de background-image la ignoran por completo los
+     navegadores sin soporte de image-set() (no reconocen la función),
+     dejando intacto el PNG de arriba — nunca se rompe el fondo. */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.18) 0%,
+      rgba(2, 6, 23, 0.32) 45%,
+      rgba(2, 6, 23, 0.72) 100%
+    ),
+    image-set(
+      url('/optimized/images/torcal-padel-bg.webp') type('image/webp'),
+      url('/images/torcal-padel-bg.png') type('image/png')
+    );
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+body.cp04-role-screen-active #root {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
+body.cp04-role-screen-active #root > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.cp04-role-screen-active main,
+body.cp04-role-screen-active .app,
+body.cp04-role-screen-active .App,
+body.cp04-role-screen-active .page,
+body.cp04-role-screen-active .screen,
+body.cp04-role-screen-active .min-h-screen,
+body.cp04-role-screen-active .bg-black,
+body.cp04-role-screen-active .bg-slate-950,
+body.cp04-role-screen-active .bg-gray-950,
+body.cp04-role-screen-active [class*="bg-slate-950"],
+body.cp04-role-screen-active [class*="bg-gray-950"],
+body.cp04-role-screen-active [class*="bg-black"] {
+  background-color: transparent !important;
+}
+
+/* Ajuste visual final: máxima visibilidad del fondo Torcal */
+body.cp04-role-screen-active .cp04-card {
+  background: linear-gradient(
+    135deg,
+    rgba(8, 13, 25, 0.46),
+    rgba(8, 13, 25, 0.28)
+  ) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+body.cp04-role-screen-active .cp04-card::before {
+  opacity: 0.18 !important;
+}
+
+/* Prompt 4 (Mejora 2.6, 2026-07-26): excluidos los elementos
+   role="status" (los avisos de "sin conexión" y "nueva versión
+   disponible" de PwaStatusBanners, App.jsx) — este selector por
+   atributo `[style*="background"]` es intencionadamente amplio (da
+   aspecto "cristal" a cualquier tarjeta/botón con fondo inline en la
+   pantalla de rol), pero al no distinguir el propósito de cada
+   elemento también capturaba estos dos avisos, cuyo `color` inline
+   (#2a0700 sobre naranja, #06100a sobre lima — ambos con contraste
+   real >6:1, medido) estaba pensado para SU fondo original, no para el
+   fondo oscuro genérico que esta regla les imponía. Resultado medido
+   antes del fix: contraste ~1.07:1 en el aviso de "sin conexión" y su
+   botón "Reintentar" — prácticamente ilegible.
+   La exclusión usa `:not(:where(...))`, no `:not(...)` a secas: un
+   `:not()` normal habría subido la especificidad de esta regla por
+   encima de `.cp04-login-submit-btn`/`.cp04-login-entrar-white-btn`
+   (los fixes ya existentes para "Iniciar sesión"/"Crear cuenta"/
+   "Entrar"/"Enviar instrucciones"), rompiéndolos de nuevo — detectado
+   y corregido dentro de esta misma sesión, ver
+   docs/mejora-2-visual-identity-audit-20260724/17-*.md. `:where()`
+   tiene especificidad cero siempre, así que esta regla conserva
+   exactamente la misma especificidad que tenía antes de excluir nada. */
+body.cp04-role-screen-active [style*="background"]:not(:where([role="status"], [role="status"] *)) {
+  background-color: rgba(8, 13, 25, 0.24) !important;
+}
+
+/* Ocultar título grande y descripción en pantalla de inicio de sesión */
+body.cp04-role-screen-active h1,
+body.cp04-role-screen-active h1 + p {
+  display: none !important;
+}
+
+/* Compensar el espacio al ocultar el título */
+body.cp04-role-screen-active .cp04-card {
+  padding-top: 34px !important;
+}
+
+/* =========================================================
+   LOGIN PREMIUM · TORCAL BACKGROUND MAX VISIBILITY
+   Pantalla: Inicio de sesión por rol
+   ========================================================= */
+
+body.cp04-role-screen-active,
+body.cp04-role-screen-active html,
+body.cp04-role-screen-active #root,
+body.cp04-role-screen-active #root > div {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.00) 0%,
+      rgba(2, 6, 23, 0.06) 40%,
+      rgba(2, 6, 23, 0.18) 100%
+    ),
+    url('/images/torcal-padel-bg.png') !important;
+  /* Mejora 2: ver comentario equivalente más arriba en este archivo. */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.00) 0%,
+      rgba(2, 6, 23, 0.06) 40%,
+      rgba(2, 6, 23, 0.18) 100%
+    ),
+    image-set(
+      url('/optimized/images/torcal-padel-bg.webp') type('image/webp'),
+      url('/images/torcal-padel-bg.png') type('image/png')
+    ) !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+/* Tarjeta principal más transparente */
+body.cp04-role-screen-active .cp04-card {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(8, 13, 25, 0.24),
+      rgba(8, 13, 25, 0.14)
+    ) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.20) !important;
+}
+
+/* Quitar oscurecimiento decorativo excesivo */
+body.cp04-role-screen-active .cp04-card::before {
+  opacity: 0.08 !important;
+}
+
+/* Tarjetas de rol más transparentes
+   (Prompt 4, Mejora 2.6, 2026-07-26: excluidos los botones dentro de un
+   role="status" — "Reintentar"/"Actualizar ahora" de PwaStatusBanners —
+   mismo motivo y misma técnica de :not(:where(...)) que la regla de
+   [style*="background"] más arriba: sin excluirlos, este selector por
+   elemento `button` les imponía el mismo fondo oscuro genérico incluso
+   después de aquel fix, dejando el contraste en 4.02:1 en vez de >6:1.
+   Ver docs/mejora-2-visual-identity-audit-20260724/17-*.md) */
+body.cp04-role-screen-active .cp04-card .cp04-card,
+body.cp04-role-screen-active button:not(:where([role="status"] *)),
+body.cp04-role-screen-active [role="button"]:not(:where([role="status"] *)) {
+  background-color: rgba(5, 10, 18, 0.22) !important;
+  background-image: none !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Formulario inferior más ligero */
+body.cp04-role-screen-active input,
+body.cp04-role-screen-active form,
+body.cp04-role-screen-active .cp04-card section,
+body.cp04-role-screen-active .cp04-card div[style*="background"] {
+  background-color: rgba(5, 10, 18, 0.18) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Mantener ocultos el título grande y la descripción */
+body.cp04-role-screen-active h1,
+body.cp04-role-screen-active h1 + p {
+  display: none !important;
+}
+
+/* Mantener el encabezado superior visible */
+body.cp04-role-screen-active .cp04-badge,
+body.cp04-role-screen-active code {
+  color: #b6ff00 !important;
+}
+
+/* Mejor integración visual en tablet */
+@media (max-width: 1180px) {
+  body.cp04-role-screen-active,
+  body.cp04-role-screen-active #root,
+  body.cp04-role-screen-active #root > div {
+    background-position: center center !important;
+  }
+
+  body.cp04-role-screen-active .cp04-card {
+    background: rgba(8, 13, 25, 0.20) !important;
+  }
+}
+
+/* LOGIN VISUAL FINAL · Fondo Torcal mucho más visible */
+body.cp04-role-screen-active,
+body.cp04-role-screen-active #root,
+body.cp04-role-screen-active #root > div {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.00) 0%,
+      rgba(2, 6, 23, 0.04) 42%,
+      rgba(2, 6, 23, 0.16) 100%
+    ),
+    url('/images/torcal-padel-bg.png') !important;
+  /* Mejora 2: ver comentario equivalente más arriba en este archivo. */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.00) 0%,
+      rgba(2, 6, 23, 0.04) 42%,
+      rgba(2, 6, 23, 0.16) 100%
+    ),
+    image-set(
+      url('/optimized/images/torcal-padel-bg.webp') type('image/webp'),
+      url('/images/torcal-padel-bg.png') type('image/png')
+    ) !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-color: #020617 !important;
+}
+
+/* Ocultar título grande y descripción sin romper JSX */
+body.cp04-role-screen-active h1,
+body.cp04-role-screen-active h1 + p {
+  display: none !important;
+}
+
+/* Tarjeta principal más transparente */
+body.cp04-role-screen-active .cp04-card {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(8, 13, 25, 0.20),
+      rgba(8, 13, 25, 0.12)
+    ) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Quitar velos internos que oscurecen demasiado */
+body.cp04-role-screen-active .cp04-card::before {
+  opacity: 0.05 !important;
+}
+
+/* Tarjetas de roles y formulario más transparentes */
+body.cp04-role-screen-active .cp04-card [style*="background"] {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(5, 10, 18, 0.22),
+      rgba(5, 10, 18, 0.12)
+    ) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+  border-color: rgba(255, 255, 255, 0.13) !important;
+}
+
+/* Mantener textos legibles */
+body.cp04-role-screen-active,
+body.cp04-role-screen-active * {
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.38);
+}
+
+/* AUDITORIA 29 (histórico) tenía aquí varios bloques que daban a
+   "Perfil y ajustes" ([data-tour="sidebar-perfil"]) un tratamiento de
+   color exclusivo — incluidos bloques SIN scope de body (`html body
+   .cp04-sidebar [data-tour="sidebar-perfil"] *`), que por tanto
+   ganaban la cascada en cualquier pantalla y estado, incluso el
+   normal/reposo. Ese era el origen real (confirmado por computed
+   style en navegador) de que el texto de Perfil se viera negro fuera
+   de la pantalla de selección de rol. Se eliminan: Perfil ahora no
+   tiene ninguna regla de color propia en este archivo y usa
+   exactamente las mismas reglas genéricas de `.cp04-sidebar button`
+   que Comunidad, Reservas, Torneos, etc. — ver
+   docs/mejora-2-visual-identity-audit-20260724/12-*.md */
+
+html body .cp04-sidebar select,
+html body .cp04-sidebar [data-tour*="idioma" i],
+html body .cp04-sidebar [data-tour*="language" i],
+html body .cp04-sidebar [aria-label*="idioma" i],
+html body .cp04-sidebar [aria-label*="language" i],
+html body .cp04-sidebar .cp04-language,
+html body .cp04-sidebar .cp04-language-select {
+  background: rgba(7,11,20,.82) !important;
+  background-color: rgba(7,11,20,.82) !important;
+  border-color: rgba(182,255,0,.34) !important;
+  color: rgba(245,247,250,.96) !important;
+  transition: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* AUDITORIA 29 · Refuerzo Torcal: Idioma / Español verde neón */
+html body .cp04-sidebar select,
+html body .cp04-sidebar select:hover,
+html body .cp04-sidebar select:focus,
+html body .cp04-sidebar select:active,
+html body .cp04-sidebar [data-tour*="idioma" i],
+html body .cp04-sidebar [data-tour*="idioma" i]:hover,
+html body .cp04-sidebar [data-tour*="language" i],
+html body .cp04-sidebar [data-tour*="language" i]:hover,
+html body .cp04-sidebar [aria-label*="idioma" i],
+html body .cp04-sidebar [aria-label*="idioma" i]:hover,
+html body .cp04-sidebar [aria-label*="language" i],
+html body .cp04-sidebar [aria-label*="language" i]:hover,
+html body .cp04-sidebar .cp04-language,
+html body .cp04-sidebar .cp04-language:hover,
+html body .cp04-sidebar .cp04-language-select,
+html body .cp04-sidebar .cp04-language-select:hover {
+  background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-color: #b6ff00 !important;
+  border-color: rgba(182,255,0,.98) !important;
+  color: #05080d !important;
+  box-shadow:
+    0 0 0 1px rgba(182,255,0,.35),
+    0 0 22px rgba(182,255,0,.22),
+    0 12px 30px rgba(0,0,0,.25) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+html body .cp04-sidebar select *,
+html body .cp04-sidebar [data-tour*="idioma" i] *,
+html body .cp04-sidebar [data-tour*="language" i] *,
+html body .cp04-sidebar [aria-label*="idioma" i] *,
+html body .cp04-sidebar [aria-label*="language" i] *,
+html body .cp04-sidebar .cp04-language *,
+html body .cp04-sidebar .cp04-language-select * {
+  color: #05080d !important;
+}
+
+/* ===== PASO 07K · FIX BOTÓN "INICIAR SESIÓN" (login con correo personal) =====
+   Mismo motivo que el fix de Perfil más arriba: esta pantalla (login/
+   selección de rol) activa `body.cp04-role-screen-active`, y la regla
+   genérica de fondo de botones más arriba en este archivo
+   (`body.cp04-role-screen-active button { background-color:
+   rgba(5,10,18,.22) !important; background-image: none !important }`)
+   dejaba el CTA principal de "Iniciar sesión" con fondo casi transparente
+   sobre fondo oscuro — prácticamente invisible. Se fuerza aquí el mismo
+   degradado lima/menta premium que ya usa el resto de CTAs de marca, con
+   mayor especificidad para ganarle a esa regla genérica. */
+body.cp04-role-screen-active button.cp04-login-submit-btn,
+body.cp04-role-screen-active button.cp04-login-submit-btn:hover,
+body.cp04-role-screen-active button.cp04-login-submit-btn:focus,
+body.cp04-role-screen-active button.cp04-login-submit-btn:focus-visible,
+body.cp04-role-screen-active button.cp04-login-submit-btn:active {
+  background: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-image: linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%) !important;
+  background-color: #b6ff00 !important;
+  color: #06100a !important;
+  border-color: rgba(182, 255, 0, .85) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow:
+    0 16px 36px rgba(182, 255, 0, .32),
+    0 0 0 1px rgba(6, 16, 10, .45) !important;
+  opacity: 1 !important;
+}
+
+body.cp04-role-screen-active button.cp04-login-submit-btn * {
+  color: #06100a !important;
+}
+
+body.cp04-role-screen-active button.cp04-login-submit-btn:disabled {
+  opacity: .55 !important;
+}

@@ -1,0 +1,6 @@
+src/components/ClubGallery.jsx
+src/components/README.md
+src/data/README.md
+src/data/performancePlan.js
+src/data/visualAssets.js
+src/utils/README.md

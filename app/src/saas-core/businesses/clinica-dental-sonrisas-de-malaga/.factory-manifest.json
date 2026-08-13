@@ -1,0 +1,79 @@
+{
+  "businessId": "clinica-dental-sonrisas-de-malaga",
+  "schemaVersion": 1,
+  "lastRunAt": "2026-07-21T07:56:24.237Z",
+  "files": {
+    "business.blueprint.json": {
+      "hash": "d526c1fed6075a94e30bf72c86384c8e1a7a1a9ecdb24122ffec1183fee40b61",
+      "generatedBy": "one-prompt-factory"
+    },
+    "tenant.config.json": {
+      "hash": "5794aadccf0bec0528c9fed292112d5b334e2437ee54b4be42758b9fd99c16d7",
+      "generatedBy": "one-prompt-factory"
+    },
+    "env.example": {
+      "hash": "aff9c4cfbc2de1b1db449a746a80a252cc017da1c1b770ae26df4de4aeafc771",
+      "generatedBy": "one-prompt-factory"
+    },
+    "branding/tokens.json": {
+      "hash": "2b75b75afebfbd4c08233a7299634e9242724d5baec521224a4093fcd176eab9",
+      "generatedBy": "one-prompt-factory"
+    },
+    "branding/tokens.css": {
+      "hash": "a564620cbe0babb949f7483a9f5d2a25538a8824bd3063b6a098d3972f3278ef",
+      "generatedBy": "one-prompt-factory"
+    },
+    "branding/pending-assets.json": {
+      "hash": "c27cb688f5eb29ee83274ef29e473e9e85f986abbabc2c0433edf302643b43de",
+      "generatedBy": "one-prompt-factory"
+    },
+    "landing/landing.config.json": {
+      "hash": "2180a5c35f0daea7e776df9139b89566a3ee5369f05dde4b83f82872720ff2d8",
+      "generatedBy": "one-prompt-factory"
+    },
+    "landing/index.html": {
+      "hash": "8d40ab36121c85fb36d2d7402f9549fbac1772ef07ed56a7dd1b5a8639ab2027",
+      "generatedBy": "one-prompt-factory"
+    },
+    "pwa/pwa.config.json": {
+      "hash": "351cb55917a87657edde5dcb90bd8f45d756185cf8af25d6f3afd237917fc720",
+      "generatedBy": "one-prompt-factory"
+    },
+    "demo-data/dataset.json": {
+      "hash": "d8b7b871e4407dd45d003dd05d07576c330c4a54375553a87c025be1cf3478ec",
+      "generatedBy": "one-prompt-factory"
+    },
+    "mockups/manifest.json": {
+      "hash": "9b49b5e0c6d30d2116287c0fd26a2fe6be7d097a8d254cb12590c2ebf1294a42",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/README.md": {
+      "hash": "e5d148e4cedcab6966cb596539c0bf8c1ff515693a5b52b69e47246455d368e3",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/guia-rapida.md": {
+      "hash": "ed735c8a7d9dcf761e9cda65452e73063900c3d428cc7ab857566317d1915d65",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/onboarding.md": {
+      "hash": "f19c6b5b7c87a15512116dd8d8f4db2ab76b3da9196d4a2f347c6ec935950439",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/checklist-tecnico.md": {
+      "hash": "c8189ce9fbbec10c345306bc975bba7a8f7f7b4d23eb77b65453f7f05073a0f7",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/checklist-comercial.md": {
+      "hash": "5ac2fcb9d8a3c94fe20c7d0fe77ecc474364f2eed95c484a94d3453827bacbbf",
+      "generatedBy": "one-prompt-factory"
+    },
+    "report.md": {
+      "hash": "36fa34dc27686cbee0adc4c2ea0607068e32ea40dccb5eeda90b289b80fe9832",
+      "generatedBy": "one-prompt-factory"
+    },
+    "report.json": {
+      "hash": "b4e3fc09f4d1beb11fe3b672570674178faceae98347874565c77cd158bf565f",
+      "generatedBy": "one-prompt-factory"
+    }
+  }
+}

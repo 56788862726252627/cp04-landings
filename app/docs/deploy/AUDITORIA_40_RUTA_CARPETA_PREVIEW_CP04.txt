@@ -1,0 +1,1 @@
+/root/cp04-landings/app/deploy-pages/club-padel-04-pages-dist

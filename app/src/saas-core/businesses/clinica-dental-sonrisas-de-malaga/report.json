@@ -1,0 +1,122 @@
+{
+  "businessId": "clinica-dental-sonrisas-de-malaga",
+  "blueprint": {
+    "businessId": "clinica-dental-sonrisas-de-malaga",
+    "sector": "dental",
+    "commercialName": "Sonrisas de Málaga"
+  },
+  "filesCreated": [],
+  "filesUpdated": [],
+  "filesPreserved": [
+    "business.blueprint.json",
+    "tenant.config.json",
+    "env.example",
+    "branding/tokens.json",
+    "branding/tokens.css",
+    "branding/pending-assets.json",
+    "landing/landing.config.json",
+    "landing/index.html",
+    "pwa/pwa.config.json",
+    "demo-data/dataset.json",
+    "mockups/manifest.json",
+    "docs/README.md",
+    "docs/guia-rapida.md",
+    "docs/onboarding.md",
+    "docs/checklist-tecnico.md",
+    "docs/checklist-comercial.md"
+  ],
+  "modulesActivated": [
+    "inicio",
+    "citas",
+    "clientes",
+    "pagos",
+    "automatizaciones",
+    "soporte",
+    "informes",
+    "configuracion",
+    "agenda",
+    "profesionales",
+    "recursos",
+    "servicios",
+    "documentos",
+    "formularios"
+  ],
+  "modulesDiscarded": [],
+  "automationsSelected": [
+    "alta_cliente",
+    "confirmacion",
+    "cancelacion",
+    "recordatorio",
+    "encuesta",
+    "documento",
+    "pago"
+  ],
+  "integrationsDeclared": [
+    "automation",
+    "dataRepository",
+    "payments",
+    "messaging",
+    "calendar"
+  ],
+  "demoDataSummary": {
+    "customers": 18,
+    "professionals": 3,
+    "appointments": 24,
+    "incidents": 3
+  },
+  "reuse": {
+    "reusedModulesRatio": "14/14 (100%)",
+    "coreFilesModified": 0
+  },
+  "manualSteps": [
+    "Revisión normativa sanitaria/odontológica antes de producción",
+    "Sustituir logotipo/branding placeholder por assets reales"
+  ],
+  "risks": [
+    "Sector \"dental\" requiere revisión normativa antes de producción (ver checklist técnico)."
+  ],
+  "limitations": [
+    "Ningún proveedor externo real está conectado (Airtable/Make/Stripe/WhatsApp/Gmail/Calendar): todo son adaptadores mock.",
+    "No hay integración en vivo con App.jsx: el tenant generado es configuración validada, no una aplicación desplegada.",
+    "Los binarios de branding/PWA (favicon, iconos, manifest real) no se generan en este paso: solo el contrato y el manifest declarativo.",
+    "Los mockups no se capturan realmente (requeriría Playwright u otra herramienta, no incluida como dependencia).",
+    "Los datos demo son sintéticos y no deben usarse como base de un cliente real sin sustitución explícita."
+  ],
+  "durationMs": 51,
+  "compatibility": [
+    {
+      "platform": "Android",
+      "vehicle": "PWA instalada / Chrome",
+      "status": "planned"
+    },
+    {
+      "platform": "iOS",
+      "vehicle": "PWA instalada / Safari",
+      "status": "planned"
+    },
+    {
+      "platform": "iPadOS",
+      "vehicle": "PWA instalada / Safari",
+      "status": "planned"
+    },
+    {
+      "platform": "Windows",
+      "vehicle": "PWA instalada / Edge-Chrome",
+      "status": "planned"
+    },
+    {
+      "platform": "macOS",
+      "vehicle": "PWA instalada / Safari-Chrome",
+      "status": "planned"
+    },
+    {
+      "platform": "Linux",
+      "vehicle": "Navegador (Chrome/Firefox), PWA si el navegador lo soporta",
+      "status": "planned"
+    }
+  ],
+  "idempotent": true,
+  "dryRun": false,
+  "nextStep": "Resolver los riesgos listados (revisión normativa/contraste/terminología) antes de conectar cualquier proveedor real.",
+  "generatedAt": "2026-07-21T07:56:24.237Z"
+}

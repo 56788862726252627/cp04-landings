@@ -1,0 +1,700 @@
+src/App.jsx:1:import './cp04-login-enter-white-final.js';
+src/App.jsx:46: * - No contiene webhooks reales de Make.
+src/App.jsx:47: * - No contiene API keys, tokens ni credenciales.
+src/App.jsx:48: * - un endpoint seguro propio: /api/reservas.
+src/App.jsx:49: * - La integración con Make/Airtable/Stripe debe hacerse en backend, Edge Function,
+src/App.jsx:50: *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
+src/App.jsx:74:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+src/App.jsx:472:    accion: "reprogramar_reserva",
+src/App.jsx:480:    origen: "app_publica_reprogramar_reserva",
+src/App.jsx:485:  const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx:510:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+src/App.jsx:526:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+src/App.jsx:805:function AuthStatusPanel({ compact = false }) {
+src/App.jsx:808:  return <Card><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}><div><h3 style={{ margin: 0, fontFamily: T.fontDisplay, letterSpacing: "-.04em" }}>{tx("auth.roles_title")}</h3><p style={{ color: T.textDim, lineHeight: 1.65, marginTop: 8 }}>{tx("auth.pending_desc")}</p></div><span className="cp04-badge" style={{ color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "7px 11px", fontWeight: 900, fontSize: ".74rem", whiteSpace: "nowrap" }}>{tx("auth.pending_badge")}</span></div><div className={compact ? undefined : "cp04-grid-2"} style={compact ? { display: "grid", gap: 12 } : undefined}>{ROLES.map((role) => <div key={role.id} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 16, background: "rgba(255,255,255,.035)" }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong style={{ color: T.accent }}>{role.id}</strong><span style={{ color: T.warning, fontSize: ".82rem", fontWeight: 900 }}>{role.access}</span></div><div style={{ marginTop: 8, fontWeight: 900 }}>{role.label}</div><div style={{ color: T.textDim, marginTop: 6, lineHeight: 1.55 }}>{tx("auth.secciones")} {role.sections}</div>{!compact && <PanelList items={role.permissions} />}</div>)}</div></Card>;
+src/App.jsx:1102:  const cleanSub = sub ? sub.replace(/ ?·? ?demo/gi, "").replace(/Make/gi, "Procesos").trim() : sub;
+src/App.jsx:1121:// Los datos de Make deben venir de un endpoint propio o webhook,
+src/App.jsx:1125:  make: "demo/prepared",
+src/App.jsx:1126:  airtable: "prepared",
+src/App.jsx:1127:  stripe: "prepared",
+src/App.jsx:1156:  makeActivos: 38,
+src/App.jsx:1157:  makeErrores: 2,
+src/App.jsx:1158:  makePausados: 3,
+src/App.jsx:1159:  tasaExitoMake: 97.4,
+src/App.jsx:1165:const DEMO_MAKE_EJECUCIONES_24H = [42, 55, 38, 61, 47, 53, 49, 66, 71, 58, 44, 39, 52, 48, 57, 63, 70, 65, 59, 42, 38, 44, 51, 48];
+src/App.jsx:1167:const DEMO_MAKE_CATEGORIAS = [
+src/App.jsx:1180:const DEMO_MAKE_FLUJOS_TOP = [
+src/App.jsx:1188:const DEMO_MAKE_FLUJOS_ERRORES = [
+src/App.jsx:1205:    "make_id": "5736472",
+src/App.jsx:1206:    "make_team_id": "1099976",
+src/App.jsx:1207:    "make_folder_id": "316391",
+src/App.jsx:1208:    "make_active": true
+src/App.jsx:1220:    "make_id": "6199248",
+src/App.jsx:1221:    "make_team_id": "1099976",
+src/App.jsx:1222:    "make_folder_id": "316391",
+src/App.jsx:1223:    "make_active": true
+src/App.jsx:1235:    "make_id": "5811901",
+src/App.jsx:1236:    "make_team_id": "1099976",
+src/App.jsx:1237:    "make_folder_id": "316391",
+src/App.jsx:1238:    "make_active": true
+src/App.jsx:1250:    "make_id": "5697630",
+src/App.jsx:1251:    "make_team_id": "1099976",
+src/App.jsx:1252:    "make_folder_id": "316391",
+src/App.jsx:1253:    "make_active": true
+src/App.jsx:1265:    "make_id": "6217724",
+src/App.jsx:1266:    "make_team_id": "1099976",
+src/App.jsx:1267:    "make_folder_id": "316391",
+src/App.jsx:1268:    "make_active": true
+src/App.jsx:1280:    "make_id": "5288809",
+src/App.jsx:1281:    "make_team_id": "1099976",
+src/App.jsx:1282:    "make_folder_id": "316391",
+src/App.jsx:1283:    "make_active": true
+src/App.jsx:1295:    "make_id": "5791022",
+src/App.jsx:1296:    "make_team_id": "1099976",
+src/App.jsx:1297:    "make_folder_id": "316391",
+src/App.jsx:1298:    "make_active": true
+src/App.jsx:1310:    "make_id": "5799061",
+src/App.jsx:1311:    "make_team_id": "1099976",
+src/App.jsx:1312:    "make_folder_id": "316391",
+src/App.jsx:1313:    "make_active": true
+src/App.jsx:1325:    "make_id": "5791133",
+src/App.jsx:1326:    "make_team_id": "1099976",
+src/App.jsx:1327:    "make_folder_id": "316391",
+src/App.jsx:1328:    "make_active": true
+src/App.jsx:1340:    "make_id": "5791116",
+src/App.jsx:1341:    "make_team_id": "1099976",
+src/App.jsx:1342:    "make_folder_id": "316391",
+src/App.jsx:1343:    "make_active": true
+src/App.jsx:1355:    "make_id": "5812456",
+src/App.jsx:1356:    "make_team_id": "1099976",
+src/App.jsx:1357:    "make_folder_id": "316391",
+src/App.jsx:1358:    "make_active": true
+src/App.jsx:1370:    "make_id": "5291559",
+src/App.jsx:1371:    "make_team_id": "1099976",
+src/App.jsx:1372:    "make_folder_id": "316391",
+src/App.jsx:1373:    "make_active": true
+src/App.jsx:1385:    "make_id": "4919937",
+src/App.jsx:1386:    "make_team_id": "1099976",
+src/App.jsx:1387:    "make_folder_id": "316391",
+src/App.jsx:1388:    "make_active": true
+src/App.jsx:1400:    "make_id": "5736800",
+src/App.jsx:1401:    "make_team_id": "1099976",
+src/App.jsx:1402:    "make_folder_id": "316391",
+src/App.jsx:1403:    "make_active": true
+src/App.jsx:1415:    "make_id": "5791128",
+src/App.jsx:1416:    "make_team_id": "1099976",
+src/App.jsx:1417:    "make_folder_id": "316391",
+src/App.jsx:1418:    "make_active": true
+src/App.jsx:1430:    "make_id": "5811888",
+src/App.jsx:1431:    "make_team_id": "1099976",
+src/App.jsx:1432:    "make_folder_id": "316391",
+src/App.jsx:1433:    "make_active": true
+src/App.jsx:1445:    "make_id": "5811864",
+src/App.jsx:1446:    "make_team_id": "1099976",
+src/App.jsx:1447:    "make_folder_id": "316391",
+src/App.jsx:1448:    "make_active": true
+src/App.jsx:1458:    "funcion": "Genera QR de acceso para reserva confirmada, envía email y actualiza Airtable.",
+src/App.jsx:1460:    "make_id": "6244975",
+src/App.jsx:1461:    "make_team_id": "1099976",
+src/App.jsx:1462:    "make_folder_id": "316391",
+src/App.jsx:1463:    "make_active": true
+src/App.jsx:1475:    "make_id": "5791113",
+src/App.jsx:1476:    "make_team_id": "1099976",
+src/App.jsx:1477:    "make_folder_id": "316391",
+src/App.jsx:1478:    "make_active": true
+src/App.jsx:1490:    "make_id": "5791119",
+src/App.jsx:1491:    "make_team_id": "1099976",
+src/App.jsx:1492:    "make_folder_id": "316391",
+src/App.jsx:1493:    "make_active": true
+src/App.jsx:1497:    "nombre": "🗺️ Mapa de Flujos + Auditoría Make · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1498:    "nombre_final": "🗺️ Mapa de Flujos + Auditoría Make · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1503:    "funcion": "Registra y audita el mapa de flujos Make de Club Pádel 04.",
+src/App.jsx:1504:    "blueprint": "workflows/05-mapa-flujos-auditoria-make/final/Mapa_de_Flujos_Auditoria_Make_Club_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1505:    "make_id": "6233755",
+src/App.jsx:1506:    "make_team_id": "1099976",
+src/App.jsx:1507:    "make_folder_id": "316391",
+src/App.jsx:1508:    "make_active": true
+src/App.jsx:1520:    "make_id": "5750308",
+src/App.jsx:1521:    "make_team_id": "1099976",
+src/App.jsx:1522:    "make_folder_id": "316391",
+src/App.jsx:1523:    "make_active": true
+src/App.jsx:1535:    "make_id": "5811918",
+src/App.jsx:1536:    "make_team_id": "1099976",
+src/App.jsx:1537:    "make_folder_id": "316391",
+src/App.jsx:1538:    "make_active": true
+src/App.jsx:1550:    "make_id": "5736468",
+src/App.jsx:1551:    "make_team_id": "1099976",
+src/App.jsx:1552:    "make_folder_id": "316391",
+src/App.jsx:1553:    "make_active": true
+src/App.jsx:1565:    "make_id": "6216523",
+src/App.jsx:1566:    "make_team_id": "1099976",
+src/App.jsx:1567:    "make_folder_id": "316391",
+src/App.jsx:1568:    "make_active": true
+src/App.jsx:1580:    "make_id": "5799041",
+src/App.jsx:1581:    "make_team_id": "1099976",
+src/App.jsx:1582:    "make_folder_id": "316391",
+src/App.jsx:1583:    "make_active": true
+src/App.jsx:1595:    "make_id": "5812297",
+src/App.jsx:1596:    "make_team_id": "1099976",
+src/App.jsx:1597:    "make_folder_id": "316391",
+src/App.jsx:1598:    "make_active": true
+src/App.jsx:1610:    "make_id": "5736470",
+src/App.jsx:1611:    "make_team_id": "1099976",
+src/App.jsx:1612:    "make_folder_id": "316391",
+src/App.jsx:1613:    "make_active": true
+src/App.jsx:1625:    "make_id": "4942506",
+src/App.jsx:1626:    "make_team_id": "1099976",
+src/App.jsx:1627:    "make_folder_id": "316391",
+src/App.jsx:1628:    "make_active": true
+src/App.jsx:1640:    "make_id": "5330078",
+src/App.jsx:1641:    "make_team_id": "1099976",
+src/App.jsx:1642:    "make_folder_id": "316391",
+src/App.jsx:1643:    "make_active": true
+src/App.jsx:1655:    "make_id": "5791374",
+src/App.jsx:1656:    "make_team_id": "1099976",
+src/App.jsx:1657:    "make_folder_id": "316391",
+src/App.jsx:1658:    "make_active": true
+src/App.jsx:1670:    "make_id": "5736797",
+src/App.jsx:1671:    "make_team_id": "1099976",
+src/App.jsx:1672:    "make_folder_id": "316391",
+src/App.jsx:1673:    "make_active": true
+src/App.jsx:1683:    "funcion": "Sincroniza reservas confirmadas con Google Calendar y Airtable.",
+src/App.jsx:1685:    "make_id": "5735907",
+src/App.jsx:1686:    "make_team_id": "1099976",
+src/App.jsx:1687:    "make_folder_id": "316391",
+src/App.jsx:1688:    "make_active": true
+src/App.jsx:1692:    "nombre": "⚠️ Alerta Crítica Fallos Make · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1693:    "nombre_final": "⚠️ Alerta Crítica Fallos Make · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1698:    "funcion": "Recibe incidencias críticas de Make y avisa al administrador.",
+src/App.jsx:1699:    "blueprint": "workflows/03-alerta-critica-fallos-make/final/Alerta_Critica_Fallos_Make_Club_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1700:    "make_id": "6192096",
+src/App.jsx:1701:    "make_team_id": "1099976",
+src/App.jsx:1702:    "make_folder_id": "316391",
+src/App.jsx:1703:    "make_active": false
+src/App.jsx:1713:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1715:    "make_id": "5799031",
+src/App.jsx:1716:    "make_team_id": "1099976",
+src/App.jsx:1717:    "make_folder_id": "316391",
+src/App.jsx:1718:    "make_active": false
+src/App.jsx:1728:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1730:    "make_id": "4832095",
+src/App.jsx:1731:    "make_team_id": "1099976",
+src/App.jsx:1732:    "make_folder_id": "316391",
+src/App.jsx:1733:    "make_active": false
+src/App.jsx:1743:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1745:    "make_id": "5798996",
+src/App.jsx:1746:    "make_team_id": "1099976",
+src/App.jsx:1747:    "make_folder_id": "316391",
+src/App.jsx:1748:    "make_active": false
+src/App.jsx:1758:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1760:    "make_id": "5791124",
+src/App.jsx:1761:    "make_team_id": "1099976",
+src/App.jsx:1762:    "make_folder_id": "316391",
+src/App.jsx:1763:    "make_active": false
+src/App.jsx:1773:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1775:    "make_id": "5736466",
+src/App.jsx:1776:    "make_team_id": "1099976",
+src/App.jsx:1777:    "make_folder_id": "316391",
+src/App.jsx:1778:    "make_active": false
+src/App.jsx:1788:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1790:    "make_id": "5733370",
+src/App.jsx:1791:    "make_team_id": "1099976",
+src/App.jsx:1792:    "make_folder_id": "316391",
+src/App.jsx:1793:    "make_active": false
+src/App.jsx:1805:    "make_id": "5736463",
+src/App.jsx:1806:    "make_team_id": "1099976",
+src/App.jsx:1807:    "make_folder_id": "316391",
+src/App.jsx:1808:    "make_active": false
+src/App.jsx:1818:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1820:    "make_id": "5791032",
+src/App.jsx:1821:    "make_team_id": "1099976",
+src/App.jsx:1822:    "make_folder_id": "316391",
+src/App.jsx:1823:    "make_active": false
+src/App.jsx:1835:    "make_id": "5747703",
+src/App.jsx:1836:    "make_team_id": "1099976",
+src/App.jsx:1837:    "make_folder_id": "316391",
+src/App.jsx:1838:    "make_active": false
+src/App.jsx:1842:function FlujosMake() {
+src/App.jsx:1849:  const cats = ["Todas", ...Array.from(new Set(DEMO_MAKE_CATEGORIAS.map(c => c.l)))];
+src/App.jsx:1854:  const exportMakeJSON = () => {
+src/App.jsx:1855:    const blob = new Blob([JSON.stringify({ total: 43, activos: kpi.makeActivos, errores: kpi.makeErrores, pausados: kpi.makePausados, tasaExito: kpi.tasaExitoMake, flujos: WORKFLOW_ITEMS, fuente: "demo", nota: "TODO producción: alimentar desde backend/proxy seguro" }, null, 2)], { type: "application/json" });
+src/App.jsx:1857:    const a = document.createElement("a"); a.href = url; a.download = `make-status-${Date.now()}.json`; a.click();
+src/App.jsx:1864:      {/* TODO producción: alimentar este dashboard desde backend/proxy seguro (Make API o webhook propio). NUNCA llamar Make API con clave privada desde el frontend. */}
+src/App.jsx:1869:          <button type="button" onClick={exportMakeJSON} style={{ border:`1px solid rgba(182,255,0,.35)`, background:"none", color:T.accent, borderRadius:10, padding:"7px 14px", cursor:"pointer", fontWeight:700, fontSize:".8rem" }}>{tx("flujos.exportar_json")}</button>
+src/App.jsx:1876:        <MetricCard label={tx("flujos.activos_label")} value={kpi.makeActivos} sub={tx("flujos.conectados")} trend={null} color={T.accent} icon="✅" />
+src/App.jsx:1877:        <MetricCard label={tx("flujos.pausados_label")} value={kpi.makePausados} sub={tx("flujos.en_pausa")} trend={null} color={T.warning} icon="⏸" />
+src/App.jsx:1878:        <MetricCard label={tx("flujos.incidencias_label")} value={kpi.makeErrores} sub={tx("flujos.ultimas_24h")} trend={null} color={kpi.makeErrores > 0 ? T.danger : T.accent} icon="🔴" />
+src/App.jsx:1879:        <MetricCard label={tx("flujos.tasa_exito")} value={kpi.tasaExitoMake+"%"} sub={tx("flujos.global_sistema")} trend={null} color={T.accent2} icon="📈" />
+src/App.jsx:1883:      {/* GRÁFICAS MAKE */}
+src/App.jsx:1887:            { l:tx("flujos.activos_label"), v:kpi.makeActivos,  c:T.accent },
+src/App.jsx:1888:            { l:tx("flujos.pausados_label"), v:kpi.makePausados, c:T.warning },
+src/App.jsx:1889:            { l:tx("flujos.incidencias_label"), v:kpi.makeErrores, c:T.danger },
+src/App.jsx:1894:          <MiniLineChart data={DEMO_MAKE_EJECUCIONES_24H} height={80} color={T.accent} />
+src/App.jsx:1899:            {tx("flujos.total_24h_label")}: <strong style={{ color:T.accent }}>{DEMO_MAKE_EJECUCIONES_24H.reduce((a,b)=>a+b,0)}</strong> {tx("flujos.ejecuciones")}
+src/App.jsx:1904:          <HorizontalBarChart data={DEMO_MAKE_CATEGORIAS.slice(0,6)} />
+src/App.jsx:1910:          <HorizontalBarChart data={DEMO_MAKE_FLUJOS_TOP} color={T.accent2} />
+src/App.jsx:1914:          {DEMO_MAKE_FLUJOS_ERRORES.length > 0
+src/App.jsx:1915:            ? <HorizontalBarChart data={DEMO_MAKE_FLUJOS_ERRORES} color={T.danger} />
+src/App.jsx:1966:                    <td><FlowStatusBadge status={flow.make_active ? "ok" : "paused"} /></td>
+src/App.jsx:2167:/* AUDITORIA 20 · AUTH REAL HELPERS
+src/App.jsx:2169:   El backend/Worker debe ser la autoridad final en producción. */
+src/App.jsx:2171:const CP04_AUTH_MODES = {
+src/App.jsx:2181:  "flujos_make",
+src/App.jsx:2187:  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+src/App.jsx:2188:  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+src/App.jsx:2189:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
+src/App.jsx:2214:function cp04RequiresBackendAuth(section) {
+src/App.jsx:2218:function cp04GetStoredAuthMode() {
+src/App.jsx:2220:    return localStorage.getItem("cp04_auth_mode") || CP04_AUTH_MODES.DEMO;
+src/App.jsx:2222:    return CP04_AUTH_MODES.DEMO;
+src/App.jsx:2230:    "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
+src/App.jsx:2232:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
+src/App.jsx:2234:    "login.title":"Iniciar como rol","login.entrar":"Entrar","login.cancelar":"Cancelar",
+src/App.jsx:2235:    "login.password":"Contraseña","login.ver_pwd":"👁️ Ver contraseña","login.ocultar_pwd":"🙈 Ocultar contraseña",
+src/App.jsx:2236:    "login.guardar_sesion":"Guardar sesión en este dispositivo","login.acceder_como":"Acceder como",
+src/App.jsx:2237:    "login.intro_pwd":"Introduce la contraseña asignada a este rol.",
+src/App.jsx:2238:    "login.error_rol":"Selecciona un rol válido.","login.error_pwd":"Contraseña incorrecta para este rol.",
+src/App.jsx:2239:    "login.sesion_label":"Club Pádel 04 · Inicio de sesión",
+src/App.jsx:2240:    "login.legal":"Acceso local protegido por contraseña. Puedes guardar sesión solo en este dispositivo. Para producción real, las credenciales deberán validarse desde backend/autenticación segura.",
+src/App.jsx:2241:    "login.olvide_pwd":"¿Has olvidado tu contraseña?","login.recuperar_title":"Recuperar acceso","login.recuperar_desc":"Introduce tu correo electrónico y, si la cuenta existe, recibirás instrucciones para restablecer el acceso.","login.recuperar_email":"Correo electrónico","login.recuperar_btn":"Enviar instrucciones","login.recuperar_enviado":"Si esa dirección está registrada en el sistema, recibirás instrucciones en breve. Revisa también la carpeta de spam.","login.recuperar_volver":"Volver al inicio de sesión","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+src/App.jsx:2243:    "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
+src/App.jsx:2244:    "login.idioma":"Idioma",
+src/App.jsx:2245:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+src/App.jsx:2300:    "reprog.btn":"Reprogramar reserva","reprog.volver":"Volver a Reservas",
+src/App.jsx:2327:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicita la cancelación de una reserva.",
+src/App.jsx:2330:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Volver a Reservas",
+src/App.jsx:2332:    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
+src/App.jsx:2340:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
+src/App.jsx:2356:    "status.reprog.error":"No se pudo reprogramar","status.reprog.error_txt":"Revisa los datos y vuelve a intentarlo.",
+src/App.jsx:2368:    "errors.confirmado_reprog":"Confirma que quieres reprogramar la reserva.",
+src/App.jsx:2383:    "reprog.info2":"Se mantiene la misma clave después de reprogramar.",
+src/App.jsx:2414:    "auth.roles_title":"Roles y accesos","auth.pending_badge":"Pendiente de configurar",
+src/App.jsx:2415:    "auth.pending_desc":"Sistema de acceso configurado por roles. En producción debe protegerse por autenticación y backend de usuarios.",
+src/App.jsx:2416:    "auth.secciones":"Secciones:",
+src/App.jsx:2420:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx:2421:    "soporte.make_item":"Automatizaciones pendientes de secreto privado",
+src/App.jsx:2422:    "soporte.airtable_item":"Base de datos preparada sin escritura activa",
+src/App.jsx:2423:    "soporte.stripe_item":"Pagos y mensajería pendientes de configuración",
+src/App.jsx:2426:    "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
+src/App.jsx:2432:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+src/App.jsx:2434:    "nav.admin":"Admin","nav.flujos_make":"Tech centre","nav.soporte":"Support",
+src/App.jsx:2436:    "login.title":"Log in as role","login.entrar":"Enter","login.cancelar":"Cancel",
+src/App.jsx:2437:    "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
+src/App.jsx:2438:    "login.guardar_sesion":"Remember me on this device","login.acceder_como":"Log in as",
+src/App.jsx:2439:    "login.intro_pwd":"Enter the password assigned to this role.",
+src/App.jsx:2440:    "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
+src/App.jsx:2441:    "login.sesion_label":"Club Pádel 04 · Login",
+src/App.jsx:2442:    "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
+src/App.jsx:2443:    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+src/App.jsx:2445:    "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
+src/App.jsx:2446:    "login.idioma":"Language",
+src/App.jsx:2616:    "auth.roles_title":"Roles and access","auth.pending_badge":"Pending configuration",
+src/App.jsx:2617:    "auth.pending_desc":"Role-based access system. In production it must be protected by an authentication provider and user backend.",
+src/App.jsx:2618:    "auth.secciones":"Sections:",
+src/App.jsx:2622:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx:2623:    "soporte.make_item":"Automations pending private secret",
+src/App.jsx:2624:    "soporte.airtable_item":"Database ready without active writes",
+src/App.jsx:2625:    "soporte.stripe_item":"Payments and messaging pending configuration",
+src/App.jsx:2628:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx:2634:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+src/App.jsx:2636:    "nav.admin":"Admin","nav.flujos_make":"Tech center","nav.soporte":"Support",
+src/App.jsx:2638:    "login.title":"Sign in as role","login.entrar":"Sign in","login.cancelar":"Cancel",
+src/App.jsx:2639:    "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
+src/App.jsx:2640:    "login.guardar_sesion":"Remember me on this device","login.acceder_como":"Sign in as",
+src/App.jsx:2641:    "login.intro_pwd":"Enter the password assigned to this role.",
+src/App.jsx:2642:    "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
+src/App.jsx:2643:    "login.sesion_label":"Club Pádel 04 · Sign In",
+src/App.jsx:2644:    "login.legal":"Local access protected by password. Session can be saved on this device only.",
+src/App.jsx:2645:    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+src/App.jsx:2647:    "login.subtitle":"Select how you want to enter the app. Each role has an experience tailored to its permissions.",
+src/App.jsx:2648:    "login.idioma":"Language",
+src/App.jsx:2818:    "auth.roles_title":"Roles and access","auth.pending_badge":"Pending configuration",
+src/App.jsx:2819:    "auth.pending_desc":"Role-based access system. In production it must be protected by an authentication provider and user backend.",
+src/App.jsx:2820:    "auth.secciones":"Sections:",
+src/App.jsx:2824:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx:2825:    "soporte.make_item":"Automations pending private secret",
+src/App.jsx:2826:    "soporte.airtable_item":"Database ready without active writes",
+src/App.jsx:2827:    "soporte.stripe_item":"Payments and messaging pending configuration",
+src/App.jsx:2830:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx:2836:    "nav.reprogramar":"Reporter","nav.cancelar":"Annuler réservation",
+src/App.jsx:2838:    "nav.admin":"Admin","nav.flujos_make":"Centre technique","nav.soporte":"Support",
+src/App.jsx:2840:    "login.title":"Se connecter en tant que rôle","login.entrar":"Entrer","login.cancelar":"Annuler",
+src/App.jsx:2841:    "login.password":"Mot de passe","login.ver_pwd":"👁️ Voir le mot de passe","login.ocultar_pwd":"🙈 Masquer",
+src/App.jsx:2842:    "login.guardar_sesion":"Mémoriser sur cet appareil","login.acceder_como":"Se connecter en tant que",
+src/App.jsx:2843:    "login.intro_pwd":"Entrez le mot de passe attribué à ce rôle.",
+src/App.jsx:2844:    "login.error_rol":"Veuillez sélectionner un rôle valide.","login.error_pwd":"Mot de passe incorrect.",
+src/App.jsx:2845:    "login.sesion_label":"Club Pádel 04 · Connexion",
+src/App.jsx:2846:    "login.legal":"Accès local protégé par mot de passe. Session sauvegardable sur cet appareil uniquement.",
+src/App.jsx:2847:    "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password",
+src/App.jsx:2849:    "login.subtitle":"Sélectionnez comment vous souhaitez entrer dans l'application.",
+src/App.jsx:2850:    "login.idioma":"Langue",
+src/App.jsx:3016:    "auth.roles_title":"Rôles et accès","auth.pending_badge":"Configuration en attente",
+src/App.jsx:3017:    "auth.pending_desc":"Système d'accès par rôles. En production, il doit être protégé par un fournisseur d'authentification.",
+src/App.jsx:3018:    "auth.secciones":"Sections :",
+src/App.jsx:3022:    "soporte.worker_item":"Worker de réservations prêt",
+src/App.jsx:3023:    "soporte.make_item":"Automatisations en attente de secret privé",
+src/App.jsx:3024:    "soporte.airtable_item":"Base de données prête sans écriture active",
+src/App.jsx:3025:    "soporte.stripe_item":"Paiements et messagerie en attente de configuration",
+src/App.jsx:3028:    "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
+src/App.jsx:3034:    "nav.reprogramar":"Riprogramma","nav.cancelar":"Annulla prenotazione",
+src/App.jsx:3036:    "nav.admin":"Admin","nav.flujos_make":"Centro tecnico","nav.soporte":"Supporto",
+src/App.jsx:3038:    "login.title":"Accedi come ruolo","login.entrar":"Entra","login.cancelar":"Annulla",
+src/App.jsx:3039:    "login.password":"Password","login.ver_pwd":"👁️ Mostra password","login.ocultar_pwd":"🙈 Nascondi",
+src/App.jsx:3040:    "login.guardar_sesion":"Ricordami su questo dispositivo","login.acceder_como":"Accedi come",
+src/App.jsx:3041:    "login.intro_pwd":"Inserisci la password assegnata a questo ruolo.",
+src/App.jsx:3042:    "login.error_rol":"Seleziona un ruolo valido.","login.error_pwd":"Password errata per questo ruolo.",
+src/App.jsx:3043:    "login.sesion_label":"Club Pádel 04 · Accesso",
+src/App.jsx:3044:    "login.legal":"Accesso locale protetto da password. Sessione salvabile solo su questo dispositivo.",
+src/App.jsx:3045:    "login.olvide_pwd":"Hai dimenticato la password?","login.recuperar_title":"Recupera l'accesso","login.recuperar_desc":"Inserisci il tuo indirizzo e-mail e, se l'account esiste, riceverai le istruzioni per reimpostare l'accesso.","login.recuperar_email":"Indirizzo e-mail","login.recuperar_btn":"Invia istruzioni","login.recuperar_enviado":"Se quell'indirizzo è registrato nel sistema, riceverai le istruzioni a breve. Controlla anche la cartella spam.","login.recuperar_volver":"Torna al login","login.recuperar_preparado":"Pronto per l'endpoint: /api/auth/forgot-password",
+src/App.jsx:3047:    "login.subtitle":"Seleziona come vuoi accedere all'applicazione.",
+src/App.jsx:3048:    "login.idioma":"Lingua",
+src/App.jsx:3214:    "auth.roles_title":"Ruoli e accessi","auth.pending_badge":"Configurazione in attesa",
+src/App.jsx:3215:    "auth.pending_desc":"Sistema di accesso per ruoli. In produzione deve essere protetto da un provider di autenticazione.",
+src/App.jsx:3216:    "auth.secciones":"Sezioni:",
+src/App.jsx:3220:    "soporte.worker_item":"Worker prenotazioni pronto",
+src/App.jsx:3221:    "soporte.make_item":"Automazioni in attesa di segreto privato",
+src/App.jsx:3222:    "soporte.airtable_item":"Database pronto senza scritture attive",
+src/App.jsx:3223:    "soporte.stripe_item":"Pagamenti e messaggistica in attesa di configurazione",
+src/App.jsx:3226:    "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
+src/App.jsx:3232:    "nav.reprogramar":"Reagendar","nav.cancelar":"Cancelar reserva",
+src/App.jsx:3234:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Suporte",
+src/App.jsx:3236:    "login.title":"Entrar como função","login.entrar":"Entrar","login.cancelar":"Cancelar",
+src/App.jsx:3237:    "login.password":"Palavra-passe","login.ver_pwd":"👁️ Ver palavra-passe","login.ocultar_pwd":"🙈 Ocultar",
+src/App.jsx:3238:    "login.guardar_sesion":"Guardar sessão neste dispositivo","login.acceder_como":"Entrar como",
+src/App.jsx:3239:    "login.intro_pwd":"Introduza a palavra-passe atribuída a esta função.",
+src/App.jsx:3240:    "login.error_rol":"Selecione uma função válida.","login.error_pwd":"Palavra-passe incorreta.",
+src/App.jsx:3241:    "login.sesion_label":"Club Pádel 04 · Início de sessão",
+src/App.jsx:3242:    "login.legal":"Acesso local protegido por palavra-passe. Sessão guardável apenas neste dispositivo.",
+src/App.jsx:3243:    "login.olvide_pwd":"Esqueceu a palavra-passe?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Introduza o seu e-mail e, se a conta existir, receberá instruções para repor o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver registado no sistema, receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao início de sessão","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+src/App.jsx:3245:    "login.subtitle":"Selecione como pretende entrar na aplicação.",
+src/App.jsx:3246:    "login.idioma":"Idioma",
+src/App.jsx:3325:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+src/App.jsx:3328:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"A enviar...","cancelar.volver_reservas":"Voltar às reservas",
+src/App.jsx:3338:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou hora da sua reserva.",
+src/App.jsx:3412:    "auth.roles_title":"Funções e acessos","auth.pending_badge":"Configuração pendente",
+src/App.jsx:3413:    "auth.pending_desc":"Sistema de acesso por funções. Em produção deve ser protegido por fornecedor de autenticação.",
+src/App.jsx:3414:    "auth.secciones":"Secções:",
+src/App.jsx:3418:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx:3419:    "soporte.make_item":"Automatizações pendentes de segredo privado",
+src/App.jsx:3420:    "soporte.airtable_item":"Base de dados preparada sem escrita ativa",
+src/App.jsx:3421:    "soporte.stripe_item":"Pagamentos e mensagens pendentes de configuração",
+src/App.jsx:3424:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx:3430:    "nav.reprogramar":"Remarcar","nav.cancelar":"Cancelar reserva",
+src/App.jsx:3432:    "nav.admin":"Admin","nav.flujos_make":"Central técnica","nav.soporte":"Suporte",
+src/App.jsx:3434:    "login.title":"Entrar como perfil","login.entrar":"Entrar","login.cancelar":"Cancelar",
+src/App.jsx:3435:    "login.password":"Senha","login.ver_pwd":"👁️ Mostrar senha","login.ocultar_pwd":"🙈 Ocultar",
+src/App.jsx:3436:    "login.guardar_sesion":"Lembrar neste dispositivo","login.acceder_como":"Entrar como",
+src/App.jsx:3437:    "login.intro_pwd":"Digite a senha atribuída a este perfil.",
+src/App.jsx:3438:    "login.error_rol":"Selecione um perfil válido.","login.error_pwd":"Senha incorreta para este perfil.",
+src/App.jsx:3439:    "login.sesion_label":"Club Pádel 04 · Login",
+src/App.jsx:3440:    "login.legal":"Acesso local protegido por senha. Sessão salvável apenas neste dispositivo.",
+src/App.jsx:3441:    "login.olvide_pwd":"Esqueceu a senha?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Insira seu e-mail e, se a conta existir, você receberá instruções para redefinir o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver cadastrado no sistema, você receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao login","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+src/App.jsx:3443:    "login.subtitle":"Selecione como deseja entrar na aplicação.",
+src/App.jsx:3444:    "login.idioma":"Idioma",
+src/App.jsx:3523:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+src/App.jsx:3526:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Voltar para reservas",
+src/App.jsx:3610:    "auth.roles_title":"Perfis e acessos","auth.pending_badge":"Configuração pendente",
+src/App.jsx:3611:    "auth.pending_desc":"Sistema de acesso por perfis. Em produção deve ser protegido por provedor de autenticação.",
+src/App.jsx:3612:    "auth.secciones":"Seções:",
+src/App.jsx:3616:    "soporte.worker_item":"Worker de reservas pronto",
+src/App.jsx:3617:    "soporte.make_item":"Automações pendentes de segredo privado",
+src/App.jsx:3618:    "soporte.airtable_item":"Banco de dados preparado sem escritas ativas",
+src/App.jsx:3619:    "soporte.stripe_item":"Pagamentos e mensagens pendentes de configuração",
+src/App.jsx:3622:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx:3628:    "nav.reprogramar":"Umbuchen","nav.cancelar":"Buchung stornieren",
+src/App.jsx:3630:    "nav.admin":"Admin","nav.flujos_make":"Technisches Zentrum","nav.soporte":"Support",
+src/App.jsx:3632:    "login.title":"Als Rolle anmelden","login.entrar":"Eintreten","login.cancelar":"Abbrechen",
+src/App.jsx:3633:    "login.password":"Passwort","login.ver_pwd":"👁️ Passwort anzeigen","login.ocultar_pwd":"🙈 Ausblenden",
+src/App.jsx:3634:    "login.guardar_sesion":"Auf diesem Gerät speichern","login.acceder_como":"Anmelden als",
+src/App.jsx:3635:    "login.intro_pwd":"Geben Sie das dieser Rolle zugewiesene Passwort ein.",
+src/App.jsx:3636:    "login.error_rol":"Bitte wählen Sie eine gültige Rolle.","login.error_pwd":"Falsches Passwort für diese Rolle.",
+src/App.jsx:3637:    "login.sesion_label":"Club Pádel 04 · Anmeldung",
+src/App.jsx:3638:    "login.legal":"Lokaler Zugang durch Passwort geschützt. Sitzung nur auf diesem Gerät speicherbar.",
+src/App.jsx:3639:    "login.olvide_pwd":"Passwort vergessen?","login.recuperar_title":"Zugang wiederherstellen","login.recuperar_desc":"Geben Sie Ihre E-Mail-Adresse ein und, wenn das Konto existiert, erhalten Sie Anweisungen zur Zurücksetzung.","login.recuperar_email":"E-Mail-Adresse","login.recuperar_btn":"Anweisungen senden","login.recuperar_enviado":"Wenn diese Adresse im System registriert ist, erhalten Sie in Kürze Anweisungen. Prüfen Sie auch Ihren Spam-Ordner.","login.recuperar_volver":"Zurück zum Login","login.recuperar_preparado":"Bereit für Endpunkt: /api/auth/forgot-password",
+src/App.jsx:3641:    "login.subtitle":"Wählen Sie aus, wie Sie die Anwendung betreten möchten.",
+src/App.jsx:3642:    "login.idioma":"Sprache",
+src/App.jsx:3808:    "auth.roles_title":"Rollen und Zugriffe","auth.pending_badge":"Konfiguration ausstehend",
+src/App.jsx:3809:    "auth.pending_desc":"Rollenbasiertes Zugriffssystem. In Produktion muss es durch einen Authentifizierungsanbieter geschützt sein.",
+src/App.jsx:3810:    "auth.secciones":"Bereiche:",
+src/App.jsx:3814:    "soporte.worker_item":"Buchungs-Worker bereit",
+src/App.jsx:3815:    "soporte.make_item":"Automatisierungen warten auf privaten Schlüssel",
+src/App.jsx:3816:    "soporte.airtable_item":"Datenbank bereit ohne aktive Schreibvorgänge",
+src/App.jsx:3817:    "soporte.stripe_item":"Zahlungen und Messaging ausstehend",
+src/App.jsx:3820:    "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
+src/App.jsx:3972:    ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
+src/App.jsx:3974:    ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
+src/App.jsx:3978:    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
+src/App.jsx:3979:    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
+src/App.jsx:3980:    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+src/App.jsx:4029:  const makeOk = kpi.makeActivos >= 35;
+src/App.jsx:4030:  const makeStatus = kpi.makeErrores > 3 ? "error" : kpi.makeErrores > 0 ? "warn" : "ok";
+src/App.jsx:4069:            <Btn variant="secondary" onClick={() => setCurrent("flujos_make")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>⚙️ {tx("home.procesos")}</Btn>
+src/App.jsx:4076:            <FlowStatusBadge status={makeStatus} />
+src/App.jsx:4086:        <MetricCard label={tx("home.procesos_activos")} value={`${kpi.makeActivos}/43`} sub={`${kpi.makeErrores} ${kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
+src/App.jsx:4109:            { l: tx("home.activos"),      v: kpi.makeActivos,  c: T.accent },
+src/App.jsx:4110:            { l: tx("home.pausados"),     v: kpi.makePausados, c: T.warning },
+src/App.jsx:4111:            { l: tx("home.incidencias"),  v: kpi.makeErrores,  c: T.danger },
+src/App.jsx:4117:      {(kpi.makeErrores > 0 || kpi.incidenciasAbiertas > 0) && (
+src/App.jsx:4123:              {kpi.makeErrores > 0 && <span>{kpi.makeErrores} {kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")} · </span>}
+src/App.jsx:4127:          <Btn variant="secondary" onClick={() => setCurrent("flujos_make")} style={{ padding: "7px 14px", fontSize: ".8rem" }}>{tx("home.ver_procesos")}</Btn>
+src/App.jsx:4286:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx:4324:function ReprogramarReserva({ setCurrent }) {
+src/App.jsx:4397:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx:4488:            <label htmlFor="reprogramar-clave" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+src/App.jsx:4492:              id="reprogramar-clave"
+src/App.jsx:4518:            <label htmlFor="reprogramar-fecha" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+src/App.jsx:4522:              id="reprogramar-fecha"
+src/App.jsx:4533:            <label htmlFor="reprogramar-hora" style={{ display:"block", color:T.textDim, fontWeight:900, margin:"18px 0 8px" }}>
+src/App.jsx:4537:              id="reprogramar-hora"
+src/App.jsx:4555:            <label htmlFor="reprogramar-duracion" style={{ display:"block", color:T.textDim, fontWeight:900, margin:"18px 0 8px" }}>
+src/App.jsx:4559:              id="reprogramar-duracion"
+src/App.jsx:4679:            <Btn onClick={resetForm}>Reprogramar otra reserva</Btn>
+src/App.jsx:4701:  const reservasEndpoint =
+src/App.jsx:4702:    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
+src/App.jsx:4813:      const separador = reservasEndpoint.includes("?") ? "&" : "?";
+src/App.jsx:4816:        `${reservasEndpoint}${separador}` +
+src/App.jsx:4857:      setFuenteReservas(resultado.source || "airtable");
+src/App.jsx:4986:          Consultar mis reservas
+src/App.jsx:6543:      <AuthStatusPanel compact />
+src/App.jsx:6551:        <MetricCard label={tx("admin.procesos")} value={`${kpi.makeActivos}/43`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
+src/App.jsx:6583:function AuthProductionStatusPanel() {
+src/App.jsx:6584:  const mode = cp04GetStoredAuthMode();
+src/App.jsx:6585:  const isDemo = mode === CP04_AUTH_MODES.DEMO || mode === CP04_AUTH_MODES.LOCAL_DEMO;
+src/App.jsx:6593:        La app está preparada para conectar autenticación real mediante backend/Worker.
+src/App.jsx:6601:          "Login real pendiente: /api/auth/login",
+src/App.jsx:6602:          "Sesión real pendiente: /api/auth/me",
+src/App.jsx:6603:          "Recuperación real pendiente: /api/auth/forgot-password",
+src/App.jsx:6609:        el backend/Worker con sesión válida y rol real.
+src/App.jsx:6619:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+src/App.jsx:6630:  // Endpoints recomendados:
+src/App.jsx:6636:  // POST   /api/auth/change-password
+src/App.jsx:6637:  const PROFILE_BACKEND_ENDPOINTS = {
+src/App.jsx:6641:    changePassword: "/api/auth/change-password",
+src/App.jsx:6657:    // await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+src/App.jsx:6674:  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+src/App.jsx:6790:    // TODO: POST /api/auth/change-password
+src/App.jsx:7182:  // Login universal preparado para producción.
+src/App.jsx:7184:  const [loginEmail, setLoginEmail] = useState("");
+src/App.jsx:7185:  const [loginPassword, setLoginPassword] = useState("");
+src/App.jsx:7186:  const [loginError, setLoginError] = useState("");
+src/App.jsx:7188:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+src/App.jsx:7193:      desc: "Reservar pistas, consultar reservas y ranking.",
+src/App.jsx:7275:  function handleUniversalLogin(event) {
+src/App.jsx:7278:    const cleanEmail = loginEmail.trim().toLowerCase();
+src/App.jsx:7279:    const cleanPassword = loginPassword.trim();
+src/App.jsx:7282:      setLoginError("Introduce un correo electrónico válido.");
+src/App.jsx:7287:      setLoginError("Introduce una contraseña válida.");
+src/App.jsx:7295:    localStorage.setItem("cp04_auth_mode", "universal_demo");
+src/App.jsx:7298:    setLoginError("");
+src/App.jsx:7299:    setLoginPassword("");
+src/App.jsx:7360:  const loginClock = useClock();
+src/App.jsx:7361:  const loginLang = useLang();
+src/App.jsx:7362:  const ltx = key => t(key, loginLang);
+src/App.jsx:7378:                {ltx("login.sesion_label")}
+src/App.jsx:7383:                  <div style={{ color:T.accent, fontWeight:900, fontSize:"1.15rem", letterSpacing:".05em" }}>{loginClock.time}</div>
+src/App.jsx:7384:                  <div style={{ color:T.textDim, fontSize:".72rem", marginTop:2 }}>{loginClock.day}, {loginClock.date}</div>
+src/App.jsx:7390:              {ltx("login.title").split(" ").slice(0,-1).join(" ")} <span style={{ color:T.accent }}>{ltx("login.title").split(" ").slice(-1)}</span>
+src/App.jsx:7394:              {ltx("login.subtitle")}
+src/App.jsx:7398:        <form onSubmit={handleUniversalLogin} style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(5,10,18,.72)" }}>
+src/App.jsx:7410:            value={loginEmail}
+src/App.jsx:7411:            onChange={e => setLoginEmail(e.target.value)}
+src/App.jsx:7414:            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+src/App.jsx:7418:            value={loginPassword}
+src/App.jsx:7419:            onChange={e => setLoginPassword(e.target.value)}
+src/App.jsx:7420:            placeholder={ltx("login.password")}
+src/App.jsx:7422:            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+src/App.jsx:7424:          {loginError && <div style={{ color:"#ff8b8b", marginBottom:12, fontWeight:800 }}>{loginError}</div>}
+src/App.jsx:7430:              {ltx("login.olvide_pwd")}
+src/App.jsx:7434:            Preparado para conectar con backend real: /api/auth/login, /api/auth/register y /api/auth/forgot-password.
+src/App.jsx:7469:                  {ltx("login.acceder_como")} {roleLabels[pendingRole]?.label || roleConfig[pendingRole]?.label}
+src/App.jsx:7471:                <p style={{ color:T.textDim, marginTop:0, marginBottom:14 }}>{ltx("login.intro_pwd")}</p>
+src/App.jsx:7476:                  placeholder={ltx("login.password")}
+src/App.jsx:7483:                    {showRolePassword ? ltx("login.ocultar_pwd") : ltx("login.ver_pwd")}
+src/App.jsx:7487:                    {ltx("login.olvide_pwd")}
+src/App.jsx:7492:                  {ltx("login.guardar_sesion")}
+src/App.jsx:7498:                    {ltx("login.entrar")}
+src/App.jsx:7503:                    {ltx("login.cancelar")}
+src/App.jsx:7513:                    <strong style={{ display:"block", marginBottom:6 }}>{ltx("login.recuperar_title")}</strong>
+src/App.jsx:7514:                    <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_desc")}</p>
+src/App.jsx:7520:                        placeholder={ltx("login.recuperar_email")}
+src/App.jsx:7528:                          {ltx("login.recuperar_btn")}
+src/App.jsx:7532:                          {ltx("login.recuperar_volver")}
+src/App.jsx:7541:                    <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
+src/App.jsx:7542:                    <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_enviado")}</p>
+src/App.jsx:7545:                      {ltx("login.recuperar_volver")}
+src/App.jsx:7553:              {ltx("login.legal")}
+worker-reservas/src/index.js:70:  if (accion === "reprogramar_reserva") {
+worker-reservas/src/index.js:94:  // CP04_DOMINGOS_V1: crear o reprogramar en domingo es inválido.
+worker-reservas/src/index.js:97:    (accion === "crear_reserva" || accion === "reprogramar_reserva") &&
+worker-reservas/src/index.js:141:  if (accion === "reprogramar_reserva") {
+worker-reservas/src/index.js:342:  if (accion === "reprogramar_reserva") {
+worker-reservas/src/index.js:348:      accion: "reprogramar_reserva",
+worker-reservas/src/index.js:414:async function forwardToMake(payload, env) {
+worker-reservas/src/index.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/src/index.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/src/index.js:428:async function prepareAirtableWrite(payload, env) {
+worker-reservas/src/index.js:430:    (env.AIRTABLE_TOKEN || env.AIRTABLE_API_KEY) &&
+worker-reservas/src/index.js:431:    env.AIRTABLE_BASE_ID &&
+worker-reservas/src/index.js:432:    (env.AIRTABLE_RESERVAS_TABLE || env.AIRTABLE_TABLE_ID)
+worker-reservas/src/index.js:440:    reason: "Reserva confirmada vía Make. Escritura directa Airtable desactivada para evitar duplicados y bloqueos 403."
+worker-reservas/src/index.js:472:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/src/index.js:473:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/src/index.js:475:  if (makeResult.configured && !makeResult.ok) {
+worker-reservas/src/index.js:476:    return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
+worker-reservas/src/index.js:481:    status: makeResult.configured ? "forwarded" : "accepted_without_make_webhook",
+worker-reservas/src/index.js:482:    make: { configured: makeResult.configured, status: makeResult.status },
+worker-reservas/src/index.js:483:    airtable: airtableResult,
+worker-reservas/src/index.js:505:      // CP04_DOMINGOS_V1: una consulta dominical devuelve cerrado sin leer Airtable.
+worker-reservas/src/index.js:538:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/src/index.js:542:        error: "Airtable no está configurado en el Worker",
+worker-reservas/src/index.js:544:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/src/index.js:545:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/src/index.js:546:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/src/index.js:563:  const airtableUrl =
+worker-reservas/src/index.js:564:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/src/index.js:572:  const airtableRes = await fetch(airtableUrl, {
+worker-reservas/src/index.js:575:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/src/index.js:580:  const data = await airtableRes.json();
+worker-reservas/src/index.js:582:  if (!airtableRes.ok) {
+worker-reservas/src/index.js:586:        error: "Error consultando disponibilidad en Airtable",
+worker-reservas/src/index.js:587:        status: airtableRes.status,
+worker-reservas/src/index.js:680:    !env.AIRTABLE_TOKEN ||
+worker-reservas/src/index.js:681:    !env.AIRTABLE_BASE_ID ||
+worker-reservas/src/index.js:682:    !env.AIRTABLE_TABLE_ID
+worker-reservas/src/index.js:687:        error: "Airtable not configured",
+worker-reservas/src/index.js:723:  const endpoint =
+worker-reservas/src/index.js:724:    `https://api.airtable.com/v0/` +
+worker-reservas/src/index.js:725:    `${encodeURIComponent(env.AIRTABLE_BASE_ID)}/` +
+worker-reservas/src/index.js:726:    `${encodeURIComponent(env.AIRTABLE_TABLE_ID)}`;
+worker-reservas/src/index.js:732:    const airtableUrl = new URL(endpoint);
+worker-reservas/src/index.js:734:    airtableUrl.searchParams.set(
+worker-reservas/src/index.js:739:    airtableUrl.searchParams.set(
+worker-reservas/src/index.js:744:    airtableUrl.searchParams.set(
+worker-reservas/src/index.js:750:      airtableUrl.searchParams.set(
+worker-reservas/src/index.js:756:    const airtableResponse = await fetch(
+worker-reservas/src/index.js:757:      airtableUrl.toString(),
+worker-reservas/src/index.js:761:          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/src/index.js:767:    const rawText = await airtableResponse.text();
+worker-reservas/src/index.js:769:    let airtableData = {};
+worker-reservas/src/index.js:772:      airtableData = rawText
+worker-reservas/src/index.js:779:          error: "Invalid Airtable response",
+worker-reservas/src/index.js:780:          airtable_status: airtableResponse.status,
+worker-reservas/src/index.js:787:    if (!airtableResponse.ok) {
+worker-reservas/src/index.js:791:          error: "Airtable request failed",
+worker-reservas/src/index.js:792:          airtable_status: airtableResponse.status,
+worker-reservas/src/index.js:800:      airtableData.records
+worker-reservas/src/index.js:802:      ? airtableData.records
+worker-reservas/src/index.js:808:      typeof airtableData.offset === "string"
+worker-reservas/src/index.js:809:        ? airtableData.offset
+worker-reservas/src/index.js:951:      source: "airtable",
+worker-reservas/src/index.js:980:  if (!env.MAKE_ALTA_JUGADOR_WEBHOOK) {
+worker-reservas/src/index.js:982:      { ok: false, error: "Alta webhook not configured" },
+worker-reservas/src/index.js:1059:  const makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
+worker-reservas/src/index.js:1065:  const responseText = await makeResponse.text();
+worker-reservas/src/index.js:1067:  if (!makeResponse.ok) {
+worker-reservas/src/index.js:1071:        error: "Make request failed",
+worker-reservas/src/index.js:1072:        status: makeResponse.status,
+worker-reservas/src/index.js:1083:      makeResponse: responseText || null,
+worker-reservas/src/index.js:1094:// AUDITORIA 22 · SUPABASE AUTH HELPERS
+worker-reservas/src/index.js:1095:// Helpers para conectar Supabase Auth cuando existan credenciales reales.
+worker-reservas/src/index.js:1096:// Si faltan SUPABASE_URL o SUPABASE_ANON_KEY, el Worker mantiene modo backend_stub.
+worker-reservas/src/index.js:1098:function cp04SupabaseConfigured(env) {
+worker-reservas/src/index.js:1099:  return Boolean(env && env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
+worker-reservas/src/index.js:1102:function cp04SupabaseBaseUrl(env) {
+worker-reservas/src/index.js:1103:  return String(env.SUPABASE_URL || "").replace(/\/+$/, "");
+worker-reservas/src/index.js:1106:function cp04SupabaseHeaders(env, extra = {}) {
+worker-reservas/src/index.js:1108:    apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1109:    Authorization: `Bearer ${String(env.SUPABASE_ANON_KEY || "")}`,
+worker-reservas/src/index.js:1115:function cp04GetBearerToken(request) {
+worker-reservas/src/index.js:1116:  const auth = request.headers.get("Authorization") || "";
+worker-reservas/src/index.js:1117:  const match = auth.match(/^Bearer\s+(.+)$/i);
+worker-reservas/src/index.js:1121:async function cp04SupabaseRequest(env, path, options = {}) {
+worker-reservas/src/index.js:1122:  const base = cp04SupabaseBaseUrl(env);
+worker-reservas/src/index.js:1125:    headers: cp04SupabaseHeaders(env, options.headers || {})
+worker-reservas/src/index.js:1144:function cp04MapSupabaseUserToCp04(user, fallbackRole = "PLAYER") {
+worker-reservas/src/index.js:1147:  const role = cp04NormalizeAuthRole(
+worker-reservas/src/index.js:1153:  return cp04SafeAuthUser({
+worker-reservas/src/index.js:1154:    id: user?.id || "supabase-user",
+worker-reservas/src/index.js:1161:function cp04SupabaseErrorResponse(request, env, result, fallbackMessage = "Error de autenticación.") {
+worker-reservas/src/index.js:1165:      auth_ready: true,
+worker-reservas/src/index.js:1166:      provider: "supabase",
+worker-reservas/src/index.js:1167:      error: result?.data?.error || result?.data?.error_description || "SUPABASE_AUTH_ERROR",
+worker-reservas/src/index.js:1176:// AUDITORIA 21 · AUTH BACKEND STUBS
+worker-reservas/src/index.js:1177:// Preparación segura de endpoints de autenticación real.
+worker-reservas/src/index.js:1178:// En producción, estos endpoints deben conectarse a proveedor real de auth,
+worker-reservas/src/index.js:1179:// base de usuarios y sesiones/tokens seguros.
+worker-reservas/src/index.js:1181:const CP04_AUTH_ROLES = ["PLAYER", "STAFF", "ADMIN", "SUPPORT"];
+worker-reservas/src/index.js:1183:const CP04_AUTH_PERMISSIONS = {
+worker-reservas/src/index.js:1185:  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+worker-reservas/src/index.js:1186:  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+worker-reservas/src/index.js:1187:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
+worker-reservas/src/index.js:1190:function cp04NormalizeAuthRole(role) {
+worker-reservas/src/index.js:1192:  return CP04_AUTH_ROLES.includes(value) ? value : "PLAYER";
+worker-reservas/src/index.js:1195:function cp04SafeAuthUser(user = {}) {
+worker-reservas/src/index.js:1196:  const role = cp04NormalizeAuthRole(user.role);
+worker-reservas/src/index.js:1202:    permissions: CP04_AUTH_PERMISSIONS[role] || CP04_AUTH_PERMISSIONS.PLAYER
+worker-reservas/src/index.js:1214:function cp04AuthNotConfiguredResponse(request, env, extra = {}) {
+worker-reservas/src/index.js:1218:      auth_ready: false,
+worker-reservas/src/index.js:1220:      error: "AUTH_BACKEND_NOT_CONFIGURED",
+worker-reservas/src/index.js:1223:        "AUTH_PROVIDER",
+worker-reservas/src/index.js:1226:        "EMAIL_PROVIDER_TOKEN"
+worker-reservas/src/index.js:1235:async function handleAuthRoute(request, env, url) {
+worker-reservas/src/index.js:1239:  const supabaseReady = cp04SupabaseConfigured(env);
+worker-reservas/src/index.js:1245:  if (path === "/api/auth/me" && method === "GET") {
+worker-reservas/src/index.js:1246:    if (!supabaseReady) {
+worker-reservas/src/index.js:1250:          auth_ready: false,
+worker-reservas/src/index.js:1252:          user: cp04SafeAuthUser({ role: "PLAYER" }),
+worker-reservas/src/index.js:1253:          message: "Endpoint /api/auth/me preparado. Pendiente validar token real."
+worker-reservas/src/index.js:1260:    const token = cp04GetBearerToken(request);
+worker-reservas/src/index.js:1262:    if (!token) {
+worker-reservas/src/index.js:1266:          auth_ready: true,
+worker-reservas/src/index.js:1267:          provider: "supabase",
+worker-reservas/src/index.js:1268:          error: "MISSING_BEARER_TOKEN",
+worker-reservas/src/index.js:1269:          message: "Falta Authorization Bearer token."
+worker-reservas/src/index.js:1276:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+worker-reservas/src/index.js:1279:        apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1280:        Authorization: `Bearer ${token}`,
+worker-reservas/src/index.js:1295:      return cp04SupabaseErrorResponse(
+worker-reservas/src/index.js:1303:    const user = cp04MapSupabaseUserToCp04(data, "PLAYER");
+worker-reservas/src/index.js:1308:        auth_ready: true,
+worker-reservas/src/index.js:1309:        provider: "supabase",
+worker-reservas/src/index.js:1319:  if (path === "/api/auth/logout" && method === "POST") {
+worker-reservas/src/index.js:1320:    if (!supabaseReady) {
+worker-reservas/src/index.js:1324:          auth_ready: false,
+worker-reservas/src/index.js:1326:          message: "Logout preparado. Pendiente invalidar sesión real cuando exista backend auth."
+worker-reservas/src/index.js:1333:    const token = cp04GetBearerToken(request);
+worker-reservas/src/index.js:1335:    if (!token) {
+worker-reservas/src/index.js:1339:          auth_ready: true,
+worker-reservas/src/index.js:1340:          provider: "supabase",
+worker-reservas/src/index.js:1341:          message: "Sesión local cerrada. No había token Bearer que invalidar."
+worker-reservas/src/index.js:1348:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/logout`, {
+worker-reservas/src/index.js:1351:        apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1352:        Authorization: `Bearer ${token}`,
+worker-reservas/src/index.js:1360:        auth_ready: true,
+worker-reservas/src/index.js:1361:        provider: "supabase",
+worker-reservas/src/index.js:1362:        message: response.ok ? "Logout realizado." : "Logout solicitado, revisar proveedor."
+worker-reservas/src/index.js:1369:  if (path === "/api/auth/login" && method === "POST") {
+worker-reservas/src/index.js:1372:    if (!supabaseReady) {
+worker-reservas/src/index.js:1373:      return cp04AuthNotConfiguredResponse(request, env, {
+worker-reservas/src/index.js:1374:        endpoint: "/api/auth/login",
+worker-reservas/src/index.js:1389:          auth_ready: true,
+worker-reservas/src/index.js:1390:          provider: "supabase",
+worker-reservas/src/index.js:1399:    const result = await cp04SupabaseRequest(env, "/auth/v1/token?grant_type=password", {
+worker-reservas/src/index.js:1405:      return cp04SupabaseErrorResponse(request, env, result, "Login no válido.");
+worker-reservas/src/index.js:1408:    const user = cp04MapSupabaseUserToCp04(result.data?.user, "PLAYER");
+worker-reservas/src/index.js:1413:        auth_ready: true,
+worker-reservas/src/index.js:1414:        provider: "supabase",
+worker-reservas/src/index.js:1418:        access_token: result.data?.access_token || "",
+worker-reservas/src/index.js:1419:        refresh_token: result.data?.refresh_token || "",
+worker-reservas/src/index.js:1421:        token_type: result.data?.token_type || "bearer"
+worker-reservas/src/index.js:1428:  if (path === "/api/auth/register" && method === "POST") {
+worker-reservas/src/index.js:1431:    if (!supabaseReady) {
+worker-reservas/src/index.js:1432:      return cp04AuthNotConfiguredResponse(request, env, {
+worker-reservas/src/index.js:1433:        endpoint: "/api/auth/register",
+worker-reservas/src/index.js:1452:          auth_ready: true,
+worker-reservas/src/index.js:1453:          provider: "supabase",
+worker-reservas/src/index.js:1462:    const result = await cp04SupabaseRequest(env, "/auth/v1/signup", {
+worker-reservas/src/index.js:1476:      return cp04SupabaseErrorResponse(request, env, result, "No se pudo registrar el usuario.");
+worker-reservas/src/index.js:1479:    const user = cp04MapSupabaseUserToCp04(result.data?.user, "PLAYER");
+worker-reservas/src/index.js:1484:        auth_ready: true,
+worker-reservas/src/index.js:1485:        provider: "supabase",

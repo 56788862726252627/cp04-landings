@@ -1,0 +1,260 @@
+src/App.jsx:44: * - No contiene webhooks reales de Make.
+src/App.jsx:45: * - No contiene API keys, tokens ni credenciales.
+src/App.jsx:46: * - un endpoint seguro propio: /api/reservas.
+src/App.jsx:47: * - La integración con Make/Airtable/Stripe debe hacerse en backend, Edge Function,
+src/App.jsx:48: *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
+src/App.jsx:72:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+src/App.jsx:123:  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
+src/App.jsx:124:  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
+src/App.jsx:125:  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
+src/App.jsx:153:  { name: "Automatización de procesos", status: "Activo", detail: "Canal interno seguro configurado", flow: "Reservas → Procesos → Base de datos" },
+src/App.jsx:155:  { name: "Pagos", status: "Listo para conexión", detail: "Reservas, bonos, membresías y torneos", flow: "Sistema → Pagos" },
+src/App.jsx:157:  { name: "Calendario", status: "Listo para conexión", detail: "Reservas, disponibilidad y eventos", flow: "Sistema → Calendario" },
+src/App.jsx:162:  { id: "PLAYER", label: "Jugador / cliente", access: "Activo", sections: "Inicio, Reservas, Ranking", permissions: ["Crear solicitud de reserva", "Consultar ranking del club", "Ver participación en torneos"] },
+src/App.jsx:163:  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+src/App.jsx:392:    accion: "crear_reserva",
+src/App.jsx:401:    reserva: {
+src/App.jsx:418:  const cleanKey = form.clave_reserva.trim();
+src/App.jsx:420:  const selectedDate = form.nueva_fecha_reserva
+src/App.jsx:421:    ? new Date(`${form.nueva_fecha_reserva}T00:00:00`)
+src/App.jsx:426:    errors.clave_reserva = _t("errors.clave");
+src/App.jsx:428:    errors.clave_reserva = _t("errors.clave_incompleta");
+src/App.jsx:431:  if (!form.nueva_fecha_reserva) {
+src/App.jsx:432:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha");
+src/App.jsx:434:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha_pasado");
+src/App.jsx:435:  } else if (isSundayISO(form.nueva_fecha_reserva)) {
+src/App.jsx:436:    errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+src/App.jsx:447:  if (!errors.nueva_fecha_reserva && !errors.nueva_hora_inicio && !errors.duracion_minutos) {
+src/App.jsx:448:    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+src/App.jsx:451:    if (slotStatus === "closed") errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+src/App.jsx:470:    accion: "reprogramar_reserva",
+src/App.jsx:471:    clave_reserva: form.clave_reserva.trim(),
+src/App.jsx:472:    nueva_fecha_reserva: form.nueva_fecha_reserva,
+src/App.jsx:478:    origen: "app_publica_reprogramar_reserva",
+src/App.jsx:483:  const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx:508:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+src/App.jsx:524:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+src/App.jsx:567:      setMensaje("Club cerrado los domingos · no se admiten reservas durante todo el día.");
+src/App.jsx:803:function AuthStatusPanel({ compact = false }) {
+src/App.jsx:806:  return <Card><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}><div><h3 style={{ margin: 0, fontFamily: T.fontDisplay, letterSpacing: "-.04em" }}>{tx("auth.roles_title")}</h3><p style={{ color: T.textDim, lineHeight: 1.65, marginTop: 8 }}>{tx("auth.pending_desc")}</p></div><span className="cp04-badge" style={{ color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "7px 11px", fontWeight: 900, fontSize: ".74rem", whiteSpace: "nowrap" }}>{tx("auth.pending_badge")}</span></div><div className={compact ? undefined : "cp04-grid-2"} style={compact ? { display: "grid", gap: 12 } : undefined}>{ROLES.map((role) => <div key={role.id} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 16, background: "rgba(255,255,255,.035)" }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong style={{ color: T.accent }}>{role.id}</strong><span style={{ color: T.warning, fontSize: ".82rem", fontWeight: 900 }}>{role.access}</span></div><div style={{ marginTop: 8, fontWeight: 900 }}>{role.label}</div><div style={{ color: T.textDim, marginTop: 6, lineHeight: 1.55 }}>{tx("auth.secciones")} {role.sections}</div>{!compact && <PanelList items={role.permissions} />}</div>)}</div></Card>;
+src/App.jsx:926:function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
+src/App.jsx:1100:  const cleanSub = sub ? sub.replace(/ ?·? ?demo/gi, "").replace(/Make/gi, "Procesos").trim() : sub;
+src/App.jsx:1119:// Los datos de Make deben venir de un endpoint propio o webhook,
+src/App.jsx:1123:  make: "demo/prepared",
+src/App.jsx:1124:  airtable: "prepared",
+src/App.jsx:1125:  stripe: "prepared",
+src/App.jsx:1129:const DEMO_RESERVAS_HOY = [
+src/App.jsx:1135:const DEMO_RESERVAS_SEMANA = [12, 18, 24, 19, 27, 31, 22];
+src/App.jsx:1145:  reservasHoy: 12,
+src/App.jsx:1146:  reservasSemana: 68,
+src/App.jsx:1154:  makeActivos: 38,
+src/App.jsx:1155:  makeErrores: 2,
+src/App.jsx:1156:  makePausados: 3,
+src/App.jsx:1157:  tasaExitoMake: 97.4,
+src/App.jsx:1163:const DEMO_MAKE_EJECUCIONES_24H = [42, 55, 38, 61, 47, 53, 49, 66, 71, 58, 44, 39, 52, 48, 57, 63, 70, 65, 59, 42, 38, 44, 51, 48];
+src/App.jsx:1165:const DEMO_MAKE_CATEGORIAS = [
+src/App.jsx:1166:  { l:"Reservas", v:9, c:"#2f6bff" },
+src/App.jsx:1178:const DEMO_MAKE_FLUJOS_TOP = [
+src/App.jsx:1179:  { l:"API Reservas", v:892, c:"#2f6bff" },
+src/App.jsx:1186:const DEMO_MAKE_FLUJOS_ERRORES = [
+src/App.jsx:1203:    "make_id": "5736472",
+src/App.jsx:1204:    "make_team_id": "1099976",
+src/App.jsx:1205:    "make_folder_id": "316391",
+src/App.jsx:1206:    "make_active": true
+src/App.jsx:1218:    "make_id": "6199248",
+src/App.jsx:1219:    "make_team_id": "1099976",
+src/App.jsx:1220:    "make_folder_id": "316391",
+src/App.jsx:1221:    "make_active": true
+src/App.jsx:1233:    "make_id": "5811901",
+src/App.jsx:1234:    "make_team_id": "1099976",
+src/App.jsx:1235:    "make_folder_id": "316391",
+src/App.jsx:1236:    "make_active": true
+src/App.jsx:1240:    "nombre": "📡 API Reservas Club Pádel 04 · FINAL V2 · Crear + Cancelar + Ocupación",
+src/App.jsx:1241:    "nombre_final": "📡 API Reservas Club Pádel 04 · FINAL V2 · Crear + Cancelar + Ocupación",
+src/App.jsx:1244:    "categoria": "Reservas",
+src/App.jsx:1246:    "funcion": "Gestiona reservas desde la app.",
+src/App.jsx:1247:    "blueprint": "workflows/01-api-reservas/final/API_Reservas_Club_Padel_04_FINAL_V2_Crear_Cancelar_Ocupacion.blueprint.json",
+src/App.jsx:1248:    "make_id": "5697630",
+src/App.jsx:1249:    "make_team_id": "1099976",
+src/App.jsx:1250:    "make_folder_id": "316391",
+src/App.jsx:1251:    "make_active": true
+src/App.jsx:1261:    "funcion": "Backup semanal de reservas y socios.",
+src/App.jsx:1263:    "make_id": "6217724",
+src/App.jsx:1264:    "make_team_id": "1099976",
+src/App.jsx:1265:    "make_folder_id": "316391",
+src/App.jsx:1266:    "make_active": true
+src/App.jsx:1278:    "make_id": "5288809",
+src/App.jsx:1279:    "make_team_id": "1099976",
+src/App.jsx:1280:    "make_folder_id": "316391",
+src/App.jsx:1281:    "make_active": true
+src/App.jsx:1293:    "make_id": "5791022",
+src/App.jsx:1294:    "make_team_id": "1099976",
+src/App.jsx:1295:    "make_folder_id": "316391",
+src/App.jsx:1296:    "make_active": true
+src/App.jsx:1300:    "nombre": "💬 Chatbot Web Reservas Sin Tally · Pádel 04",
+src/App.jsx:1301:    "nombre_final": "💬 Chatbot Web Reservas Sin Tally · Pádel 04",
+src/App.jsx:1304:    "categoria": "Reservas",
+src/App.jsx:1307:    "blueprint": "workflows/08-chatbot-web-reservas-sin-tally-padel-04/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1308:    "make_id": "5799061",
+src/App.jsx:1309:    "make_team_id": "1099976",
+src/App.jsx:1310:    "make_folder_id": "316391",
+src/App.jsx:1311:    "make_active": true
+src/App.jsx:1319:    "categoria": "Reservas",
+src/App.jsx:1323:    "make_id": "5791133",
+src/App.jsx:1324:    "make_team_id": "1099976",
+src/App.jsx:1325:    "make_folder_id": "316391",
+src/App.jsx:1326:    "make_active": true
+src/App.jsx:1338:    "make_id": "5791116",
+src/App.jsx:1339:    "make_team_id": "1099976",
+src/App.jsx:1340:    "make_folder_id": "316391",
+src/App.jsx:1341:    "make_active": true
+src/App.jsx:1353:    "make_id": "5812456",
+src/App.jsx:1354:    "make_team_id": "1099976",
+src/App.jsx:1355:    "make_folder_id": "316391",
+src/App.jsx:1356:    "make_active": true
+src/App.jsx:1368:    "make_id": "5291559",
+src/App.jsx:1369:    "make_team_id": "1099976",
+src/App.jsx:1370:    "make_folder_id": "316391",
+src/App.jsx:1371:    "make_active": true
+src/App.jsx:1383:    "make_id": "4919937",
+src/App.jsx:1384:    "make_team_id": "1099976",
+src/App.jsx:1385:    "make_folder_id": "316391",
+src/App.jsx:1386:    "make_active": true
+src/App.jsx:1398:    "make_id": "5736800",
+src/App.jsx:1399:    "make_team_id": "1099976",
+src/App.jsx:1400:    "make_folder_id": "316391",
+src/App.jsx:1401:    "make_active": true
+src/App.jsx:1413:    "make_id": "5791128",
+src/App.jsx:1414:    "make_team_id": "1099976",
+src/App.jsx:1415:    "make_folder_id": "316391",
+src/App.jsx:1416:    "make_active": true
+src/App.jsx:1428:    "make_id": "5811888",
+src/App.jsx:1429:    "make_team_id": "1099976",
+src/App.jsx:1430:    "make_folder_id": "316391",
+src/App.jsx:1431:    "make_active": true
+src/App.jsx:1443:    "make_id": "5811864",
+src/App.jsx:1444:    "make_team_id": "1099976",
+src/App.jsx:1445:    "make_folder_id": "316391",
+src/App.jsx:1446:    "make_active": true
+src/App.jsx:1450:    "nombre": "🔑 Generación QR Acceso · Reserva Confirmada · Club Pádel 04 · CANDIDATO",
+src/App.jsx:1451:    "nombre_final": "🔑 Generación QR Acceso · Reserva Confirmada · Club Pádel 04 · CANDIDATO",
+src/App.jsx:1456:    "funcion": "Genera QR de acceso para reserva confirmada, envía email y actualiza Airtable.",
+src/App.jsx:1457:    "blueprint": "workflows/06-generacion-qr-acceso/final/Generacion_QR_Acceso_Reserva_Confirmada_Club_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1458:    "make_id": "6244975",
+src/App.jsx:1459:    "make_team_id": "1099976",
+src/App.jsx:1460:    "make_folder_id": "316391",
+src/App.jsx:1461:    "make_active": true
+src/App.jsx:1465:    "nombre": "📋 Gestión Lista de Espera Reservas · Pádel 04 · DEFINITIVO",
+src/App.jsx:1466:    "nombre_final": "📋 Gestión Lista de Espera Reservas · Pádel 04 · DEFINITIVO",
+src/App.jsx:1469:    "categoria": "Reservas",
+src/App.jsx:1472:    "blueprint": "workflows/18-gestion-lista-espera-reservas/final/Gestion_Lista_de_Espera_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1473:    "make_id": "5791113",
+src/App.jsx:1474:    "make_team_id": "1099976",
+src/App.jsx:1475:    "make_folder_id": "316391",
+src/App.jsx:1476:    "make_active": true
+src/App.jsx:1488:    "make_id": "5791119",
+src/App.jsx:1489:    "make_team_id": "1099976",
+src/App.jsx:1490:    "make_folder_id": "316391",
+src/App.jsx:1491:    "make_active": true
+src/App.jsx:1495:    "nombre": "🗺️ Mapa de Flujos + Auditoría Make · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1496:    "nombre_final": "🗺️ Mapa de Flujos + Auditoría Make · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1501:    "funcion": "Registra y audita el mapa de flujos Make de Club Pádel 04.",
+src/App.jsx:1502:    "blueprint": "workflows/05-mapa-flujos-auditoria-make/final/Mapa_de_Flujos_Auditoria_Make_Club_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1503:    "make_id": "6233755",
+src/App.jsx:1504:    "make_team_id": "1099976",
+src/App.jsx:1505:    "make_folder_id": "316391",
+src/App.jsx:1506:    "make_active": true
+src/App.jsx:1518:    "make_id": "5750308",
+src/App.jsx:1519:    "make_team_id": "1099976",
+src/App.jsx:1520:    "make_folder_id": "316391",
+src/App.jsx:1521:    "make_active": true
+src/App.jsx:1533:    "make_id": "5811918",
+src/App.jsx:1534:    "make_team_id": "1099976",
+src/App.jsx:1535:    "make_folder_id": "316391",
+src/App.jsx:1536:    "make_active": true
+src/App.jsx:1548:    "make_id": "5736468",
+src/App.jsx:1549:    "make_team_id": "1099976",
+src/App.jsx:1550:    "make_folder_id": "316391",
+src/App.jsx:1551:    "make_active": true
+src/App.jsx:1563:    "make_id": "6216523",
+src/App.jsx:1564:    "make_team_id": "1099976",
+src/App.jsx:1565:    "make_folder_id": "316391",
+src/App.jsx:1566:    "make_active": true
+src/App.jsx:1578:    "make_id": "5799041",
+src/App.jsx:1579:    "make_team_id": "1099976",
+src/App.jsx:1580:    "make_folder_id": "316391",
+src/App.jsx:1581:    "make_active": true
+src/App.jsx:1593:    "make_id": "5812297",
+src/App.jsx:1594:    "make_team_id": "1099976",
+src/App.jsx:1595:    "make_folder_id": "316391",
+src/App.jsx:1596:    "make_active": true
+src/App.jsx:1608:    "make_id": "5736470",
+src/App.jsx:1609:    "make_team_id": "1099976",
+src/App.jsx:1610:    "make_folder_id": "316391",
+src/App.jsx:1611:    "make_active": true
+src/App.jsx:1621:    "funcion": "Envía recordatorio automático 24 horas antes de la reserva.",
+src/App.jsx:1623:    "make_id": "4942506",
+src/App.jsx:1624:    "make_team_id": "1099976",
+src/App.jsx:1625:    "make_folder_id": "316391",
+src/App.jsx:1626:    "make_active": true
+src/App.jsx:1638:    "make_id": "5330078",
+src/App.jsx:1639:    "make_team_id": "1099976",
+src/App.jsx:1640:    "make_folder_id": "316391",
+src/App.jsx:1641:    "make_active": true
+src/App.jsx:1653:    "make_id": "5791374",
+src/App.jsx:1654:    "make_team_id": "1099976",
+src/App.jsx:1655:    "make_folder_id": "316391",
+src/App.jsx:1656:    "make_active": true
+src/App.jsx:1668:    "make_id": "5736797",
+src/App.jsx:1669:    "make_team_id": "1099976",
+src/App.jsx:1670:    "make_folder_id": "316391",
+src/App.jsx:1671:    "make_active": true
+src/App.jsx:1679:    "categoria": "Reservas",
+src/App.jsx:1681:    "funcion": "Sincroniza reservas confirmadas con Google Calendar y Airtable.",
+src/App.jsx:1683:    "make_id": "5735907",
+src/App.jsx:1684:    "make_team_id": "1099976",
+src/App.jsx:1685:    "make_folder_id": "316391",
+src/App.jsx:1686:    "make_active": true
+src/App.jsx:1690:    "nombre": "⚠️ Alerta Crítica Fallos Make · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1691:    "nombre_final": "⚠️ Alerta Crítica Fallos Make · Club Pádel 04 · DEFINITIVO",
+src/App.jsx:1696:    "funcion": "Recibe incidencias críticas de Make y avisa al administrador.",
+src/App.jsx:1697:    "blueprint": "workflows/03-alerta-critica-fallos-make/final/Alerta_Critica_Fallos_Make_Club_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1698:    "make_id": "6192096",
+src/App.jsx:1699:    "make_team_id": "1099976",
+src/App.jsx:1700:    "make_folder_id": "316391",
+src/App.jsx:1701:    "make_active": false
+src/App.jsx:1711:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1713:    "make_id": "5799031",
+src/App.jsx:1714:    "make_team_id": "1099976",
+src/App.jsx:1715:    "make_folder_id": "316391",
+src/App.jsx:1716:    "make_active": false
+src/App.jsx:1720:    "nombre": "🤖 Bot IA Reservas · Telegram · Pádel 04 · DEFINITIVO",
+src/App.jsx:1721:    "nombre_final": "🤖 Bot IA Reservas · Telegram · Pádel 04 · DEFINITIVO",
+src/App.jsx:1724:    "categoria": "Reservas",
+src/App.jsx:1726:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1727:    "blueprint": "workflows/36-bot-ia-reservas-telegram-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1728:    "make_id": "4832095",
+src/App.jsx:1729:    "make_team_id": "1099976",
+src/App.jsx:1730:    "make_folder_id": "316391",
+src/App.jsx:1731:    "make_active": false
+src/App.jsx:1735:    "nombre": "🤖 Bot IA Reservas · WhatsApp · Pádel 04 · DEFINITIVO",
+src/App.jsx:1736:    "nombre_final": "🤖 Bot IA Reservas · WhatsApp · Pádel 04 · DEFINITIVO",
+src/App.jsx:1739:    "categoria": "Reservas",
+src/App.jsx:1741:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1742:    "blueprint": "workflows/37-bot-ia-reservas-whatsapp-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+src/App.jsx:1743:    "make_id": "5798996",
+src/App.jsx:1744:    "make_team_id": "1099976",
+src/App.jsx:1745:    "make_folder_id": "316391",
+src/App.jsx:1746:    "make_active": false
+src/App.jsx:1756:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1758:    "make_id": "5791124",
+src/App.jsx:1759:    "make_team_id": "1099976",
+src/App.jsx:1760:    "make_folder_id": "316391",
+src/App.jsx:1761:    "make_active": false
+src/App.jsx:1771:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1773:    "make_id": "5736466",
+src/App.jsx:1774:    "make_team_id": "1099976",
+src/App.jsx:1775:    "make_folder_id": "316391",
+src/App.jsx:1776:    "make_active": false
+src/App.jsx:1786:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1788:    "make_id": "5733370",

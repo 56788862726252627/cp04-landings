@@ -1,0 +1,94 @@
+/* Fondos internos Club Pádel 04 */
+
+body.cp04-module-screen-active {
+  background: #020617 !important;
+  overflow-x: hidden;
+}
+
+body.cp04-module-screen-active,
+body.cp04-module-screen-active #root,
+body.cp04-module-screen-active #root > div {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.06) 0%,
+      rgba(2, 6, 23, 0.22) 45%,
+      rgba(2, 6, 23, 0.56) 100%
+    ),
+    var(--cp04-current-module-bg) !important;
+  /* Mejora 2: WebP ya generado en Paso 20 pero nunca conectado (92-97%
+     menos peso, mismo encuadre). Misma técnica que
+     torcal-role-background.css: navegadores sin soporte de image-set()
+     no reconocen la función y descartan esta declaración entera,
+     dejando intacta la de arriba (PNG vía la variable de siempre). */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.06) 0%,
+      rgba(2, 6, 23, 0.22) 45%,
+      rgba(2, 6, 23, 0.56) 100%
+    ),
+    image-set(
+      var(--cp04-current-module-bg-webp) type('image/webp'),
+      var(--cp04-current-module-bg) type('image/png')
+    ) !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-color: #020617 !important;
+}
+
+body.cp04-module-user {
+  --cp04-current-module-bg: url('/images/user-reservas-bg.png');
+  --cp04-current-module-bg-webp: url('/optimized/images/user-reservas-bg.webp');
+}
+
+body.cp04-module-admin {
+  --cp04-current-module-bg: url('/images/admin-technical-bg.png');
+  --cp04-current-module-bg-webp: url('/optimized/images/admin-technical-bg.webp');
+}
+
+body.cp04-module-general {
+  --cp04-current-module-bg: url('/images/general-modules-bg.png');
+  --cp04-current-module-bg-webp: url('/optimized/images/general-modules-bg.webp');
+}
+
+/* Mantener legibilidad sin tapar demasiado el fondo */
+body.cp04-module-screen-active .cp04-card {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(8, 13, 25, 0.34),
+      rgba(8, 13, 25, 0.20)
+    ) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22) !important;
+}
+
+body.cp04-module-screen-active .cp04-card::before {
+  opacity: 0.08 !important;
+}
+
+/* PASO 07L (2026-07-19): excluido `button` de este selector — mismo
+   motivo que en cp04-legibility-polish.css: capturaba botones de acción
+   con fondo sólido intencional (p. ej. "Solicitar baja de jugador"),
+   dejando el texto casi invisible sobre un fondo oscuro forzado. */
+body.cp04-module-screen-active .cp04-card [style*="background"]:not(button) {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(5, 10, 18, 0.32),
+      rgba(5, 10, 18, 0.18)
+    ) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border-color: rgba(255, 255, 255, 0.13) !important;
+}
+
+body.cp04-module-screen-active,
+body.cp04-module-screen-active * {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.34);
+}

@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "businessId": "despacho-de-abogados-demo",
+  "tenantId": "despacho-de-abogados-demo",
+  "commercialName": "Despacho De Abogados",
+  "sector": "law",
+  "country": "ES",
+  "timezone": "Europe/Madrid",
+  "locale": "es-ES",
+  "currencies": [
+    "EUR"
+  ],
+  "plan": "pro",
+  "publicInfo": {
+    "shortDescription": "Despacho de abogados (ES) — 10 módulo(s) habilitado(s)."
+  },
+  "branding": {
+    "logoRef": null,
+    "faviconRef": null,
+    "tone": "formal-institucional",
+    "colors": {
+      "primary": "#1d4e89",
+      "accent": "#1f3a63",
+      "bg": "#ffffff",
+      "text": "#0c1420"
+    },
+    "fonts": {
+      "display": "'Inter', sans-serif",
+      "body": "'Inter', sans-serif"
+    }
+  },
+  "modules": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "pagos",
+    "facturacion",
+    "documentos",
+    "servicios",
+    "profesionales",
+    "soporte",
+    "configuracion"
+  ],
+  "roles": [
+    "cliente",
+    "abogado",
+    "administracion",
+    "direccion",
+    "soporte"
+  ],
+  "permissions": {
+    "cliente": [
+      "citas",
+      "documentos",
+      "servicios"
+    ],
+    "abogado": [
+      "clientes",
+      "citas",
+      "documentos",
+      "servicios",
+      "profesionales"
+    ],
+    "administracion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "pagos",
+      "facturacion",
+      "documentos",
+      "servicios",
+      "profesionales",
+      "soporte",
+      "configuracion"
+    ],
+    "direccion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "pagos",
+      "facturacion",
+      "documentos",
+      "servicios",
+      "profesionales",
+      "soporte",
+      "configuracion"
+    ],
+    "soporte": [
+      "soporte"
+    ]
+  },
+  "automations": [
+    "confirmacion",
+    "impago",
+    "recordatorio",
+    "seguimiento"
+  ],
+  "aiCapabilities": [],
+  "integrations": {
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    }
+  },
+  "pwa": {
+    "shortName": "Despacho De Abogados (bo",
+    "themeColor": "#1f3a63",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProp",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer",
+      "privacyPlaceholder"
+    ],
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto",
+    "testimonials": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de despacho de abogados.",
+        "isDemo": true
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Qué incluye la solución para despacho de abogados?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "seed": "demo-despacho-001",
+    "sizes": {}
+  },
+  "flags": {},
+  "limits": {},
+  "privacy": {
+    "regulatedSector": false,
+    "sensitiveDataCategories": []
+  },
+  "manualSteps": [
+    "confidencialidad reforzada de documentos de clientes",
+    "Confirmar antes de producción: ¿En qué ciudad y país operará el negocio?",
+    "Confirmar antes de producción: ¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?",
+    "Revisar supuesto — country/timezone: se asumió \"ES/Europe/Madrid\" (valor por defecto seguro (España/Europe-Madrid) al no detectarse ciudad en el texto)"
+  ],
+  "generationMeta": {
+    "generatedBy": "nl-builder:business:compose",
+    "sourceIntentRequestId": "intent-599cd8baa2c08f8a",
+    "seed": "demo-despacho-001"
+  }
+}

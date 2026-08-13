@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "tenantId": "padel-sur-estepona",
+  "slug": "padel-sur-estepona",
+  "legalName": "Pádel Sur Estepona",
+  "displayName": "Pádel Sur Estepona",
+  "businessType": "padel-club",
+  "sector": "padel",
+  "locale": "es-ES",
+  "timezone": "Europe/Madrid",
+  "currency": "EUR",
+  "country": "ES",
+  "branding": {
+    "colors": {
+      "accent": "#2f6bff"
+    }
+  },
+  "roles": [
+    "CLIENT",
+    "STAFF",
+    "ADMIN",
+    "SUPPORT"
+  ],
+  "permissions": {
+    "CLIENT": [
+      "inicio",
+      "citas",
+      "servicios",
+      "pagos",
+      "torneos",
+      "ranking"
+    ],
+    "STAFF": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "servicios",
+      "recursos",
+      "pagos",
+      "soporte",
+      "torneos",
+      "ranking"
+    ],
+    "ADMIN": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "servicios",
+      "recursos",
+      "pagos",
+      "automatizaciones",
+      "soporte",
+      "informes",
+      "configuracion",
+      "torneos",
+      "ranking"
+    ],
+    "SUPPORT": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "servicios",
+      "recursos",
+      "pagos",
+      "automatizaciones",
+      "soporte",
+      "informes",
+      "configuracion",
+      "torneos",
+      "ranking"
+    ]
+  },
+  "modulesEnabled": [
+    "inicio",
+    "citas",
+    "clientes",
+    "pagos",
+    "automatizaciones",
+    "soporte",
+    "informes",
+    "configuracion",
+    "agenda",
+    "profesionales",
+    "recursos",
+    "servicios",
+    "torneos",
+    "ranking"
+  ],
+  "terminologyOverrides": {},
+  "integrations": {
+    "automation": {
+      "status": "not_configured",
+      "envVars": [
+        "MAKE_WEBHOOK_URL"
+      ]
+    },
+    "dataRepository": {
+      "status": "not_configured",
+      "envVars": [
+        "AIRTABLE_API_KEY",
+        "AIRTABLE_BASE_ID"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    },
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    }
+  },
+  "policies": {
+    "privacyReviewRequired": false,
+    "regulatedSector": false,
+    "sensitiveDataCategories": []
+  },
+  "demoData": {
+    "enabled": true,
+    "source": "template:padel-club"
+  },
+  "flags": {},
+  "meta": {
+    "templateId": "padel-club",
+    "presetId": null,
+    "isDefaultTenant": false,
+    "generatedBy": "tenant:create"
+  }
+}

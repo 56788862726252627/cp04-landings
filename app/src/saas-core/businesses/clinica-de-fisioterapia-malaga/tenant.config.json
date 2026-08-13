@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "tenantId": "clinica-de-fisioterapia-malaga",
+  "slug": "clinica-de-fisioterapia-malaga",
+  "legalName": "Clínica De Fisioterapia Málaga",
+  "displayName": "Clínica De Fisioterapia Málaga",
+  "businessType": "healthcare-clinic",
+  "sector": "physiotherapy",
+  "locale": "es-ES",
+  "timezone": "Europe/Madrid",
+  "currency": "EUR",
+  "country": "ES",
+  "branding": {
+    "colors": {
+      "primary": "#1d4e89",
+      "accent": "#1f7a34",
+      "bg": "#ffffff",
+      "text": "#0c1420"
+    }
+  },
+  "roles": [
+    "CLIENT",
+    "STAFF",
+    "ADMIN",
+    "SUPPORT"
+  ],
+  "permissions": {
+    "CLIENT": [
+      "inicio",
+      "citas",
+      "servicios",
+      "pagos"
+    ],
+    "STAFF": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "servicios",
+      "recursos",
+      "pagos",
+      "documentos",
+      "formularios",
+      "soporte"
+    ],
+    "ADMIN": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "servicios",
+      "recursos",
+      "pagos",
+      "automatizaciones",
+      "documentos",
+      "formularios",
+      "soporte",
+      "informes",
+      "configuracion"
+    ],
+    "SUPPORT": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "servicios",
+      "recursos",
+      "pagos",
+      "automatizaciones",
+      "documentos",
+      "formularios",
+      "soporte",
+      "informes",
+      "configuracion"
+    ]
+  },
+  "modulesEnabled": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "pagos",
+    "facturacion",
+    "bonos",
+    "documentos",
+    "expedientes",
+    "servicios",
+    "profesionales",
+    "soporte",
+    "leads",
+    "recordatorios",
+    "dashboard",
+    "configuracion",
+    "landing",
+    "pwa"
+  ],
+  "featuresEnabled": [],
+  "terminologyOverrides": {
+    "customer": {
+      "singular": "paciente",
+      "plural": "pacientes",
+      "short": "Paciente"
+    },
+    "resource": {
+      "singular": "consulta",
+      "plural": "consultas",
+      "short": "Consulta"
+    },
+    "appointment": {
+      "singular": "cita",
+      "plural": "citas",
+      "short": "Cita"
+    },
+    "staff": {
+      "singular": "fisioterapeuta",
+      "plural": "fisioterapeutas",
+      "short": "Fisio"
+    },
+    "event": {
+      "singular": "campaña de salud",
+      "plural": "campañas de salud",
+      "short": "Campaña"
+    },
+    "progress": {
+      "singular": "seguimiento",
+      "plural": "seguimientos",
+      "short": "Seguimiento"
+    },
+    "organization": {
+      "singular": "clínica de fisioterapia",
+      "plural": "clínicas de fisioterapia",
+      "short": "Clínica"
+    }
+  },
+  "integrations": {
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    }
+  },
+  "policies": {
+    "privacyReviewRequired": true,
+    "regulatedSector": true,
+    "sensitiveDataCategories": [
+      "salud_o_legal_placeholder"
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "source": "preset:physiotherapy-clinic"
+  },
+  "flags": {},
+  "meta": {
+    "templateId": "healthcare-clinic",
+    "presetId": "physiotherapy-clinic",
+    "isDefaultTenant": false,
+    "generatedBy": "one-prompt-factory:business:create",
+    "businessId": "clinica-de-fisioterapia-malaga"
+  }
+}

@@ -1,0 +1,3 @@
+OK: dist existe
+OK: index.html existe
+OK: assets existe

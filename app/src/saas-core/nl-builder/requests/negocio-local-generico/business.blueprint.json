@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "businessId": "negocio-local-generico",
+  "tenantId": "negocio-local-generico",
+  "commercialName": "Negocio Local Genérico",
+  "sector": "generic-local-service",
+  "country": "ES",
+  "timezone": "Europe/Madrid",
+  "locale": "es-ES",
+  "currencies": [
+    "EUR"
+  ],
+  "plan": "starter",
+  "publicInfo": {
+    "shortDescription": "Negocio local genérico (ES) — 7 módulo(s) habilitado(s)."
+  },
+  "branding": {
+    "logoRef": null,
+    "faviconRef": null,
+    "tone": "profesional-neutro",
+    "colors": {
+      "primary": "#1d4e89",
+      "accent": "#1d4e89",
+      "bg": "#ffffff",
+      "text": "#0c1420"
+    },
+    "fonts": {
+      "display": "'Inter', sans-serif",
+      "body": "'Inter', sans-serif"
+    }
+  },
+  "modules": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "servicios",
+    "profesionales",
+    "soporte",
+    "configuracion"
+  ],
+  "roles": [
+    "cliente",
+    "recepcion",
+    "administracion",
+    "soporte"
+  ],
+  "permissions": {
+    "cliente": [
+      "citas",
+      "servicios"
+    ],
+    "recepcion": [
+      "clientes",
+      "citas",
+      "servicios",
+      "profesionales"
+    ],
+    "administracion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "servicios",
+      "profesionales",
+      "soporte",
+      "configuracion"
+    ],
+    "soporte": [
+      "soporte"
+    ]
+  },
+  "automations": [
+    "confirmacion",
+    "recordatorio"
+  ],
+  "aiCapabilities": [],
+  "integrations": {
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    }
+  },
+  "pwa": {
+    "shortName": "Negocio Local Genérico (",
+    "themeColor": "#1d4e89",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProp",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer",
+      "privacyPlaceholder"
+    ],
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto",
+    "testimonials": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de negocio local genérico.",
+        "isDemo": true
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Qué incluye la solución para negocio local genérico?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "seed": "demo-ambiguo-001",
+    "sizes": {}
+  },
+  "flags": {},
+  "limits": {},
+  "privacy": {
+    "regulatedSector": false,
+    "sensitiveDataCategories": []
+  },
+  "manualSteps": [
+    "Confirmar antes de producción: ¿A qué sector pertenece exactamente el negocio (clínica, despacho, club, restaurante, etc.)?",
+    "Confirmar antes de producción: ¿En qué ciudad y país operará el negocio?",
+    "Confirmar antes de producción: ¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?",
+    "Revisar supuesto — business.sector: se asumió \"generic-local-service\" (ningún preset sectorial coincidió; se aplicó el preset genérico de negocio local)",
+    "Revisar supuesto — country/timezone: se asumió \"ES/Europe/Madrid\" (valor por defecto seguro (España/Europe-Madrid) al no detectarse ciudad en el texto)"
+  ],
+  "generationMeta": {
+    "generatedBy": "nl-builder:business:compose",
+    "sourceIntentRequestId": "intent-341fc321a7695e4f",
+    "seed": "demo-ambiguo-001"
+  }
+}

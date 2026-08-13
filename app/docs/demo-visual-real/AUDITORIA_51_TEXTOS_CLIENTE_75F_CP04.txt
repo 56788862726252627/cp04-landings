@@ -1,0 +1,5 @@
+src/App.jsx:7406:            Usa tu email y contraseña. Los roles internos siguen disponibles abajo solo para validación interna.
+src/App.jsx:7440:            ACCESO POR ROLES
+src/components/demo/DemoSafeNotice.jsx:7:    <div className="cp04-demo-safe-banner" role="status" aria-label="Entorno seguro">
+src/components/demo/DemoSafeNotice.jsx:8:      <strong>Entorno seguro</strong>
+src/components/demo/DemoSafeNotice.jsx:14:export function DemoSafeBadge({ children = "Entorno seguro" }) {

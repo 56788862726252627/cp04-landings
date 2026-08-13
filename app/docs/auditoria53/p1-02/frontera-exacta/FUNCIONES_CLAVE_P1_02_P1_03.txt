@@ -1,0 +1,57 @@
+75:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+120:const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+121:const BOOKING_DURATIONS = [60, 90, 120];
+331:function getSlotStatus(fecha, hora, duration = 90) {
+360:function validateBooking(form, courtName, tx) {
+374:  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = _t("errors.hora");
+375:  if (!BOOKING_DURATIONS.includes(duration)) errors.duracion_minutos = _t("errors.duracion");
+377:    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+389:function prepareBookingPayload(form, courtName) {
+442:  if (!BOOKING_HOURS.includes(form.nueva_hora_inicio)) {
+446:  if (!BOOKING_DURATIONS.includes(duration)) {
+451:    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+485:async function sendBooking(payload) {
+697:                  : `${BOOKING_HOURS.filter((hora) => ocupadasSet.has(`${fecha}|${pista}|${hora}`)).length} ocupadas`}
+702:              {BOOKING_HOURS.map((hora) => {
+705:                const slotStatus = getSlotStatus(fecha, hora, duration);
+4310:function Reservas() {
+4313:  const [step, setStep] = useState(1);
+4323:  const payload = useMemo(() => prepareBookingPayload(form, court), [form, court]);
+4340:  function review() {
+4341:    const nextErrors = validateBooking(form, court, tx);
+4348:    setStep(2);
+4353:    const nextErrors = validateBooking(form, court, tx);
+4358:      setStep(1);
+4371:        setStep(1);
+4378:      setStep(3);
+4387:  function newBooking() {
+4388:    setStep(1);
+4403:    setStep(1);
+4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+4408:function CancelarReserva({ setCurrent }) {
+4497:function ReprogramarReserva({ setCurrent }) {
+4716:              {BOOKING_HOURS.map((hora) => (
+4720:                  disabled={getSlotStatus(form.nueva_fecha_reserva, hora, duration) !== "available"}
+4738:              {BOOKING_DURATIONS.map((minutes) => (
+4826:                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+4865:  const [reservasReales, setReservasReales] = useState([]);
+4866:  const [cargandoReservas, setCargandoReservas] = useState(false);
+4867:  const [reservasConsultadas, setReservasConsultadas] = useState(false);
+4868:  const [errorReservas, setErrorReservas] = useState("");
+4869:  const [fuenteReservas, setFuenteReservas] = useState("");
+4875:    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
+4892:  function normalizarReserva(item) {
+4967:  async function cargarReservas() {
+5022:        .map(normalizarReserva)
+5101:  const resumenReservas = useMemo(() => {
+6792:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+6852:  const [avatarPreview, setAvatarPreview] = useState(null);
+6909:    reader.onload = ev => setAvatarPreview(ev.target.result);
+6913:    if (!avatarPreview) return;
+6914:    saveProfileField("avatar", avatarPreview);
+6915:    setAvatarSrc(avatarPreview); setAvatarPreview(null);
+6921:    setAvatarSrc(null); setAvatarPreview(null); setShowDelConfirm(false);
+7069:            {avatarPreview ? (
+7071:                <img src={avatarPreview} alt="Vista previa" style={{ width:80, height:80, borderRadius:"50%", objectFit:"cover", border:`2px solid ${T.warning}`, marginBottom:8 }} />
+7075:                  <Btn variant="secondary" onClick={() => setAvatarPreview(null)} style={{ fontSize:".82rem", padding:"7px 18px" }}>Descartar</Btn>
+7514:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };

@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "businessId": "clinica-dental-london",
+  "tenantId": "clinica-dental-london",
+  "commercialName": "Clínica Dental London",
+  "sector": "dental",
+  "country": "GB",
+  "timezone": "Europe/London",
+  "locale": "en-US",
+  "currencies": [
+    "GBP"
+  ],
+  "plan": "pro",
+  "publicInfo": {
+    "shortDescription": "Clínica dental en London (GB) — 11 módulo(s) habilitado(s)."
+  },
+  "branding": {
+    "logoRef": null,
+    "faviconRef": null,
+    "tone": "cercano-profesional",
+    "colors": {
+      "primary": "#1d4e89",
+      "accent": "#0b6e6e",
+      "bg": "#ffffff",
+      "text": "#0c1420"
+    },
+    "fonts": {
+      "display": "'Inter', sans-serif",
+      "body": "'Inter', sans-serif"
+    }
+  },
+  "modules": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "pagos",
+    "facturacion",
+    "documentos",
+    "servicios",
+    "profesionales",
+    "soporte",
+    "configuracion",
+    "landing"
+  ],
+  "roles": [
+    "paciente",
+    "recepcion",
+    "dentista",
+    "direccion",
+    "soporte"
+  ],
+  "permissions": {
+    "paciente": [
+      "citas",
+      "documentos",
+      "servicios",
+      "landing"
+    ],
+    "recepcion": [
+      "clientes",
+      "citas",
+      "pagos",
+      "facturacion",
+      "servicios",
+      "profesionales"
+    ],
+    "dentista": [
+      "clientes",
+      "citas",
+      "documentos",
+      "servicios",
+      "profesionales"
+    ],
+    "direccion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "pagos",
+      "facturacion",
+      "documentos",
+      "servicios",
+      "profesionales",
+      "soporte",
+      "configuracion",
+      "landing"
+    ],
+    "soporte": [
+      "soporte"
+    ]
+  },
+  "automations": [
+    "confirmacion",
+    "recordatorio",
+    "cancelacion",
+    "seguimiento",
+    "encuesta"
+  ],
+  "aiCapabilities": [],
+  "integrations": {
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    }
+  },
+  "pwa": {
+    "shortName": "Clínica Dental London (b",
+    "themeColor": "#0b6e6e",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProp",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer",
+      "privacyPlaceholder"
+    ],
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto",
+    "testimonials": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de clínica dental.",
+        "isDemo": true
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Qué incluye la solución para clínica dental?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "seed": "demo-ingles-001",
+    "sizes": {}
+  },
+  "flags": {},
+  "limits": {},
+  "privacy": {
+    "regulatedSector": true,
+    "sensitiveDataCategories": [
+      "health"
+    ]
+  },
+  "manualSteps": [
+    "datos de salud sujetos a normativa reforzada (expedientes clínicos)",
+    "Confirmar antes de producción: ¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?"
+  ],
+  "generationMeta": {
+    "generatedBy": "nl-builder:business:compose",
+    "sourceIntentRequestId": "intent-6cb2bb0bc66641e6",
+    "seed": "demo-ingles-001"
+  }
+}
