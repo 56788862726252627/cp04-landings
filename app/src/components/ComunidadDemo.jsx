@@ -1,27 +1,76 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { T } from "../theme.js";
 import {
   COMUNIDAD_DEMO_NOTICE,
   DEMO_PLAYER,
   DEMO_STAFF,
-  DEMO_FRIENDS,
-  DEMO_POSTS,
-  DEMO_OPEN_MATCHES,
-  DEMO_MODERATION_QUEUE,
+  DEMO_CONTACTS,
 } from "../data/comunidadDemoData.js";
+import {
+  communitySeedDemoRelationships,
+  communityHasSocialConsent,
+  communityGrantSocialConsent,
+  communityRevokeSocialConsent,
+  communityGetFriendshipState,
+  communitySendFriendRequest,
+  communityAcceptFriendRequest,
+  communityRejectFriendRequest,
+  communityCancelFriendRequest,
+  communityRemoveFriend,
+  communityIsFollowing,
+  communityFollowUser,
+  communityUnfollowUser,
+  communityCountFollowers,
+  communityGetVisibleFeed,
+  communityCreatePost,
+  communityGetCommentsForPost,
+  communityCommentOnPost,
+  communityGetReactionsCount,
+  communityHasUserReacted,
+  communityReactToPost,
+  communityCreateOpenMatch,
+  communityListVisibleOpenMatches,
+  communityRequestToJoin,
+  communityAcceptJoinRequest,
+  communityRejectJoinRequest,
+  communityCancelOpenMatch,
+  communityGetPendingInvitesForMatch,
+  communityGetMyInviteForMatch,
+  DEMO_MODERATOR_IDS,
+  communityCanReport,
+  communityReportContent,
+  communityGetReportsQueue,
+  communityMarkInReview,
+  communityApplyModerationAction,
+  communityDismissReport,
+  communityUpdateProfileVisibility,
+  communityGetProfileVisibility,
+} from "../utils/communityBridge.js";
 
 // Club Pádel 04 · Comunidad (demo/mock interno)
 //
-// Integración SOLO visual del bloque social (Feed, Perfil, Amigos, Partidos
-// abiertos, Moderación, Consentimiento) documentado en
-// app/docs/club-padel-04/comunidad/. No hay persistencia real: todo el
-// estado vive en memoria de React y se pierde al recargar. No hay ninguna
-// llamada a Supabase, Make, Airtable, Stripe ni WhatsApp — los botones
-// "demo" solo cambian estado local para ilustrar el flujo.
+// Feed, Amigos, Partidos abiertos, Moderación y Consentimiento usan la
+// lógica REAL de projects/club-padel-04/community-logic/ a través de
+// src/utils/communityBridge.js. El estado vive solo en memoria del navegador
+// — se pierde al recargar la página, sin llamadas a Supabase, Make, Airtable,
+// Stripe ni WhatsApp.
+//
+// P0.1 (amistad/follow), P0.2 (feed/posts/comentarios/reacciones),
+// P0.3 (partidos abiertos), P0.4 (moderación/reportes/privacidad): CERRADOS.
 //
 // No debe usarse con menores activos ni datos reales hasta que el PR #24
 // (revisión legal externa + decisión de negocio sobre menores) se resuelva.
 // Ver DECISION_MENORES_Y_REVISION_LEGAL_COMUNIDAD_PADEL_04.md.
+
+const ACTOR_ID = DEMO_PLAYER.id;
+
+const FRIENDSHIP_STATUS_CHIP = {
+  blocked: { tone: "danger", label: "Bloqueado" },
+  friends: { tone: "accent", label: "Amistad activa" },
+  request_sent: { tone: "warning", label: "Solicitud enviada" },
+  request_received: { tone: "warning", label: "Solicitud recibida" },
+  none: { tone: "neutral", label: "Sin relación" },
+};
 
 const TABS = [
   { id: "feed", label: "Feed", icon: "📰" },
@@ -114,31 +163,175 @@ function DemoNotice() {
   );
 }
 
-function FeedTab({ posts, onReport, onBlock }) {
+function FeedTab({ socialConsent, viewerId, feedVersion, onRefresh, setLastAction, reportedPosts = {}, onReportPost, reportedComments = {}, onReportComment }) {
+  const [newPostBody, setNewPostBody] = useState("");
+  const [openComments, setOpenComments] = useState({});
+  const [commentInputs, setCommentInputs] = useState({});
+
+  // Re-derived from store on every render; feedVersion changes trigger parent
+  // re-render which cascades here, pulling fresh data from communityBridge.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const visiblePosts = communityGetVisibleFeed(viewerId);
+
+  function handleCreatePost() {
+    const body = newPostBody.trim();
+    if (!body) return;
+    const result = communityCreatePost(viewerId, body);
+    if (result.ok) {
+      setNewPostBody("");
+      onRefresh();
+      setLastAction("Publicación creada (en memoria del navegador).");
+    } else {
+      setLastAction(`Error al publicar: ${result.error}`);
+    }
+  }
+
+  function handleReact(postId) {
+    const result = communityReactToPost(postId, viewerId);
+    if (result.ok) {
+      onRefresh();
+    } else {
+      setLastAction(`No se pudo reaccionar: ${result.error}`);
+    }
+  }
+
+  function toggleComments(postId) {
+    setOpenComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  }
+
+  function handleComment(postId) {
+    const body = (commentInputs[postId] || "").trim();
+    if (!body) return;
+    const result = communityCommentOnPost(postId, viewerId, body);
+    if (result.ok) {
+      setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
+      onRefresh();
+      setLastAction("Comentario añadido (en memoria).");
+    } else {
+      setLastAction(`Error al comentar: ${result.error}`);
+    }
+  }
+
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      {posts.map((post) => (
-        <div key={post.id} className="cp04-card" style={{ padding: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-            <strong style={{ color: T.accent }}>{post.autor}</strong>
-            {post.estado === "reportado" ? (
-              <Chip tone="danger">Reportado / en revisión</Chip>
-            ) : (
-              <Chip tone="accent">Publicado (demo)</Chip>
+      {socialConsent ? (
+        <div className="cp04-card" style={{ padding: 16, display: "grid", gap: 10 }}>
+          <textarea
+            value={newPostBody}
+            onChange={(e) => setNewPostBody(e.target.value)}
+            placeholder="¿Qué quieres compartir con el club? (en memoria, se pierde al recargar)"
+            rows={3}
+            style={{
+              width: "100%",
+              background: "rgba(255,255,255,.04)",
+              border: `1px solid ${T.line}`,
+              borderRadius: 10,
+              color: T.text,
+              padding: "10px 12px",
+              fontSize: ".88rem",
+              resize: "vertical",
+              boxSizing: "border-box",
+            }}
+          />
+          <DemoButton variant="primary" onClick={handleCreatePost} disabled={!newPostBody.trim()}>
+            Publicar
+          </DemoButton>
+        </div>
+      ) : (
+        <p style={{ color: T.textDim, fontSize: ".85rem" }}>
+          Activa tu consentimiento social en la pestaña <strong style={{ color: T.text }}>Consentimiento</strong> para
+          ver y publicar en el feed.
+        </p>
+      )}
+
+      {socialConsent && visiblePosts.length === 0 && (
+        <p style={{ color: T.textDim, fontSize: ".85rem" }}>
+          No hay publicaciones visibles todavía. ¡Sé el primero en publicar!
+        </p>
+      )}
+
+      {[...visiblePosts].reverse().map((post) => {
+        const likeCount = communityGetReactionsCount("post", post.id);
+        const hasLiked = communityHasUserReacted("post", post.id, viewerId);
+        const comments = communityGetCommentsForPost(post.id);
+        const showComments = Boolean(openComments[post.id]);
+        const authorLabel = post.authorId === viewerId ? "Tú" : post.authorId;
+
+        return (
+          <div key={post.id} className="cp04-card" style={{ padding: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <strong style={{ color: T.accent }}>{authorLabel}</strong>
+              <Chip tone="accent">Publicado (en memoria)</Chip>
+            </div>
+            <p style={{ margin: "0 0 12px", color: T.text, lineHeight: 1.6 }}>{post.body}</p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <DemoButton onClick={() => handleReact(post.id)} disabled={hasLiked}>
+                {hasLiked ? "Me gusta ✓" : "Me gusta"} · {likeCount}
+              </DemoButton>
+              <DemoButton onClick={() => toggleComments(post.id)}>
+                Comentarios · {comments.length}
+              </DemoButton>
+              <DemoButton
+                variant="danger"
+                onClick={() => onReportPost && onReportPost(post.id)}
+                disabled={Boolean(reportedPosts[post.id])}
+              >
+                {reportedPosts[post.id] ? "Reportado ✓" : "Reportar"}
+              </DemoButton>
+            </div>
+            {showComments && (
+              <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
+                {comments.length === 0 && (
+                  <p style={{ color: T.textDim, fontSize: ".82rem" }}>Sin comentarios todavía.</p>
+                )}
+                {comments.map((c) => (
+                  <div key={c.id} style={{ background: "rgba(255,255,255,.03)", borderRadius: 8, padding: "8px 12px", fontSize: ".85rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                    <div>
+                      <strong style={{ color: T.textDim }}>{c.authorId === viewerId ? "Tú" : c.authorId}</strong>
+                      {" "}<span style={{ color: T.text }}>{c.body}</span>
+                    </div>
+                    {c.authorId !== viewerId && onReportComment && (
+                      <button
+                        type="button"
+                        onClick={() => onReportComment(c.id)}
+                        disabled={Boolean(reportedComments[c.id])}
+                        style={{ background: "none", border: "none", color: reportedComments[c.id] ? T.textDim : T.danger, fontSize: ".72rem", cursor: "pointer", padding: "2px 4px", whiteSpace: "nowrap", opacity: reportedComments[c.id] ? 0.55 : 1 }}
+                        title={reportedComments[c.id] ? "Ya reportado" : "Reportar comentario"}
+                      >
+                        {reportedComments[c.id] ? "Reportado ✓" : "Reportar"}
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  <input
+                    type="text"
+                    value={commentInputs[post.id] || ""}
+                    onChange={(e) => setCommentInputs((prev) => ({ ...prev, [post.id]: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleComment(post.id); }}
+                    placeholder="Añade un comentario..."
+                    style={{
+                      flex: 1,
+                      background: "rgba(255,255,255,.04)",
+                      border: `1px solid ${T.line}`,
+                      borderRadius: 8,
+                      color: T.text,
+                      padding: "8px 12px",
+                      fontSize: ".85rem",
+                    }}
+                  />
+                  <DemoButton onClick={() => handleComment(post.id)}>Comentar</DemoButton>
+                </div>
+              </div>
             )}
           </div>
-          <p style={{ margin: "0 0 12px", color: T.textDim, lineHeight: 1.6 }}>{post.texto}</p>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <DemoButton onClick={() => onReport(post.id)}>Reportar demo</DemoButton>
-            <DemoButton onClick={() => onBlock(post.autor)} variant="danger">Bloquear demo</DemoButton>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-function PerfilTab({ player, onTogglePrivacy }) {
+function PerfilTab({ player, socialConsent, onTogglePrivacy }) {
   return (
     <div className="cp04-card" style={{ padding: 22 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
@@ -147,150 +340,506 @@ function PerfilTab({ player, onTogglePrivacy }) {
           <p style={{ margin: "6px 0 0", color: T.textDim }}>{player.nivel} · {player.club}</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {player.perfilVisible ? <Chip tone="accent">Perfil visible (demo)</Chip> : <Chip tone="warning">Perfil privado</Chip>}
-          {!player.consentimientoSocial && <Chip tone="danger">Sin consentimiento social</Chip>}
+          {player.perfilVisible ? <Chip tone="accent">Perfil visible</Chip> : <Chip tone="warning">Perfil privado</Chip>}
+          {!socialConsent && <Chip tone="danger">Sin consentimiento social</Chip>}
         </div>
       </div>
       <p style={{ color: T.textDim, fontSize: ".85rem", lineHeight: 1.6, marginBottom: 14 }}>
-        Datos íntegramente ficticios (Jugador Demo). Ningún dato real de clientes se muestra aquí.
+        Datos íntegramente ficticios (Jugador Demo). La visibilidad es real en memoria — afecta
+        a <code>canView()</code> y al listado de partidos. Ningún dato real de clientes se muestra.
       </p>
       <DemoButton onClick={onTogglePrivacy}>
-        {player.perfilVisible ? "Hacer privado (demo)" : "Hacer visible (demo)"}
+        {player.perfilVisible ? "Hacer perfil privado" : "Hacer perfil visible"}
       </DemoButton>
     </div>
   );
 }
 
-function AmigosTab({ friends, onAccept, onReject }) {
-  const estadoChip = (estado) => {
-    if (estado === "solicitud_pendiente") return <Chip tone="warning">Solicitud de amistad demo</Chip>;
-    if (estado === "bloqueado") return <Chip tone="danger">Bloqueado</Chip>;
-    return <Chip tone="accent">Amigo (demo)</Chip>;
-  };
+function AmigosTab({
+  contacts,
+  socialConsent,
+  followerCount,
+  onSendRequest,
+  onAccept,
+  onReject,
+  onCancel,
+  onRemove,
+  onFollow,
+  onUnfollow,
+}) {
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      {friends.map((f) => (
-        <div key={f.id} className="cp04-card" style={{ padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <strong>{f.nombre}</strong>
-            {estadoChip(f.estado)}
-          </div>
-          {f.estado === "solicitud_pendiente" && (
-            <div style={{ display: "flex", gap: 8 }}>
-              <DemoButton variant="primary" onClick={() => onAccept(f.id)}>Aceptar (demo)</DemoButton>
-              <DemoButton onClick={() => onReject(f.id)}>Rechazar (demo)</DemoButton>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PartidosTab({ matches, joined, onJoin }) {
-  return (
-    <div style={{ display: "grid", gap: 12 }}>
-      {matches.map((m) => (
-        <div key={m.id} className="cp04-card" style={{ padding: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
-            <strong>{m.titulo}</strong>
-            <Chip tone="accent">Partido abierto demo</Chip>
-          </div>
-          <p style={{ margin: "0 0 12px", color: T.textDim }}>{m.fecha} · {m.plazas}</p>
-          <DemoButton variant="primary" disabled={joined.includes(m.id)} onClick={() => onJoin(m.id)}>
-            {joined.includes(m.id) ? "Unido (demo)" : "Unirme (demo)"}
-          </DemoButton>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ModeracionTab({ queue, role, onReview }) {
-  const isStaffRole = role === "STAFF" || role === "ADMIN" || role === "SUPPORT";
-  return (
-    <div>
-      {!isStaffRole && (
-        <p style={{ color: T.textDim, fontSize: ".85rem", marginBottom: 14 }}>
-          En producción real esta cola sería visible solo para roles Staff/Admin. Se muestra aquí en modo
-          demo para ilustrar el flujo completo.
+      <p style={{ color: T.textDim, fontSize: ".85rem" }}>
+        Te siguen <strong style={{ color: T.text }}>{followerCount}</strong> jugadores (contador real,
+        en memoria del navegador — se pierde al recargar).
+      </p>
+      {!socialConsent && (
+        <p style={{ color: T.warning, fontSize: ".85rem" }}>
+          Sin consentimiento social activo: puedes gestionar relaciones ya existentes, pero no enviar
+          nuevas solicitudes de amistad ni seguir a nadie hasta activarlo en la pestaña Consentimiento.
         </p>
       )}
-      <div style={{ display: "grid", gap: 12 }}>
-        {queue.map((r) => (
-          <div key={r.id} className="cp04-card" style={{ padding: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
-              <strong>{r.objetivo}</strong>
-              <Chip tone="danger">Reportado / en revisión</Chip>
+      {contacts.map((c) => {
+        const state = communityGetFriendshipState(ACTOR_ID, c.id);
+        const following = communityIsFollowing(ACTOR_ID, c.id);
+        const chip = FRIENDSHIP_STATUS_CHIP[state.status] || FRIENDSHIP_STATUS_CHIP.none;
+        return (
+          <div key={c.id} className="cp04-card" style={{ padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <strong>{c.nombre}</strong>
+              <Chip tone={chip.tone}>{chip.label}</Chip>
+              {state.status !== "blocked" && following && <Chip tone="accent">Siguiendo</Chip>}
             </div>
-            <p style={{ margin: "0 0 12px", color: T.textDim }}>{r.motivo}</p>
-            <DemoButton onClick={() => onReview(r.id)}>Revisar moderación demo</DemoButton>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {state.status === "none" && (
+                <DemoButton variant="primary" onClick={() => onSendRequest(c.id)}>Añadir amigo</DemoButton>
+              )}
+              {state.status === "request_received" && (
+                <>
+                  <DemoButton variant="primary" onClick={() => onAccept(state.friendshipId)}>Aceptar</DemoButton>
+                  <DemoButton onClick={() => onReject(state.friendshipId)}>Rechazar</DemoButton>
+                </>
+              )}
+              {state.status === "request_sent" && (
+                <DemoButton onClick={() => onCancel(state.friendshipId)}>Cancelar solicitud</DemoButton>
+              )}
+              {state.status === "friends" && (
+                <DemoButton variant="danger" onClick={() => onRemove(c.id)}>Eliminar amigo</DemoButton>
+              )}
+              {state.status !== "blocked" &&
+                (following ? (
+                  <DemoButton onClick={() => onUnfollow(c.id)}>Dejar de seguir</DemoButton>
+                ) : (
+                  <DemoButton onClick={() => onFollow(c.id)}>Seguir</DemoButton>
+                ))}
+            </div>
           </div>
-        ))}
-        {queue.length === 0 && <p style={{ color: T.textDim }}>Sin reportes pendientes (demo).</p>}
-      </div>
+        );
+      })}
     </div>
   );
 }
 
-function ConsentimientoTab({ player }) {
+const LEVEL_LABELS = { iniciacion: "Iniciación", intermedio: "Intermedio", avanzado: "Avanzado", profesional: "Profesional" };
+const LEVELS_LIST = ["iniciacion", "intermedio", "avanzado", "profesional"];
+
+const MATCH_STATUS_CHIP = { open: { tone: "accent", label: "Abierto" }, full: { tone: "danger", label: "Completo" }, cancelled: { tone: "neutral", label: "Cancelado" } };
+
+function PartidosTab({ socialConsent, viewerId, matchVersion, onRefresh, setLastAction }) {
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({ levelMin: "intermedio", levelMax: "intermedio", slotsTotal: 4, visibility: "club" });
+
+  const visibleMatches = communityListVisibleOpenMatches(viewerId);
+
+  function handleCreate() {
+    const result = communityCreateOpenMatch(viewerId, { ...form, scheduledAt: new Date(Date.now() + 86400000).toISOString() });
+    if (result.ok) { setShowCreate(false); onRefresh(); setLastAction("Partido creado (en memoria)."); }
+    else setLastAction(`Error al crear partido: ${result.error}`);
+  }
+
+  function handleRequestJoin(matchId) {
+    const result = communityRequestToJoin(matchId, viewerId);
+    if (result.ok) { onRefresh(); setLastAction("Solicitud de plaza enviada."); }
+    else setLastAction(`Error al solicitar plaza: ${result.error}`);
+  }
+
+  function handleAccept(inviteId) {
+    const result = communityAcceptJoinRequest(inviteId, viewerId);
+    if (result.ok) { onRefresh(); setLastAction("Solicitud aceptada."); }
+    else setLastAction(`Error al aceptar: ${result.error}`);
+  }
+
+  function handleReject(inviteId) {
+    const result = communityRejectJoinRequest(inviteId, viewerId);
+    if (result.ok) { onRefresh(); setLastAction("Solicitud rechazada."); }
+    else setLastAction(`Error al rechazar: ${result.error}`);
+  }
+
+  function handleCancel(matchId) {
+    const result = communityCancelOpenMatch(matchId, viewerId);
+    if (result.ok) { onRefresh(); setLastAction("Partido cancelado."); }
+    else setLastAction(`Error al cancelar: ${result.error}`);
+  }
+
+  const inputStyle = { background: "rgba(255,255,255,.04)", border: `1px solid ${T.line}`, borderRadius: 8, color: T.text, padding: "7px 10px", fontSize: ".85rem" };
+  const labelStyle = { display: "flex", flexDirection: "column", gap: 4, color: T.textDim, fontSize: ".82rem" };
+
+  return (
+    <div style={{ display: "grid", gap: 14 }}>
+      {!socialConsent && (
+        <p style={{ color: T.textDim, fontSize: ".85rem" }}>
+          Activa tu consentimiento social en la pestaña <strong style={{ color: T.text }}>Consentimiento</strong> para
+          crear y gestionar partidos abiertos.
+        </p>
+      )}
+
+      {socialConsent && !showCreate && (
+        <DemoButton variant="primary" onClick={() => setShowCreate(true)}>+ Crear partido abierto</DemoButton>
+      )}
+
+      {showCreate && (
+        <div className="cp04-card" style={{ padding: 16, display: "grid", gap: 12 }}>
+          <strong style={{ fontFamily: T.fontDisplay }}>Nuevo partido abierto</strong>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label style={labelStyle}>
+              Nivel mínimo
+              <select style={inputStyle} value={form.levelMin} onChange={(e) => setForm((p) => ({ ...p, levelMin: e.target.value }))}>
+                {LEVELS_LIST.map((l) => <option key={l} value={l}>{LEVEL_LABELS[l]}</option>)}
+              </select>
+            </label>
+            <label style={labelStyle}>
+              Nivel máximo
+              <select style={inputStyle} value={form.levelMax} onChange={(e) => setForm((p) => ({ ...p, levelMax: e.target.value }))}>
+                {LEVELS_LIST.map((l) => <option key={l} value={l}>{LEVEL_LABELS[l]}</option>)}
+              </select>
+            </label>
+            <label style={labelStyle}>
+              Plazas
+              <select style={inputStyle} value={form.slotsTotal} onChange={(e) => setForm((p) => ({ ...p, slotsTotal: Number(e.target.value) }))}>
+                {[2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </label>
+            <label style={labelStyle}>
+              Visibilidad
+              <select style={inputStyle} value={form.visibility} onChange={(e) => setForm((p) => ({ ...p, visibility: e.target.value }))}>
+                <option value="club">Todo el club</option>
+                <option value="friends">Solo amigos</option>
+              </select>
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <DemoButton variant="primary" onClick={handleCreate}>Crear</DemoButton>
+            <DemoButton onClick={() => setShowCreate(false)}>Cancelar</DemoButton>
+          </div>
+        </div>
+      )}
+
+      {visibleMatches.length === 0 && socialConsent && (
+        <p style={{ color: T.textDim, fontSize: ".85rem" }}>No hay partidos abiertos visibles. ¡Crea el primero!</p>
+      )}
+
+      {[...visibleMatches].reverse().map((match) => {
+        const isCreator = match.creatorId === viewerId;
+        const myInvite = communityGetMyInviteForMatch(match.id, viewerId);
+        const pendingInvites = isCreator ? communityGetPendingInvitesForMatch(match.id) : [];
+        const chip = MATCH_STATUS_CHIP[match.status] || MATCH_STATUS_CHIP.open;
+        const scheduledLabel = new Date(match.scheduledAt).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+        return (
+          <div key={match.id} className="cp04-card" style={{ padding: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <strong style={{ color: T.accent }}>{isCreator ? "Tú (organizador)" : match.creatorId}</strong>
+                {isCreator && <Chip tone="warning">Organizador</Chip>}
+              </div>
+              <Chip tone={chip.tone}>{chip.label} (en memoria)</Chip>
+            </div>
+
+            <div style={{ color: T.textDim, fontSize: ".85rem", marginBottom: 12, display: "grid", gap: 3 }}>
+              <span>Nivel: {LEVEL_LABELS[match.levelMin] || match.levelMin} – {LEVEL_LABELS[match.levelMax] || match.levelMax}</span>
+              <span>Plazas: {match.slotsFilled} / {match.slotsTotal} ocupadas</span>
+              <span>Visibilidad: {match.visibility === "club" ? "Todo el club" : "Solo amigos"}</span>
+              <span>Fecha: {scheduledLabel} (demo)</span>
+            </div>
+
+            {isCreator && match.status === "open" && (
+              <div style={{ display: "grid", gap: 8 }}>
+                {pendingInvites.length === 0 ? (
+                  <p style={{ color: T.textDim, fontSize: ".82rem" }}>Sin solicitudes pendientes.</p>
+                ) : (
+                  <div>
+                    <p style={{ color: T.textDim, fontSize: ".82rem", margin: "0 0 6px" }}>Solicitudes pendientes:</p>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      {pendingInvites.map((inv) => (
+                        <div key={inv.id} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ fontSize: ".85rem", color: T.text }}>{inv.requesterId}</span>
+                          <DemoButton variant="primary" onClick={() => handleAccept(inv.id)}>Aceptar</DemoButton>
+                          <DemoButton onClick={() => handleReject(inv.id)}>Rechazar</DemoButton>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <DemoButton variant="danger" onClick={() => handleCancel(match.id)}>Cancelar partido</DemoButton>
+              </div>
+            )}
+
+            {!isCreator && match.status === "open" && !myInvite && (
+              <DemoButton variant="primary" onClick={() => handleRequestJoin(match.id)}>Solicitar plaza</DemoButton>
+            )}
+            {!isCreator && myInvite?.status === "pending" && <Chip tone="warning">Solicitud enviada — pendiente</Chip>}
+            {!isCreator && myInvite?.status === "accepted" && <Chip tone="accent">Plaza confirmada</Chip>}
+            {!isCreator && myInvite?.status === "rejected" && <Chip tone="danger">Solicitud rechazada</Chip>}
+            {!isCreator && match.status === "full" && !myInvite && <Chip tone="danger">Partido completo — sin plazas</Chip>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const REPORT_STATUS_CHIP = {
+  open: { tone: "danger", label: "Abierto" },
+  in_review: { tone: "warning", label: "En revisión" },
+  resolved: { tone: "accent", label: "Resuelto" },
+  dismissed: { tone: "neutral", label: "Desestimado" },
+};
+
+function ModeracionTab({ moderatorId, selectedRole, onRefresh, setLastAction }) {
+  const isModerator = ["STAFF", "ADMIN", "SUPPORT"].includes(selectedRole);
+  const isAdmin = selectedRole === "ADMIN";
+  const reports = moderatorId ? communityGetReportsQueue(moderatorId) : [];
+
+  function handleMarkInReview(reportId) {
+    const r = communityMarkInReview(reportId, moderatorId);
+    if (r.ok) { onRefresh(); setLastAction("Reporte marcado en revisión (real, en memoria)."); }
+    else setLastAction(`Error al marcar en revisión: ${r.error}`);
+  }
+
+  function handleApplyAction(reportId, actionType) {
+    const r = communityApplyModerationAction(reportId, moderatorId, actionType);
+    if (r.ok) { onRefresh(); setLastAction(`Acción aplicada: ${actionType} (real, en memoria).`); }
+    else setLastAction(`Error al aplicar acción: ${r.error}`);
+  }
+
+  function handleDismiss(reportId) {
+    const r = communityDismissReport(reportId, moderatorId);
+    if (r.ok) { onRefresh(); setLastAction("Reporte desestimado (real, en memoria)."); }
+    else setLastAction(`Error al desestimar: ${r.error}`);
+  }
+
+  return (
+    <div>
+      {!isModerator && (
+        <p style={{ color: T.textDim, fontSize: ".85rem", marginBottom: 14 }}>
+          En producción esta cola es visible solo para roles Staff/Admin/Support.
+          Cambia el rol en el selector superior para acceder a la moderación real.
+        </p>
+      )}
+      {isModerator && (
+        <div style={{ display: "grid", gap: 12 }}>
+          {reports.length === 0 && (
+            <p style={{ color: T.textDim, fontSize: ".85rem" }}>
+              Sin reportes pendientes (cola real, en memoria).
+            </p>
+          )}
+          {reports.map((r) => {
+            const chip = REPORT_STATUS_CHIP[r.status] || REPORT_STATUS_CHIP.open;
+            return (
+              <div key={r.id} className="cp04-card" style={{ padding: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                  <div>
+                    <strong style={{ color: T.text }}>{r.targetType}</strong>
+                    <span style={{ color: T.textDim, fontSize: ".82rem", marginLeft: 10 }}>Motivo: {r.reason}</span>
+                    {isAdmin && r.reporterId && (
+                      <span style={{ color: T.textDim, fontSize: ".79rem", marginLeft: 10 }}>
+                        (reportante: {r.reporterId})
+                      </span>
+                    )}
+                  </div>
+                  <Chip tone={chip.tone}>{chip.label}</Chip>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {r.status === "open" && (
+                    <DemoButton onClick={() => handleMarkInReview(r.id)}>Marcar en revisión</DemoButton>
+                  )}
+                  {r.status === "in_review" && (
+                    <>
+                      <DemoButton variant="primary" onClick={() => handleApplyAction(r.id, "warning")}>Avisar</DemoButton>
+                      <DemoButton variant="danger" onClick={() => handleApplyAction(r.id, "content_removed")}>Retirar contenido</DemoButton>
+                      {isAdmin && (
+                        <DemoButton variant="danger" onClick={() => handleApplyAction(r.id, "user_suspended")}>
+                          Suspender (solo ADMIN)
+                        </DemoButton>
+                      )}
+                      {isAdmin && (
+                        <DemoButton variant="danger" onClick={() => handleApplyAction(r.id, "user_banned")}>
+                          Banear (solo ADMIN)
+                        </DemoButton>
+                      )}
+                      <DemoButton onClick={() => handleDismiss(r.id)}>Desestimar</DemoButton>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ConsentimientoTab({ socialConsent, onGrant, onRevoke }) {
   return (
     <div className="cp04-card" style={{ padding: 22 }}>
-      <h3 style={{ margin: "0 0 10px", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>Estado de consentimiento (demo)</h3>
+      <h3 style={{ margin: "0 0 10px", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>Estado de consentimiento</h3>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-        {player.consentimientoSocial ? (
-          <Chip tone="accent">Consentimiento otorgado (demo)</Chip>
+        {socialConsent ? (
+          <Chip tone="accent">Consentimiento otorgado (real, en memoria)</Chip>
         ) : (
           <Chip tone="danger">Sin consentimiento social</Chip>
         )}
       </div>
-      <p style={{ color: T.textDim, lineHeight: 1.65 }}>
-        Este panel refleja, en modo mock, el estado documentado en{" "}
-        <code>CONSENTIMIENTO_PRIVACIDAD_COMUNIDAD_PADEL_04.md</code>. No hay flujo de recogida de
-        consentimiento real conectado — activarlo con usuarios reales (y en particular con menores)
-        requiere resolver antes el bloqueo legal externo del PR #24.
+      <p style={{ color: T.textDim, lineHeight: 1.65, marginBottom: 14 }}>
+        Este panel usa la puerta de consentimiento REAL de{" "}
+        <code>community-logic</code> (documentada en{" "}
+        <code>CONSENTIMIENTO_PRIVACIDAD_COMUNIDAD_PADEL_04.md</code>): sin este consentimiento
+        otorgado, ni una solicitud de amistad ni un follow nuevos se pueden crear en la pestaña
+        Amigos. El estado vive solo en memoria del navegador — se pierde al recargar la página, no
+        hay ninguna base de datos real detrás. Activarlo con usuarios reales (y en particular con
+        menores) requiere resolver antes el bloqueo legal externo del PR #24.
       </p>
+      <DemoButton variant={socialConsent ? "danger" : "primary"} onClick={socialConsent ? onRevoke : onGrant}>
+        {socialConsent ? "Revocar consentimiento" : "Otorgar consentimiento"}
+      </DemoButton>
     </div>
   );
 }
 
 export default function ComunidadDemo({ selectedRole }) {
   const [tab, setTab] = useState("feed");
-  const [posts, setPosts] = useState(DEMO_POSTS);
-  const [friends, setFriends] = useState(DEMO_FRIENDS);
   const [player, setPlayer] = useState(DEMO_PLAYER);
-  const [joinedMatches, setJoinedMatches] = useState([]);
-  const [moderationQueue, setModerationQueue] = useState(DEMO_MODERATION_QUEUE);
   const [lastAction, setLastAction] = useState("");
+  const [socialConsent, setSocialConsent] = useState(false);
+  const [relationshipTick, setRelationshipTick] = useState(0);
+  const [feedVersion, setFeedVersion] = useState(0);
+  const [matchVersion, setMatchVersion] = useState(0);
+  const [moderationVersion, setModerationVersion] = useState(0);
+  const [reportedPosts, setReportedPosts] = useState({});
+  const [reportedComments, setReportedComments] = useState({});
 
-  function reportPost(postId) {
-    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, estado: "reportado" } : p)));
-    setLastAction(`Publicación ${postId} marcada como reportada (demo, solo local).`);
+  useEffect(() => {
+    communitySeedDemoRelationships({
+      actorId: ACTOR_ID,
+      friendId: "amigo-1",
+      pendingReceivedFrom: "amigo-2",
+      followingId: "amigo-3",
+      blockedId: "amigo-4",
+      privateProfileId: "amigo-5",
+      publicUnrelatedId: "amigo-6",
+    });
+    setSocialConsent(communityHasSocialConsent(ACTOR_ID));
+    const visibility = communityGetProfileVisibility(ACTOR_ID);
+    setPlayer((prev) => ({ ...prev, perfilVisible: visibility !== "private" }));
+  }, []);
+
+  function bumpRelationships() {
+    setRelationshipTick((v) => v + 1);
   }
 
-  function blockAuthor(nombre) {
-    setLastAction(`${nombre} bloqueado en modo demo (solo local, sin efecto real).`);
+  function refreshFeed() {
+    setFeedVersion((v) => v + 1);
+  }
+
+  function refreshMatches() {
+    setMatchVersion((v) => v + 1);
+  }
+
+  function refreshModeration() {
+    setModerationVersion((v) => v + 1);
   }
 
   function togglePrivacy() {
-    setPlayer((prev) => ({ ...prev, perfilVisible: !prev.perfilVisible }));
+    const current = communityGetProfileVisibility(ACTOR_ID);
+    const next = current === "private" ? "friends" : "private";
+    communityUpdateProfileVisibility(ACTOR_ID, next);
+    setPlayer((prev) => ({ ...prev, perfilVisible: next !== "private" }));
+    setLastAction(`Perfil ahora ${next === "private" ? "privado" : "visible"} (real, en memoria).`);
   }
 
-  function acceptFriend(id) {
-    setFriends((prev) => prev.map((f) => (f.id === id ? { ...f, estado: "amigo" } : f)));
+  function handleReportPost(postId) {
+    if (!communityCanReport(ACTOR_ID)) {
+      setLastAction("Activa el consentimiento social para reportar contenido.");
+      return;
+    }
+    if (reportedPosts[postId]) {
+      setLastAction("Ya has reportado esta publicación.");
+      return;
+    }
+    const result = communityReportContent(ACTOR_ID, { targetType: "post", targetId: postId, reason: "spam" });
+    if (result.ok) {
+      setReportedPosts((prev) => ({ ...prev, [postId]: result.reportId }));
+      refreshModeration();
+      setLastAction("Publicación reportada (real, en memoria del navegador).");
+    } else {
+      setLastAction(`Error al reportar: ${result.error}`);
+    }
   }
 
-  function rejectFriend(id) {
-    setFriends((prev) => prev.filter((f) => f.id !== id));
+  function handleReportComment(commentId) {
+    if (!communityCanReport(ACTOR_ID)) {
+      setLastAction("Activa el consentimiento social para reportar comentarios.");
+      return;
+    }
+    if (reportedComments[commentId]) {
+      setLastAction("Ya has reportado este comentario.");
+      return;
+    }
+    const result = communityReportContent(ACTOR_ID, { targetType: "comment", targetId: commentId, reason: "harassment" });
+    if (result.ok) {
+      setReportedComments((prev) => ({ ...prev, [commentId]: result.reportId }));
+      refreshModeration();
+      setLastAction("Comentario reportado (real, en memoria del navegador).");
+    } else {
+      setLastAction(`Error al reportar comentario: ${result.error}`);
+    }
   }
 
-  function joinMatch(id) {
-    setJoinedMatches((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  const moderatorId = DEMO_MODERATOR_IDS[selectedRole] ?? null;
+
+  function grantSocialConsent() {
+    const result = communityGrantSocialConsent(ACTOR_ID);
+    if (result.ok) { setSocialConsent(true); refreshFeed(); }
+    setLastAction(result.ok ? "Consentimiento social otorgado (real, en memoria)." : `No se pudo otorgar el consentimiento: ${result.error}`);
   }
 
-  function reviewReport(id) {
-    setModerationQueue((prev) => prev.filter((r) => r.id !== id));
-    setLastAction(`Reporte ${id} revisado en modo demo (solo local, sin efecto real).`);
+  function revokeSocialConsent() {
+    const result = communityRevokeSocialConsent(ACTOR_ID);
+    if (result.ok) { setSocialConsent(false); refreshFeed(); }
+    setLastAction(result.ok ? "Consentimiento social revocado (real, en memoria)." : `No se pudo revocar el consentimiento: ${result.error}`);
+  }
+
+  function sendFriendRequestTo(contactId) {
+    const result = communitySendFriendRequest(ACTOR_ID, contactId);
+    setLastAction(result.ok ? "Solicitud de amistad enviada." : `No se pudo enviar la solicitud: ${result.error}`);
+    bumpRelationships();
+  }
+
+  function acceptFriend(friendshipId) {
+    const result = communityAcceptFriendRequest(friendshipId, ACTOR_ID);
+    setLastAction(result.ok ? "Solicitud de amistad aceptada." : `No se pudo aceptar la solicitud: ${result.error}`);
+    bumpRelationships();
+  }
+
+  function rejectFriend(friendshipId) {
+    const result = communityRejectFriendRequest(friendshipId, ACTOR_ID);
+    setLastAction(result.ok ? "Solicitud de amistad rechazada." : `No se pudo rechazar la solicitud: ${result.error}`);
+    bumpRelationships();
+  }
+
+  function cancelFriendRequestTo(friendshipId) {
+    const result = communityCancelFriendRequest(friendshipId, ACTOR_ID);
+    setLastAction(result.ok ? "Solicitud de amistad cancelada." : `No se pudo cancelar la solicitud: ${result.error}`);
+    bumpRelationships();
+  }
+
+  function removeFriendWith(contactId) {
+    const result = communityRemoveFriend(ACTOR_ID, contactId);
+    setLastAction(result.ok ? "Amistad eliminada." : `No se pudo eliminar la amistad: ${result.error}`);
+    bumpRelationships();
+  }
+
+  function followContact(contactId) {
+    const result = communityFollowUser(ACTOR_ID, contactId);
+    setLastAction(result.ok ? "Ahora sigues a este jugador." : `No se pudo seguir: ${result.error}`);
+    bumpRelationships();
+  }
+
+  function unfollowContact(contactId) {
+    const result = communityUnfollowUser(ACTOR_ID, contactId);
+    setLastAction(result.ok ? "Has dejado de seguir a este jugador." : `No se pudo dejar de seguir: ${result.error}`);
+    bumpRelationships();
   }
 
   return (
@@ -342,12 +891,55 @@ export default function ComunidadDemo({ selectedRole }) {
         </p>
       )}
 
-      {tab === "feed" && <FeedTab posts={posts} onReport={reportPost} onBlock={blockAuthor} />}
-      {tab === "perfil" && <PerfilTab player={player} onTogglePrivacy={togglePrivacy} />}
-      {tab === "amigos" && <AmigosTab friends={friends} onAccept={acceptFriend} onReject={rejectFriend} />}
-      {tab === "partidos" && <PartidosTab matches={DEMO_OPEN_MATCHES} joined={joinedMatches} onJoin={joinMatch} />}
-      {tab === "moderacion" && <ModeracionTab queue={moderationQueue} role={selectedRole} onReview={reviewReport} />}
-      {tab === "consentimiento" && <ConsentimientoTab player={player} />}
+      {tab === "feed" && (
+        <FeedTab
+          socialConsent={socialConsent}
+          viewerId={ACTOR_ID}
+          feedVersion={feedVersion}
+          onRefresh={refreshFeed}
+          setLastAction={setLastAction}
+          reportedPosts={reportedPosts}
+          onReportPost={handleReportPost}
+          reportedComments={reportedComments}
+          onReportComment={handleReportComment}
+        />
+      )}
+      {tab === "perfil" && <PerfilTab player={player} socialConsent={socialConsent} onTogglePrivacy={togglePrivacy} />}
+      {tab === "amigos" && (
+        <AmigosTab
+          key={relationshipTick}
+          contacts={DEMO_CONTACTS}
+          socialConsent={socialConsent}
+          followerCount={communityCountFollowers(ACTOR_ID)}
+          onSendRequest={sendFriendRequestTo}
+          onAccept={acceptFriend}
+          onReject={rejectFriend}
+          onCancel={cancelFriendRequestTo}
+          onRemove={removeFriendWith}
+          onFollow={followContact}
+          onUnfollow={unfollowContact}
+        />
+      )}
+      {tab === "partidos" && (
+        <PartidosTab
+          socialConsent={socialConsent}
+          viewerId={ACTOR_ID}
+          matchVersion={matchVersion}
+          onRefresh={refreshMatches}
+          setLastAction={setLastAction}
+        />
+      )}
+      {tab === "moderacion" && (
+        <ModeracionTab
+          moderatorId={moderatorId}
+          selectedRole={selectedRole}
+          onRefresh={refreshModeration}
+          setLastAction={setLastAction}
+        />
+      )}
+      {tab === "consentimiento" && (
+        <ConsentimientoTab socialConsent={socialConsent} onGrant={grantSocialConsent} onRevoke={revokeSocialConsent} />
+      )}
 
       <p style={{ marginTop: 32, color: T.textDim, fontSize: ".76rem", lineHeight: 1.6, borderTop: `1px solid ${T.line}`, paddingTop: 16 }}>
         Staff demo de referencia: {DEMO_STAFF.nombre} ({DEMO_STAFF.rol}). Todos los nombres, publicaciones,
