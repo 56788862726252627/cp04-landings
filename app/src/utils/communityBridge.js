@@ -21,6 +21,16 @@
 // nunca lanzan hacia el componente que las llama, y nunca convierten un
 // error real (p. ej. intentar bloquearse/seguirse a uno mismo) en éxito.
 import {
+  AGE_STATUS,
+  isCommunityAllowed,
+  getCommunityBlockedMessage,
+} from "./communityAgePolicy.js";
+
+// Re-export para que los consumidores (UI, tests) no necesiten importar
+// communityAgePolicy.js por separado.
+export { AGE_STATUS, getCommunityBlockedMessage };
+
+import {
   createEmptyStore,
   createUserProfile,
   createPlayerSocialProfile,
@@ -78,6 +88,34 @@ export const COMMUNITY_BRIDGE_CLUB_B_ID = "club-demo-05";
 
 const SOCIAL_LAYER_CONSENT_TYPE = "social_layer_opt_in";
 
+// --- Age policy gate (P1.3-L) ------------------------------------------------
+//
+// El estado de edad vive en este Map, separado del store de community-logic.
+// Por defecto (sin entrada) → AGE_UNKNOWN → bloqueado.
+// Decisión conservadora: verificación activa requerida, no ausencia de contraindicio.
+// No existe DOB en el modelo actual de CP04: el campo dateOfBirth nunca se almacena aquí.
+let _ageStatusMap = new Map(); // userId → AGE_STATUS value
+
+/** Registra el estado de edad resuelto para un userId. */
+export function communitySetAgeStatus(userId, status) {
+  _ageStatusMap.set(userId, status);
+}
+
+/** Consulta el estado de edad de un userId. Default: AGE_UNKNOWN (bloqueado). */
+export function communityGetAgeStatus(userId) {
+  return _ageStatusMap.get(userId) ?? AGE_STATUS.AGE_UNKNOWN;
+}
+
+/**
+ * Comprueba si el userId tiene acceso a la capa social según la política vigente.
+ * @returns {{ allowed: boolean, reason: string, ageStatus: string }}
+ */
+function _ageGateCheck(userId) {
+  const ageStatus = communityGetAgeStatus(userId);
+  const { allowed, reason } = isCommunityAllowed(ageStatus);
+  return { allowed, reason, ageStatus };
+}
+
 // IDs de los moderadores ficticios para la demo — uno por rol con permiso de
 // moderación. Se crean en communitySeedDemoRelationships con el rol correcto
 // para que assertModeratorRole de community-logic los encuentre en el store.
@@ -107,12 +145,13 @@ function getStoreForClub(clubId) {
   return getRepoForClub(clubId).getStore();
 }
 
-// Solo para tests: reinicia también los repos extra.
+// Solo para tests: reinicia también los repos extra y el age status map.
 export function __resetAllClubStoresForTests() {
   _communityRepo = createMemoryCommunityRepository(COMMUNITY_BRIDGE_CLUB_ID);
   store = _communityRepo.getStore();
   demoSeeded = false;
   _extraRepos.clear();
+  _ageStatusMap = new Map();
 }
 
 // Expone el repo de cualquier club para tests de integración multi-club.
@@ -145,6 +184,7 @@ export function __resetCommunityStoreForTests() {
   _communityRepo = createMemoryCommunityRepository(COMMUNITY_BRIDGE_CLUB_ID);
   store = _communityRepo.getStore();
   demoSeeded = false;
+  _ageStatusMap = new Map();
 }
 
 // --- Consentimiento --------------------------------------------------
@@ -275,6 +315,8 @@ export function communityAreFriends(userIdA, userIdB) {
 }
 
 export function communitySendFriendRequest(requesterId, addresseeId) {
+  const gate = _ageGateCheck(requesterId);
+  if (!gate.allowed) return { ok: false, error: gate.reason, ageStatus: gate.ageStatus };
   try {
     const record = sendFriendRequest(store, { clubId: COMMUNITY_BRIDGE_CLUB_ID, requesterId, addresseeId });
     return { ok: true, friendshipId: record.id };
@@ -322,6 +364,8 @@ export function communityRemoveFriend(actingUserId, otherUserId) {
 // --- Follow -----------------------------------------------------------
 
 export function communityFollowUser(followerId, followedId) {
+  const gate = _ageGateCheck(followerId);
+  if (!gate.allowed) return { ok: false, error: gate.reason, ageStatus: gate.ageStatus };
   try {
     const record = followUser(store, { clubId: COMMUNITY_BRIDGE_CLUB_ID, followerId, followedId });
     return { ok: true, followId: record.id };
@@ -451,6 +495,8 @@ export function communitySeedDemoRelationships({
 // el único botón de la pestaña Consentimiento sea suficiente. En producción
 // ambos consentimientos se recogen de forma explícita y separada.
 export function communityCreatePost(authorId, body, { visibility = "friends" } = {}) {
+  const gate = _ageGateCheck(authorId);
+  if (!gate.allowed) return { ok: false, error: gate.reason, ageStatus: gate.ageStatus };
   try {
     communityEnsureUserProfile(authorId);
     if (hasSocialLayerActive(store, authorId) && !hasConsent(store, authorId, "appear_in_feed")) {
@@ -464,6 +510,7 @@ export function communityCreatePost(authorId, body, { visibility = "friends" } =
 }
 
 export function communityGetVisibleFeed(viewerId) {
+  if (!_ageGateCheck(viewerId).allowed) return [];
   communityEnsureUserProfile(viewerId);
   return getVisibleFeed(store, viewerId);
 }
@@ -473,6 +520,8 @@ export function communityGetCommentsForPost(postId) {
 }
 
 export function communityCommentOnPost(postId, authorId, body) {
+  const gate = _ageGateCheck(authorId);
+  if (!gate.allowed) return { ok: false, error: gate.reason, ageStatus: gate.ageStatus };
   try {
     communityEnsureUserProfile(authorId);
     const comment = commentOnPost(store, { clubId: COMMUNITY_BRIDGE_CLUB_ID, postId, authorId, body });
@@ -491,6 +540,8 @@ export function communityHasUserReacted(targetType, targetId, userId) {
 }
 
 export function communityReactToPost(postId, userId) {
+  const gate = _ageGateCheck(userId);
+  if (!gate.allowed) return { ok: false, error: gate.reason, ageStatus: gate.ageStatus };
   try {
     const record = reactTo(store, { clubId: COMMUNITY_BRIDGE_CLUB_ID, targetType: "post", targetId: postId, userId });
     return { ok: true, reactionId: record.id };
@@ -505,6 +556,8 @@ export function communityReactToPost(postId, userId) {
 // pero aún no tiene activity_sharing — misma estrategia de bundled-consent-demo
 // usada para appear_in_feed en P0.2.
 export function communityCreateOpenMatch(creatorId, { scheduledAt, levelMin = "intermedio", levelMax = "intermedio", slotsTotal = 4, visibility = "club" } = {}) {
+  const gate = _ageGateCheck(creatorId);
+  if (!gate.allowed) return { ok: false, error: gate.reason, ageStatus: gate.ageStatus };
   try {
     communityEnsureUserProfile(creatorId);
     communityEnsurePlayerProfile(creatorId);
@@ -533,6 +586,8 @@ export function communityListVisibleOpenMatches(viewerId) {
 }
 
 export function communityRequestToJoin(openMatchId, requesterId) {
+  const gate = _ageGateCheck(requesterId);
+  if (!gate.allowed) return { ok: false, error: gate.reason, ageStatus: gate.ageStatus };
   try {
     communityEnsureUserProfile(requesterId);
     communityEnsurePlayerProfile(requesterId);
@@ -716,6 +771,8 @@ export function communityGetProfileVisibility(userId) {
 // Cambiar de club invalida cualquier cursor anterior (el id no existirá en
 // el nuevo store), devolviendo error "cursor_invalid".
 export function communityGetFeedPage(viewerId, { cursor = null, limit = 10, clubId = COMMUNITY_BRIDGE_CLUB_ID } = {}) {
+  const gate = _ageGateCheck(viewerId);
+  if (!gate.allowed) return { ok: false, error: gate.reason, ageStatus: gate.ageStatus };
   const clubStore = getStoreForClub(clubId);
   // Garantizar UserProfile en este club (mismo patrón que communityEnsureUserProfile,
   // pero usando el store del club activo en lugar del store principal).
@@ -732,11 +789,13 @@ export function communityGetFeedPage(viewerId, { cursor = null, limit = 10, club
 
 /** Lista las notificaciones del actor en el club activo, más recientes primero. */
 export function communityGetNotifications(userId, { clubId = COMMUNITY_BRIDGE_CLUB_ID, limit = 20 } = {}) {
+  if (!_ageGateCheck(userId).allowed) return [];
   return listNotifications(getStoreForClub(clubId), { userId, clubId, limit });
 }
 
 /** Número de notificaciones no leídas del actor en el club activo. */
 export function communityGetUnreadCount(userId, clubId = COMMUNITY_BRIDGE_CLUB_ID) {
+  if (!_ageGateCheck(userId).allowed) return 0;
   return getUnreadCount(getStoreForClub(clubId), userId, clubId);
 }
 

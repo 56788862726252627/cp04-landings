@@ -11,6 +11,10 @@ import {
   communityHasSocialConsent,
   communityGrantSocialConsent,
   communityRevokeSocialConsent,
+  communitySetAgeStatus,
+  communityGetAgeStatus,
+  AGE_STATUS,
+  getCommunityBlockedMessage,
   communityGetFriendshipState,
   communitySendFriendRequest,
   communityAcceptFriendRequest,
@@ -843,6 +847,7 @@ export default function ComunidadDemo({ selectedRole }) {
   const [player, setPlayer] = useState(DEMO_PLAYER);
   const [lastAction, setLastAction] = useState("");
   const [socialConsent, setSocialConsent] = useState(false);
+  const [ageStatus, setAgeStatus] = useState(AGE_STATUS.AGE_UNKNOWN);
   const [relationshipTick, setRelationshipTick] = useState(0);
   const [feedVersion, setFeedVersion] = useState(0);
   const [matchVersion, setMatchVersion] = useState(0);
@@ -853,6 +858,12 @@ export default function ComunidadDemo({ selectedRole }) {
   const [activeClubId, setActiveClubId] = useState(COMMUNITY_BRIDGE_CLUB_ID);
 
   useEffect(() => {
+    // El DEMO_PLAYER es explícitamente un perfil ficticio de adulto.
+    // En producción este status lo asignaría el backend tras verificación.
+    // Requiere validación jurídica antes de aplicar a datos reales.
+    communitySetAgeStatus(ACTOR_ID, AGE_STATUS.ADULT_VERIFIED);
+    setAgeStatus(communityGetAgeStatus(ACTOR_ID));
+
     communitySeedDemoRelationships({
       actorId: ACTOR_ID,
       friendId: "amigo-1",
@@ -941,6 +952,12 @@ export default function ComunidadDemo({ selectedRole }) {
 
   const moderatorId = DEMO_MODERATOR_IDS[selectedRole] ?? null;
 
+  // Barrera de age policy: si el perfil no es adult_verified, la capa social
+  // no está disponible. El bridge también bloquea internamente — esta pantalla
+  // es la barrera de UI (defensa en profundidad).
+  const communityBlockedMessage = getCommunityBlockedMessage(ageStatus);
+  const isCommunityBlocked = communityBlockedMessage !== null;
+
   function grantSocialConsent() {
     const result = communityGrantSocialConsent(ACTOR_ID);
     if (result.ok) { setSocialConsent(true); refreshFeed(); }
@@ -1012,7 +1029,28 @@ export default function ComunidadDemo({ selectedRole }) {
 
       <DemoNotice />
 
-      {DEMO_CLUBS.length > 1 && (
+      {isCommunityBlocked && (
+        <div
+          className="cp04-card"
+          style={{
+            marginBottom: 22,
+            borderColor: "rgba(255,94,58,.4)",
+            padding: 24,
+          }}
+        >
+          <div style={{ color: T.danger, fontWeight: 900, fontSize: ".8rem", letterSpacing: ".04em", textTransform: "uppercase", marginBottom: 8 }}>
+            Comunidad no disponible
+          </div>
+          <p style={{ margin: "0 0 14px", color: T.textDim, lineHeight: 1.65 }}>
+            {communityBlockedMessage}
+          </p>
+          <DemoButton onClick={() => {}}>
+            Contactar con el club
+          </DemoButton>
+        </div>
+      )}
+
+      {DEMO_CLUBS.length > 1 && !isCommunityBlocked && (
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
           <span style={{ color: T.textDim, fontSize: ".78rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>
             Club activo:
@@ -1047,7 +1085,7 @@ export default function ComunidadDemo({ selectedRole }) {
         </div>
       )}
 
-      <nav style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }} aria-label="Secciones de Comunidad">
+      {!isCommunityBlocked && <nav style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }} aria-label="Secciones de Comunidad">
         {TABS.map((t) => {
           const isNotifTab = t.id === "notificaciones";
           const unread = isNotifTab ? communityGetUnreadCount(ACTOR_ID, activeClubId) : 0;
@@ -1099,15 +1137,15 @@ export default function ComunidadDemo({ selectedRole }) {
             </button>
           );
         })}
-      </nav>
+      </nav>}
 
-      {lastAction && (
+      {!isCommunityBlocked && lastAction && (
         <p role="status" aria-live="polite" style={{ color: T.textDim, fontSize: ".82rem", marginBottom: 16 }}>
           {lastAction}
         </p>
       )}
 
-      {tab === "feed" && (
+      {!isCommunityBlocked && tab === "feed" && (
         <FeedTab
           socialConsent={socialConsent}
           viewerId={ACTOR_ID}
@@ -1121,7 +1159,7 @@ export default function ComunidadDemo({ selectedRole }) {
           activeClubId={activeClubId}
         />
       )}
-      {tab === "notificaciones" && (
+      {!isCommunityBlocked && tab === "notificaciones" && (
         <NotificacionesTab
           key={`${activeClubId}-${notifVersion}`}
           viewerId={ACTOR_ID}
@@ -1130,8 +1168,8 @@ export default function ComunidadDemo({ selectedRole }) {
           onMarkAll={refreshNotifications}
         />
       )}
-      {tab === "perfil" && <PerfilTab player={player} socialConsent={socialConsent} onTogglePrivacy={togglePrivacy} />}
-      {tab === "amigos" && (
+      {!isCommunityBlocked && tab === "perfil" && <PerfilTab player={player} socialConsent={socialConsent} onTogglePrivacy={togglePrivacy} />}
+      {!isCommunityBlocked && tab === "amigos" && (
         <AmigosTab
           key={relationshipTick}
           contacts={DEMO_CONTACTS}
@@ -1146,7 +1184,7 @@ export default function ComunidadDemo({ selectedRole }) {
           onUnfollow={unfollowContact}
         />
       )}
-      {tab === "partidos" && (
+      {!isCommunityBlocked && tab === "partidos" && (
         <PartidosTab
           socialConsent={socialConsent}
           viewerId={ACTOR_ID}
@@ -1155,7 +1193,7 @@ export default function ComunidadDemo({ selectedRole }) {
           setLastAction={setLastAction}
         />
       )}
-      {tab === "moderacion" && (
+      {!isCommunityBlocked && tab === "moderacion" && (
         <ModeracionTab
           moderatorId={moderatorId}
           selectedRole={selectedRole}
@@ -1163,7 +1201,7 @@ export default function ComunidadDemo({ selectedRole }) {
           setLastAction={setLastAction}
         />
       )}
-      {tab === "consentimiento" && (
+      {!isCommunityBlocked && tab === "consentimiento" && (
         <ConsentimientoTab socialConsent={socialConsent} onGrant={grantSocialConsent} onRevoke={revokeSocialConsent} />
       )}
 

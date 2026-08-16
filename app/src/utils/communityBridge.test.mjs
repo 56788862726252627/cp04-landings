@@ -12,6 +12,9 @@ import {
   communityHasSocialConsent,
   communityGrantSocialConsent,
   communityRevokeSocialConsent,
+  communitySetAgeStatus,
+  communityGetAgeStatus,
+  AGE_STATUS,
   communityIsBlocked,
   communityBlockUser,
   communityUnblockUser,
@@ -70,6 +73,10 @@ import { createEmptyStore, createFriendship, blockUser } from "../../projects/cl
 // un error real en éxito; no se repite la cobertura de reglas de negocio
 // que ya tienen sus propios tests en projects/club-padel-04/community-logic/tests/.
 function grantConsentFor(userId) {
+  // Para tests existentes: otorgar consentimiento social implica también marcar
+  // como adult_verified, porque ambas condiciones son necesarias en producción.
+  // Esto mantiene todos los tests de P0/P1.1/P1.2/P1.3 en verde sin modificarlos.
+  communitySetAgeStatus(userId, AGE_STATUS.ADULT_VERIFIED);
   const result = communityGrantSocialConsent(userId);
   if (!result.ok) throw new Error(`No se pudo otorgar consentimiento de prueba a ${userId}: ${result.error}`);
 }
@@ -1161,6 +1168,8 @@ test("P1.3 feed: segunda página devuelve items distintos sin duplicados", () =>
 });
 
 test("P1.3 feed: cursor inválido devuelve ok:false con error", () => {
+  // actor-test debe ser adult_verified para que el age gate pase y se evalúe el cursor.
+  communitySetAgeStatus("actor-test", AGE_STATUS.ADULT_VERIFIED);
   const result = communityGetFeedPage("actor-test", { cursor: "id-que-no-existe", limit: 5 });
   assert.equal(result.ok, false);
   assert.ok(result.error);
@@ -1246,6 +1255,8 @@ test("P1.3 notif: communityFollowUser genera notificación al seguido", () => {
   grantConsentFor("seguidor");
   communityEnsurePlayerProfile("seguido", { visibilityLevel: "friends" });
   communityEnsureUserProfile("seguido");
+  // "seguido" debe ser adult_verified para poder consultar sus notificaciones.
+  communitySetAgeStatus("seguido", AGE_STATUS.ADULT_VERIFIED);
   communityFollowUser("seguidor", "seguido");
 
   const notifs = communityGetNotifications("seguido");
@@ -1410,4 +1421,229 @@ test("P1.3 regresión: P0 feed, amistad y partidos abiertos siguen funcionando t
   // friendship_accepted va al solicitante (reg-actor), no al aceptante (reg-amigo)
   const notifsActor = communityGetNotifications("reg-actor");
   assert.ok(notifsActor.some((n) => n.notificationType === "friendship_accepted"), "notif aceptación OK");
+});
+
+// ── P1.3-L — Age Policy Gate ──────────────────────────────────────────────────
+//
+// Verifica que la barrera de edad existe en el dominio/bridge (no solo en la UI)
+// y que bloquea únicamente la capa social sin afectar el núcleo del club.
+// Nota: los tests de P0/P1.1/P1.2/P1.3 usan grantConsentFor() que automáticamente
+// setea adult_verified — por eso todos siguen en verde sin modificación.
+
+test("P1.3-L age gate: communityGetAgeStatus devuelve age_unknown por defecto (ningún set previo)", () => {
+  assert.equal(communityGetAgeStatus("usuario-sin-status"), AGE_STATUS.AGE_UNKNOWN);
+});
+
+test("P1.3-L age gate: communitySetAgeStatus persiste y communityGetAgeStatus lo devuelve", () => {
+  communitySetAgeStatus("ag-user", AGE_STATUS.ADULT_VERIFIED);
+  assert.equal(communityGetAgeStatus("ag-user"), AGE_STATUS.ADULT_VERIFIED);
+  communitySetAgeStatus("ag-user", AGE_STATUS.MINOR_OR_BELOW_POLICY);
+  assert.equal(communityGetAgeStatus("ag-user"), AGE_STATUS.MINOR_OR_BELOW_POLICY);
+});
+
+test("P1.3-L age gate: adult_verified → createPost permitido", () => {
+  communitySetAgeStatus("ag-adult", AGE_STATUS.ADULT_VERIFIED);
+  grantConsentFor("ag-adult");
+  const result = communityCreatePost("ag-adult", "Post de adulto verificado");
+  assert.equal(result.ok, true);
+});
+
+test("P1.3-L age gate: age_unknown → createPost bloqueado con ok:false", () => {
+  // age_unknown es el default — sin communitySetAgeStatus
+  grantConsentFor("ag-unknown");
+  communitySetAgeStatus("ag-unknown", AGE_STATUS.AGE_UNKNOWN); // resetear a unknown
+  const result = communityCreatePost("ag-unknown", "Post bloqueado");
+  assert.equal(result.ok, false);
+  assert.equal(typeof result.error, "string");
+  assert.ok(result.error.length > 0);
+  assert.equal(result.ageStatus, AGE_STATUS.AGE_UNKNOWN);
+});
+
+test("P1.3-L age gate: minor_or_below_policy → createPost bloqueado", () => {
+  communitySetAgeStatus("ag-minor", AGE_STATUS.MINOR_OR_BELOW_POLICY);
+  communityGrantSocialConsent("ag-minor");
+  const result = communityCreatePost("ag-minor", "Post de menor");
+  assert.equal(result.ok, false);
+  assert.equal(result.ageStatus, AGE_STATUS.MINOR_OR_BELOW_POLICY);
+});
+
+test("P1.3-L age gate: verification_pending → createPost bloqueado", () => {
+  communitySetAgeStatus("ag-pending", AGE_STATUS.VERIFICATION_PENDING);
+  communityGrantSocialConsent("ag-pending");
+  const result = communityCreatePost("ag-pending", "Post pendiente");
+  assert.equal(result.ok, false);
+  assert.equal(result.ageStatus, AGE_STATUS.VERIFICATION_PENDING);
+});
+
+test("P1.3-L age gate: consentimiento social NO anula el age gate — age_unknown con consent sigue bloqueado", () => {
+  // El consentimiento social es condición necesaria pero no suficiente.
+  // El age gate es independiente y no puede ser anulado por el consentimiento.
+  communitySetAgeStatus("ag-consent-only", AGE_STATUS.AGE_UNKNOWN);
+  communityGrantSocialConsent("ag-consent-only");
+  assert.equal(communityHasSocialConsent("ag-consent-only"), true, "consent otorgado");
+
+  const postResult = communityCreatePost("ag-consent-only", "Post bloqueado por age gate");
+  assert.equal(postResult.ok, false, "age gate bloquea aunque haya consentimiento");
+
+  const reqResult = communitySendFriendRequest("ag-consent-only", "otro-usuario");
+  assert.equal(reqResult.ok, false, "amistad bloqueada aunque haya consentimiento");
+});
+
+test("P1.3-L age gate: age_unknown → communitySendFriendRequest bloqueado", () => {
+  communitySetAgeStatus("ag-nofriend", AGE_STATUS.AGE_UNKNOWN);
+  communityGrantSocialConsent("ag-nofriend");
+  const result = communitySendFriendRequest("ag-nofriend", "otro-user");
+  assert.equal(result.ok, false);
+  assert.equal(result.ageStatus, AGE_STATUS.AGE_UNKNOWN);
+});
+
+test("P1.3-L age gate: age_unknown → communityFollowUser bloqueado", () => {
+  communitySetAgeStatus("ag-nofollow", AGE_STATUS.AGE_UNKNOWN);
+  communityGrantSocialConsent("ag-nofollow");
+  communityEnsurePlayerProfile("follow-target", { visibilityLevel: "friends" });
+  const result = communityFollowUser("ag-nofollow", "follow-target");
+  assert.equal(result.ok, false);
+  assert.equal(result.ageStatus, AGE_STATUS.AGE_UNKNOWN);
+});
+
+test("P1.3-L age gate: age_unknown → communityCreateOpenMatch bloqueado", () => {
+  communitySetAgeStatus("ag-nomatch", AGE_STATUS.AGE_UNKNOWN);
+  communityGrantSocialConsent("ag-nomatch");
+  const result = communityCreateOpenMatch("ag-nomatch", {
+    scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.ageStatus, AGE_STATUS.AGE_UNKNOWN);
+});
+
+test("P1.3-L age gate: age_unknown → communityCommentOnPost bloqueado", () => {
+  // Autor del post tiene adult_verified
+  grantConsentFor("post-autor-gate");
+  const postResult = communityCreatePost("post-autor-gate", "Post para comentar", { visibility: "club" });
+  assert.equal(postResult.ok, true);
+
+  communitySetAgeStatus("ag-nocomment", AGE_STATUS.AGE_UNKNOWN);
+  const result = communityCommentOnPost(postResult.postId, "ag-nocomment", "Comentario bloqueado");
+  assert.equal(result.ok, false);
+  assert.equal(result.ageStatus, AGE_STATUS.AGE_UNKNOWN);
+});
+
+test("P1.3-L age gate: age_unknown → communityReactToPost bloqueado", () => {
+  grantConsentFor("react-autor-gate");
+  const postResult = communityCreatePost("react-autor-gate", "Post para reaccionar");
+  assert.equal(postResult.ok, true);
+
+  communitySetAgeStatus("ag-noreact", AGE_STATUS.AGE_UNKNOWN);
+  const result = communityReactToPost(postResult.postId, "ag-noreact");
+  assert.equal(result.ok, false);
+  assert.equal(result.ageStatus, AGE_STATUS.AGE_UNKNOWN);
+});
+
+test("P1.3-L age gate: age_unknown → communityGetFeedPage devuelve ok:false (no leak de feed)", () => {
+  communitySetAgeStatus("ag-nofeed", AGE_STATUS.AGE_UNKNOWN);
+  const result = communityGetFeedPage("ag-nofeed", { limit: 10 });
+  assert.equal(result.ok, false);
+  assert.ok(result.error);
+});
+
+test("P1.3-L age gate: age_unknown → communityGetVisibleFeed devuelve [] (no leak de feed)", () => {
+  communitySetAgeStatus("ag-novisible", AGE_STATUS.AGE_UNKNOWN);
+  const feed = communityGetVisibleFeed("ag-novisible");
+  assert.deepEqual(feed, []);
+});
+
+test("P1.3-L age gate: age_unknown → communityGetNotifications devuelve [] (no notificaciones sociales)", () => {
+  communitySetAgeStatus("ag-nonotif", AGE_STATUS.AGE_UNKNOWN);
+  const notifs = communityGetNotifications("ag-nonotif");
+  assert.deepEqual(notifs, []);
+});
+
+test("P1.3-L age gate: age_unknown → communityGetUnreadCount devuelve 0 (no notificaciones sociales)", () => {
+  communitySetAgeStatus("ag-nounread", AGE_STATUS.AGE_UNKNOWN);
+  const count = communityGetUnreadCount("ag-nounread");
+  assert.equal(count, 0);
+});
+
+test("P1.3-L age gate: ADMIN role no bypass — age_unknown con rol ADMIN sigue bloqueado", () => {
+  // El rol ADMIN de Comunidad es para moderación, no para bypass del age gate.
+  // La política no define bypass por rol — un administrador del sistema puede
+  // usar la moderación (que no requiere age gate) pero no puede publicar/seguir
+  // desde un perfil sin edad verificada.
+  communitySetAgeStatus("ag-admin-unverified", AGE_STATUS.AGE_UNKNOWN);
+  communityEnsureUserProfile("ag-admin-unverified", { role: "ADMIN" });
+  communityGrantSocialConsent("ag-admin-unverified");
+
+  const result = communityCreatePost("ag-admin-unverified", "Post de ADMIN sin edad verificada");
+  assert.equal(result.ok, false, "ADMIN sin adult_verified no puede publicar");
+  assert.equal(result.ageStatus, AGE_STATUS.AGE_UNKNOWN);
+});
+
+test("P1.3-L age gate: no mutación social al bloquear — age_unknown no crea posts aunque tenga consent", () => {
+  communitySetAgeStatus("ag-nomut", AGE_STATUS.AGE_UNKNOWN);
+  communityGrantSocialConsent("ag-nomut");
+
+  communityCreatePost("ag-nomut", "Post que no debe crearse");
+  communityFollowUser("ag-nomut", "otro-usuario");
+  communitySendFriendRequest("ag-nomut", "otro-usuario");
+
+  // Verificar que no hay datos sociales del usuario bloqueado en el store
+  const feed = communityGetVisibleFeed("ag-nomut");
+  assert.deepEqual(feed, [], "feed vacío para perfil bloqueado");
+
+  const notifs = communityGetNotifications("ag-nomut");
+  assert.deepEqual(notifs, [], "sin notificaciones para perfil bloqueado");
+});
+
+test("P1.3-L age gate: bloqueo afecta solo social — operaciones de estado puras siguen funcionando", () => {
+  // communityIsBlocked, communityGetFriendshipState, communityGetProfileVisibility
+  // no requieren age verification — son consultas de estado, no acciones sociales.
+  communitySetAgeStatus("ag-readonly", AGE_STATUS.AGE_UNKNOWN);
+
+  // Estas operaciones NO deben verse afectadas por el age gate
+  assert.equal(communityIsBlocked("ag-readonly", "otro"), false, "isBlocked funciona");
+  assert.deepEqual(
+    communityGetFriendshipState("ag-readonly", "otro"),
+    { status: "none" },
+    "getFriendshipState funciona"
+  );
+  const visibility = communityGetProfileVisibility("ag-readonly");
+  assert.equal(typeof visibility, "string", "getProfileVisibility funciona");
+});
+
+test("P1.3-L age gate: __resetAllClubStoresForTests limpia también el age status map", () => {
+  communitySetAgeStatus("ag-reset-user", AGE_STATUS.ADULT_VERIFIED);
+  assert.equal(communityGetAgeStatus("ag-reset-user"), AGE_STATUS.ADULT_VERIFIED);
+
+  __resetAllClubStoresForTests();
+
+  assert.equal(communityGetAgeStatus("ag-reset-user"), AGE_STATUS.AGE_UNKNOWN, "reset limpia el mapa de edad");
+});
+
+test("P1.3-L age gate: regresión P0/P1.1/P1.2/P1.3 — adult_verified permite acceso completo normal", () => {
+  // Con adult_verified, el comportamiento es idéntico al anterior: las reglas
+  // de consentimiento y bloqueo de community-logic siguen siendo las que mandan.
+  grantConsentFor("ag-full-actor"); // setea adult_verified + social consent
+  grantConsentFor("ag-full-amigo");
+  communityEnsureUserProfile("ag-full-amigo");
+  communityEnsurePlayerProfile("ag-full-amigo", { visibilityLevel: "friends" });
+
+  const reqResult = communitySendFriendRequest("ag-full-actor", "ag-full-amigo");
+  assert.equal(reqResult.ok, true, "amistad permitida con adult_verified");
+
+  communityAcceptFriendRequest(reqResult.friendshipId, "ag-full-amigo");
+
+  const postResult = communityCreatePost("ag-full-actor", "Post de adulto", { visibility: "friends" });
+  assert.equal(postResult.ok, true, "post permitido con adult_verified");
+
+  const feedPage = communityGetFeedPage("ag-full-amigo", { limit: 5 });
+  assert.equal(feedPage.ok, true, "feed paginado permitido con adult_verified");
+
+  const matchResult = communityCreateOpenMatch("ag-full-actor", {
+    scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+    visibility: "friends",
+  });
+  assert.equal(matchResult.ok, true, "partido abierto permitido con adult_verified");
+
+  const notifs = communityGetNotifications("ag-full-amigo");
+  assert.ok(Array.isArray(notifs), "notificaciones funcionan con adult_verified");
 });
