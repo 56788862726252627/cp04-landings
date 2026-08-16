@@ -4,8 +4,11 @@ import { beforeEach } from "node:test";
 
 import {
   COMMUNITY_BRIDGE_CLUB_ID,
+  COMMUNITY_BRIDGE_CLUB_B_ID,
   __resetCommunityStoreForTests,
+  __resetAllClubStoresForTests,
   __getCommunityRepoForTests,
+  __getRepoForClubForTests,
   communityHasSocialConsent,
   communityGrantSocialConsent,
   communityRevokeSocialConsent,
@@ -52,6 +55,11 @@ import {
   communityDismissReport,
   communityUpdateProfileVisibility,
   communityGetProfileVisibility,
+  communityGetFeedPage,
+  communityGetNotifications,
+  communityGetUnreadCount,
+  communityMarkNotificationRead,
+  communityMarkAllNotificationsRead,
 } from "./communityBridge.js";
 
 import { createEmptyStore, createFriendship, blockUser } from "../../projects/club-padel-04/community-logic/index.mjs";
@@ -74,7 +82,7 @@ function grantConsentFor(userId) {
 // nunca convierte un error real en éxito.
 
 beforeEach(() => {
-  __resetCommunityStoreForTests();
+  __resetAllClubStoresForTests();
 });
 
 test("COMMUNITY_BRIDGE_CLUB_ID es un id fijo y no vacío", () => {
@@ -1113,4 +1121,293 @@ test("P0.5: communityGetReportStatusForReporter con reportId inexistente devuelv
   const result = communityGetReportStatusForReporter("reporte-que-no-existe", "jugador-1");
   assert.equal(result.ok, false);
   assert.ok(result.error, "debe incluir mensaje de error");
+});
+
+// ── P1.3 — Feed paginado ──────────────────────────────────────────────────
+
+test("P1.3 feed: primera página devuelve items, nextCursor y hasMore correctos", () => {
+  grantConsentFor("autor-1");
+  for (let i = 0; i < 15; i++) communityCreatePost("autor-1", `Post ${i}`);
+
+  grantConsentFor("lector-1");
+  communityEnsureUserProfile("lector-1");
+  // autor-1 publica con visibility=friends; necesito amistad para ver
+  // En este test uso visibility por defecto "friends" y cargo sin amistad ->
+  // el actor ve solo sus propios posts (los de "lector-1" = ninguno).
+  // Para ver los de autor-1 necesitamos amistad. Usaré el viewerId = "autor-1".
+  const result = communityGetFeedPage("autor-1", { limit: 5 });
+  assert.equal(result.ok, true);
+  assert.equal(result.items.length, 5);
+  assert.equal(result.hasMore, true);
+  assert.ok(result.nextCursor, "debe haber cursor para la siguiente página");
+});
+
+test("P1.3 feed: segunda página devuelve items distintos sin duplicados", () => {
+  grantConsentFor("autor-feed");
+  communityEnsureUserProfile("autor-feed");
+  for (let i = 0; i < 12; i++) communityCreatePost("autor-feed", `Post ${i}`, { visibility: "friends" });
+
+  const page1 = communityGetFeedPage("autor-feed", { limit: 7 });
+  const page2 = communityGetFeedPage("autor-feed", { cursor: page1.nextCursor, limit: 7 });
+
+  assert.equal(page1.ok, true);
+  assert.equal(page2.ok, true);
+  assert.equal(page1.items.length, 7);
+  assert.equal(page2.items.length, 5);
+  assert.equal(page2.hasMore, false);
+
+  const allIds = [...page1.items.map((p) => p.id), ...page2.items.map((p) => p.id)];
+  assert.equal(new Set(allIds).size, 12, "no debe haber duplicados entre páginas");
+});
+
+test("P1.3 feed: cursor inválido devuelve ok:false con error", () => {
+  const result = communityGetFeedPage("actor-test", { cursor: "id-que-no-existe", limit: 5 });
+  assert.equal(result.ok, false);
+  assert.ok(result.error);
+  assert.equal(result.items.length, 0);
+});
+
+test("P1.3 feed: feed vacío devuelve ok:true, items:[] hasMore:false", () => {
+  grantConsentFor("actor-vacio");
+  const result = communityGetFeedPage("actor-vacio", { limit: 10 });
+  assert.equal(result.ok, true);
+  assert.equal(result.items.length, 0);
+  assert.equal(result.hasMore, false);
+  assert.equal(result.nextCursor, null);
+});
+
+test("P1.3 feed: bloqueo excluye posts del bloqueado", () => {
+  grantConsentFor("bloqueador");
+  grantConsentFor("bloqueado");
+  communityEnsureUserProfile("bloqueado");
+  communityCreatePost("bloqueado", "post de bloqueado", { visibility: "friends" });
+  communityBlockUser("bloqueador", "bloqueado");
+
+  const result = communityGetFeedPage("bloqueador", { limit: 10 });
+  assert.equal(result.ok, true);
+  const leaks = result.items.filter((p) => p.authorId === "bloqueado");
+  assert.equal(leaks.length, 0, "post de bloqueado no debe aparecer");
+});
+
+test("P1.3 feed: tenant isolation — club B no ve posts de club A", () => {
+  grantConsentFor("autor-a");
+  communityCreatePost("autor-a", "Post del club A", { visibility: "friends" });
+
+  // Feed para el mismo userId pero en club B
+  const resultB = communityGetFeedPage("autor-a", { limit: 10, clubId: COMMUNITY_BRIDGE_CLUB_B_ID });
+  assert.equal(resultB.ok, true);
+  assert.equal(resultB.items.length, 0, "club B no debe ver posts de club A");
+});
+
+test("P1.3 feed: cursor de club A es inválido en club B", () => {
+  grantConsentFor("autor-a");
+  communityEnsureUserProfile("autor-a");
+  for (let i = 0; i < 3; i++) communityCreatePost("autor-a", `Post ${i}`, { visibility: "friends" });
+
+  const pageA = communityGetFeedPage("autor-a", { limit: 2 });
+  assert.equal(pageA.ok, true);
+  assert.ok(pageA.nextCursor);
+
+  // Usar el cursor de A en B debe fallar
+  const resultB = communityGetFeedPage("autor-a", {
+    cursor: pageA.nextCursor,
+    limit: 10,
+    clubId: COMMUNITY_BRIDGE_CLUB_B_ID,
+  });
+  assert.equal(resultB.ok, false, "cursor de club A debe ser inválido en club B");
+});
+
+// ── P1.3 — Notificaciones ─────────────────────────────────────────────────
+
+test("P1.3 notif: communitySendFriendRequest genera notificación al destinatario", () => {
+  grantConsentFor("solicitante");
+  communityEnsureUserProfile("destinatario");
+  communityEnsurePlayerProfile("destinatario");
+  grantConsentFor("destinatario");
+  communitySendFriendRequest("solicitante", "destinatario");
+
+  const notifs = communityGetNotifications("destinatario");
+  assert.ok(notifs.some((n) => n.notificationType === "friendship_request"), "debe haber notif de solicitud");
+});
+
+test("P1.3 notif: communityAcceptFriendRequest genera notificación al solicitante", () => {
+  grantConsentFor("solicitante2");
+  communityEnsureUserProfile("destinatario2");
+  communityEnsurePlayerProfile("destinatario2");
+  grantConsentFor("destinatario2");
+  const { friendshipId } = communitySendFriendRequest("solicitante2", "destinatario2");
+  communityAcceptFriendRequest(friendshipId, "destinatario2");
+
+  const notifs = communityGetNotifications("solicitante2");
+  assert.ok(notifs.some((n) => n.notificationType === "friendship_accepted"), "debe haber notif de aceptación");
+});
+
+test("P1.3 notif: communityFollowUser genera notificación al seguido", () => {
+  grantConsentFor("seguidor");
+  communityEnsurePlayerProfile("seguido", { visibilityLevel: "friends" });
+  communityEnsureUserProfile("seguido");
+  communityFollowUser("seguidor", "seguido");
+
+  const notifs = communityGetNotifications("seguido");
+  assert.ok(notifs.some((n) => n.notificationType === "new_follower"), "debe haber notif de nuevo seguidor");
+});
+
+test("P1.3 notif: communityCommentOnPost genera notificación al autor del post", () => {
+  grantConsentFor("autor-post");
+  grantConsentFor("comentador");
+  communityEnsureUserProfile("comentador");
+  // visibility "club" para que comentador (sin amistad) pueda ver el post
+  const post = communityCreatePost("autor-post", "Post para comentar", { visibility: "club" });
+  const r = communityCommentOnPost(post.postId, "comentador", "hola");
+  assert.equal(r.ok, true, `el comentario debería funcionar: ${r.error}`);
+
+  const notifs = communityGetNotifications("autor-post");
+  assert.ok(notifs.some((n) => n.notificationType === "new_comment"), "debe haber notif de comentario");
+});
+
+test("P1.3 notif: communityReactToPost genera notificación al autor", () => {
+  grantConsentFor("autor-react");
+  grantConsentFor("reactor");
+  communityEnsureUserProfile("reactor");
+  const post = communityCreatePost("autor-react", "Post para reaccionar");
+  communityReactToPost(post.postId, "reactor");
+
+  const notifs = communityGetNotifications("autor-react");
+  assert.ok(notifs.some((n) => n.notificationType === "new_reaction"), "debe haber notif de reacción");
+});
+
+test("P1.3 notif: communityGetUnreadCount aumenta con notificaciones nuevas", () => {
+  grantConsentFor("n-actor");
+  communityEnsureUserProfile("n-target");
+  communityEnsurePlayerProfile("n-target");
+  grantConsentFor("n-target");
+  assert.equal(communityGetUnreadCount("n-target"), 0);
+  communitySendFriendRequest("n-actor", "n-target");
+  assert.equal(communityGetUnreadCount("n-target"), 1);
+});
+
+test("P1.3 notif: communityMarkNotificationRead marca una y reduce el contador", () => {
+  grantConsentFor("mark-actor");
+  communityEnsureUserProfile("mark-target");
+  communityEnsurePlayerProfile("mark-target");
+  grantConsentFor("mark-target");
+  communitySendFriendRequest("mark-actor", "mark-target");
+  const notifs = communityGetNotifications("mark-target");
+  assert.equal(notifs.length, 1);
+
+  const result = communityMarkNotificationRead(notifs[0].id, "mark-target");
+  assert.equal(result.ok, true);
+  assert.equal(communityGetUnreadCount("mark-target"), 0);
+});
+
+test("P1.3 notif: communityMarkNotificationRead falla si usuario incorrecto", () => {
+  grantConsentFor("mark2-actor");
+  communityEnsureUserProfile("mark2-target");
+  communityEnsurePlayerProfile("mark2-target");
+  grantConsentFor("mark2-target");
+  communitySendFriendRequest("mark2-actor", "mark2-target");
+  const notifs = communityGetNotifications("mark2-target");
+
+  const result = communityMarkNotificationRead(notifs[0].id, "otro-usuario");
+  assert.equal(result.ok, false);
+  assert.ok(result.error);
+});
+
+test("P1.3 notif: communityMarkAllNotificationsRead marca todas y devuelve count", () => {
+  grantConsentFor("all-actor");
+  communityEnsureUserProfile("all-target");
+  communityEnsurePlayerProfile("all-target");
+  grantConsentFor("all-target");
+  communitySendFriendRequest("all-actor", "all-target");
+  communityFollowUser("all-actor", "all-target");
+
+  assert.equal(communityGetUnreadCount("all-target"), 2);
+  const result = communityMarkAllNotificationsRead("all-target");
+  assert.equal(result.ok, true);
+  assert.equal(result.count, 2);
+  assert.equal(communityGetUnreadCount("all-target"), 0);
+});
+
+test("P1.3 notif: orden descendente — notificación más reciente primero", () => {
+  grantConsentFor("order-actor");
+  communityEnsureUserProfile("order-target");
+  communityEnsurePlayerProfile("order-target");
+  grantConsentFor("order-target");
+  communitySendFriendRequest("order-actor", "order-target");
+  communityFollowUser("order-actor", "order-target");
+
+  const notifs = communityGetNotifications("order-target");
+  assert.equal(notifs.length, 2);
+  assert.ok(notifs[0].createdAt >= notifs[1].createdAt, "más reciente primero");
+});
+
+// ── P1.3 — Multi-club / tenant isolation ──────────────────────────────────
+
+test("P1.3 multi-club: notificaciones de club A no aparecen en club B", () => {
+  grantConsentFor("mc-actor");
+  communityEnsureUserProfile("mc-target");
+  communityEnsurePlayerProfile("mc-target");
+  grantConsentFor("mc-target");
+  communitySendFriendRequest("mc-actor", "mc-target");
+
+  // Las notificaciones de club-demo-04 no deben aparecer en club-demo-05
+  const notifsB = communityGetNotifications("mc-target", { clubId: COMMUNITY_BRIDGE_CLUB_B_ID });
+  assert.equal(notifsB.length, 0, "notificaciones de club A no deben cruzar a club B");
+});
+
+test("P1.3 multi-club: unreadCount de club B es 0 aunque haya no-leídas en club A", () => {
+  grantConsentFor("uc-actor");
+  communityEnsureUserProfile("uc-target");
+  communityEnsurePlayerProfile("uc-target");
+  grantConsentFor("uc-target");
+  communitySendFriendRequest("uc-actor", "uc-target");
+
+  assert.equal(communityGetUnreadCount("uc-target", COMMUNITY_BRIDGE_CLUB_ID), 1);
+  assert.equal(communityGetUnreadCount("uc-target", COMMUNITY_BRIDGE_CLUB_B_ID), 0);
+});
+
+test("P1.3 multi-club: repos son instancias separadas", () => {
+  const repoA = __getRepoForClubForTests(COMMUNITY_BRIDGE_CLUB_ID);
+  const repoB = __getRepoForClubForTests(COMMUNITY_BRIDGE_CLUB_B_ID);
+  assert.notEqual(repoA, repoB, "deben ser instancias distintas");
+  assert.equal(repoA.getClubId(), COMMUNITY_BRIDGE_CLUB_ID);
+  assert.equal(repoB.getClubId(), COMMUNITY_BRIDGE_CLUB_B_ID);
+});
+
+test("P1.3 multi-club: markAllNotificationsRead en club A no afecta club B", () => {
+  grantConsentFor("mab-actor");
+  communityEnsureUserProfile("mab-target");
+  communityEnsurePlayerProfile("mab-target");
+  grantConsentFor("mab-target");
+  communitySendFriendRequest("mab-actor", "mab-target");
+
+  // Solo hay 1 notif en club A; club B tiene 0
+  communityMarkAllNotificationsRead("mab-target", COMMUNITY_BRIDGE_CLUB_ID);
+  assert.equal(communityGetUnreadCount("mab-target", COMMUNITY_BRIDGE_CLUB_B_ID), 0, "no debe afectar al otro club");
+});
+
+// ── P1.3 — Regresión P0/P1.1/P1.2 ───────────────────────────────────────
+
+test("P1.3 regresión: P0 feed, amistad y partidos abiertos siguen funcionando tras cambios P1.3", () => {
+  grantConsentFor("reg-actor");
+  grantConsentFor("reg-amigo");
+  communityEnsureUserProfile("reg-amigo");
+  communityEnsurePlayerProfile("reg-amigo", { visibilityLevel: "friends" });
+
+  const { friendshipId } = communitySendFriendRequest("reg-actor", "reg-amigo");
+  communityAcceptFriendRequest(friendshipId, "reg-amigo");
+
+  communityCreatePost("reg-actor", "post de regresión", { visibility: "friends" });
+  const feed = communityGetVisibleFeed("reg-amigo");
+  assert.ok(feed.length > 0, "amigo debe ver el post");
+
+  const match = communityCreateOpenMatch("reg-actor", {
+    scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+    visibility: "friends",
+  });
+  assert.equal(match.ok, true);
+
+  // friendship_accepted va al solicitante (reg-actor), no al aceptante (reg-amigo)
+  const notifsActor = communityGetNotifications("reg-actor");
+  assert.ok(notifsActor.some((n) => n.notificationType === "friendship_accepted"), "notif aceptación OK");
 });

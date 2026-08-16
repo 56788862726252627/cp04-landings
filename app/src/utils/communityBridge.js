@@ -58,6 +58,11 @@ import {
   getSanctionSummaryForUser,
   isContentHidden,
   canReport,
+  listNotifications,
+  getUnreadCount,
+  markNotificationRead,
+  markAllNotificationsRead,
+  getPaginatedFeed,
 } from "../../projects/club-padel-04/community-logic/index.mjs";
 
 import { createMemoryCommunityRepository } from "./communityRepository.js";
@@ -66,6 +71,10 @@ import { createMemoryCommunityRepository } from "./communityRepository.js";
 // sin inventar uno nuevo, solo para mantener consistencia si en el futuro
 // se comparten datos entre el seed de test y este puente.
 export const COMMUNITY_BRIDGE_CLUB_ID = "club-demo-04";
+
+// Segundo club para demo de aislamiento multi-club (P1.3).
+// Tiene su propio repo en memoria, completamente separado de COMMUNITY_BRIDGE_CLUB_ID.
+export const COMMUNITY_BRIDGE_CLUB_B_ID = "club-demo-05";
 
 const SOCIAL_LAYER_CONSENT_TYPE = "social_layer_opt_in";
 
@@ -77,6 +86,41 @@ export const DEMO_MODERATOR_IDS = {
   ADMIN: "demo-moderator-admin",
   SUPPORT: "demo-moderator-support",
 };
+
+// --- Multi-club support (P1.3) -------------------------------------------
+//
+// Cada club tiene su propio repo en memoria, completamente aislado. El repo
+// principal (club-demo-04) sigue siendo el de siempre (_communityRepo). Los
+// repos adicionales se crean bajo demanda en _extraRepos. Ningún store cruza
+// a otro club — el clubId en el store filtra todos los datos ya en la lógica.
+const _extraRepos = new Map();
+
+function getRepoForClub(clubId) {
+  if (clubId === COMMUNITY_BRIDGE_CLUB_ID) return _communityRepo;
+  if (!_extraRepos.has(clubId)) {
+    _extraRepos.set(clubId, createMemoryCommunityRepository(clubId));
+  }
+  return _extraRepos.get(clubId);
+}
+
+function getStoreForClub(clubId) {
+  return getRepoForClub(clubId).getStore();
+}
+
+// Solo para tests: reinicia también los repos extra.
+export function __resetAllClubStoresForTests() {
+  _communityRepo = createMemoryCommunityRepository(COMMUNITY_BRIDGE_CLUB_ID);
+  store = _communityRepo.getStore();
+  demoSeeded = false;
+  _extraRepos.clear();
+}
+
+// Expone el repo de cualquier club para tests de integración multi-club.
+export function __getRepoForClubForTests(clubId) {
+  return getRepoForClub(clubId);
+}
+
+// --- (continúa el repo principal) ----------------------------------------
 
 // P1.1: el store ahora vive dentro de un CommunityRepository aislado por tenant.
 // La variable `store` sigue siendo una referencia directa (mismo patrón de P0)
@@ -661,4 +705,47 @@ export function communityUpdateProfileVisibility(userId, visibilityLevel) {
 export function communityGetProfileVisibility(userId) {
   const profile = store.playerSocialProfiles.find((p) => p.userProfileId === userId);
   return profile?.visibilityLevel ?? "friends";
+}
+
+// --- Feed paginado (P1.3) ------------------------------------------------
+//
+// Aplica todas las reglas de visibilidad (bloqueo, consentimiento, clubId,
+// moderación) ANTES de paginar — getVisibleFeed de community-logic garantiza
+// que ningún post prohibido llega a la página. El cursor es el id del último
+// post visto: opaco para la UI, estable mientras el post exista en el store.
+// Cambiar de club invalida cualquier cursor anterior (el id no existirá en
+// el nuevo store), devolviendo error "cursor_invalid".
+export function communityGetFeedPage(viewerId, { cursor = null, limit = 10, clubId = COMMUNITY_BRIDGE_CLUB_ID } = {}) {
+  const clubStore = getStoreForClub(clubId);
+  // Garantizar UserProfile en este club (mismo patrón que communityEnsureUserProfile,
+  // pero usando el store del club activo en lugar del store principal).
+  const existing = clubStore.userProfiles.find((u) => u.id === viewerId);
+  if (!existing) {
+    const profile = createUserProfile({ clubId, displayName: viewerId, role: "PLAYER" });
+    profile.id = viewerId;
+    clubStore.userProfiles.push(profile);
+  }
+  return getPaginatedFeed(clubStore, viewerId, { cursor, limit, getVisibleFeed });
+}
+
+// --- Notificaciones (P1.3) -----------------------------------------------
+
+/** Lista las notificaciones del actor en el club activo, más recientes primero. */
+export function communityGetNotifications(userId, { clubId = COMMUNITY_BRIDGE_CLUB_ID, limit = 20 } = {}) {
+  return listNotifications(getStoreForClub(clubId), { userId, clubId, limit });
+}
+
+/** Número de notificaciones no leídas del actor en el club activo. */
+export function communityGetUnreadCount(userId, clubId = COMMUNITY_BRIDGE_CLUB_ID) {
+  return getUnreadCount(getStoreForClub(clubId), userId, clubId);
+}
+
+/** Marca una notificación como leída. Solo el destinatario puede marcarla. */
+export function communityMarkNotificationRead(notificationId, userId, clubId = COMMUNITY_BRIDGE_CLUB_ID) {
+  return markNotificationRead(getStoreForClub(clubId), notificationId, userId);
+}
+
+/** Marca como leídas todas las notificaciones no leídas del actor en el club. */
+export function communityMarkAllNotificationsRead(userId, clubId = COMMUNITY_BRIDGE_CLUB_ID) {
+  return markAllNotificationsRead(getStoreForClub(clubId), userId, clubId);
 }

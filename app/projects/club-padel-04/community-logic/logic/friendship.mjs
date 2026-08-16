@@ -1,7 +1,7 @@
 // Comunidad Pádel 04 — Lógica aislada: amistad
 // Espejo funcional de FLUJOS_UI_AMIGOS_SEGUIDORES_COMUNIDAD_PADEL_04.md (flujos 4-8).
 
-import { createFriendship, appendAudit } from "../entities/store.mjs";
+import { createFriendship, createNotification, appendAudit } from "../entities/store.mjs";
 import { hasSocialLayerActive } from "./consent.mjs";
 import { isBlocked } from "./blocking.mjs";
 
@@ -47,6 +47,14 @@ export function sendFriendRequest(store, { clubId, requesterId, addresseeId }) {
 
   const record = createFriendship({ clubId, requesterId, addresseeId, status: "pending" });
   store.friendships.push(record);
+  store.notifications.push(
+    createNotification({
+      clubId,
+      userId: addresseeId,
+      notificationType: "friendship_request",
+      payload: { friendshipId: record.id, requesterId },
+    })
+  );
   return record;
 }
 
@@ -59,6 +67,14 @@ export function acceptFriendRequest(store, { friendshipId, actingUserId }) {
 
   request.status = "accepted";
   request.respondedAt = new Date().toISOString();
+  store.notifications.push(
+    createNotification({
+      clubId: request.clubId,
+      userId: request.requesterId,
+      notificationType: "friendship_accepted",
+      payload: { friendshipId: request.id, acceptedBy: actingUserId },
+    })
+  );
   return request;
 }
 

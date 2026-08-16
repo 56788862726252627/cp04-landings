@@ -1,7 +1,7 @@
 // Comunidad Pádel 04 — Lógica aislada: seguidores (fase 2)
 // Espejo funcional de FLUJOS_UI_AMIGOS_SEGUIDORES_COMUNIDAD_PADEL_04.md (flujos 9-10).
 
-import { createFollow } from "../entities/store.mjs";
+import { createFollow, createNotification } from "../entities/store.mjs";
 import { hasSocialLayerActive } from "./consent.mjs";
 import { isBlocked } from "./blocking.mjs";
 
@@ -27,6 +27,14 @@ export function followUser(store, { clubId, followerId, followedId }) {
 
   const record = createFollow({ clubId, followerId, followedId });
   store.follows.push(record);
+  store.notifications.push(
+    createNotification({
+      clubId,
+      userId: followedId,
+      notificationType: "new_follower",
+      payload: { followerId },
+    })
+  );
   return record;
 }
 

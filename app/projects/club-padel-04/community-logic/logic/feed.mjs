@@ -1,7 +1,7 @@
 // Comunidad Pádel 04 — Lógica aislada: feed
 // Espejo funcional de PROTOTIPO_FEED_SOCIAL_COMUNIDAD_PADEL_04.md.
 
-import { createPost, createComment, createReaction } from "../entities/store.mjs";
+import { createPost, createComment, createReaction, createNotification } from "../entities/store.mjs";
 import { hasConsent, hasSocialLayerActive } from "./consent.mjs";
 import { isBlocked } from "./blocking.mjs";
 import { areFriends } from "./friendship.mjs";
@@ -79,6 +79,16 @@ export function commentOnPost(store, { clubId, postId, authorId, body }) {
 
   const comment = createComment({ clubId, postId, authorId, body });
   store.comments.push(comment);
+  if (post.authorId !== authorId) {
+    store.notifications.push(
+      createNotification({
+        clubId,
+        userId: post.authorId,
+        notificationType: "new_comment",
+        payload: { postId, commentId: comment.id, authorId },
+      })
+    );
+  }
   return comment;
 }
 
@@ -91,5 +101,25 @@ export function reactTo(store, { clubId, targetType, targetId, userId, reactionT
 
   const reaction = createReaction({ clubId, targetType, targetId, userId, reactionType });
   store.reactions.push(reaction);
+
+  // Notificar al autor del contenido (solo si no es el propio actor).
+  let targetAuthorId = null;
+  if (targetType === "post") {
+    const target = store.posts.find((p) => p.id === targetId);
+    if (target) targetAuthorId = target.authorId;
+  } else if (targetType === "comment") {
+    const target = store.comments.find((c) => c.id === targetId);
+    if (target) targetAuthorId = target.authorId;
+  }
+  if (targetAuthorId && targetAuthorId !== userId) {
+    store.notifications.push(
+      createNotification({
+        clubId,
+        userId: targetAuthorId,
+        notificationType: "new_reaction",
+        payload: { targetType, targetId, userId, reactionType },
+      })
+    );
+  }
   return reaction;
 }

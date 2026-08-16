@@ -7,7 +7,7 @@
 // moderatorId humano con rol STAFF/ADMIN/SUPPORT, pasado explícitamente por
 // quien llama a la función (nunca inferido ni por defecto).
 
-import { createReport, createModerationAction, appendAudit } from "../entities/store.mjs";
+import { createReport, createModerationAction, createNotification, appendAudit } from "../entities/store.mjs";
 
 const MODERATOR_ROLES = ["STAFF", "ADMIN", "SUPPORT"];
 const ADMIN_ONLY_ACTIONS = ["user_suspended", "user_banned"];
@@ -74,6 +74,31 @@ export function applyModerationAction(store, { clubId, reportId, moderatorId, ac
     targetId: action.id,
     metadata: { reportId, actionType },
   });
+
+  // Notificar al usuario afectado — nunca incluir moderatorId ni reporterId.
+  const NOTIFY_ACTIONS = ["warning", "content_removed", "user_suspended", "user_banned"];
+  if (NOTIFY_ACTIONS.includes(actionType)) {
+    let affectedUserId = null;
+    if (report.targetType === "post") {
+      const post = store.posts.find((p) => p.id === report.targetId);
+      if (post) affectedUserId = post.authorId;
+    } else if (report.targetType === "comment") {
+      const comment = store.comments.find((c) => c.id === report.targetId);
+      if (comment) affectedUserId = comment.authorId;
+    } else if (report.targetType === "user") {
+      affectedUserId = report.targetId;
+    }
+    if (affectedUserId) {
+      store.notifications.push(
+        createNotification({
+          clubId,
+          userId: affectedUserId,
+          notificationType: "moderation_action",
+          payload: { actionType },
+        })
+      );
+    }
+  }
 
   return action;
 }

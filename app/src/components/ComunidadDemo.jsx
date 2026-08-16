@@ -45,6 +45,13 @@ import {
   communityDismissReport,
   communityUpdateProfileVisibility,
   communityGetProfileVisibility,
+  communityGetFeedPage,
+  communityGetNotifications,
+  communityGetUnreadCount,
+  communityMarkNotificationRead,
+  communityMarkAllNotificationsRead,
+  COMMUNITY_BRIDGE_CLUB_ID,
+  COMMUNITY_BRIDGE_CLUB_B_ID,
 } from "../utils/communityBridge.js";
 
 // Club Pádel 04 · Comunidad (demo/mock interno)
@@ -64,6 +71,21 @@ import {
 
 const ACTOR_ID = DEMO_PLAYER.id;
 
+const DEMO_CLUBS = [
+  { id: COMMUNITY_BRIDGE_CLUB_ID, name: "Club Pádel 04" },
+  { id: COMMUNITY_BRIDGE_CLUB_B_ID, name: "Club Pádel 05 (demo)" },
+];
+
+const NOTIF_TYPE_LABEL = {
+  friendship_request: { icon: "🤝", label: "Solicitud de amistad" },
+  friendship_accepted: { icon: "✅", label: "Amistad aceptada" },
+  new_follower: { icon: "👣", label: "Nuevo seguidor" },
+  new_comment: { icon: "💬", label: "Comentario nuevo" },
+  new_reaction: { icon: "❤️", label: "Reacción" },
+  match_invite: { icon: "🎾", label: "Partido — solicitud/respuesta" },
+  moderation_action: { icon: "🛡️", label: "Acción de moderación" },
+};
+
 const FRIENDSHIP_STATUS_CHIP = {
   blocked: { tone: "danger", label: "Bloqueado" },
   friends: { tone: "accent", label: "Amistad activa" },
@@ -74,6 +96,7 @@ const FRIENDSHIP_STATUS_CHIP = {
 
 const TABS = [
   { id: "feed", label: "Feed", icon: "📰" },
+  { id: "notificaciones", label: "Notificaciones", icon: "🔔" },
   { id: "perfil", label: "Perfil", icon: "🙍" },
   { id: "amigos", label: "Amigos", icon: "🤝" },
   { id: "partidos", label: "Partidos abiertos", icon: "🎾" },
@@ -163,15 +186,41 @@ function DemoNotice() {
   );
 }
 
-function FeedTab({ socialConsent, viewerId, feedVersion, onRefresh, setLastAction, reportedPosts = {}, onReportPost, reportedComments = {}, onReportComment }) {
+function FeedTab({ socialConsent, viewerId, feedVersion, onRefresh, setLastAction, reportedPosts = {}, onReportPost, reportedComments = {}, onReportComment, activeClubId }) {
   const [newPostBody, setNewPostBody] = useState("");
   const [openComments, setOpenComments] = useState({});
   const [commentInputs, setCommentInputs] = useState({});
+  const [feedState, setFeedState] = useState({ items: [], cursor: null, hasMore: false, error: null });
 
-  // Re-derived from store on every render; feedVersion changes trigger parent
-  // re-render which cascades here, pulling fresh data from communityBridge.
+  // Carga/recarga al cambiar club, viewerId o feedVersion (bump por onRefresh).
+  useEffect(() => {
+    const result = communityGetFeedPage(viewerId, { cursor: null, limit: 10, clubId: activeClubId });
+    if (result.ok) {
+      setFeedState({ items: result.items, cursor: result.nextCursor, hasMore: result.hasMore, error: null });
+    } else {
+      setFeedState({ items: [], cursor: null, hasMore: false, error: result.error || "Error al cargar el feed" });
+    }
+    setOpenComments({});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const visiblePosts = communityGetVisibleFeed(viewerId);
+  }, [viewerId, activeClubId, feedVersion]);
+
+  function loadMore() {
+    if (!feedState.cursor || !feedState.hasMore) return;
+    const result = communityGetFeedPage(viewerId, { cursor: feedState.cursor, limit: 10, clubId: activeClubId });
+    if (result.ok) {
+      setFeedState((prev) => ({
+        items: [...prev.items, ...result.items],
+        cursor: result.nextCursor,
+        hasMore: result.hasMore,
+        error: null,
+      }));
+    } else {
+      setFeedState((prev) => ({ ...prev, error: result.error || "Error al cargar más" }));
+    }
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const { items: visiblePosts } = feedState;
 
   function handleCreatePost() {
     const body = newPostBody.trim();
@@ -244,13 +293,17 @@ function FeedTab({ socialConsent, viewerId, feedVersion, onRefresh, setLastActio
         </p>
       )}
 
-      {socialConsent && visiblePosts.length === 0 && (
+      {socialConsent && feedState.error && (
+        <p style={{ color: T.danger, fontSize: ".85rem" }}>Error: {feedState.error}</p>
+      )}
+
+      {socialConsent && visiblePosts.length === 0 && !feedState.error && (
         <p style={{ color: T.textDim, fontSize: ".85rem" }}>
           No hay publicaciones visibles todavía. ¡Sé el primero en publicar!
         </p>
       )}
 
-      {[...visiblePosts].reverse().map((post) => {
+      {visiblePosts.map((post) => {
         const likeCount = communityGetReactionsCount("post", post.id);
         const hasLiked = communityHasUserReacted("post", post.id, viewerId);
         const comments = communityGetCommentsForPost(post.id);
@@ -323,6 +376,94 @@ function FeedTab({ socialConsent, viewerId, feedVersion, onRefresh, setLastActio
                   <DemoButton onClick={() => handleComment(post.id)}>Comentar</DemoButton>
                 </div>
               </div>
+            )}
+          </div>
+        );
+      })}
+
+      {socialConsent && feedState.hasMore && (
+        <DemoButton onClick={loadMore}>Cargar más publicaciones</DemoButton>
+      )}
+      {socialConsent && !feedState.hasMore && visiblePosts.length > 0 && (
+        <p style={{ color: T.textDim, fontSize: ".78rem", textAlign: "center", marginTop: 8 }}>
+          Has llegado al final del feed.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function NotificacionesTab({ viewerId, notifVersion, activeClubId, onMarkAll }) {
+  const notifications = communityGetNotifications(viewerId, { clubId: activeClubId, limit: 50 });
+  const unreadCount = communityGetUnreadCount(viewerId, activeClubId);
+
+  function handleMarkRead(notifId) {
+    communityMarkNotificationRead(notifId, viewerId, activeClubId);
+    onMarkAll(); // bump notifVersion para re-render
+  }
+
+  function handleMarkAll() {
+    communityMarkAllNotificationsRead(viewerId, activeClubId);
+    onMarkAll();
+  }
+
+  if (notifications.length === 0) {
+    return (
+      <div className="cp04-card" style={{ padding: 22 }}>
+        <p style={{ color: T.textDim, fontSize: ".85rem", margin: 0 }}>
+          No tienes notificaciones en este club (en memoria).
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+        <span style={{ color: T.textDim, fontSize: ".82rem" }}>
+          {unreadCount > 0 ? (
+            <strong style={{ color: T.warning }}>{unreadCount} sin leer</strong>
+          ) : (
+            "Todas leídas"
+          )}
+          {" · "}{notifications.length} total
+        </span>
+        {unreadCount > 0 && (
+          <DemoButton onClick={handleMarkAll}>Marcar todas como leídas</DemoButton>
+        )}
+      </div>
+
+      {notifications.map((n) => {
+        const meta = NOTIF_TYPE_LABEL[n.notificationType] || { icon: "📣", label: n.notificationType };
+        const isUnread = !n.readAt;
+        const timeLabel = new Date(n.createdAt).toLocaleString("es-ES", {
+          day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+        });
+        return (
+          <div
+            key={n.id}
+            className="cp04-card"
+            style={{
+              padding: "14px 16px",
+              borderColor: isUnread ? "rgba(182,255,0,.4)" : undefined,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <span aria-hidden="true" style={{ fontSize: "1.15rem", lineHeight: 1 }}>{meta.icon}</span>
+              <div>
+                <div style={{ color: isUnread ? T.text : T.textDim, fontWeight: isUnread ? 800 : 400, fontSize: ".85rem", marginBottom: 2 }}>
+                  {meta.label}
+                </div>
+                <div style={{ color: T.textDim, fontSize: ".76rem" }}>{timeLabel}</div>
+              </div>
+            </div>
+            {isUnread && (
+              <DemoButton onClick={() => handleMarkRead(n.id)}>Marcar leída</DemoButton>
             )}
           </div>
         );
@@ -706,8 +847,10 @@ export default function ComunidadDemo({ selectedRole }) {
   const [feedVersion, setFeedVersion] = useState(0);
   const [matchVersion, setMatchVersion] = useState(0);
   const [moderationVersion, setModerationVersion] = useState(0);
+  const [notifVersion, setNotifVersion] = useState(0);
   const [reportedPosts, setReportedPosts] = useState({});
   const [reportedComments, setReportedComments] = useState({});
+  const [activeClubId, setActiveClubId] = useState(COMMUNITY_BRIDGE_CLUB_ID);
 
   useEffect(() => {
     communitySeedDemoRelationships({
@@ -738,6 +881,16 @@ export default function ComunidadDemo({ selectedRole }) {
 
   function refreshModeration() {
     setModerationVersion((v) => v + 1);
+  }
+
+  function refreshNotifications() {
+    setNotifVersion((v) => v + 1);
+  }
+
+  function switchClub(clubId) {
+    setActiveClubId(clubId);
+    setFeedVersion((v) => v + 1); // reinicia el cursor del feed
+    setNotifVersion((v) => v + 1);
   }
 
   function togglePrivacy() {
@@ -859,30 +1012,93 @@ export default function ComunidadDemo({ selectedRole }) {
 
       <DemoNotice />
 
+      {DEMO_CLUBS.length > 1 && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
+          <span style={{ color: T.textDim, fontSize: ".78rem", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>
+            Club activo:
+          </span>
+          {DEMO_CLUBS.map((club) => (
+            <button
+              key={club.id}
+              type="button"
+              onClick={() => switchClub(club.id)}
+              style={{
+                background: activeClubId === club.id
+                  ? `linear-gradient(135deg, ${T.accent}, ${T.accent2})`
+                  : "rgba(255,255,255,.06)",
+                color: activeClubId === club.id ? "#06100a" : T.textDim,
+                border: `1px solid ${activeClubId === club.id ? "rgba(182,255,0,.7)" : T.line}`,
+                borderRadius: 8,
+                padding: "6px 12px",
+                fontFamily: T.fontDisplay,
+                fontWeight: 800,
+                fontSize: ".78rem",
+                cursor: "pointer",
+              }}
+            >
+              {club.name}
+            </button>
+          ))}
+          {activeClubId !== COMMUNITY_BRIDGE_CLUB_ID && (
+            <span style={{ color: T.textDim, fontSize: ".74rem", fontStyle: "italic" }}>
+              — feed y notificaciones completamente aisladas del Club 04
+            </span>
+          )}
+        </div>
+      )}
+
       <nav style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }} aria-label="Secciones de Comunidad">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className="cp04-btn"
-            onClick={() => setTab(t.id)}
-            aria-current={tab === t.id ? "page" : undefined}
-            style={{
-              background: tab === t.id ? `linear-gradient(135deg, ${T.accent}, ${T.accent2})` : "rgba(7,11,20,.72)",
-              color: tab === t.id ? "#06100a" : T.textDim,
-              border: `1px solid ${tab === t.id ? "rgba(182,255,0,.92)" : T.line}`,
-              borderRadius: 12,
-              padding: "9px 14px",
-              fontFamily: T.fontDisplay,
-              fontWeight: 800,
-              fontSize: ".82rem",
-              cursor: "pointer",
-            }}
-          >
-            <span aria-hidden="true" style={{ marginRight: 6 }}>{t.icon}</span>
-            Ver {t.label.toLowerCase()}
-          </button>
-        ))}
+        {TABS.map((t) => {
+          const isNotifTab = t.id === "notificaciones";
+          const unread = isNotifTab ? communityGetUnreadCount(ACTOR_ID, activeClubId) : 0;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              className="cp04-btn"
+              onClick={() => setTab(t.id)}
+              aria-current={tab === t.id ? "page" : undefined}
+              style={{
+                background: tab === t.id ? `linear-gradient(135deg, ${T.accent}, ${T.accent2})` : "rgba(7,11,20,.72)",
+                color: tab === t.id ? "#06100a" : T.textDim,
+                border: `1px solid ${tab === t.id ? "rgba(182,255,0,.92)" : T.line}`,
+                borderRadius: 12,
+                padding: "9px 14px",
+                fontFamily: T.fontDisplay,
+                fontWeight: 800,
+                fontSize: ".82rem",
+                cursor: "pointer",
+                position: "relative",
+              }}
+            >
+              <span aria-hidden="true" style={{ marginRight: 6 }}>{t.icon}</span>
+              Ver {t.label.toLowerCase()}
+              {unread > 0 && (
+                <span
+                  aria-label={`${unread} sin leer`}
+                  style={{
+                    position: "absolute",
+                    top: -6,
+                    right: -6,
+                    background: T.danger,
+                    color: "#fff",
+                    borderRadius: 999,
+                    fontSize: ".65rem",
+                    fontWeight: 900,
+                    minWidth: 18,
+                    height: 18,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "0 4px",
+                  }}
+                >
+                  {unread > 99 ? "99+" : unread}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
       {lastAction && (
@@ -902,6 +1118,16 @@ export default function ComunidadDemo({ selectedRole }) {
           onReportPost={handleReportPost}
           reportedComments={reportedComments}
           onReportComment={handleReportComment}
+          activeClubId={activeClubId}
+        />
+      )}
+      {tab === "notificaciones" && (
+        <NotificacionesTab
+          key={`${activeClubId}-${notifVersion}`}
+          viewerId={ACTOR_ID}
+          notifVersion={notifVersion}
+          activeClubId={activeClubId}
+          onMarkAll={refreshNotifications}
         />
       )}
       {tab === "perfil" && <PerfilTab player={player} socialConsent={socialConsent} onTogglePrivacy={togglePrivacy} />}
