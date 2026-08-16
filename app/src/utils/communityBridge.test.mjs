@@ -5,6 +5,7 @@ import { beforeEach } from "node:test";
 import {
   COMMUNITY_BRIDGE_CLUB_ID,
   __resetCommunityStoreForTests,
+  __getCommunityRepoForTests,
   communityHasSocialConsent,
   communityGrantSocialConsent,
   communityRevokeSocialConsent,

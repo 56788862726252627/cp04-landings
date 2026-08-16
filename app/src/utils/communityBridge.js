@@ -60,6 +60,8 @@ import {
   canReport,
 } from "../../projects/club-padel-04/community-logic/index.mjs";
 
+import { createMemoryCommunityRepository } from "./communityRepository.js";
+
 // Mismo id de club ficticio que ya usa community-logic/entities/seed.mjs —
 // sin inventar uno nuevo, solo para mantener consistencia si en el futuro
 // se comparten datos entre el seed de test y este puente.
@@ -76,15 +78,28 @@ export const DEMO_MODERATOR_IDS = {
   SUPPORT: "demo-moderator-support",
 };
 
-let store = createEmptyStore();
+// P1.1: el store ahora vive dentro de un CommunityRepository aislado por tenant.
+// La variable `store` sigue siendo una referencia directa (mismo patrón de P0)
+// pero se deriva del repo. Al hacer reset, se reasignan ambos para que todo el
+// código del bridge siga funcionando sin cambios. Para multi-tenant real, crear
+// un repo distinto por club; el bridge actual es el repo del club demo.
+let _communityRepo = createMemoryCommunityRepository(COMMUNITY_BRIDGE_CLUB_ID);
+let store = _communityRepo.getStore();
 let demoSeeded = false;
+
+// Expone el repo activo para tests de integración y diagnóstico.
+// No usar en producción para acceso directo al store — usar solo las funciones del bridge.
+export function __getCommunityRepoForTests() {
+  return _communityRepo;
+}
 
 // Solo para tests: reinicia el store en memoria a un estado vacío, igual
 // que ya hacen __resetAvailabilityCacheForTests / __resetCrearReservaRateLimitForTests
 // en worker-reservas — mismo patrón ya establecido en el proyecto. También
 // limpia el flag de seeding de demo para que un test pueda volver a poblarlo.
 export function __resetCommunityStoreForTests() {
-  store = createEmptyStore();
+  _communityRepo = createMemoryCommunityRepository(COMMUNITY_BRIDGE_CLUB_ID);
+  store = _communityRepo.getStore();
   demoSeeded = false;
 }
 
