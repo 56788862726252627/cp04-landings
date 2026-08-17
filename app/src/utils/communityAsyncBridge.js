@@ -67,11 +67,12 @@ import {
  * Crea una instancia del async bridge para un club específico.
  *
  * @param {object} options
- * @param {object} options.repo   — MemoryCommunityRepository o BackendCommunityRepository
- * @param {object} options.auth   — CommunityAuthBoundary (DemoAuthBoundary o real)
- * @param {string} [options.clubId] — clubId override (si no está en auth boundary)
+ * @param {object} options.repo      — MemoryCommunityRepository (estado local)
+ * @param {object} options.auth      — CommunityAuthBoundary
+ * @param {object} [options.sync]    — CommunitySyncManager (opcional; activa write-through)
+ * @param {string} [options.clubId]  — clubId override
  */
-export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride = null }) {
+export function createCommunityAsyncBridge({ repo, auth, sync = null, clubId: _clubIdOverride = null }) {
   if (!repo || typeof repo.getClubId !== "function") {
     throw new Error("createCommunityAsyncBridge: repo es requerido (con getClubId)");
   }
@@ -81,21 +82,26 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
 
   const _clubId = _clubIdOverride ?? repo.getClubId();
 
-  // Obtiene el store del repo (sync o async).
+  // Obtiene el store local (MemoryRepo).
   async function _getStore() {
-    const s = await repo.getStore();
-    return s;
+    return repo.getStore();
   }
 
-  // Persiste el store en el backend (solo si el repo es async/backend).
-  async function _persist(store, expectedVersion = null) {
-    // Si el repo tiene writeAll (es BackendCommunityRepository con adapter),
-    // la persistencia ya ocurre vía applyIfVersion. Aquí no hacemos nada extra
-    // porque el repo se encarga. Este método existe para repos que necesiten
-    // flush explícito (futuros adapters).
-    //
-    // Para MemoryCommunityRepository no hay nada que persistir (es en memoria).
-    return { ok: true };
+  // Persiste vía SyncManager si está disponible (write-through backend-first).
+  // Sin SyncManager: mutación directa en MemoryRepo (modo local).
+  // Devuelve { ok, result?, version? } donde result = valor devuelto por mutFn.
+  async function _persist(mutFn) {
+    if (sync && typeof sync.writeThrough === "function") {
+      return sync.writeThrough(mutFn);
+    }
+    // Sin SyncManager: ejecutar la mutación solo en MemoryRepo (modo local/demo)
+    try {
+      const store = await repo.getStore();
+      const result = mutFn(store);
+      return { ok: true, result };
+    } catch (e) {
+      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
+    }
   }
 
   // Verifica identidad y devuelve actor seguro.
@@ -156,8 +162,8 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
   }
 
   // Garantiza que el actor tiene un userProfile en el store.
-  // Necesario para getVisibleFeed, assertModeratorRole, etc.
-  async function _ensureProfile(store, actorId, role = "PLAYER") {
+  // Es síncrona — puede usarse dentro de callbacks de _persist.
+  function _ensureProfile(store, actorId, role = "PLAYER") {
     const existing = store.userProfiles.find((u) => u.id === actorId);
     if (existing) return existing;
     const profile = createUserProfile({ clubId: _clubId, displayName: actorId, role });
@@ -174,16 +180,14 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     const authResult = await _requireAuth();
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
+    const role = (await auth.getRole?.()) ?? "PLAYER";
 
-    try {
-      const store = await _getStore();
-      const role = (await auth.getRole?.()) ?? "PLAYER";
-      await _ensureProfile(store, actorId, role);
+    const persistResult = await _persist((store) => {
+      _ensureProfile(store, actorId, role);
       grantConsent(store, { clubId: _clubId, userId: actorId, consentType: "social_layer_opt_in" });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    });
+    if (!persistResult.ok) return persistResult;
+    return { ok: true };
   }
 
   async function revokeSocialConsent() {
@@ -191,13 +195,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
+    const pr = await _persist((store) => {
       revokeConsent(store, { clubId: _clubId, userId: actorId, consentType: "social_layer_opt_in" });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    });
+    if (!pr.ok) return pr;
+    return { ok: true };
   }
 
   async function hasSocialConsent() {
@@ -223,15 +225,13 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     const idem = await _idempotencyCheck("friend_request", addresseeId);
     if (idem?.already) return { ok: true, ...idem.result, fromCache: true };
 
-    try {
-      const store = await _getStore();
-      const record = sendFriendRequest(store, { clubId: _clubId, requesterId: actorId, addresseeId });
-      const result = { ok: true, friendshipId: record.id };
-      await _markIdempotency(idem?.key, result);
-      return result;
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const pr = await _persist((store) => {
+      return sendFriendRequest(store, { clubId: _clubId, requesterId: actorId, addresseeId });
+    });
+    if (!pr.ok) return pr;
+    const result = { ok: true, friendshipId: pr.result.id };
+    await _markIdempotency(idem?.key, result);
+    return result;
   }
 
   async function acceptFriend(friendshipId) {
@@ -239,13 +239,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
+    const pr = await _persist((store) => {
       acceptFriendRequest(store, { friendshipId, actingUserId: actorId });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    });
+    if (!pr.ok) return pr;
+    return { ok: true };
   }
 
   async function rejectFriend(friendshipId) {
@@ -253,13 +251,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
+    const pr = await _persist((store) => {
       rejectFriendRequest(store, { friendshipId, actingUserId: actorId });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    });
+    if (!pr.ok) return pr;
+    return { ok: true };
   }
 
   async function cancelFriend(friendshipId) {
@@ -267,13 +263,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
+    const pr = await _persist((store) => {
       cancelFriendRequest(store, { friendshipId, actingUserId: actorId });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    });
+    if (!pr.ok) return pr;
+    return { ok: true };
   }
 
   async function removeFriendship(otherUserId) {
@@ -281,13 +275,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
+    const pr = await _persist((store) => {
       removeFriend(store, { actingUserId: actorId, otherUserId });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    });
+    if (!pr.ok) return pr;
+    return { ok: true };
   }
 
   // --------------------------------------------------------------------------
@@ -305,15 +297,13 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     const idem = await _idempotencyCheck("follow", followedId);
     if (idem?.already) return { ok: true, ...idem.result, fromCache: true };
 
-    try {
-      const store = await _getStore();
-      const record = followUser(store, { clubId: _clubId, followerId: actorId, followedId });
-      const result = { ok: true, followId: record.id };
-      await _markIdempotency(idem?.key, result);
-      return result;
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const pr = await _persist((store) => {
+      return followUser(store, { clubId: _clubId, followerId: actorId, followedId });
+    });
+    if (!pr.ok) return pr;
+    const result = { ok: true, followId: pr.result.id };
+    await _markIdempotency(idem?.key, result);
+    return result;
   }
 
   async function unfollow(followedId) {
@@ -321,13 +311,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
+    const pr = await _persist((store) => {
       unfollowUser(store, { followerId: actorId, followedId });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    });
+    if (!pr.ok) return pr;
+    return { ok: true };
   }
 
   // --------------------------------------------------------------------------
@@ -342,17 +330,14 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     const ageResult = await _requireAdult(actorId);
     if (!ageResult.ok) return ageResult;
 
-    try {
-      const store = await _getStore();
-      // Auto-grant appear_in_feed si tiene social consent (misma lógica que bridge sync)
+    const pr = await _persist((store) => {
       if (hasSocialLayerActive(store, actorId) && !hasConsent(store, actorId, "appear_in_feed")) {
         grantConsent(store, { clubId: _clubId, userId: actorId, consentType: "appear_in_feed" });
       }
-      const post = createPostMock(store, { clubId: _clubId, authorId: actorId, body, visibility });
-      return { ok: true, postId: post.id, post };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+      return createPostMock(store, { clubId: _clubId, authorId: actorId, body, visibility });
+    });
+    if (!pr.ok) return pr;
+    return { ok: true, postId: pr.result.id, post: pr.result };
   }
 
   async function getFeedPage({ cursor = null, limit = 10 } = {}) {
@@ -375,15 +360,13 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     const ageResult = await _requireAdult(actorId);
     if (!ageResult.ok) return ageResult;
 
-    try {
-      const store = await _getStore();
-      const role = (await auth.getRole?.()) ?? "PLAYER";
-      await _ensureProfile(store, actorId, role);
-      const comment = commentOnPost(store, { clubId: _clubId, postId, authorId: actorId, body });
-      return { ok: true, commentId: comment.id, comment };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const role = (await auth.getRole?.()) ?? "PLAYER";
+    const pr = await _persist((store) => {
+      _ensureProfile(store, actorId, role);
+      return commentOnPost(store, { clubId: _clubId, postId, authorId: actorId, body });
+    });
+    if (!pr.ok) return pr;
+    return { ok: true, commentId: pr.result.id, comment: pr.result };
   }
 
   async function react(targetType, targetId) {
@@ -397,15 +380,13 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     const idem = await _idempotencyCheck(`react_${targetType}`, targetId);
     if (idem?.already) return { ok: true, ...idem.result, fromCache: true };
 
-    try {
-      const store = await _getStore();
-      const record = reactTo(store, { clubId: _clubId, targetType, targetId, userId: actorId });
-      const result = { ok: true, reactionId: record.id };
-      await _markIdempotency(idem?.key, result);
-      return result;
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const pr = await _persist((store) => {
+      return reactTo(store, { clubId: _clubId, targetType, targetId, userId: actorId });
+    });
+    if (!pr.ok) return pr;
+    const result = { ok: true, reactionId: pr.result.id };
+    await _markIdempotency(idem?.key, result);
+    return result;
   }
 
   // --------------------------------------------------------------------------
@@ -420,21 +401,19 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     const ageResult = await _requireAdult(actorId);
     if (!ageResult.ok) return ageResult;
 
-    try {
-      const store = await _getStore();
+    const pr = await _persist((store) => {
       if (hasSocialLayerActive(store, actorId) && !hasConsent(store, actorId, "activity_sharing")) {
         grantConsent(store, { clubId: _clubId, userId: actorId, consentType: "activity_sharing" });
       }
-      const match = createOpenMatchMock(store, {
+      return createOpenMatchMock(store, {
         clubId: _clubId, creatorId: actorId,
         levelMin, levelMax,
         scheduledAt: scheduledAt || new Date(Date.now() + 86400000).toISOString(),
         slotsTotal, visibility,
       });
-      return { ok: true, matchId: match.id, match };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    });
+    if (!pr.ok) return pr;
+    return { ok: true, matchId: pr.result.id, match: pr.result };
   }
 
   async function joinMatch(openMatchId) {
@@ -448,18 +427,16 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     const idem = await _idempotencyCheck("join_match", openMatchId);
     if (idem?.already) return { ok: true, ...idem.result, fromCache: true };
 
-    try {
-      const store = await _getStore();
+    const pr = await _persist((store) => {
       if (hasSocialLayerActive(store, actorId) && !hasConsent(store, actorId, "activity_sharing")) {
         grantConsent(store, { clubId: _clubId, userId: actorId, consentType: "activity_sharing" });
       }
-      const invite = requestToJoin(store, { clubId: _clubId, openMatchId, requesterId: actorId });
-      const result = { ok: true, inviteId: invite.id };
-      await _markIdempotency(idem?.key, result);
-      return result;
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+      return requestToJoin(store, { clubId: _clubId, openMatchId, requesterId: actorId });
+    });
+    if (!pr.ok) return pr;
+    const result = { ok: true, inviteId: pr.result.id };
+    await _markIdempotency(idem?.key, result);
+    return result;
   }
 
   async function acceptJoin(inviteId) {
@@ -467,13 +444,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
-      const invite = acceptJoinRequest(store, { inviteId, actingUserId: actorId });
-      return { ok: true, invite };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const pr = await _persist((store) => {
+      return acceptJoinRequest(store, { inviteId, actingUserId: actorId });
+    });
+    if (!pr.ok) return pr;
+    return { ok: true, invite: pr.result };
   }
 
   // --------------------------------------------------------------------------
@@ -503,8 +478,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    const store = await _getStore();
-    return markNotificationRead(store, notificationId, actorId);
+    const pr = await _persist((store) => {
+      return markNotificationRead(store, notificationId, actorId);
+    });
+    if (!pr.ok) return pr;
+    return pr.result;
   }
 
   async function markAllRead() {
@@ -512,8 +490,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    const store = await _getStore();
-    return markAllNotificationsRead(store, actorId, _clubId);
+    const pr = await _persist((store) => {
+      return markAllNotificationsRead(store, actorId, _clubId);
+    });
+    if (!pr.ok) return pr;
+    return pr.result;
   }
 
   // --------------------------------------------------------------------------
@@ -525,13 +506,11 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
-      const record = reportContent(store, { clubId: _clubId, reporterId: actorId, targetType, targetId, reason, details });
-      return { ok: true, reportId: record.id };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const pr = await _persist((store) => {
+      return reportContent(store, { clubId: _clubId, reporterId: actorId, targetType, targetId, reason, details });
+    });
+    if (!pr.ok) return pr;
+    return { ok: true, reportId: pr.result.id };
   }
 
   async function moderateMarkInReview(reportId) {
@@ -539,15 +518,13 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
-      const role = (await auth.getRole?.()) ?? "STAFF";
-      await _ensureProfile(store, actorId, role);
-      const record = markInReview(store, { reportId, moderatorId: actorId });
-      return { ok: true, report: record };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const role = (await auth.getRole?.()) ?? "STAFF";
+    const pr = await _persist((store) => {
+      _ensureProfile(store, actorId, role);
+      return markInReview(store, { reportId, moderatorId: actorId });
+    });
+    if (!pr.ok) return pr;
+    return { ok: true, report: pr.result };
   }
 
   async function moderateApplyAction(reportId, actionType, notes = null) {
@@ -555,15 +532,13 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
-      const role = (await auth.getRole?.()) ?? "STAFF";
-      await _ensureProfile(store, actorId, role);
-      const action = applyModerationAction(store, { clubId: _clubId, reportId, moderatorId: actorId, actionType, notes });
-      return { ok: true, actionId: action.id };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const role = (await auth.getRole?.()) ?? "STAFF";
+    const pr = await _persist((store) => {
+      _ensureProfile(store, actorId, role);
+      return applyModerationAction(store, { clubId: _clubId, reportId, moderatorId: actorId, actionType, notes });
+    });
+    if (!pr.ok) return pr;
+    return { ok: true, actionId: pr.result.id };
   }
 
   async function moderateDismiss(reportId, notes = null) {
@@ -571,15 +546,13 @@ export function createCommunityAsyncBridge({ repo, auth, clubId: _clubIdOverride
     if (!authResult.ok) return authResult;
     const { actorId } = authResult;
 
-    try {
-      const store = await _getStore();
-      const role = (await auth.getRole?.()) ?? "STAFF";
-      await _ensureProfile(store, actorId, role);
-      const action = dismissReport(store, { reportId, moderatorId: actorId, notes });
-      return { ok: true, actionId: action.id };
-    } catch (e) {
-      return { ok: false, error: createCommunityError(COMMUNITY_ERROR_TYPES.INTERNAL, e?.message) };
-    }
+    const role = (await auth.getRole?.()) ?? "STAFF";
+    const pr = await _persist((store) => {
+      _ensureProfile(store, actorId, role);
+      return dismissReport(store, { reportId, moderatorId: actorId, notes });
+    });
+    if (!pr.ok) return pr;
+    return { ok: true, actionId: pr.result.id };
   }
 
   // --------------------------------------------------------------------------
