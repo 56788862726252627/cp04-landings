@@ -47,11 +47,15 @@ Authorization: Bearer <token>   (si CP04_ENFORCE_ROLE_GATES=true)
 | Campo | Tipo | Req | Descripción |
 |-------|------|-----|-------------|
 | `clave_reserva` | string | ✅ | Clave única de la reserva (≥ 4 chars) |
-| `player_id` | string | ✅ | Email / ID del jugador |
-| `club_id` | string | ✅ | `cp04-antequera` |
+| `player_id` | string | ✅ | Email / ID del jugador (solo uso interno) |
+| `club_id` | string | ✅ | `club-padel-04` |
 | `pista` | string | ✅ | Una de: Pista 1, Pista 2, Pista 3, Pista 4 |
 | `fecha` | string YYYY-MM-DD | ✅ | Fecha de la reserva |
-| `hora_inicio` | string HH:MM | ✅ | Hora de inicio |
+| `hora_inicio` | string HH:MM | ✅ | Hora de inicio (desde Airtable) |
+| `hora_fin` | string HH:MM | ✅ | Hora de fin (desde Airtable — bloqueante si ausente) |
+| `record_id` | string | ✅ | Record ID de Airtable (desde normalizarReserva) |
+| `nombre` | string | ✅ | Nombre del jugador (desde Airtable) |
+| `email` | string | ✅ | Email del jugador (desde Airtable) |
 
 ### Cálculo de ventana de acceso
 
@@ -83,19 +87,23 @@ validUntil = fechaBase + QR_WINDOW_AFTER_MIN  (30 min) → DECISIÓN PENDIENTE D
 
 ```json
 {
-  "accion": "generar_qr_acceso",
+  "event": "reserva_confirmada",
+  "club_id": "club-padel-04",
+  "record_id": "<Airtable record ID>",
+  "nombre": "<nombre del jugador>",
+  "email": "<email del jugador>",
   "clave_reserva": "...",
-  "player_id": "...",
-  "club_id": "cp04-antequera",
-  "pista": "Pista 2",
-  "fecha": "2026-07-20",
+  "fecha_reserva": "2026-07-20",
   "hora_inicio": "09:00",
-  "valid_from": "2026-07-20T08:45:00.000Z",
-  "valid_until": "2026-07-20T09:30:00.000Z",
-  "issued_at": "...",
-  "origen": "APP_CLUB_PADEL_04"
+  "hora_fin": "10:30",
+  "pista": "Pista 2",
+  "idempotency_key": "qr_gen_<clave_reserva>",
+  "source": "app_cp04",
+  "test_mode": false
 }
 ```
+
+**Nota:** `player_id`, `valid_from`, `valid_until`, `issued_at` son datos internos del Worker — no se envían a Make.
 
 ---
 
@@ -141,7 +149,7 @@ Authorization: Bearer <token>   (si CP04_ENFORCE_ROLE_GATES=true)
   "accion": "validar_qr_acceso",
   "clave_reserva": "...",
   "pista": "Pista 2",
-  "club_id": "cp04-antequera",
+  "club_id": "club-padel-04",
   "staff_id": "...",
   "scanned_at": "...",
   "origen": "APP_CLUB_PADEL_04"
@@ -242,7 +250,7 @@ Regresión confirmada: `cierre-temporal-pista.test.mjs` → 16/16 PASS.
 
 ### Archivo: `worker-reservas/src/qr-acceso.test.mjs`
 
-**29/29 PASS**
+**35/35 PASS** (commit 2450c73)
 
 | Test | Descripción |
 |------|-------------|
@@ -275,17 +283,33 @@ Regresión confirmada: `cierre-temporal-pista.test.mjs` → 16/16 PASS.
 | 27 | QR_REASON_CODES tiene todos los reason codes |
 | 28 | Regresión: cierre-temporal sigue respondiendo |
 | 29 | Regresión: alta jugador sigue respondiendo |
+| 30 | hora_fin faltante → 400 |
+| 31 | record_id faltante → 400 |
+| 32 | nombre faltante → 400 |
+| 33 | email faltante → 400 |
+| 34 | Payload Make cumple contrato exacto (spy de body) |
+| 35 | idempotency_key es determinista para la misma clave_reserva |
 
 ---
 
 ## 11. UI — ControlQrAccesos
 
-**PLAYER / STAFF / ADMIN:**
+**Flujo productivo:**
+1. **Panel "Buscar reserva confirmada"**: Introduce email del jugador → consulta `/api/reservas` → lista reservas confirmadas/reprogramadas de Airtable → selecciona una → todos los campos (record_id, nombre, email, hora_fin, clave, fecha, pista, hora_inicio) se precargan automáticamente. Si `hora_fin` está vacía en Airtable → bloqueo con error explícito, sin inventar valor.
 
-- **Generación:** formulario con clave_reserva, player_id, pista, fecha, hora. Muestra ventana de acceso tras generar.
-- **Validación:** formulario con clave_reserva, pista, staff_id. Muestra ALLOW (verde) o DENY (rojo) con reason code.
+2. **Panel "Generar QR"**: Si se precargó desde reserva real, muestra banner verde "✓ datos desde reserva real". Si se edita manualmente, muestra aviso "⚠ Entrada manual". Envía a `/api/qr/generate` vía `authFetch`.
 
-Ambos formularios usan `authFetch` → respetan tokens de sesión reales.
+3. **Panel "Verificar acceso QR"**: formulario con clave_reserva, pista, staff_id. Muestra ALLOW (verde) o DENY (rojo) con reason code.
+
+**Origen de datos en producción:**
+- `record_id` → `normalizarReserva(item).id` = `item.id` (Airtable record ID)
+- `nombre` → `normalizarReserva(item).nombre` = `item.fields.nombre` (Airtable)
+- `email` → `normalizarReserva(item).email` = `item.fields.email` (Airtable)
+- `hora_fin` → `normalizarReserva(item).horaFin` = `item.fields.hora_fin` (Airtable — bloqueante si vacío)
+- `clave_reserva` → `normalizarReserva(item).clave` = `item.fields.clave_reserva`
+- `fecha`, `pista`, `hora_inicio` → mismos campos normalizados
+
+`normalizarReserva` es función de módulo compartida entre Gestion y ControlQrAccesos.
 
 ---
 
@@ -322,7 +346,7 @@ Ambos formularios usan `authFetch` → respetan tokens de sesión reales.
 | Auditoría/log (Airtable historial) | ⏳ PENDIENTE — Make lo escribe |
 | Recovery/error handler | ✅ (502 normalizado) |
 
-**Porcentaje bloque QR:** ~55% (código terminado, Make pendiente de conectar)
+**Porcentaje bloque QR:** ~65% (código terminado + contrato Make exacto + flujo productivo sin datos inventados; Make pendiente de conectar)
 
 ---
 
@@ -330,7 +354,7 @@ Ambos formularios usan `authFetch` → respetan tokens de sesión reales.
 
 1. Wrangler: `wrangler secret put MAKE_QR_ACCESO_WEBHOOK` → pegar URL del webhook Make 6244975
 2. Wrangler: `wrangler secret put MAKE_CONTROL_QR_WEBHOOK` → pegar URL del webhook Make 5291559
-3. En Make: verificar que webhook 6244975 acepta campo `accion: "generar_qr_acceso"`
+3. En Make: verificar que webhook 6244975 acepta contrato `{ event:"reserva_confirmada", record_id, nombre, email, fecha_reserva, hora_fin, pista, idempotency_key, source, test_mode }`
 4. En Make: verificar que webhook 5291559 acepta campo `accion: "validar_qr_acceso"` y campo `scanned_at`
 5. En Airtable: confirmar que el campo `resultado_acceso` tiene opciones: ACCESO_OK, QR_CADUCADO, DENEGADO_INVALIDO
 6. Decisión de negocio: confirmar ventana de acceso (actualmente 15 min antes + 30 min después del inicio)
