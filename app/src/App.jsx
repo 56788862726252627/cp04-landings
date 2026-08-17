@@ -4533,20 +4533,24 @@ function ControlQrAccesos() {
   const [selectedRole] = useState(null); // el role real viene del RBAC superior
 
   // ── Subpanel Generación QR ──
-  const [genClave, setGenClave]     = useState("");
-  const [genPista, setGenPista]     = useState("Pista 1");
-  const [genFecha, setGenFecha]     = useState("");
-  const [genHora, setGenHora]       = useState("09:00");
+  const [genClave, setGenClave]       = useState("");
+  const [genPista, setGenPista]       = useState("Pista 1");
+  const [genFecha, setGenFecha]       = useState("");
+  const [genHora, setGenHora]         = useState("09:00");
+  const [genHoraFin, setGenHoraFin]   = useState("10:30");
   const [genPlayerId, setGenPlayerId] = useState("");
-  const [genResult, setGenResult]   = useState(null);
-  const [genLoading, setGenLoading] = useState(false);
-  const [genError, setGenError]     = useState("");
+  const [genRecordId, setGenRecordId] = useState("");
+  const [genNombre, setGenNombre]     = useState("");
+  const [genEmail, setGenEmail]       = useState("");
+  const [genResult, setGenResult]     = useState(null);
+  const [genLoading, setGenLoading]   = useState(false);
+  const [genError, setGenError]       = useState("");
 
   async function handleGenerarQr(e) {
     e.preventDefault();
     setGenError("");
     setGenResult(null);
-    if (!genClave || !genPlayerId || !genFecha) {
+    if (!genClave || !genPlayerId || !genFecha || !genRecordId || !genNombre || !genEmail || !genHoraFin) {
       setGenError("Completa todos los campos requeridos.");
       return;
     }
@@ -4558,10 +4562,14 @@ function ControlQrAccesos() {
         body: JSON.stringify({
           clave_reserva: genClave,
           player_id:     genPlayerId,
-          club_id:       "cp04-antequera",
+          club_id:       "club-padel-04",
           pista:         genPista,
           fecha:         genFecha,
           hora_inicio:   genHora,
+          hora_fin:      genHoraFin,
+          record_id:     genRecordId,
+          nombre:        genNombre,
+          email:         genEmail,
         }),
       });
       const data = await res.json();
@@ -4657,6 +4665,36 @@ function ControlQrAccesos() {
               style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
             />
           </label>
+          <label style={{ fontSize: ".87rem" }}>
+            Record ID Airtable *
+            <input
+              value={genRecordId}
+              onChange={(e) => setGenRecordId(e.target.value)}
+              placeholder="recXXXXXXXXXXXXXX"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label style={{ fontSize: ".87rem", flex: "2 1 200px" }}>
+              Nombre del jugador *
+              <input
+                value={genNombre}
+                onChange={(e) => setGenNombre(e.target.value)}
+                placeholder="Nombre Apellido"
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "2 1 200px" }}>
+              Email del jugador *
+              <input
+                type="email"
+                value={genEmail}
+                onChange={(e) => setGenEmail(e.target.value)}
+                placeholder="jugador@club.es"
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+          </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <label style={{ fontSize: ".87rem", flex: "1 1 140px" }}>
               Pista
@@ -4683,6 +4721,15 @@ function ControlQrAccesos() {
                 type="time"
                 value={genHora}
                 onChange={(e) => setGenHora(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "1 1 100px" }}>
+              Hora fin *
+              <input
+                type="time"
+                value={genHoraFin}
+                onChange={(e) => setGenHoraFin(e.target.value)}
                 style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
               />
             </label>

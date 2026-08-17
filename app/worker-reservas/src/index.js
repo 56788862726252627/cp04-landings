@@ -2804,6 +2804,10 @@ async function handleQrGenerate(request, env) {
   const pista          = clean(payload?.pista);
   const fecha          = clean(payload?.fecha);
   const hora_inicio    = clean(payload?.hora_inicio);
+  const hora_fin       = clean(payload?.hora_fin);
+  const record_id      = clean(payload?.record_id);
+  const nombre         = clean(payload?.nombre);
+  const email          = clean(payload?.email);
 
   const errors = {};
   if (!clave_reserva || clave_reserva.length < 4) errors.clave_reserva = "Requerida (mínimo 4 caracteres)";
@@ -2812,29 +2816,35 @@ async function handleQrGenerate(request, env) {
   if (!pista || !COURTS.includes(pista))           errors.pista         = `Pista inválida. Valores aceptados: ${COURTS.join(", ")}`;
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) errors.fecha       = "Fecha inválida (YYYY-MM-DD)";
   if (!hora_inicio || !/^\d{2}:\d{2}$/.test(hora_inicio)) errors.hora_inicio = "Hora inválida (HH:MM)";
+  if (!hora_fin || !/^\d{2}:\d{2}$/.test(hora_fin))       errors.hora_fin    = "Hora fin inválida (HH:MM)";
+  if (!record_id)                                  errors.record_id     = "Requerido";
+  if (!nombre)                                     errors.nombre        = "Requerido";
+  if (!email)                                      errors.email         = "Requerido";
 
   if (Object.keys(errors).length > 0) {
     return jsonResponse({ ok: false, error: "Validation failed", fields: errors }, 400, headers);
   }
 
-  const issuedAt  = new Date().toISOString();
-  const [h, m]    = hora_inicio.split(":").map(Number);
-  const fechaBase = new Date(`${fecha}T${hora_inicio}:00Z`);
-  const validFrom = new Date(fechaBase.getTime() - QR_WINDOW_BEFORE_MIN * 60 * 1000).toISOString();
+  const issuedAt   = new Date().toISOString();
+  const fechaBase  = new Date(`${fecha}T${hora_inicio}:00Z`);
+  const validFrom  = new Date(fechaBase.getTime() - QR_WINDOW_BEFORE_MIN * 60 * 1000).toISOString();
   const validUntil = new Date(fechaBase.getTime() + QR_WINDOW_AFTER_MIN * 60 * 1000).toISOString();
 
-  const normalized = {
-    accion:        "generar_qr_acceso",
+  // Payload exacto que espera Make escenario 6244975 (Generación QR Acceso)
+  const makePayload = {
+    event:           "reserva_confirmada",
+    club_id:         "club-padel-04",
+    record_id,
+    nombre,
+    email,
     clave_reserva,
-    player_id,
-    club_id,
-    pista,
-    fecha,
+    fecha_reserva:   fecha,
     hora_inicio,
-    valid_from:    validFrom,
-    valid_until:   validUntil,
-    issued_at:     issuedAt,
-    origen:        "APP_CLUB_PADEL_04",
+    hora_fin,
+    pista,
+    idempotency_key: `qr_gen_${clave_reserva}`,
+    source:          "app_cp04",
+    test_mode:       false,
   };
 
   let makeResponse;
@@ -2842,7 +2852,7 @@ async function handleQrGenerate(request, env) {
     makeResponse = await fetch(env.MAKE_QR_ACCESO_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(normalized),
+      body: JSON.stringify(makePayload),
     });
   } catch (e) {
     return jsonResponse({ ok: false, error: "Make request failed", code: "NETWORK_ERROR" }, 502, headers);
@@ -2863,7 +2873,7 @@ async function handleQrGenerate(request, env) {
       ok:            true,
       clave_reserva,
       pista,
-      fecha,
+      fecha:         fecha,
       hora_inicio,
       valid_from:    validFrom,
       valid_until:   validUntil,

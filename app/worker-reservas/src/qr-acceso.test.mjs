@@ -42,10 +42,14 @@ function makeQrValidateRequest(body = {}, { headers = {}, env = {} } = {}) {
 const VALID_GENERATE_BODY = {
   clave_reserva: "CP04-TEST-2026-07-20-PISTA2-09",
   player_id:     "player-qa@test.example",
-  club_id:       "cp04-antequera",
+  club_id:       "club-padel-04",
   pista:         "Pista 2",
   fecha:         "2026-07-20",
   hora_inicio:   "09:00",
+  hora_fin:      "10:30",
+  record_id:     "rec_TEST_AIRTABLE_ID_QA",
+  nombre:        "Jugador QA Test",
+  email:         "jugador-qa@test.example",
 };
 
 const VALID_VALIDATE_BODY = {
@@ -141,6 +145,115 @@ test("qr/generate: player_id faltante → 400", async () => {
       const data = await res.json();
       assert.equal(res.status, 400);
       assert.ok(data.fields?.player_id);
+    }
+  );
+});
+
+test("qr/generate: hora_fin faltante → 400", async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => "ok" }),
+    async () => {
+      const body = { ...VALID_GENERATE_BODY, hora_fin: "" };
+      const [req, env] = makeQrGenerateRequest(body);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 400);
+      assert.ok(data.fields?.hora_fin);
+    }
+  );
+});
+
+test("qr/generate: record_id faltante → 400", async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => "ok" }),
+    async () => {
+      const body = { ...VALID_GENERATE_BODY, record_id: "" };
+      const [req, env] = makeQrGenerateRequest(body);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 400);
+      assert.ok(data.fields?.record_id);
+    }
+  );
+});
+
+test("qr/generate: nombre faltante → 400", async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => "ok" }),
+    async () => {
+      const body = { ...VALID_GENERATE_BODY, nombre: "" };
+      const [req, env] = makeQrGenerateRequest(body);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 400);
+      assert.ok(data.fields?.nombre);
+    }
+  );
+});
+
+test("qr/generate: email faltante → 400", async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => "ok" }),
+    async () => {
+      const body = { ...VALID_GENERATE_BODY, email: "" };
+      const [req, env] = makeQrGenerateRequest(body);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 400);
+      assert.ok(data.fields?.email);
+    }
+  );
+});
+
+test("qr/generate: payload enviado a Make cumple contrato Make escenario 6244975", async () => {
+  let capturedBody = null;
+  await withFakeFetch(
+    async (url, opts) => {
+      capturedBody = JSON.parse(opts.body);
+      return { ok: true, text: async () => "generacion_ok" };
+    },
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
+      const res = await worker.fetch(req, env);
+      assert.equal(res.status, 200);
+      assert.ok(capturedBody, "debe haber capturado el payload enviado a Make");
+      // Campos del contrato Make
+      assert.equal(capturedBody.event,           "reserva_confirmada");
+      assert.equal(capturedBody.club_id,         "club-padel-04");
+      assert.equal(capturedBody.record_id,       VALID_GENERATE_BODY.record_id);
+      assert.equal(capturedBody.nombre,          VALID_GENERATE_BODY.nombre);
+      assert.equal(capturedBody.email,           VALID_GENERATE_BODY.email);
+      assert.equal(capturedBody.clave_reserva,   VALID_GENERATE_BODY.clave_reserva);
+      assert.equal(capturedBody.fecha_reserva,   VALID_GENERATE_BODY.fecha);
+      assert.equal(capturedBody.hora_inicio,     VALID_GENERATE_BODY.hora_inicio);
+      assert.equal(capturedBody.hora_fin,        VALID_GENERATE_BODY.hora_fin);
+      assert.equal(capturedBody.pista,           VALID_GENERATE_BODY.pista);
+      assert.equal(capturedBody.source,          "app_cp04");
+      assert.equal(capturedBody.test_mode,       false);
+      assert.ok(capturedBody.idempotency_key,    "debe tener idempotency_key");
+      // Campos que NO deben ir a Make
+      assert.equal(capturedBody.player_id,       undefined, "player_id no debe ir a Make");
+      assert.equal(capturedBody.accion,          undefined, "accion (legado) no debe ir a Make");
+      assert.equal(capturedBody.origen,          undefined, "origen (legado) no debe ir a Make");
+    }
+  );
+});
+
+test("qr/generate: idempotency_key es determinista (misma clave_reserva = mismo key)", async () => {
+  const captured = [];
+  await withFakeFetch(
+    async (url, opts) => {
+      captured.push(JSON.parse(opts.body).idempotency_key);
+      return { ok: true, text: async () => "ok" };
+    },
+    async () => {
+      const [req1, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
+      const [req2]      = makeQrGenerateRequest(VALID_GENERATE_BODY);
+      await worker.fetch(req1, env);
+      await worker.fetch(req2, env);
+      assert.equal(captured.length, 2);
+      assert.equal(captured[0], captured[1], "idempotency_key debe ser idéntico para la misma clave_reserva");
+      assert.ok(captured[0].includes(VALID_GENERATE_BODY.clave_reserva), "key debe incluir la clave_reserva");
     }
   );
 });
