@@ -4530,14 +4530,24 @@ function IntegrationStatusBanner({ children }) {
 // Endpoints reales: POST /api/qr/generate y POST /api/qr/validate.
 // Make scenarios: Generación QR (6244975) y Control Acceso QR (5291559).
 function ControlQrAccesos() {
-  const [selectedRole] = useState(null); // el role real viene del RBAC superior
+  const qrReservasEndpoint =
+    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas";
+
+  // ── Búsqueda de reserva real (flujo productivo) ──
+  const [lookupEmail, setLookupEmail] = useState(() => {
+    try { return window.localStorage.getItem("cp04-reservas-email") || ""; } catch { return ""; }
+  });
+  const [lookupResults, setLookupResults] = useState([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError]     = useState("");
+  const [lookupDone, setLookupDone]       = useState(false);
 
   // ── Subpanel Generación QR ──
   const [genClave, setGenClave]       = useState("");
   const [genPista, setGenPista]       = useState("Pista 1");
   const [genFecha, setGenFecha]       = useState("");
-  const [genHora, setGenHora]         = useState("09:00");
-  const [genHoraFin, setGenHoraFin]   = useState("10:30");
+  const [genHora, setGenHora]         = useState("");
+  const [genHoraFin, setGenHoraFin]   = useState("");
   const [genPlayerId, setGenPlayerId] = useState("");
   const [genRecordId, setGenRecordId] = useState("");
   const [genNombre, setGenNombre]     = useState("");
@@ -4545,6 +4555,73 @@ function ControlQrAccesos() {
   const [genResult, setGenResult]     = useState(null);
   const [genLoading, setGenLoading]   = useState(false);
   const [genError, setGenError]       = useState("");
+  const [genFromReal, setGenFromReal] = useState(false);
+
+  async function handleBuscarReserva(e) {
+    e.preventDefault();
+    const emailLimpio = lookupEmail.trim().toLowerCase();
+    if (!emailLimpio || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
+      setLookupError("Introduce un correo electrónico válido.");
+      return;
+    }
+    setLookupLoading(true);
+    setLookupError("");
+    setLookupResults([]);
+    setLookupDone(false);
+    try {
+      const sep = qrReservasEndpoint.includes("?") ? "&" : "?";
+      const url = `${qrReservasEndpoint}${sep}email=${encodeURIComponent(emailLimpio)}&limit=100&t=${Date.now()}`;
+      const response = await authFetch(url, {
+        method: "GET",
+        headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+      });
+      const data = await readSafeResponse(response);
+      const resultado = data && typeof data === "object" ? data : {};
+      if (!response.ok || resultado.ok !== true) {
+        throw new Error(resultado.error || resultado.message || `Error ${response.status}`);
+      }
+      const lista =
+        Array.isArray(resultado.reservas) ? resultado.reservas
+        : Array.isArray(resultado.records) ? resultado.records
+        : Array.isArray(resultado.data) ? resultado.data
+        : [];
+      const normalizadas = lista
+        .map(normalizarReserva)
+        .filter((r) => r.estado === "confirmada" || r.estado === "reprogramada")
+        .sort((a, b) => {
+          const fa = `${a.fecha}T${a.horaInicio || "00:00"}`;
+          const fb = `${b.fecha}T${b.horaInicio || "00:00"}`;
+          return fb.localeCompare(fa);
+        });
+      setLookupResults(normalizadas);
+      setLookupDone(true);
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : "No se pudieron cargar las reservas.");
+    } finally {
+      setLookupLoading(false);
+    }
+  }
+
+  function handleSeleccionarReserva(reserva) {
+    if (!reserva.horaFin) {
+      setGenError(
+        "Esta reserva no tiene hora_fin en Airtable. No se puede generar QR hasta que Make registre la hora de fin."
+      );
+      return;
+    }
+    setGenClave(reserva.clave || "");
+    setGenPlayerId(reserva.email || "");
+    setGenRecordId(reserva.id || "");
+    setGenNombre(reserva.nombre || "");
+    setGenEmail(reserva.email || "");
+    setGenFecha(reserva.fecha || "");
+    setGenHora(reserva.horaInicio || "");
+    setGenHoraFin(reserva.horaFin);
+    setGenPista(reserva.pista || "Pista 1");
+    setGenError("");
+    setGenResult(null);
+    setGenFromReal(true);
+  }
 
   async function handleGenerarQr(e) {
     e.preventDefault();
@@ -4609,7 +4686,7 @@ function ControlQrAccesos() {
         body: JSON.stringify({
           clave_reserva: valClave,
           pista:         valPista,
-          club_id:       "cp04-antequera",
+          club_id:       "club-padel-04",
           staff_id:      valStaff,
         }),
       });
@@ -4639,19 +4716,88 @@ function ControlQrAccesos() {
         desc="Genera y valida códigos QR de acceso para reservas de pistas."
       />
 
+      {/* Flujo productivo: buscar reserva real → precargar datos */}
+      <Card style={{ marginBottom: 24, borderColor: T.accent + "55" }}>
+        <h3 style={{ marginTop: 0 }}>🔍 Buscar reserva confirmada</h3>
+        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 0 }}>
+          Flujo productivo: busca por email del jugador y selecciona la reserva para precargar
+          record_id, nombre, email, hora_fin y demás campos directamente desde Airtable vía Make.
+          Ningún dato se inventa ni hardcodea.
+        </p>
+        <form onSubmit={handleBuscarReserva} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ fontSize: ".87rem", flex: "2 1 220px" }}>
+            Email del jugador
+            <input
+              type="email"
+              value={lookupEmail}
+              onChange={(e) => setLookupEmail(e.target.value)}
+              placeholder="jugador@club.es"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <Btn type="submit" disabled={lookupLoading} variant="secondary">
+            {lookupLoading ? "Buscando…" : "Buscar reservas"}
+          </Btn>
+        </form>
+        {lookupError && (
+          <p style={{ color: T.error, fontSize: ".86rem", margin: "10px 0 0" }}>{lookupError}</p>
+        )}
+        {lookupDone && lookupResults.length === 0 && !lookupError && (
+          <p style={{ color: T.textMuted, fontSize: ".86rem", margin: "10px 0 0" }}>
+            No se encontraron reservas confirmadas para ese email.
+          </p>
+        )}
+        {lookupResults.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <p style={{ fontSize: ".85rem", color: T.textMuted, marginBottom: 8 }}>
+              Selecciona la reserva para precargar los datos del QR:
+            </p>
+            {lookupResults.map((r) => (
+              <div
+                key={r.id}
+                onClick={() => handleSeleccionarReserva(r)}
+                style={{ padding: "10px 14px", marginBottom: 8, borderRadius: 8, border: `1px solid ${T.border}`, background: T.cardBg, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}
+              >
+                <div>
+                  <span style={{ fontWeight: 600, fontSize: ".9rem" }}>{r.clave || r.id}</span>
+                  <span style={{ color: T.textMuted, fontSize: ".84rem", marginLeft: 12 }}>
+                    {r.fecha} · {r.horaInicio}{r.horaFin ? `–${r.horaFin}` : ""} · {r.pista}
+                  </span>
+                  {!r.horaFin && (
+                    <span style={{ color: T.error, fontSize: ".8rem", marginLeft: 8 }}>⚠ sin hora_fin</span>
+                  )}
+                </div>
+                <span style={{ fontSize: ".82rem", color: T.accent, whiteSpace: "nowrap" }}>Precargar →</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
       {/* Panel Generación QR */}
       <Card style={{ marginBottom: 24 }}>
-        <h3 style={{ marginTop: 0 }}>🔑 Generar QR de acceso</h3>
-        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 0 }}>
-          Genera el QR de acceso para una reserva confirmada. El código QR será procesado por Make
-          y enviado al jugador (WhatsApp/email según configuración del club).
+        <h3 style={{ marginTop: 0 }}>
+          🔑 Generar QR de acceso
+          {genFromReal && (
+            <span style={{ fontSize: ".76rem", color: T.success, marginLeft: 10, fontWeight: 400 }}>
+              ✓ datos desde reserva real
+            </span>
+          )}
+        </h3>
+        {!genFromReal && (
+          <p style={{ color: T.textMuted, fontSize: ".83rem", marginTop: 0, padding: "6px 10px", borderRadius: 6, background: `${T.accent}14`, border: `1px solid ${T.accent}33` }}>
+            ⚠ Entrada manual — usa el buscador anterior para precargar datos reales desde Airtable.
+          </p>
+        )}
+        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 8 }}>
+          El QR será procesado por Make y enviado al jugador (WhatsApp/email).
         </p>
         <form onSubmit={handleGenerarQr} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label style={{ fontSize: ".87rem" }}>
             Clave de reserva *
             <input
               value={genClave}
-              onChange={(e) => setGenClave(e.target.value)}
+              onChange={(e) => { setGenClave(e.target.value); setGenFromReal(false); }}
               placeholder="CP04-2026-07-20-PISTA2-09"
               style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
             />
@@ -4716,7 +4862,7 @@ function ControlQrAccesos() {
               />
             </label>
             <label style={{ fontSize: ".87rem", flex: "1 1 100px" }}>
-              Hora inicio
+              Hora inicio *
               <input
                 type="time"
                 value={genHora}
@@ -5055,6 +5201,81 @@ function AutomatizacionesBots() {
   );
 }
 
+function normalizarReserva(item) {
+  const reserva =
+    item && typeof item === "object" && item.fields
+      ? { ...item.fields, record_id: item.id || item.record_id }
+      : item || {};
+
+  return {
+    id:
+      reserva.record_id ||
+      reserva.id ||
+      reserva.clave_reserva ||
+      `${reserva.fecha_reserva || reserva.fecha || "sin-fecha"}-${
+        reserva.pista || reserva.Pista || "sin-pista"
+      }-${reserva.hora_inicio || reserva.hora || "sin-hora"}`,
+
+    nombre:
+      reserva.nombre ||
+      reserva.Nombre ||
+      reserva.jugador_nombre ||
+      "",
+
+    apellidos:
+      reserva.apellidos ||
+      reserva.Apellidos ||
+      reserva.jugador_apellidos ||
+      "",
+
+    email:
+      reserva.email ||
+      reserva.Email ||
+      "",
+
+    fecha:
+      reserva.fecha_reserva ||
+      reserva.fecha ||
+      reserva.Fecha ||
+      "",
+
+    horaInicio:
+      reserva.hora_inicio ||
+      reserva.hora ||
+      reserva.Hora ||
+      "",
+
+    horaFin:
+      reserva.hora_fin ||
+      "",
+
+    pista:
+      reserva.pista ||
+      reserva.Pista ||
+      "",
+
+    estado: String(
+      reserva.estado_reserva ||
+      reserva.estado ||
+      reserva.Estado ||
+      "sin estado",
+    ).toLowerCase(),
+
+    clave:
+      reserva.clave_reserva ||
+      reserva.clave ||
+      "",
+
+    fechaCancelacion:
+      reserva.fecha_cancelacion ||
+      "",
+
+    eventId:
+      reserva.event_id ||
+      "",
+  };
+}
+
 function Gestion() {
   const [emailConsulta, setEmailConsulta] = useState(() => {
     try {
@@ -5079,81 +5300,6 @@ function Gestion() {
   const reservasEndpoint =
     import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
     "/api/reservas";
-
-  function normalizarReserva(item) {
-    const reserva =
-      item && typeof item === "object" && item.fields
-        ? { ...item.fields, record_id: item.id || item.record_id }
-        : item || {};
-
-    return {
-      id:
-        reserva.record_id ||
-        reserva.id ||
-        reserva.clave_reserva ||
-        `${reserva.fecha_reserva || reserva.fecha || "sin-fecha"}-${
-          reserva.pista || reserva.Pista || "sin-pista"
-        }-${reserva.hora_inicio || reserva.hora || "sin-hora"}`,
-
-      nombre:
-        reserva.nombre ||
-        reserva.Nombre ||
-        reserva.jugador_nombre ||
-        "",
-
-      apellidos:
-        reserva.apellidos ||
-        reserva.Apellidos ||
-        reserva.jugador_apellidos ||
-        "",
-
-      email:
-        reserva.email ||
-        reserva.Email ||
-        "",
-
-      fecha:
-        reserva.fecha_reserva ||
-        reserva.fecha ||
-        reserva.Fecha ||
-        "",
-
-      horaInicio:
-        reserva.hora_inicio ||
-        reserva.hora ||
-        reserva.Hora ||
-        "",
-
-      horaFin:
-        reserva.hora_fin ||
-        "",
-
-      pista:
-        reserva.pista ||
-        reserva.Pista ||
-        "",
-
-      estado: String(
-        reserva.estado_reserva ||
-        reserva.estado ||
-        reserva.Estado ||
-        "sin estado",
-      ).toLowerCase(),
-
-      clave:
-        reserva.clave_reserva ||
-        reserva.clave ||
-        "",
-
-      fechaCancelacion:
-        reserva.fecha_cancelacion ||
-        "",
-
-      eventId:
-        reserva.event_id ||
-        "",
-    };
-  }
 
   async function cargarReservas() {
     const emailLimpio = emailConsulta.trim().toLowerCase();
