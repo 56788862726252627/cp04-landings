@@ -2717,6 +2717,253 @@ async function handleSupportMakeScenarios(request, env) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// QR ACCESO — Generación y Control (Make scenarios 6244975 y 5291559)
+//
+// Arquitectura:
+//   App → Worker → Make webhook → (Airtable) → respuesta normalizada
+//
+// El token QR es el `clave_reserva` codificado. Make lleva la fuente de
+// verdad: Airtable almacena reserva + estado + historial de acceso.
+//
+// Reason codes devueltos por el Worker (normalizados desde Make):
+//   VALID          — acceso autorizado
+//   TOO_EARLY      — antes de la ventana de acceso
+//   EXPIRED        — pasada la ventana de acceso
+//   CANCELLED      — reserva cancelada o revocada
+//   COURT_CLOSED   — pista cerrada temporalmente
+//   WRONG_CLUB     — club_id no coincide
+//   WRONG_COURT    — pista no coincide con la reserva
+//   UNKNOWN_QR     — token no encontrado
+//   ALREADY_USED   — acceso ya registrado (doble scan)
+//   INVALID_STATE  — estado de reserva inconsistente
+//   UNAUTHORIZED   — sin permiso para validar
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Ventana temporal de acceso (minutos):
+//   - PLAYER puede usar el QR desde QR_WINDOW_BEFORE_MIN antes del inicio.
+//   - El QR expira QR_WINDOW_AFTER_MIN minutos después del inicio.
+const QR_WINDOW_BEFORE_MIN = 15; // DECISIÓN PENDIENTE DE NEGOCIO — confirmar antes de producción
+const QR_WINDOW_AFTER_MIN = 30;  // DECISIÓN PENDIENTE DE NEGOCIO — confirmar antes de producción
+
+const QR_GENERATE_ROLES = ["PLAYER", "STAFF", "ADMIN", "SUPPORT"];
+const QR_VALIDATE_ROLES = ["STAFF", "ADMIN", "SUPPORT"];
+
+// Reason codes canónicos — no modificar sin actualizar el doc y los tests.
+export const QR_REASON_CODES = Object.freeze({
+  VALID:         "VALID",
+  TOO_EARLY:     "TOO_EARLY",
+  EXPIRED:       "EXPIRED",
+  CANCELLED:     "CANCELLED",
+  COURT_CLOSED:  "COURT_CLOSED",
+  WRONG_CLUB:    "WRONG_CLUB",
+  WRONG_COURT:   "WRONG_COURT",
+  UNKNOWN_QR:    "UNKNOWN_QR",
+  ALREADY_USED:  "ALREADY_USED",
+  INVALID_STATE: "INVALID_STATE",
+  UNAUTHORIZED:  "UNAUTHORIZED",
+});
+
+// Mapear respuestas textuales de Make a reason codes canónicos.
+function mapMakeQrResult(makeText) {
+  const t = (makeText || "").toLowerCase();
+  if (t.includes("acceso_ok") || t.includes("ok"))           return QR_REASON_CODES.VALID;
+  if (t.includes("qr_caducado") || t.includes("expirado"))   return QR_REASON_CODES.EXPIRED;
+  if (t.includes("denegado") || t.includes("invalido"))      return QR_REASON_CODES.CANCELLED;
+  if (t.includes("cerrada") || t.includes("closed"))         return QR_REASON_CODES.COURT_CLOSED;
+  if (t.includes("ya_usado") || t.includes("already"))       return QR_REASON_CODES.ALREADY_USED;
+  if (t.includes("desconocido") || t.includes("unknown"))    return QR_REASON_CODES.UNKNOWN_QR;
+  return QR_REASON_CODES.INVALID_STATE;
+}
+
+async function handleQrGenerate(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method !== "POST")    return jsonResponse({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405, headers);
+
+  if (!env.MAKE_QR_ACCESO_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "QR generation webhook not configured", code: "NOT_CONFIGURED" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400, headers);
+  }
+
+  const clean = (v) => (typeof v === "string" ? v.trim() : v);
+  const clave_reserva  = clean(payload?.clave_reserva);
+  const player_id      = clean(payload?.player_id);
+  const club_id        = clean(payload?.club_id);
+  const pista          = clean(payload?.pista);
+  const fecha          = clean(payload?.fecha);
+  const hora_inicio    = clean(payload?.hora_inicio);
+
+  const errors = {};
+  if (!clave_reserva || clave_reserva.length < 4) errors.clave_reserva = "Requerida (mínimo 4 caracteres)";
+  if (!player_id)                                  errors.player_id     = "Requerido";
+  if (!club_id)                                    errors.club_id       = "Requerido";
+  if (!pista || !COURTS.includes(pista))           errors.pista         = `Pista inválida. Valores aceptados: ${COURTS.join(", ")}`;
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) errors.fecha       = "Fecha inválida (YYYY-MM-DD)";
+  if (!hora_inicio || !/^\d{2}:\d{2}$/.test(hora_inicio)) errors.hora_inicio = "Hora inválida (HH:MM)";
+
+  if (Object.keys(errors).length > 0) {
+    return jsonResponse({ ok: false, error: "Validation failed", fields: errors }, 400, headers);
+  }
+
+  const issuedAt  = new Date().toISOString();
+  const [h, m]    = hora_inicio.split(":").map(Number);
+  const fechaBase = new Date(`${fecha}T${hora_inicio}:00Z`);
+  const validFrom = new Date(fechaBase.getTime() - QR_WINDOW_BEFORE_MIN * 60 * 1000).toISOString();
+  const validUntil = new Date(fechaBase.getTime() + QR_WINDOW_AFTER_MIN * 60 * 1000).toISOString();
+
+  const normalized = {
+    accion:        "generar_qr_acceso",
+    clave_reserva,
+    player_id,
+    club_id,
+    pista,
+    fecha,
+    hora_inicio,
+    valid_from:    validFrom,
+    valid_until:   validUntil,
+    issued_at:     issuedAt,
+    origen:        "APP_CLUB_PADEL_04",
+  };
+
+  let makeResponse;
+  try {
+    makeResponse = await fetch(env.MAKE_QR_ACCESO_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(normalized),
+    });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: "Make request failed", code: "NETWORK_ERROR" }, 502, headers);
+  }
+
+  const makeText = await makeResponse.text().catch(() => "");
+
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      { ok: false, error: "Make request failed", status: makeResponse.status, code: "MAKE_ERROR" },
+      502,
+      headers
+    );
+  }
+
+  return jsonResponse(
+    {
+      ok:            true,
+      clave_reserva,
+      pista,
+      fecha,
+      hora_inicio,
+      valid_from:    validFrom,
+      valid_until:   validUntil,
+      issued_at:     issuedAt,
+      estado:        "pendiente_confirmacion",
+      makeResponse:  makeText || null,
+    },
+    200,
+    headers
+  );
+}
+
+async function handleQrValidate(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method !== "POST")    return jsonResponse({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405, headers);
+
+  if (!env.MAKE_CONTROL_QR_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "QR control webhook not configured", code: "NOT_CONFIGURED" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400, headers);
+  }
+
+  const clean = (v) => (typeof v === "string" ? v.trim() : v);
+  const clave_reserva = clean(payload?.clave_reserva);
+  const pista         = clean(payload?.pista);
+  const club_id       = clean(payload?.club_id);
+  const staff_id      = clean(payload?.staff_id);
+
+  const errors = {};
+  if (!clave_reserva || clave_reserva.length < 4) errors.clave_reserva = "Requerida";
+  if (!pista || !COURTS.includes(pista))           errors.pista         = `Pista inválida. Valores aceptados: ${COURTS.join(", ")}`;
+  if (!club_id)                                    errors.club_id       = "Requerido";
+  if (!staff_id)                                   errors.staff_id      = "Requerido";
+
+  if (Object.keys(errors).length > 0) {
+    return jsonResponse({ ok: false, error: "Validation failed", fields: errors }, 400, headers);
+  }
+
+  const scanned_at = new Date().toISOString();
+
+  const normalized = {
+    accion:         "validar_qr_acceso",
+    clave_reserva,
+    pista,
+    club_id,
+    staff_id,
+    scanned_at,
+    origen:         "APP_CLUB_PADEL_04",
+  };
+
+  let makeResponse;
+  try {
+    makeResponse = await fetch(env.MAKE_CONTROL_QR_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(normalized),
+    });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: "Make request failed", code: "NETWORK_ERROR" }, 502, headers);
+  }
+
+  const makeText = await makeResponse.text().catch(() => "");
+
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      { ok: false, error: "Make request failed", status: makeResponse.status, code: "MAKE_ERROR" },
+      502,
+      headers
+    );
+  }
+
+  const reason    = mapMakeQrResult(makeText);
+  const decision  = reason === QR_REASON_CODES.VALID ? "ALLOW" : "DENY";
+
+  return jsonResponse(
+    {
+      ok:           true,
+      decision,
+      reason,
+      clave_reserva,
+      pista,
+      scanned_at,
+      makeResponse: makeText || null,
+    },
+    200,
+    headers
+  );
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -2843,6 +3090,29 @@ export default {
           request,
           env
         );
+      }
+
+      // QR Acceso — Generación (Make 6244975) y Control (Make 5291559)
+      if (
+        url.pathname === "/api/qr/generate" ||
+        url.pathname === "/qr/generate"
+      ) {
+        if (request.method !== "OPTIONS" && env.CP04_ENFORCE_ROLE_GATES === "true") {
+          const gate = await requireRoles(request, env, QR_GENERATE_ROLES);
+          if (!gate.ok) return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+        }
+        return await handleQrGenerate(request, env);
+      }
+
+      if (
+        url.pathname === "/api/qr/validate" ||
+        url.pathname === "/qr/validate"
+      ) {
+        if (request.method !== "OPTIONS" && env.CP04_ENFORCE_ROLE_GATES === "true") {
+          const gate = await requireRoles(request, env, QR_VALIDATE_ROLES);
+          if (!gate.ok) return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+        }
+        return await handleQrValidate(request, env);
       }
 
       return jsonResponse(
