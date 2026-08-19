@@ -2764,10 +2764,46 @@ export const QR_REASON_CODES = Object.freeze({
   UNAUTHORIZED:  "UNAUTHORIZED",
 });
 
-// Mapear respuestas textuales de Make a reason codes canónicos.
+// Mapear respuestas de Make a reason codes canónicos.
+// IMPORTANTE: la mera presencia de "ok" en la respuesta NUNCA implica acceso
+// permitido — un JSON como {"ok":true,"decision":"DENY","reason":"TOO_EARLY"}
+// contiene "ok" pero debe denegar. Por eso, si la respuesta es JSON válido,
+// se priorizan siempre los campos decision/reason explícitos sobre cualquier
+// heurística textual.
 function mapMakeQrResult(makeText) {
-  const t = (makeText || "").toLowerCase();
-  if (t.includes("acceso_ok") || t.includes("ok"))           return QR_REASON_CODES.VALID;
+  const raw = makeText || "";
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const decision = typeof parsed.decision === "string" ? parsed.decision.toUpperCase() : "";
+      const reason   = typeof parsed.reason   === "string" ? parsed.reason.toUpperCase()   : "";
+
+      if (reason === "TOO_EARLY")    return QR_REASON_CODES.TOO_EARLY;
+      if (reason === "EXPIRED")      return QR_REASON_CODES.EXPIRED;
+      if (reason === "ALREADY_USED") return QR_REASON_CODES.ALREADY_USED;
+      if (reason === "CANCELLED")    return QR_REASON_CODES.CANCELLED;
+      if (reason === "COURT_CLOSED") return QR_REASON_CODES.COURT_CLOSED;
+      if (reason === "WRONG_CLUB")   return QR_REASON_CODES.WRONG_CLUB;
+      if (reason === "WRONG_COURT")  return QR_REASON_CODES.WRONG_COURT;
+      if (reason === "UNKNOWN_QR")   return QR_REASON_CODES.UNKNOWN_QR;
+      if (reason === "UNAUTHORIZED") return QR_REASON_CODES.UNAUTHORIZED;
+      if (reason === "INVALID")      return QR_REASON_CODES.INVALID_STATE;
+
+      if (decision === "ALLOW" && (reason === "ACCESO_OK" || reason === "VALID")) {
+        return QR_REASON_CODES.VALID;
+      }
+      if (decision === "DENY") return QR_REASON_CODES.INVALID_STATE;
+      // JSON válido pero sin decision/reason reconocibles: no asumir acceso.
+      return QR_REASON_CODES.INVALID_STATE;
+    }
+  } catch {
+    // No es JSON válido — Make histórico devuelve texto plano. Fallback abajo.
+  }
+
+  // Fallback textual legacy (compatibilidad con respuestas de texto plano).
+  const t = raw.toLowerCase();
+  if (t.includes("acceso_ok"))                                return QR_REASON_CODES.VALID;
   if (t.includes("qr_caducado") || t.includes("expirado"))   return QR_REASON_CODES.EXPIRED;
   if (t.includes("denegado") || t.includes("invalido"))      return QR_REASON_CODES.CANCELLED;
   if (t.includes("cerrada") || t.includes("closed"))         return QR_REASON_CODES.COURT_CLOSED;

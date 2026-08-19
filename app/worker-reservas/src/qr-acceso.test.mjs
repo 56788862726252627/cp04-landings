@@ -477,6 +477,98 @@ test("qr/validate: Make responde texto desconocido → decision DENY, reason INV
   );
 });
 
+// ─── RESPUESTAS JSON DE MAKE (decision/reason) ───────────────────────────────
+// Regresión del bug: {"ok":true,...} NUNCA debe interpretarse como VALID solo
+// porque el texto contiene "ok". Deben priorizarse los campos decision/reason.
+
+test('qr/validate: Make responde {"ok":true,"decision":"ALLOW","reason":"ACCESO_OK"} → decision ALLOW, reason VALID', async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "ALLOW", reason: "ACCESO_OK" }) }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(data.decision, "ALLOW");
+      assert.equal(data.reason, QR_REASON_CODES.VALID);
+    }
+  );
+});
+
+test('qr/validate: Make responde {"ok":true,"decision":"DENY","reason":"TOO_EARLY"} → decision DENY, reason TOO_EARLY (nunca ALLOW)', async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "DENY", reason: "TOO_EARLY" }) }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(data.decision, "DENY");
+      assert.notEqual(data.decision, "ALLOW");
+      assert.equal(data.reason, QR_REASON_CODES.TOO_EARLY);
+    }
+  );
+});
+
+test('qr/validate: Make responde {"ok":true,"decision":"DENY","reason":"EXPIRED"} → decision DENY, reason EXPIRED (nunca ALLOW)', async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "DENY", reason: "EXPIRED" }) }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(data.decision, "DENY");
+      assert.notEqual(data.decision, "ALLOW");
+      assert.equal(data.reason, QR_REASON_CODES.EXPIRED);
+    }
+  );
+});
+
+test('qr/validate: Make responde {"ok":true,"decision":"DENY","reason":"ALREADY_USED"} → decision DENY, reason ALREADY_USED (nunca ALLOW)', async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "DENY", reason: "ALREADY_USED" }) }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(data.decision, "DENY");
+      assert.notEqual(data.decision, "ALLOW");
+      assert.equal(data.reason, QR_REASON_CODES.ALREADY_USED);
+    }
+  );
+});
+
+test('qr/validate: Make responde {"ok":true,"decision":"DENY","reason":"INVALID"} → decision DENY, reason INVALID_STATE (nunca ALLOW)', async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "DENY", reason: "INVALID" }) }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(data.decision, "DENY");
+      assert.notEqual(data.decision, "ALLOW");
+      assert.equal(data.reason, QR_REASON_CODES.INVALID_STATE);
+    }
+  );
+});
+
+test('qr/validate: Make responde {"ok":true} sin decision/reason → decision DENY (la presencia de "ok" no implica acceso)', async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => JSON.stringify({ ok: true }) }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(data.decision, "DENY");
+      assert.equal(data.reason, QR_REASON_CODES.INVALID_STATE);
+    }
+  );
+});
+
 test("qr/validate: doble scan → ambas peticiones llegan a Make (Make gestiona ALREADY_USED)", async () => {
   let callCount = 0;
   await withFakeFetch(
