@@ -39,6 +39,49 @@ function makeQrValidateRequest(body = {}, { headers = {}, env = {} } = {}) {
   ];
 }
 
+// Entorno con Airtable configurado (además del webhook de Make), para poder
+// ejercitar cp04LookupReservaParaQr (defensa en profundidad pista real vs
+// pista solicitada). Usa el mismo AIRTABLE_TABLE_ID que el resto del Worker.
+const AIRTABLE_ENV = {
+  AIRTABLE_TOKEN: "test-token",
+  AIRTABLE_BASE_ID: "appTestBase",
+  AIRTABLE_TABLE_ID: "tblTestReservas",
+};
+
+// Fetch stub que enruta según la URL: peticiones a api.airtable.com van a
+// `airtableImpl`, cualquier otra (el webhook de Make) va a `makeImpl`.
+// `calls` acumula `{ target }` por cada invocación, para poder comprobar
+// cuántas veces (y en qué orden) se llamó a cada sistema.
+function routedFetch({ airtableImpl, makeImpl, calls }) {
+  return async (input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.includes("api.airtable.com")) {
+      calls.push({ target: "airtable", url, init });
+      return airtableImpl(url, init);
+    }
+    calls.push({ target: "make", url, init });
+    return makeImpl(url, init);
+  };
+}
+
+function airtableReservaRecord({ claveReserva, pista, estado = "confirmada" }) {
+  return {
+    ok: true,
+    json: async () => ({
+      records: [
+        {
+          id: "recTestReserva001",
+          fields: {
+            clave_reserva: claveReserva,
+            Pista: pista,
+            estado_reserva: estado,
+          },
+        },
+      ],
+    }),
+  };
+}
+
 const VALID_GENERATE_BODY = {
   clave_reserva: "CP04-TEST-2026-07-20-PISTA2-09",
   player_id:     "player-qa@test.example",
@@ -612,6 +655,202 @@ test("qr/validate: no expone staff_id en respuesta (privacidad)", async () => {
       const res = await worker.fetch(req, env);
       const data = await res.json();
       assert.equal(data.staff_id, undefined, "staff_id no debe estar en respuesta pública");
+    }
+  );
+});
+
+// ─── DEFENSA EN PROFUNDIDAD: PISTA REAL (AIRTABLE) VS PISTA SOLICITADA ───────
+// Regresión del bug real E2E (2026-08-20): una reserva CONFIRMADA en Pista 2
+// fue validada con éxito (ALLOW) enviando "Pista 1", consumiendo el QR antes
+// de que pudiera usarse en su pista real. La fuente de verdad es la reserva
+// persistida en Airtable — el Worker ahora la consulta directamente (además
+// de Make) antes de decidir.
+
+test("A) reserva Pista 2 + request Pista 1 → DENY WRONG_COURT, Make nunca se llama (no consume el QR)", async () => {
+  const calls = [];
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => airtableReservaRecord({
+        claveReserva: "CP04-QR-E2E-20260820-PISTA-FRESH-003",
+        pista: "Pista 2",
+      }),
+      makeImpl: async () => { throw new Error("no debería llamar a Make: la pista no coincide"); },
+      calls,
+    }),
+    async () => {
+      const [req, env] = makeQrValidateRequest({
+        ...VALID_VALIDATE_BODY,
+        clave_reserva: "CP04-QR-E2E-20260820-PISTA-FRESH-003",
+        pista: "Pista 1",
+      }, { env: AIRTABLE_ENV });
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(data.decision, "DENY");
+      assert.equal(data.reason, QR_REASON_CODES.WRONG_COURT);
+      assert.equal(calls.filter((c) => c.target === "make").length, 0, "Make no debe recibir la petición");
+    }
+  );
+});
+
+test("B) tras el rechazo por pista incorrecta, reserva Pista 2 + request Pista 2 → ALLOW (el QR sigue disponible en su pista real)", async () => {
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => airtableReservaRecord({
+        claveReserva: "CP04-QR-E2E-20260820-PISTA-FRESH-003",
+        pista: "Pista 2",
+      }),
+      makeImpl: async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "ALLOW", reason: "ACCESO_OK" }) }),
+      calls: [],
+    }),
+    async () => {
+      const [req, env] = makeQrValidateRequest({
+        ...VALID_VALIDATE_BODY,
+        clave_reserva: "CP04-QR-E2E-20260820-PISTA-FRESH-003",
+        pista: "Pista 2",
+      }, { env: AIRTABLE_ENV });
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 200);
+      assert.equal(data.decision, "ALLOW");
+      assert.equal(data.reason, QR_REASON_CODES.VALID);
+    }
+  );
+});
+
+test("C) repetir el request correcto (Pista 2 de nuevo) → ALREADY_USED", async () => {
+  let makeCallCount = 0;
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => airtableReservaRecord({
+        claveReserva: "CP04-QR-E2E-20260820-PISTA-FRESH-003",
+        pista: "Pista 2",
+      }),
+      makeImpl: async () => {
+        makeCallCount++;
+        const text = makeCallCount === 1
+          ? JSON.stringify({ ok: true, decision: "ALLOW", reason: "ACCESO_OK" })
+          : JSON.stringify({ ok: true, decision: "DENY", reason: "ALREADY_USED" });
+        return { ok: true, text: async () => text };
+      },
+      calls: [],
+    }),
+    async () => {
+      const body = {
+        ...VALID_VALIDATE_BODY,
+        clave_reserva: "CP04-QR-E2E-20260820-PISTA-FRESH-003",
+        pista: "Pista 2",
+      };
+      const [req1, env] = makeQrValidateRequest(body, { env: AIRTABLE_ENV });
+      const [req2] = makeQrValidateRequest(body, { env: AIRTABLE_ENV });
+      const data1 = await (await worker.fetch(req1, env)).json();
+      const data2 = await (await worker.fetch(req2, env)).json();
+      assert.equal(data1.decision, "ALLOW");
+      assert.equal(data2.decision, "DENY");
+      assert.equal(data2.reason, QR_REASON_CODES.ALREADY_USED);
+    }
+  );
+});
+
+test("D) tenant (club_id) incorrecto sigue en DENY (el nuevo gate de pista no interfiere con WRONG_CLUB)", async () => {
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => airtableReservaRecord({
+        claveReserva: "CP04-QR-E2E-20260820-PISTA-FRESH-003",
+        pista: "Pista 2",
+      }),
+      makeImpl: async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "DENY", reason: "WRONG_CLUB" }) }),
+      calls: [],
+    }),
+    async () => {
+      const [req, env] = makeQrValidateRequest({
+        ...VALID_VALIDATE_BODY,
+        clave_reserva: "CP04-QR-E2E-20260820-PISTA-FRESH-003",
+        pista: "Pista 2",
+        club_id: "otro-club-distinto",
+      }, { env: AIRTABLE_ENV });
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(data.decision, "DENY");
+      assert.equal(data.reason, QR_REASON_CODES.WRONG_CLUB);
+    }
+  );
+});
+
+test("E) una pista inválida no consume el QR: tras el DENY por pista incorrecta, el mismo QR sigue ALLOW en su pista real", async () => {
+  const calls = [];
+  const claveReserva = "CP04-QR-E2E-20260820-PISTA-FRESH-003";
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => airtableReservaRecord({ claveReserva, pista: "Pista 2" }),
+      makeImpl: async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "ALLOW", reason: "ACCESO_OK" }) }),
+      calls,
+    }),
+    async () => {
+      const [reqMismatch, env] = makeQrValidateRequest(
+        { ...VALID_VALIDATE_BODY, clave_reserva: claveReserva, pista: "Pista 1" },
+        { env: AIRTABLE_ENV }
+      );
+      const mismatchData = await (await worker.fetch(reqMismatch, env)).json();
+      assert.equal(mismatchData.decision, "DENY");
+      assert.equal(mismatchData.reason, QR_REASON_CODES.WRONG_COURT);
+
+      const [reqCorrect] = makeQrValidateRequest(
+        { ...VALID_VALIDATE_BODY, clave_reserva: claveReserva, pista: "Pista 2" },
+        { env: AIRTABLE_ENV }
+      );
+      const correctData = await (await worker.fetch(reqCorrect, env)).json();
+      assert.equal(correctData.decision, "ALLOW");
+      assert.equal(correctData.reason, QR_REASON_CODES.VALID);
+
+      assert.equal(calls.filter((c) => c.target === "make").length, 1, "Make solo debe recibir la petición con la pista correcta");
+    }
+  );
+});
+
+test("qr/validate: Airtable no configurado → cae al flujo existente (confía en Make, comportamiento sin cambios)", async () => {
+  await withFakeFetch(
+    async () => ({ ok: true, text: async () => "ACCESO_OK" }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(data.decision, "ALLOW");
+      assert.equal(data.reason, QR_REASON_CODES.VALID);
+    }
+  );
+});
+
+test("qr/validate: Airtable configurado pero sin reserva encontrada → cae al flujo existente (Make decide, p.ej. UNKNOWN_QR)", async () => {
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => ({ ok: true, json: async () => ({ records: [] }) }),
+      makeImpl: async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "DENY", reason: "UNKNOWN_QR" }) }),
+      calls: [],
+    }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY, { env: AIRTABLE_ENV });
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(data.decision, "DENY");
+      assert.equal(data.reason, QR_REASON_CODES.UNKNOWN_QR);
+    }
+  );
+});
+
+test("qr/validate: error de red al consultar Airtable → cae al flujo existente (no bloquea la validación)", async () => {
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => { throw new Error("network down"); },
+      makeImpl: async () => ({ ok: true, text: async () => JSON.stringify({ ok: true, decision: "ALLOW", reason: "ACCESO_OK" }) }),
+      calls: [],
+    }),
+    async () => {
+      const [req, env] = makeQrValidateRequest(VALID_VALIDATE_BODY, { env: AIRTABLE_ENV });
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(data.decision, "ALLOW");
+      assert.equal(data.reason, QR_REASON_CODES.VALID);
     }
   );
 });

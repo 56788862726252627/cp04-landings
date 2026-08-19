@@ -2922,6 +2922,60 @@ async function handleQrGenerate(request, env) {
   );
 }
 
+// Defensa en profundidad para /api/qr/validate: la fuente de verdad de qué
+// pista pertenece a una `clave_reserva` es la reserva persistida en
+// Airtable, nunca la `pista` que envía el escáner/request. Antes de reenviar
+// la validación a Make (que puede marcar el QR como usado en Airtable), el
+// Worker comprueba de forma independiente la pista real de la reserva. Si
+// Airtable no está configurado, o la reserva no aparece, o hay un error de
+// red, se devuelve `ok:false` y el llamador cae de vuelta al flujo existente
+// (confía en Make) — este chequeo es un refuerzo adicional, no un
+// reemplazo del control que ya hace Make/Airtable.
+async function cp04LookupReservaParaQr(env, claveReserva) {
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+    return { ok: false, reason: "not_configured" };
+  }
+
+  const formula = `{clave_reserva} = "${cp04FormulaText(claveReserva)}"`;
+  const airtableUrl =
+    `https://api.airtable.com/v0/${encodeURIComponent(env.AIRTABLE_BASE_ID)}/${encodeURIComponent(env.AIRTABLE_TABLE_ID)}` +
+    `?filterByFormula=${encodeURIComponent(formula)}` +
+    `&maxRecords=1` +
+    `&fields%5B%5D=clave_reserva` +
+    `&fields%5B%5D=estado_reserva` +
+    `&fields%5B%5D=Pista`;
+
+  let airtableRes;
+  try {
+    airtableRes = await fetch(airtableUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+        Accept: "application/json",
+      },
+    });
+  } catch {
+    return { ok: false, reason: "network_error" };
+  }
+
+  const data = await airtableRes.json().catch(() => null);
+
+  if (!airtableRes.ok) {
+    return { ok: false, reason: "airtable_error", status: airtableRes.status };
+  }
+
+  const record = Array.isArray(data?.records) ? data.records[0] : null;
+  if (!record) {
+    return { ok: true, found: false };
+  }
+
+  const fields = record && typeof record.fields === "object" ? record.fields : {};
+  const pistaReal = cp04Scalar(cp04PickField(fields, "fld0UMH1W6VXF55xb", ["Pista", "pista"])).trim();
+  const estadoReserva = cp04Scalar(cp04PickField(fields, "fldXYQaqNXZWY9IO9", ["estado_reserva"])).trim();
+
+  return { ok: true, found: true, pista: pistaReal, estado_reserva: estadoReserva, recordId: record.id };
+}
+
 async function handleQrValidate(request, env) {
   const headers = corsHeaders(request, env);
 
@@ -2960,6 +3014,30 @@ async function handleQrValidate(request, env) {
   }
 
   const scanned_at = new Date().toISOString();
+
+  // Defensa en profundidad (ver cp04LookupReservaParaQr): si la reserva real
+  // en Airtable existe y su pista no coincide con la pista solicitada, se
+  // deniega AQUÍ, antes de llamar a Make. Así el QR nunca llega al escenario
+  // que lo marca como usado — sigue disponible para escanearse en su pista
+  // correcta. Si el lookup no es concluyente (Airtable no configurado, sin
+  // resultado, error de red/HTTP), se sigue el flujo existente y la
+  // decisión queda en manos de Make, igual que antes de este fix.
+  const reservaReal = await cp04LookupReservaParaQr(env, clave_reserva);
+  if (reservaReal.ok && reservaReal.found && reservaReal.pista && reservaReal.pista !== pista) {
+    return jsonResponse(
+      {
+        ok:           true,
+        decision:     "DENY",
+        reason:       QR_REASON_CODES.WRONG_COURT,
+        clave_reserva,
+        pista,
+        scanned_at,
+        makeResponse: null,
+      },
+      200,
+      headers
+    );
+  }
 
   const normalized = {
     accion:         "validar_qr_acceso",
