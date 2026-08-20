@@ -2812,7 +2812,13 @@ function mapMakeQrResult(makeText) {
   return QR_REASON_CODES.INVALID_STATE;
 }
 
-async function handleQrGenerate(request, env) {
+// `auth` es { role, email, ... } cuando CP04_ENFORCE_ROLE_GATES=true (viene
+// del gate ya resuelto en el dispatcher); `null` cuando el gate está
+// desactivado o la petición es OPTIONS. Se usa únicamente para la
+// comprobación de propiedad de PLAYER (ver más abajo) — nunca para decidir
+// si la petición está autenticada, eso ya lo resolvió requireRoles antes de
+// llamar a este handler.
+async function handleQrGenerate(request, env, auth = null) {
   const headers = corsHeaders(request, env);
 
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
@@ -2861,8 +2867,79 @@ async function handleQrGenerate(request, env) {
     return jsonResponse({ ok: false, error: "Validation failed", fields: errors }, 400, headers);
   }
 
+  // Defensa en profundidad — CRÍTICA para este endpoint, no un refuerzo
+  // opcional: a diferencia de /api/qr/validate, el escenario Make 6244975 NO
+  // valida la reserva contra Airtable (verificado en el blueprint real): solo
+  // comprueba event/club_id/record_id "exist" y envía el email. Si el Worker
+  // reenviara ciegamente lo que manda el cliente, cualquier PLAYER
+  // autenticado podría generarse (y recibir por email) un QR de acceso válido
+  // para una `clave_reserva` ajena, con pista/horario inventados. Por eso
+  // aquí SÍ se falla cerrado: sin poder confirmar la reserva real en
+  // Airtable, no se genera ni se envía nada.
+  const reservaReal = await cp04LookupReservaParaQr(env, clave_reserva);
+
+  if (!reservaReal.ok) {
+    return jsonResponse(
+      { ok: false, error: "No se pudo verificar la reserva", code: "RESERVATION_CHECK_FAILED" },
+      503,
+      headers
+    );
+  }
+
+  if (!reservaReal.found) {
+    return jsonResponse(
+      { ok: false, error: "Reserva no encontrada", code: "RESERVATION_NOT_FOUND" },
+      404,
+      headers
+    );
+  }
+
+  if (reservaReal.estado_reserva !== "confirmada") {
+    return jsonResponse(
+      { ok: false, error: "La reserva no está confirmada", code: "RESERVATION_NOT_CONFIRMED" },
+      409,
+      headers
+    );
+  }
+
+  if (reservaReal.pista && reservaReal.pista !== pista) {
+    return jsonResponse(
+      { ok: false, error: "La pista no coincide con la reserva real", code: "MISMATCHED_COURT" },
+      409,
+      headers
+    );
+  }
+
+  // PLAYER solo puede generar el QR de su propia reserva (comparado contra
+  // el email real de Airtable, nunca el que mande el body). STAFF/ADMIN/
+  // SUPPORT pueden generarlo en nombre de un jugador (soporte/recepción),
+  // igual que en el resto de endpoints de gestión.
+  if (
+    auth &&
+    auth.role === "PLAYER" &&
+    reservaReal.email &&
+    String(auth.email || "").toLowerCase() !== reservaReal.email.toLowerCase()
+  ) {
+    return jsonResponse(
+      { ok: false, error: "FORBIDDEN", message: "Solo puedes generar el QR de tu propia reserva." },
+      403,
+      headers
+    );
+  }
+
+  // A partir de aquí, nombre/email/fecha/horario/record_id vienen SIEMPRE de
+  // la reserva real de Airtable, nunca del body — el body ya cumplió su
+  // única función (localizar la reserva e indicar la pista, ya validada
+  // arriba contra la reserva real).
+  const nombreReal     = reservaReal.nombre       || nombre;
+  const emailReal      = reservaReal.email        || email;
+  const fechaReal       = reservaReal.fecha_reserva || fecha;
+  const horaInicioReal  = reservaReal.hora_inicio   || hora_inicio;
+  const horaFinReal     = reservaReal.hora_fin      || hora_fin;
+  const recordIdReal    = reservaReal.recordId      || record_id;
+
   const issuedAt   = new Date().toISOString();
-  const fechaBase  = new Date(`${fecha}T${hora_inicio}:00Z`);
+  const fechaBase  = new Date(`${fechaReal}T${horaInicioReal}:00Z`);
   const validFrom  = new Date(fechaBase.getTime() - QR_WINDOW_BEFORE_MIN * 60 * 1000).toISOString();
   const validUntil = new Date(fechaBase.getTime() + QR_WINDOW_AFTER_MIN * 60 * 1000).toISOString();
 
@@ -2870,13 +2947,13 @@ async function handleQrGenerate(request, env) {
   const makePayload = {
     event:           "reserva_confirmada",
     club_id:         "club-padel-04",
-    record_id,
-    nombre,
-    email,
+    record_id:       recordIdReal,
+    nombre:          nombreReal,
+    email:           emailReal,
     clave_reserva,
-    fecha_reserva:   fecha,
-    hora_inicio,
-    hora_fin,
+    fecha_reserva:   fechaReal,
+    hora_inicio:     horaInicioReal,
+    hora_fin:        horaFinReal,
     pista,
     idempotency_key: `qr_gen_${clave_reserva}`,
     source:          "app_cp04",
@@ -2909,8 +2986,8 @@ async function handleQrGenerate(request, env) {
       ok:            true,
       clave_reserva,
       pista,
-      fecha:         fecha,
-      hora_inicio,
+      fecha:         fechaReal,
+      hora_inicio:   horaInicioReal,
       valid_from:    validFrom,
       valid_until:   validUntil,
       issued_at:     issuedAt,
@@ -2922,15 +2999,17 @@ async function handleQrGenerate(request, env) {
   );
 }
 
-// Defensa en profundidad para /api/qr/validate: la fuente de verdad de qué
-// pista pertenece a una `clave_reserva` es la reserva persistida en
-// Airtable, nunca la `pista` que envía el escáner/request. Antes de reenviar
-// la validación a Make (que puede marcar el QR como usado en Airtable), el
-// Worker comprueba de forma independiente la pista real de la reserva. Si
-// Airtable no está configurado, o la reserva no aparece, o hay un error de
-// red, se devuelve `ok:false` y el llamador cae de vuelta al flujo existente
-// (confía en Make) — este chequeo es un refuerzo adicional, no un
-// reemplazo del control que ya hace Make/Airtable.
+// Lookup compartido por /api/qr/validate y /api/qr/generate: la fuente de
+// verdad de una `clave_reserva` (pista, estado, nombre, email, fecha,
+// horario) es siempre la reserva persistida en Airtable, nunca lo que envíe
+// el cliente/escáner. Devuelve `{ ok:false, reason }` si Airtable no está
+// configurado, la petición falla o responde con error HTTP; `{ ok:true,
+// found:false }` si no hay ninguna reserva con esa clave; o `{ ok:true,
+// found:true, ... }` con los campos reales. Cómo trata cada llamador un
+// `ok:false`/`found:false` es responsabilidad suya (ver comentarios en cada
+// handler): /validate puede caer de vuelta al flujo de Make (segunda capa de
+// verdad), /generate no puede — es la única verificación antes de emitir y
+// enviar el QR.
 async function cp04LookupReservaParaQr(env, claveReserva) {
   if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
     return { ok: false, reason: "not_configured" };
@@ -2943,7 +3022,12 @@ async function cp04LookupReservaParaQr(env, claveReserva) {
     `&maxRecords=1` +
     `&fields%5B%5D=clave_reserva` +
     `&fields%5B%5D=estado_reserva` +
-    `&fields%5B%5D=Pista`;
+    `&fields%5B%5D=Pista` +
+    `&fields%5B%5D=Nombre` +
+    `&fields%5B%5D=Email` +
+    `&fields%5B%5D=fecha_reserva` +
+    `&fields%5B%5D=hora_inicio` +
+    `&fields%5B%5D=hora_fin`;
 
   let airtableRes;
   try {
@@ -2972,8 +3056,24 @@ async function cp04LookupReservaParaQr(env, claveReserva) {
   const fields = record && typeof record.fields === "object" ? record.fields : {};
   const pistaReal = cp04Scalar(cp04PickField(fields, "fld0UMH1W6VXF55xb", ["Pista", "pista"])).trim();
   const estadoReserva = cp04Scalar(cp04PickField(fields, "fldXYQaqNXZWY9IO9", ["estado_reserva"])).trim();
+  const nombreReal = cp04Scalar(cp04PickField(fields, "fldYEv1HQY1uK8h4P", ["Nombre", "nombre"])).trim();
+  const emailReal = cp04Scalar(cp04PickField(fields, "fldBssXQxXnhG8yXt", ["Email", "email"])).trim();
+  const fechaReal = cp04Scalar(cp04PickField(fields, "fldUMLCyV75pxgHwy", ["fecha_reserva"])).trim();
+  const horaInicioReal = cp04Scalar(cp04PickField(fields, "fldfgICHdyy2kgxDr", ["hora_inicio"])).trim();
+  const horaFinReal = cp04Scalar(cp04PickField(fields, "fldoJx5Er5JVwLKCY", ["hora_fin"])).trim();
 
-  return { ok: true, found: true, pista: pistaReal, estado_reserva: estadoReserva, recordId: record.id };
+  return {
+    ok: true,
+    found: true,
+    pista: pistaReal,
+    estado_reserva: estadoReserva,
+    nombre: nombreReal,
+    email: emailReal,
+    fecha_reserva: fechaReal,
+    hora_inicio: horaInicioReal,
+    hora_fin: horaFinReal,
+    recordId: record.id,
+  };
 }
 
 async function handleQrValidate(request, env) {
@@ -3221,11 +3321,13 @@ export default {
         url.pathname === "/api/qr/generate" ||
         url.pathname === "/qr/generate"
       ) {
+        let qrGenerateAuth = null;
         if (request.method !== "OPTIONS" && env.CP04_ENFORCE_ROLE_GATES === "true") {
           const gate = await requireRoles(request, env, QR_GENERATE_ROLES);
           if (!gate.ok) return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          qrGenerateAuth = gate.auth;
         }
-        return await handleQrGenerate(request, env);
+        return await handleQrGenerate(request, env, qrGenerateAuth);
       }
 
       if (

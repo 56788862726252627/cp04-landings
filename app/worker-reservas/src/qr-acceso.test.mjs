@@ -17,6 +17,10 @@ async function withFakeFetch(impl, run) {
   }
 }
 
+// Airtable configurado por defecto: desde el fix de defensa en profundidad,
+// handleQrGenerate necesita consultar la reserva real ANTES de llamar a
+// Make (falla cerrado si no puede). Los tests que quieran ejercitar
+// "Airtable no configurado" lo desactivan explícitamente vía env.
 function makeQrGenerateRequest(body = {}, { headers = {}, env = {} } = {}) {
   return [
     new Request("https://worker.test/api/qr/generate", {
@@ -24,7 +28,7 @@ function makeQrGenerateRequest(body = {}, { headers = {}, env = {} } = {}) {
       headers: { Origin: "http://localhost:5173", "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
     }),
-    { MAKE_QR_ACCESO_WEBHOOK: "https://hook.make.test/qr-generate", ...env },
+    { MAKE_QR_ACCESO_WEBHOOK: "https://hook.make.test/qr-generate", ...AIRTABLE_ENV, ...env },
   ];
 }
 
@@ -49,37 +53,76 @@ const AIRTABLE_ENV = {
 };
 
 // Fetch stub que enruta según la URL: peticiones a api.airtable.com van a
-// `airtableImpl`, cualquier otra (el webhook de Make) va a `makeImpl`.
+// `airtableImpl`, peticiones a /auth/v1/user (verificación Supabase) van a
+// `supabaseImpl`, cualquier otra (el webhook de Make) va a `makeImpl`.
 // `calls` acumula `{ target }` por cada invocación, para poder comprobar
 // cuántas veces (y en qué orden) se llamó a cada sistema.
-function routedFetch({ airtableImpl, makeImpl, calls }) {
+function routedFetch({ airtableImpl, makeImpl, supabaseImpl, calls }) {
   return async (input, init) => {
     const url = typeof input === "string" ? input : input.url;
     if (url.includes("api.airtable.com")) {
       calls.push({ target: "airtable", url, init });
       return airtableImpl(url, init);
     }
+    if (url.includes("/auth/v1/user")) {
+      calls.push({ target: "supabase", url, init });
+      return supabaseImpl(url, init);
+    }
     calls.push({ target: "make", url, init });
     return makeImpl(url, init);
   };
 }
 
-function airtableReservaRecord({ claveReserva, pista, estado = "confirmada" }) {
+function airtableReservaRecord({
+  claveReserva,
+  pista,
+  estado = "confirmada",
+  nombre,
+  email,
+  fecha,
+  horaInicio,
+  horaFin,
+  recordId = "recTestReserva001",
+} = {}) {
   return {
     ok: true,
     json: async () => ({
       records: [
         {
-          id: "recTestReserva001",
+          id: recordId,
           fields: {
             clave_reserva: claveReserva,
             Pista: pista,
             estado_reserva: estado,
+            ...(nombre !== undefined ? { Nombre: nombre } : {}),
+            ...(email !== undefined ? { Email: email } : {}),
+            ...(fecha !== undefined ? { fecha_reserva: fecha } : {}),
+            ...(horaInicio !== undefined ? { hora_inicio: horaInicio } : {}),
+            ...(horaFin !== undefined ? { hora_fin: horaFin } : {}),
           },
         },
       ],
     }),
   };
+}
+
+const AIRTABLE_RECORD_NOT_FOUND = { ok: true, json: async () => ({ records: [] }) };
+
+// Entorno Supabase falso, para ejercitar el gate de rol/propiedad de
+// /api/qr/generate a través de worker.fetch(). Ningún test hace una llamada
+// real: la petición a `${SUPABASE_URL}/auth/v1/user` la intercepta el fetch
+// stub de cada test vía `supabaseImpl`.
+const SUPABASE_ENV = {
+  SUPABASE_URL: "https://fake.supabase.test",
+  SUPABASE_ANON_KEY: "fake-anon-key",
+};
+
+function supabaseUser({ id = "user-qa-1", email, role }) {
+  return { ok: true, json: async () => ({ id, email, app_metadata: { role } }) };
+}
+
+function bearerAuthHeader(token = "fake-jwt-token") {
+  return { Authorization: `Bearer ${token}` };
 }
 
 const VALID_GENERATE_BODY = {
@@ -94,6 +137,25 @@ const VALID_GENERATE_BODY = {
   nombre:        "Jugador QA Test",
   email:         "jugador-qa@test.example",
 };
+
+// Reserva real en Airtable que coincide exactamente con VALID_GENERATE_BODY
+// — el caso feliz. Los tests de defensa en profundidad sobreescriben campos
+// concretos (email de otro dueño, pista distinta, estado no confirmada...)
+// para comprobar que el Worker usa SIEMPRE la reserva real, nunca el body.
+function validGenerateAirtableRecord(overrides = {}) {
+  return airtableReservaRecord({
+    claveReserva: VALID_GENERATE_BODY.clave_reserva,
+    pista:        VALID_GENERATE_BODY.pista,
+    estado:       "confirmada",
+    nombre:       VALID_GENERATE_BODY.nombre,
+    email:        VALID_GENERATE_BODY.email,
+    fecha:        VALID_GENERATE_BODY.fecha,
+    horaInicio:   VALID_GENERATE_BODY.hora_inicio,
+    horaFin:      VALID_GENERATE_BODY.hora_fin,
+    recordId:     "recTestReserva001",
+    ...overrides,
+  });
+}
 
 const VALID_VALIDATE_BODY = {
   clave_reserva: "CP04-TEST-2026-07-20-PISTA2-09",
@@ -250,11 +312,16 @@ test("qr/generate: email faltante → 400", async () => {
 
 test("qr/generate: payload enviado a Make cumple contrato Make escenario 6244975", async () => {
   let capturedBody = null;
+  const calls = [];
   await withFakeFetch(
-    async (url, opts) => {
-      capturedBody = JSON.parse(opts.body);
-      return { ok: true, text: async () => "generacion_ok" };
-    },
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async (url, opts) => {
+        capturedBody = JSON.parse(opts.body);
+        return { ok: true, text: async () => "generacion_ok" };
+      },
+      calls,
+    }),
     async () => {
       const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
       const res = await worker.fetch(req, env);
@@ -263,7 +330,7 @@ test("qr/generate: payload enviado a Make cumple contrato Make escenario 6244975
       // Campos del contrato Make
       assert.equal(capturedBody.event,           "reserva_confirmada");
       assert.equal(capturedBody.club_id,         "club-padel-04");
-      assert.equal(capturedBody.record_id,       VALID_GENERATE_BODY.record_id);
+      assert.equal(capturedBody.record_id,       "recTestReserva001", "record_id debe ser el de Airtable, no el del body");
       assert.equal(capturedBody.nombre,          VALID_GENERATE_BODY.nombre);
       assert.equal(capturedBody.email,           VALID_GENERATE_BODY.email);
       assert.equal(capturedBody.clave_reserva,   VALID_GENERATE_BODY.clave_reserva);
@@ -278,6 +345,8 @@ test("qr/generate: payload enviado a Make cumple contrato Make escenario 6244975
       assert.equal(capturedBody.player_id,       undefined, "player_id no debe ir a Make");
       assert.equal(capturedBody.accion,          undefined, "accion (legado) no debe ir a Make");
       assert.equal(capturedBody.origen,          undefined, "origen (legado) no debe ir a Make");
+      // Airtable se consultó ANTES que Make
+      assert.deepEqual(calls.map((c) => c.target), ["airtable", "make"]);
     }
   );
 });
@@ -285,10 +354,14 @@ test("qr/generate: payload enviado a Make cumple contrato Make escenario 6244975
 test("qr/generate: idempotency_key es determinista (misma clave_reserva = mismo key)", async () => {
   const captured = [];
   await withFakeFetch(
-    async (url, opts) => {
-      captured.push(JSON.parse(opts.body).idempotency_key);
-      return { ok: true, text: async () => "ok" };
-    },
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async (url, opts) => {
+        captured.push(JSON.parse(opts.body).idempotency_key);
+        return { ok: true, text: async () => "ok" };
+      },
+      calls: [],
+    }),
     async () => {
       const [req1, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
       const [req2]      = makeQrGenerateRequest(VALID_GENERATE_BODY);
@@ -303,7 +376,11 @@ test("qr/generate: idempotency_key es determinista (misma clave_reserva = mismo 
 
 test("qr/generate: Make responde ok → 200 con valid_from/valid_until/issued_at", async () => {
   await withFakeFetch(
-    async () => ({ ok: true, text: async () => "generacion_ok" }),
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async () => ({ ok: true, text: async () => "generacion_ok" }),
+      calls: [],
+    }),
     async () => {
       const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
       const res = await worker.fetch(req, env);
@@ -322,7 +399,11 @@ test("qr/generate: Make responde ok → 200 con valid_from/valid_until/issued_at
 
 test("qr/generate: valid_from es antes de hora_inicio (ventana de anticipación)", async () => {
   await withFakeFetch(
-    async () => ({ ok: true, text: async () => "ok" }),
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async () => ({ ok: true, text: async () => "ok" }),
+      calls: [],
+    }),
     async () => {
       const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
       const res = await worker.fetch(req, env);
@@ -337,7 +418,11 @@ test("qr/generate: valid_from es antes de hora_inicio (ventana de anticipación)
 
 test("qr/generate: Make responde error → 502", async () => {
   await withFakeFetch(
-    async () => ({ ok: false, status: 503, text: async () => "error" }),
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async () => ({ ok: false, status: 503, text: async () => "error" }),
+      calls: [],
+    }),
     async () => {
       const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
       const res = await worker.fetch(req, env);
@@ -348,10 +433,32 @@ test("qr/generate: Make responde error → 502", async () => {
   );
 });
 
-test("qr/generate: doble petición con mismo body → ambas 200 (idempotente desde app)", async () => {
-  let callCount = 0;
+test("qr/generate: fallo de red hacia Make → 502 NETWORK_ERROR, nunca cuelga", async () => {
   await withFakeFetch(
-    async () => { callCount++; return { ok: true, text: async () => "ok" }; },
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async () => { throw new Error("network down"); },
+      calls: [],
+    }),
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 502);
+      assert.equal(data.ok, false);
+      assert.equal(data.code, "NETWORK_ERROR");
+    }
+  );
+});
+
+test("qr/generate: doble petición con mismo body → ambas 200 (idempotente desde app)", async () => {
+  let makeCallCount = 0;
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async () => { makeCallCount++; return { ok: true, text: async () => "ok" }; },
+      calls: [],
+    }),
     async () => {
       const [req1, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
       const [req2] = makeQrGenerateRequest(VALID_GENERATE_BODY);
@@ -359,14 +466,18 @@ test("qr/generate: doble petición con mismo body → ambas 200 (idempotente des
       const res2 = await worker.fetch(req2, env);
       assert.equal(res1.status, 200);
       assert.equal(res2.status, 200);
-      assert.equal(callCount, 2); // Make se llama 2x — idempotencia en Make side
+      assert.equal(makeCallCount, 2); // Make se llama 2x — idempotencia en Make side
     }
   );
 });
 
 test("qr/generate: no expone player_id en respuesta (privacidad mínima)", async () => {
   await withFakeFetch(
-    async () => ({ ok: true, text: async () => "ok" }),
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async () => ({ ok: true, text: async () => "ok" }),
+      calls: [],
+    }),
     async () => {
       const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
       const res = await worker.fetch(req, env);
@@ -375,6 +486,251 @@ test("qr/generate: no expone player_id en respuesta (privacidad mínima)", async
       assert.equal(data.player_id, undefined, "player_id no debe estar en la respuesta pública");
     }
   );
+});
+
+// ─── DEFENSA EN PROFUNDIDAD: LA RESERVA REAL DE AIRTABLE MANDA, NUNCA EL BODY ─
+// Causa raíz encontrada en la auditoría de cierre (2026-08-20): el escenario
+// Make 6244975 (verificado por blueprint real) NO valida la reserva contra
+// Airtable — solo comprueba event/club_id/record_id "exist" y envía el email
+// con el QR a `{{1.email}}` tal cual llega. Sin este bloque, cualquier
+// PLAYER autenticado podría generarse (y recibirse por email) un QR de
+// acceso válido para una `clave_reserva` ajena, con pista/horario/email
+// inventados. El Worker ahora es la única fuente de verdad antes de generar
+// y enviar nada.
+
+test("C) clave_reserva inexistente en Airtable → 404, Make nunca se llama", async () => {
+  const calls = [];
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => AIRTABLE_RECORD_NOT_FOUND,
+      makeImpl: async () => { throw new Error("no debería llamar a Make: la reserva no existe"); },
+      calls,
+    }),
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 404);
+      assert.equal(data.ok, false);
+      assert.equal(data.code, "RESERVATION_NOT_FOUND");
+      assert.deepEqual(calls.map((c) => c.target), ["airtable"]);
+    }
+  );
+});
+
+test("D) reserva encontrada pero NO confirmada (pendiente/cancelada) → 409, Make nunca se llama, no genera QR", async () => {
+  for (const estado of ["pendiente", "cancelada", "reprogramada", "no_show"]) {
+    const calls = [];
+    await withFakeFetch(
+      routedFetch({
+        airtableImpl: async () => validGenerateAirtableRecord({ estado }),
+        makeImpl: async () => { throw new Error(`no debería llamar a Make: estado=${estado}`); },
+        calls,
+      }),
+      async () => {
+        const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
+        const res = await worker.fetch(req, env);
+        const data = await res.json();
+        assert.equal(res.status, 409, `estado=${estado}`);
+        assert.equal(data.ok, false, `estado=${estado}`);
+        assert.equal(data.code, "RESERVATION_NOT_CONFIRMED", `estado=${estado}`);
+        assert.deepEqual(calls.map((c) => c.target), ["airtable"], `estado=${estado}`);
+      }
+    );
+  }
+});
+
+test("E) club_id del body es ignorado: siempre se envía club-padel-04 a Make (cross-tenant seguro por diseño)", async () => {
+  let capturedBody = null;
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      makeImpl: async (url, opts) => {
+        capturedBody = JSON.parse(opts.body);
+        return { ok: true, text: async () => "ok" };
+      },
+      calls: [],
+    }),
+    async () => {
+      const body = { ...VALID_GENERATE_BODY, club_id: "otro-club-cualquiera" };
+      const [req, env] = makeQrGenerateRequest(body);
+      const res = await worker.fetch(req, env);
+      assert.equal(res.status, 200);
+      assert.equal(capturedBody.club_id, "club-padel-04");
+    }
+  );
+});
+
+test("F) pista del body incoherente con la reserva real → 409 MISMATCHED_COURT, Make nunca se llama", async () => {
+  const calls = [];
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord({ pista: "Pista 3" }),
+      makeImpl: async () => { throw new Error("no debería llamar a Make: pista incoherente"); },
+      calls,
+    }),
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY); // body pide Pista 2, real es Pista 3
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 409);
+      assert.equal(data.ok, false);
+      assert.equal(data.code, "MISMATCHED_COURT");
+      assert.deepEqual(calls.map((c) => c.target), ["airtable"]);
+    }
+  );
+});
+
+test("K) el email de destino SIEMPRE es el de la reserva real, nunca el que mande el cliente (anti-secuestro de QR ajeno)", async () => {
+  let capturedBody = null;
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord({
+        email: "dueno-real-de-la-reserva@test.example",
+        nombre: "Dueño Real",
+      }),
+      makeImpl: async (url, opts) => {
+        capturedBody = JSON.parse(opts.body);
+        return { ok: true, text: async () => "ok" };
+      },
+      calls: [],
+    }),
+    async () => {
+      const body = { ...VALID_GENERATE_BODY, email: "atacante@evil.example", nombre: "Atacante" };
+      const [req, env] = makeQrGenerateRequest(body);
+      const res = await worker.fetch(req, env);
+      assert.equal(res.status, 200);
+      assert.equal(capturedBody.email, "dueno-real-de-la-reserva@test.example");
+      assert.equal(capturedBody.nombre, "Dueño Real");
+      assert.notEqual(capturedBody.email, "atacante@evil.example");
+    }
+  );
+});
+
+test("Airtable no configurado → 503 RESERVATION_CHECK_FAILED, falla cerrado (a diferencia de qr/validate)", async () => {
+  await withFakeFetch(
+    async () => { throw new Error("no debería llamar a fetch: sin Airtable no se puede verificar la reserva"); },
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY, {
+        env: { AIRTABLE_TOKEN: undefined, AIRTABLE_BASE_ID: undefined, AIRTABLE_TABLE_ID: undefined },
+      });
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 503);
+      assert.equal(data.ok, false);
+      assert.equal(data.code, "RESERVATION_CHECK_FAILED");
+    }
+  );
+});
+
+test("error de red al consultar Airtable → 503 RESERVATION_CHECK_FAILED, Make nunca se llama", async () => {
+  const calls = [];
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => { throw new Error("network down"); },
+      makeImpl: async () => { throw new Error("no debería llamar a Make: Airtable no verificó la reserva"); },
+      calls,
+    }),
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY);
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 503);
+      assert.equal(data.code, "RESERVATION_CHECK_FAILED");
+      assert.deepEqual(calls.map((c) => c.target), ["airtable"]);
+    }
+  );
+});
+
+// ─── ROL / PROPIEDAD (PLAYER solo su propia reserva; STAFF+ sin restricción) ──
+
+test("H1) con CP04_ENFORCE_ROLE_GATES=true y sin token → 401 antes de llegar al handler (Make nunca se llama)", async () => {
+  await withFakeFetch(
+    async () => { throw new Error("no debería llamarse a fetch: el gate de rol debe bloquear antes"); },
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY, {
+        env: { CP04_ENFORCE_ROLE_GATES: "true" },
+      });
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 401);
+      assert.equal(data.ok, false);
+    }
+  );
+});
+
+test("H2) PLAYER autenticado con el email de la reserva real → 200 (genera su propio QR)", async () => {
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(), // email real = VALID_GENERATE_BODY.email
+      supabaseImpl: async () => supabaseUser({ email: VALID_GENERATE_BODY.email, role: "PLAYER" }),
+      makeImpl: async () => ({ ok: true, text: async () => "ok" }),
+      calls: [],
+    }),
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY, {
+        headers: bearerAuthHeader(),
+        env: { ...SUPABASE_ENV, CP04_ENFORCE_ROLE_GATES: "true" },
+      });
+      const res = await worker.fetch(req, env);
+      assert.equal(res.status, 200);
+    }
+  );
+});
+
+test("H3) PLAYER autenticado con OTRO email → 403 FORBIDDEN, Make nunca se llama (no puede robar el QR de otro jugador)", async () => {
+  const calls = [];
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(), // email real = VALID_GENERATE_BODY.email
+      supabaseImpl: async () => supabaseUser({ email: "otro-jugador@test.example", role: "PLAYER" }),
+      makeImpl: async () => { throw new Error("no debería llamar a Make: PLAYER intenta robar el QR de otro"); },
+      calls,
+    }),
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY, {
+        headers: bearerAuthHeader(),
+        env: { ...SUPABASE_ENV, CP04_ENFORCE_ROLE_GATES: "true" },
+      });
+      const res = await worker.fetch(req, env);
+      const data = await res.json();
+      assert.equal(res.status, 403);
+      assert.equal(data.ok, false);
+      assert.equal(data.error, "FORBIDDEN");
+      assert.deepEqual(calls.map((c) => c.target), ["supabase", "airtable"]);
+    }
+  );
+});
+
+test("H4) STAFF autenticado puede generar el QR de un jugador aunque el email no coincida (soporte/recepción)", async () => {
+  await withFakeFetch(
+    routedFetch({
+      airtableImpl: async () => validGenerateAirtableRecord(),
+      supabaseImpl: async () => supabaseUser({ email: "recepcion@club-padel-04.example", role: "STAFF" }),
+      makeImpl: async () => ({ ok: true, text: async () => "ok" }),
+      calls: [],
+    }),
+    async () => {
+      const [req, env] = makeQrGenerateRequest(VALID_GENERATE_BODY, {
+        headers: bearerAuthHeader(),
+        env: { ...SUPABASE_ENV, CP04_ENFORCE_ROLE_GATES: "true" },
+      });
+      const res = await worker.fetch(req, env);
+      assert.equal(res.status, 200);
+    }
+  );
+});
+
+test("OPTIONS siempre responde 204, incluso con el gate de rol activo", async () => {
+  const request = new Request("https://worker.test/api/qr/generate", {
+    method: "OPTIONS",
+    headers: { Origin: "http://localhost:5173" },
+  });
+  const res = await worker.fetch(request, {
+    MAKE_QR_ACCESO_WEBHOOK: "https://hook.test/qr",
+    CP04_ENFORCE_ROLE_GATES: "true",
+  });
+  assert.equal(res.status, 204);
 });
 
 // ─── VALIDACIÓN / CONTROL QR ─────────────────────────────────────────────────
