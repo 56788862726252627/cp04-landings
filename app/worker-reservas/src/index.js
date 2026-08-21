@@ -2073,7 +2073,148 @@ async function handleCierreTemporalPista(request, env) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LISTA DE ESPERA · PISTA/RESERVA (flujo #8, Make 5791113 "📋 Gestión Lista de
+// Espera" + escenario nuevo "📋➕ Lista de Espera Pista · Apuntarse/Salir")
+//
+// Dominio distinto de la lista de espera de MEMBRESÍA que ya gestiona
+// "❌ Baja de Jugador + Promoción" (activa, sin tocar su comportamiento). Ambas
+// comparten la tabla Airtable LISTA_ESPERA; se distinguen por el campo
+// `tipo_espera` ("MEMBRESIA" vacío/legado vs "PISTA" aquí). Un jugador se
+// apunta a la espera de un slot de pista concreto (pista+fecha+hora_inicio+
+// hora_fin); el escenario 5791113 avisa por email cuando ese slot se libera,
+// con ventana de expiración y reoferta al siguiente si no reserva a tiempo.
+// ─────────────────────────────────────────────────────────────────────────────
 
+const LISTA_ESPERA_ACCIONES = ["apuntarse", "salir"];
+
+async function handleListaEspera(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (request.method !== "POST") {
+    return jsonResponse(
+      { ok: false, error: "Method not allowed" },
+      405,
+      { ...headers, Allow: "POST, OPTIONS" }
+    );
+  }
+
+  if (!env.MAKE_LISTA_ESPERA_PISTA_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "Lista de espera webhook not configured" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400, headers);
+  }
+
+  const clean = (value) => (typeof value === "string" ? value.trim() : value);
+  const accion = clean(payload?.accion);
+
+  if (!LISTA_ESPERA_ACCIONES.includes(accion)) {
+    return jsonResponse(
+      { ok: false, error: "Validation failed", fields: { accion: "Acción inválida. Usa 'apuntarse' o 'salir'." } },
+      400,
+      headers
+    );
+  }
+
+  const normalized = {
+    accion,
+    email: clean(payload?.email || "").toLowerCase(),
+    pista: clean(payload?.pista),
+    fecha: clean(payload?.fecha),
+    hora_inicio: clean(payload?.hora_inicio),
+    hora_fin: clean(payload?.hora_fin),
+    origen: "APP_CLUB_PADEL_04",
+  };
+
+  const errors = {};
+
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized.email || "");
+  if (!emailValido) errors.email = "Email inválido.";
+
+  if (!COURTS.includes(normalized.pista)) {
+    errors.pista = `Pista inválida. Valores aceptados: ${COURTS.join(", ")}`;
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.fecha || "")) {
+    errors.fecha = "Fecha inválida (YYYY-MM-DD).";
+  }
+
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(normalized.hora_inicio || "")) {
+    errors.hora_inicio = "Hora de inicio inválida (HH:MM).";
+  }
+
+  if (accion === "apuntarse") {
+    if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(normalized.hora_fin || "")) {
+      errors.hora_fin = "Hora de fin inválida (HH:MM).";
+    }
+
+    normalized.nombre = clean(payload?.nombre);
+    normalized.apellidos = clean(payload?.apellidos || "");
+    normalized.telefono = clean(payload?.telefono || "");
+    normalized.nivel = clean(payload?.nivel || "");
+
+    if (!normalized.nombre || normalized.nombre.length < 2) {
+      errors.nombre = "Nombre requerido.";
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return jsonResponse({ ok: false, error: "Validation failed", fields: errors }, 400, headers);
+  }
+
+  let makeResponse;
+  try {
+    makeResponse = await fetch(env.MAKE_LISTA_ESPERA_PISTA_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(normalized),
+    });
+  } catch {
+    return jsonResponse({ ok: false, error: "Make request failed", code: "NETWORK_ERROR" }, 502, headers);
+  }
+
+  const responseText = await makeResponse.text().catch(() => "");
+
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      { ok: false, error: "Make request failed", status: makeResponse.status },
+      502,
+      headers
+    );
+  }
+
+  let parsed = null;
+  try {
+    parsed = responseText ? JSON.parse(responseText) : null;
+  } catch {
+    parsed = null;
+  }
+
+  // El Worker nunca inventa el resultado (duplicate/orden_espera): si Make no
+  // devuelve un cuerpo JSON interpretable, se informa tal cual sin fingir éxito.
+  if (!parsed || typeof parsed !== "object") {
+    return jsonResponse(
+      { ok: false, error: "Respuesta de Make no interpretable", makeResponse: responseText || null },
+      502,
+      headers
+    );
+  }
+
+  return jsonResponse(parsed, 200, headers);
+}
 
 
 
@@ -3188,6 +3329,464 @@ async function handleQrValidate(request, env) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ⚖️ SOLICITUD GDPR ACCESO U OLVIDO DE DATOS (flujo #9, Make 6323457 — un
+// único escenario gestiona ACCESO y OLVIDO, igual que handleListaEspera
+// distingue "apuntarse"/"salir" con un campo `accion`: nunca se crea un
+// segundo escenario para esto).
+//
+// Estado real de las fuentes de datos hoy (ver src/data/makeArchitectureMatrix.js,
+// id 6323457 = EXTERNALLY_BLOCKED): el Worker solo tiene configurada
+// AIRTABLE_TABLE_ID (Reservas Padel 04). No existe ningún AIRTABLE_*_TABLE_ID
+// para JUGADORES, LISTA_ESPERA, HISTORIAL_BAJAS, log_reservas,
+// Push_Subscriptions, Inscripciones, Torneos ni Partidos, ni tampoco
+// MAKE_GDPR_WEBHOOK como secret (ver wrangler.toml). Estos handlers NUNCA
+// fingen una tabla vacía cuando en realidad no pueden consultarla: cada
+// categoría no verificable viaja como `disponible:false, motivo:"NO_CONFIGURADO"`
+// en vez de inventar un resultado.
+//
+// BAJA DE JUGADOR (handleBajaJugador, más arriba) y GDPR_OLVIDO son
+// operaciones deliberadamente distintas: una baja es una decisión de
+// membresía; esto es únicamente eliminación/anonimización de datos
+// personales. Ninguno de estos handlers llama a handleBajaJugador ni
+// reutiliza su semántica de "promocionar_siguiente_si_aplica".
+const GDPR_ROLES_ADMINISTRATIVOS = ["ADMIN", "SUPPORT"];
+
+function cp04GdprEmailValido(email) {
+  return Boolean(email) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function cp04GdprCategoriaNoConfigurada(motivo) {
+  return { disponible: false, motivo, registros: [] };
+}
+
+// Única fuente de reservas real disponible para GDPR: la misma tabla y el
+// mismo criterio de escape (cp04FormulaText) que cp04ListReservations y
+// cp04LookupReservaParaQr más arriba — sin reimplementar la paginación
+// completa porque el volumen esperado de reservas por socio es pequeño
+// (pageSize=100 basta; si algún día no bastara, sería el mismo problema que
+// ya tiene cp04ListReservations, no uno nuevo de GDPR).
+async function cp04GdprBuscarReservasPorEmail(env, email, { soloFuturas = false } = {}) {
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+    return { configured: false, ok: false, records: [] };
+  }
+
+  const condiciones = [`LOWER({Email})="${cp04FormulaText(email)}"`];
+  if (soloFuturas) {
+    condiciones.push(`{fecha_reserva} >= "${cp04FormulaText(todayISO())}"`);
+    condiciones.push(`LOWER({estado_reserva})!="cancelada"`);
+  }
+  const filterFormula = condiciones.length === 1 ? condiciones[0] : `AND(${condiciones.join(",")})`;
+
+  const airtableUrl =
+    `https://api.airtable.com/v0/${encodeURIComponent(env.AIRTABLE_BASE_ID)}/${encodeURIComponent(env.AIRTABLE_TABLE_ID)}` +
+    `?filterByFormula=${encodeURIComponent(filterFormula)}` +
+    `&pageSize=100` +
+    `&fields%5B%5D=clave_reserva` +
+    `&fields%5B%5D=Pista` +
+    `&fields%5B%5D=estado_reserva` +
+    `&fields%5B%5D=fecha_reserva` +
+    `&fields%5B%5D=hora_inicio` +
+    `&fields%5B%5D=hora_fin`;
+
+  let airtableResponse;
+  try {
+    airtableResponse = await fetch(airtableUrl, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}`, Accept: "application/json" },
+    });
+  } catch {
+    return { configured: true, ok: false, records: [] };
+  }
+
+  const rawText = await airtableResponse.text().catch(() => "");
+  let airtableData;
+  try {
+    airtableData = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    return { configured: true, ok: false, records: [] };
+  }
+
+  if (!airtableResponse.ok) {
+    return { configured: true, ok: false, status: airtableResponse.status, records: [] };
+  }
+
+  const records = Array.isArray(airtableData.records)
+    ? airtableData.records.map((record) => ({
+        clave_reserva: record.fields?.clave_reserva ?? null,
+        pista: record.fields?.Pista ?? null,
+        estado_reserva: record.fields?.estado_reserva ?? null,
+        fecha_reserva: record.fields?.fecha_reserva ?? null,
+        hora_inicio: record.fields?.hora_inicio ?? null,
+        hora_fin: record.fields?.hora_fin ?? null,
+      }))
+    : [];
+
+  return { configured: true, ok: true, records };
+}
+
+// Notificación best-effort al escenario Make 6323457 (auditoría/tramitación).
+// Nunca bloquea ni invalida la respuesta al usuario si falla: el resultado
+// se refleja honestamente en `auditoria`, nunca se finge un registro que no
+// ocurrió.
+async function cp04GdprNotificarMake(env, evento) {
+  if (!env.MAKE_GDPR_WEBHOOK) {
+    return { registrado_en_make: false, detalle: "MAKE_GDPR_WEBHOOK no configurado — acción manual pendiente (ver runbook 07Q)." };
+  }
+  try {
+    const makeResponse = await fetch(env.MAKE_GDPR_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(evento),
+    });
+    return {
+      registrado_en_make: makeResponse.ok,
+      detalle: makeResponse.ok ? "Registrado en Make (6323457)." : `Make respondió ${makeResponse.status}.`,
+    };
+  } catch {
+    return { registrado_en_make: false, detalle: "Error de red al notificar a Make." };
+  }
+}
+
+// ── DERECHO DE ACCESO — POST /api/gdpr/acceso ──
+// requireAuth es SIEMPRE obligatorio (no depende de CP04_ENFORCE_ROLE_GATES):
+// expone PII, así que nunca puede quedar accesible sin sesión real verificada
+// por Supabase — mismo criterio que GET /api/reservas más abajo en el
+// dispatcher. Un PLAYER/STAFF solo puede consultar su propio email
+// autenticado (el que mande en el body se ignora); solo ADMIN/SUPPORT puede
+// pedir los datos de otro socio, para tramitar una solicitud recibida por
+// otro canal.
+async function handleGdprAcceso(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method !== "POST") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, { ...headers, Allow: "POST, OPTIONS" });
+  }
+
+  const gate = await requireAuth(request, env);
+  if (!gate.ok) return jsonResponse(gate.body, gate.status, headers);
+  const auth = gate.auth;
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    payload = {};
+  }
+
+  const esAdministrativo = authorizeRole(auth.role, GDPR_ROLES_ADMINISTRATIVOS);
+  const emailSolicitado = typeof payload?.email === "string" ? payload.email.trim().toLowerCase() : "";
+  const targetEmail = esAdministrativo && cp04GdprEmailValido(emailSolicitado)
+    ? emailSolicitado
+    : String(auth.email || "").toLowerCase();
+
+  if (!cp04GdprEmailValido(targetEmail)) {
+    return jsonResponse({ ok: false, error: "Validation failed", fields: { email: "Email inválido." } }, 400, headers);
+  }
+
+  const esConsultaPropia = targetEmail === String(auth.email || "").toLowerCase();
+  const reservas = await cp04GdprBuscarReservasPorEmail(env, targetEmail);
+
+  const datos = {
+    // Identidad solo se puede construir de verdad para la propia sesión
+    // autenticada (userId/role verificados por Supabase). Para un email de
+    // un tercero pedido por ADMIN/SUPPORT no existe ninguna fuente que
+    // resuelva userId a partir de solo el email sin una tabla JUGADORES
+    // configurada — se marca honestamente en vez de inventarlo.
+    identidad: esConsultaPropia
+      ? { disponible: true, registros: [{ user_id: auth.userId, email: auth.email, rol: auth.role, club_id: auth.clubId, organization_id: auth.organizationId }] }
+      : cp04GdprCategoriaNoConfigurada("SIN_FUENTE_PARA_RESOLVER_TERCERO"),
+    // El perfil deportivo/bio/privacidad de Perfil() vive únicamente en
+    // localStorage del navegador (ver Perfil() en App.jsx) — el Worker
+    // nunca ha tenido acceso a esos datos, así que no puede incluirlos.
+    perfil: cp04GdprCategoriaNoConfigurada("ALMACENADO_SOLO_EN_CLIENTE"),
+    reservas: reservas.configured
+      ? (reservas.ok
+          ? { disponible: true, registros: reservas.records }
+          : { disponible: false, motivo: "AIRTABLE_ERROR", registros: [] })
+      : cp04GdprCategoriaNoConfigurada("NO_CONFIGURADO"),
+    lista_espera: cp04GdprCategoriaNoConfigurada("NO_CONFIGURADO"),
+    competiciones: cp04GdprCategoriaNoConfigurada("NO_CONFIGURADO"),
+    logs_trazabilidad: cp04GdprCategoriaNoConfigurada("NO_CONFIGURADO"),
+  };
+
+  const idSolicitud = crypto.randomUUID();
+  const auditoria = await cp04GdprNotificarMake(env, {
+    tipo: "GDPR_ACCESO",
+    id_solicitud: idSolicitud,
+    estado: "EJECUTADO",
+    email_titular: targetEmail,
+    actor: { email: auth.email, role: auth.role },
+    fecha_solicitud: new Date().toISOString(),
+    origen: "APP_CLUB_PADEL_04",
+  });
+
+  return jsonResponse(
+    {
+      ok: true,
+      tipo: "GDPR_ACCESO",
+      titular: { email: targetEmail },
+      solicitante: { email: auth.email, role: auth.role },
+      generado_en: new Date().toISOString(),
+      datos,
+      auditoria,
+    },
+    200,
+    headers
+  );
+}
+
+// ── DERECHO DE OLVIDO — POST /api/gdpr/olvido ──
+// Flujo de dos fases sobre el mismo endpoint (igual que handleListaEspera
+// distingue acciones con un campo, aquí es el flag `ejecutar`):
+//   1) SOLICITUD (ejecutar ausente/false): cualquier titular autenticado
+//      registra su propia solicitud. Nunca borra ni cancela nada — solo
+//      analiza dependencias reales (reservas futuras) y las no verificables
+//      (lista de espera, sin tabla configurada) y notifica a Make.
+//   2) EJECUCIÓN (ejecutar:true, solo ADMIN/SUPPORT): representa la
+//      "revisión administrativa" ya hecha fuera del Worker (en Make/Airtable,
+//      que sí puede ver LISTA_ESPERA). Reutiliza handleReservas
+//      (cancelar_reserva) y handleListaEspera (salir) tal cual existen, sin
+//      tocar ni una línea de ninguno de los dos.
+const GDPR_OLVIDO_IDEMPOTENCY_PREFIX_SOLICITUD = "gdpr_olvido_solicitud";
+const GDPR_OLVIDO_IDEMPOTENCY_PREFIX_EJECUCION = "gdpr_olvido_ejecucion";
+
+async function handleGdprOlvido(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method !== "POST") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, { ...headers, Allow: "POST, OPTIONS" });
+  }
+
+  const gate = await requireAuth(request, env);
+  if (!gate.ok) return jsonResponse(gate.body, gate.status, headers);
+  const auth = gate.auth;
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400, headers);
+  }
+
+  const esAdministrativo = authorizeRole(auth.role, GDPR_ROLES_ADMINISTRATIVOS);
+  const emailSolicitado = typeof payload?.email === "string" ? payload.email.trim().toLowerCase() : "";
+  const targetEmail = esAdministrativo && cp04GdprEmailValido(emailSolicitado)
+    ? emailSolicitado
+    : String(auth.email || "").toLowerCase();
+
+  if (!cp04GdprEmailValido(targetEmail)) {
+    return jsonResponse({ ok: false, error: "Validation failed", fields: { email: "Email inválido." } }, 400, headers);
+  }
+
+  // Confirmación fuerte obligatoria en las dos fases: nunca se procesa un
+  // olvido "por accidente" (doble clic sin confirmar, integración externa
+  // mal configurada). La UI (Perfil()/BackupsSeguridad()) siempre debe
+  // pedir una confirmación explícita antes de llegar aquí.
+  if (payload?.confirmar !== true) {
+    return jsonResponse(
+      { ok: false, error: "CONFIRMATION_REQUIRED", message: "Falta confirmación explícita de la solicitud de olvido." },
+      400,
+      headers
+    );
+  }
+
+  const ejecutar = payload?.ejecutar === true;
+
+  if (ejecutar && !esAdministrativo) {
+    return jsonResponse(
+      { ok: false, error: "FORBIDDEN", message: "Solo ADMIN/SUPPORT puede ejecutar una solicitud de olvido ya revisada." },
+      403,
+      headers
+    );
+  }
+
+  // Idempotencia (Fase 6): reutiliza el mismo almacén en memoria que ya usa
+  // handleReservas (cp04IsIdempotentDuplicate/cp04MarkIdempotentSuccess),
+  // con claves propias de GDPR — no se reimplementa el mecanismo, solo se
+  // deriva una clave distinta por fase (solicitud vs ejecución) y por
+  // titular. A diferencia de crear_reserva (que solo marca éxito en el
+  // camino feliz para no bloquear un reintento legítimo tras un error), en
+  // EJECUCIÓN se marca siempre que se intenta, incluso en PARCIAL/ERROR:
+  // el riesgo de volver a cancelar/anonimizar algo ya tocado pesa más que
+  // la comodidad de un reintento automático — un reintento real requiere
+  // una nueva decisión humana, no una repetición ciega.
+  const idemKey = `${ejecutar ? GDPR_OLVIDO_IDEMPOTENCY_PREFIX_EJECUCION : GDPR_OLVIDO_IDEMPOTENCY_PREFIX_SOLICITUD}|${targetEmail}`;
+  if (cp04IsIdempotentDuplicate(idemKey)) {
+    return jsonResponse(
+      {
+        ok: false,
+        code: "IDEMPOTENT_DUPLICATE",
+        duplicated: true,
+        message: "Ya hay una solicitud de olvido idéntica en curso para este socio. Espera unos minutos antes de repetirla.",
+      },
+      409,
+      headers
+    );
+  }
+
+  // Fase 3 — análisis de dependencias. Reservas futuras SÍ se pueden
+  // verificar de verdad. Lista de espera de pista NO: no existe ningún
+  // AIRTABLE_LISTA_ESPERA_TABLE_ID configurado, así que el Worker no puede
+  // leerla — se marca `verificable:false`, nunca "vacía".
+  const reservasFuturas = await cp04GdprBuscarReservasPorEmail(env, targetEmail, { soloFuturas: true });
+
+  const dependencias = {
+    reservas_futuras: reservasFuturas.configured
+      ? (reservasFuturas.ok
+          ? { verificable: true, cantidad: reservasFuturas.records.length, registros: reservasFuturas.records }
+          : { verificable: false, motivo: "AIRTABLE_ERROR" })
+      : { verificable: false, motivo: "NO_CONFIGURADO" },
+    lista_espera_activa: { verificable: false, motivo: "NO_CONFIGURADO" },
+  };
+
+  if (!ejecutar) {
+    const hayDependenciasPendientes =
+      !dependencias.reservas_futuras.verificable ||
+      !dependencias.lista_espera_activa.verificable ||
+      dependencias.reservas_futuras.cantidad > 0;
+
+    // Fase 4: nunca se anonimiza/borra nada en esta rama. Al no poder
+    // verificar lista de espera, ninguna solicitud puede cerrarse como
+    // "SOLICITADO" sin más — siempre requiere revisión humana con el
+    // estado actual de configuración.
+    const estado = hayDependenciasPendientes ? "REQUIERE_REVISION_HUMANA" : "SOLICITADO";
+
+    const idSolicitud = crypto.randomUUID();
+    const auditoria = await cp04GdprNotificarMake(env, {
+      tipo: "GDPR_OLVIDO",
+      id_solicitud: idSolicitud,
+      estado,
+      email_titular: targetEmail,
+      actor: { email: auth.email, role: auth.role },
+      dependencias,
+      motivo: typeof payload?.motivo === "string" ? payload.motivo.trim() : "",
+      fecha_solicitud: new Date().toISOString(),
+      origen: "APP_CLUB_PADEL_04",
+    });
+
+    cp04MarkIdempotentSuccess(idemKey);
+
+    return jsonResponse(
+      {
+        ok: true,
+        tipo: "GDPR_OLVIDO",
+        estado,
+        titular: { email: targetEmail },
+        solicitante: { email: auth.email, role: auth.role },
+        dependencias,
+        anonimizacion_historica: "REQUIERE_REVISION_HUMANA",
+        auditoria,
+      },
+      200,
+      headers
+    );
+  }
+
+  // ── Ejecución (ADMIN/SUPPORT, tras revisión externa) ──
+  // Reservas futuras detectadas de verdad arriba: se cancelan reutilizando
+  // handleReservas tal cual (misma función, mismo camino que usa STAFF a
+  // diario), reenviando el Authorization del admin que ejecuta — lo exige
+  // el propio gate STAFF/ADMIN/SUPPORT de cancelar_reserva cuando
+  // CP04_ENFORCE_ROLE_GATES=true.
+  const accionesReservas = [];
+  for (const reserva of reservasFuturas.ok ? reservasFuturas.records : []) {
+    if (!reserva.clave_reserva) continue;
+    const cancelRequest = new Request(new URL("/api/reservas", request.url).toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: request.headers.get("Origin") || "",
+        Authorization: request.headers.get("Authorization") || "",
+      },
+      body: JSON.stringify({ accion: "cancelar_reserva", clave_reserva: reserva.clave_reserva }),
+    });
+    try {
+      const cancelResponse = await handleReservas(cancelRequest, env);
+      const cancelBody = await cancelResponse.json().catch(() => null);
+      accionesReservas.push({
+        clave_reserva: reserva.clave_reserva,
+        ok: cancelResponse.status === 200 && cancelBody?.ok === true,
+        make_configurado: cancelBody?.make?.configured ?? null,
+        status: cancelResponse.status,
+      });
+    } catch {
+      accionesReservas.push({ clave_reserva: reserva.clave_reserva, ok: false, status: null });
+    }
+  }
+
+  // Salir de lista de espera: el Worker no puede descubrir las posiciones
+  // por su cuenta (sin tabla configurada), así que el admin las pasa
+  // explícitamente tras revisarlas fuera del Worker. Se reutiliza
+  // handleListaEspera("salir") sin modificarlo ni una línea.
+  const listaEsperaSlots = Array.isArray(payload?.lista_espera_slots) ? payload.lista_espera_slots : [];
+  const accionesListaEspera = [];
+  for (const slot of listaEsperaSlots) {
+    const salirRequest = new Request(new URL("/api/lista-espera", request.url).toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: request.headers.get("Origin") || "",
+      },
+      body: JSON.stringify({
+        accion: "salir",
+        email: targetEmail,
+        pista: slot?.pista,
+        fecha: slot?.fecha,
+        hora_inicio: slot?.hora_inicio,
+        hora_fin: slot?.hora_fin,
+      }),
+    });
+    try {
+      const salirResponse = await handleListaEspera(salirRequest, env);
+      const salirBody = await salirResponse.json().catch(() => null);
+      accionesListaEspera.push({ slot, ok: salirResponse.status === 200 && salirBody?.ok !== false, status: salirResponse.status });
+    } catch {
+      accionesListaEspera.push({ slot, ok: false, status: null });
+    }
+  }
+
+  const todasLasAcciones = [...accionesReservas, ...accionesListaEspera];
+  const estadoFinal = todasLasAcciones.length === 0
+    ? "EJECUTADO"
+    : todasLasAcciones.every((a) => a.ok)
+      ? "EJECUTADO"
+      : todasLasAcciones.some((a) => a.ok)
+        ? "PARCIAL"
+        : "ERROR";
+
+  const idSolicitud = crypto.randomUUID();
+  const auditoria = await cp04GdprNotificarMake(env, {
+    tipo: "GDPR_OLVIDO",
+    id_solicitud: idSolicitud,
+    estado: estadoFinal,
+    email_titular: targetEmail,
+    actor_resolutor: { email: auth.email, role: auth.role },
+    acciones: { reservas: accionesReservas, lista_espera: accionesListaEspera },
+    fecha_resolucion: new Date().toISOString(),
+    origen: "APP_CLUB_PADEL_04",
+  });
+
+  cp04MarkIdempotentSuccess(idemKey);
+
+  return jsonResponse(
+    {
+      ok: true,
+      tipo: "GDPR_OLVIDO",
+      estado: estadoFinal,
+      titular: { email: targetEmail },
+      solicitante: { email: auth.email, role: auth.role },
+      acciones: { reservas: accionesReservas, lista_espera: accionesListaEspera },
+      anonimizacion_historica: "REQUIERE_REVISION_HUMANA",
+      auditoria,
+    },
+    200,
+    headers
+  );
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -3253,6 +3852,16 @@ export default {
         }
 
         return await handleCierreTemporalPista(request, env);
+      }
+
+      if (
+        url.pathname === "/api/lista-espera" ||
+        url.pathname === "/lista-espera"
+      ) {
+        // Apuntarse/salir de la lista de espera de pista es una acción de
+        // autoservicio del jugador, igual de abierta que crear_reserva (sin
+        // gate de rol): cualquiera puede apuntarse a esperar un slot.
+        return await handleListaEspera(request, env);
       }
 
       if (url.pathname.startsWith("/api/auth/")) {
@@ -3339,6 +3948,24 @@ export default {
           if (!gate.ok) return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
         }
         return await handleQrValidate(request, env);
+      }
+
+      // ⚖️ Solicitud GDPR Acceso u Olvido de Datos (flujo #9, Make 6323457).
+      // Sin gate condicional a CP04_ENFORCE_ROLE_GATES a propósito: ambos
+      // handlers exigen requireAuth ellos mismos, siempre, por exponer PII
+      // (mismo criterio que GET /api/reservas más arriba).
+      if (
+        url.pathname === "/api/gdpr/acceso" ||
+        url.pathname === "/gdpr/acceso"
+      ) {
+        return await handleGdprAcceso(request, env);
+      }
+
+      if (
+        url.pathname === "/api/gdpr/olvido" ||
+        url.pathname === "/gdpr/olvido"
+      ) {
+        return await handleGdprOlvido(request, env);
       }
 
       return jsonResponse(
