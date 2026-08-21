@@ -375,6 +375,42 @@ export function getAccessToken() {
   return state.accessToken;
 }
 
+// Flujo de recovery: usa el token capturado del hash de URL (type=recovery)
+// como Bearer directamente. El token NUNCA toca state ni se persiste:
+// se usa una sola vez y el llamador es responsable de descartarlo.
+export async function updatePasswordWithToken(newPassword, recoveryToken) {
+  if (!recoveryToken) {
+    return { ok: false, error: "MISSING_RECOVERY_TOKEN", message: "No hay token de recuperación activo." };
+  }
+
+  if (!newPassword) {
+    return { ok: false, error: "MISSING_PASSWORD", message: "La nueva contraseña no puede estar vacía." };
+  }
+
+  let response;
+  try {
+    response = await fetch(AUTH_ENDPOINTS.changePassword, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${recoveryToken}`,
+      },
+      body: JSON.stringify({ newPassword }),
+    });
+  } catch {
+    return { ok: false, error: "UPSTREAM_ERROR", message: "No se pudo contactar con el servidor." };
+  }
+
+  const data = await readJsonSafe(response);
+
+  return {
+    ok: Boolean(data?.ok),
+    authReady: data?.auth_ready !== false,
+    error: data?.error,
+    message: data?.message || "",
+  };
+}
+
 // authFetch: wrapper mínimo sobre fetch() que adjunta
 // `Authorization: Bearer <access_token>` cuando existe sesión, y no hace
 // nada más. No decide qué endpoints son públicos ni protegidos (eso lo

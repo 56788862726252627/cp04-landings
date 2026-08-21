@@ -5037,6 +5037,109 @@ function DashboardKpiNps() {
 // Drive" (6216523), "⚖️ Solicitud GDPR Acceso u Olvido de Datos"
 // (6323457) y "🛡️ Alerta Seguridad Acceso Sospechoso" (6323450). Gateado
 // como "admin" (ADMIN+SUPPORT, sin STAFF).
+// PASO T2 (2026-08-21): "Revisar solicitud GDPR" deja de ser un botón
+// preparado (PreparedActionButtons) y pasa a ser funcional de verdad,
+// reutilizando exactamente los mismos endpoints que Perfil() (POST
+// /api/gdpr/acceso y /api/gdpr/olvido, con `email` explícito porque
+// ADMIN/SUPPORT puede tramitar la solicitud de otro socio). No se crea
+// ninguna tabla/lista de solicitudes nueva: el Worker no tiene ningún
+// AIRTABLE_*_TABLE_ID configurado para eso todavía (ver comentario en
+// handleGdprAcceso/handleGdprOlvido), así que este panel es de consulta
+// puntual por email, no un listado histórico — eso queda documentado como
+// limitación, no fingido.
+function GdprAdminReview() {
+  const [email, setEmail] = useState("");
+  const [accesoLoading, setAccesoLoading] = useState(false);
+  const [accesoResult, setAccesoResult] = useState(null);
+  const [accesoError, setAccesoError] = useState("");
+  const [olvidoLoading, setOlvidoLoading] = useState(false);
+  const [olvidoResult, setOlvidoResult] = useState(null);
+  const [olvidoError, setOlvidoError] = useState("");
+
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  async function consultarAcceso() {
+    setAccesoLoading(true); setAccesoError(""); setAccesoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/acceso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) setAccesoError(data?.message || data?.error || "No se pudo consultar.");
+      else setAccesoResult(data);
+    } catch {
+      setAccesoError("Error de conexión.");
+    } finally {
+      setAccesoLoading(false);
+    }
+  }
+
+  async function registrarOlvido() {
+    setOlvidoLoading(true); setOlvidoError(""); setOlvidoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/olvido", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), confirmar: true, motivo: "Tramitación administrativa desde Backups y seguridad." }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) setOlvidoError(data?.message || data?.error || "No se pudo registrar.");
+      else setOlvidoResult(data);
+    } catch {
+      setOlvidoError("Error de conexión.");
+    } finally {
+      setOlvidoLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${T.line}` }}>
+      <h3 style={{ marginTop: 0, fontSize: "1rem" }}>⚖️ Revisar solicitud GDPR</h3>
+      <p style={{ color: T.textDim, fontSize: ".82rem", marginBottom: 14 }}>
+        Consulta o registra una solicitud GDPR (ACCESO u OLVIDO) por email de socio — distinta de una Baja de Jugador.
+        La ejecución real del olvido (cancelaciones, salida de lista de espera) requiere el runbook administrativo, no este panel.
+      </p>
+      <input
+        type="email"
+        placeholder="email@socio.example"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{ width: "100%", maxWidth: 360, padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.surface2, color: T.text, marginBottom: 12 }}
+      />
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Btn variant="secondary" onClick={consultarAcceso} disabled={!emailValido || accesoLoading}>
+          {accesoLoading ? "Consultando…" : "Consultar datos (GDPR_ACCESO)"}
+        </Btn>
+        <Btn variant="danger" onClick={registrarOlvido} disabled={!emailValido || olvidoLoading}>
+          {olvidoLoading ? "Registrando…" : "Registrar solicitud de olvido (GDPR_OLVIDO)"}
+        </Btn>
+      </div>
+
+      {accesoError && <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 10 }}>{accesoError}</div>}
+      {accesoResult && (
+        <div style={{ marginTop: 12, padding: 12, border: `1px solid ${T.line}`, borderRadius: 10, fontSize: ".82rem", lineHeight: 1.6 }}>
+          <div style={{ fontWeight: 700 }}>{accesoResult.tipo} — {accesoResult.titular.email}</div>
+          <div style={{ color: T.textDim }}>Identidad: {accesoResult.datos.identidad.disponible ? "disponible" : `no disponible (${accesoResult.datos.identidad.motivo})`}</div>
+          <div style={{ color: T.textDim }}>Reservas: {accesoResult.datos.reservas.disponible ? `${accesoResult.datos.reservas.registros.length} registro(s)` : `no disponible (${accesoResult.datos.reservas.motivo})`}</div>
+        </div>
+      )}
+
+      {olvidoError && <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 10 }}>{olvidoError}</div>}
+      {olvidoResult && (
+        <div style={{ marginTop: 12, padding: 12, border: `1px solid ${T.line}`, borderRadius: 10, fontSize: ".82rem", lineHeight: 1.6 }}>
+          <div style={{ fontWeight: 700 }}>{olvidoResult.tipo} — {olvidoResult.titular.email} — estado: {olvidoResult.estado}</div>
+          {olvidoResult.dependencias?.reservas_futuras?.verificable && (
+            <div style={{ color: T.textDim }}>Reservas futuras: {olvidoResult.dependencias.reservas_futuras.cantidad}</div>
+          )}
+          <div style={{ color: T.textDim }}>Lista de espera: no verificable en este entorno (requiere revisión manual).</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BackupsSeguridad() {
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
@@ -5052,13 +5155,14 @@ function BackupsSeguridad() {
         <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
         <PanelList items={[
           "🔄 Backup Semanal / 🗂️ Backup Plantilla Drive — copias de seguridad periódicas.",
-          "⚖️ Solicitud GDPR Acceso u Olvido de Datos — gestión de solicitudes de privacidad.",
+          "⚖️ Solicitud GDPR Acceso u Olvido de Datos — gestión de solicitudes de privacidad (ver panel funcional debajo).",
           "🛡️ Alerta Seguridad Acceso Sospechoso — aviso de accesos sospechosos.",
-          "Los 4 escenarios ya corren en Make; este panel no los reactiva ni los sustituye.",
+          "Backup Semanal, Backup Plantilla Drive y Alerta Seguridad ya corren en Make; este panel no los reactiva ni los sustituye.",
         ]} />
         <div style={{ marginTop: 20 }}>
-          <PreparedActionButtons actions={["Solicitar backup manual", "Revisar solicitud GDPR", "Revisar alerta de seguridad"]} />
+          <PreparedActionButtons actions={["Solicitar backup manual", "Revisar alerta de seguridad"]} />
         </div>
+        <GdprAdminReview />
       </Card>
     </div>
   );
@@ -7719,6 +7823,18 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   const [privacidad, setPrivacidad] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_privacidad") || "{}"); } catch { return {}; } });
   const [privMsg, setPrivMsg] = useState("");
 
+  // Derechos GDPR (flujo #9, Make 6323457) — a diferencia del resto de
+  // Perfil() (que persiste en localStorage), estos dos botones sí llaman al
+  // Worker real (POST /api/gdpr/acceso y /api/gdpr/olvido): son los únicos
+  // datos de este componente que existen server-side hoy.
+  const [gdprAccesoLoading, setGdprAccesoLoading] = useState(false);
+  const [gdprAccesoResult, setGdprAccesoResult] = useState(null);
+  const [gdprAccesoError, setGdprAccesoError] = useState("");
+  const [gdprOlvidoConfirming, setGdprOlvidoConfirming] = useState(false);
+  const [gdprOlvidoLoading, setGdprOlvidoLoading] = useState(false);
+  const [gdprOlvidoResult, setGdprOlvidoResult] = useState(null);
+  const [gdprOlvidoError, setGdprOlvidoError] = useState("");
+
   // Contraseña
   const [pwdActual, setPwdActual] = useState("");
   const [pwdNueva, setPwdNueva] = useState("");
@@ -7800,6 +7916,57 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
     setPrivacidad(updated); saveProfileField("privacidad", updated);
     setPrivMsg(tx("perfil.privacidad_guardada"));
     setTimeout(() => setPrivMsg(""), 2000);
+  }
+
+  // Handlers GDPR (flujo #9) — llaman al Worker real, nunca simulan éxito.
+  async function handleGdprAcceso() {
+    setGdprAccesoLoading(true);
+    setGdprAccesoError("");
+    setGdprAccesoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/acceso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) {
+        setGdprAccesoError(data?.message || data?.error || "No se pudo obtener tus datos ahora mismo.");
+      } else {
+        setGdprAccesoResult(data);
+      }
+    } catch {
+      setGdprAccesoError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setGdprAccesoLoading(false);
+    }
+  }
+
+  // "Eliminar mis datos" NUNCA es lo mismo que "darme de baja del club" (ver
+  // handleGdprOlvido en el Worker): esto solo registra una solicitud de
+  // olvido para revisión, nunca ejecuta un borrado desde el frontend.
+  async function handleGdprOlvido() {
+    setGdprOlvidoLoading(true);
+    setGdprOlvidoError("");
+    setGdprOlvidoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/olvido", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmar: true, motivo: "Solicitud del titular desde su perfil." }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) {
+        setGdprOlvidoError(data?.message || data?.error || "No se pudo registrar la solicitud ahora mismo.");
+      } else {
+        setGdprOlvidoResult(data);
+      }
+    } catch {
+      setGdprOlvidoError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setGdprOlvidoLoading(false);
+      setGdprOlvidoConfirming(false);
+    }
   }
 
   // Handler contraseña
@@ -8270,6 +8437,72 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
         </div>
       </div>
 
+      {/* ── MIS DERECHOS GDPR (flujo #9, Make 6323457) ── */}
+      <div style={{ marginBottom:24 }}>
+        <div style={cs}>
+          <h3 style={{ ...hs, marginBottom:10 }}>⚖️ Mis derechos GDPR</h3>
+          <p style={{ color:T.textDim, fontSize:".82rem", marginBottom:18, lineHeight:1.5 }}>
+            Solicita una copia de tus datos personales o pide su eliminación, conforme al RGPD.
+          </p>
+
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+            <Btn variant="secondary" onClick={handleGdprAcceso} disabled={gdprAccesoLoading}>
+              {gdprAccesoLoading ? "Consultando…" : "Solicitar mis datos"}
+            </Btn>
+            <Btn variant="danger" onClick={() => setGdprOlvidoConfirming(true)} disabled={gdprOlvidoLoading}>
+              Solicitar eliminación de mis datos
+            </Btn>
+          </div>
+
+          {gdprAccesoError && <div style={{ color:T.danger, fontSize:".82rem", marginTop:12 }}>{gdprAccesoError}</div>}
+          {gdprAccesoResult && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.line}`, borderRadius:12, fontSize:".82rem", lineHeight:1.6 }}>
+              <div style={{ color:T.text, fontWeight:700, marginBottom:6 }}>Datos generados el {new Date(gdprAccesoResult.generado_en).toLocaleString()}</div>
+              <div style={{ color:T.textDim }}>Identidad: {gdprAccesoResult.datos.identidad.disponible ? "disponible" : `no disponible (${gdprAccesoResult.datos.identidad.motivo})`}</div>
+              <div style={{ color:T.textDim }}>Reservas: {gdprAccesoResult.datos.reservas.disponible ? `${gdprAccesoResult.datos.reservas.registros.length} registro(s)` : `no disponible (${gdprAccesoResult.datos.reservas.motivo})`}</div>
+              <div style={{ color:T.textDim }}>Lista de espera / competiciones / logs: no disponibles todavía (fuente no configurada en este entorno).</div>
+              <div style={{ color:T.textDim, fontSize:".74rem", marginTop:8 }}>
+                Registro en Make: {gdprAccesoResult.auditoria.registrado_en_make ? "sí" : `no — ${gdprAccesoResult.auditoria.detalle}`}
+              </div>
+            </div>
+          )}
+
+          {gdprOlvidoConfirming && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.danger}66`, borderRadius:12 }}>
+              <p style={{ color:T.text, fontWeight:700, fontSize:".86rem", marginTop:0, marginBottom:6 }}>
+                ¿Seguro que quieres solicitar la eliminación de tus datos?
+              </p>
+              <p style={{ color:T.textDim, fontSize:".8rem", lineHeight:1.5, marginBottom:14 }}>
+                Esto NO es lo mismo que darte de baja del club. Se registrará tu solicitud para revisión
+                (comprobación de reservas futuras y otras dependencias antes de ejecutar nada) — no se borra nada al instante.
+              </p>
+              <div style={{ display:"flex", gap:10 }}>
+                <Btn variant="danger" onClick={handleGdprOlvido} disabled={gdprOlvidoLoading}>
+                  {gdprOlvidoLoading ? "Enviando…" : "Sí, solicitar eliminación"}
+                </Btn>
+                <Btn variant="secondary" onClick={() => setGdprOlvidoConfirming(false)} disabled={gdprOlvidoLoading}>
+                  Cancelar
+                </Btn>
+              </div>
+            </div>
+          )}
+
+          {gdprOlvidoError && <div style={{ color:T.danger, fontSize:".82rem", marginTop:12 }}>{gdprOlvidoError}</div>}
+          {gdprOlvidoResult && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.line}`, borderRadius:12, fontSize:".82rem", lineHeight:1.6 }}>
+              <div style={{ color:T.text, fontWeight:700, marginBottom:6 }}>Solicitud registrada — estado: {gdprOlvidoResult.estado}</div>
+              {gdprOlvidoResult.dependencias?.reservas_futuras?.verificable && (
+                <div style={{ color:T.textDim }}>Reservas futuras detectadas: {gdprOlvidoResult.dependencias.reservas_futuras.cantidad}</div>
+              )}
+              <div style={{ color:T.textDim }}>Lista de espera: no verificable en este entorno (requiere revisión manual).</div>
+              <div style={{ color:T.textDim, fontSize:".74rem", marginTop:8 }}>
+                Registro en Make: {gdprOlvidoResult.auditoria.registrado_en_make ? "sí" : `no — ${gdprOlvidoResult.auditoria.detalle}`}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ── NOTIFICACIONES ── */}
       <div style={cs}>
         <h3 style={{ ...hs, marginBottom:10 }}>🔔 {tx("perfil.notificaciones")}</h3>
@@ -8386,6 +8619,17 @@ export default function ClubPadel04SaaSApp() {
   const [forgotPwdEmail, setForgotPwdEmail] = useState("");
   const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
 
+  // Recovery callback: token capturado del hash de URL (type=recovery).
+  // NUNCA se persiste en localStorage/sessionStorage.
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [recoveryToken, setRecoveryToken] = useState(null);
+  const [recoveryStep, setRecoveryStep] = useState("form"); // "form"|"loading"|"success"|"error"
+  const [recoveryPwd, setRecoveryPwd] = useState("");
+  const [recoveryPwdConfirm, setRecoveryPwdConfirm] = useState("");
+  const [recoveryError, setRecoveryError] = useState("");
+  const [showRecoveryPwd, setShowRecoveryPwd] = useState(false);
+  const [showRecoveryPwdConfirm, setShowRecoveryPwdConfirm] = useState(false);
+
   // Login universal preparado para producción.
   // Mantiene los perfiles demo internos sin obligar a usuarios reales a usar correos fijos.
   const [loginEmail, setLoginEmail] = useState("");
@@ -8426,6 +8670,31 @@ export default function ClubPadel04SaaSApp() {
       setLoginError("");
     }
   }, [auth.isAuthenticated, auth.role]);
+
+  // Detecta el callback de recuperación de Supabase Auth al montar la SPA.
+  // Supabase envía el enlace con #access_token=...&type=recovery en el hash.
+  // El token se captura SOLO en estado React — nunca en localStorage/sessionStorage.
+  // El hash se limpia de inmediato con history.replaceState para no dejar
+  // tokens sensibles en la URL visible ni en el historial del navegador.
+  useEffect(() => {
+    const raw = window.location.hash;
+    if (!raw) return;
+
+    const params = new URLSearchParams(raw.slice(1));
+    if (params.get("type") !== "recovery") return;
+
+    const token = params.get("access_token");
+    if (!token) return;
+
+    setRecoveryToken(token);
+    setRecoveryMode(true);
+    setRecoveryStep("form");
+
+    try {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    } catch { /* no bloquear si el entorno no permite replaceState */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- solo ejecuta al montar
+
   const menuButtonRef = useRef(null);
   const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
@@ -8734,9 +9003,164 @@ export default function ClubPadel04SaaSApp() {
   }
 
 
+  async function handleRecoverySubmit(e) {
+    e.preventDefault();
+    setRecoveryError("");
+
+    const valid = /[A-Z]/.test(recoveryPwd) && /[a-z]/.test(recoveryPwd) && /[0-9]/.test(recoveryPwd) && recoveryPwd.length >= 8;
+    if (!valid) { setRecoveryError("Mínimo 8 caracteres, mayúscula, minúscula y número."); return; }
+    if (recoveryPwd !== recoveryPwdConfirm) { setRecoveryError("Las contraseñas no coinciden."); return; }
+    if (!recoveryToken) { setRecoveryError("Token de recuperación no disponible. Solicita de nuevo el enlace."); return; }
+
+    setRecoveryStep("loading");
+
+    const result = await auth.updatePasswordWithToken(recoveryPwd, recoveryToken);
+
+    if (!result.ok) {
+      setRecoveryError(result.message || "No se pudo actualizar la contraseña.");
+      setRecoveryStep("error");
+      return;
+    }
+
+    // Token consumido: borrar de memoria inmediatamente
+    setRecoveryToken(null);
+    setRecoveryStep("success");
+  }
+
+  function handleRecoveryCancel() {
+    setRecoveryMode(false);
+    setRecoveryToken(null);
+    setRecoveryStep("form");
+    setRecoveryPwd("");
+    setRecoveryPwdConfirm("");
+    setRecoveryError("");
+    setShowRecoveryPwd(false);
+    setShowRecoveryPwdConfirm(false);
+  }
+
   const loginClock = useClock();
   const loginLang = useLang();
   const ltx = key => t(key, loginLang);
+
+  if (recoveryMode) {
+    return (
+      <>
+        <style>{globalStyles}</style>
+        <PwaStatusBanners />
+        <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:`radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), ${T.bg}`, color:T.text }}>
+          <section style={{ width:"min(520px, 100%)", border:`1px solid ${T.line}`, borderRadius:34, padding:"clamp(24px, 4vw, 42px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
+            <div style={{ color:T.accent, fontSize:".78rem", letterSpacing:".22em", textTransform:"uppercase", fontWeight:900, marginBottom:18 }}>
+              Club Pádel 04
+            </div>
+            <h1 style={{ fontFamily:T.fontDisplay, fontSize:"clamp(1.8rem, 5vw, 2.8rem)", lineHeight:"1.1", letterSpacing:"-.04em", margin:"0 0 8px" }}>
+              Nueva contraseña
+            </h1>
+            <p style={{ color:T.textDim, marginTop:0, marginBottom:24, lineHeight:1.6, fontSize:".95rem" }}>
+              Introduce y confirma la nueva contraseña para tu cuenta.
+            </p>
+
+            {recoveryStep === "success" ? (
+              <>
+                <div style={{ color:T.accent, fontWeight:900, fontSize:"1.8rem", marginBottom:12 }}>✓</div>
+                <strong style={{ display:"block", marginBottom:8, fontSize:"1.1rem" }}>Contraseña actualizada correctamente.</strong>
+                <p style={{ color:T.textDim, marginBottom:24, lineHeight:1.6 }}>Ya puedes iniciar sesión con tu nueva contraseña.</p>
+                <button type="button" onClick={handleRecoveryCancel} style={{ padding:"13px 22px", borderRadius:14, border:`1px solid ${T.line}`, background:"transparent", color:T.text, fontWeight:800, cursor:"pointer", fontSize:"1rem" }}>
+                  Ir al inicio de sesión
+                </button>
+              </>
+            ) : (
+              <form onSubmit={handleRecoverySubmit} style={{ display:"grid", gap:12 }}>
+                <div style={{ position:"relative" }}>
+                  <input
+                    type={showRecoveryPwd ? "text" : "password"}
+                    value={recoveryPwd}
+                    onChange={e => { setRecoveryPwd(e.target.value); setRecoveryError(""); }}
+                    placeholder="Nueva contraseña"
+                    autoComplete="new-password"
+                    autoFocus
+                    disabled={recoveryStep === "loading"}
+                    style={{ width:"100%", padding:"14px 48px 14px 16px", borderRadius:14, border:`1px solid ${recoveryError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", boxSizing:"border-box" }}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showRecoveryPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    onClick={() => setShowRecoveryPwd(v => !v)}
+                    disabled={recoveryStep === "loading"}
+                    style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:T.textDim, cursor:"pointer", padding:4, display:"flex", alignItems:"center", lineHeight:1 }}
+                  >
+                    {showRecoveryPwd ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <div style={{ position:"relative" }}>
+                  <input
+                    type={showRecoveryPwdConfirm ? "text" : "password"}
+                    value={recoveryPwdConfirm}
+                    onChange={e => { setRecoveryPwdConfirm(e.target.value); setRecoveryError(""); }}
+                    placeholder="Confirmar nueva contraseña"
+                    autoComplete="new-password"
+                    disabled={recoveryStep === "loading"}
+                    style={{ width:"100%", padding:"14px 48px 14px 16px", borderRadius:14, border:`1px solid ${recoveryError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", boxSizing:"border-box" }}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showRecoveryPwdConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    onClick={() => setShowRecoveryPwdConfirm(v => !v)}
+                    disabled={recoveryStep === "loading"}
+                    style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:T.textDim, cursor:"pointer", padding:4, display:"flex", alignItems:"center", lineHeight:1 }}
+                  >
+                    {showRecoveryPwdConfirm ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {recoveryError && (
+                  <div role="alert" style={{ color:T.dangerText, fontSize:".88rem" }}>{recoveryError}</div>
+                )}
+                <p style={{ color:T.textDim, fontSize:".82rem", margin:"0", lineHeight:1.5 }}>
+                  Mínimo 8 caracteres, mayúscula, minúscula y número.
+                </p>
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:4 }}>
+                  <button
+                    type="submit"
+                    disabled={recoveryStep === "loading"}
+                    style={{ padding:"13px 22px", borderRadius:14, border:"none", background:T.accent, color:"#ffffff", fontWeight:900, cursor:recoveryStep === "loading" ? "wait" : "pointer", fontSize:"1rem", opacity:recoveryStep === "loading" ? 0.7 : 1 }}
+                  >
+                    {recoveryStep === "loading" ? "Actualizando…" : "Establecer contraseña"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRecoveryCancel}
+                    disabled={recoveryStep === "loading"}
+                    style={{ padding:"13px 22px", borderRadius:14, border:`1px solid ${T.line}`, background:"transparent", color:T.text, fontWeight:800, cursor:recoveryStep === "loading" ? "not-allowed" : "pointer", fontSize:"1rem" }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
+        </main>
+      </>
+    );
+  }
 
   if (!selectedRole) {
     const roleLabels = {
