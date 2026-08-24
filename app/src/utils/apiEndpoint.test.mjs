@@ -40,6 +40,18 @@ test("cp04ResolveApiBaseUrl: quita una o varias barras finales, nunca las de en 
   assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: `${PREVIEW_BASE}///` }), PREVIEW_BASE);
 });
 
+test("cp04ResolveApiBaseUrl: acepta http y https, rechaza cualquier otro esquema (nunca lo propaga)", () => {
+  assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "http://localhost:8787" }), "http://localhost:8787");
+  assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "javascript:alert(1)" }), "");
+  assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "data:text/html,<script>alert(1)</script>" }), "");
+  assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "ftp://example.com" }), "");
+});
+
+test("cp04ResolveApiBaseUrl: rechaza un valor protocolo-relativo o sin esquema (cae a relativo, nunca lo usa tal cual)", () => {
+  assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "//evil.example.com" }), "");
+  assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "evil.example.com" }), "");
+});
+
 // cp04BuildApiUrl -------------------------------------------------------------
 
 test("cp04BuildApiUrl: sin base -> ruta relativa tal cual (desarrollo, proxy de Vite)", () => {

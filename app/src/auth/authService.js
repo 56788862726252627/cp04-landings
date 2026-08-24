@@ -14,16 +14,31 @@
 // exportadas aquí, nunca fetch()/localStorage directamente.
 
 import { AUTH_MODES } from "./authTypes.js";
+import { cp04BuildApiUrl } from "../utils/apiEndpoint.js";
 
-const AUTH_ENDPOINTS = {
-  login: "/api/auth/login",
-  register: "/api/auth/register",
-  logout: "/api/auth/logout",
-  refresh: "/api/auth/refresh",
-  me: "/api/auth/me",
-  forgotPassword: "/api/auth/forgot-password",
-  changePassword: "/api/auth/change-password",
-};
+// Bloqueo P0 2026-08-25: estas 7 rutas eran relativas hardcodeadas, sin
+// ningún mecanismo de URL base configurable (a diferencia de
+// bookingEndpoint) — en cualquier preview/producción de Cloudflare Pages
+// nunca llegaban al Worker real (caían en el fallback SPA de Pages o en un
+// 405 plano de Pages, según el método), y un login con credenciales
+// perfectamente válidas se veía como "No se pudo iniciar sesión." Se
+// construyen ahora con la misma base pública centralizada que ya usan
+// disponibilidad y reservas (src/utils/apiEndpoint.js) — sin URL/clave de
+// Supabase en el cliente: la auth real sigue viviendo enteramente en el
+// Worker.
+export function cp04BuildAuthEndpoints(env) {
+  return {
+    login: cp04BuildApiUrl("/api/auth/login", env),
+    register: cp04BuildApiUrl("/api/auth/register", env),
+    logout: cp04BuildApiUrl("/api/auth/logout", env),
+    refresh: cp04BuildApiUrl("/api/auth/refresh", env),
+    me: cp04BuildApiUrl("/api/auth/me", env),
+    forgotPassword: cp04BuildApiUrl("/api/auth/forgot-password", env),
+    changePassword: cp04BuildApiUrl("/api/auth/change-password", env),
+  };
+}
+
+const AUTH_ENDPOINTS = cp04BuildAuthEndpoints(import.meta.env);
 
 // Mismas claves que ya usaba App.jsx antes de esta fase: se mantiene el
 // formato de almacenamiento para no romper nada que todavía las lea

@@ -1,6 +1,7 @@
 // Club Pádel 04 · Construcción centralizada de las URLs /api/* que el
-// frontend llama contra el Worker cp04-reservas-proxy (disponibilidad y
-// reservas: crear/cancelar/reprogramar).
+// frontend llama contra el Worker cp04-reservas-proxy (disponibilidad,
+// reservas: crear/cancelar/reprogramar, y auth: login/register/logout/
+// refresh/me/forgot-password/change-password — ver authService.js).
 //
 // Bloqueo P0 2026-08-24: vite.config.js proxya /api/* al Worker real
 // SOLO en `vite dev` (server.proxy) — Vite nunca incluye ese proxy en
@@ -22,13 +23,21 @@
 // Sin configurar (desarrollo local, `npm run dev`): base = "" -> rutas
 // relativas /api/..., resueltas por el proxy de Vite contra el Worker
 // real. Este es el único caso en el que /api/* sigue siendo relativo.
+//
+// Solo se acepta http(s): un valor de build mal puesto (otro esquema,
+// protocolo-relativo "//", o cualquier basura) nunca debe convertirse en
+// el destino de un fetch() de login/reservas — se trata igual que "sin
+// configurar" (cae a rutas relativas) en vez de propagar un esquema
+// inseguro.
+const SAFE_BASE_URL_PATTERN = /^https?:\/\/[^\s"'<>]+$/i;
 
 export function cp04ResolveApiBaseUrl(env) {
   const raw = env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT;
   if (typeof raw !== "string") return "";
-  const trimmed = raw.trim();
+  const trimmed = raw.trim().replace(/\/+$/, "");
   if (!trimmed) return "";
-  return trimmed.replace(/\/+$/, "");
+  if (!SAFE_BASE_URL_PATTERN.test(trimmed)) return "";
+  return trimmed;
 }
 
 // Une base + path sin duplicar ni perder la barra: base="" -> el path
