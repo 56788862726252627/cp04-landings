@@ -39,6 +39,7 @@ import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 import { authFetch } from "./auth/authService.js";
 import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
 import { cp04BuildReservationError, cp04ReservationErrorMessage } from "./utils/reservationErrors.js";
+import { cp04ShouldBlockAnonymousReservaSubmit, cp04IsSessionExpiredReservaResponse } from "./utils/reservaAuthGate.js";
 import {
   CP04_ROLE_PERMISSIONS,
   CP04_PROTECTED_SECTIONS,
@@ -127,7 +128,7 @@ const COURTS = [
   { id: 4, name: "Pista 4", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
 ];
 
-const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 const BOOKING_DURATIONS = [60, 90, 120];
 const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
 const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
@@ -274,6 +275,14 @@ function calcTimeEnd(time, mins) {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + mins;
   return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function getAvailableDurationsForHour(hora) {
+  if (!hora || !hora.includes(":")) return BOOKING_DURATIONS;
+  const [h, m] = hora.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return BOOKING_DURATIONS;
+  const startMins = h * 60 + m;
+  return BOOKING_DURATIONS.filter((d) => startMins + d <= CLUB_CLOSING_MINUTES);
 }
 
 function priceFor(courtName, duration) {
@@ -505,18 +514,6 @@ function prepareReschedulePayload(form, courtName) {
   };
 }
 
-async function sendBooking(payload) {
-  const res = await fetch(CONFIG.bookingEndpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await readSafeResponse(res);
-  if (!res.ok || data?.ok === false) throw cp04BuildReservationError(data, "booking_request_failed");
-  return data;
-}
-
 function Card({ children, style = {} }) {
   return <div className="cp04-card" style={style}>{children}</div>;
 }
@@ -575,6 +572,7 @@ function CalendarioDisponibilidad({
   initialDate,
   selectedCourt,
   onSelectSlot,
+  onDisponibilidadChange,
   duration = 90,
   title = "Calendario de disponibilidad",
   description = "Elige fecha, hora y pista disponibles.",
@@ -696,6 +694,14 @@ function CalendarioDisponibilidad({
     };
   }, [consultarDisponibilidad, fecha]);
 
+  // Notifica al padre (Reservas) cuando cambia la disponibilidad real del backend,
+  // para que pueda sincronizar el ocupadasSet del formulario con la misma fuente.
+  useEffect(() => {
+    if (typeof onDisponibilidadChange === "function") {
+      onDisponibilidadChange({ ocupadas, ocupadasDetalle });
+    }
+  }, [ocupadas, ocupadasDetalle, onDisponibilidadChange]);
+
   const cambiarFecha = (value) => {
     setFecha(value);
     consultarDisponibilidad(value);
@@ -770,12 +776,21 @@ function CalendarioDisponibilidad({
                 // `mensaje` de arriba, no en cada botón individual.
                 const datosNoVerificados = estado === "loading" || estado === "error";
 
+                // Siempre usa la duración mínima válida (normalmente 60 min).
+                // La pregunta del calendario es "¿puede INICIARSE alguna reserva aquí?"
+                // no "¿cabe mi duración seleccionada aquí?". Esto evita dos problemas:
+                // 1. 22:00 + 90min → INSUFFICIENT_REMAINING_TIME (cierre a las 23:00)
+                // 2. Reserva [22:00,23:00) bloquea visualmente 21:00 cuando dur=90
+                //    porque 21:00+90=22:30 solapa con la reserva; con 60min
+                //    21:00+60=22:00, que es el límite semiabierto, no hay solapamiento.
+                const slotDuration = getAvailableDurationsForHour(hora)[0] ?? 60;
+
                 const evaluacion = datosNoVerificados
                   ? { status: AVAILABILITY_STATUS.UNAVAILABLE, reason: null }
                   : evaluateSlotAvailability({
                       date: fecha,
                       startTime: hora,
-                      durationMinutes: Number(duration),
+                      durationMinutes: slotDuration,
                       courtId: pista,
                       existingBookings,
                       openingHours: CLUB_OPENING_HOURS,
@@ -3459,14 +3474,110 @@ function Inicio({ navigate, selectedRole }) {
   );
 }
 
+// Club Pádel 04 · Puerta de login inline para crear/cancelar/reprogramar.
+//
+// Con el gate de rol del Worker activo (CP04_ENFORCE_ROLE_GATES), las 3
+// acciones mutables de /api/reservas exigen un Bearer real verificado por
+// Supabase: ya no basta con un rol demo local. En vez de enviar la petición
+// igualmente (y recibir un 401 opaco) o simular un éxito falso, los 3
+// formularios bloquean el envío ANTES de llamar al Worker y muestran este
+// login inline. Se queda dentro del mismo componente (nunca navega ni
+// desmonta el formulario): los datos no sensibles que el usuario ya
+// escribió (fecha, pista, hora, clave de reserva...) permanecen intactos en
+// el estado de React sin necesidad de guardarlos en ningún sitio. Email y
+// contraseña de este mini-login viven solo en estado local del componente,
+// nunca en localStorage/sessionStorage/URL — authService ya se encarga de
+// persistir únicamente el access_token tras un login correcto.
+function ReservaAuthGate({ message }) {
+  const auth = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function submit(event) {
+    event.preventDefault();
+    if (sending) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setError("Introduce tu email y contraseña.");
+      return;
+    }
+    setSending(true);
+    setError("");
+    const result = await auth.login(cleanEmail, password);
+    setSending(false);
+    if (!result.ok) {
+      setError(result.message || "No se pudo iniciar sesión.");
+      return;
+    }
+    // Éxito: auth.isAuthenticated pasa a true, el formulario que envuelve
+    // este gate deja de mostrarlo (ver condición `!auth.isAuthenticated` en
+    // cada llamador) y conserva sus datos, listo para reintentar el envío.
+    setPassword("");
+  }
+
+  return (
+    <Card style={{ marginBottom: 20, borderColor: `${T.warning}66` }}>
+      <strong style={{ color: T.warning }}>Inicia sesión para continuar</strong>
+      <p style={{ color: T.textDim, marginTop: 6, marginBottom: 16, lineHeight: 1.55 }}>{message}</p>
+      <form onSubmit={submit}>
+        <input
+          type="email"
+          aria-label="Email"
+          placeholder="tu@email.com"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          autoComplete="email"
+          disabled={sending}
+        />
+        <div style={{ marginTop: 10 }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            aria-label="Contraseña"
+            placeholder="Contraseña"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            autoComplete="current-password"
+            disabled={sending}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowPassword(v => !v)}
+          style={{ border: "none", background: "transparent", color: T.accent, fontSize: ".82rem", fontWeight: 800, cursor: "pointer", padding: 0, marginTop: 8, textDecoration: "underline", textUnderlineOffset: 3 }}
+        >
+          {showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+        </button>
+        {error && <FieldError>{error}</FieldError>}
+        <Btn type="submit" disabled={sending} style={{ marginTop: 14 }}>
+          {sending ? "Entrando..." : "Iniciar sesión"}
+        </Btn>
+      </form>
+    </Card>
+  );
+}
+
 function Reservas() {
   const lang = useLang();
   const tx = key => t(key, lang);
+  const auth = useAuth();
+  // No hace falta sincronizar needsLogin a false con un efecto cuando
+  // auth.isAuthenticated pasa a true: el gate solo se pinta si
+  // `needsLogin && !auth.isAuthenticated` (ver el render más abajo), así
+  // que en cuanto hay sesión real deja de mostrarse sin más estado.
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [step, setStep] = useState(1);
   const [status, setStatus] = useState("pending");
   const [statusMessage, setStatusMessage] = useState("");
   const [errors, setErrors] = useState({});
   const [court, setCourt] = useState("Pista 1");
+  // ocupadas: claves "fecha|pista|hora" recibidas del backend vía CalendarioDisponibilidad.
+  // Es la misma fuente de verdad que usa el calendario → elimina la divergencia
+  // que permitía seleccionar en el formulario slots marcados como "No disponible".
+  const [ocupadas, setOcupadas] = useState([]);
+  const ocupadasSet = useMemo(() => new Set(ocupadas), [ocupadas]);
   const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
   const sendingRef = useRef(false);
   const duration = Number(form.duracion_minutos);
@@ -3483,13 +3594,30 @@ function Reservas() {
   const [statusTitle, statusText, statusColor] = statusMap[status];
 
   function updateForm(field, value) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const updated = { ...current, [field]: value };
+      if (field === "hora") {
+        const valid = getAvailableDurationsForHour(value);
+        if (!valid.includes(Number(current.duracion_minutos))) {
+          updated.duracion_minutos = String(valid[0] ?? 60);
+        }
+      }
+      return updated;
+    });
     setErrors((current) => ({ ...current, [field]: undefined }));
     setStatusMessage("");
     if (status !== "sending") setStatus("pending");
   }
 
   function review() {
+    // Comprueba ocupación antes de validateBooking: getSlotStatus no tiene acceso
+    // al inventario del backend, así que este check usa ocupadasSet (misma fuente
+    // que el calendario).
+    if (ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)) {
+      setErrors({ hora: tx("errors.horario_ocupado") });
+      setStatus("error");
+      return;
+    }
     const nextErrors = validateBooking(form, court, tx);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -3511,6 +3639,18 @@ function Reservas() {
       return;
     }
 
+    // Con el gate de rol del Worker activo, crear_reserva exige un Bearer
+    // real: sin sesión, ni se consulta disponibilidad ni se llama al
+    // endpoint — se muestra el login inline (ReservaAuthGate) en vez de
+    // mandar una petición anónima que solo recibiría un 401. El formulario
+    // (paso 2, con todos los datos ya introducidos) permanece tal cual.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setStatusMessage("Inicia sesión para confirmar tu reserva. Tus datos no se pierden.");
+      setStatus("error");
+      return;
+    }
+
     sendingRef.current = true;
     setStatus("sending");
     setStatusMessage("");
@@ -3524,7 +3664,26 @@ function Reservas() {
         return;
       }
 
-      await sendBooking(payload);
+      const res = await authFetch(CONFIG.bookingEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local
+      // (deja de mandar un Bearer que el Worker ya rechaza) y se vuelve a
+      // pedir login, sin tocar los datos del formulario ya escritos.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setStatusMessage("Tu sesión ha caducado. Inicia sesión de nuevo para confirmar la reserva.");
+        setStatus("error");
+        return;
+      }
+
+      const data = await readSafeResponse(res);
+      if (!res.ok || data?.ok === false) throw cp04BuildReservationError(data, "booking_request_failed");
+
       refreshDisponibilidadAfterChange(form.fecha);
       setStatus("success");
       setStep(3);
@@ -3543,10 +3702,34 @@ function Reservas() {
     setErrors({});
   }
 
+  // Cuando la fecha o la pista cambia, el calendario refetch y actualiza
+  // ocupadasSet. Si la hora seleccionada queda ocupada en el nuevo contexto,
+  // se restablece automáticamente a la primera franja libre.
+  useEffect(() => {
+    setForm((prev) => {
+      const key = `${prev.fecha}|${court}|${prev.hora}`;
+      if (!ocupadasSet.has(key)) return prev;
+      const fallback = BOOKING_HOURS.find(
+        (h) =>
+          !ocupadasSet.has(`${prev.fecha}|${court}|${h}`) &&
+          getAvailableDurationsForHour(h).length > 0
+      ) ?? BOOKING_HOURS[0];
+      const validDurations = getAvailableDurationsForHour(fallback);
+      return {
+        ...prev,
+        hora: fallback,
+        duracion_minutos: validDurations.includes(Number(prev.duracion_minutos))
+          ? prev.duracion_minutos
+          : String(validDurations[0] ?? 60),
+      };
+    });
+  }, [form.fecha, court, ocupadasSet]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow={tx("reservas.eyebrow")} title={tx("reservas.title")} desc={tx("reservas.desc")} /><CalendarioDisponibilidad
   initialDate={form.fecha || todayISO()}
   selectedCourt={court}
   duration={duration}
+  onDisponibilidadChange={(data) => setOcupadas(data.ocupadas)}
   onSelectSlot={({ fecha, pista, hora }) => {
     updateForm("fecha", fecha);
     updateForm("hora", hora);
@@ -3554,20 +3737,14 @@ function Reservas() {
     setCourt(pista);
     setStep(1);
   }}
-/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para confirmar esta reserva. El resumen que has revisado se mantiene." />}{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,getAvailableDurationsForHour(h)[0]??duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${h}`)}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{getAvailableDurationsForHour(form.hora).map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
 }
 
 function CancelarReserva({ setCurrent }) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const auth = useAuth();
-  // Cancelar es operación de STAFF/ADMIN/SUPPORT (RBAC). Con
-  // CP04_ENFORCE_ROLE_GATES activo en el Worker, solo una sesión backend
-  // real (auth.isAuthenticated, vía Supabase) puede llamar al endpoint
-  // protegido de verdad. El login demo por contraseña de rol no emite
-  // token verificable, así que aquí se simula localmente en vez de
-  // devolver siempre 401 MISSING_TOKEN.
-  const isDemoSession = !auth.isAuthenticated;
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [clave, setClave] = useState("");
   const [confirmado, setConfirmado] = useState(false);
   const [status, setStatus] = useState("idle");
@@ -3575,16 +3752,11 @@ function CancelarReserva({ setCurrent }) {
   const sendingRef = useRef(false);
   const sending = status === "sending";
   const success = status === "success";
+
   const statusMap = {
     idle: [tx("status.cancelar.idle"), tx("status.cancelar.idle_txt"), T.warning],
     sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt"), T.warning],
-    success: [
-      tx("status.cancelar.exito"),
-      isDemoSession
-        ? "Simulado en modo demo: no se ha cancelado ninguna reserva real."
-        : tx("status.cancelar.exito_txt"),
-      T.accent,
-    ],
+    success: [tx("status.cancelar.exito"), tx("status.cancelar.exito_txt"), T.accent],
     error: [tx("status.cancelar.error"), error || tx("status.cancelar.error_txt"), T.danger],
   };
   const [statusTitle, statusText, statusColor] = statusMap[status];
@@ -3617,22 +3789,22 @@ function CancelarReserva({ setCurrent }) {
       return;
     }
 
+    // Cancelar es operación mutable de /api/reservas: con el gate de rol
+    // del Worker activo exige un Bearer real. Sin sesión, no se llama al
+    // endpoint (que solo devolvería 401) — se muestra el login inline; la
+    // clave de reserva y la confirmación ya escritas se mantienen.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setError("Inicia sesión para cancelar esta reserva.");
+      setStatus("error");
+      return;
+    }
+
     setStatus("sending");
     setError("");
     sendingRef.current = true;
 
     try {
-      if (isDemoSession) {
-        // Modo demo: no se llama al Worker (siempre respondería 401 al no
-        // haber token real), no se toca ningún dato real. Solo feedback
-        // visual local, dejando claro que es una simulación.
-        await new Promise((resolve) => window.setTimeout(resolve, 600));
-        setClave("");
-        setConfirmado(false);
-        setStatus("success");
-        return;
-      }
-
       // Adjunta el token real de la sesión backend (Supabase) verificada
       // por el Worker (CP04_ENFORCE_ROLE_GATES).
       const res = await authFetch(CONFIG.bookingEndpoint, {
@@ -3650,6 +3822,16 @@ function CancelarReserva({ setCurrent }) {
           origen: "app_publica_cancelar_reserva",
         }),
       });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local y
+      // se vuelve a pedir login, sin perder la clave de reserva escrita.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setError("Tu sesión ha caducado. Inicia sesión de nuevo para cancelar la reserva.");
+        setStatus("error");
+        return;
+      }
 
       const data = await readSafeResponse(res);
 
@@ -3669,7 +3851,7 @@ function CancelarReserva({ setCurrent }) {
     }
   }
 
-  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{isDemoSession && <Card style={{ marginBottom:20, borderColor:`${T.warning}66`, color:T.warning, fontSize:".85rem" }}>Modo demo: esta acción se simula localmente, sin llamar al servidor ni afectar a ninguna reserva real.</Card>}<Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para cancelar esta reserva. La clave que has introducido se mantiene." />}<Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
 }
 
 
@@ -3677,9 +3859,7 @@ function ReprogramarReserva({ setCurrent }) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const auth = useAuth();
-  // Ver nota equivalente en CancelarReserva: sin sesión backend real, se
-  // simula localmente en vez de llamar al Worker (que devolvería 401).
-  const isDemoSession = !auth.isAuthenticated;
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [court, setCourt] = useState("Pista 1");
   const [form, setForm] = useState({
     clave_reserva: "",
@@ -3710,7 +3890,16 @@ function ReprogramarReserva({ setCurrent }) {
   const [statusTitle, statusText, statusColor] = statusMap[status];
 
   function updateForm(field, value) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const updated = { ...current, [field]: value };
+      if (field === "nueva_hora_inicio") {
+        const valid = getAvailableDurationsForHour(value);
+        if (!valid.includes(Number(current.duracion_minutos))) {
+          updated.duracion_minutos = String(valid[0] ?? 60);
+        }
+      }
+      return updated;
+    });
     setErrors((current) => ({ ...current, [field]: undefined }));
     setStatusMessage("");
     if (status !== "sending") setStatus("idle");
@@ -3736,24 +3925,23 @@ function ReprogramarReserva({ setCurrent }) {
       return;
     }
 
+    // Reprogramar es operación mutable de /api/reservas: con el gate de rol
+    // del Worker activo exige un Bearer real. Sin sesión, no se consulta
+    // disponibilidad ni se llama al endpoint (que solo devolvería 401) — se
+    // muestra el login inline; los datos de fecha/hora/pista ya elegidos se
+    // mantienen.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setStatusMessage("Inicia sesión para reprogramar esta reserva.");
+      setStatus("error");
+      return;
+    }
+
     sendingRef.current = true;
     setStatus("sending");
     setStatusMessage("");
 
     try {
-      if (isDemoSession) {
-        // Modo demo: no se consulta disponibilidad real ni se llama al
-        // Worker (que devolvería 401 al no haber token real). Solo
-        // feedback visual local, sin tocar ningún dato real.
-        await new Promise((resolve) => window.setTimeout(resolve, 600));
-        setStatusMessage(
-          `Simulado en modo demo: ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}. No se ha modificado ninguna reserva real.`,
-        );
-        setStatus("success");
-        setForm((current) => ({ ...current, confirmado: false }));
-        return;
-      }
-
       const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
       const disponibilidad = await fetchDisponibilidad(form.nueva_fecha_reserva);
 
@@ -3763,13 +3951,23 @@ function ReprogramarReserva({ setCurrent }) {
         return;
       }
 
-      // Reprogramar, igual que cancelar, es operación de STAFF/ADMIN/SUPPORT:
-      // adjunta el token real si existe sesión.
+      // Reprogramar, igual que cancelar, adjunta el token real de la sesión
+      // backend (Supabase) verificada por el Worker.
       const res = await authFetch(CONFIG.bookingEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local y
+      // se vuelve a pedir login, sin perder los datos ya elegidos.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setStatusMessage("Tu sesión ha caducado. Inicia sesión de nuevo para reprogramar la reserva.");
+        setStatus("error");
+        return;
+      }
 
       const data = await readSafeResponse(res);
 
@@ -3827,10 +4025,8 @@ function ReprogramarReserva({ setCurrent }) {
     <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}>
       <SectionTitle eyebrow={tx("reprog.eyebrow")} title={tx("reprog.title")} desc={tx("reprog.desc")} />
 
-      {isDemoSession && (
-        <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
-          Modo demo: esta acción se simula localmente, sin llamar al servidor ni afectar a ninguna reserva real.
-        </Card>
+      {needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && (
+        <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para reprogramar esta reserva. La fecha, hora y pista ya elegidas se mantienen." />
       )}
 
       <Card
@@ -3939,7 +4135,7 @@ function ReprogramarReserva({ setCurrent }) {
               onChange={(event) => updateForm("duracion_minutos", event.target.value)}
               disabled={sending}
             >
-              {BOOKING_DURATIONS.map((minutes) => (
+              {getAvailableDurationsForHour(form.nueva_hora_inicio).map((minutes) => (
                 <option key={minutes} value={minutes}>{minutes} {tx("reservas.minutos")}</option>
               ))}
             </select>
@@ -4030,8 +4226,7 @@ function ReprogramarReserva({ setCurrent }) {
                 type="submit"
                 disabled={
                   sending ||
-                  (!isDemoSession &&
-                    getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available")
+                  getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"
                 }
                 className="cp04-fix-white-action-btn cp04-fix-reprogramar-reserva-btn"
               >
