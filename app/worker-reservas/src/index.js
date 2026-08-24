@@ -28,6 +28,23 @@ function jsonResponse(body, status = 200, corsHeaders = {}) {
   });
 }
 
+// Subdominio de preview de Cloudflare Pages para ESTE proyecto
+// (https://<alias-o-hash>.club-padel-04.pages.dev). Cloudflare es quien
+// emite el certificado y el hosting bajo ese dominio exacto — un atacante
+// no puede obtener un origen que matchee este patrón sin controlar el
+// propio proyecto Pages. Ancla ^...$ y exige un único label (sin puntos)
+// para que ni un sufijo parecido (https://club-padel-04.pages.dev.evil.com)
+// ni un prefijo parecido (https://evilclub-padel-04.pages.dev) puedan
+// colarse, y exige https (Cloudflare Pages nunca sirve un preview real
+// por http).
+const CP04_PAGES_PREVIEW_ORIGIN = /^https:\/\/[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.club-padel-04\.pages\.dev$/i;
+
+function cp04IsAllowedOrigin(origin, allowedOrigins) {
+  if (!origin) return false;
+  if (allowedOrigins.includes(origin)) return true;
+  return CP04_PAGES_PREVIEW_ORIGIN.test(origin);
+}
+
 function corsHeaders(request, env) {
   const origin = request.headers.get("Origin") || "";
   const allowedOrigins = (env.ALLOWED_ORIGIN || "")
@@ -35,15 +52,16 @@ function corsHeaders(request, env) {
   .map((item) => item.trim())
   .filter(Boolean);
 
-const isAllowedOrigin = allowedOrigins.includes(origin);
-const corsOrigin = isAllowedOrigin ? origin : allowedOrigins[0] || "";
+  const isAllowedOrigin = cp04IsAllowedOrigin(origin, allowedOrigins);
 
   if (!isAllowedOrigin) {
     return {};
   }
 
+  // Nunca "*": el origen se refleja exacto (nunca un comodín), y solo tras
+  // pasar la validación explícita de arriba.
   return {
-    "Access-Control-Allow-Origin": corsOrigin,
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Vary": "Origin",

@@ -40,6 +40,7 @@ import { authFetch } from "./auth/authService.js";
 import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
 import { cp04BuildReservationError, cp04ReservationErrorMessage } from "./utils/reservationErrors.js";
 import { cp04ShouldBlockAnonymousReservaSubmit, cp04IsSessionExpiredReservaResponse } from "./utils/reservaAuthGate.js";
+import { cp04DisponibilidadEndpoint, cp04ReservasEndpoint } from "./utils/apiEndpoint.js";
 import {
   CP04_ROLE_PERMISSIONS,
   CP04_PROTECTED_SECTIONS,
@@ -83,7 +84,7 @@ const CONFIG = {
   appName: "Club Pádel 04",
   club: "Club Pádel 04",
   origen: "github_safe_frontend",
-  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+  bookingEndpoint: cp04ReservasEndpoint(import.meta?.env),
   contactEmail: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_EMAIL || "Pendiente de configurar",
   contactPhone: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_PHONE || "Pendiente de configurar",
 };
@@ -532,7 +533,7 @@ function Btn({ children, onClick, variant = "primary", disabled = false, type = 
 }
 
 
-const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+const DISPONIBILIDAD_ENDPOINT = cp04DisponibilidadEndpoint(import.meta?.env);
 const DISPONIBILIDAD_UPDATE_EVENT = "cp04:disponibilidad-actualizar";
 
 async function readSafeResponse(res) {
@@ -4725,8 +4726,7 @@ function IntegrationStatusBanner({ children }) {
 // Endpoints reales: POST /api/qr/generate y POST /api/qr/validate.
 // Make scenarios: Generación QR (6244975) y Control Acceso QR (5291559).
 function ControlQrAccesos() {
-  const qrReservasEndpoint =
-    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas";
+  const qrReservasEndpoint = cp04ReservasEndpoint(import.meta?.env);
 
   // ── Búsqueda de reserva real (flujo productivo) ──
   const [lookupEmail, setLookupEmail] = useState(() => {
@@ -5596,9 +5596,7 @@ function Gestion() {
   const [filtroPista, setFiltroPista] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
 
-  const reservasEndpoint =
-    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
-    "/api/reservas";
+  const reservasEndpoint = cp04ReservasEndpoint(import.meta?.env);
 
   async function cargarReservas() {
     const emailLimpio = emailConsulta.trim().toLowerCase();
