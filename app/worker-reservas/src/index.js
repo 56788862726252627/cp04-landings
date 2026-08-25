@@ -11,7 +11,8 @@ import {
   checkMakeRateLimit,
 } from "../support/makeLiveInventory.js";
 
-const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+const CLUB_CLOSING_MINUTES = 23 * 60;
 const BOOKING_DURATIONS = [60, 90, 120];
 const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
 const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
@@ -286,6 +287,17 @@ export function validatePayload(payload) {
         "La hora de fin debe ser posterior.";
     }
 
+    if (formatoHoraValido.test(nuevaHoraInicio) && !BOOKING_HOURS.includes(nuevaHoraInicio)) {
+      errors.nueva_hora_inicio = "Hora de inicio fuera de las franjas permitidas.";
+    }
+
+    if (formatoHoraValido.test(nuevaHoraFin) && !errors.nueva_hora_fin) {
+      const [hFin, mFin] = nuevaHoraFin.split(":").map(Number);
+      if (hFin * 60 + mFin > CLUB_CLOSING_MINUTES) {
+        errors.nueva_hora_fin = "La reserva no puede terminar despues de las 23:00.";
+      }
+    }
+
     if (!nuevaPista || nuevaPista.length > 100) {
       errors.nueva_pista =
         "Nueva pista invalida.";
@@ -345,6 +357,13 @@ export function validatePayload(payload) {
 
   if (!BOOKING_DURATIONS.includes(duration)) {
     errors.duracion_minutos = "Duracion invalida.";
+  }
+
+  if (!errors.hora && !errors.duracion_minutos && BOOKING_HOURS.includes(reserva.hora)) {
+    const [hh, mm] = reserva.hora.split(":").map(Number);
+    if (hh * 60 + mm + duration > CLUB_CLOSING_MINUTES) {
+      errors.duracion_minutos = "La reserva no puede terminar despues de las 23:00.";
+    }
   }
 
   if (!COURTS.includes(reserva.pista)) {
@@ -592,20 +611,50 @@ export function cp04BuildAirtableDegradedResponse(technicalDetail = {}) {
   };
 }
 
-// Consulta compartida de slots ocupados en Airtable para una fecha, con el
-// mismo filtro (fecha + estado activo) que ya usaba handleDisponibilidad.
-// Extraída para poder reutilizarla también en la revalidación de
-// handleReservas, sin duplicar la query. `ok:false` cubre tanto "Airtable
-// no configurado" como errores de red/HTTP: en ningún caso lanza, siempre
-// devuelve un resultado que el llamador decide cómo tratar.
-export async function cp04FetchOcupadas(env, fecha) {
-  const cached = cp04GetCachedAvailability(fecha);
-  if (cached) return cached;
+// REPARACIÓN DEFINITIVA RATE LIMIT (2026-08-25): dos defensas nuevas sobre
+// la misma lectura compartida, sin cambiar la forma del resultado que ya
+// consumen handleDisponibilidad y la revalidación de handleReservas:
+//
+// 1) Single-flight por fecha: si ya hay una consulta a Airtable en curso
+//    para esa fecha exacta, una segunda llamada concurrente (dos pestañas,
+//    dos usuarios, o la propia revalidación de una reserva justo cuando
+//    otro cliente está cargando el calendario) NUNCA dispara una segunda
+//    petición HTTP — espera la misma promesa. La caché de 30s de arriba ya
+//    evita repetir la consulta una vez resuelta; esto cubre la ventana
+//    ANTERIOR a esa primera resolución, que es exactamente donde
+//    N solicitudes simultáneas multiplicaban por N el consumo de cuota
+//    (hallazgo confirmado: "hasta 3 lecturas Airtable sin caché por
+//    reserva", ver runbook Paso 07Q).
+// 2) Reintento único (nunca en bucle, nunca para escritura) ante un 429
+//    real de Airtable, esperando el tiempo indicado por su cabecera
+//    `Retry-After` cuando la trae (acotada a un máximo razonable para no
+//    dejar la petición del cliente colgada) o un backoff fijo corto si no
+//    la trae. Un segundo 429 tras ese único reintento se trata igual que
+//    cualquier otro fallo — nunca hay un tercer intento.
+const cp04AvailabilityInFlight = new Map(); // fecha -> Promise<resultado>
 
-  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
-    return { ok: false, reason: "not_configured" };
+export const CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS = 400;
+export const CP04_AIRTABLE_RETRY_MAX_BACKOFF_MS = 3000;
+
+function cp04DefaultSleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Airtable solo documenta Retry-After en segundos (nunca fecha HTTP) para
+// sus 429; cualquier valor ausente, no numérico o <= 0 cae al backoff por
+// defecto. Siempre acotado a CP04_AIRTABLE_RETRY_MAX_BACKOFF_MS: un valor
+// grande real no debe dejar la petición del cliente colgada — recibe la
+// respuesta degradada a tiempo y puede reintentar él mismo (botón
+// "Actualizar" del frontend), en vez de esperar en bloque lo que Airtable pida.
+export function cp04ResolveRetryBackoffMs(retryAfterHeader) {
+  const parsed = Number(retryAfterHeader);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS;
   }
+  return Math.min(parsed * 1000, CP04_AIRTABLE_RETRY_MAX_BACKOFF_MS);
+}
 
+async function cp04FetchOcupadasAttempt(env, fecha) {
   const formula = `AND(
     FIND("${cp04FormulaText(fecha)}|", {clave_slot}) = 1,
     OR(
@@ -635,21 +684,81 @@ export async function cp04FetchOcupadas(env, fecha) {
       }
     });
   } catch {
-    return { ok: false, reason: "network_error" };
+    return { networkError: true };
   }
 
   const data = await airtableRes.json().catch(() => null);
+  return {
+    networkError: false,
+    ok: airtableRes.ok,
+    status: airtableRes.status,
+    data,
+    retryAfterHeader: airtableRes.headers.get("Retry-After"),
+  };
+}
 
-  if (!airtableRes.ok) {
-    return { ok: false, reason: "airtable_error", status: airtableRes.status, details: data };
+// Consulta compartida de slots ocupados en Airtable para una fecha, con el
+// mismo filtro (fecha + estado activo) que ya usaba handleDisponibilidad.
+// Extraída para poder reutilizarla también en la revalidación de
+// handleReservas, sin duplicar la query. `ok:false` cubre tanto "Airtable
+// no configurado" como errores de red/HTTP: en ningún caso lanza, siempre
+// devuelve un resultado que el llamador decide cómo tratar.
+//
+// `deps.sleep` solo existe para que los tests puedan sustituir la espera
+// real del reintento por una resolución inmediata — en producción siempre
+// usa el temporizador real (cp04DefaultSleep).
+export async function cp04FetchOcupadas(env, fecha, deps = {}) {
+  const cached = cp04GetCachedAvailability(fecha);
+  if (cached) return cached;
+
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+    return { ok: false, reason: "not_configured" };
   }
 
-  const records = data?.records || [];
-  const ocupadas = records.map((record) => record.fields?.clave_slot).filter(Boolean);
+  const existingInFlight = cp04AvailabilityInFlight.get(fecha);
+  if (existingInFlight) return existingInFlight;
 
-  const result = { ok: true, records, ocupadas };
-  cp04SetCachedAvailability(fecha, result);
-  return result;
+  const sleep = deps.sleep || cp04DefaultSleep;
+
+  const promise = (async () => {
+    let attempt = await cp04FetchOcupadasAttempt(env, fecha);
+
+    if (attempt.networkError) {
+      return { ok: false, reason: "network_error" };
+    }
+
+    if (!attempt.ok && attempt.status === 429) {
+      await sleep(cp04ResolveRetryBackoffMs(attempt.retryAfterHeader));
+      attempt = await cp04FetchOcupadasAttempt(env, fecha);
+      if (attempt.networkError) {
+        return { ok: false, reason: "network_error" };
+      }
+    }
+
+    if (!attempt.ok) {
+      return { ok: false, reason: "airtable_error", status: attempt.status, details: attempt.data };
+    }
+
+    const records = attempt.data?.records || [];
+    const ocupadas = records.map((record) => record.fields?.clave_slot).filter(Boolean);
+
+    const result = { ok: true, records, ocupadas };
+    cp04SetCachedAvailability(fecha, result);
+    return result;
+  })();
+
+  cp04AvailabilityInFlight.set(fecha, promise);
+  try {
+    return await promise;
+  } finally {
+    cp04AvailabilityInFlight.delete(fecha);
+  }
+}
+
+// Expuesto solo para tests (limpiar estado entre casos), mismo patrón que
+// __resetAvailabilityCacheForTests.
+export function __resetAvailabilityInFlightForTests() {
+  cp04AvailabilityInFlight.clear();
 }
 
 // Comprobación pura (sin red): ¿el slot fecha|pista|hora ya aparece en la
@@ -903,12 +1012,6 @@ async function handleReservas(request, env) {
     return jsonResponse({ ok: false, error: "Invalid JSON body" }, 400, headers);
   }
 
-  // Cancelar/reprogramar son operaciones de staff según la matriz RBAC
-  // (CP04_AUTH_PERMISSIONS): PLAYER no las tiene. El gate está implementado
-  // y listo, pero permanece detrás de CP04_ENFORCE_ROLE_GATES porque el
-  // login demo por contraseña de rol no emite ningún token verificable en
-  // servidor todavía: activarlo hoy sin más rompería el tutorial guiado de
-  // STAFF/ADMIN/SUPPORT. Ver informe de auditoría para la decisión pendiente.
   const accionSolicitada = cleanText(payload?.accion);
 
   if (accionSolicitada === "crear_reserva" && !cp04CheckCrearReservaRateLimit()) {
@@ -935,16 +1038,27 @@ async function handleReservas(request, env) {
     );
   }
 
-  const esAccionDeStaff =
+  // Toda acción mutable de reservas exige un Bearer real verificado por
+  // Supabase — nunca creación/cancelación/reprogramación anónima. Los 4
+  // roles pueden crear (STAFF/ADMIN/SUPPORT en nombre de un jugador, p.ej.
+  // recepción); cancelar/reprogramar están abiertos también a PLAYER, pero
+  // solo sobre su propia reserva (comprobado más abajo contra Airtable, ver
+  // cp04LookupReservaParaQr) — STAFF/ADMIN/SUPPORT quedan exceptuados de esa
+  // comprobación de propiedad, igual que en el resto de endpoints de
+  // gestión (matriz RBAC CP04_AUTH_PERMISSIONS).
+  const esAccionMutable =
+    accionSolicitada === "crear_reserva" ||
     accionSolicitada === "cancelar_reserva" ||
     accionSolicitada === "reprogramar_reserva";
 
-  if (esAccionDeStaff && env.CP04_ENFORCE_ROLE_GATES === "true") {
-    const gate = await requireRoles(request, env, ["STAFF", "ADMIN", "SUPPORT"]);
+  let auth = null;
+  if (esAccionMutable && env.CP04_ENFORCE_ROLE_GATES === "true") {
+    const gate = await requireRoles(request, env, CP04_AUTH_ROLES);
 
     if (!gate.ok) {
       return jsonResponse(gate.body, gate.status, headers);
     }
+    auth = gate.auth;
   }
 
   const errors = validatePayload(payload);
@@ -953,6 +1067,68 @@ async function handleReservas(request, env) {
   }
 
   const normalizedPayload = normalizePayload(payload);
+
+  // No confiar en el email que manda el cliente: un PLAYER autenticado solo
+  // puede crear la reserva a su propio nombre (vinculado al email verificado
+  // por Supabase). STAFF/ADMIN/SUPPORT sí pueden crear en nombre de otro
+  // jugador (recepción/soporte), igual que en el resto de endpoints.
+  if (
+    auth &&
+    accionSolicitada === "crear_reserva" &&
+    auth.role === "PLAYER" &&
+    normalizedPayload.jugador.email !== auth.email
+  ) {
+    return jsonResponse(
+      { ok: false, error: "FORBIDDEN", message: "Solo puedes crear una reserva con tu propio email." },
+      403,
+      headers
+    );
+  }
+
+  // Cancelar/reprogramar: PLAYER solo sobre su propia reserva, comprobado
+  // contra la reserva REAL de Airtable (nunca contra el jugador.email que
+  // mande el body). Si no se puede verificar la reserva (Airtable no
+  // configurado/caído), se falla cerrado: es una comprobación de seguridad,
+  // no de UX, mismo criterio que la defensa en profundidad de
+  // handleQrGenerate.
+  if (
+    auth &&
+    auth.role === "PLAYER" &&
+    (accionSolicitada === "cancelar_reserva" || accionSolicitada === "reprogramar_reserva")
+  ) {
+    const reservaReal = await cp04LookupReservaParaQr(env, normalizedPayload.clave_reserva);
+
+    if (!reservaReal.ok) {
+      return jsonResponse(
+        { ok: false, error: "RESERVATION_CHECK_FAILED", message: "No se pudo verificar la reserva." },
+        503,
+        headers
+      );
+    }
+
+    if (!reservaReal.found) {
+      return jsonResponse(
+        { ok: false, error: "RESERVATION_NOT_FOUND", message: "Reserva no encontrada." },
+        404,
+        headers
+      );
+    }
+
+    if (reservaReal.email && reservaReal.email.toLowerCase() !== auth.email) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: "FORBIDDEN",
+          message:
+            accionSolicitada === "cancelar_reserva"
+              ? "Solo puedes cancelar tus propias reservas."
+              : "Solo puedes reprogramar tus propias reservas.",
+        },
+        403,
+        headers
+      );
+    }
+  }
 
   // Idempotencia: si la misma solicitud exacta ya se procesó hace unos
   // segundos (doble clic, reintento de red del cliente), no se reenvía a

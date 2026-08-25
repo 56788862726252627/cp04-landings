@@ -553,7 +553,14 @@ async function fetchDisponibilidad(fecha) {
   const data = await readSafeResponse(res);
 
   if (!res.ok || data?.ok === false) {
-    throw new Error("availability_request_failed");
+    // Se conserva el código/mensaje que ya manda el Worker (p.ej.
+    // AIRTABLE_RATE_LIMIT, ver cp04BuildAirtableDegradedResponse) para que
+    // quien llame pueda distinguir "no se pudo verificar la disponibilidad"
+    // de un error genérico, en vez de perderlo todo en un Error() plano.
+    const err = new Error(data?.code || "availability_request_failed");
+    err.apiCode = data?.code || null;
+    err.apiMessage = typeof data?.message === "string" ? data.message : null;
+    throw err;
   }
 
   return data || {};
@@ -583,6 +590,19 @@ function CalendarioDisponibilidad({
   const [ocupadasDetalle, setOcupadasDetalle] = useState([]);
   const [estado, setEstado] = useState("idle");
   const [mensaje, setMensaje] = useState("");
+  // Fecha para la que `ocupadas`/`ocupadasDetalle` reflejan la última
+  // respuesta REAL confirmada de Airtable (no domingo/pasado, que no
+  // consultan Airtable pero tampoco necesitan este rastro: ya son estados
+  // deterministas sin ambigüedad). Se usa para distinguir, cuando la
+  // consulta falla técnicamente (p.ej. AIRTABLE_RATE_LIMIT), si lo que hay
+  // en `ocupadas` es un último estado confirmado (aunque desactualizado) de
+  // ESTA MISMA fecha, o si nunca se llegó a confirmar nada para ella — ver
+  // consultarDisponibilidad más abajo. Deliberadamente un ref, no un
+  // useState: se lee/escribe dentro de consultarDisponibilidad (memoizada
+  // con []) sin querer que cambiar este valor dispare una nueva identidad
+  // de esa función — eso reactivaría el useEffect de abajo y crearía un
+  // bucle de refetch tras cada éxito.
+  const fechaUltimaConfirmadaRef = useRef(null);
   const lastInitialDateRef = useRef(initialDate);
 
   const ocupadasSet = useMemo(() => new Set(ocupadas), [ocupadas]);
@@ -652,12 +672,32 @@ function CalendarioDisponibilidad({
       setOcupadas(data.ocupadas || []);
       setOcupadasDetalle(Array.isArray(data.ocupadas_detalle) ? data.ocupadas_detalle : []);
       setEstado("success");
+      fechaUltimaConfirmadaRef.current = fechaConsulta;
       setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
-    } catch {
+    } catch (err) {
       setEstado("error");
-      setMensaje("No se pudo actualizar la disponibilidad. Inténtalo de nuevo.");
-      setOcupadas([]);
-      setOcupadasDetalle([]);
+
+      // Si ya había una disponibilidad confirmada para ESTA MISMA fecha, se
+      // conserva tal cual (nunca se borra aquí): es mejor mostrar el último
+      // estado real conocido, marcado como pendiente de actualizar, que
+      // dejar la franja en un limbo "sin datos" cuando sí los hay. Si nunca
+      // se confirmó nada para esta fecha (primera carga fallida, o cambio a
+      // una fecha nueva mientras Airtable está degradado), no hay nada
+      // fiable que conservar — se limpia y el render de abajo (variable
+      // `datosSinVerificar`) trata cada franja como "sin verificar", nunca
+      // como "No disponible" (eso sería un falso "ocupado" técnico).
+      const haySnapshotDeEstaFecha = fechaUltimaConfirmadaRef.current === fechaConsulta;
+      if (!haySnapshotDeEstaFecha) {
+        setOcupadas([]);
+        setOcupadasDetalle([]);
+      }
+
+      const mensajeApi = err?.apiMessage;
+      setMensaje(
+        haySnapshotDeEstaFecha
+          ? `No se pudo verificar la disponibilidad más reciente; mostrando el último estado confirmado, puede estar desactualizado.${mensajeApi ? ` (${mensajeApi})` : ""}`
+          : mensajeApi || "No se pudo verificar la disponibilidad. Reintenta en unos segundos."
+      );
     }
   }, []);
 
@@ -770,12 +810,22 @@ function CalendarioDisponibilidad({
               {BOOKING_HOURS.map((hora) => {
                 const clave = `${fecha}|${pista}|${hora}`;
 
-                // Mientras la disponibilidad se está consultando o falló al
-                // cargar, NUNCA se muestra un slot como si estuviera libre
-                // (fail-safe): se trata como no disponible y el aviso real
-                // ("Comprobando…" / error de red) vive en el banner
-                // `mensaje` de arriba, no en cada botón individual.
-                const datosNoVerificados = estado === "loading" || estado === "error";
+                // Solo se trata como "sin fuente fiable" cuando la consulta
+                // está en curso o falló Y, además, no hay ningún snapshot
+                // real confirmado para ESTA fecha (ver fechaUltimaConfirmadaRef
+                // más arriba). Si sí lo hay (p.ej. un refresco en segundo
+                // plano, o un error técnico tras haber cargado bien antes),
+                // se sigue evaluando con los datos reales ya conocidos —
+                // desactualizados, pero reales — y el aviso de "puede estar
+                // desactualizado" vive en el banner `mensaje` de arriba.
+                // Cuando NO hay ningún dato real que mostrar, el slot nunca
+                // se pinta como "No disponible" (eso sería un falso ocupado
+                // técnico) ni como "Libre" (eso sería el falso "disponible"
+                // silencioso ya corregido en apiEndpoint.js) — se marca
+                // explícitamente como sin verificar, deshabilitado.
+                const sinFuenteFiable =
+                  (estado === "loading" || estado === "error") &&
+                  fechaUltimaConfirmadaRef.current !== fecha;
 
                 // Siempre usa la duración mínima válida (normalmente 60 min).
                 // La pregunta del calendario es "¿puede INICIARSE alguna reserva aquí?"
@@ -786,8 +836,8 @@ function CalendarioDisponibilidad({
                 //    21:00+60=22:00, que es el límite semiabierto, no hay solapamiento.
                 const slotDuration = getAvailableDurationsForHour(hora)[0] ?? 60;
 
-                const evaluacion = datosNoVerificados
-                  ? { status: AVAILABILITY_STATUS.UNAVAILABLE, reason: null }
+                const evaluacion = sinFuenteFiable
+                  ? { status: null, reason: null }
                   : evaluateSlotAvailability({
                       date: fecha,
                       startTime: hora,
@@ -798,26 +848,38 @@ function CalendarioDisponibilidad({
                       currentDateTime: madridNowAsUtcTrick(),
                     });
 
-                const disabled = evaluacion.status !== AVAILABILITY_STATUS.AVAILABLE;
-                const occupiedLike = evaluacion.status === AVAILABILITY_STATUS.OCCUPIED;
-                const unavailableLike = evaluacion.status === AVAILABILITY_STATUS.UNAVAILABLE;
+                const disabled = sinFuenteFiable || evaluacion.status !== AVAILABILITY_STATUS.AVAILABLE;
+                const occupiedLike = !sinFuenteFiable && evaluacion.status === AVAILABILITY_STATUS.OCCUPIED;
+                const unavailableLike = !sinFuenteFiable && evaluacion.status === AVAILABILITY_STATUS.UNAVAILABLE;
 
-                // El usuario solo ve estos tres estados. El motivo interno
+                // El usuario solo ve estos estados. El motivo interno
                 // (reason) queda solo en el title/tooltip, para soporte.
-                const label = evaluacion.status === AVAILABILITY_STATUS.AVAILABLE
+                const label = sinFuenteFiable
+                  ? (estado === "loading" ? "Comprobando…" : "Sin verificar")
+                  : evaluacion.status === AVAILABILITY_STATUS.AVAILABLE
                   ? "Libre"
                   : occupiedLike
                     ? "Ocupado"
                     : "No disponible";
 
-                const borderColor = unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
-                const background = unavailableLike
-                  ? "rgba(255,184,77,.12)"
-                  : occupiedLike
-                    ? "rgba(255,80,80,.13)"
-                    : "rgba(185,245,0,.12)";
-                const textColor = unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
-                const tooltip = evaluacion.reason ? `${label} (${evaluacion.reason})` : label;
+                const borderColor = sinFuenteFiable
+                  ? T.textDim
+                  : unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
+                const background = sinFuenteFiable
+                  ? "rgba(255,255,255,.05)"
+                  : unavailableLike
+                    ? "rgba(255,184,77,.12)"
+                    : occupiedLike
+                      ? "rgba(255,80,80,.13)"
+                      : "rgba(185,245,0,.12)";
+                const textColor = sinFuenteFiable
+                  ? T.textDim
+                  : unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
+                const tooltip = sinFuenteFiable
+                  ? (estado === "loading"
+                      ? "Comprobando disponibilidad…"
+                      : "No se pudo verificar la disponibilidad; reintenta con el botón «Actualizar».")
+                  : evaluacion.reason ? `${label} (${evaluacion.reason})` : label;
 
                 return (
                   <button
