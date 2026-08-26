@@ -1,9 +1,25 @@
 # Estado actual · cp04-landings/app
 
-Última actualización: 2026-08-26 · Claude Code (Terminal) · sesión de creación del Context Hub.
+Última actualización: 2026-08-26 · Claude Code (Terminal) · sesión de cierre y merge del Context Hub a main.
 
 Ver `PROJECTS/*.md` para el detalle de cada proyecto. Esta página es el resumen
 de una sola pantalla.
+
+## Context Hub — estado de integración en main
+
+| Campo | Valor |
+|---|---|
+| **Fecha** | 2026-08-26 |
+| **Estado** | 100 % integrado en `main` |
+| **PR limpio** | #79 (`docs/context-hub-clean`) — mergeado |
+| **PR obsoleto** | #78 (`docs/resultado-merge-pr52-66-20260727`) — cerrado sin merge |
+| **Merge SHA** | `aaf0eb3f6988f6e2a615f35e6e0f5e3eedab3521` |
+| **Contenido del merge** | exclusivamente `app/.ai-context/` — 10 archivos, 648 inserciones, 0 borrados |
+| **Deploy** | NO |
+| **Secretos incluidos** | NO |
+| **Cambios de producción** | NO |
+
+Certeza: VERIFICADO DIRECTAMENTE (2026-08-26).
 
 ## Repositorio
 
@@ -12,7 +28,7 @@ de una sola pantalla.
 | Directorio base | `/root/cp04-landings/app` | VERIFICADO DIRECTAMENTE |
 | Rama actual | `docs/resultado-merge-pr52-66-20260727` | VERIFICADO DIRECTAMENTE |
 | Remoto | `origin` → `github.com/56788862726252627/cp04-landings.git` | VERIFICADO DIRECTAMENTE |
-| Estado vs. origin | 5 commits por delante, sin push | VERIFICADO DIRECTAMENTE (2026-08-26) |
+| Estado vs. origin | en sincronía con origin (Context Hub ya en main vía PR #79) | VERIFICADO DIRECTAMENTE (2026-08-26) |
 | Working tree | 23 archivos modificados sin commitear + numerosos untracked (factory-cli, saas-core/deliverables, saas-core/factory, docs/paso-21..24, docs/registro-maestro-50-flujos-20260801, `examples/`) — **pre-existentes a esta sesión**, ninguno tocado por el Context Hub | VERIFICADO DIRECTAMENTE (2026-08-26) |
 
 ## Últimos 5 commits (rama actual)
