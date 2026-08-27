@@ -52,6 +52,22 @@ test("cp04ResolveApiBaseUrl: rechaza un valor protocolo-relativo o sin esquema (
   assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "evil.example.com" }), "");
 });
 
+test("cp04ResolveApiBaseUrl: DEV:true fuerza rutas relativas aunque VITE_CP04_PUBLIC_BOOKING_ENDPOINT esté configurado", () => {
+  // Bug P0 2026-08-27: .env (cargado en todos los modos) tiene la variable
+  // configurada. En desarrollo el navegador haría peticiones cross-origin al
+  // Worker → CORS falla → fetch() lanza → mensaje incorrecto "No se pudo
+  // contactar". La guardia DEV:true garantiza que en dev siempre va al proxy
+  // de Vite (rutas relativas) independientemente del valor de la variable.
+  assert.equal(cp04ResolveApiBaseUrl({ DEV: true, VITE_CP04_PUBLIC_BOOKING_ENDPOINT: PREVIEW_BASE }), "");
+  assert.equal(cp04ResolveApiBaseUrl({ DEV: true, VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "http://localhost:8787" }), "");
+  assert.equal(cp04ResolveApiBaseUrl({ DEV: true, VITE_CP04_PUBLIC_BOOKING_ENDPOINT: "" }), "");
+});
+
+test("cp04ResolveApiBaseUrl: DEV:false o DEV ausente no activa la guardia de dev — se comporta como siempre", () => {
+  assert.equal(cp04ResolveApiBaseUrl({ DEV: false, VITE_CP04_PUBLIC_BOOKING_ENDPOINT: PREVIEW_BASE }), PREVIEW_BASE);
+  assert.equal(cp04ResolveApiBaseUrl({ VITE_CP04_PUBLIC_BOOKING_ENDPOINT: PREVIEW_BASE }), PREVIEW_BASE);
+});
+
 // cp04BuildApiUrl -------------------------------------------------------------
 
 test("cp04BuildApiUrl: sin base -> ruta relativa tal cual (desarrollo, proxy de Vite)", () => {

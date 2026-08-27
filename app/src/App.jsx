@@ -9205,18 +9205,21 @@ export default function ClubPadel04SaaSApp() {
     setForgotPwdStep("loading");
 
     // Llamada real a auth.recoverPassword (POST /api/auth/forgot-password).
-    // result.authReady distingue si el backend tiene proveedor configurado
-    // (Supabase) de si sigue en modo backend_stub: NUNCA se muestra el
-    // mismo mensaje de éxito en ambos casos, porque en el segundo no se ha
-    // enviado ningún email de verdad. Mostrar "sent" ahí sería seguridad de
-    // attrezzo (Fase 8 del prompt maestro).
+    // Tres casos distintos que deben mostrarse de forma diferente:
+    // - ok:false + networkError:true → fallo de red (no implica proveedor no configurado)
+    // - ok:true + authReady:true    → Supabase activo, email enviado (neutro anti-enumeration)
+    // - ok:true + authReady:false   → backend_stub, proveedor no configurado (no se envió nada)
     const result = await auth.recoverPassword(forgotPwdEmail.trim().toLowerCase());
 
-    if (result.authReady) {
-      // Respuesta siempre neutra por diseño anti-enumeration: no revela si
-      // el email existe o no, tanto si el envío real fue posible como si no.
+    if (!result.ok) {
+      // Fallo de red o error de cliente: volvemos al formulario con el mensaje.
+      setForgotPwdEmailError(result.message || "No se pudo contactar con el servidor.");
+      setForgotPwdStep("form");
+    } else if (result.authReady) {
+      // Supabase configurado: respuesta neutra (no revela si el email existe).
       setForgotPwdStep("sent");
     } else {
+      // auth_ready:false explícito del backend: proveedor no configurado.
       setForgotPwdStep("unavailable");
     }
   }

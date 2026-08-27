@@ -32,6 +32,13 @@
 const SAFE_BASE_URL_PATTERN = /^https?:\/\/[^\s"'<>]+$/i;
 
 export function cp04ResolveApiBaseUrl(env) {
+  // Bloqueo P0 2026-08-27: si VITE_CP04_PUBLIC_BOOKING_ENDPOINT está en
+  // .env (no solo en .env.production), Vite la inyecta también en `dev`.
+  // En desarrollo el proxy de Vite debe resolver /api/*, no el navegador
+  // directamente: una petición cross-origin desde localhost al Worker
+  // falla con CORS porque localhost no está en ALLOWED_ORIGIN del Worker.
+  // En DEV forzamos siempre rutas relativas, ignorando la variable.
+  if (env?.DEV === true) return "";
   const raw = env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT;
   if (typeof raw !== "string") return "";
   const trimmed = raw.trim().replace(/\/+$/, "");

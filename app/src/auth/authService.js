@@ -170,11 +170,19 @@ export async function login(email, password) {
   const data = await readJsonSafe(response);
 
   if (!response.ok || !data?.ok) {
+    // Supabase devuelve error "invalid_grant" (HTTP 400) cuando las
+    // credenciales son incorrectas. Se expone un mensaje claro y sin
+    // información técnica de Supabase en lugar de "No se pudo iniciar sesión."
+    const isInvalidCredentials =
+      response.status === 400 &&
+      (data?.error === "invalid_grant" || data?.error === "INVALID_CREDENTIALS");
     return {
       ok: false,
       authReady: data?.auth_ready !== false,
       error: data?.error || "LOGIN_FAILED",
-      message: data?.message || "No se pudo iniciar sesión.",
+      message: isInvalidCredentials
+        ? "Correo electrónico o contraseña incorrectos."
+        : (data?.message || "No se pudo iniciar sesión."),
     };
   }
 
@@ -341,8 +349,10 @@ export async function forgotPassword(email) {
       body: JSON.stringify({ email }),
     });
   } catch {
-    // Fallo de red: honesto también, nunca se traduce en "email enviado".
-    return { ok: false, authReady: false, message: "No se pudo contactar con el servidor." };
+    // Fallo de red: honesto, pero no implica proveedor no configurado.
+    // authReady queda sin definir (no false) para que el llamador distinga
+    // este caso de backend_stub (auth_ready:false explícito del backend).
+    return { ok: false, networkError: true, message: "No se pudo contactar con el servidor de autenticación." };
   }
 
   const data = await readJsonSafe(response);

@@ -58,15 +58,42 @@ test("forgotPassword: respuesta neutra — no revela si el email existe", async 
   assert.ok(result.message.length > 0, "Debe incluir mensaje neutro");
 });
 
-test("forgotPassword: error de red → ok:false, authReady:false, sin exception", async () => {
+test("forgotPassword: error de red → ok:false, networkError:true, sin authReady:false, sin exception", async () => {
+  // Un fallo de red NO implica proveedor no configurado (authReady:false).
+  // authReady queda sin definir para distinguirlo de backend_stub (auth_ready:false
+  // explícito del backend). La UI debe mostrar un error de conexión, no "proveedor
+  // pendiente de configurar".
   const result = await withMockedFetch(
     async () => { throw new TypeError("Network error"); },
     () => forgotPassword("test@example.com")
   );
 
   assert.equal(result.ok, false);
-  assert.equal(result.authReady, false);
+  assert.equal(result.networkError, true, "Debe indicar networkError:true para que la UI distinga este caso");
+  assert.notEqual(result.authReady, false, "Un fallo de red NO debe marcar authReady:false (eso es solo para backend_stub)");
   assert.ok(result.message.length > 0, "Debe incluir mensaje de error de red");
+});
+
+test("forgotPassword: HTTP 200 con auth_ready:true → authReady:true, ok:true (éxito real)", async () => {
+  const result = await withMockedFetch(
+    async () => makeResponse({ ok: true, auth_ready: true, provider: "supabase", message: "Si el correo existe..." }),
+    () => forgotPassword("staff@clubpadel04.com")
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.authReady, true);
+  assert.equal(result.networkError, undefined, "No debe haber networkError en éxito");
+});
+
+test("forgotPassword: HTTP 200 con auth_ready:false → authReady:false (backend_stub, proveedor no configurado)", async () => {
+  const result = await withMockedFetch(
+    async () => makeResponse({ ok: true, auth_ready: false, mode: "backend_stub", message: "Sin proveedor" }),
+    () => forgotPassword("cualquiera@example.com")
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.authReady, false, "Debe ser false para backend_stub explícito");
+  assert.equal(result.networkError, undefined, "backend_stub no es un error de red");
 });
 
 test("forgotPassword: envía el email en el body al endpoint correcto", async () => {
