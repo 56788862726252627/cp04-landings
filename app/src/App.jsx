@@ -1538,6 +1538,7 @@ const TRANSLATIONS = {
     "nav.comunicaciones_socio":"Comunicaciones y ciclo de socio",
     "nav.calendario_disponibilidad":"Calendario y disponibilidad",
     "nav.facturacion_pagos":"Facturación y pagos",
+    "nav.asistente_ia":"Asistente IA",
     "nav.automatizaciones_bots":"Automatizaciones y bots",
     "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
     "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
@@ -3353,6 +3354,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
     ["dashboard_kpi","nav.dashboard_kpi","📈"],
     ["backups_seguridad","nav.backups_seguridad","🗂️"],
     ["facturacion_pagos","nav.facturacion_pagos","💳"],
+    ["asistente_ia","nav.asistente_ia","💬"],
     ["automatizaciones_bots","nav.automatizaciones_bots","🤖"],
     ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
   ];
@@ -5528,9 +5530,30 @@ function FacturacionPagos() {
   );
 }
 
+// RBAC V2 (2026-08-27): módulo usuario limpio — solo el chatbot, sin info
+// técnica de Make/secretos/escenarios. Visible a todos los roles (PLAYER incluido).
+function AsistenteIA({ navigate }) {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 700, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Tu asistente"
+        title="Asistente IA"
+        desc="Consulta disponibilidad, gestiona tus reservas y resuelve dudas."
+      />
+      <Card>
+        <h3 style={{ marginTop: 0 }}>💬 Asistente de Club Pádel 04</h3>
+        <p style={{ color: "#555", fontSize: 14, marginBottom: 16 }}>
+          Escribe o envía una nota de voz. Puedo ayudarte con disponibilidad de pistas, consultar o gestionar tus reservas.
+        </p>
+        <ChatbotAsistente onNavigate={navigate} />
+      </Card>
+    </div>
+  );
+}
+
 // PASO 07P (2026-07-20) / Omnicanal (2026-08-27): "Automatizaciones y bots"
-// agrupa el Asistente Web real (conectado a /api/chat en el Worker) más los
-// escenarios Make de canales externos. WhatsApp Business API y Tally siguen
+// agrupa los canales externos Make (Telegram, WhatsApp, Tally) y el Asistente
+// Web con detalle técnico. Visible solo para ADMIN y SUPPORT. WhatsApp Business API y Tally siguen
 // sin integración real. Telegram usa el mismo endpoint /api/chat con
 // X-CP04-Bot-Secret (trigger en Make ID 4832095 preparado, sin activar).
 // El asistente web SÍ está conectado al backend omnicanal real.
@@ -8957,7 +8980,7 @@ export default function ClubPadel04SaaSApp() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- solo ejecuta al montar
 
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots navigate={navigate} />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, asistente_ia: <AsistenteIA navigate={navigate} />, automatizaciones_bots: <AutomatizacionesBots navigate={navigate} />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,
