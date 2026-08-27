@@ -34,11 +34,14 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 
 import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
 import { LazyCP04GuidedTutorial } from "./components/lazy/lazyGuidedTutorial.js";
-import { useAuth } from "./auth/AuthContext.jsx";
+import { useAuth } from "./auth/useAuth.js";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 import { authFetch } from "./auth/authService.js";
+import { ChatbotAsistente } from "./components/ChatbotAsistente.jsx";
 import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
 import { cp04BuildReservationError, cp04ReservationErrorMessage } from "./utils/reservationErrors.js";
+import { cp04ShouldBlockAnonymousReservaSubmit, cp04IsSessionExpiredReservaResponse } from "./utils/reservaAuthGate.js";
+import { cp04DisponibilidadEndpoint, cp04ReservasEndpoint } from "./utils/apiEndpoint.js";
 import {
   CP04_ROLE_PERMISSIONS,
   CP04_PROTECTED_SECTIONS,
@@ -48,6 +51,17 @@ import {
 } from "./utils/rbac.js";
 import { cp04ComputeScreenState } from "./utils/screenState.js";
 import { cp04Can } from "./utils/permissions.js";
+import { computeMasterCounters } from "./data/makeMasterRegistry.js";
+import {
+  buildRoundRobinMatches,
+  getRoundRobinRestingPairId,
+  getRoundRobinTotalRounds,
+  applyRoundRobinResult,
+  computeRoundRobinStandings,
+  sortRoundRobinStandings,
+  isRoundRobinComplete,
+  getRoundRobinChampion,
+} from "./utils/roundRobin.js";
 import { cp04ApplyScreenState } from "./cp04-apply-screen-state.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
 import { LazyComunidad } from "./components/lazy/lazyComunidad.js";
@@ -71,7 +85,7 @@ const CONFIG = {
   appName: "Club Pádel 04",
   club: "Club Pádel 04",
   origen: "github_safe_frontend",
-  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+  bookingEndpoint: cp04ReservasEndpoint(import.meta?.env),
   contactEmail: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_EMAIL || "Pendiente de configurar",
   contactPhone: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_PHONE || "Pendiente de configurar",
 };
@@ -116,7 +130,7 @@ const COURTS = [
   { id: 4, name: "Pista 4", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
 ];
 
-const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 const BOOKING_DURATIONS = [60, 90, 120];
 const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
 const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
@@ -263,6 +277,14 @@ function calcTimeEnd(time, mins) {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + mins;
   return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function getAvailableDurationsForHour(hora) {
+  if (!hora || !hora.includes(":")) return BOOKING_DURATIONS;
+  const [h, m] = hora.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return BOOKING_DURATIONS;
+  const startMins = h * 60 + m;
+  return BOOKING_DURATIONS.filter((d) => startMins + d <= CLUB_CLOSING_MINUTES);
 }
 
 function priceFor(courtName, duration) {
@@ -494,18 +516,6 @@ function prepareReschedulePayload(form, courtName) {
   };
 }
 
-async function sendBooking(payload) {
-  const res = await fetch(CONFIG.bookingEndpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await readSafeResponse(res);
-  if (!res.ok || data?.ok === false) throw cp04BuildReservationError(data, "booking_request_failed");
-  return data;
-}
-
 function Card({ children, style = {} }) {
   return <div className="cp04-card" style={style}>{children}</div>;
 }
@@ -524,7 +534,7 @@ function Btn({ children, onClick, variant = "primary", disabled = false, type = 
 }
 
 
-const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+const DISPONIBILIDAD_ENDPOINT = cp04DisponibilidadEndpoint(import.meta?.env);
 const DISPONIBILIDAD_UPDATE_EVENT = "cp04:disponibilidad-actualizar";
 
 async function readSafeResponse(res) {
@@ -544,7 +554,14 @@ async function fetchDisponibilidad(fecha) {
   const data = await readSafeResponse(res);
 
   if (!res.ok || data?.ok === false) {
-    throw new Error("availability_request_failed");
+    // Se conserva el código/mensaje que ya manda el Worker (p.ej.
+    // AIRTABLE_RATE_LIMIT, ver cp04BuildAirtableDegradedResponse) para que
+    // quien llame pueda distinguir "no se pudo verificar la disponibilidad"
+    // de un error genérico, en vez de perderlo todo en un Error() plano.
+    const err = new Error(data?.code || "availability_request_failed");
+    err.apiCode = data?.code || null;
+    err.apiMessage = typeof data?.message === "string" ? data.message : null;
+    throw err;
   }
 
   return data || {};
@@ -564,6 +581,7 @@ function CalendarioDisponibilidad({
   initialDate,
   selectedCourt,
   onSelectSlot,
+  onDisponibilidadChange,
   duration = 90,
   title = "Calendario de disponibilidad",
   description = "Elige fecha, hora y pista disponibles.",
@@ -573,6 +591,19 @@ function CalendarioDisponibilidad({
   const [ocupadasDetalle, setOcupadasDetalle] = useState([]);
   const [estado, setEstado] = useState("idle");
   const [mensaje, setMensaje] = useState("");
+  // Fecha para la que `ocupadas`/`ocupadasDetalle` reflejan la última
+  // respuesta REAL confirmada de Airtable (no domingo/pasado, que no
+  // consultan Airtable pero tampoco necesitan este rastro: ya son estados
+  // deterministas sin ambigüedad). Se usa para distinguir, cuando la
+  // consulta falla técnicamente (p.ej. AIRTABLE_RATE_LIMIT), si lo que hay
+  // en `ocupadas` es un último estado confirmado (aunque desactualizado) de
+  // ESTA MISMA fecha, o si nunca se llegó a confirmar nada para ella — ver
+  // consultarDisponibilidad más abajo. Deliberadamente un ref, no un
+  // useState: se lee/escribe dentro de consultarDisponibilidad (memoizada
+  // con []) sin querer que cambiar este valor dispare una nueva identidad
+  // de esa función — eso reactivaría el useEffect de abajo y crearía un
+  // bucle de refetch tras cada éxito.
+  const fechaUltimaConfirmadaRef = useRef(null);
   const lastInitialDateRef = useRef(initialDate);
 
   const ocupadasSet = useMemo(() => new Set(ocupadas), [ocupadas]);
@@ -642,12 +673,32 @@ function CalendarioDisponibilidad({
       setOcupadas(data.ocupadas || []);
       setOcupadasDetalle(Array.isArray(data.ocupadas_detalle) ? data.ocupadas_detalle : []);
       setEstado("success");
+      fechaUltimaConfirmadaRef.current = fechaConsulta;
       setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
-    } catch {
+    } catch (err) {
       setEstado("error");
-      setMensaje("No se pudo actualizar la disponibilidad. Inténtalo de nuevo.");
-      setOcupadas([]);
-      setOcupadasDetalle([]);
+
+      // Si ya había una disponibilidad confirmada para ESTA MISMA fecha, se
+      // conserva tal cual (nunca se borra aquí): es mejor mostrar el último
+      // estado real conocido, marcado como pendiente de actualizar, que
+      // dejar la franja en un limbo "sin datos" cuando sí los hay. Si nunca
+      // se confirmó nada para esta fecha (primera carga fallida, o cambio a
+      // una fecha nueva mientras Airtable está degradado), no hay nada
+      // fiable que conservar — se limpia y el render de abajo (variable
+      // `datosSinVerificar`) trata cada franja como "sin verificar", nunca
+      // como "No disponible" (eso sería un falso "ocupado" técnico).
+      const haySnapshotDeEstaFecha = fechaUltimaConfirmadaRef.current === fechaConsulta;
+      if (!haySnapshotDeEstaFecha) {
+        setOcupadas([]);
+        setOcupadasDetalle([]);
+      }
+
+      const mensajeApi = err?.apiMessage;
+      setMensaje(
+        haySnapshotDeEstaFecha
+          ? `No se pudo verificar la disponibilidad más reciente; mostrando el último estado confirmado, puede estar desactualizado.${mensajeApi ? ` (${mensajeApi})` : ""}`
+          : mensajeApi || "No se pudo verificar la disponibilidad. Reintenta en unos segundos."
+      );
     }
   }, []);
 
@@ -684,6 +735,14 @@ function CalendarioDisponibilidad({
       window.removeEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
     };
   }, [consultarDisponibilidad, fecha]);
+
+  // Notifica al padre (Reservas) cuando cambia la disponibilidad real del backend,
+  // para que pueda sincronizar el ocupadasSet del formulario con la misma fuente.
+  useEffect(() => {
+    if (typeof onDisponibilidadChange === "function") {
+      onDisponibilidadChange({ ocupadas, ocupadasDetalle });
+    }
+  }, [ocupadas, ocupadasDetalle, onDisponibilidadChange]);
 
   const cambiarFecha = (value) => {
     setFecha(value);
@@ -752,45 +811,76 @@ function CalendarioDisponibilidad({
               {BOOKING_HOURS.map((hora) => {
                 const clave = `${fecha}|${pista}|${hora}`;
 
-                // Mientras la disponibilidad se está consultando o falló al
-                // cargar, NUNCA se muestra un slot como si estuviera libre
-                // (fail-safe): se trata como no disponible y el aviso real
-                // ("Comprobando…" / error de red) vive en el banner
-                // `mensaje` de arriba, no en cada botón individual.
-                const datosNoVerificados = estado === "loading" || estado === "error";
+                // Solo se trata como "sin fuente fiable" cuando la consulta
+                // está en curso o falló Y, además, no hay ningún snapshot
+                // real confirmado para ESTA fecha (ver fechaUltimaConfirmadaRef
+                // más arriba). Si sí lo hay (p.ej. un refresco en segundo
+                // plano, o un error técnico tras haber cargado bien antes),
+                // se sigue evaluando con los datos reales ya conocidos —
+                // desactualizados, pero reales — y el aviso de "puede estar
+                // desactualizado" vive en el banner `mensaje` de arriba.
+                // Cuando NO hay ningún dato real que mostrar, el slot nunca
+                // se pinta como "No disponible" (eso sería un falso ocupado
+                // técnico) ni como "Libre" (eso sería el falso "disponible"
+                // silencioso ya corregido en apiEndpoint.js) — se marca
+                // explícitamente como sin verificar, deshabilitado.
+                const sinFuenteFiable =
+                  (estado === "loading" || estado === "error") &&
+                  fechaUltimaConfirmadaRef.current !== fecha;
 
-                const evaluacion = datosNoVerificados
-                  ? { status: AVAILABILITY_STATUS.UNAVAILABLE, reason: null }
+                // Siempre usa la duración mínima válida (normalmente 60 min).
+                // La pregunta del calendario es "¿puede INICIARSE alguna reserva aquí?"
+                // no "¿cabe mi duración seleccionada aquí?". Esto evita dos problemas:
+                // 1. 22:00 + 90min → INSUFFICIENT_REMAINING_TIME (cierre a las 23:00)
+                // 2. Reserva [22:00,23:00) bloquea visualmente 21:00 cuando dur=90
+                //    porque 21:00+90=22:30 solapa con la reserva; con 60min
+                //    21:00+60=22:00, que es el límite semiabierto, no hay solapamiento.
+                const slotDuration = getAvailableDurationsForHour(hora)[0] ?? 60;
+
+                const evaluacion = sinFuenteFiable
+                  ? { status: null, reason: null }
                   : evaluateSlotAvailability({
                       date: fecha,
                       startTime: hora,
-                      durationMinutes: Number(duration),
+                      durationMinutes: slotDuration,
                       courtId: pista,
                       existingBookings,
                       openingHours: CLUB_OPENING_HOURS,
                       currentDateTime: madridNowAsUtcTrick(),
                     });
 
-                const disabled = evaluacion.status !== AVAILABILITY_STATUS.AVAILABLE;
-                const occupiedLike = evaluacion.status === AVAILABILITY_STATUS.OCCUPIED;
-                const unavailableLike = evaluacion.status === AVAILABILITY_STATUS.UNAVAILABLE;
+                const disabled = sinFuenteFiable || evaluacion.status !== AVAILABILITY_STATUS.AVAILABLE;
+                const occupiedLike = !sinFuenteFiable && evaluacion.status === AVAILABILITY_STATUS.OCCUPIED;
+                const unavailableLike = !sinFuenteFiable && evaluacion.status === AVAILABILITY_STATUS.UNAVAILABLE;
 
-                // El usuario solo ve estos tres estados. El motivo interno
+                // El usuario solo ve estos estados. El motivo interno
                 // (reason) queda solo en el title/tooltip, para soporte.
-                const label = evaluacion.status === AVAILABILITY_STATUS.AVAILABLE
+                const label = sinFuenteFiable
+                  ? (estado === "loading" ? "Comprobando…" : "Sin verificar")
+                  : evaluacion.status === AVAILABILITY_STATUS.AVAILABLE
                   ? "Libre"
                   : occupiedLike
                     ? "Ocupado"
                     : "No disponible";
 
-                const borderColor = unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
-                const background = unavailableLike
-                  ? "rgba(255,184,77,.12)"
-                  : occupiedLike
-                    ? "rgba(255,80,80,.13)"
-                    : "rgba(185,245,0,.12)";
-                const textColor = unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
-                const tooltip = evaluacion.reason ? `${label} (${evaluacion.reason})` : label;
+                const borderColor = sinFuenteFiable
+                  ? T.textDim
+                  : unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
+                const background = sinFuenteFiable
+                  ? "rgba(255,255,255,.05)"
+                  : unavailableLike
+                    ? "rgba(255,184,77,.12)"
+                    : occupiedLike
+                      ? "rgba(255,80,80,.13)"
+                      : "rgba(185,245,0,.12)";
+                const textColor = sinFuenteFiable
+                  ? T.textDim
+                  : unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
+                const tooltip = sinFuenteFiable
+                  ? (estado === "loading"
+                      ? "Comprobando disponibilidad…"
+                      : "No se pudo verificar la disponibilidad; reintenta con el botón «Actualizar».")
+                  : evaluacion.reason ? `${label} (${evaluacion.reason})` : label;
 
                 return (
                   <button
@@ -1149,13 +1239,20 @@ function FlowStatusBadge({ status }) {
   );
 }
 
-function ChartCard({ title, sub, children, action, style: cs = {} }) {
+function ChartCard({ title, sub, children, action, demo = false, style: cs = {} }) {
   const cleanSub = sub ? sub.replace(/ ?·? ?demo/gi, "").replace(/Make/gi, "Procesos").trim() : sub;
   return (
     <div style={{ borderRadius:20, border:`1px solid rgba(255,255,255,.09)`, background:"rgba(11,17,29,.82)", padding:"16px 18px", ...cs }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
         <div>
-          <div style={{ fontWeight:800, fontSize:".88rem", color:T.text }}>{title}</div>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ fontWeight:800, fontSize:".88rem", color:T.text }}>{title}</div>
+            {demo && (
+              <span style={{ color:T.warning, border:`1px solid ${T.warning}66`, borderRadius:999, padding:"1px 7px", fontSize:".62rem", fontWeight:800, textTransform:"uppercase", letterSpacing:".04em" }}>
+                Demo
+              </span>
+            )}
+          </div>
           {cleanSub && <div style={{ color:T.textDim, fontSize:".73rem", marginTop:2 }}>{cleanSub}</div>}
         </div>
         {action && <div style={{ flexShrink:0 }}>{action}</div>}
@@ -1197,14 +1294,16 @@ const DEMO_KPI = {
   ingresosMes: 4820,
   alertasCriticas: 0,
   incidenciasAbiertas: 1,
-  makeActivos: 38,
   makeErrores: 2,
-  makePausados: 3,
   tasaExitoMake: 97.4,
   ultimoBackup: "Lun 07:00",
   qrGenerados: 24,
   exportaciones: 7,
 };
+
+// Fuente única de verdad de los 50 flujos Make (src/data/makeMasterRegistry.js).
+// Nunca hardcodear el total ni el desglose aquí — siempre derivado.
+const MAKE_FLUJOS_COUNTERS = computeMasterCounters();
 
 
 
@@ -1470,7 +1569,7 @@ const TRANSLATIONS = {
     "home.este_mes":"este mes","home.incidencia":"incidencia","home.incidencias_s":"incidencias",
     "home.franja_horaria":"Franja horaria","home.tendencia_semanal":"Tendencia semanal",
     "home.porcentaje_uso":"Porcentaje de uso","home.procesos_conectados":"procesos conectados",
-    "home.activos":"Activos","home.pausados":"Pausados","home.incidencias":"Incidencias",
+    "home.activos":"Activos","home.pausados":"Pausados","home.incidencias":"Incidencias","home.flujos_totales":"flujos totales","home.operativo_probado":"operativo (probado E2E)",
     "home.reservas_hora":"Reservas por hora — hoy","home.reservas_7dias":"Reservas últimos 7 días",
     "home.ocupacion_pista":"Ocupación por pista","home.estado_procesos":"Estado de procesos",
     "home.club_operativo":"Club de pádel","home.hero_accent":"operativo",
@@ -1605,7 +1704,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Estado de procesos","flujos.por_estado":"Por estado de conexión",
     "flujos.actividad_24h":"Actividad últimas 24h","flujos.por_hora":"Por hora del día",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"ejecuciones",
-    "flujos.por_categoria":"Procesos por categoría","flujos.distribucion":"Distribución de los 43 procesos",
+    "flujos.por_categoria":"Procesos por categoría","flujos.distribucion":"Distribución de los 50 procesos",
     "flujos.mas_activos":"Procesos más activos","flujos.con_incidencias":"Procesos con incidencias",
     "flujos.sin_errores":"✅ Sin errores registrados","flujos.criticos":"Estado de procesos críticos",
     "flujos.estado_op":"Estado operativo","flujos.todos_flujos":"Todos los flujos",
@@ -1675,7 +1774,7 @@ const TRANSLATIONS = {
     "home.este_mes":"this month","home.incidencia":"incident","home.incidencias_s":"incidents",
     "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
     "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
-    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents",
+    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents","home.flujos_totales":"total flows","home.operativo_probado":"operational (E2E tested)",
     "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
     "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
     "home.club_operativo":"Padel club","home.hero_accent":"operational",
@@ -1810,7 +1909,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Process status","flujos.por_estado":"By connection status",
     "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"executions",
-    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 43 processes",
+    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 50 processes",
     "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
     "flujos.sin_errores":"✅ No errors recorded","flujos.criticos":"Critical process status",
     "flujos.estado_op":"Operational status","flujos.todos_flujos":"All processes",
@@ -1880,7 +1979,7 @@ const TRANSLATIONS = {
     "home.este_mes":"this month","home.incidencia":"incident","home.incidencias_s":"incidents",
     "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
     "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
-    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents",
+    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents","home.flujos_totales":"total flows","home.operativo_probado":"operational (E2E tested)",
     "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
     "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
     "home.club_operativo":"Padel club","home.hero_accent":"operational",
@@ -2015,7 +2114,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Process status","flujos.por_estado":"By connection status",
     "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"executions",
-    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 43 processes",
+    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 50 processes",
     "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
     "flujos.sin_errores":"✅ No errors recorded","flujos.criticos":"Critical process status",
     "flujos.estado_op":"Operational status","flujos.todos_flujos":"All processes",
@@ -2085,7 +2184,7 @@ const TRANSLATIONS = {
     "home.este_mes":"ce mois","home.incidencia":"incident","home.incidencias_s":"incidents",
     "home.franja_horaria":"Créneau horaire","home.tendencia_semanal":"Tendance hebdomadaire",
     "home.porcentaje_uso":"% d'utilisation","home.procesos_conectados":"processus connectés",
-    "home.activos":"Actifs","home.pausados":"En pause","home.incidencias":"Incidents",
+    "home.activos":"Actifs","home.pausados":"En pause","home.incidencias":"Incidents","home.flujos_totales":"flux au total","home.operativo_probado":"opérationnel (testé E2E)",
     "home.reservas_hora":"Réservations par heure — auj.","home.reservas_7dias":"Réservations 7 derniers jours",
     "home.ocupacion_pista":"Occupation par court","home.estado_procesos":"État des processus",
     "home.club_operativo":"Club de padel","home.hero_accent":"opérationnel",
@@ -2216,7 +2315,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"État des processus","flujos.por_estado":"Par état de connexion",
     "flujos.actividad_24h":"Activité dernières 24h","flujos.por_hora":"Par heure de la journée",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"exécutions",
-    "flujos.por_categoria":"Processus par catégorie","flujos.distribucion":"Répartition des 43 processus",
+    "flujos.por_categoria":"Processus par catégorie","flujos.distribucion":"Répartition des 50 processus",
     "flujos.mas_activos":"Processus les plus actifs","flujos.con_incidencias":"Processus avec incidents",
     "flujos.sin_errores":"✅ Aucune erreur enregistrée","flujos.criticos":"État des processus critiques",
     "flujos.estado_op":"État opérationnel","flujos.todos_flujos":"Tous les processus",
@@ -2286,7 +2385,7 @@ const TRANSLATIONS = {
     "home.este_mes":"questo mese","home.incidencia":"incidente","home.incidencias_s":"incidenti",
     "home.franja_horaria":"Fascia oraria","home.tendencia_semanal":"Tendenza settimanale",
     "home.porcentaje_uso":"% utilizzo","home.procesos_conectados":"processi connessi",
-    "home.activos":"Attivi","home.pausados":"In pausa","home.incidencias":"Incidenti",
+    "home.activos":"Attivi","home.pausados":"In pausa","home.incidencias":"Incidenti","home.flujos_totales":"flussi totali","home.operativo_probado":"operativo (testato E2E)",
     "home.reservas_hora":"Prenotazioni per ora — oggi","home.reservas_7dias":"Prenotazioni ultimi 7 giorni",
     "home.ocupacion_pista":"Occupazione per campo","home.estado_procesos":"Stato processi",
     "home.club_operativo":"Club di padel","home.hero_accent":"operativo",
@@ -2417,7 +2516,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Stato processi","flujos.por_estado":"Per stato di connessione",
     "flujos.actividad_24h":"Attività ultime 24h","flujos.por_hora":"Per ora del giorno",
     "flujos.total_24h_label":"Totale 24h","flujos.ejecuciones":"esecuzioni",
-    "flujos.por_categoria":"Processi per categoria","flujos.distribucion":"Distribuzione dei 43 processi",
+    "flujos.por_categoria":"Processi per categoria","flujos.distribucion":"Distribuzione dei 50 processi",
     "flujos.mas_activos":"Processi più attivi","flujos.con_incidencias":"Processi con incidenti",
     "flujos.sin_errores":"✅ Nessun errore registrato","flujos.criticos":"Stato processi critici",
     "flujos.estado_op":"Stato operativo","flujos.todos_flujos":"Tutti i processi",
@@ -2487,7 +2586,7 @@ const TRANSLATIONS = {
     "home.este_mes":"este mês","home.incidencia":"incidente","home.incidencias_s":"incidentes",
     "home.franja_horaria":"Faixa horária","home.tendencia_semanal":"Tendência semanal",
     "home.porcentaje_uso":"% utilização","home.procesos_conectados":"processos conectados",
-    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes",
+    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes","home.flujos_totales":"fluxos totais","home.operativo_probado":"operacional (testado E2E)",
     "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
     "home.ocupacion_pista":"Ocupação por campo","home.estado_procesos":"Estado dos processos",
     "home.club_operativo":"Clube de padel","home.hero_accent":"operacional",
@@ -2618,7 +2717,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Estado dos processos","flujos.por_estado":"Por estado de ligação",
     "flujos.actividad_24h":"Atividade últimas 24h","flujos.por_hora":"Por hora do dia",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"execuções",
-    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 43 processos",
+    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 50 processos",
     "flujos.mas_activos":"Processos mais ativos","flujos.con_incidencias":"Processos com incidentes",
     "flujos.sin_errores":"✅ Sem erros registados","flujos.criticos":"Estado dos processos críticos",
     "flujos.estado_op":"Estado operacional","flujos.todos_flujos":"Todos os processos",
@@ -2688,7 +2787,7 @@ const TRANSLATIONS = {
     "home.este_mes":"este mês","home.incidencia":"incidente","home.incidencias_s":"incidentes",
     "home.franja_horaria":"Faixa horária","home.tendencia_semanal":"Tendência semanal",
     "home.porcentaje_uso":"% utilização","home.procesos_conectados":"processos conectados",
-    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes",
+    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes","home.flujos_totales":"fluxos totais","home.operativo_probado":"operacional (testado E2E)",
     "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
     "home.ocupacion_pista":"Ocupação por quadra","home.estado_procesos":"Status dos processos",
     "home.club_operativo":"Clube de padel","home.hero_accent":"operacional",
@@ -2819,7 +2918,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Status dos processos","flujos.por_estado":"Por status de conexão",
     "flujos.actividad_24h":"Atividade últimas 24h","flujos.por_hora":"Por hora do dia",
     "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"execuções",
-    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 43 processos",
+    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 50 processos",
     "flujos.mas_activos":"Processos mais ativos","flujos.con_incidencias":"Processos com incidentes",
     "flujos.sin_errores":"✅ Sem erros registrados","flujos.criticos":"Status dos processos críticos",
     "flujos.estado_op":"Status operacional","flujos.todos_flujos":"Todos os processos",
@@ -2889,7 +2988,7 @@ const TRANSLATIONS = {
     "home.este_mes":"diesen Monat","home.incidencia":"Vorfall","home.incidencias_s":"Vorfälle",
     "home.franja_horaria":"Zeitfenster","home.tendencia_semanal":"Wöchentlicher Trend",
     "home.porcentaje_uso":"% Nutzung","home.procesos_conectados":"verbundene Prozesse",
-    "home.activos":"Aktiv","home.pausados":"Pausiert","home.incidencias":"Vorfälle",
+    "home.activos":"Aktiv","home.pausados":"Pausiert","home.incidencias":"Vorfälle","home.flujos_totales":"Abläufe insgesamt","home.operativo_probado":"operativ (E2E getestet)",
     "home.reservas_hora":"Buchungen pro Stunde — heute","home.reservas_7dias":"Buchungen letzte 7 Tage",
     "home.ocupacion_pista":"Auslastung je Platz","home.estado_procesos":"Prozessstatus",
     "home.club_operativo":"Padel-Club","home.hero_accent":"in Betrieb",
@@ -3020,7 +3119,7 @@ const TRANSLATIONS = {
     "flujos.estado_procesos_label":"Prozessstatus","flujos.por_estado":"Nach Verbindungsstatus",
     "flujos.actividad_24h":"Aktivität letzte 24h","flujos.por_hora":"Nach Tageszeit",
     "flujos.total_24h_label":"Gesamt 24h","flujos.ejecuciones":"Ausführungen",
-    "flujos.por_categoria":"Prozesse nach Kategorie","flujos.distribucion":"Verteilung der 43 Prozesse",
+    "flujos.por_categoria":"Prozesse nach Kategorie","flujos.distribucion":"Verteilung der 50 Prozesse",
     "flujos.mas_activos":"Aktivste Prozesse","flujos.con_incidencias":"Prozesse mit Vorfällen",
     "flujos.sin_errores":"✅ Keine Fehler registriert","flujos.criticos":"Status kritischer Prozesse",
     "flujos.estado_op":"Betriebsstatus","flujos.todos_flujos":"Alle Prozesse",
@@ -3331,7 +3430,7 @@ function Inicio({ navigate, selectedRole }) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const kpi = DEMO_KPI;
-  const makeOk = kpi.makeActivos >= 35;
+  const makeOk = MAKE_FLUJOS_COUNTERS.conectados >= MAKE_FLUJOS_COUNTERS.total * 0.5;
   const makeStatus = kpi.makeErrores > 3 ? "error" : kpi.makeErrores > 0 ? "warn" : "ok";
   const diasCortos = tx("home.dias_semana").split(",");
   const diasLargo = tx("home.dias_largo").split(",");
@@ -3389,7 +3488,7 @@ function Inicio({ navigate, selectedRole }) {
         <MetricCard label={tx("home.reservas_hoy")} value={kpi.reservasHoy} sub={`vs 10 ${tx("home.vs_ayer")}`} trend={20} icon="🎾" />
         <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
         <MetricCard label={tx("home.socios_activos")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
-        <MetricCard label={tx("home.procesos_activos")} value={`${kpi.makeActivos}/43`} sub={`${kpi.makeErrores} ${kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
+        <MetricCard label={tx("home.procesos_activos")} value={`${MAKE_FLUJOS_COUNTERS.conectados}/${MAKE_FLUJOS_COUNTERS.total}`} sub={`${MAKE_FLUJOS_COUNTERS.operativos} ${tx("home.operativo_probado")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
         <MetricCard label={tx("home.ingresos_mes")} value={`${kpi.ingresosMes}€`} sub={tx("home.estimacion_mensual")} trend={12} color={T.metricPositive} icon="💶" />
         <MetricCard label={tx("home.torneos_activos")} value={kpi.torneosActivos} sub={tx("home.en_curso")} trend={null} color={T.warning} icon="🏆" />
       </div>
@@ -3410,11 +3509,10 @@ function Inicio({ navigate, selectedRole }) {
         <ChartCard title={tx("home.ocupacion_pista")} sub={tx("home.porcentaje_uso")}>
           <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} unit="%" />
         </ChartCard>
-        <ChartCard title={tx("home.estado_procesos")} sub={`43 ${tx("home.procesos_conectados")}`}>
+        <ChartCard title={tx("home.estado_procesos")} sub={`${MAKE_FLUJOS_COUNTERS.total} ${tx("home.flujos_totales")}`}>
           <DonutChart size={100} label="Sistema" segments={[
-            { l: tx("home.activos"),      v: kpi.makeActivos,  c: T.accent },
-            { l: tx("home.pausados"),     v: kpi.makePausados, c: T.warning },
-            { l: tx("home.incidencias"),  v: kpi.makeErrores,  c: T.danger },
+            { l: tx("home.activos"),      v: MAKE_FLUJOS_COUNTERS.conectados, c: T.accent },
+            { l: tx("home.pausados"),     v: MAKE_FLUJOS_COUNTERS.total - MAKE_FLUJOS_COUNTERS.conectados, c: T.warning },
           ]} />
         </ChartCard>
       </div>
@@ -3440,14 +3538,110 @@ function Inicio({ navigate, selectedRole }) {
   );
 }
 
+// Club Pádel 04 · Puerta de login inline para crear/cancelar/reprogramar.
+//
+// Con el gate de rol del Worker activo (CP04_ENFORCE_ROLE_GATES), las 3
+// acciones mutables de /api/reservas exigen un Bearer real verificado por
+// Supabase: ya no basta con un rol demo local. En vez de enviar la petición
+// igualmente (y recibir un 401 opaco) o simular un éxito falso, los 3
+// formularios bloquean el envío ANTES de llamar al Worker y muestran este
+// login inline. Se queda dentro del mismo componente (nunca navega ni
+// desmonta el formulario): los datos no sensibles que el usuario ya
+// escribió (fecha, pista, hora, clave de reserva...) permanecen intactos en
+// el estado de React sin necesidad de guardarlos en ningún sitio. Email y
+// contraseña de este mini-login viven solo en estado local del componente,
+// nunca en localStorage/sessionStorage/URL — authService ya se encarga de
+// persistir únicamente el access_token tras un login correcto.
+function ReservaAuthGate({ message }) {
+  const auth = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function submit(event) {
+    event.preventDefault();
+    if (sending) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setError("Introduce tu email y contraseña.");
+      return;
+    }
+    setSending(true);
+    setError("");
+    const result = await auth.login(cleanEmail, password);
+    setSending(false);
+    if (!result.ok) {
+      setError(result.message || "No se pudo iniciar sesión.");
+      return;
+    }
+    // Éxito: auth.isAuthenticated pasa a true, el formulario que envuelve
+    // este gate deja de mostrarlo (ver condición `!auth.isAuthenticated` en
+    // cada llamador) y conserva sus datos, listo para reintentar el envío.
+    setPassword("");
+  }
+
+  return (
+    <Card style={{ marginBottom: 20, borderColor: `${T.warning}66` }}>
+      <strong style={{ color: T.warning }}>Inicia sesión para continuar</strong>
+      <p style={{ color: T.textDim, marginTop: 6, marginBottom: 16, lineHeight: 1.55 }}>{message}</p>
+      <form onSubmit={submit}>
+        <input
+          type="email"
+          aria-label="Email"
+          placeholder="tu@email.com"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          autoComplete="email"
+          disabled={sending}
+        />
+        <div style={{ marginTop: 10 }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            aria-label="Contraseña"
+            placeholder="Contraseña"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            autoComplete="current-password"
+            disabled={sending}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowPassword(v => !v)}
+          style={{ border: "none", background: "transparent", color: T.accent, fontSize: ".82rem", fontWeight: 800, cursor: "pointer", padding: 0, marginTop: 8, textDecoration: "underline", textUnderlineOffset: 3 }}
+        >
+          {showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+        </button>
+        {error && <FieldError>{error}</FieldError>}
+        <Btn type="submit" disabled={sending} style={{ marginTop: 14 }}>
+          {sending ? "Entrando..." : "Iniciar sesión"}
+        </Btn>
+      </form>
+    </Card>
+  );
+}
+
 function Reservas() {
   const lang = useLang();
   const tx = key => t(key, lang);
+  const auth = useAuth();
+  // No hace falta sincronizar needsLogin a false con un efecto cuando
+  // auth.isAuthenticated pasa a true: el gate solo se pinta si
+  // `needsLogin && !auth.isAuthenticated` (ver el render más abajo), así
+  // que en cuanto hay sesión real deja de mostrarse sin más estado.
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [step, setStep] = useState(1);
   const [status, setStatus] = useState("pending");
   const [statusMessage, setStatusMessage] = useState("");
   const [errors, setErrors] = useState({});
   const [court, setCourt] = useState("Pista 1");
+  // ocupadas: claves "fecha|pista|hora" recibidas del backend vía CalendarioDisponibilidad.
+  // Es la misma fuente de verdad que usa el calendario → elimina la divergencia
+  // que permitía seleccionar en el formulario slots marcados como "No disponible".
+  const [ocupadas, setOcupadas] = useState([]);
+  const ocupadasSet = useMemo(() => new Set(ocupadas), [ocupadas]);
   const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
   const sendingRef = useRef(false);
   const duration = Number(form.duracion_minutos);
@@ -3464,13 +3658,30 @@ function Reservas() {
   const [statusTitle, statusText, statusColor] = statusMap[status];
 
   function updateForm(field, value) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const updated = { ...current, [field]: value };
+      if (field === "hora") {
+        const valid = getAvailableDurationsForHour(value);
+        if (!valid.includes(Number(current.duracion_minutos))) {
+          updated.duracion_minutos = String(valid[0] ?? 60);
+        }
+      }
+      return updated;
+    });
     setErrors((current) => ({ ...current, [field]: undefined }));
     setStatusMessage("");
     if (status !== "sending") setStatus("pending");
   }
 
   function review() {
+    // Comprueba ocupación antes de validateBooking: getSlotStatus no tiene acceso
+    // al inventario del backend, así que este check usa ocupadasSet (misma fuente
+    // que el calendario).
+    if (ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)) {
+      setErrors({ hora: tx("errors.horario_ocupado") });
+      setStatus("error");
+      return;
+    }
     const nextErrors = validateBooking(form, court, tx);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -3492,6 +3703,18 @@ function Reservas() {
       return;
     }
 
+    // Con el gate de rol del Worker activo, crear_reserva exige un Bearer
+    // real: sin sesión, ni se consulta disponibilidad ni se llama al
+    // endpoint — se muestra el login inline (ReservaAuthGate) en vez de
+    // mandar una petición anónima que solo recibiría un 401. El formulario
+    // (paso 2, con todos los datos ya introducidos) permanece tal cual.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setStatusMessage("Inicia sesión para confirmar tu reserva. Tus datos no se pierden.");
+      setStatus("error");
+      return;
+    }
+
     sendingRef.current = true;
     setStatus("sending");
     setStatusMessage("");
@@ -3505,7 +3728,26 @@ function Reservas() {
         return;
       }
 
-      await sendBooking(payload);
+      const res = await authFetch(CONFIG.bookingEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local
+      // (deja de mandar un Bearer que el Worker ya rechaza) y se vuelve a
+      // pedir login, sin tocar los datos del formulario ya escritos.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setStatusMessage("Tu sesión ha caducado. Inicia sesión de nuevo para confirmar la reserva.");
+        setStatus("error");
+        return;
+      }
+
+      const data = await readSafeResponse(res);
+      if (!res.ok || data?.ok === false) throw cp04BuildReservationError(data, "booking_request_failed");
+
       refreshDisponibilidadAfterChange(form.fecha);
       setStatus("success");
       setStep(3);
@@ -3524,10 +3766,34 @@ function Reservas() {
     setErrors({});
   }
 
+  // Cuando la fecha o la pista cambia, el calendario refetch y actualiza
+  // ocupadasSet. Si la hora seleccionada queda ocupada en el nuevo contexto,
+  // se restablece automáticamente a la primera franja libre.
+  useEffect(() => {
+    setForm((prev) => {
+      const key = `${prev.fecha}|${court}|${prev.hora}`;
+      if (!ocupadasSet.has(key)) return prev;
+      const fallback = BOOKING_HOURS.find(
+        (h) =>
+          !ocupadasSet.has(`${prev.fecha}|${court}|${h}`) &&
+          getAvailableDurationsForHour(h).length > 0
+      ) ?? BOOKING_HOURS[0];
+      const validDurations = getAvailableDurationsForHour(fallback);
+      return {
+        ...prev,
+        hora: fallback,
+        duracion_minutos: validDurations.includes(Number(prev.duracion_minutos))
+          ? prev.duracion_minutos
+          : String(validDurations[0] ?? 60),
+      };
+    });
+  }, [form.fecha, court, ocupadasSet]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow={tx("reservas.eyebrow")} title={tx("reservas.title")} desc={tx("reservas.desc")} /><CalendarioDisponibilidad
   initialDate={form.fecha || todayISO()}
   selectedCourt={court}
   duration={duration}
+  onDisponibilidadChange={(data) => setOcupadas(data.ocupadas)}
   onSelectSlot={({ fecha, pista, hora }) => {
     updateForm("fecha", fecha);
     updateForm("hora", hora);
@@ -3535,20 +3801,14 @@ function Reservas() {
     setCourt(pista);
     setStep(1);
   }}
-/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para confirmar esta reserva. El resumen que has revisado se mantiene." />}{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,getAvailableDurationsForHour(h)[0]??duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${h}`)}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{getAvailableDurationsForHour(form.hora).map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
 }
 
 function CancelarReserva({ setCurrent }) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const auth = useAuth();
-  // Cancelar es operación de STAFF/ADMIN/SUPPORT (RBAC). Con
-  // CP04_ENFORCE_ROLE_GATES activo en el Worker, solo una sesión backend
-  // real (auth.isAuthenticated, vía Supabase) puede llamar al endpoint
-  // protegido de verdad. El login demo por contraseña de rol no emite
-  // token verificable, así que aquí se simula localmente en vez de
-  // devolver siempre 401 MISSING_TOKEN.
-  const isDemoSession = !auth.isAuthenticated;
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [clave, setClave] = useState("");
   const [confirmado, setConfirmado] = useState(false);
   const [status, setStatus] = useState("idle");
@@ -3556,16 +3816,11 @@ function CancelarReserva({ setCurrent }) {
   const sendingRef = useRef(false);
   const sending = status === "sending";
   const success = status === "success";
+
   const statusMap = {
     idle: [tx("status.cancelar.idle"), tx("status.cancelar.idle_txt"), T.warning],
     sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt"), T.warning],
-    success: [
-      tx("status.cancelar.exito"),
-      isDemoSession
-        ? "Simulado en modo demo: no se ha cancelado ninguna reserva real."
-        : tx("status.cancelar.exito_txt"),
-      T.accent,
-    ],
+    success: [tx("status.cancelar.exito"), tx("status.cancelar.exito_txt"), T.accent],
     error: [tx("status.cancelar.error"), error || tx("status.cancelar.error_txt"), T.danger],
   };
   const [statusTitle, statusText, statusColor] = statusMap[status];
@@ -3598,22 +3853,22 @@ function CancelarReserva({ setCurrent }) {
       return;
     }
 
+    // Cancelar es operación mutable de /api/reservas: con el gate de rol
+    // del Worker activo exige un Bearer real. Sin sesión, no se llama al
+    // endpoint (que solo devolvería 401) — se muestra el login inline; la
+    // clave de reserva y la confirmación ya escritas se mantienen.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setError("Inicia sesión para cancelar esta reserva.");
+      setStatus("error");
+      return;
+    }
+
     setStatus("sending");
     setError("");
     sendingRef.current = true;
 
     try {
-      if (isDemoSession) {
-        // Modo demo: no se llama al Worker (siempre respondería 401 al no
-        // haber token real), no se toca ningún dato real. Solo feedback
-        // visual local, dejando claro que es una simulación.
-        await new Promise((resolve) => window.setTimeout(resolve, 600));
-        setClave("");
-        setConfirmado(false);
-        setStatus("success");
-        return;
-      }
-
       // Adjunta el token real de la sesión backend (Supabase) verificada
       // por el Worker (CP04_ENFORCE_ROLE_GATES).
       const res = await authFetch(CONFIG.bookingEndpoint, {
@@ -3631,6 +3886,16 @@ function CancelarReserva({ setCurrent }) {
           origen: "app_publica_cancelar_reserva",
         }),
       });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local y
+      // se vuelve a pedir login, sin perder la clave de reserva escrita.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setError("Tu sesión ha caducado. Inicia sesión de nuevo para cancelar la reserva.");
+        setStatus("error");
+        return;
+      }
 
       const data = await readSafeResponse(res);
 
@@ -3650,7 +3915,7 @@ function CancelarReserva({ setCurrent }) {
     }
   }
 
-  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{isDemoSession && <Card style={{ marginBottom:20, borderColor:`${T.warning}66`, color:T.warning, fontSize:".85rem" }}>Modo demo: esta acción se simula localmente, sin llamar al servidor ni afectar a ninguna reserva real.</Card>}<Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para cancelar esta reserva. La clave que has introducido se mantiene." />}<Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
 }
 
 
@@ -3658,9 +3923,7 @@ function ReprogramarReserva({ setCurrent }) {
   const lang = useLang();
   const tx = key => t(key, lang);
   const auth = useAuth();
-  // Ver nota equivalente en CancelarReserva: sin sesión backend real, se
-  // simula localmente en vez de llamar al Worker (que devolvería 401).
-  const isDemoSession = !auth.isAuthenticated;
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [court, setCourt] = useState("Pista 1");
   const [form, setForm] = useState({
     clave_reserva: "",
@@ -3691,7 +3954,16 @@ function ReprogramarReserva({ setCurrent }) {
   const [statusTitle, statusText, statusColor] = statusMap[status];
 
   function updateForm(field, value) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const updated = { ...current, [field]: value };
+      if (field === "nueva_hora_inicio") {
+        const valid = getAvailableDurationsForHour(value);
+        if (!valid.includes(Number(current.duracion_minutos))) {
+          updated.duracion_minutos = String(valid[0] ?? 60);
+        }
+      }
+      return updated;
+    });
     setErrors((current) => ({ ...current, [field]: undefined }));
     setStatusMessage("");
     if (status !== "sending") setStatus("idle");
@@ -3717,24 +3989,23 @@ function ReprogramarReserva({ setCurrent }) {
       return;
     }
 
+    // Reprogramar es operación mutable de /api/reservas: con el gate de rol
+    // del Worker activo exige un Bearer real. Sin sesión, no se consulta
+    // disponibilidad ni se llama al endpoint (que solo devolvería 401) — se
+    // muestra el login inline; los datos de fecha/hora/pista ya elegidos se
+    // mantienen.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setStatusMessage("Inicia sesión para reprogramar esta reserva.");
+      setStatus("error");
+      return;
+    }
+
     sendingRef.current = true;
     setStatus("sending");
     setStatusMessage("");
 
     try {
-      if (isDemoSession) {
-        // Modo demo: no se consulta disponibilidad real ni se llama al
-        // Worker (que devolvería 401 al no haber token real). Solo
-        // feedback visual local, sin tocar ningún dato real.
-        await new Promise((resolve) => window.setTimeout(resolve, 600));
-        setStatusMessage(
-          `Simulado en modo demo: ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}. No se ha modificado ninguna reserva real.`,
-        );
-        setStatus("success");
-        setForm((current) => ({ ...current, confirmado: false }));
-        return;
-      }
-
       const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
       const disponibilidad = await fetchDisponibilidad(form.nueva_fecha_reserva);
 
@@ -3744,13 +4015,23 @@ function ReprogramarReserva({ setCurrent }) {
         return;
       }
 
-      // Reprogramar, igual que cancelar, es operación de STAFF/ADMIN/SUPPORT:
-      // adjunta el token real si existe sesión.
+      // Reprogramar, igual que cancelar, adjunta el token real de la sesión
+      // backend (Supabase) verificada por el Worker.
       const res = await authFetch(CONFIG.bookingEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local y
+      // se vuelve a pedir login, sin perder los datos ya elegidos.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setStatusMessage("Tu sesión ha caducado. Inicia sesión de nuevo para reprogramar la reserva.");
+        setStatus("error");
+        return;
+      }
 
       const data = await readSafeResponse(res);
 
@@ -3808,10 +4089,8 @@ function ReprogramarReserva({ setCurrent }) {
     <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}>
       <SectionTitle eyebrow={tx("reprog.eyebrow")} title={tx("reprog.title")} desc={tx("reprog.desc")} />
 
-      {isDemoSession && (
-        <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
-          Modo demo: esta acción se simula localmente, sin llamar al servidor ni afectar a ninguna reserva real.
-        </Card>
+      {needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && (
+        <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para reprogramar esta reserva. La fecha, hora y pista ya elegidas se mantienen." />
       )}
 
       <Card
@@ -3920,7 +4199,7 @@ function ReprogramarReserva({ setCurrent }) {
               onChange={(event) => updateForm("duracion_minutos", event.target.value)}
               disabled={sending}
             >
-              {BOOKING_DURATIONS.map((minutes) => (
+              {getAvailableDurationsForHour(form.nueva_hora_inicio).map((minutes) => (
                 <option key={minutes} value={minutes}>{minutes} {tx("reservas.minutos")}</option>
               ))}
             </select>
@@ -4011,8 +4290,7 @@ function ReprogramarReserva({ setCurrent }) {
                 type="submit"
                 disabled={
                   sending ||
-                  (!isDemoSession &&
-                    getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available")
+                  getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"
                 }
                 className="cp04-fix-white-action-btn cp04-fix-reprogramar-reserva-btn"
               >
@@ -4506,33 +4784,437 @@ function IntegrationStatusBanner({ children }) {
   );
 }
 
-// PASO 07O (2026-07-20): "Control QR / Accesos" — módulo visual preparado
-// para los escenarios Make "🔐 Control Acceso QR" (5291559) y "🔑
-// Generación QR Acceso" (6244975). Ambos siguen ejecutándose de forma
-// autónoma en Make (Grupo D antes de este paso); este panel no los
-// dispara ni los sustituye, solo prepara un punto de entrada en la app.
-// Gateado a STAFF/ADMIN/SUPPORT (ver rbac.js).
+// PASO T3 (2026-08-17): "Control QR / Accesos" — panel funcional.
+// Dos sub-flujos: PLAYER genera su QR de reserva; STAFF/ADMIN valida.
+// Endpoints reales: POST /api/qr/generate y POST /api/qr/validate.
+// Make scenarios: Generación QR (6244975) y Control Acceso QR (5291559).
 function ControlQrAccesos() {
+  const qrReservasEndpoint = cp04ReservasEndpoint(import.meta?.env);
+
+  // ── Búsqueda de reserva real (flujo productivo) ──
+  const [lookupEmail, setLookupEmail] = useState(() => {
+    try { return window.localStorage.getItem("cp04-reservas-email") || ""; } catch { return ""; }
+  });
+  const [lookupResults, setLookupResults] = useState([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError]     = useState("");
+  const [lookupDone, setLookupDone]       = useState(false);
+
+  // ── Subpanel Generación QR ──
+  const [genClave, setGenClave]       = useState("");
+  const [genPista, setGenPista]       = useState("Pista 1");
+  const [genFecha, setGenFecha]       = useState("");
+  const [genHora, setGenHora]         = useState("");
+  const [genHoraFin, setGenHoraFin]   = useState("");
+  const [genPlayerId, setGenPlayerId] = useState("");
+  const [genRecordId, setGenRecordId] = useState("");
+  const [genNombre, setGenNombre]     = useState("");
+  const [genEmail, setGenEmail]       = useState("");
+  const [genResult, setGenResult]     = useState(null);
+  const [genLoading, setGenLoading]   = useState(false);
+  const [genError, setGenError]       = useState("");
+  const [genFromReal, setGenFromReal] = useState(false);
+
+  async function handleBuscarReserva(e) {
+    e.preventDefault();
+    const emailLimpio = lookupEmail.trim().toLowerCase();
+    if (!emailLimpio || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
+      setLookupError("Introduce un correo electrónico válido.");
+      return;
+    }
+    setLookupLoading(true);
+    setLookupError("");
+    setLookupResults([]);
+    setLookupDone(false);
+    try {
+      const sep = qrReservasEndpoint.includes("?") ? "&" : "?";
+      const url = `${qrReservasEndpoint}${sep}email=${encodeURIComponent(emailLimpio)}&limit=100&t=${Date.now()}`;
+      const response = await authFetch(url, {
+        method: "GET",
+        headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+      });
+      const data = await readSafeResponse(response);
+      const resultado = data && typeof data === "object" ? data : {};
+      if (!response.ok || resultado.ok !== true) {
+        throw new Error(resultado.error || resultado.message || `Error ${response.status}`);
+      }
+      const lista =
+        Array.isArray(resultado.reservas) ? resultado.reservas
+        : Array.isArray(resultado.records) ? resultado.records
+        : Array.isArray(resultado.data) ? resultado.data
+        : [];
+      const normalizadas = lista
+        .map(normalizarReserva)
+        .filter((r) => r.estado === "confirmada" || r.estado === "reprogramada")
+        .sort((a, b) => {
+          const fa = `${a.fecha}T${a.horaInicio || "00:00"}`;
+          const fb = `${b.fecha}T${b.horaInicio || "00:00"}`;
+          return fb.localeCompare(fa);
+        });
+      setLookupResults(normalizadas);
+      setLookupDone(true);
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : "No se pudieron cargar las reservas.");
+    } finally {
+      setLookupLoading(false);
+    }
+  }
+
+  function handleSeleccionarReserva(reserva) {
+    if (!reserva.horaFin) {
+      setGenError(
+        "Esta reserva no tiene hora_fin en Airtable. No se puede generar QR hasta que Make registre la hora de fin."
+      );
+      return;
+    }
+    setGenClave(reserva.clave || "");
+    setGenPlayerId(reserva.email || "");
+    setGenRecordId(reserva.id || "");
+    setGenNombre(reserva.nombre || "");
+    setGenEmail(reserva.email || "");
+    setGenFecha(reserva.fecha || "");
+    setGenHora(reserva.horaInicio || "");
+    setGenHoraFin(reserva.horaFin);
+    setGenPista(reserva.pista || "Pista 1");
+    setGenError("");
+    setGenResult(null);
+    setGenFromReal(true);
+  }
+
+  async function handleGenerarQr(e) {
+    e.preventDefault();
+    setGenError("");
+    setGenResult(null);
+    if (!genClave || !genPlayerId || !genFecha || !genRecordId || !genNombre || !genEmail || !genHoraFin) {
+      setGenError("Completa todos los campos requeridos.");
+      return;
+    }
+    setGenLoading(true);
+    try {
+      const res = await authFetch("/api/qr/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clave_reserva: genClave,
+          player_id:     genPlayerId,
+          club_id:       "club-padel-04",
+          pista:         genPista,
+          fecha:         genFecha,
+          hora_inicio:   genHora,
+          hora_fin:      genHoraFin,
+          record_id:     genRecordId,
+          nombre:        genNombre,
+          email:         genEmail,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setGenResult(data);
+      } else {
+        setGenError(data.error || "Error al generar QR.");
+      }
+    } catch {
+      setGenError("Error de red al contactar el servidor.");
+    } finally {
+      setGenLoading(false);
+    }
+  }
+
+  // ── Subpanel Validación QR ──
+  const [valClave, setValClave]   = useState("");
+  const [valPista, setValPista]   = useState("Pista 1");
+  const [valStaff, setValStaff]   = useState("");
+  const [valResult, setValResult] = useState(null);
+  const [valLoading, setValLoading] = useState(false);
+  const [valError, setValError]   = useState("");
+
+  async function handleValidarQr(e) {
+    e.preventDefault();
+    setValError("");
+    setValResult(null);
+    if (!valClave || !valStaff) {
+      setValError("Completa todos los campos requeridos.");
+      return;
+    }
+    setValLoading(true);
+    try {
+      const res = await authFetch("/api/qr/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clave_reserva: valClave,
+          pista:         valPista,
+          club_id:       "club-padel-04",
+          staff_id:      valStaff,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setValResult(data);
+      } else {
+        setValError(data.error || "Error al validar QR.");
+      }
+    } catch {
+      setValError("Error de red al contactar el servidor.");
+    } finally {
+      setValLoading(false);
+    }
+  }
+
+  const pistasDisponibles = ["Pista 1", "Pista 2", "Pista 3", "Pista 4"];
+  const decisionColor = valResult
+    ? (valResult.decision === "ALLOW" ? T.success : T.error)
+    : T.text;
+
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
       <SectionTitle
         eyebrow="Seguridad y accesos"
         title="Control QR / Accesos"
-        desc="Gestiona el acceso al club mediante códigos QR de jugadores."
+        desc="Genera y valida códigos QR de acceso para reservas de pistas."
       />
-      <IntegrationStatusBanner>
-        Preparado visualmente. Pendiente de activación Make — este panel no ejecuta acciones reales todavía.
-      </IntegrationStatusBanner>
+
+      {/* Flujo productivo: buscar reserva real → precargar datos */}
+      <Card style={{ marginBottom: 24, borderColor: T.accent + "55" }}>
+        <h3 style={{ marginTop: 0 }}>🔍 Buscar reserva confirmada</h3>
+        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 0 }}>
+          Flujo productivo: busca por email del jugador y selecciona la reserva para precargar
+          record_id, nombre, email, hora_fin y demás campos directamente desde Airtable vía Make.
+          Ningún dato se inventa ni hardcodea.
+        </p>
+        <form onSubmit={handleBuscarReserva} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ fontSize: ".87rem", flex: "2 1 220px" }}>
+            Email del jugador
+            <input
+              type="email"
+              value={lookupEmail}
+              onChange={(e) => setLookupEmail(e.target.value)}
+              placeholder="jugador@club.es"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <Btn type="submit" disabled={lookupLoading} variant="secondary">
+            {lookupLoading ? "Buscando…" : "Buscar reservas"}
+          </Btn>
+        </form>
+        {lookupError && (
+          <p style={{ color: T.error, fontSize: ".86rem", margin: "10px 0 0" }}>{lookupError}</p>
+        )}
+        {lookupDone && lookupResults.length === 0 && !lookupError && (
+          <p style={{ color: T.textMuted, fontSize: ".86rem", margin: "10px 0 0" }}>
+            No se encontraron reservas confirmadas para ese email.
+          </p>
+        )}
+        {lookupResults.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <p style={{ fontSize: ".85rem", color: T.textMuted, marginBottom: 8 }}>
+              Selecciona la reserva para precargar los datos del QR:
+            </p>
+            {lookupResults.map((r) => (
+              <div
+                key={r.id}
+                onClick={() => handleSeleccionarReserva(r)}
+                style={{ padding: "10px 14px", marginBottom: 8, borderRadius: 8, border: `1px solid ${T.border}`, background: T.cardBg, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}
+              >
+                <div>
+                  <span style={{ fontWeight: 600, fontSize: ".9rem" }}>{r.clave || r.id}</span>
+                  <span style={{ color: T.textMuted, fontSize: ".84rem", marginLeft: 12 }}>
+                    {r.fecha} · {r.horaInicio}{r.horaFin ? `–${r.horaFin}` : ""} · {r.pista}
+                  </span>
+                  {!r.horaFin && (
+                    <span style={{ color: T.error, fontSize: ".8rem", marginLeft: 8 }}>⚠ sin hora_fin</span>
+                  )}
+                </div>
+                <span style={{ fontSize: ".82rem", color: T.accent, whiteSpace: "nowrap" }}>Precargar →</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Panel Generación QR */}
+      <Card style={{ marginBottom: 24 }}>
+        <h3 style={{ marginTop: 0 }}>
+          🔑 Generar QR de acceso
+          {genFromReal && (
+            <span style={{ fontSize: ".76rem", color: T.success, marginLeft: 10, fontWeight: 400 }}>
+              ✓ datos desde reserva real
+            </span>
+          )}
+        </h3>
+        {!genFromReal && (
+          <p style={{ color: T.textMuted, fontSize: ".83rem", marginTop: 0, padding: "6px 10px", borderRadius: 6, background: `${T.accent}14`, border: `1px solid ${T.accent}33` }}>
+            ⚠ Entrada manual — usa el buscador anterior para precargar datos reales desde Airtable.
+          </p>
+        )}
+        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 8 }}>
+          El QR será procesado por Make y enviado al jugador (WhatsApp/email).
+        </p>
+        <form onSubmit={handleGenerarQr} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label style={{ fontSize: ".87rem" }}>
+            Clave de reserva *
+            <input
+              value={genClave}
+              onChange={(e) => { setGenClave(e.target.value); setGenFromReal(false); }}
+              placeholder="CP04-2026-07-20-PISTA2-09"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <label style={{ fontSize: ".87rem" }}>
+            Player ID (email/usuario) *
+            <input
+              value={genPlayerId}
+              onChange={(e) => setGenPlayerId(e.target.value)}
+              placeholder="jugador@example.com"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <label style={{ fontSize: ".87rem" }}>
+            Record ID Airtable *
+            <input
+              value={genRecordId}
+              onChange={(e) => setGenRecordId(e.target.value)}
+              placeholder="recXXXXXXXXXXXXXX"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label style={{ fontSize: ".87rem", flex: "2 1 200px" }}>
+              Nombre del jugador *
+              <input
+                value={genNombre}
+                onChange={(e) => setGenNombre(e.target.value)}
+                placeholder="Nombre Apellido"
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "2 1 200px" }}>
+              Email del jugador *
+              <input
+                type="email"
+                value={genEmail}
+                onChange={(e) => setGenEmail(e.target.value)}
+                placeholder="jugador@club.es"
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label style={{ fontSize: ".87rem", flex: "1 1 140px" }}>
+              Pista
+              <select
+                value={genPista}
+                onChange={(e) => setGenPista(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              >
+                {pistasDisponibles.map((p) => <option key={p}>{p}</option>)}
+              </select>
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "1 1 140px" }}>
+              Fecha *
+              <input
+                type="date"
+                value={genFecha}
+                onChange={(e) => setGenFecha(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "1 1 100px" }}>
+              Hora inicio *
+              <input
+                type="time"
+                value={genHora}
+                onChange={(e) => setGenHora(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "1 1 100px" }}>
+              Hora fin *
+              <input
+                type="time"
+                value={genHoraFin}
+                onChange={(e) => setGenHoraFin(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+          </div>
+          {genError && (
+            <p style={{ color: T.error, fontSize: ".86rem", margin: 0 }}>{genError}</p>
+          )}
+          <Btn type="submit" disabled={genLoading} variant="primary">
+            {genLoading ? "Generando…" : "Generar QR de acceso"}
+          </Btn>
+        </form>
+        {genResult && (
+          <div style={{ marginTop: 20, padding: 16, borderRadius: 8, background: `${T.success}18`, border: `1px solid ${T.success}44` }}>
+            <p style={{ color: T.success, fontWeight: 700, margin: "0 0 8px" }}>QR generado — pendiente de confirmación Make</p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Clave: <strong>{genResult.clave_reserva}</strong></p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Pista: {genResult.pista} · Fecha: {genResult.fecha} · {genResult.hora_inicio}</p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Válido desde: {genResult.valid_from ? new Date(genResult.valid_from).toLocaleString("es-ES") : "—"}</p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Válido hasta: {genResult.valid_until ? new Date(genResult.valid_until).toLocaleString("es-ES") : "—"}</p>
+            <p style={{ fontSize: ".82rem", margin: "8px 0 0", color: T.textMuted }}>Make procesará la entrega del QR al jugador según la configuración del club.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Panel Control / Validación QR */}
       <Card>
-        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
-        <PanelList items={[
-          "🔐 Control Acceso QR — verifica el código QR presentado en la entrada del club.",
-          "🔑 Generación QR Acceso — genera el código QR de acceso para un jugador.",
-          "Ambos siguen ejecutándose de forma autónoma en Make; este panel no los dispara ni los sustituye.",
-        ]} />
-        <div style={{ marginTop: 20 }}>
-          <PreparedActionButtons actions={["Generar QR de acceso", "Verificar acceso"]} />
-        </div>
+        <h3 style={{ marginTop: 0 }}>🔐 Verificar acceso QR</h3>
+        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 0 }}>
+          Introduce la clave de reserva escaneada o tecleada manualmente. Make comprobará el estado real en Airtable.
+        </p>
+        <form onSubmit={handleValidarQr} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label style={{ fontSize: ".87rem" }}>
+            Clave de reserva (del QR) *
+            <input
+              value={valClave}
+              onChange={(e) => setValClave(e.target.value)}
+              placeholder="CP04-2026-07-20-PISTA2-09"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label style={{ fontSize: ".87rem", flex: "1 1 140px" }}>
+              Pista
+              <select
+                value={valPista}
+                onChange={(e) => setValPista(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              >
+                {pistasDisponibles.map((p) => <option key={p}>{p}</option>)}
+              </select>
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "2 1 200px" }}>
+              ID del validador (staff) *
+              <input
+                value={valStaff}
+                onChange={(e) => setValStaff(e.target.value)}
+                placeholder="staff@cp04.es"
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+          </div>
+          {valError && (
+            <p style={{ color: T.error, fontSize: ".86rem", margin: 0 }}>{valError}</p>
+          )}
+          <Btn type="submit" disabled={valLoading} variant="primary">
+            {valLoading ? "Verificando…" : "Verificar acceso"}
+          </Btn>
+        </form>
+        {valResult && (
+          <div style={{ marginTop: 20, padding: 20, borderRadius: 8, background: valResult.decision === "ALLOW" ? `${T.success}18` : `${T.error}18`, border: `2px solid ${decisionColor}` }}>
+            <p style={{ color: decisionColor, fontWeight: 800, fontSize: "1.1rem", margin: "0 0 8px" }}>
+              {valResult.decision === "ALLOW" ? "✅ ACCESO PERMITIDO" : "❌ ACCESO DENEGADO"}
+            </p>
+            <p style={{ fontSize: ".87rem", margin: "4px 0", color: T.textMuted }}>
+              Motivo: <strong>{valResult.reason}</strong>
+            </p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Pista: {valResult.pista}</p>
+            <p style={{ fontSize: ".82rem", margin: "8px 0 0", color: T.textMuted }}>
+              Validado: {new Date(valResult.scanned_at).toLocaleString("es-ES")}
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );
@@ -4613,6 +5295,109 @@ function DashboardKpiNps() {
 // Drive" (6216523), "⚖️ Solicitud GDPR Acceso u Olvido de Datos"
 // (6323457) y "🛡️ Alerta Seguridad Acceso Sospechoso" (6323450). Gateado
 // como "admin" (ADMIN+SUPPORT, sin STAFF).
+// PASO T2 (2026-08-21): "Revisar solicitud GDPR" deja de ser un botón
+// preparado (PreparedActionButtons) y pasa a ser funcional de verdad,
+// reutilizando exactamente los mismos endpoints que Perfil() (POST
+// /api/gdpr/acceso y /api/gdpr/olvido, con `email` explícito porque
+// ADMIN/SUPPORT puede tramitar la solicitud de otro socio). No se crea
+// ninguna tabla/lista de solicitudes nueva: el Worker no tiene ningún
+// AIRTABLE_*_TABLE_ID configurado para eso todavía (ver comentario en
+// handleGdprAcceso/handleGdprOlvido), así que este panel es de consulta
+// puntual por email, no un listado histórico — eso queda documentado como
+// limitación, no fingido.
+function GdprAdminReview() {
+  const [email, setEmail] = useState("");
+  const [accesoLoading, setAccesoLoading] = useState(false);
+  const [accesoResult, setAccesoResult] = useState(null);
+  const [accesoError, setAccesoError] = useState("");
+  const [olvidoLoading, setOlvidoLoading] = useState(false);
+  const [olvidoResult, setOlvidoResult] = useState(null);
+  const [olvidoError, setOlvidoError] = useState("");
+
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  async function consultarAcceso() {
+    setAccesoLoading(true); setAccesoError(""); setAccesoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/acceso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) setAccesoError(data?.message || data?.error || "No se pudo consultar.");
+      else setAccesoResult(data);
+    } catch {
+      setAccesoError("Error de conexión.");
+    } finally {
+      setAccesoLoading(false);
+    }
+  }
+
+  async function registrarOlvido() {
+    setOlvidoLoading(true); setOlvidoError(""); setOlvidoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/olvido", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), confirmar: true, motivo: "Tramitación administrativa desde Backups y seguridad." }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) setOlvidoError(data?.message || data?.error || "No se pudo registrar.");
+      else setOlvidoResult(data);
+    } catch {
+      setOlvidoError("Error de conexión.");
+    } finally {
+      setOlvidoLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${T.line}` }}>
+      <h3 style={{ marginTop: 0, fontSize: "1rem" }}>⚖️ Revisar solicitud GDPR</h3>
+      <p style={{ color: T.textDim, fontSize: ".82rem", marginBottom: 14 }}>
+        Consulta o registra una solicitud GDPR (ACCESO u OLVIDO) por email de socio — distinta de una Baja de Jugador.
+        La ejecución real del olvido (cancelaciones, salida de lista de espera) requiere el runbook administrativo, no este panel.
+      </p>
+      <input
+        type="email"
+        placeholder="email@socio.example"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{ width: "100%", maxWidth: 360, padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.surface2, color: T.text, marginBottom: 12 }}
+      />
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Btn variant="secondary" onClick={consultarAcceso} disabled={!emailValido || accesoLoading}>
+          {accesoLoading ? "Consultando…" : "Consultar datos (GDPR_ACCESO)"}
+        </Btn>
+        <Btn variant="danger" onClick={registrarOlvido} disabled={!emailValido || olvidoLoading}>
+          {olvidoLoading ? "Registrando…" : "Registrar solicitud de olvido (GDPR_OLVIDO)"}
+        </Btn>
+      </div>
+
+      {accesoError && <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 10 }}>{accesoError}</div>}
+      {accesoResult && (
+        <div style={{ marginTop: 12, padding: 12, border: `1px solid ${T.line}`, borderRadius: 10, fontSize: ".82rem", lineHeight: 1.6 }}>
+          <div style={{ fontWeight: 700 }}>{accesoResult.tipo} — {accesoResult.titular.email}</div>
+          <div style={{ color: T.textDim }}>Identidad: {accesoResult.datos.identidad.disponible ? "disponible" : `no disponible (${accesoResult.datos.identidad.motivo})`}</div>
+          <div style={{ color: T.textDim }}>Reservas: {accesoResult.datos.reservas.disponible ? `${accesoResult.datos.reservas.registros.length} registro(s)` : `no disponible (${accesoResult.datos.reservas.motivo})`}</div>
+        </div>
+      )}
+
+      {olvidoError && <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 10 }}>{olvidoError}</div>}
+      {olvidoResult && (
+        <div style={{ marginTop: 12, padding: 12, border: `1px solid ${T.line}`, borderRadius: 10, fontSize: ".82rem", lineHeight: 1.6 }}>
+          <div style={{ fontWeight: 700 }}>{olvidoResult.tipo} — {olvidoResult.titular.email} — estado: {olvidoResult.estado}</div>
+          {olvidoResult.dependencias?.reservas_futuras?.verificable && (
+            <div style={{ color: T.textDim }}>Reservas futuras: {olvidoResult.dependencias.reservas_futuras.cantidad}</div>
+          )}
+          <div style={{ color: T.textDim }}>Lista de espera: no verificable en este entorno (requiere revisión manual).</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BackupsSeguridad() {
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
@@ -4628,13 +5413,14 @@ function BackupsSeguridad() {
         <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
         <PanelList items={[
           "🔄 Backup Semanal / 🗂️ Backup Plantilla Drive — copias de seguridad periódicas.",
-          "⚖️ Solicitud GDPR Acceso u Olvido de Datos — gestión de solicitudes de privacidad.",
+          "⚖️ Solicitud GDPR Acceso u Olvido de Datos — gestión de solicitudes de privacidad (ver panel funcional debajo).",
           "🛡️ Alerta Seguridad Acceso Sospechoso — aviso de accesos sospechosos.",
-          "Los 4 escenarios ya corren en Make; este panel no los reactiva ni los sustituye.",
+          "Backup Semanal, Backup Plantilla Drive y Alerta Seguridad ya corren en Make; este panel no los reactiva ni los sustituye.",
         ]} />
         <div style={{ marginTop: 20 }}>
-          <PreparedActionButtons actions={["Solicitar backup manual", "Revisar solicitud GDPR", "Revisar alerta de seguridad"]} />
+          <PreparedActionButtons actions={["Solicitar backup manual", "Revisar alerta de seguridad"]} />
         </div>
+        <GdprAdminReview />
       </Card>
     </div>
   );
@@ -4742,39 +5528,119 @@ function FacturacionPagos() {
   );
 }
 
-// PASO 07P (2026-07-20): "Automatizaciones y bots" — agrupa "🎧 Atención
-// Socio WhatsApp FAQ" (5799031), "🎯 Campaña Flash WhatsApp" (5791124),
-// "🤖 Bot IA Reservas WhatsApp" (5798996), "🤖 Bot IA Reservas Telegram"
-// (4832095) y "📝 Tally → API Reservas" (5747703). Gateado como "admin"
-// (ADMIN+SUPPORT, sin STAFF). No existe integración de WhatsApp Business
-// API, Telegram Bot API ni Tally en esta rama — este panel nunca debe dar
-// a entender que ya hay mensajes reales conectados.
-function AutomatizacionesBots() {
+// PASO 07P (2026-07-20) / Omnicanal (2026-08-27): "Automatizaciones y bots"
+// agrupa el Asistente Web real (conectado a /api/chat en el Worker) más los
+// escenarios Make de canales externos. WhatsApp Business API y Tally siguen
+// sin integración real. Telegram usa el mismo endpoint /api/chat con
+// X-CP04-Bot-Secret (trigger en Make ID 4832095 preparado, sin activar).
+// El asistente web SÍ está conectado al backend omnicanal real.
+function AutomatizacionesBots({ navigate }) {
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
       <SectionTitle
         eyebrow="Automatizaciones"
-        title="Automatizaciones y bots"
-        desc="Asistentes de WhatsApp, Telegram y formularios externos."
+        title="Asistente y automatizaciones"
+        desc="Asistente de reservas en tiempo real + canales externos."
       />
-      <IntegrationStatusBanner>
-        Preparado visualmente. Pendiente de integración real con WhatsApp Business API, Telegram Bot API y Tally — no envía mensajes reales todavía.
-      </IntegrationStatusBanner>
+
+      <Card style={{ marginBottom: 24 }}>
+        <h3 style={{ marginTop: 0 }}>💬 Asistente Web (activo)</h3>
+        <p style={{ color: "#555", fontSize: 14, marginBottom: 16 }}>
+          Conectado al backend omnicanal del Worker. Consulta disponibilidad y recibe orientación para gestionar tus reservas.
+        </p>
+        <ChatbotAsistente onNavigate={navigate} />
+      </Card>
+
       <Card>
-        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <h3 style={{ marginTop: 0 }}>Canales externos (en Make)</h3>
         <PanelList items={[
-          "🎧 Atención Socio WhatsApp FAQ — responde preguntas frecuentes de socios por WhatsApp.",
-          "🎯 Campaña Flash WhatsApp — envía promociones flash por WhatsApp.",
-          "🤖 Bot IA Reservas WhatsApp / 🤖 Bot IA Reservas Telegram — asistentes de reserva por chat.",
-          "📝 Tally → API Reservas — recoge reservas desde un formulario externo (Tally).",
-          "Los 5 escenarios ya corren en Make; este panel no los reactiva, no los sustituye y no envía ningún mensaje real.",
+          "🤖 Bot IA Reservas Telegram — contrato omnicanal preparado; endpoint /api/chat listo con X-CP04-Bot-Secret. Transcripción de audio: PENDIENTE E2E REAL (requiere Cloudflare AI binding o clave OpenAI Whisper configurada en Worker).",
+          "🎧 Atención Socio WhatsApp FAQ (Make 5799031) — desactivado; mismo contrato omnicanal aplicable.",
+          "🤖 Bot IA Reservas WhatsApp (Make 5798996) — desactivado; misma API /api/chat.",
+          "🎯 Campaña Flash WhatsApp (Make 5791124) — canal independiente, sin chatbot.",
+          "📝 Tally → API Reservas (Make 5747703) — pendiente de integración.",
         ]} />
-        <div style={{ marginTop: 20 }}>
-          <PreparedActionButtons actions={["Revisar conversación preparada", "Enviar campaña de prueba", "Revisar formulario Tally"]} />
-        </div>
+        <p style={{ fontSize: 13, color: "#888", marginTop: 12, marginBottom: 0 }}>
+          Los escenarios de canales externos no se reactivan desde este panel. Para activarlos, configura CHATBOT_BOT_SECRET como Worker secret y habilita el trigger de Telegram en Make.
+        </p>
       </Card>
     </div>
   );
+}
+
+function normalizarReserva(item) {
+  const reserva =
+    item && typeof item === "object" && item.fields
+      ? { ...item.fields, record_id: item.id || item.record_id }
+      : item || {};
+
+  return {
+    id:
+      reserva.record_id ||
+      reserva.id ||
+      reserva.clave_reserva ||
+      `${reserva.fecha_reserva || reserva.fecha || "sin-fecha"}-${
+        reserva.pista || reserva.Pista || "sin-pista"
+      }-${reserva.hora_inicio || reserva.hora || "sin-hora"}`,
+
+    nombre:
+      reserva.nombre ||
+      reserva.Nombre ||
+      reserva.jugador_nombre ||
+      "",
+
+    apellidos:
+      reserva.apellidos ||
+      reserva.Apellidos ||
+      reserva.jugador_apellidos ||
+      "",
+
+    email:
+      reserva.email ||
+      reserva.Email ||
+      "",
+
+    fecha:
+      reserva.fecha_reserva ||
+      reserva.fecha ||
+      reserva.Fecha ||
+      "",
+
+    horaInicio:
+      reserva.hora_inicio ||
+      reserva.hora ||
+      reserva.Hora ||
+      "",
+
+    horaFin:
+      reserva.hora_fin ||
+      "",
+
+    pista:
+      reserva.pista ||
+      reserva.Pista ||
+      "",
+
+    estado: String(
+      reserva.estado_reserva ||
+      reserva.estado ||
+      reserva.Estado ||
+      "sin estado",
+    ).toLowerCase(),
+
+    clave:
+      reserva.clave_reserva ||
+      reserva.clave ||
+      "",
+
+    fechaCancelacion:
+      reserva.fecha_cancelacion ||
+      "",
+
+    eventId:
+      reserva.event_id ||
+      "",
+  };
 }
 
 function Gestion() {
@@ -4798,84 +5664,7 @@ function Gestion() {
   const [filtroPista, setFiltroPista] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
 
-  const reservasEndpoint =
-    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
-    "/api/reservas";
-
-  function normalizarReserva(item) {
-    const reserva =
-      item && typeof item === "object" && item.fields
-        ? { ...item.fields, record_id: item.id || item.record_id }
-        : item || {};
-
-    return {
-      id:
-        reserva.record_id ||
-        reserva.id ||
-        reserva.clave_reserva ||
-        `${reserva.fecha_reserva || reserva.fecha || "sin-fecha"}-${
-          reserva.pista || reserva.Pista || "sin-pista"
-        }-${reserva.hora_inicio || reserva.hora || "sin-hora"}`,
-
-      nombre:
-        reserva.nombre ||
-        reserva.Nombre ||
-        reserva.jugador_nombre ||
-        "",
-
-      apellidos:
-        reserva.apellidos ||
-        reserva.Apellidos ||
-        reserva.jugador_apellidos ||
-        "",
-
-      email:
-        reserva.email ||
-        reserva.Email ||
-        "",
-
-      fecha:
-        reserva.fecha_reserva ||
-        reserva.fecha ||
-        reserva.Fecha ||
-        "",
-
-      horaInicio:
-        reserva.hora_inicio ||
-        reserva.hora ||
-        reserva.Hora ||
-        "",
-
-      horaFin:
-        reserva.hora_fin ||
-        "",
-
-      pista:
-        reserva.pista ||
-        reserva.Pista ||
-        "",
-
-      estado: String(
-        reserva.estado_reserva ||
-        reserva.estado ||
-        reserva.Estado ||
-        "sin estado",
-      ).toLowerCase(),
-
-      clave:
-        reserva.clave_reserva ||
-        reserva.clave ||
-        "",
-
-      fechaCancelacion:
-        reserva.fecha_cancelacion ||
-        "",
-
-      eventId:
-        reserva.event_id ||
-        "",
-    };
-  }
+  const reservasEndpoint = cp04ReservasEndpoint(import.meta?.env);
 
   async function cargarReservas() {
     const emailLimpio = emailConsulta.trim().toLowerCase();
@@ -5605,6 +6394,9 @@ function AltaJugador({ initialModo = "alta" } = {}) {
     try {
       // Alta de jugador es operación de STAFF/ADMIN/SUPPORT: adjunta el
       // token real si existe sesión (preparado para CP04_ENFORCE_ROLE_GATES).
+      // request_id: generado en el cliente para idempotencia real (si el
+      // envío se reintenta con el mismo request_id, el backend/Make puede
+      // reconocerlo como la misma solicitud en vez de crear un duplicado).
       const response = await authFetch("/api/jugadores/alta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -5619,6 +6411,7 @@ function AltaJugador({ initialModo = "alta" } = {}) {
           comentarios: form.comentarios.trim(),
           acepta_condiciones: form.acepta_condiciones,
           origen: "app",
+          request_id: crypto.randomUUID(),
         }),
       });
 
@@ -5877,7 +6670,9 @@ function torneoLoadSaved() {
     const rawBracket = Array.isArray(raw.bracket) ? raw.bracket : [];
     // If bracket items lack 'round' (old format), discard bracket to avoid crash
     const bracketOk = rawBracket.length === 0 || rawBracket.every(m => typeof m.round === "number");
-    return { ...raw, pairs: rawPairs, bracket: bracketOk ? rawBracket : [] };
+    const rawRrMatches = Array.isArray(raw.rrMatches) ? raw.rrMatches : [];
+    const rrMatchesOk = rawRrMatches.length === 0 || rawRrMatches.every(m => typeof m.round === "number");
+    return { ...raw, pairs: rawPairs, bracket: bracketOk ? rawBracket : [], rrMatches: rrMatchesOk ? rawRrMatches : [] };
   } catch { return null; }
 }
 
@@ -5982,6 +6777,11 @@ function Torneos({ selectedRole } = {}) {
   const [byePair, setByePair] = useState(() => saved?.byePair ?? null);
   const [byeDrawDate, setByeDrawDate] = useState(() => saved?.byeDrawDate ?? null);
   const [published, setPublished] = useState(() => saved?.published ?? false);
+  // Round Robin (liga: todos contra todos) — motor puro en
+  // src/utils/roundRobin.js. rrMatches es independiente del `bracket` de
+  // eliminación directa: solo se usa cuando formatMode === "roundrobin".
+  const [rrMatches, setRrMatches] = useState(() => saved?.rrMatches ?? []);
+  const [rrScoreDraft, setRrScoreDraft] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ p1: "", p2: "" });
   const [deleteId, setDeleteId] = useState(null);
@@ -5989,16 +6789,30 @@ function Torneos({ selectedRole } = {}) {
   const [showHistory, setShowHistory] = useState(false);
   const [notice, setNotice] = useState("");
   const [noticeErr, setNoticeErr] = useState(false);
-  const [savedAt, setSavedAt] = useState(null);
   const [winnerAnim, setWinnerAnim] = useState(null);
 
-  const currentMax = formatMode !== "custom" ? FORMAT_MAX[formatMode] : null;
+  const isRoundRobin = formatMode === "roundrobin";
+  const currentMax = formatMode !== "custom" && !isRoundRobin ? FORMAT_MAX[formatMode] : null;
+
+  const torneoSnapshot = JSON.stringify({
+    formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published, rrMatches,
+  });
 
   useEffect(() => {
-    const s = { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published };
-    localStorage.setItem(TORNEO_STORE, JSON.stringify(s));
+    localStorage.setItem(TORNEO_STORE, torneoSnapshot);
+  }, [torneoSnapshot]);
+
+  // savedAt es puramente informativo para el indicador "Guardado HH:MM:SS".
+  // Se ajusta durante el render (patrón "Storing information from previous
+  // renders" de React: https://react.dev/reference/react/useState#storing-information-from-previous-renders),
+  // no dentro de un efecto: evita el setState síncrono en efecto sin
+  // necesitar un segundo render encadenado ni dependencias artificiales.
+  const [prevTorneoSnapshot, setPrevTorneoSnapshot] = useState(torneoSnapshot);
+  const [savedAt, setSavedAt] = useState(() => new Date());
+  if (torneoSnapshot !== prevTorneoSnapshot) {
+    setPrevTorneoSnapshot(torneoSnapshot);
     setSavedAt(new Date());
-  }, [pairs, bracket, byePair, byeDrawDate, published, formatMode, customMode, customInput]);
+  }
 
   const showNotice = (msg, err = false) => {
     setNotice(msg); setNoticeErr(err);
@@ -6017,7 +6831,7 @@ function Torneos({ selectedRole } = {}) {
         id: torneoUid("h"),
         ts: new Date().toISOString(),
         action,
-        s: { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published },
+        s: { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published, rrMatches },
       };
       const snaps = Array.isArray(hist.snaps) ? hist.snaps : [];
       const idx = typeof hist.idx === "number" ? hist.idx : -1;
@@ -6039,6 +6853,7 @@ function Torneos({ selectedRole } = {}) {
     setByePair(s.byePair ?? null);
     setByeDrawDate(s.byeDrawDate ?? null);
     setPublished(s.published ?? false);
+    setRrMatches(Array.isArray(s.rrMatches) ? s.rrMatches : []);
   };
 
   const handleUndo = () => {
@@ -6081,10 +6896,16 @@ function Torneos({ selectedRole } = {}) {
   const applyFormat = (fmt) => {
     if (!canManage) return;
     pushHistory(`Cambio de formato → ${fmt}`);
-    setFormatMode(fmt); setCustomError("");
-    if (fmt !== "custom") {
+    setFormatMode(fmt); setCustomError(""); setRrMatches([]); setRrScoreDraft({});
+    if (fmt !== "custom" && fmt !== "roundrobin") {
       const c = FORMAT_MAX[fmt]; const np = torneoBuildEmptyPairs(c);
       setPairs(np); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false);
+    } else {
+      // "custom" y "roundrobin" comparten el mismo panel de configuración
+      // por número de jugadores/parejas (ver abajo): al cambiar a
+      // cualquiera de los dos se limpian las parejas hasta que se
+      // confirme un número con applyCustom().
+      setPairs([]); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false);
     }
   };
 
@@ -6104,10 +6925,53 @@ function Torneos({ selectedRole } = {}) {
       pc = raw;
     }
     setCustomError("");
-    pushHistory(`Personalizado: ${pc} parejas`);
+    pushHistory(isRoundRobin ? `Round Robin: ${pc} parejas` : `Personalizado: ${pc} parejas`);
     const np = torneoBuildEmptyPairs(pc);
-    setPairs(np); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false);
+    setPairs(np); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false); setRrMatches([]); setRrScoreDraft({});
     showNotice(`Torneo configurado: ${pc} pareja${pc !== 1 ? "s" : ""}.`);
+  };
+
+  const handleGenerateRoundRobin = () => {
+    if (!canManage) return;
+    if (pairs.length < 2) {
+      showNotice("Se necesitan al menos 2 parejas para generar el calendario de Round Robin.", true);
+      return;
+    }
+    const hadResults = rrMatches.some(m => m.played);
+    pushHistory("Generar calendario Round Robin");
+    const matches = buildRoundRobinMatches(pairs);
+    setRrMatches(matches);
+    setRrScoreDraft({});
+    const totalRounds = getRoundRobinTotalRounds(matches);
+    const warn = hadResults ? " Los resultados anteriores se han reiniciado." : "";
+    showNotice(`📅 Calendario generado: ${matches.length} partido${matches.length !== 1 ? "s" : ""} en ${totalRounds} jornada${totalRounds !== 1 ? "s" : ""}.${warn}`, hadResults);
+  };
+
+  const handleRoundRobinScoreChange = (matchId, side, value) => {
+    setRrScoreDraft(d => ({ ...d, [matchId]: { ...d[matchId], [side]: value } }));
+  };
+
+  const handleRoundRobinSaveResult = (match) => {
+    if (!canManage) return;
+    const draft = rrScoreDraft[match.id] || {};
+    const scoreA = parseInt(draft.a ?? match.scoreA, 10);
+    const scoreB = parseInt(draft.b ?? match.scoreB, 10);
+    if (isNaN(scoreA) || isNaN(scoreB) || scoreA < 0 || scoreB < 0) {
+      showNotice("Introduce un resultado válido (números enteros no negativos) para ambas parejas.", true);
+      return;
+    }
+    if (scoreA === scoreB) {
+      showNotice("El resultado no puede ser un empate: el pádel no tiene empates, indica quién ganó.", true);
+      return;
+    }
+    const res = applyRoundRobinResult(rrMatches, match.id, scoreA, scoreB);
+    if (!res.ok) {
+      showNotice("No se ha podido guardar el resultado.", true);
+      return;
+    }
+    pushHistory(match.played ? "Corregir resultado Round Robin" : "Registrar resultado Round Robin");
+    setRrMatches(res.matches);
+    showNotice("✅ Resultado guardado. Clasificación actualizada.");
   };
 
   const handleReorder = () => {
@@ -6175,9 +7039,17 @@ function Torneos({ selectedRole } = {}) {
     // mostraría un "ganador" que ya no existe en `pairs`.
     const affectsBracket = bracket.some(m => (m.pairA === id || m.pairB === id) && (m.winner || m.round > 1));
     const newBrk = bracket.filter(m => m.pairA !== id && m.pairB !== id);
-    setPairs(upd); setBracket(newBrk); setByePair(nb); setByeDrawDate(nd); setDeleteId(null);
+    // Round Robin: cualquier partido de la pareja eliminada se retira del
+    // calendario (misma razón que en el bracket de eliminación — no tiene
+    // sentido conservar un partido jugado contra una pareja que ya no
+    // existe en `pairs`).
+    const affectsRoundRobin = rrMatches.some(m => (m.pairA === id || m.pairB === id) && m.played);
+    const newRrMatches = rrMatches.filter(m => m.pairA !== id && m.pairB !== id);
+    setPairs(upd); setBracket(newBrk); setByePair(nb); setByeDrawDate(nd); setDeleteId(null); setRrMatches(newRrMatches);
     if (affectsBracket) {
       showNotice(`⚠️ "${pairLabel(deleted)}" tenía resultados en el cuadro: se han invalidado los partidos y rondas posteriores que dependían de ella.`, true);
+    } else if (affectsRoundRobin) {
+      showNotice(`⚠️ "${pairLabel(deleted)}" tenía resultados en el calendario de Round Robin: sus partidos se han retirado de la clasificación.`, true);
     }
   };
 
@@ -6204,25 +7076,46 @@ function Torneos({ selectedRole } = {}) {
 
   const handleExportJSON = () => {
     if (!canManage) return;
+    // Date.now() aquí es seguro: solo se ejecuta dentro de este manejador de
+    // clic (nunca durante el render), exactamente el mismo patrón ya usado
+    // sin incidentes en handleExportCSV más abajo. El análisis estático del
+    // compilador de React solo llega a marcarlo aquí porque, al añadir más
+    // código a este componente (Round Robin), progresa más a fondo en su
+    // intento de auto-memoizar Torneos; no es un problema real de pureza en
+    // ejecución — un timestamp para el nombre del fichero exportado no
+    // afecta al resultado del render.
+    // eslint-disable-next-line react-hooks/purity
+    const exportTs = Date.now();
     const data = {
       nombreTorneo: `Torneo Club Pádel 04 · ${pairs.length} parejas`,
       numJugadores: pairs.length * 2, numParejas: pairs.length, formato: formatMode,
       parejas: pairs.map(p => ({ jugador1: p.player1, jugador2: p.player2 })),
-      ranking: pairs.map((p, i) => ({ pos: i + 1, jugador1: p.player1, jugador2: p.player2 })),
-      bracket: bracket.map(m => {
+      ranking: isRoundRobin
+        ? rrStandingsSorted.map((s, i) => {
+            const pair = pairs.find(p => p.id === s.pairId);
+            return { pos: i + 1, jugador1: pair?.player1 ?? "", jugador2: pair?.player2 ?? "", jugados: s.played, ganados: s.won, perdidos: s.lost, favor: s.scoreFor, contra: s.scoreAgainst, diferencia: s.diff, puntos: s.points };
+          })
+        : pairs.map((p, i) => ({ pos: i + 1, jugador1: p.player1, jugador2: p.player2 })),
+      bracket: isRoundRobin ? [] : bracket.map(m => {
         const pA = pairs.find(p => p.id === m.pairA);
         const pB = m.pairB ? pairs.find(p => p.id === m.pairB) : null;
         const pW = m.winner ? pairs.find(p => p.id === m.winner) : null;
         return { ronda: m.round, parejaA: pA ? pairLabel(pA) : "—", parejaB: pB ? pairLabel(pB) : "BYE", ganador: pW ? pairLabel(pW) : "—", esBye: m.isBye };
       }),
+      calendarioRoundRobin: isRoundRobin ? rrMatches.map(m => {
+        const pA = pairs.find(p => p.id === m.pairA);
+        const pB = pairs.find(p => p.id === m.pairB);
+        return { jornada: m.round, parejaA: pA ? pairLabel(pA) : "—", parejaB: pB ? pairLabel(pB) : "—", resultado: m.played ? `${m.scoreA}-${m.scoreB}` : null };
+      }) : [],
+      campeonRoundRobin: isRoundRobin && rrChampion ? pairLabel(rrChampion) : null,
       parejaPaseDirecto: byePair ? pairLabel(byePair) : null,
       fechaSorteo: byeDrawDate,
       estadoTorneo: published ? "Publicado" : "En curso",
-      fechaExportacion: new Date().toISOString(),
+      fechaExportacion: new Date(exportTs).toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `torneo-cp04-${Date.now()}.json`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `torneo-cp04-${exportTs}.json`; a.click();
     URL.revokeObjectURL(url);
     showNotice("⬇ JSON descargado correctamente.");
   };
@@ -6244,6 +7137,21 @@ function Torneos({ selectedRole } = {}) {
   const totalRounds = roundNums.length;
   const canUndo = hist.idx > 0;
   const canRedo = hist.idx < (hist.snaps?.length ?? 0) - 1;
+
+  // Round Robin: clasificación derivada de pairs+rrMatches (motor puro en
+  // src/utils/roundRobin.js). Recalcula solo cuando cambia alguna de las
+  // dos, no en cada render.
+  // Derivación simple durante el render, igual que bracketByRound/roundNums
+  // más abajo: el volumen de datos (máx. ~32 parejas) hace innecesaria
+  // cualquier memoización.
+  const rrStandingsSorted = isRoundRobin
+    ? sortRoundRobinStandings(computeRoundRobinStandings(pairs, rrMatches), rrMatches)
+    : [];
+  const rrByRound = {};
+  rrMatches.forEach(m => { if (!rrByRound[m.round]) rrByRound[m.round] = []; rrByRound[m.round].push(m); });
+  const rrRoundNums = Object.keys(rrByRound).map(Number).sort((a, b) => a - b);
+  const rrComplete = isRoundRobin && isRoundRobinComplete(rrMatches);
+  const rrChampion = isRoundRobin ? getRoundRobinChampion(pairs, rrMatches) : null;
 
   return (
     <div style={{ padding: "42px 24px", maxWidth: 1240, margin: "0 auto" }}>
@@ -6307,17 +7215,30 @@ function Torneos({ selectedRole } = {}) {
       <div style={{ marginBottom: 22 }}>
         <p style={{ color: T.textDim, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 10, fontWeight: 700 }}>Formato del torneo</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[{ v: "16", l: "16 jug / 8 parejas" }, { v: "32", l: "32 jug / 16 parejas" }, { v: "64", l: "64 jug / 32 parejas" }, { v: "custom", l: "⚙ Personalizado" }].map(o => (
+          {[{ v: "16", l: "16 jug / 8 parejas" }, { v: "32", l: "32 jug / 16 parejas" }, { v: "64", l: "64 jug / 32 parejas" }, { v: "custom", l: "⚙ Personalizado" }, { v: "roundrobin", l: "🔁 Round Robin (liga)" }].map(o => (
             <button key={o.v} type="button" className={`cp04-format-pill${formatMode === o.v ? " is-active" : ""}`} onClick={() => applyFormat(o.v)}>{o.l}</button>
           ))}
         </div>
       </div>
       )}
 
-      {/* CUSTOM FORMAT PANEL */}
-      {canManage && formatMode === "custom" && (
+      {/* ROUND ROBIN EXPLICATION */}
+      {isRoundRobin && (
         <Card style={{ marginBottom: 22 }}>
-          <h3 style={{ marginTop: 0, marginBottom: 14, fontSize: "1rem" }}>Formato personalizado</h3>
+          <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: "1rem" }}>🔁 Round Robin (liga: todos contra todos)</h3>
+          <p style={{ color: T.textDim, fontSize: ".85rem", lineHeight: 1.6, margin: 0 }}>
+            Cada pareja juega exactamente una vez contra todas las demás. No hay eliminación: la clasificación
+            final se calcula por puntos (3 por partido ganado, 0 por perdido). Con número impar de parejas, una
+            pareja distinta descansa cada jornada de forma rotatoria, sin rival ficticio. Desempates, en orden:
+            puntos → enfrentamiento directo (si aplica) → diferencia de puntos → puntos a favor → orden de entrada.
+          </p>
+        </Card>
+      )}
+
+      {/* CUSTOM FORMAT PANEL (compartido por "custom" y "roundrobin": ambos configuran el número de jugadores/parejas de la misma forma) */}
+      {canManage && (formatMode === "custom" || isRoundRobin) && (
+        <Card style={{ marginBottom: 22 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 14, fontSize: "1rem" }}>{isRoundRobin ? "Configurar Round Robin" : "Formato personalizado"}</h3>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
             <div>
               <p style={{ color: T.textDim, fontSize: ".8rem", marginBottom: 8, marginTop: 0 }}>Configurar por</p>
@@ -6340,13 +7261,15 @@ function Torneos({ selectedRole } = {}) {
           </div>
           {customError && <p style={{ color: T.dangerText, margin: "10px 0 0", fontSize: ".82rem", fontWeight: 700 }}>⚠️ {customError}</p>}
           <p style={{ color: T.textDim, fontSize: ".78rem", marginTop: 12, marginBottom: 0, lineHeight: 1.55 }}>
-            Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Si el número es impar se sorteará automáticamente un pase directo (BYE).
+            {isRoundRobin
+              ? "Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Tras configurar el número, genera el calendario con el botón «📅 Generar calendario» en Controles."
+              : "Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Si el número es impar se sorteará automáticamente un pase directo (BYE)."}
           </p>
         </Card>
       )}
 
-      {/* BYE NOTICE */}
-      {byePair && (
+      {/* BYE NOTICE (solo eliminación directa: Round Robin gestiona el descanso por jornada dentro de su propio calendario, no con un BYE fijo) */}
+      {byePair && !isRoundRobin && (
         <div style={{ background: "rgba(182,255,0,.07)", border: "1px solid rgba(182,255,0,.3)", borderRadius: 14, padding: "11px 16px", marginBottom: 18, display: "flex", gap: 12, alignItems: "flex-start" }}>
           <span style={{ fontSize: "1.3rem", lineHeight: 1 }}>🎯</span>
           <div>
@@ -6431,7 +7354,9 @@ function Torneos({ selectedRole } = {}) {
           <div className="cp04-tournament-control">
             <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: ".95rem" }}>Controles</h3>
             <div className="cp04-control-list">
-              <button type="button" className="cp04-control-btn" onClick={handleReorder}>🔀 {tx("torneos.reordenar")}</button>
+              {isRoundRobin
+                ? <button type="button" className="cp04-control-btn" onClick={handleGenerateRoundRobin}>📅 Generar calendario</button>
+                : <button type="button" className="cp04-control-btn" onClick={handleReorder}>🔀 {tx("torneos.reordenar")}</button>}
               <button type="button" className="cp04-control-btn" onClick={handleAutoAssign}>👤 {tx("torneos.autoasignar")}</button>
               <button type="button" className="cp04-control-btn" onClick={handleSave}>💾 {tx("torneos.guardar")}</button>
               <button type="button" className="cp04-control-btn primary" onClick={handlePublish}>
@@ -6496,8 +7421,8 @@ function Torneos({ selectedRole } = {}) {
         )}
       </div>
 
-      {/* BRACKET */}
-      {roundNums.length > 0 && (
+      {/* BRACKET (solo eliminación directa; Round Robin usa su propia sección de calendario, más abajo) */}
+      {!isRoundRobin && roundNums.length > 0 && (
         <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
           <h3 style={{ marginTop: 0, marginBottom: 16 }}>
             Bracket
@@ -6580,6 +7505,73 @@ function Torneos({ selectedRole } = {}) {
         </div>
       )}
 
+      {/* ROUND ROBIN: calendario por jornadas + registro de resultados */}
+      {isRoundRobin && rrMatches.length > 0 && (
+        <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 16 }}>
+            Calendario Round Robin
+            <span style={{ color: T.accent, fontWeight: 400, fontSize: ".82rem", marginLeft: 10 }}>
+              {pairs.length} parejas · {rrMatches.length} partido{rrMatches.length !== 1 ? "s" : ""} · {rrRoundNums.length} jornada{rrRoundNums.length !== 1 ? "s" : ""}
+            </span>
+          </h3>
+          {rrComplete && rrChampion && (
+            <div style={{ background: "linear-gradient(135deg, rgba(182,255,0,.16), rgba(49,232,159,.10))", border: "1px solid rgba(182,255,0,.4)", borderRadius: 14, padding: "12px 16px", marginBottom: 18, color: "#fff", fontWeight: 800 }}>
+              🏆 Liga completada. Campeón: {pairLabel(rrChampion)}
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {rrRoundNums.map(rNum => {
+              const restingId = getRoundRobinRestingPairId(pairs, rrMatches, rNum);
+              const restingPair = restingId ? pairs.find(p => p.id === restingId) : null;
+              return (
+                <div key={rNum}>
+                  <div style={{ color: T.accent, fontWeight: 800, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid rgba(182,255,0,.18)", display: "flex", justifyContent: "space-between" }}>
+                    <span>Jornada {rNum}</span>
+                    {restingPair && <span style={{ color: T.textDim, textTransform: "none", letterSpacing: "normal", fontWeight: 600 }}>😴 Descansa: {pairLabel(restingPair)}</span>}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {rrByRound[rNum].map(match => {
+                      const pA = pairs.find(p => p.id === match.pairA);
+                      const pB = pairs.find(p => p.id === match.pairB);
+                      const draft = rrScoreDraft[match.id] || {};
+                      const draftA = draft.a ?? (match.scoreA ?? "");
+                      const draftB = draft.b ?? (match.scoreB ?? "");
+                      return (
+                        <div key={match.id} style={{ background: match.played ? "rgba(182,255,0,.05)" : "rgba(4,9,20,.72)", border: match.played ? "1px solid rgba(182,255,0,.3)" : `1px solid ${T.line}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                          <span style={{ flex: "1 1 auto", minWidth: 160, fontSize: ".85rem", color: "#fff" }}>
+                            <strong style={{ color: match.played && match.scoreA > match.scoreB ? T.accent : "#fff" }}>{pA ? pairLabel(pA) : "—"}</strong>
+                            <span style={{ color: T.textDim }}> vs </span>
+                            <strong style={{ color: match.played && match.scoreB > match.scoreA ? T.accent : "#fff" }}>{pB ? pairLabel(pB) : "—"}</strong>
+                          </span>
+                          {canManage ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <input type="number" min="0" value={draftA} onChange={e => handleRoundRobinScoreChange(match.id, "a", e.target.value)}
+                                aria-label={`Puntos de ${pairLabel(pA)}`} placeholder="0"
+                                style={{ width: 52, padding: "5px 7px", borderRadius: 8, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.06)", color: "#fff", outline: "none", fontSize: ".82rem" }} />
+                              <span style={{ color: T.textDim }}>–</span>
+                              <input type="number" min="0" value={draftB} onChange={e => handleRoundRobinScoreChange(match.id, "b", e.target.value)}
+                                aria-label={`Puntos de ${pairLabel(pB)}`} placeholder="0"
+                                style={{ width: 52, padding: "5px 7px", borderRadius: 8, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.06)", color: "#fff", outline: "none", fontSize: ".82rem" }} />
+                              <button type="button" className="cp04-control-btn primary" style={{ width: "auto", padding: "5px 12px", fontSize: ".78rem" }} onClick={() => handleRoundRobinSaveResult(match)}>
+                                {match.played ? "Corregir" : "Guardar"}
+                              </button>
+                            </div>
+                          ) : (
+                            match.played
+                              ? <span style={{ color: T.accent, fontWeight: 800, fontSize: ".85rem" }}>{match.scoreA} – {match.scoreB}</span>
+                              : <span style={{ color: "rgba(255,255,255,.3)", fontSize: ".78rem" }}>Pendiente</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* RANKING */}
       <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showRanking ? 14 : 0 }}>
@@ -6596,6 +7588,33 @@ function Torneos({ selectedRole } = {}) {
             <div style={{ textAlign: "center", padding: "32px 0", color: T.textDim }}>
               <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>📋</div>
               <p style={{ margin: 0 }}>Aún no hay parejas configuradas.</p>
+            </div>
+          ) : isRoundRobin ? (
+            <div className="cp04-full-ranking-wrap">
+              <table className="cp04-full-ranking-table">
+                <thead>
+                  <tr><th>#</th><th>Pareja</th><th>PJ</th><th>PG</th><th>PP</th><th>PF</th><th>PC</th><th>Dif</th><th>Pts</th></tr>
+                </thead>
+                <tbody>
+                  {rrStandingsSorted.map((s, i) => {
+                    const pair = pairs.find(p => p.id === s.pairId);
+                    const isChampion = rrComplete && i === 0;
+                    return (
+                      <tr key={s.pairId}>
+                        <td style={{ color: T.textDim, fontSize: ".82rem" }}>{i + 1}{isChampion ? " 🏆" : ""}</td>
+                        <td><strong style={{ color: isChampion ? T.accent : "#fff" }}>{pair ? pairLabel(pair) : "—"}</strong></td>
+                        <td>{s.played}</td>
+                        <td>{s.won}</td>
+                        <td>{s.lost}</td>
+                        <td>{s.scoreFor}</td>
+                        <td>{s.scoreAgainst}</td>
+                        <td style={{ color: s.diff > 0 ? T.accent : s.diff < 0 ? T.dangerText : "inherit" }}>{s.diff > 0 ? `+${s.diff}` : s.diff}</td>
+                        <td><strong>{s.points}</strong></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="cp04-full-ranking-wrap">
@@ -6924,7 +7943,7 @@ function Admin() {
         <MetricCard label={tx("admin.reservas_mes")} value="268" sub={`vs 241 ${tx("admin.vs_mes_anterior")}`} trend={11} icon="🎾" />
         <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
         <MetricCard label={tx("admin.socios")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
-        <MetricCard label={tx("admin.procesos")} value={`${kpi.makeActivos}/43`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
+        <MetricCard label={tx("admin.procesos")} value={`${MAKE_FLUJOS_COUNTERS.conectados}/${MAKE_FLUJOS_COUNTERS.total}`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
         <MetricCard label={tx("admin.backup")} value={kpi.ultimoBackup} sub={tx("admin.prox_lunes")} trend={null} color={T.metricPositive} icon="💾" />
       </div>
 
@@ -7065,6 +8084,18 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
   const [privacidad, setPrivacidad] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_privacidad") || "{}"); } catch { return {}; } });
   const [privMsg, setPrivMsg] = useState("");
 
+  // Derechos GDPR (flujo #9, Make 6323457) — a diferencia del resto de
+  // Perfil() (que persiste en localStorage), estos dos botones sí llaman al
+  // Worker real (POST /api/gdpr/acceso y /api/gdpr/olvido): son los únicos
+  // datos de este componente que existen server-side hoy.
+  const [gdprAccesoLoading, setGdprAccesoLoading] = useState(false);
+  const [gdprAccesoResult, setGdprAccesoResult] = useState(null);
+  const [gdprAccesoError, setGdprAccesoError] = useState("");
+  const [gdprOlvidoConfirming, setGdprOlvidoConfirming] = useState(false);
+  const [gdprOlvidoLoading, setGdprOlvidoLoading] = useState(false);
+  const [gdprOlvidoResult, setGdprOlvidoResult] = useState(null);
+  const [gdprOlvidoError, setGdprOlvidoError] = useState("");
+
   // Contraseña
   const [pwdActual, setPwdActual] = useState("");
   const [pwdNueva, setPwdNueva] = useState("");
@@ -7146,6 +8177,57 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
     setPrivacidad(updated); saveProfileField("privacidad", updated);
     setPrivMsg(tx("perfil.privacidad_guardada"));
     setTimeout(() => setPrivMsg(""), 2000);
+  }
+
+  // Handlers GDPR (flujo #9) — llaman al Worker real, nunca simulan éxito.
+  async function handleGdprAcceso() {
+    setGdprAccesoLoading(true);
+    setGdprAccesoError("");
+    setGdprAccesoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/acceso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) {
+        setGdprAccesoError(data?.message || data?.error || "No se pudo obtener tus datos ahora mismo.");
+      } else {
+        setGdprAccesoResult(data);
+      }
+    } catch {
+      setGdprAccesoError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setGdprAccesoLoading(false);
+    }
+  }
+
+  // "Eliminar mis datos" NUNCA es lo mismo que "darme de baja del club" (ver
+  // handleGdprOlvido en el Worker): esto solo registra una solicitud de
+  // olvido para revisión, nunca ejecuta un borrado desde el frontend.
+  async function handleGdprOlvido() {
+    setGdprOlvidoLoading(true);
+    setGdprOlvidoError("");
+    setGdprOlvidoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/olvido", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmar: true, motivo: "Solicitud del titular desde su perfil." }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) {
+        setGdprOlvidoError(data?.message || data?.error || "No se pudo registrar la solicitud ahora mismo.");
+      } else {
+        setGdprOlvidoResult(data);
+      }
+    } catch {
+      setGdprOlvidoError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setGdprOlvidoLoading(false);
+      setGdprOlvidoConfirming(false);
+    }
   }
 
   // Handler contraseña
@@ -7616,6 +8698,72 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
         </div>
       </div>
 
+      {/* ── MIS DERECHOS GDPR (flujo #9, Make 6323457) ── */}
+      <div style={{ marginBottom:24 }}>
+        <div style={cs}>
+          <h3 style={{ ...hs, marginBottom:10 }}>⚖️ Mis derechos GDPR</h3>
+          <p style={{ color:T.textDim, fontSize:".82rem", marginBottom:18, lineHeight:1.5 }}>
+            Solicita una copia de tus datos personales o pide su eliminación, conforme al RGPD.
+          </p>
+
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+            <Btn variant="secondary" onClick={handleGdprAcceso} disabled={gdprAccesoLoading}>
+              {gdprAccesoLoading ? "Consultando…" : "Solicitar mis datos"}
+            </Btn>
+            <Btn variant="danger" onClick={() => setGdprOlvidoConfirming(true)} disabled={gdprOlvidoLoading}>
+              Solicitar eliminación de mis datos
+            </Btn>
+          </div>
+
+          {gdprAccesoError && <div style={{ color:T.danger, fontSize:".82rem", marginTop:12 }}>{gdprAccesoError}</div>}
+          {gdprAccesoResult && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.line}`, borderRadius:12, fontSize:".82rem", lineHeight:1.6 }}>
+              <div style={{ color:T.text, fontWeight:700, marginBottom:6 }}>Datos generados el {new Date(gdprAccesoResult.generado_en).toLocaleString()}</div>
+              <div style={{ color:T.textDim }}>Identidad: {gdprAccesoResult.datos.identidad.disponible ? "disponible" : `no disponible (${gdprAccesoResult.datos.identidad.motivo})`}</div>
+              <div style={{ color:T.textDim }}>Reservas: {gdprAccesoResult.datos.reservas.disponible ? `${gdprAccesoResult.datos.reservas.registros.length} registro(s)` : `no disponible (${gdprAccesoResult.datos.reservas.motivo})`}</div>
+              <div style={{ color:T.textDim }}>Lista de espera / competiciones / logs: no disponibles todavía (fuente no configurada en este entorno).</div>
+              <div style={{ color:T.textDim, fontSize:".74rem", marginTop:8 }}>
+                Registro en Make: {gdprAccesoResult.auditoria.registrado_en_make ? "sí" : `no — ${gdprAccesoResult.auditoria.detalle}`}
+              </div>
+            </div>
+          )}
+
+          {gdprOlvidoConfirming && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.danger}66`, borderRadius:12 }}>
+              <p style={{ color:T.text, fontWeight:700, fontSize:".86rem", marginTop:0, marginBottom:6 }}>
+                ¿Seguro que quieres solicitar la eliminación de tus datos?
+              </p>
+              <p style={{ color:T.textDim, fontSize:".8rem", lineHeight:1.5, marginBottom:14 }}>
+                Esto NO es lo mismo que darte de baja del club. Se registrará tu solicitud para revisión
+                (comprobación de reservas futuras y otras dependencias antes de ejecutar nada) — no se borra nada al instante.
+              </p>
+              <div style={{ display:"flex", gap:10 }}>
+                <Btn variant="danger" onClick={handleGdprOlvido} disabled={gdprOlvidoLoading}>
+                  {gdprOlvidoLoading ? "Enviando…" : "Sí, solicitar eliminación"}
+                </Btn>
+                <Btn variant="secondary" onClick={() => setGdprOlvidoConfirming(false)} disabled={gdprOlvidoLoading}>
+                  Cancelar
+                </Btn>
+              </div>
+            </div>
+          )}
+
+          {gdprOlvidoError && <div style={{ color:T.danger, fontSize:".82rem", marginTop:12 }}>{gdprOlvidoError}</div>}
+          {gdprOlvidoResult && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.line}`, borderRadius:12, fontSize:".82rem", lineHeight:1.6 }}>
+              <div style={{ color:T.text, fontWeight:700, marginBottom:6 }}>Solicitud registrada — estado: {gdprOlvidoResult.estado}</div>
+              {gdprOlvidoResult.dependencias?.reservas_futuras?.verificable && (
+                <div style={{ color:T.textDim }}>Reservas futuras detectadas: {gdprOlvidoResult.dependencias.reservas_futuras.cantidad}</div>
+              )}
+              <div style={{ color:T.textDim }}>Lista de espera: no verificable en este entorno (requiere revisión manual).</div>
+              <div style={{ color:T.textDim, fontSize:".74rem", marginTop:8 }}>
+                Registro en Make: {gdprOlvidoResult.auditoria.registrado_en_make ? "sí" : `no — ${gdprOlvidoResult.auditoria.detalle}`}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ── NOTIFICACIONES ── */}
       <div style={cs}>
         <h3 style={{ ...hs, marginBottom:10 }}>🔔 {tx("perfil.notificaciones")}</h3>
@@ -7732,6 +8880,17 @@ export default function ClubPadel04SaaSApp() {
   const [forgotPwdEmail, setForgotPwdEmail] = useState("");
   const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
 
+  // Recovery callback: token capturado del hash de URL (type=recovery).
+  // NUNCA se persiste en localStorage/sessionStorage.
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [recoveryToken, setRecoveryToken] = useState(null);
+  const [recoveryStep, setRecoveryStep] = useState("form"); // "form"|"loading"|"success"|"error"
+  const [recoveryPwd, setRecoveryPwd] = useState("");
+  const [recoveryPwdConfirm, setRecoveryPwdConfirm] = useState("");
+  const [recoveryError, setRecoveryError] = useState("");
+  const [showRecoveryPwd, setShowRecoveryPwd] = useState(false);
+  const [showRecoveryPwdConfirm, setShowRecoveryPwdConfirm] = useState(false);
+
   // Login universal preparado para producción.
   // Mantiene los perfiles demo internos sin obligar a usuarios reales a usar correos fijos.
   const [loginEmail, setLoginEmail] = useState("");
@@ -7755,14 +8914,50 @@ export default function ClubPadel04SaaSApp() {
   // reflejamos su rol verificado aquí. Si no hay sesión real (auth.role es
   // null, incluyendo todo el flujo de login demo), no tocamos selectedRole:
   // ese caso lo sigue gestionando confirmRoleAccess/clearRole como hasta ahora.
+  //
+  // Excepción documentada a react-hooks/set-state-in-effect: la alternativa
+  // "derivar en render" (sin efecto) rompe selectedRole en el flujo
+  // logout→login con el MISMO rol, porque auth.role no cambia de valor entre
+  // ambos logins y un cálculo derivado no volvería a disparar el bridge —
+  // selectedRole se quedaría vacío tras el logout. El efecto sí lo cubre
+  // porque su dependencia auth.isAuthenticated pasa por false en el logout,
+  // re-disparando el efecto en el siguiente login aunque el rol se repita.
+  // Verificado en sesión 2026-07-29 (revisión P1.3) — evaluado de nuevo en
+  // el cierre técnico global del 2026-07-30 antes de aceptar la excepción.
   useEffect(() => {
     if (auth.isAuthenticated && auth.role) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza selectedRole con la sesión backend verificada; ver justificación arriba
       setSelectedRole(auth.role);
       setLoginError("");
     }
   }, [auth.isAuthenticated, auth.role]);
+
+  // Detecta el callback de recuperación de Supabase Auth al montar la SPA.
+  // Supabase envía el enlace con #access_token=...&type=recovery en el hash.
+  // El token se captura SOLO en estado React — nunca en localStorage/sessionStorage.
+  // El hash se limpia de inmediato con history.replaceState para no dejar
+  // tokens sensibles en la URL visible ni en el historial del navegador.
+  useEffect(() => {
+    const raw = window.location.hash;
+    if (!raw) return;
+
+    const params = new URLSearchParams(raw.slice(1));
+    if (params.get("type") !== "recovery") return;
+
+    const token = params.get("access_token");
+    if (!token) return;
+
+    setRecoveryToken(token);
+    setRecoveryMode(true);
+    setRecoveryStep("form");
+
+    try {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    } catch { /* no bloquear si el entorno no permite replaceState */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- solo ejecuta al montar
+
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots navigate={navigate} />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,
@@ -8016,18 +9211,21 @@ export default function ClubPadel04SaaSApp() {
     setForgotPwdStep("loading");
 
     // Llamada real a auth.recoverPassword (POST /api/auth/forgot-password).
-    // result.authReady distingue si el backend tiene proveedor configurado
-    // (Supabase) de si sigue en modo backend_stub: NUNCA se muestra el
-    // mismo mensaje de éxito en ambos casos, porque en el segundo no se ha
-    // enviado ningún email de verdad. Mostrar "sent" ahí sería seguridad de
-    // attrezzo (Fase 8 del prompt maestro).
+    // Tres casos distintos que deben mostrarse de forma diferente:
+    // - ok:false + networkError:true → fallo de red (no implica proveedor no configurado)
+    // - ok:true + authReady:true    → Supabase activo, email enviado (neutro anti-enumeration)
+    // - ok:true + authReady:false   → backend_stub, proveedor no configurado (no se envió nada)
     const result = await auth.recoverPassword(forgotPwdEmail.trim().toLowerCase());
 
-    if (result.authReady) {
-      // Respuesta siempre neutra por diseño anti-enumeration: no revela si
-      // el email existe o no, tanto si el envío real fue posible como si no.
+    if (!result.ok) {
+      // Fallo de red o error de cliente: volvemos al formulario con el mensaje.
+      setForgotPwdEmailError(result.message || "No se pudo contactar con el servidor.");
+      setForgotPwdStep("form");
+    } else if (result.authReady) {
+      // Supabase configurado: respuesta neutra (no revela si el email existe).
       setForgotPwdStep("sent");
     } else {
+      // auth_ready:false explícito del backend: proveedor no configurado.
       setForgotPwdStep("unavailable");
     }
   }
@@ -8069,9 +9267,164 @@ export default function ClubPadel04SaaSApp() {
   }
 
 
+  async function handleRecoverySubmit(e) {
+    e.preventDefault();
+    setRecoveryError("");
+
+    const valid = /[A-Z]/.test(recoveryPwd) && /[a-z]/.test(recoveryPwd) && /[0-9]/.test(recoveryPwd) && recoveryPwd.length >= 8;
+    if (!valid) { setRecoveryError("Mínimo 8 caracteres, mayúscula, minúscula y número."); return; }
+    if (recoveryPwd !== recoveryPwdConfirm) { setRecoveryError("Las contraseñas no coinciden."); return; }
+    if (!recoveryToken) { setRecoveryError("Token de recuperación no disponible. Solicita de nuevo el enlace."); return; }
+
+    setRecoveryStep("loading");
+
+    const result = await auth.updatePasswordWithToken(recoveryPwd, recoveryToken);
+
+    if (!result.ok) {
+      setRecoveryError(result.message || "No se pudo actualizar la contraseña.");
+      setRecoveryStep("error");
+      return;
+    }
+
+    // Token consumido: borrar de memoria inmediatamente
+    setRecoveryToken(null);
+    setRecoveryStep("success");
+  }
+
+  function handleRecoveryCancel() {
+    setRecoveryMode(false);
+    setRecoveryToken(null);
+    setRecoveryStep("form");
+    setRecoveryPwd("");
+    setRecoveryPwdConfirm("");
+    setRecoveryError("");
+    setShowRecoveryPwd(false);
+    setShowRecoveryPwdConfirm(false);
+  }
+
   const loginClock = useClock();
   const loginLang = useLang();
   const ltx = key => t(key, loginLang);
+
+  if (recoveryMode) {
+    return (
+      <>
+        <style>{globalStyles}</style>
+        <PwaStatusBanners />
+        <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:`radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), ${T.bg}`, color:T.text }}>
+          <section style={{ width:"min(520px, 100%)", border:`1px solid ${T.line}`, borderRadius:34, padding:"clamp(24px, 4vw, 42px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
+            <div style={{ color:T.accent, fontSize:".78rem", letterSpacing:".22em", textTransform:"uppercase", fontWeight:900, marginBottom:18 }}>
+              Club Pádel 04
+            </div>
+            <h1 style={{ fontFamily:T.fontDisplay, fontSize:"clamp(1.8rem, 5vw, 2.8rem)", lineHeight:"1.1", letterSpacing:"-.04em", margin:"0 0 8px" }}>
+              Nueva contraseña
+            </h1>
+            <p style={{ color:T.textDim, marginTop:0, marginBottom:24, lineHeight:1.6, fontSize:".95rem" }}>
+              Introduce y confirma la nueva contraseña para tu cuenta.
+            </p>
+
+            {recoveryStep === "success" ? (
+              <>
+                <div style={{ color:T.accent, fontWeight:900, fontSize:"1.8rem", marginBottom:12 }}>✓</div>
+                <strong style={{ display:"block", marginBottom:8, fontSize:"1.1rem" }}>Contraseña actualizada correctamente.</strong>
+                <p style={{ color:T.textDim, marginBottom:24, lineHeight:1.6 }}>Ya puedes iniciar sesión con tu nueva contraseña.</p>
+                <button type="button" onClick={handleRecoveryCancel} style={{ padding:"13px 22px", borderRadius:14, border:`1px solid ${T.line}`, background:"transparent", color:T.text, fontWeight:800, cursor:"pointer", fontSize:"1rem" }}>
+                  Ir al inicio de sesión
+                </button>
+              </>
+            ) : (
+              <form onSubmit={handleRecoverySubmit} style={{ display:"grid", gap:12 }}>
+                <div style={{ position:"relative" }}>
+                  <input
+                    type={showRecoveryPwd ? "text" : "password"}
+                    value={recoveryPwd}
+                    onChange={e => { setRecoveryPwd(e.target.value); setRecoveryError(""); }}
+                    placeholder="Nueva contraseña"
+                    autoComplete="new-password"
+                    autoFocus
+                    disabled={recoveryStep === "loading"}
+                    style={{ width:"100%", padding:"14px 48px 14px 16px", borderRadius:14, border:`1px solid ${recoveryError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", boxSizing:"border-box" }}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showRecoveryPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    onClick={() => setShowRecoveryPwd(v => !v)}
+                    disabled={recoveryStep === "loading"}
+                    style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:T.textDim, cursor:"pointer", padding:4, display:"flex", alignItems:"center", lineHeight:1 }}
+                  >
+                    {showRecoveryPwd ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <div style={{ position:"relative" }}>
+                  <input
+                    type={showRecoveryPwdConfirm ? "text" : "password"}
+                    value={recoveryPwdConfirm}
+                    onChange={e => { setRecoveryPwdConfirm(e.target.value); setRecoveryError(""); }}
+                    placeholder="Confirmar nueva contraseña"
+                    autoComplete="new-password"
+                    disabled={recoveryStep === "loading"}
+                    style={{ width:"100%", padding:"14px 48px 14px 16px", borderRadius:14, border:`1px solid ${recoveryError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", boxSizing:"border-box" }}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showRecoveryPwdConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    onClick={() => setShowRecoveryPwdConfirm(v => !v)}
+                    disabled={recoveryStep === "loading"}
+                    style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:T.textDim, cursor:"pointer", padding:4, display:"flex", alignItems:"center", lineHeight:1 }}
+                  >
+                    {showRecoveryPwdConfirm ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {recoveryError && (
+                  <div role="alert" style={{ color:T.dangerText, fontSize:".88rem" }}>{recoveryError}</div>
+                )}
+                <p style={{ color:T.textDim, fontSize:".82rem", margin:"0", lineHeight:1.5 }}>
+                  Mínimo 8 caracteres, mayúscula, minúscula y número.
+                </p>
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:4 }}>
+                  <button
+                    type="submit"
+                    disabled={recoveryStep === "loading"}
+                    style={{ padding:"13px 22px", borderRadius:14, border:"none", background:T.accent, color:"#ffffff", fontWeight:900, cursor:recoveryStep === "loading" ? "wait" : "pointer", fontSize:"1rem", opacity:recoveryStep === "loading" ? 0.7 : 1 }}
+                  >
+                    {recoveryStep === "loading" ? "Actualizando…" : "Establecer contraseña"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRecoveryCancel}
+                    disabled={recoveryStep === "loading"}
+                    style={{ padding:"13px 22px", borderRadius:14, border:`1px solid ${T.line}`, background:"transparent", color:T.text, fontWeight:800, cursor:recoveryStep === "loading" ? "not-allowed" : "pointer", fontSize:"1rem" }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
+        </main>
+      </>
+    );
+  }
 
   if (!selectedRole) {
     const roleLabels = {

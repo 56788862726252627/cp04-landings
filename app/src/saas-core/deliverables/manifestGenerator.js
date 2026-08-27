@@ -1,0 +1,148 @@
+// App 3 · Prompt 1/6 — ManifestGenerator.
+//
+// Construye y valida el manifiesto que describe un lote de entregables
+// ya exportados (o pendientes): qué se generó, en qué formato, con qué
+// checksum, en qué versión y en qué ruta lógica de Drive debería acabar.
+// Es la pieza que le permite a DriveSyncManager saber "qué hay que
+// subir" sin tener que volver a inspeccionar cada archivo.
+//
+// El checksum usa `node:crypto` (ya en Node, cero dependencias nuevas)
+// — nunca un hash inventado a mano.
+
+import { createHash, randomBytes } from "node:crypto";
+import { writeFile, rename, unlink } from "node:fs/promises";
+import path from "node:path";
+import process from "node:process";
+import { Buffer } from "node:buffer";
+
+function checksumOf(content) {
+  // Contenido binario (PDF/DOCX/PPTX real, Prompt 4/6): hash directo de
+  // los bytes reales — JSON.stringify(buffer) también sería determinista
+  // (serializa cada byte), pero es un rodeo innecesario y mucho más
+  // costoso para binarios de varios KB/MB.
+  if (Buffer.isBuffer(content)) return createHash("sha256").update(content).digest("hex");
+  const text = typeof content === "string" ? content : JSON.stringify(content ?? "");
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+/**
+ * Escribe un manifiesto de forma atómica: escribe primero a un archivo
+ * temporal en el MISMO directorio y lo renombra sobre el destino final.
+ * `rename()` es atómico dentro de un mismo sistema de archivos (POSIX) —
+ * el archivo final queda o con el contenido nuevo completo, o con el
+ * contenido anterior intacto; nunca a medio escribir, ni siquiera si el
+ * proceso se corta abruptamente (p. ej. signal 9) durante la escritura.
+ *
+ * Sin esto, `writeFile()` trunca el archivo antes de escribir el
+ * contenido nuevo — un corte a mitad deja el manifiesto vacío o
+ * incompleto, perdiendo el historial de versiones anterior (que
+ * `loadPreviousManifest`/`loadPreviousMockupsManifest` no puede
+ * distinguir de "no existe todavía" — solo capturan JSON.parse
+ * fallando, no la causa).
+ */
+export async function cp04WriteManifestAtomic(filePath, content) {
+  const dir = path.dirname(filePath);
+  const tmpPath = path.join(dir, `.${path.basename(filePath)}.tmp-${process.pid}-${randomBytes(4).toString("hex")}`);
+  try {
+    await writeFile(tmpPath, content, "utf8");
+    await rename(tmpPath, filePath);
+  } catch (error) {
+    await unlink(tmpPath).catch(() => {});
+    throw error;
+  }
+}
+
+/**
+ * @param {{id:string, deliverableType:string, format:string, content:any, versionContent?:any, path:string, status:string}[]} entries - `versionContent`
+ * opcional (Prompt 4/6): contenido alternativo usado SOLO para calcular
+ * `versionChecksum` — necesario para binarios (PDF/DOCX/PPTX) cuyas
+ * librerías embeben un timestamp de creación no determinista dentro del
+ * propio archivo (`docProps/core.xml` en OOXML), lo que impediría que
+ * dos generaciones con el MISMO contenido real produjeran el mismo
+ * checksum. `checksum` (integridad del archivo en disco) no cambia; se
+ * añade `versionChecksum` (identidad de contenido, para decidir si hay
+ * que subir de versión) calculado sobre `versionContent` si se aporta,
+ * o sobre el propio `content` si no (mismo patrón ya usado en
+ * `captureOrchestrator.js`, aquí generalizado al módulo compartido).
+ * @param {{projectId:string, projectName:string, version?:number}} meta
+ */
+export function cp04GenerateManifest(entries, meta) {
+  if (!Array.isArray(entries)) throw new TypeError("cp04GenerateManifest requiere un array de entries");
+  if (!meta || !meta.projectId) throw new TypeError("cp04GenerateManifest requiere meta.projectId");
+
+  const items = entries.map((entry) => {
+    if (!entry || !entry.id || !entry.deliverableType || !entry.format) {
+      throw new TypeError("cada entry del manifiesto necesita id, deliverableType y format");
+    }
+    const checksum = checksumOf(entry.content);
+    const versionChecksum = entry.versionContent !== undefined ? checksumOf(entry.versionContent) : checksum;
+    return Object.freeze({
+      id: entry.id,
+      deliverableType: entry.deliverableType,
+      format: String(entry.format).toLowerCase(),
+      path: entry.path || null,
+      status: entry.status || "completed",
+      checksum,
+      versionChecksum,
+    });
+  });
+
+  return Object.freeze({
+    manifestVersion: 1,
+    projectId: String(meta.projectId),
+    projectName: meta.projectName ? String(meta.projectName) : null,
+    generatedAt: new Date().toISOString(),
+    version: Number.isInteger(meta.version) ? meta.version : 1,
+    itemCount: items.length,
+    items,
+  });
+}
+
+/** Valida un manifiesto ya generado (o uno recibido de un fixture externo) sin lanzar — siempre devuelve un resultado, nunca una excepción. */
+export function cp04ValidateManifest(manifest) {
+  const errors = [];
+  if (!manifest || typeof manifest !== "object") return { valid: false, errors: ["manifiesto ausente o no es un objeto"] };
+  if (manifest.manifestVersion !== 1) errors.push("manifestVersion debe ser 1");
+  if (!manifest.projectId) errors.push("falta projectId");
+  if (!Array.isArray(manifest.items)) {
+    errors.push("falta 'items' o no es un array");
+  } else {
+    if (manifest.itemCount !== manifest.items.length) errors.push("itemCount no coincide con items.length");
+    manifest.items.forEach((item, idx) => {
+      if (!item?.id) errors.push(`items[${idx}]: falta id`);
+      if (!item?.format) errors.push(`items[${idx}]: falta format`);
+      if (!item?.checksum) errors.push(`items[${idx}]: falta checksum`);
+    });
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Compara dos manifiestos del mismo proyecto y devuelve qué items son nuevos, cuáles cambiaron y cuáles ya no están.
+ *
+ * Usa `versionChecksum` cuando el item lo declara (checksum "de identidad
+ * de contenido", que excluye campos honestos pero volátiles como una marca
+ * de tiempo de captura) y cae a `checksum` (el hash real del archivo en
+ * disco) si no — así un item sin `versionChecksum` (p. ej. los del
+ * Prompt 1/6) se compara exactamente igual que antes.
+ */
+export function cp04DiffManifests(previous, next) {
+  const prevById = new Map((previous?.items || []).map((i) => [i.id, i]));
+  const nextById = new Map((next?.items || []).map((i) => [i.id, i]));
+  const versionKeyOf = (item) => item.versionChecksum ?? item.checksum;
+
+  const added = [];
+  const changed = [];
+  const removed = [];
+
+  for (const [id, item] of nextById) {
+    const prevItem = prevById.get(id);
+    if (!prevItem) added.push(item);
+    else if (versionKeyOf(prevItem) !== versionKeyOf(item)) changed.push({ id, from: prevItem.checksum, to: item.checksum });
+  }
+  for (const [id, item] of prevById) {
+    if (!nextById.has(id)) removed.push(item);
+  }
+
+  return { added, changed, removed };
+}

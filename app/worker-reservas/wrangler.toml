@@ -3,13 +3,25 @@ main = "src/index.js"
 compatibility_date = "2026-06-10"
 
 [vars]
-ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173,http://localhost:5174"
+APP_PUBLIC_URL = "https://club-padel-04.pages.dev"
+ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173,http://localhost:5174,http://localhost:5175"
 AIRTABLE_BASE_ID = "appyWvzZJLzy0E6aX"
+AIRTABLE_CIERRES_TABLE_ID = "tblz1Ocj05vFiXdbB"
 AIRTABLE_TABLE_ID = "tblBtLjPS3sis28nz"
 CP04_ENFORCE_ROLE_GATES = "true"
 
 # Secrets:
 # MAKE_RESERVAS_WEBHOOK
 # AIRTABLE_TOKEN
+# MAKE_ALTA_JUGADOR_WEBHOOK (usado por handleAltaJugador, POST /api/jugadores/alta)
+# MAKE_BAJA_JUGADOR_WEBHOOK (usado por handleBajaJugador, POST /api/jugadores/baja — todavía no configurado, ver comentario en el propio handler)
+# MAKE_GDPR_WEBHOOK (usado por handleGdprAcceso/handleGdprOlvido, POST /api/gdpr/acceso y /api/gdpr/olvido — secret configurado en Cloudflare)
 
 AIRTABLE_RESERVAS_TABLE="tblBtLjPS3sis28nz"
+AIRTABLE_GDPR_TABLE_ID = "tbllJFCWQ6FbnFOlO"
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true

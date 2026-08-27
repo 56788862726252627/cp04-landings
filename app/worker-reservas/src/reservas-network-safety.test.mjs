@@ -10,7 +10,11 @@ import {
   cp04SetCachedAvailability,
   cp04InvalidateAvailabilityCache,
   __resetAvailabilityCacheForTests,
+  __resetAvailabilityInFlightForTests,
   CP04_AVAILABILITY_CACHE_TTL_MS,
+  cp04ResolveRetryBackoffMs,
+  CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS,
+  CP04_AIRTABLE_RETRY_MAX_BACKOFF_MS,
   cp04IsAirtableRateLimited,
   cp04BuildAirtableDegradedResponse,
   cp04BuildIdempotencyKey,
@@ -133,6 +137,187 @@ test("cp04FetchOcupadas: éxito -> extrae ocupadas desde records[].fields.clave_
   );
 });
 
+// Single-flight + reintento con backoff (reparación definitiva rate limit,
+// 2026-08-25) --------------------------------------------------------------
+
+test("Single-flight: N llamadas concurrentes a cp04FetchOcupadas para la misma fecha comparten una sola consulta real", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetAvailabilityInFlightForTests();
+  let fetchCalls = 0;
+  let resolveFetch;
+  const gate = new Promise((resolve) => { resolveFetch = resolve; });
+
+  await withFakeFetch(
+    async () => {
+      fetchCalls += 1;
+      await gate; // las 5 llamadas concurrentes deben quedar esperando esta misma promesa sin disparar un segundo fetch
+      return new Response(JSON.stringify({ records: [{ fields: { clave_slot: "2026-10-01|Pista 1|10:00" } }] }), { status: 200 });
+    },
+    async () => {
+      const calls = Array.from({ length: 5 }, () => cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-01"));
+      // Deja que las 5 lleguen a `await fetch(...)` antes de destrabar la respuesta.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      resolveFetch();
+      const results = await Promise.all(calls);
+
+      assert.equal(fetchCalls, 1, "5 solicitudes concurrentes para la misma fecha deben compartir una sola llamada real a Airtable");
+      for (const result of results) {
+        assert.deepEqual(result, results[0], "todas las llamadas concurrentes deben recibir el mismo resultado");
+      }
+    }
+  );
+});
+
+test("Single-flight: fechas distintas SÍ disparan consultas independientes en paralelo", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetAvailabilityInFlightForTests();
+  const fetchedDates = [];
+
+  await withFakeFetch(
+    async (url) => {
+      const formula = new URL(url).searchParams.get("filterByFormula");
+      fetchedDates.push(formula.includes("2026-10-02") ? "2026-10-02" : "2026-10-03");
+      return new Response(JSON.stringify({ records: [] }), { status: 200 });
+    },
+    async () => {
+      await Promise.all([
+        cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-02"),
+        cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-03"),
+      ]);
+      assert.equal(fetchedDates.length, 2, "fechas distintas no deben coalescerse entre sí");
+    }
+  );
+});
+
+test("Single-flight: tras resolverse (éxito o error), la siguiente llamada ya no comparte la promesa anterior", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetAvailabilityInFlightForTests();
+  let fetchCalls = 0;
+
+  await withFakeFetch(
+    async () => {
+      fetchCalls += 1;
+      return new Response(JSON.stringify({ records: [] }), { status: 200 });
+    },
+    async () => {
+      await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-04");
+      __resetAvailabilityCacheForTests(); // fuerza a que la 2ª llamada no se sirva desde la caché de 30s
+      await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-04");
+      assert.equal(fetchCalls, 2, "una vez resuelta la promesa en curso, se elimina del mapa de in-flight y la siguiente llamada consulta de nuevo");
+    }
+  );
+});
+
+test("Reintento con backoff: un 429 sin Retry-After se reintenta una vez con el backoff por defecto, nunca en bucle", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetAvailabilityInFlightForTests();
+  let fetchCalls = 0;
+  const sleeps = [];
+
+  await withFakeFetch(
+    async () => {
+      fetchCalls += 1;
+      return new Response(JSON.stringify({ error: "RATE_LIMITED" }), { status: 429 });
+    },
+    async () => {
+      const result = await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-05", {
+        sleep: async (ms) => { sleeps.push(ms); },
+      });
+
+      assert.equal(fetchCalls, 2, "debe intentarlo exactamente 2 veces: el original + 1 reintento, nunca más");
+      assert.deepEqual(sleeps, [CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS], "sin Retry-After, debe esperar el backoff fijo por defecto exactamente una vez");
+      assert.equal(result.ok, false);
+      assert.equal(result.status, 429);
+    }
+  );
+});
+
+test("Reintento con backoff: un 429 con Retry-After respeta ese valor (acotado al máximo permitido)", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetAvailabilityInFlightForTests();
+  const sleeps = [];
+
+  await withFakeFetch(
+    async () => new Response(JSON.stringify({ error: "RATE_LIMITED" }), { status: 429, headers: { "Retry-After": "1" } }),
+    async () => {
+      await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-06", {
+        sleep: async (ms) => { sleeps.push(ms); },
+      });
+      assert.deepEqual(sleeps, [1000], "Retry-After: 1 (segundo) debe traducirse a 1000ms de espera");
+    }
+  );
+});
+
+test("Reintento con backoff: un Retry-After mayor que el máximo permitido se acota, no se espera en bloque el valor completo", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetAvailabilityInFlightForTests();
+  const sleeps = [];
+
+  await withFakeFetch(
+    async () => new Response(JSON.stringify({ error: "RATE_LIMITED" }), { status: 429, headers: { "Retry-After": "120" } }),
+    async () => {
+      await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-07", {
+        sleep: async (ms) => { sleeps.push(ms); },
+      });
+      assert.deepEqual(sleeps, [CP04_AIRTABLE_RETRY_MAX_BACKOFF_MS], "un Retry-After de 120s debe acotarse al máximo, nunca esperarse tal cual");
+    }
+  );
+});
+
+test("Reintento con backoff: si el reintento sí tiene éxito, el resultado final es ok:true y sí se cachea", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetAvailabilityInFlightForTests();
+  let fetchCalls = 0;
+
+  await withFakeFetch(
+    async () => {
+      fetchCalls += 1;
+      if (fetchCalls === 1) {
+        return new Response(JSON.stringify({ error: "RATE_LIMITED" }), { status: 429 });
+      }
+      return new Response(JSON.stringify({ records: [{ fields: { clave_slot: "2026-10-08|Pista 1|10:00" } }] }), { status: 200 });
+    },
+    async () => {
+      const result = await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-08", { sleep: async () => {} });
+      assert.equal(fetchCalls, 2);
+      assert.equal(result.ok, true);
+      assert.deepEqual(result.ocupadas, ["2026-10-08|Pista 1|10:00"]);
+
+      // Ya cacheado: una tercera llamada no debe volver a tocar fetch.
+      await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-08", { sleep: async () => {} });
+      assert.equal(fetchCalls, 2, "el resultado exitoso del reintento debe quedar cacheado igual que un éxito directo");
+    }
+  );
+});
+
+test("Reintento con backoff: un fallo de red en el reintento -> ok:false, reason network_error (nunca lanza)", async () => {
+  __resetAvailabilityCacheForTests();
+  __resetAvailabilityInFlightForTests();
+  let fetchCalls = 0;
+
+  await withFakeFetch(
+    async () => {
+      fetchCalls += 1;
+      if (fetchCalls === 1) {
+        return new Response(JSON.stringify({ error: "RATE_LIMITED" }), { status: 429 });
+      }
+      throw new TypeError("network down mid-retry");
+    },
+    async () => {
+      const result = await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-10-09", { sleep: async () => {} });
+      assert.deepEqual(result, { ok: false, reason: "network_error" });
+    }
+  );
+});
+
+test("cp04ResolveRetryBackoffMs: valores no numéricos, ausentes o <= 0 caen al backoff por defecto", () => {
+  assert.equal(cp04ResolveRetryBackoffMs(null), CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS);
+  assert.equal(cp04ResolveRetryBackoffMs(undefined), CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS);
+  assert.equal(cp04ResolveRetryBackoffMs("0"), CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS);
+  assert.equal(cp04ResolveRetryBackoffMs("-5"), CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS);
+  assert.equal(cp04ResolveRetryBackoffMs("no-numero"), CP04_AIRTABLE_RETRY_DEFAULT_BACKOFF_MS);
+});
+
 // Caché de disponibilidad (PASO 06B) ---------------------------------------
 //
 // cp04GetCachedAvailability/cp04SetCachedAvailability se prueban de forma
@@ -224,6 +409,7 @@ test("Caché de disponibilidad: tras expirar el TTL, cp04FetchOcupadas vuelve a 
 test("Caché de disponibilidad: un error (incluido 429) nunca se cachea como disponibilidad válida", async () => {
   __resetAvailabilityCacheForTests();
   let fetchCalls = 0;
+  const noSleep = { sleep: async () => {} };
 
   await withFakeFetch(
     async () => {
@@ -231,13 +417,16 @@ test("Caché de disponibilidad: un error (incluido 429) nunca se cachea como dis
       return new Response(JSON.stringify({ error: "RATE_LIMITED" }), { status: 429 });
     },
     async () => {
-      const first = await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-09-05");
+      // Cada llamada a cp04FetchOcupadas hace 2 intentos de fetch (el
+      // reintento acotado ante un 429 real, ver CP04_AIRTABLE_RETRY_*):
+      // 2 llamadas x 2 intentos = 4.
+      const first = await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-09-05", noSleep);
       assert.equal(first.ok, false);
       assert.equal(first.status, 429);
 
-      const second = await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-09-05");
+      const second = await cp04FetchOcupadas(FAKE_AIRTABLE_ENV, "2026-09-05", noSleep);
       assert.equal(second.ok, false);
-      assert.equal(fetchCalls, 2, "un error no debe quedar cacheado: la segunda llamada debe reintentar la fuente");
+      assert.equal(fetchCalls, 4, "un error no debe quedar cacheado: la segunda llamada debe reintentar la fuente (2 intentos cada una)");
     }
   );
 

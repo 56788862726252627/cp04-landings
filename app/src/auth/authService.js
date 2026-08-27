@@ -14,16 +14,31 @@
 // exportadas aquí, nunca fetch()/localStorage directamente.
 
 import { AUTH_MODES } from "./authTypes.js";
+import { cp04BuildApiUrl } from "../utils/apiEndpoint.js";
 
-const AUTH_ENDPOINTS = {
-  login: "/api/auth/login",
-  register: "/api/auth/register",
-  logout: "/api/auth/logout",
-  refresh: "/api/auth/refresh",
-  me: "/api/auth/me",
-  forgotPassword: "/api/auth/forgot-password",
-  changePassword: "/api/auth/change-password",
-};
+// Bloqueo P0 2026-08-25: estas 7 rutas eran relativas hardcodeadas, sin
+// ningún mecanismo de URL base configurable (a diferencia de
+// bookingEndpoint) — en cualquier preview/producción de Cloudflare Pages
+// nunca llegaban al Worker real (caían en el fallback SPA de Pages o en un
+// 405 plano de Pages, según el método), y un login con credenciales
+// perfectamente válidas se veía como "No se pudo iniciar sesión." Se
+// construyen ahora con la misma base pública centralizada que ya usan
+// disponibilidad y reservas (src/utils/apiEndpoint.js) — sin URL/clave de
+// Supabase en el cliente: la auth real sigue viviendo enteramente en el
+// Worker.
+export function cp04BuildAuthEndpoints(env) {
+  return {
+    login: cp04BuildApiUrl("/api/auth/login", env),
+    register: cp04BuildApiUrl("/api/auth/register", env),
+    logout: cp04BuildApiUrl("/api/auth/logout", env),
+    refresh: cp04BuildApiUrl("/api/auth/refresh", env),
+    me: cp04BuildApiUrl("/api/auth/me", env),
+    forgotPassword: cp04BuildApiUrl("/api/auth/forgot-password", env),
+    changePassword: cp04BuildApiUrl("/api/auth/change-password", env),
+  };
+}
+
+const AUTH_ENDPOINTS = cp04BuildAuthEndpoints(import.meta.env);
 
 // Mismas claves que ya usaba App.jsx antes de esta fase: se mantiene el
 // formato de almacenamiento para no romper nada que todavía las lea
@@ -155,11 +170,19 @@ export async function login(email, password) {
   const data = await readJsonSafe(response);
 
   if (!response.ok || !data?.ok) {
+    // Supabase devuelve error "invalid_grant" (HTTP 400) cuando las
+    // credenciales son incorrectas. Se expone un mensaje claro y sin
+    // información técnica de Supabase en lugar de "No se pudo iniciar sesión."
+    const isInvalidCredentials =
+      response.status === 400 &&
+      (data?.error === "invalid_grant" || data?.error === "INVALID_CREDENTIALS");
     return {
       ok: false,
       authReady: data?.auth_ready !== false,
       error: data?.error || "LOGIN_FAILED",
-      message: data?.message || "No se pudo iniciar sesión.",
+      message: isInvalidCredentials
+        ? "Correo electrónico o contraseña incorrectos."
+        : (data?.message || "No se pudo iniciar sesión."),
     };
   }
 
@@ -326,8 +349,10 @@ export async function forgotPassword(email) {
       body: JSON.stringify({ email }),
     });
   } catch {
-    // Fallo de red: honesto también, nunca se traduce en "email enviado".
-    return { ok: false, authReady: false, message: "No se pudo contactar con el servidor." };
+    // Fallo de red: honesto, pero no implica proveedor no configurado.
+    // authReady queda sin definir (no false) para que el llamador distinga
+    // este caso de backend_stub (auth_ready:false explícito del backend).
+    return { ok: false, networkError: true, message: "No se pudo contactar con el servidor de autenticación." };
   }
 
   const data = await readJsonSafe(response);
@@ -373,6 +398,42 @@ export async function updatePassword(newPassword) {
 
 export function getAccessToken() {
   return state.accessToken;
+}
+
+// Flujo de recovery: usa el token capturado del hash de URL (type=recovery)
+// como Bearer directamente. El token NUNCA toca state ni se persiste:
+// se usa una sola vez y el llamador es responsable de descartarlo.
+export async function updatePasswordWithToken(newPassword, recoveryToken) {
+  if (!recoveryToken) {
+    return { ok: false, error: "MISSING_RECOVERY_TOKEN", message: "No hay token de recuperación activo." };
+  }
+
+  if (!newPassword) {
+    return { ok: false, error: "MISSING_PASSWORD", message: "La nueva contraseña no puede estar vacía." };
+  }
+
+  let response;
+  try {
+    response = await fetch(AUTH_ENDPOINTS.changePassword, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${recoveryToken}`,
+      },
+      body: JSON.stringify({ newPassword }),
+    });
+  } catch {
+    return { ok: false, error: "UPSTREAM_ERROR", message: "No se pudo contactar con el servidor." };
+  }
+
+  const data = await readJsonSafe(response);
+
+  return {
+    ok: Boolean(data?.ok),
+    authReady: data?.auth_ready !== false,
+    error: data?.error,
+    message: data?.message || "",
+  };
 }
 
 // authFetch: wrapper mínimo sobre fetch() que adjunta
