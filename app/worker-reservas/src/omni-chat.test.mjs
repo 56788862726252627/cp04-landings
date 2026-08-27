@@ -51,7 +51,11 @@ test("detectAction: 'quiero reservar' → crear_reserva", () => {
 });
 
 test("detectAction: texto sin contexto → desconocida", () => {
-  assert.equal(detectAction("hola buenas tardes"), OMNI_ACTIONS.DESCONOCIDA);
+  assert.equal(detectAction("cuéntame un chiste"), OMNI_ACTIONS.DESCONOCIDA);
+});
+
+test("detectAction: 'hola buenas tardes' → saludo_ayuda", () => {
+  assert.equal(detectAction("hola buenas tardes"), OMNI_ACTIONS.SALUDO_AYUDA);
 });
 
 test("detectAction: 'cancelar' toma precedencia sobre 'reserva' en misma frase", () => {
@@ -376,4 +380,116 @@ test("handleOmniChat: reprogramar desde web → redirect_hint:reprogramar", asyn
   const data = await res.json();
   assert.equal(data.action, OMNI_ACTIONS.REPROGRAMAR_RESERVA);
   assert.equal(data.redirect_hint, "reprogramar");
+});
+
+// ─── saludo_ayuda — detectAction ─────────────────────────────────────────────
+
+test("detectAction: 'Hola, ¿qué puedes hacer?' → saludo_ayuda", () => {
+  assert.equal(detectAction("Hola, ¿qué puedes hacer?"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'hola' → saludo_ayuda", () => {
+  assert.equal(detectAction("hola"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'AYUDA' (mayúsculas) → saludo_ayuda", () => {
+  assert.equal(detectAction("AYUDA"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: '¿Qué opciones tengo?' → saludo_ayuda", () => {
+  assert.equal(detectAction("¿Qué opciones tengo?"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'Buenos días' → saludo_ayuda", () => {
+  assert.equal(detectAction("Buenos días"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'buenas tardes' → saludo_ayuda", () => {
+  assert.equal(detectAction("buenas tardes"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: texto con espacios finales → saludo_ayuda", () => {
+  assert.equal(detectAction("hola   "), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: texto con \\n final (salida Whisper) → saludo_ayuda", () => {
+  assert.equal(detectAction("Hola, ¿qué puedes hacer?\n"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'que puedes hacer' sin tildes → saludo_ayuda", () => {
+  assert.equal(detectAction("que puedes hacer"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'empezar' → saludo_ayuda", () => {
+  assert.equal(detectAction("empezar"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'menu' → saludo_ayuda", () => {
+  assert.equal(detectAction("menú"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'qué sabes hacer' → saludo_ayuda", () => {
+  assert.equal(detectAction("¿qué sabes hacer?"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+test("detectAction: 'cómo puedes ayudarme' → saludo_ayuda", () => {
+  assert.equal(detectAction("cómo puedes ayudarme"), OMNI_ACTIONS.SALUDO_AYUDA);
+});
+
+// ─── saludo_ayuda — paridad texto / audio / web ───────────────────────────────
+
+test("handleOmniChat: saludo vía telegram texto → reply de capacidades", async () => {
+  const req = makeTelegramRequest({ message: "Hola, ¿qué puedes hacer?", origin: "telegram" });
+  const res = await worker.fetch(req, makeEnv());
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.equal(data.ok, true);
+  assert.equal(data.action, OMNI_ACTIONS.SALUDO_AYUDA);
+  assert.ok(data.reply.includes("Pádel 04"), "reply debe mencionar el club");
+  assert.ok(data.reply.includes("disponibilidad"), "reply debe listar capacidades");
+});
+
+test("handleOmniChat: saludo vía telegram_audio (transcripción con \\n) → reply de capacidades", async () => {
+  const req = makeTelegramRequest({
+    transcription: "Hola, ¿qué puedes hacer?\n",
+    origin: "telegram_audio",
+  });
+  const res = await worker.fetch(req, makeEnv());
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.equal(data.ok, true);
+  assert.equal(data.action, OMNI_ACTIONS.SALUDO_AYUDA);
+  assert.ok(data.reply.includes("Pádel 04"), "reply debe mencionar el club");
+});
+
+test("handleOmniChat: saludo vía web → reply de capacidades", async () => {
+  const req = makeRequest({ message: "hola", origin: "web" });
+  const res = await worker.fetch(req, makeEnv());
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.equal(data.ok, true);
+  assert.equal(data.action, OMNI_ACTIONS.SALUDO_AYUDA);
+  assert.ok(data.reply.includes("Pádel 04"), "reply debe mencionar el club");
+});
+
+// ─── paridad — intenciones previas no rotas ───────────────────────────────────
+
+test("detectAction: 'disponibilidad' no rota por nueva intención", () => {
+  assert.equal(detectAction("¿hay disponibilidad el lunes?"), OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD);
+});
+
+test("detectAction: 'crear reserva' no rota por nueva intención", () => {
+  assert.equal(detectAction("quiero reservar una pista el martes a las 10"), OMNI_ACTIONS.CREAR_RESERVA);
+});
+
+test("detectAction: 'cancelar' no rota por nueva intención", () => {
+  assert.equal(detectAction("quiero cancelar mi reserva del viernes"), OMNI_ACTIONS.CANCELAR_RESERVA);
+});
+
+test("detectAction: 'reprogramar' no rota por nueva intención", () => {
+  assert.equal(detectAction("necesito reprogramar mi reserva"), OMNI_ACTIONS.REPROGRAMAR_RESERVA);
+});
+
+test("detectAction: 'consultar reservas' no rota por nueva intención", () => {
+  assert.equal(detectAction("muéstrame mis reservas"), OMNI_ACTIONS.CONSULTAR_RESERVAS);
 });

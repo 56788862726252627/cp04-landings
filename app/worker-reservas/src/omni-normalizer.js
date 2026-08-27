@@ -25,6 +25,7 @@ export const OMNI_ACTIONS = Object.freeze({
   CANCELAR_RESERVA: "cancelar_reserva",
   REPROGRAMAR_RESERVA: "reprogramar_reserva",
   CONSULTAR_RESERVAS: "consultar_reservas",
+  SALUDO_AYUDA: "saludo_ayuda",
   DESCONOCIDA: "desconocida",
 });
 
@@ -36,6 +37,7 @@ export function detectAction(text) {
   if (/\bmis reservas\b|\bver mis\b|\bcuantas reservas\b|\bque reservas\b|\btengo reserva\w*|\bhistorial\b/.test(n)) return OMNI_ACTIONS.CONSULTAR_RESERVAS;
   if (/\bdisponib\w+|\bhorario\w*|\bhay (pista|hueco|espacio)|\bcuando puedo\b|\bpistas? libres?\b|\bslots?\b|\bocupad\w+/.test(n)) return OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD;
   if (/\breserv\w+|\bquiero (una|pista)|\bnecesito pista\b|\bpedir pista\b|\bhacer una\b|\bapuntar\w*|\balqui\w+/.test(n)) return OMNI_ACTIONS.CREAR_RESERVA;
+  if (/\bhola\b|\bbuenas?\b|\bbuen\w+ (dia|tarde)\w*|\bque puedes\b|\bcomo puedes ayudar\w*|\bayuda\b|\bopciones?\b|\bque sabes\b|\bque servicios\b|\bquiero informacion\b|\bmenu\b|\bempezar\b/.test(n)) return OMNI_ACTIONS.SALUDO_AYUDA;
   return OMNI_ACTIONS.DESCONOCIDA;
 }
 

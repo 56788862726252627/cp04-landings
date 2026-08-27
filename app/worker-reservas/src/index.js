@@ -4162,7 +4162,7 @@ async function handleOmniChat(request, env) {
   });
 
   // Telegram: solo lectura — mutable actions → redirect to web
-  if (TELEGRAM_ORIGINS.includes(origin) && ![OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD, OMNI_ACTIONS.DESCONOCIDA].includes(action)) {
+  if (TELEGRAM_ORIGINS.includes(origin) && ![OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD, OMNI_ACTIONS.SALUDO_AYUDA, OMNI_ACTIONS.DESCONOCIDA].includes(action)) {
     return jsonResponse({
       ok: true, action,
       reply: "Para gestionar reservas accede a la app web del club. Desde Telegram solo puedo consultar disponibilidad.",
@@ -4207,6 +4207,13 @@ async function handleOmniChat(request, env) {
 
   if (action === OMNI_ACTIONS.REPROGRAMAR_RESERVA) {
     return omniMutableGuide(action, "reprogramar", "reprogramar una reserva", headers);
+  }
+
+  if (action === OMNI_ACTIONS.SALUDO_AYUDA) {
+    return jsonResponse({
+      ok: true, action,
+      reply: "¡Hola! 👋 Soy el asistente de Club Pádel 04.\n\nPuedo ayudarte a:\n• Consultar disponibilidad de pistas.\n• Consultar tus reservas.\n• Crear una reserva.\n• Cancelar una reserva.\n• Reprogramar una reserva.\n\nEscríbeme o envíame una nota de voz.\n\nEjemplos:\n• '¿Hay pistas libres mañana a las 18:00?'\n• 'Quiero reservar la Pista 2 el viernes a las 19:00.'\n• 'Muéstrame mis reservas.'\n\nAlgunas operaciones pueden estar temporalmente limitadas mientras el sistema de reservas está en mantenimiento.",
+    }, 200, headers);
   }
 
   return jsonResponse({
