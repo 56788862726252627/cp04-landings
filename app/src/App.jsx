@@ -37,6 +37,7 @@ import { LazyCP04GuidedTutorial } from "./components/lazy/lazyGuidedTutorial.js"
 import { useAuth } from "./auth/useAuth.js";
 import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
 import { authFetch } from "./auth/authService.js";
+import { ChatbotAsistente } from "./components/ChatbotAsistente.jsx";
 import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
 import { cp04BuildReservationError, cp04ReservationErrorMessage } from "./utils/reservationErrors.js";
 import { cp04ShouldBlockAnonymousReservaSubmit, cp04IsSessionExpiredReservaResponse } from "./utils/reservaAuthGate.js";
@@ -5527,36 +5528,41 @@ function FacturacionPagos() {
   );
 }
 
-// PASO 07P (2026-07-20): "Automatizaciones y bots" — agrupa "🎧 Atención
-// Socio WhatsApp FAQ" (5799031), "🎯 Campaña Flash WhatsApp" (5791124),
-// "🤖 Bot IA Reservas WhatsApp" (5798996), "🤖 Bot IA Reservas Telegram"
-// (4832095) y "📝 Tally → API Reservas" (5747703). Gateado como "admin"
-// (ADMIN+SUPPORT, sin STAFF). No existe integración de WhatsApp Business
-// API, Telegram Bot API ni Tally en esta rama — este panel nunca debe dar
-// a entender que ya hay mensajes reales conectados.
-function AutomatizacionesBots() {
+// PASO 07P (2026-07-20) / Omnicanal (2026-08-27): "Automatizaciones y bots"
+// agrupa el Asistente Web real (conectado a /api/chat en el Worker) más los
+// escenarios Make de canales externos. WhatsApp Business API y Tally siguen
+// sin integración real. Telegram usa el mismo endpoint /api/chat con
+// X-CP04-Bot-Secret (trigger en Make ID 4832095 preparado, sin activar).
+// El asistente web SÍ está conectado al backend omnicanal real.
+function AutomatizacionesBots({ navigate }) {
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
       <SectionTitle
         eyebrow="Automatizaciones"
-        title="Automatizaciones y bots"
-        desc="Asistentes de WhatsApp, Telegram y formularios externos."
+        title="Asistente y automatizaciones"
+        desc="Asistente de reservas en tiempo real + canales externos."
       />
-      <IntegrationStatusBanner>
-        Preparado visualmente. Pendiente de integración real con WhatsApp Business API, Telegram Bot API y Tally — no envía mensajes reales todavía.
-      </IntegrationStatusBanner>
+
+      <Card style={{ marginBottom: 24 }}>
+        <h3 style={{ marginTop: 0 }}>💬 Asistente Web (activo)</h3>
+        <p style={{ color: "#555", fontSize: 14, marginBottom: 16 }}>
+          Conectado al backend omnicanal del Worker. Consulta disponibilidad y recibe orientación para gestionar tus reservas.
+        </p>
+        <ChatbotAsistente onNavigate={navigate} />
+      </Card>
+
       <Card>
-        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <h3 style={{ marginTop: 0 }}>Canales externos (en Make)</h3>
         <PanelList items={[
-          "🎧 Atención Socio WhatsApp FAQ — responde preguntas frecuentes de socios por WhatsApp.",
-          "🎯 Campaña Flash WhatsApp — envía promociones flash por WhatsApp.",
-          "🤖 Bot IA Reservas WhatsApp / 🤖 Bot IA Reservas Telegram — asistentes de reserva por chat.",
-          "📝 Tally → API Reservas — recoge reservas desde un formulario externo (Tally).",
-          "Los 5 escenarios ya corren en Make; este panel no los reactiva, no los sustituye y no envía ningún mensaje real.",
+          "🤖 Bot IA Reservas Telegram — contrato omnicanal preparado; endpoint /api/chat listo con X-CP04-Bot-Secret. Transcripción de audio: PENDIENTE E2E REAL (requiere Cloudflare AI binding o clave OpenAI Whisper configurada en Worker).",
+          "🎧 Atención Socio WhatsApp FAQ (Make 5799031) — desactivado; mismo contrato omnicanal aplicable.",
+          "🤖 Bot IA Reservas WhatsApp (Make 5798996) — desactivado; misma API /api/chat.",
+          "🎯 Campaña Flash WhatsApp (Make 5791124) — canal independiente, sin chatbot.",
+          "📝 Tally → API Reservas (Make 5747703) — pendiente de integración.",
         ]} />
-        <div style={{ marginTop: 20 }}>
-          <PreparedActionButtons actions={["Revisar conversación preparada", "Enviar campaña de prueba", "Revisar formulario Tally"]} />
-        </div>
+        <p style={{ fontSize: 13, color: "#888", marginTop: 12, marginBottom: 0 }}>
+          Los escenarios de canales externos no se reactivan desde este panel. Para activarlos, configura CHATBOT_BOT_SECRET como Worker secret y habilita el trigger de Telegram en Make.
+        </p>
       </Card>
     </div>
   );
@@ -8951,7 +8957,7 @@ export default function ClubPadel04SaaSApp() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- solo ejecuta al montar
 
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, automatizaciones_bots: <AutomatizacionesBots navigate={navigate} />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
   // Si en el futuro algo hace setCurrent() directo a una sección protegida,

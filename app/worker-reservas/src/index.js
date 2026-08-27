@@ -10,6 +10,11 @@ import {
   fetchLiveMakeInventory,
   checkMakeRateLimit,
 } from "../support/makeLiveInventory.js";
+import {
+  OMNI_ACTIONS,
+  normalizeOmniInput,
+  extractDate,
+} from "./omni-normalizer.js";
 
 const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 const CLUB_CLOSING_MINUTES = 23 * 60;
@@ -148,7 +153,7 @@ function parseISODateParts(value) {
   };
 }
 
-function isSundayISO(value) {
+export function isSundayISO(value) {
   const parts = parseISODateParts(value);
   if (!parts) return false;
 
@@ -930,6 +935,22 @@ export function cp04CheckCrearReservaRateLimit(now = Date.now()) {
 export function __resetCrearReservaRateLimitForTests() {
   cp04CrearReservaRateLimitHits = [];
 }
+
+// Rate limiter del endpoint omnicanal (20 msg/min, separado de reservas).
+const CP04_CHAT_RATE_LIMIT_MAX = 20;
+const CP04_CHAT_RATE_LIMIT_WINDOW_MS = 60_000;
+let cp04ChatRateLimitHits = [];
+
+export function cp04CheckChatRateLimit(now = Date.now()) {
+  cp04ChatRateLimitHits = cp04ChatRateLimitHits.filter(
+    (t) => now - t < CP04_CHAT_RATE_LIMIT_WINDOW_MS
+  );
+  if (cp04ChatRateLimitHits.length >= CP04_CHAT_RATE_LIMIT_MAX) return false;
+  cp04ChatRateLimitHits.push(now);
+  return true;
+}
+
+export function __resetChatRateLimitForTests() { cp04ChatRateLimitHits = []; }
 
 // PASO 06B (2026-07-17): caché en memoria de disponibilidad por fecha, para
 // reducir lecturas repetidas a Airtable mientras dura el bloqueo de cuota
@@ -3981,6 +4002,219 @@ async function handleGdprOlvido(request, env) {
   );
 }
 
+// ─── BACKEND OMNICANAL (Chatbot Web + Telegram texto/audio) ──────────────────
+//
+// Único endpoint que normaliza mensajes libres de texto (web/Telegram) y
+// transcripciones de audio (Telegram) hacia las acciones de reservas.
+// NO llama al escenario Make/API Reservas como subscenario (incompatible):
+// reutiliza internamente cp04FetchOcupadas y guía el resto a la UI.
+//
+// Orígenes soportados: "web" (Bearer JWT) | "telegram" / "telegram_audio"
+// (X-CP04-Bot-Secret). WhatsApp: mismo contrato, sin código hoy.
+//
+// PENDIENTE E2E REAL CUANDO AIRTABLE VUELVA A ESTAR DISPONIBLE:
+// crear_reserva, cancelar_reserva, reprogramar_reserva, consultar_reservas.
+
+const BOOKING_HOURS_OMNI = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"];
+const COURTS_OMNI = ["Pista 1","Pista 2","Pista 3","Pista 4"];
+const TELEGRAM_ORIGINS = ["telegram", "telegram_audio"];
+
+async function omniDisponibilidad(env, headers, fecha) {
+  if (!fecha) {
+    return jsonResponse({
+      ok: true, action: OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD,
+      reply: "¿Para qué fecha quieres ver la disponibilidad?\nEj: \"mañana\", \"el viernes\", \"2026-09-05\".",
+      needs_more_info: true,
+    }, 200, headers);
+  }
+
+  if (isSundayISO(fecha)) {
+    return jsonResponse({
+      ok: true, action: OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD,
+      reply: `El ${fecha} es domingo. El club está cerrado los domingos.`,
+      data: { fecha, cerrado: true },
+    }, 200, headers);
+  }
+
+  const result = await cp04FetchOcupadas(env, fecha);
+
+  if (!result.ok) {
+    if (cp04IsAirtableRateLimited(result.status, JSON.stringify(result.details ?? result.reason ?? ""))) {
+      return jsonResponse({
+        ok: false, action: OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD,
+        reply: "El sistema está temporalmente saturado. Inténtalo en unos minutos.",
+      }, 503, headers);
+    }
+    return jsonResponse({
+      ok: false, action: OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD,
+      reply: "No he podido consultar la disponibilidad ahora mismo. Inténtalo más tarde.",
+    }, 500, headers);
+  }
+
+  const ocupadas = result.ocupadas || [];
+  const libres = [];
+  for (const hora of BOOKING_HOURS_OMNI) {
+    const pistasLibres = COURTS_OMNI.filter((p) => !cp04IsSlotOccupied(ocupadas, fecha, p, hora));
+    if (pistasLibres.length > 0) libres.push(`${hora}: ${pistasLibres.join(", ")}`);
+  }
+
+  if (libres.length === 0) {
+    return jsonResponse({
+      ok: true, action: OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD,
+      reply: `Para el ${fecha} todas las pistas están ocupadas.`,
+      data: { fecha, libres: 0 },
+    }, 200, headers);
+  }
+
+  return jsonResponse({
+    ok: true, action: OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD,
+    reply: `Disponibilidad para el ${fecha}:\n\n${libres.join("\n")}\n\n¿Quieres reservar algún horario?`,
+    data: { fecha, libres: libres.length, slots: libres },
+  }, 200, headers);
+}
+
+function omniCrearGuide(extracted, headers) {
+  const missing = [];
+  if (!extracted.fecha) missing.push("fecha (ej: \"el viernes\", \"2026-09-05\")");
+  if (!extracted.hora) missing.push("hora (ej: \"a las 10\", \"11:00\")");
+  if (!extracted.pista) missing.push("pista (Pista 1, 2, 3 o 4)");
+
+  if (missing.length > 0) {
+    return jsonResponse({
+      ok: true, action: OMNI_ACTIONS.CREAR_RESERVA,
+      reply: `Para crear una reserva necesito:\n${missing.map((m) => `• ${m}`).join("\n")}\n\nEj: "quiero Pista 2 el viernes a las 10"`,
+      needs_more_info: true, missing_fields: missing,
+    }, 200, headers);
+  }
+
+  // Todos los campos extraídos: guiar a confirmación real en la app.
+  // PENDIENTE E2E REAL CUANDO AIRTABLE VUELVA A ESTAR DISPONIBLE.
+  return jsonResponse({
+    ok: true, action: OMNI_ACTIONS.CREAR_RESERVA,
+    reply: `Entendido: ${extracted.pista} el ${extracted.fecha} a las ${extracted.hora}.\n\nConfirma la reserva en el módulo "Reservas" de la app para completarla.`,
+    data: extracted, needs_confirmation: true,
+  }, 200, headers);
+}
+
+function omniMutableGuide(action, redirectHint, label, headers) {
+  return jsonResponse({
+    ok: true, action,
+    reply: `Para ${label}, accede al módulo correspondiente en la app. Desde aquí solo puedo consultar disponibilidad.`,
+    redirect_hint: redirectHint,
+  }, 200, headers);
+}
+
+async function handleOmniChat(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method !== "POST") return jsonResponse({ ok: false, error: "Method not allowed" }, 405, headers);
+
+  if (!cp04CheckChatRateLimit()) {
+    return jsonResponse({
+      ok: false, error: "RATE_LIMITED",
+      reply: "Demasiadas solicitudes. Espera un momento antes de continuar.",
+    }, 429, headers);
+  }
+
+  let body;
+  try { body = await request.json(); } catch {
+    return jsonResponse({ ok: false, error: "INVALID_JSON", reply: "Solicitud no válida." }, 400, headers);
+  }
+
+  const rawText = cleanText(body?.message || body?.transcription || "");
+  const origin = cleanText(body?.origin || "web");
+  const context = (body?.context && typeof body.context === "object") ? body.context : {};
+
+  if (!rawText) {
+    return jsonResponse({ ok: false, error: "MISSING_MESSAGE", reply: "¿En qué puedo ayudarte? Escribe tu consulta." }, 400, headers);
+  }
+
+  const VALID_ORIGINS = ["web", "telegram", "telegram_audio", "whatsapp"];
+  if (!VALID_ORIGINS.includes(origin)) {
+    return jsonResponse({ ok: false, error: "INVALID_ORIGIN" }, 400, headers);
+  }
+
+  // Auth: web → try Bearer JWT (no requerir para consultar_disponibilidad)
+  // Telegram / audio → bot secret obligatorio
+  let auth = null;
+  if (TELEGRAM_ORIGINS.includes(origin) || origin === "whatsapp") {
+    const botSecret = request.headers.get("X-CP04-Bot-Secret") || "";
+    if (!env.CHATBOT_BOT_SECRET || botSecret !== env.CHATBOT_BOT_SECRET) {
+      return jsonResponse({ ok: false, error: "UNAUTHORIZED" }, 401, headers);
+    }
+  } else {
+    const gate = await requireAuth(request, env);
+    if (gate.ok) auth = gate.auth;
+  }
+
+  const { action, extracted } = normalizeOmniInput(rawText);
+
+  cp04LogTechnicalEvent({
+    event: "omni_chat_request",
+    action,
+    code: "OMNI_CHAT",
+    requestId: cp04GetRequestId(request),
+    retryable: false,
+    reserva_confirmada: false,
+    origen: origin,
+    detail: { hasDate: Boolean(extracted.fecha), hasTime: Boolean(extracted.hora) },
+  });
+
+  // Telegram: solo lectura — mutable actions → redirect to web
+  if (TELEGRAM_ORIGINS.includes(origin) && ![OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD, OMNI_ACTIONS.DESCONOCIDA].includes(action)) {
+    return jsonResponse({
+      ok: true, action,
+      reply: "Para gestionar reservas accede a la app web del club. Desde Telegram solo puedo consultar disponibilidad.",
+      telegram_chat_id: context.telegram_chat_id || null,
+    }, 200, headers);
+  }
+
+  if (action === OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD) {
+    return await omniDisponibilidad(env, headers, extracted.fecha);
+  }
+
+  if (action === OMNI_ACTIONS.CONSULTAR_RESERVAS) {
+    if (!auth) {
+      return jsonResponse({
+        ok: true, action,
+        reply: "Para ver tus reservas necesitas iniciar sesión en la app.",
+        authRequired: true,
+      }, 200, headers);
+    }
+    // PENDIENTE E2E REAL CUANDO AIRTABLE VUELVA A ESTAR DISPONIBLE.
+    return jsonResponse({
+      ok: true, action,
+      reply: "Consulta tus reservas en el módulo \"Gestión\" de la app (conectado en tiempo real a Airtable).",
+      redirect_hint: "gestion",
+    }, 200, headers);
+  }
+
+  if (action === OMNI_ACTIONS.CREAR_RESERVA) {
+    if (!auth) {
+      return jsonResponse({
+        ok: true, action,
+        reply: "Para crear una reserva necesitas iniciar sesión primero.",
+        authRequired: true,
+      }, 200, headers);
+    }
+    return omniCrearGuide(extracted, headers);
+  }
+
+  if (action === OMNI_ACTIONS.CANCELAR_RESERVA) {
+    return omniMutableGuide(action, "cancelar", "cancelar una reserva", headers);
+  }
+
+  if (action === OMNI_ACTIONS.REPROGRAMAR_RESERVA) {
+    return omniMutableGuide(action, "reprogramar", "reprogramar una reserva", headers);
+  }
+
+  return jsonResponse({
+    ok: true, action: OMNI_ACTIONS.DESCONOCIDA,
+    reply: "No he entendido tu consulta. Puedo ayudarte con:\n• Consultar disponibilidad (\"¿pistas libres el martes?\")\n• Ver reservas (\"mis reservas\")\n• Crear reserva (\"quiero Pista 2 el viernes a las 10\")\n• Cancelar o reprogramar (te dirijo a la sección correcta).",
+  }, 200, headers);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -4060,6 +4294,10 @@ export default {
 
       if (url.pathname.startsWith("/api/auth/")) {
       return handleAuthRoute(request, env, url);
+    }
+
+    if (url.pathname === "/api/chat") {
+      return await handleOmniChat(request, env);
     }
 
     if (url.pathname === "/api/support/make/scenarios") {
