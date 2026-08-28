@@ -10,9 +10,11 @@
     "preview": "vite preview",
     "factory:generate": "node fabrica-saas/generator/scripts/generate.mjs --manifest fabrica-saas/clients/clinica-dental-demo/manifest.yaml",
     "factory:generate:physio": "node fabrica-saas/generator/scripts/generate.mjs --manifest fabrica-saas/clients/clinica-fisioterapia-demo/manifest.yaml",
-    "factory:test": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs fabrica-saas/generator/tests/physio-cases.test.mjs",
+    "factory:generate:estetica": "node fabrica-saas/generator/scripts/generate.mjs --manifest fabrica-saas/clients/clinica-estetica-demo/manifest.yaml",
+    "factory:test": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs fabrica-saas/generator/tests/physio-cases.test.mjs fabrica-saas/generator/tests/estetica-cases.test.mjs",
     "factory:test:dental": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs",
-    "factory:test:physio": "node --test fabrica-saas/generator/tests/physio-cases.test.mjs"
+    "factory:test:physio": "node --test fabrica-saas/generator/tests/physio-cases.test.mjs",
+    "factory:test:estetica": "node --test fabrica-saas/generator/tests/estetica-cases.test.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
