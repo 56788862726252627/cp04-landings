@@ -5,7 +5,7 @@
  */
 
 const MODULOS_VALIDOS = ['chatbot_ia', 'crm', 'reservas', 'recuperacion_leads', 'dashboard', 'rbac', 'auth', 'logs'];
-const VERTICALES_VALIDOS = ['dental', 'padel', 'fisioterapia', 'estetica', 'legal', 'restaurante', 'peluqueria'];
+const VERTICALES_VALIDOS = ['dental', 'padel', 'fisioterapia', 'estetica', 'abogados', 'legal', 'restaurante', 'peluqueria'];
 
 export function validateManifest(manifest) {
   if (!manifest || typeof manifest !== 'object') {
