@@ -1,0 +1,91 @@
+cliente: "Despacho Abogados Demo"
+vertical: abogados
+modo_demo: true
+
+branding:
+  nombre_visible: "Despacho Abogados Demo"
+  inicial: "A"
+  estilo: "profesional, serio, cercano, confiable"
+  copiar_marca_real: false
+
+modulos:
+  - chatbot_ia
+  - crm
+  - reservas
+  - recuperacion_leads
+  - dashboard
+
+sedes:
+  - id: central
+    nombre: "Despacho Central"
+    horario: "L-V 09:00-19:00"
+  - id: sucursal_norte
+    nombre: "Sucursal Norte"
+    horario: "L-J 09:00-18:00"
+
+roles:
+  - admin
+  - secretaria
+  - abogado_junior
+  - abogado_senior
+
+vertical_config:
+  intenciones:
+    - consulta_inicial
+    - derecho_laboral
+    - derecho_familia
+    - derecho_civil
+    - derecho_penal
+    - derecho_mercantil
+    - derecho_administrativo
+    - presupuesto_honorarios
+    - cambio_cancelacion
+  seguridad_juridica:
+    asesoramiento_real: false
+    dictamen: false
+    garantia_resultado: false
+    conflicto_intereses_demo: true
+    derivar_a_abogado_especialista: true
+  expedientes: true
+  tareas_proximas: true
+  campanas: true
+
+integraciones:
+  reales: false
+  email: false
+  whatsapp: false
+  sms: false
+  hubspot: false
+  calendario: false
+  pagos: false
+
+mock:
+  obligatorio: true
+  clientes: 5
+  expedientes: true
+  crm: true
+  metricas: true
+  campanas: true
+  tareas: true
+
+casos_demo:
+  - consulta_inicial_laboral
+  - asunto_penal_urgente_derivacion
+  - presupuesto_honorarios_flujo_corto
+  - cambio_cancelacion_flujo_corto
+  - seguimiento_expediente_activo
+  - recuperacion_lead_abandono
+  - campana_activa_laboral
+
+calidad:
+  responsive:
+    - mobile
+    - tablet
+    - desktop
+  tests: true
+  build: true
+  lint: true
+  no_secretos: true
+  no_deploy: true
+  no_contacto_externo: true
+  no_asesoramiento_real: true

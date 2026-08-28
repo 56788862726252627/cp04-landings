@@ -10,6 +10,7 @@ export default defineConfig({
         dental: 'dental-demo.html',
         physio: 'physio-demo.html',
         estetica: 'estetica-demo.html',
+        abogados: 'abogados-demo.html',
       },
     },
   },
