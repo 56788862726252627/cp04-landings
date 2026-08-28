@@ -8,6 +8,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         dental: 'dental-demo.html',
+        physio: 'physio-demo.html',
       },
     },
   },

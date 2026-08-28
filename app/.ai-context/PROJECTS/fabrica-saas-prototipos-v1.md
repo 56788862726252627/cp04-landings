@@ -145,3 +145,120 @@ La implementación física puede adaptarse al repo actual tras la auditoría pre
 ## Definition of Done v1
 
 La v1 queda aceptada cuando, desde un único manifiesto dental y un único comando de generación, se obtiene localmente un prototipo navegable con las cuatro pantallas, los cinco casos de prueba, tests y build correctos, sin llamadas externas ni datos reales.
+
+---
+
+## Checkpoint v1 — Implementado y mergeado (2026-08-28)
+
+### Git
+
+| Campo | Valor |
+|---|---|
+| **PR** | #81 |
+| **Rama** | `agency/fabrica-saas-prototipos-v1-20260828` |
+| **Base** | `main` |
+| **Merge commit** | `1b190201111f77d9b04879fa782d8df02f692ebf` |
+| **Commit principal** | `cbb1628` — `feat(factory): add SaaS prototype generator v1 dental pilot` |
+| **Archivos en PR** | 23 (+3.107 / -2) |
+| **Fecha merge** | 2026-08-28 |
+
+### Estructura física implementada
+
+```text
+fabrica-saas/
+  core/
+    AppShell.jsx        ← layout, Card, Badge, FicticioLabel, StatCard, SectionTitle, Divider
+    mockData.js         ← pickRandom, formatDateEs, generateFutureSlots, isInsideWorkingHours
+  verticals/
+    dental/
+      config.js         ← DENTAL_VERTICAL, detectaSensible(), getIntencion(), getSede(), estaEnHorario()
+      mockData.js       ← MOCK_PACIENTES, MOCK_METRICAS, MOCK_LEADS_ABANDONO, MOCK_SLOTS
+  clients/
+    clinica-dental-demo/
+      manifest.yaml
+  generator/
+    schema/
+      manifestSchema.js ← validateManifest(), MODULOS_VALIDOS, VERTICALES_VALIDOS
+    scripts/
+      generate.mjs      ← parseSimpleYaml(), writeIdempotent(), generateRuntimeConfig(), runGeneration()
+    tests/
+      generator.test.mjs
+      dental-cases.test.mjs
+  output/
+    clinica-dental-demo/
+      DentalApp.jsx
+      DentalChatbot.jsx
+      DentalCrm.jsx
+      DentalRecovery.jsx
+      DentalDashboard.jsx
+      main.jsx
+      runtime-config.js ← generado por CLI, idempotente, SHA-256
+```
+
+### Capacidades v1 completadas
+
+- AppShell reutilizable entre verticales (banner DEMO obligatorio sticky)
+- Manifiesto YAML validado con parser propio (sin dependencias externas)
+- Schema + validación: 8 módulos válidos, 6 verticales válidos, conflict mode_demo vs integraciones reales
+- Generador CLI idempotente: `npm run factory:generate` — SHA-256, no sobrescribe si sin cambios
+- `runtime-config.js` generado determinista (sin timestamp)
+- Slug Unicode-safe: `.normalize('NFD')` antes de lowercase para caracteres acentuados
+- Chatbot dental multi-step (intención → sede → franja → financiación → slots → confirmación)
+- CRM simulado con filtros, filas expandibles, avatares, estados
+- Recuperación de leads con secuencias y timeline
+- Dashboard con métricas, BarChart CSS, DonutSimple SVG, TrendBadge
+- Reservas simuladas (datos ficticios, sin envío real)
+- Seguridad clínica: `detectaSensible()` con lista de keywords; sin diagnóstico, sin prescripción; mensaje de derivación incluye "profesional"
+- Banner DEMO en todas las pantallas
+- `FicticioLabel` en todos los datos ficticios
+- Vite multi-page: `dental-demo.html` como segundo entry point
+- `npm run factory:test`: `node:test` built-in, sin dependencias externas
+
+### Evidencia técnica
+
+| Métrica | Resultado |
+|---|---|
+| Tests | 59/59 PASS |
+| Lint | PASS (0 errores ESLint) |
+| Build | PASS (`npm run build`) |
+| Llamadas HTTP externas | 0 |
+| Secretos añadidos | 0 |
+| Binarios/PDFs | 0 |
+
+### Fixes aplicados durante implementación
+
+1. `useState` importado sin uso en `AppShell.jsx` — eliminado
+2. `startHour` param sin uso en `generateFutureSlots` — corregido (`startHour + (i % 3) * 2`)
+3. `Badge` importado sin uso en `DentalChatbot.jsx` — eliminado
+4. `SectionTitle` importado sin uso en `DentalCrm.jsx` — eliminado
+5. `useTab` hook con react-refresh/only-export-components — eliminado
+6. Mensaje de derivación sin "profesional" — corregido
+7. `generateRuntimeConfig` no era idempotente por `new Date().toISOString()` — eliminado timestamp
+8. Slug roto `cl-nica-dental-demo/` por acento en 'Clínica' — normalización NFD añadida
+
+### Limitaciones conocidas (deuda v1)
+
+- El generador v1 produce `runtime-config.js`; los componentes React siguen preescritos (no generados dinámicamente desde el manifiesto)
+- RBAC runtime: pendiente — módulo habilitado en schema pero sin runtime wiring
+- Auth runtime: pendiente
+- Logs runtime: pendiente
+- QA visual en navegador: pendiente (entorno sin navegador real)
+- Un solo vertical implementado; reutilización multisector no demostrada aún
+- `npm audit` reportó vulnerabilidades preexistentes del repo base; no corregidas en esta fase
+- Directorio `cl-nica-dental-demo/` untracked (slug roto anterior al fix NFD): no en git, no en PR, inofensivo
+
+### Madurez estimada
+
+**Fábrica SaaS v1 ≈ 72 %** antes de comenzar v1.1.
+
+Gaps para llegar al 100 %: generación dinámica de componentes desde manifiesto, RBAC/Auth/Logs runtime, QA visual, segundo vertical probado, README de ejecución final.
+
+### Siguiente fase
+
+| Campo | Valor |
+|---|---|
+| **Versión** | v1.1 |
+| **Rama** | `agency/fabrica-saas-v1.1-fisioterapia-20260828` |
+| **Objetivo** | Añadir vertical fisioterapia reutilizando CORE sin duplicar lógica |
+| **Hipótesis** | Si CORE está bien aislado, el segundo vertical debe implementarse solo con `verticals/fisioterapia/` y `clients/<cliente>/` |
+| **Métrica de éxito** | 0 líneas duplicadas de CORE/VERTICAL dental; tests PASS; build PASS |
