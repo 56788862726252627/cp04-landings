@@ -11,6 +11,7 @@ export default defineConfig({
         physio: 'physio-demo.html',
         estetica: 'estetica-demo.html',
         abogados: 'abogados-demo.html',
+        'clinica-dental-malaga-demo': 'clinica-dental-malaga-demo.html',
       },
     },
   },
