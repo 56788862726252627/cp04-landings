@@ -1,5 +1,8 @@
 # Logs
 logs
+# Exception: factory core module (not a log directory)
+!fabrica-saas/core/logs/
+!fabrica-saas/core/logs/**
 *.log
 npm-debug.log*
 yarn-debug.log*
