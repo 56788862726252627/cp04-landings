@@ -436,6 +436,57 @@ export const VERTICAL_TOKENS = {
     },
   },
 
+  // ── EDUCATION (V1.7 — architecture ready, no curriculum yet) ─────────────
+  education: {
+    colors: {
+      primary:       '#ca8a04',
+      primaryLight:  '#fef9c3',
+      primaryDark:   '#713f12',
+      secondary:     '#0891b2',
+      accent:        '#f59e0b',
+      surface:       '#fefce8',
+      surfaceAlt:    '#fffbeb',
+      background:    '#f8fafc',
+      card:          '#ffffff',
+      text:          '#1c1917',
+      textMuted:     '#64748b',
+      textLight:     '#94a3b8',
+      border:        '#fef08a',
+      borderLight:   '#fef9c3',
+      success:       '#059669',
+      warning:       '#d97706',
+      error:         '#dc2626',
+      info:          '#0891b2',
+    },
+    typography: { ...TYPO_BASE, fontFamily: 'system-ui, "Nunito", sans-serif' },
+    spacing:    SPACING_DEFAULT,
+    shadows:    SHADOWS_DEFAULT,
+    radii: {
+      sm: '6px', md: '10px', lg: '16px', xl: '24px', full: '9999px',
+    },
+    style: {
+      density:        'comfortable',
+      iconStyle:      'soft',
+      heroStyle:      'warm-yellow',
+      cardStyle:      'soft-shadow',
+      ctaStyle:       'rounded-solid',
+      sidebarStyle:   'light-yellow',
+      imageTreatment: 'rounded-soft',
+    },
+    sector: {
+      icon: '📚', label: 'Centro Educativo', entity: 'Alumno', plural: 'Alumnos',
+      service: 'Módulo', booking: 'Matrícula',
+    },
+    // Education-specific metadata for future implementation
+    educationMeta: {
+      status:        'FUTURE_VERTICAL',
+      readyFor:      ['primaria', 'eso', 'bachillerato', 'fp', 'cursos', 'universitario'],
+      futureRoles:   ['alumno', 'profesor', 'familia', 'tutor', 'admin'],
+      contentTypes:  ['video', 'ejercicio', 'cuestionario', 'documento', 'tarea', 'examen'],
+      notesCurriculum: 'Sin currículum concreto ni normativa educativa implementada. Arquitectura lista para V1.8+',
+    },
+  },
+
   // ── BACKWARD COMPAT ALIASES ───────────────────────────────────────────────
   fisioterapia: null,  // → physio (resolved below)
   estetica:     null,  // → beauty (resolved below)

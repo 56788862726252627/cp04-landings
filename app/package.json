@@ -40,7 +40,10 @@
     "factory:ai:check": "node -e \"import('./fabrica-saas/core/aiRouter.js').then(m=>m.checkLocalModelAvailable()).then(ok=>console.log('Local AI:', ok?'AVAILABLE':'UNAVAILABLE'))\"",
     "factory:ai:run": "node fabrica-saas/.ai/runner/ollama-runner.mjs",
     "factory:context:prepare": "node fabrica-saas/.ai/context/scripts/context-preprocessor.mjs",
-    "factory:test:v1.6.1": "node --test fabrica-saas/generator/tests/v1.6.1-cases.test.mjs"
+    "factory:test:v1.6.1": "node --test fabrica-saas/generator/tests/v1.6.1-cases.test.mjs",
+    "factory:test:v1.7": "node --test fabrica-saas/generator/tests/v1.7-cases.test.mjs",
+    "factory:generate:fisio-dinamica": "node fabrica-saas/generator/scripts/generate.mjs --manifest fabrica-saas/clients/fisioterapia-dinamica-demo/manifest.yaml",
+    "factory:test:all": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs fabrica-saas/generator/tests/physio-cases.test.mjs fabrica-saas/generator/tests/estetica-cases.test.mjs fabrica-saas/generator/tests/abogados-cases.test.mjs fabrica-saas/generator/tests/v1.2-cases.test.mjs fabrica-saas/generator/tests/v1.3-cases.test.mjs fabrica-saas/generator/tests/v1.4-cases.test.mjs fabrica-saas/generator/tests/v1.5-cases.test.mjs fabrica-saas/generator/tests/v1.6-cases.test.mjs fabrica-saas/generator/tests/v1.6.1-cases.test.mjs fabrica-saas/generator/tests/v1.7-cases.test.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",

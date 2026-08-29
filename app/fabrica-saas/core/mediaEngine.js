@@ -144,3 +144,94 @@ export function generateSocialMeta({ title, description, url, image, color } = {
     color       ? `<meta name="theme-color" content="${color}"/>` : '',
   ].filter(Boolean).join('\n  ');
 }
+
+// ─── V1.7 Video Engine extensions ────────────────────────────────────────────
+
+const VIDEO_POSTER_COLORS = {
+  dental: '#d1fae5', legal: '#dbeafe', physio: '#ccfbf1',
+  fisioterapia: '#ccfbf1', psychology: '#ede9fe', 'speech-therapy': '#cffafe',
+  sports: '#fee2e2', veterinary: '#d1fae5', hairdresser: '#fef3c7',
+  beauty: '#fce7f3', estetica: '#fce7f3', fertility: '#cffafe',
+  abogados: '#dbeafe', education: '#fef9c3',
+};
+
+/**
+ * Generate an SVG data URI to use as a video poster placeholder.
+ * @param {string} vertical
+ * @param {'hero'|'background'|'service'|'ambient'} type
+ * @returns {string} data URI
+ */
+export function getVideoPlaceholderPoster(vertical = 'dental', type = 'hero') {
+  const bg   = VIDEO_POSTER_COLORS[vertical] ?? '#e2e8f0';
+  const dims = type === 'background' || type === 'ambient'
+    ? { w: 1920, h: 1080 }
+    : { w: 1280, h: 720 };
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${dims.w}" height="${dims.h}">
+  <rect width="100%" height="100%" fill="${bg}"/>
+  <text x="50%" y="48%" text-anchor="middle" dominant-baseline="middle"
+        font-family="system-ui" font-size="24" fill="#94a3b8">▶ Video Placeholder</text>
+  <text x="50%" y="58%" text-anchor="middle" dominant-baseline="middle"
+        font-family="system-ui" font-size="14" fill="#cbd5e1">${vertical} · ${type}</text>
+</svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+}
+
+/**
+ * Build a safe video configuration from a manifest video entry.
+ * Enforces autoplay safety (muted required when autoplay=true).
+ *
+ * @param {Object} entry - video section from manifest (hero, ambient, etc.)
+ * @param {string} vertical
+ * @param {string} type - video role
+ * @returns {Object} complete video config
+ */
+export function buildVideoConfig(entry = {}, vertical = 'dental', type = 'heroVideo') {
+  const isAmbient = type === 'ambientLoop' || type === 'backgroundVideo';
+  const autoplay  = entry.autoplay ?? isAmbient;
+  return {
+    src:           entry.src      ?? null,
+    sources:       entry.sources  ?? (entry.src ? [{ src: entry.src, type: 'video/mp4' }] : []),
+    poster:        entry.poster   ?? getVideoPlaceholderPoster(vertical, type.replace('Video', '').replace('ambientLoop', 'ambient')),
+    muted:         autoplay ? true : (entry.muted ?? true),
+    autoplay,
+    loop:          entry.loop     ?? isAmbient,
+    controls:      entry.controls ?? !isAmbient,
+    preload:       entry.preload  ?? (isAmbient ? 'auto' : 'metadata'),
+    lazy:          entry.lazy     ?? true,
+    mobileEnabled: entry.mobileEnabled ?? !isAmbient,
+    type,
+    placeholder:   !entry.src && !entry.sources?.length,
+    staticFallback: entry.staticFallback ?? null,
+  };
+}
+
+/**
+ * Resolve V1.7 media (extends V1.6 resolveManifestMedia with full video engine).
+ * @param {Object} manifest
+ * @returns {Object} complete media config for V1.7 apps
+ */
+export function resolveManifestMediaV17(manifest = {}) {
+  const base     = resolveManifestMedia(manifest);
+  const vertical = manifest.vertical ?? manifest.sector ?? 'dental';
+  const v        = manifest.video ?? {};
+
+  return {
+    ...base,
+    videos: {
+      hero:         buildVideoConfig(v.hero        ?? {}, vertical, 'heroVideo'),
+      background:   buildVideoConfig(v.background  ?? {}, vertical, 'backgroundVideo'),
+      services:     buildVideoConfig(v.services    ?? {}, vertical, 'serviceVideo'),
+      testimonials: buildVideoConfig(v.testimonials ?? {}, vertical, 'testimonialVideo'),
+      explainer:    buildVideoConfig(v.explainer   ?? {}, vertical, 'explainerVideo'),
+      team:         buildVideoConfig(v.team        ?? {}, vertical, 'teamVideo'),
+      ambient:      buildVideoConfig(v.ambient     ?? {}, vertical, 'ambientLoop'),
+    },
+    videoGlobalConfig: {
+      autoplay:      v.autoplay      ?? false,
+      muted:         v.muted         ?? true,
+      mobileEnabled: v.mobileEnabled ?? false,
+      lazyLoad:      v.lazyLoad      ?? true,
+      poster:        v.poster        ?? null,
+    },
+  };
+}
