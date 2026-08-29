@@ -11,8 +11,12 @@ export const VERTICALES_VALIDOS = [
 ];
 
 export const MODULES_VALIDOS = [
+  // V1.0-V1.4
   'chatbot_ia', 'crm', 'reservas', 'recuperacion_leads',
   'dashboard', 'professionals', 'rbac', 'auth', 'logs', 'analytics',
+  // V1.5
+  'landing', 'agenda', 'tratamientos', 'pacientes_crm',
+  'profesionales', 'presupuestos',
 ];
 
 const HEX_RE  = /^#[0-9a-fA-F]{6}$/;

@@ -1,0 +1,58 @@
+[
+  {
+    "name": "VITE_API_BASE_URL",
+    "scope": "vite_public",
+    "description": "URL del Worker CF o API backend",
+    "command": "wrangler pages env add production VITE_API_BASE_URL <value>",
+    "cfScope": "pages_env",
+    "manual": true
+  },
+  {
+    "name": "VITE_AUTH_DOMAIN",
+    "scope": "vite_public",
+    "description": "Dominio del proveedor Auth (ej: company.auth0.com)",
+    "command": "wrangler pages env add production VITE_AUTH_DOMAIN <value>",
+    "cfScope": "pages_env",
+    "manual": true
+  },
+  {
+    "name": "VITE_AUTH_CLIENT_ID",
+    "scope": "vite_public",
+    "description": "Client ID público del proveedor Auth",
+    "command": "wrangler pages env add production VITE_AUTH_CLIENT_ID <value>",
+    "cfScope": "pages_env",
+    "manual": true
+  },
+  {
+    "name": "AUTH_CLIENT_SECRET",
+    "scope": "worker_secret",
+    "description": "Secreto del proveedor Auth (solo Worker)",
+    "command": "wrangler secret put AUTH_CLIENT_SECRET",
+    "cfScope": "worker_secret",
+    "manual": true
+  },
+  {
+    "name": "AIRTABLE_API_KEY",
+    "scope": "worker_secret",
+    "description": "Clave API de Airtable (solo Worker)",
+    "command": "wrangler secret put AIRTABLE_API_KEY",
+    "cfScope": "worker_secret",
+    "manual": true
+  },
+  {
+    "name": "AIRTABLE_BASE_ID",
+    "scope": "worker_secret",
+    "description": "Base ID de Airtable (solo Worker)",
+    "command": "wrangler secret put AIRTABLE_BASE_ID",
+    "cfScope": "worker_secret",
+    "manual": true
+  },
+  {
+    "name": "VITE_ANALYTICS_DSN",
+    "scope": "vite_public",
+    "description": "DSN del proveedor de analytics",
+    "command": "wrangler pages env add production VITE_ANALYTICS_DSN <value>",
+    "cfScope": "pages_env",
+    "manual": true
+  }
+]

@@ -1,13 +1,13 @@
 /**
- * OUTPUT GENERADO · Clínica Dental Málaga Demo · Dashboard V1.5
+ * OUTPUT GENERADO · Clínica Dental Aurora (Demo) · Dashboard V1.5
  * Generado por Fábrica SaaS V1.5 · create-client.mjs
- * NO editar manualmente — regenerar: npm run factory:create:clinica-dental-malaga-demo
+ * NO editar manualmente — regenerar: npm run factory:create:clinica-dental-aurora-demo
  * Datos 100% ficticios. Sin llamadas externas reales.
  */
-import { MOCK_METRICAS, MOCK_LEADS_ABANDONO } from './ClinicaDentalMalagaDemoMockData.js';
+import { MOCK_METRICAS, MOCK_LEADS_ABANDONO } from './ClinicaDentalAuroraDemoMockData.js';
 import { HeroSection, MetricGrid, StatCard, Card, TimelineItem } from '../../core/AppShell.jsx';
 
-const ACCENT = "#0d9488";
+const ACCENT = "#0c7873";
 
 function BarChart({ data, labelKey = 'sede', valueKey = 'consultas', color: c = ACCENT }) {
   const max = Math.max(...data.map(d => d[valueKey] ?? 0), 1);
@@ -34,7 +34,7 @@ const TIMELINE_ITEMS = [
   { icon: '✅', title: 'Tratamiento completado', sub: 'Laura Sánchez · Endodoncia', date: 'Ayer 17:00', color: '#7c3aed' },
 ];
 
-export function ClinicaDentalMalagaDemoDashboard() {
+export function ClinicaDentalAuroraDemoDashboard() {
   const m = MOCK_METRICAS;
   const leadsActivos = MOCK_LEADS_ABANDONO.filter(l => l.estado !== 'recuperado').slice(0, 3);
   return (
@@ -42,7 +42,7 @@ export function ClinicaDentalMalagaDemoDashboard() {
       <HeroSection
         color={ACCENT}
         badge="📊 Resumen del mes"
-        title="Dashboard · Clínica Dental Málaga Demo"
+        title="Dashboard · Clínica Dental Aurora (Demo)"
         subtitle="Vista ejecutiva de actividad, ingresos y leads activos. Datos 100% ficticios."
       />
 

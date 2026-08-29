@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'fabrica-saas/deploy']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -16,6 +16,13 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+  },
+  {
+    // fabrica-saas/ corre en Node.js: necesita globals de Node (Buffer, process, etc.)
+    files: ['fabrica-saas/**/*.{js,mjs}'],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
     },
   },
 ])

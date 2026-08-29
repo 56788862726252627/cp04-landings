@@ -15,6 +15,9 @@ dist
 dist-ssr
 *.local
 
+# Paquetes de deploy generados por client (no son código fuente)
+fabrica-saas/deploy/
+
 # Environment files with local/private values
 .env
 .env.*

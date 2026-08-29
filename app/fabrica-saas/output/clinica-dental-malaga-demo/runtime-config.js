@@ -47,5 +47,5 @@ export const RUNTIME_CONFIG = {
     "obligatorio": true
   },
   "generadoPor": "fabrica-saas-v1.2",
-  "generadoEn": "2026-08-28"
+  "generadoEn": "2026-08-29"
 };

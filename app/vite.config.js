@@ -12,6 +12,7 @@ export default defineConfig({
         estetica: 'estetica-demo.html',
         abogados: 'abogados-demo.html',
         'clinica-dental-malaga-demo': 'clinica-dental-malaga-demo.html',
+        'clinica-dental-aurora-demo': 'clinica-dental-aurora-demo.html',
       },
     },
   },
