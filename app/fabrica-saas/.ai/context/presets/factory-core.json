@@ -1,0 +1,27 @@
+{
+  "output": {
+    "filePath": "fabrica-saas/.ai/context/generated/factory-core.xml",
+    "style": "xml",
+    "compress": true,
+    "showLineNumbers": true,
+    "headerText": "FABRICA SAAS — Core Context — AppShell, design system, adapters, config"
+  },
+  "include": [
+    "fabrica-saas/core/**/*.js",
+    "fabrica-saas/core/**/*.jsx",
+    "fabrica-saas/core/**/*.mjs",
+    "fabrica-saas/FACTORY_V1_*.md",
+    "fabrica-saas/.ai/**/*.md",
+    "fabrica-saas/.ai/**/*.json"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "node_modules/**",
+      "fabrica-saas/.ai/context/generated/**",
+      "**/.env*",
+      "**/*.secret"
+    ]
+  }
+}

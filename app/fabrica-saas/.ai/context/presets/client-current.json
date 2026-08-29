@@ -1,0 +1,24 @@
+{
+  "output": {
+    "filePath": "fabrica-saas/.ai/context/generated/client-current.xml",
+    "style": "xml",
+    "compress": true,
+    "showLineNumbers": true,
+    "headerText": "FABRICA SAAS — Active Client Context — manifests only (no generated output)"
+  },
+  "include": [
+    "fabrica-saas/clients/**/*.yaml",
+    "fabrica-saas/clients/**/*.yml",
+    "fabrica-saas/clients/**/*.json",
+    "fabrica-saas/clients/**/*.md"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "node_modules/**",
+      "**/.env*",
+      "**/*.secret"
+    ]
+  }
+}

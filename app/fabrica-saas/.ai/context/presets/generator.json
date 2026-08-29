@@ -1,0 +1,22 @@
+{
+  "output": {
+    "filePath": "fabrica-saas/.ai/context/generated/generator.xml",
+    "style": "xml",
+    "compress": true,
+    "showLineNumbers": true,
+    "headerText": "FABRICA SAAS — Generator Context — templates, schema, scripts"
+  },
+  "include": [
+    "fabrica-saas/generator/templates/**/*.mjs",
+    "fabrica-saas/generator/schema/**/*.js",
+    "fabrica-saas/generator/scripts/**/*.mjs"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "node_modules/**",
+      "**/.env*"
+    ]
+  }
+}

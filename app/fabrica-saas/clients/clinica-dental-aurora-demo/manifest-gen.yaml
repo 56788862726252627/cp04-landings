@@ -1,4 +1,4 @@
-# Fábrica SaaS · Aurora DEMO · manifest para generador V1.5
+# Fábrica SaaS · Aurora DEMO · manifest para generador V1.6
 # Datos 100% ficticios. Sin credenciales. Sin datos reales.
 # Uso: node create-client.mjs --manifest .../manifest-gen.yaml
 # El manifest V1.4 (manifest.yaml) sigue siendo el canonical para deploy pipeline.
@@ -112,6 +112,29 @@ demoData:
       tratamiento_interes: "Blanqueamiento"
       estado: nuevo
       origen: google
+
+ai:
+  routing: TIER3_CLAUDE
+  localModel: "qwen2.5-coder:1.5b"
+  contextProfile: "generator"
+
+design:
+  vertical: dental
+  density: comfortable
+  radius: md
+  typography: sans
+  style: elevated-border
+
+media:
+  hero: null
+  gallery: []
+  team: []
+  services: []
+  video: null
+  socialPreview: null
+
+components:
+  variantSet: default
 
   leads_abandono:
     - id: lead-001
