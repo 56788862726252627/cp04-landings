@@ -51,7 +51,7 @@ export function ClinicaDentalAuroraDemoAgenda() {
       </div>
 
       {/* Resumen */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12, marginBottom: 20 }}>
         {[
           { label: 'Confirmadas', value: confirmadas, badge: 'teal' },
           { label: 'Pendientes',  value: pendientes,  badge: 'yellow' },

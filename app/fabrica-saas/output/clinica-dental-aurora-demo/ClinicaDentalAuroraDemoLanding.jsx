@@ -44,7 +44,7 @@ export function ClinicaDentalAuroraDemoLanding() {
 
       {/* Stats */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 28,
       }}>
         {STATS.map((s, i) => (
           <div key={i} style={{
@@ -63,7 +63,7 @@ export function ClinicaDentalAuroraDemoLanding() {
         <h2 style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 800, color: '#0f172a' }}>
           Nuestros servicios <Badge color="teal">Ficticios</Badge>
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           {SERVICIOS.map((s, i) => (
             <Card key={i} style={{ cursor: 'default' }}>
               <div style={{ fontSize: 28, marginBottom: 10 }}>{s.icono}</div>

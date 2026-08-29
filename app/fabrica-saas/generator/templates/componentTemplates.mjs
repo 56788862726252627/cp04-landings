@@ -99,16 +99,16 @@ export function genMockData(manifest) {
   const leadsJson   = JSON.stringify(leads, null, 2);
 
   const porSede = sedes.map((s, i) => ({
-    sede: s.nombre?.split(' ').slice(-1)[0] ?? `Sede ${i + 1}`,
-    consultas: Math.round((metrics.consultas_mes ?? 20) / sedes.length),
+    sede: (s.nombre ?? `Sede ${i + 1}`).replace(/\s*\(ficticio\)$/i, '').replace(/\s*\(demo\)$/i, '').trim(),
+    consultas: Math.round((metrics.consultas_mes ?? 147) / Math.max(sedes.length, 1)),
   }));
 
   const metricsObj = {
-    consultas_mes:   metrics.consultas_mes    ?? 0,
-    tasa_conversion: metrics.tasa_conversion  ?? 0,
-    valor_pipeline:  metrics.valor_pipeline   ?? '0 € (ficticio)',
-    ingresos_mes:    metrics.ingresos_mes     ?? '0 € (ficticio)',
-    citas_hoy:       metrics.citas_hoy        ?? 12,
+    consultas_mes:    metrics.consultas_mes    ?? 147,
+    tasa_conversion:  metrics.tasa_conversion  ?? 68,
+    valor_pipeline:   metrics.valor_pipeline   ?? '38.500 € (ficticio)',
+    ingresos_mes:     metrics.ingresos_mes     ?? '24.800 € (ficticio)',
+    citas_hoy:        metrics.citas_hoy        ?? 12,
     nuevos_pacientes: metrics.nuevos_pacientes ?? 8,
     por_sede: porSede,
   };
@@ -930,7 +930,7 @@ export function ${pascal}Landing() {
 
       {/* Stats */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 28,
       }}>
         {STATS.map((s, i) => (
           <div key={i} style={{
@@ -949,7 +949,7 @@ export function ${pascal}Landing() {
         <h2 style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 800, color: '#0f172a' }}>
           Nuestros servicios <Badge color="teal">Ficticios</Badge>
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           {SERVICIOS.map((s, i) => (
             <Card key={i} style={{ cursor: 'default' }}>
               <div style={{ fontSize: 28, marginBottom: 10 }}>{s.icono}</div>
@@ -1063,7 +1063,7 @@ export function ${pascal}Agenda() {
       </div>
 
       {/* Resumen */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12, marginBottom: 20 }}>
         {[
           { label: 'Confirmadas', value: confirmadas, badge: 'teal' },
           { label: 'Pendientes',  value: pendientes,  badge: 'yellow' },
@@ -1168,7 +1168,7 @@ export function ${pascal}Tratamientos() {
 
       <PillTabs tabs={CATEGORIAS} active={cat} onChange={setCat} color={ACCENT} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
         {lista.map(t => (
           <Card key={t.id} style={{ position: 'relative' }}>
             {t.destacado && (
@@ -1262,7 +1262,7 @@ export function ${pascal}Profesionales() {
         Nuestro equipo
       </SectionTitle>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
         {PROFESIONALES.map(pro => (
           <Card key={pro.id}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>

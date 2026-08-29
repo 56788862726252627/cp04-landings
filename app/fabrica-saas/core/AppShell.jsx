@@ -4,7 +4,7 @@
  * Responsive: sidebar en desktop, bottom nav en móvil.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function hex2rgba(hex, a = 1) {
   const h = (hex || '#0c7873').replace('#', '');
@@ -15,7 +15,13 @@ function hex2rgba(hex, a = 1) {
 }
 
 export function AppShell({ tabs, activeTab, onTabChange, branding = {}, children }) {
-  const [, setMobileOpen] = useState(false);
+  const [mobile, setMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+
   const color  = branding.color || branding.primaryColor || '#0c7873';
   const nombre = branding.nombre || branding.nombre_visible || 'Demo';
   const inicial = branding.inicial || nombre.charAt(0).toUpperCase();
@@ -35,7 +41,8 @@ export function AppShell({ tabs, activeTab, onTabChange, branding = {}, children
       </div>
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar desktop */}
+        {/* Sidebar — solo en desktop */}
+        {!mobile && (
         <aside style={{
           width: 220, background: '#fff', borderRight: '1px solid #e2e8f0',
           display: 'flex', flexDirection: 'column', flexShrink: 0,
@@ -65,7 +72,7 @@ export function AppShell({ tabs, activeTab, onTabChange, branding = {}, children
             {tabs.map(tab => {
               const active = activeTab === tab.id;
               return (
-                <button key={tab.id} onClick={() => { onTabChange(tab.id); setMobileOpen(false); }} style={{
+                <button key={tab.id} onClick={() => onTabChange(tab.id)} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   width: '100%', padding: '9px 10px', borderRadius: 8, border: 'none',
                   background: active ? hex2rgba(color, 0.10) : 'transparent',
@@ -93,15 +100,24 @@ export function AppShell({ tabs, activeTab, onTabChange, branding = {}, children
             }}>DEMO V1.5</span>
           </div>
         </aside>
+        )}
 
         {/* Main */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           <header style={{
             background: '#fff', borderBottom: '1px solid #e2e8f0',
-            padding: '12px 24px', display: 'flex', alignItems: 'center',
+            padding: mobile ? '10px 16px' : '12px 24px',
+            display: 'flex', alignItems: 'center',
             justifyContent: 'space-between', flexShrink: 0,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {mobile && (
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8, background: color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', fontWeight: 800, fontSize: 13, flexShrink: 0,
+                }}>{inicial}</div>
+              )}
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
               <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
                 {tabs.find(t => t.id === activeTab)?.label || 'Inicio'}
@@ -111,18 +127,47 @@ export function AppShell({ tabs, activeTab, onTabChange, branding = {}, children
               fontSize: 11, background: '#fef3c7', color: '#92400e',
               padding: '3px 10px', borderRadius: 20, fontWeight: 700,
             }}>
-              DEMO · DATOS FICTICIOS
+              DEMO
             </span>
           </header>
 
           <main style={{
-            flex: 1, overflowY: 'auto', padding: '28px 28px',
+            flex: 1, overflowY: 'auto',
+            padding: mobile ? '16px 14px 80px' : '28px 28px',
             background: '#f8fafc',
           }}>
             {children}
           </main>
         </div>
       </div>
+
+      {/* Bottom nav — solo mobile */}
+      {mobile && (
+        <nav style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300,
+          background: '#fff', borderTop: '1px solid #e2e8f0',
+          display: 'flex', overflowX: 'auto',
+          boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
+        }}>
+          {tabs.map(tab => {
+            const active = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => onTabChange(tab.id)} style={{
+                flex: '0 0 auto', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', padding: '8px 12px', border: 'none',
+                background: 'transparent', cursor: 'pointer', minWidth: 56,
+                color: active ? color : '#94a3b8',
+                borderTop: active ? `2px solid ${color}` : '2px solid transparent',
+              }}>
+                <span style={{ fontSize: 18 }}>{tab.icon}</span>
+                <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, marginTop: 2, whiteSpace: 'nowrap' }}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }

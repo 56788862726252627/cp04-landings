@@ -43,7 +43,7 @@
   "featureFlags": {},
   "healthPath": "/api/health",
   "buildMetadata": {
-    "generatedAt": "2026-08-29T04:37:35.520Z",
+    "generatedAt": "2026-08-29T06:46:29.825Z",
     "version": "v1.4",
     "factory": "fabrica-saas-v1.4",
     "_ficticio": true

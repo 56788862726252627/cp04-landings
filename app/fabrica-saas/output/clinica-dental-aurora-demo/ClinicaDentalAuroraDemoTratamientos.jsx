@@ -34,7 +34,7 @@ export function ClinicaDentalAuroraDemoTratamientos() {
 
       <PillTabs tabs={CATEGORIAS} active={cat} onChange={setCat} color={ACCENT} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
         {lista.map(t => (
           <Card key={t.id} style={{ position: 'relative' }}>
             {t.destacado && (

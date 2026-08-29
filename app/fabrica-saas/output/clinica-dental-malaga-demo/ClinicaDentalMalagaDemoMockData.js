@@ -165,11 +165,11 @@ export const MOCK_METRICAS = {
   "nuevos_pacientes": 8,
   "por_sede": [
     {
-      "sede": "(ficticio)",
+      "sede": "Clínica Dental Málaga Centro",
       "consultas": 17
     },
     {
-      "sede": "(ficticio)",
+      "sede": "Clínica Dental Málaga Norte",
       "consultas": 17
     }
   ]

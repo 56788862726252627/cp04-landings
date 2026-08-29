@@ -62,7 +62,7 @@ export function ClinicaDentalAuroraDemoProfesionales() {
         Nuestro equipo
       </SectionTitle>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
         {PROFESIONALES.map(pro => (
           <Card key={pro.id}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>

@@ -135,20 +135,20 @@ export const MOCK_LEADS_ABANDONO = [
 ];
 
 export const MOCK_METRICAS = {
-  "consultas_mes": 0,
-  "tasa_conversion": 0,
-  "valor_pipeline": "0 € (ficticio)",
-  "ingresos_mes": "0 € (ficticio)",
+  "consultas_mes": 147,
+  "tasa_conversion": 68,
+  "valor_pipeline": "38.500 € (ficticio)",
+  "ingresos_mes": "24.800 € (ficticio)",
   "citas_hoy": 12,
   "nuevos_pacientes": 8,
   "por_sede": [
     {
-      "sede": "(ficticio)",
-      "consultas": 10
+      "sede": "Aurora Centro",
+      "consultas": 74
     },
     {
-      "sede": "(ficticio)",
-      "consultas": 10
+      "sede": "Aurora Norte",
+      "consultas": 74
     }
   ]
 };
