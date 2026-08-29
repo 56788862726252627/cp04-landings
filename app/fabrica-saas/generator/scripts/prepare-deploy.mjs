@@ -77,9 +77,19 @@ export async function generateDeployPackage({ manifestPath, provider = 'cloudfla
   writeFileSync(outputs.productionConfig,     JSON.stringify(prodConfig, null, 2),       'utf8');
   writeFileSync(outputs.envVarMapping,        JSON.stringify(envVarMapping, null, 2),    'utf8');
 
+  // 9. Empaquetar cliente: deploy/<slug>/index.html = dist/<slug>.html (no dist/index.html)
+  // Esto evita que Cloudflare sirva el index.html del proyecto base en lugar del cliente.
+  const { packageClientForDeploy } = await import('./package-client.mjs');
+  const deployPackage = packageClientForDeploy({ slug, artifactsDir: outDir });
+
   if (verbose) {
     console.log(`[prepare-deploy] Paquete generado: ${outDir}`);
     console.log(`[prepare-deploy] Pre-deploy ready: ${preValidation.ready}`);
+    if (deployPackage.skipped) {
+      console.warn(`[prepare-deploy] Package aislado omitido: ${deployPackage.reason}`);
+    } else {
+      console.log(`[prepare-deploy] Deploy package: ${deployPackage.deployPath}`);
+    }
     if (preValidation.blockers.length) console.warn('[prepare-deploy] Blockers:', preValidation.blockers);
     if (preValidation.warnings.length) console.warn('[prepare-deploy] Warnings:', preValidation.warnings);
   }
@@ -99,7 +109,9 @@ export async function generateDeployPackage({ manifestPath, provider = 'cloudfla
     dryRunCommands,
     manualBoundary,
     envVarMapping,
-    provider: providerInstance.getStatus(),
+    provider:         providerInstance.getStatus(),
+    deployPackage,
+    deployPackagePath: deployPackage.deployPath,
   };
 }
 

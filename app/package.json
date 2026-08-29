@@ -24,7 +24,9 @@
     "factory:test:v1.4": "node --test fabrica-saas/generator/tests/v1.4-cases.test.mjs",
     "factory:test:all": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs fabrica-saas/generator/tests/physio-cases.test.mjs fabrica-saas/generator/tests/estetica-cases.test.mjs fabrica-saas/generator/tests/abogados-cases.test.mjs fabrica-saas/generator/tests/v1.2-cases.test.mjs fabrica-saas/generator/tests/v1.3-cases.test.mjs fabrica-saas/generator/tests/v1.4-cases.test.mjs",
     "factory:deploy:manifest": "node fabrica-saas/generator/scripts/generate-deployment.mjs",
-    "factory:prepare-deploy": "node fabrica-saas/generator/scripts/prepare-deploy.mjs"
+    "factory:prepare-deploy": "node fabrica-saas/generator/scripts/prepare-deploy.mjs",
+    "factory:package-client": "node fabrica-saas/generator/scripts/package-client.mjs",
+    "factory:create:clinica-dental-aurora-demo": "node fabrica-saas/generator/scripts/create-client.mjs --manifest fabrica-saas/clients/clinica-dental-aurora-demo/manifest.yaml"
   },
   "dependencies": {
     "react": "^19.2.6",

@@ -1,0 +1,87 @@
+# Fábrica SaaS · Aurora DEMO · manifest para generador V1.2
+# Datos 100% ficticios. Sin credenciales. Sin datos reales.
+# Uso: node create-client.mjs --manifest .../manifest-gen.yaml
+# El manifest V1.4 (manifest.yaml) sigue siendo el canonical para deploy pipeline.
+
+business:
+  name: "Clínica Dental Aurora (Demo)"
+  slug: "clinica-dental-aurora-demo"
+  vertical: dental
+
+vertical: dental
+modo_demo: true
+
+branding:
+  nombre_visible: "Clínica Dental Aurora"
+  inicial: "A"
+  primaryColor: "#0f766e"
+  estilo: "sanitario premium, limpio, moderno"
+  copiar_marca_real: false
+
+modules:
+  - chatbot_ia
+  - crm
+  - reservas
+  - recuperacion_leads
+  - dashboard
+
+sedes:
+  - id: aurora-centro
+    nombre: "Aurora Centro (ficticio)"
+    horario: "L-V 09:00-20:00, S 09:00-14:00"
+  - id: aurora-norte
+    nombre: "Aurora Norte (ficticio)"
+    horario: "L-V 10:00-19:00"
+
+integraciones:
+  reales: false
+  airtable: NOT_CONFIGURED
+  make: NOT_CONFIGURED
+  stripe: NOT_CONFIGURED
+
+mock:
+  obligatorio: true
+
+demoData:
+  professionals:
+    - id: prof-001
+      nombre: "Dra. Martínez Ruiz (ficticio)"
+      especialidad: Ortodoncia
+    - id: prof-002
+      nombre: "Dr. García Sánchez (ficticio)"
+      especialidad: Implantes
+    - id: prof-003
+      nombre: "Dra. López Torres (ficticio)"
+      especialidad: Endodoncia
+
+  slots:
+    - id: slot-001
+      fecha: "2026-09-15 (ficticio)"
+      hora: "09:00"
+      profesionalId: prof-001
+      disponible: true
+    - id: slot-002
+      fecha: "2026-09-15 (ficticio)"
+      hora: "10:30"
+      profesionalId: prof-002
+      disponible: true
+
+  clients:
+    - id: pac-001
+      nombre: "Paciente Ejemplo Uno (ficticio)"
+      email: paciente1@demo.ficticio
+      telefono: "+34 600 000 001 (ficticio)"
+    - id: pac-002
+      nombre: "Paciente Ejemplo Dos (ficticio)"
+      email: paciente2@demo.ficticio
+      telefono: "+34 600 000 002 (ficticio)"
+
+  leads_abandono:
+    - id: lead-001
+      nombre: "Lead Ejemplo Uno (ficticio)"
+      email: lead1@demo.ficticio
+      fuente: web
+    - id: lead-002
+      nombre: "Lead Ejemplo Dos (ficticio)"
+      email: lead2@demo.ficticio
+      fuente: referido

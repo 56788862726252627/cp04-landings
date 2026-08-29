@@ -4,6 +4,8 @@
  * Sin dependencias externas. Retorna strings (contenido de archivo).
  */
 
+import { getBrandingHeadTags } from '../../core/branding/faviconGenerator.js';
+
 // ── Utilidades ────────────────────────────────────────────────────────────────
 
 export function toPascalCase(slug) {
@@ -788,10 +790,11 @@ createRoot(document.getElementById('root')).render(
 // ── 8. HTML entry ─────────────────────────────────────────────────────────────
 
 export function genHtml(manifest) {
-  const biz   = manifest.business;
-  const br    = manifest.branding ?? {};
-  const title = br.nombre_visible ?? biz.name;
-  const version = 'V1.2';
+  const biz         = manifest.business;
+  const br          = manifest.branding ?? {};
+  const title       = br.nombre_visible ?? biz.name;
+  const version     = 'V1.2';
+  const brandingTags = getBrandingHeadTags(manifest);
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -799,6 +802,7 @@ export function genHtml(manifest) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
+    ${brandingTags}
     <title>${title} · Fábrica SaaS ${version}</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; }

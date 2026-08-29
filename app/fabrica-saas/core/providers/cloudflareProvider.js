@@ -19,7 +19,9 @@ export class CloudflareProvider extends DeploymentProvider {
     const slug = deployManifest?.client?.slug ?? this.projectName;
     return [
       '# [MANUAL_BOUNDARY] Requiere: CLOUDFLARE_API_TOKEN + proyecto creado en dashboard',
-      `wrangler pages deploy dist --project-name ${slug}`,
+      '# IMPORTANTE: deploy desde fabrica-saas/deploy/<slug>/, NO desde dist/',
+      '# dist/index.html pertenece al proyecto base — no al cliente.',
+      `wrangler pages deploy fabrica-saas/deploy/${slug} --project-name ${slug}`,
     ];
   }
 
@@ -43,16 +45,20 @@ export class CloudflareProvider extends DeploymentProvider {
       'npm run build',
       '# Verificar dist/ generado:',
       'ls dist/',
+      `# Empaquetar cliente (genera fabrica-saas/deploy/${slug}/index.html):`,
+      `npm run factory:package-client -- --slug ${slug}`,
+      `# Verificar paquete aislado del cliente:`,
+      `ls fabrica-saas/deploy/${slug}/`,
       '',
       '# ═══════════════════════════════════════════════════════════',
       '# [MANUAL_BOUNDARY] A partir de aquí requiere CLOUDFLARE_API_TOKEN',
       '# ═══════════════════════════════════════════════════════════',
-      '# 1. Configurar secretos del Worker:',
-      '#    wrangler secret put AIRTABLE_API_KEY',
-      '#    wrangler secret put AIRTABLE_BASE_ID',
-      '#    wrangler secret put AUTH_CLIENT_SECRET',
-      '# 2. Desplegar en Cloudflare Pages:',
-      `#    wrangler pages deploy dist --project-name ${slug}`,
+      '# 1. Configurar secretos del Worker (categorías genéricas):',
+      '#    Backend:         wrangler secret put <backend-api-key>',
+      '#    CRM:             wrangler secret put <crm-api-key>',
+      '#    Autenticación:   wrangler secret put <auth-client-secret>',
+      '# 2. Desplegar paquete cliente en Cloudflare Pages:',
+      `#    wrangler pages deploy fabrica-saas/deploy/${slug} --project-name ${slug}`,
       '# 3. Verificar health:',
       `#    curl https://<domain>/api/health`,
     ];
@@ -86,18 +92,25 @@ export class CloudflareProvider extends DeploymentProvider {
   getManualBoundary() {
     return {
       provider:      'cloudflare',
-      boundary:      'wrangler pages deploy dist',
+      boundary:      `wrangler pages deploy fabrica-saas/deploy/${this.projectName}`,
       reason:        'Requiere CLOUDFLARE_API_TOKEN y proyecto creado en Cloudflare Dashboard',
+      note:          'Siempre despliega desde fabrica-saas/deploy/<slug>/, NUNCA desde dist/ (dist/index.html pertenece al proyecto base)',
       prerequisites: [
         'CLOUDFLARE_API_TOKEN configurado como variable de entorno del operador',
         'Proyecto creado en Cloudflare Pages Dashboard (nombre = slug del cliente)',
-        'Dominio personalizado configurado en Cloudflare (opcional para demo)',
-        'Secretos configurados vía: wrangler secret put <VAR>',
+        'npm run build ejecutado (genera dist/<slug>.html)',
+        'npm run factory:package-client -- --slug <slug> ejecutado (genera deploy/<slug>/index.html)',
+        'Secretos de integración configurados vía wrangler secret put (categorías: Backend, CRM, Autenticación)',
       ],
-      safeStepsBefore: ['npm run lint', 'npm run factory:test:all', 'npm run build'],
+      safeStepsBefore: [
+        'npm run lint',
+        'npm run factory:test:all',
+        'npm run build',
+        `npm run factory:package-client -- --slug ${this.projectName}`,
+      ],
       postManualSteps: [
         'Verificar health: curl https://<domain>/api/health',
-        'Comprobar adapter status desde panel de admin',
+        'Comprobar que index.html sirve el cliente correcto (no otro cliente/proyecto base)',
         'Verificar logs en Cloudflare Pages > Functions > Logs',
       ],
     };

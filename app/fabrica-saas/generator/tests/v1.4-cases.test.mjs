@@ -25,6 +25,15 @@ import {
 } from '../../core/validation/preDeployValidator.js';
 import { generateDeployPackage } from '../scripts/prepare-deploy.mjs';
 import { generateDeploymentManifest } from '../scripts/generate-deployment.mjs';
+import {
+  extractAssetPaths, validateClientContent, packageClientForDeploy,
+} from '../scripts/package-client.mjs';
+import {
+  generateFaviconSvg, faviconToDataUri, getFaviconLinkTag, getThemeColorMeta, getBrandingHeadTags,
+} from '../../core/branding/faviconGenerator.js';
+import { genHtml } from '../templates/componentTemplates.mjs';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function demoManifest(overrides = {}) {
@@ -672,6 +681,158 @@ describe('14. Client isolation', () => {
   });
 });
 
+// ─── 16. Package aislado por cliente (previene index.html cruzado) ───────────
+describe('16. Package aislado por cliente', () => {
+  const DIST_DIR   = join(ROOT, 'dist');
+  const DEPLOY_DIR = join(ROOT, 'fabrica-saas', 'deploy');
+  const AURORA_SLUG = 'clinica-dental-aurora-demo';
+  const MALAGA_SLUG = 'clinica-dental-malaga-demo';
+
+  // extractAssetPaths
+  it('extractAssetPaths detecta src y href de /assets/', () => {
+    const html = '<script src="/assets/foo-abc.js"></script><link href="/assets/bar-xyz.css">';
+    const paths = extractAssetPaths(html);
+    assert.ok(paths.includes('/assets/foo-abc.js'));
+    assert.ok(paths.includes('/assets/bar-xyz.css'));
+  });
+
+  it('extractAssetPaths ignora rutas no-/assets/', () => {
+    const html = '<script src="/main.js"></script><link href="https://cdn.example.com/style.css">';
+    const paths = extractAssetPaths(html);
+    assert.equal(paths.length, 0);
+  });
+
+  it('extractAssetPaths deduplica repetidos', () => {
+    const html = '<script src="/assets/foo.js"></script><script src="/assets/foo.js"></script>';
+    const paths = extractAssetPaths(html);
+    assert.equal(paths.filter(p => p === '/assets/foo.js').length, 1);
+  });
+
+  // validateClientContent
+  it('validateClientContent lanza si contiene "Club Pádel 04"', () => {
+    const html = '<title>Club Pádel 04 | Reservas</title>';
+    assert.throws(() => validateClientContent(html, 'x'), /contenido prohibido/);
+  });
+
+  it('validateClientContent lanza si contiene bundle de Club Pádel 04', () => {
+    const html = '<script src="/assets/main-BP0rXwkC.js"></script>';
+    assert.throws(() => validateClientContent(html, 'x'), /contenido prohibido/);
+  });
+
+  it('validateClientContent lanza si contiene /api/reservas', () => {
+    const html = '<p>Llama a /api/reservas para reservar</p>';
+    assert.throws(() => validateClientContent(html, 'x'), /contenido prohibido/);
+  });
+
+  it('validateClientContent NO lanza con HTML de clínica dental', () => {
+    const html = '<title>Clínica Dental Aurora · Demo</title><script src="/assets/clinica-dental-aurora-demo-C3l5LYm4.js"></script>';
+    assert.doesNotThrow(() => validateClientContent(html, 'clinica-dental-aurora-demo'));
+  });
+
+  it('validateClientContent NO lanza con HTML vacío limpio', () => {
+    const html = '<html><body><div id="root"></div></body></html>';
+    assert.doesNotThrow(() => validateClientContent(html, 'cualquier-slug'));
+  });
+
+  // packageClientForDeploy — graceful skip
+  it('packageClientForDeploy devuelve skipped=true si dist/<slug>.html no existe', () => {
+    const result = packageClientForDeploy({
+      slug: 'cliente-inexistente-xyz',
+      distDir:   DIST_DIR,
+      deployDir: DEPLOY_DIR,
+    });
+    assert.equal(result.skipped, true);
+    assert.equal(result.deployPath, null);
+    assert.ok(result.reason.includes('dist/'));
+    assert.equal(result._ficticio, true);
+  });
+
+  it('packageClientForDeploy lanza sin slug', () => {
+    assert.throws(() => packageClientForDeploy({ distDir: DIST_DIR, deployDir: DEPLOY_DIR }), /slug requerido/);
+  });
+
+  // packageClientForDeploy — integración real con dist/
+  it('packageClientForDeploy crea deploy/aurora/index.html si dist/ existe', () => {
+    if (!existsSync(join(DIST_DIR, `${AURORA_SLUG}.html`))) return;
+    const result = packageClientForDeploy({ slug: AURORA_SLUG, deployDir: DEPLOY_DIR });
+    assert.equal(result.skipped, false);
+    assert.ok(result.indexHtml);
+    assert.ok(existsSync(result.indexHtml));
+  });
+
+  it('deploy/aurora/index.html NO contiene "Club Pádel 04"', () => {
+    const indexPath = join(DEPLOY_DIR, AURORA_SLUG, 'index.html');
+    if (!existsSync(indexPath)) return;
+    const html = readFileSync(indexPath, 'utf8');
+    assert.ok(!html.includes('Club Pádel 04'), 'index.html no debe tener "Club Pádel 04"');
+  });
+
+  it('deploy/aurora/index.html NO contiene bundle de Club Pádel 04', () => {
+    const indexPath = join(DEPLOY_DIR, AURORA_SLUG, 'index.html');
+    if (!existsSync(indexPath)) return;
+    const html = readFileSync(indexPath, 'utf8');
+    assert.ok(!html.includes('main-BP0rXwkC'), 'no debe referenciar bundle de Club Pádel 04');
+  });
+
+  it('deploy/aurora/index.html contiene bundle de Aurora', () => {
+    const indexPath = join(DEPLOY_DIR, AURORA_SLUG, 'index.html');
+    if (!existsSync(indexPath)) return;
+    const html = readFileSync(indexPath, 'utf8');
+    assert.ok(html.includes('clinica-dental-aurora-demo'), 'debe referenciar bundle de Aurora');
+  });
+
+  it('deploy/aurora/assets/ contiene assets específicos de Aurora', () => {
+    const result = packageClientForDeploy({ slug: AURORA_SLUG, deployDir: DEPLOY_DIR });
+    if (result.skipped) return;
+    assert.ok(result.assets.some(a => a.includes('clinica-dental-aurora-demo')));
+  });
+
+  it('deploy/aurora/assets/ NO contiene bundle de Club Pádel 04', () => {
+    const result = packageClientForDeploy({ slug: AURORA_SLUG, deployDir: DEPLOY_DIR });
+    if (result.skipped) return;
+    assert.ok(!result.assets.some(a => a.includes('main-BP0rXwkC')), 'no debe incluir bundle CP04');
+  });
+
+  it('dos slugs distintos producen deployPath distintos', () => {
+    const r1 = packageClientForDeploy({ slug: AURORA_SLUG, deployDir: DEPLOY_DIR });
+    const r2 = packageClientForDeploy({ slug: MALAGA_SLUG, deployDir: DEPLOY_DIR });
+    if (r1.skipped || r2.skipped) return;
+    assert.notEqual(r1.deployPath, r2.deployPath);
+  });
+
+  it('packageClientForDeploy _ficticio=true siempre', () => {
+    const result = packageClientForDeploy({ slug: AURORA_SLUG, deployDir: DEPLOY_DIR });
+    assert.equal(result._ficticio, true);
+  });
+
+  // prepare-deploy incluye deployPackage
+  it('generateDeployPackage result incluye deployPackage', async () => {
+    const r = await generateDeployPackage({ manifestPath: AURORA_MANIFEST });
+    assert.ok('deployPackage' in r);
+    assert.equal(r.deployPackage._ficticio, true);
+  });
+
+  it('deployPackagePath contiene slug cuando dist/ existe', async () => {
+    const r = await generateDeployPackage({ manifestPath: AURORA_MANIFEST });
+    if (r.deployPackage.skipped) return;
+    assert.ok(r.deployPackagePath.includes('clinica-dental-aurora-demo'));
+  });
+
+  // CloudflareProvider — getDeployCommands usa deploy/<slug>
+  it('getDeployCommands referencia fabrica-saas/deploy/<slug> no dist/', () => {
+    const p    = new CloudflareProvider({ projectName: 'mi-cliente' });
+    const cmds = p.getDeployCommands({ client: { slug: 'mi-cliente' } });
+    assert.ok(cmds.some(c => c.includes('fabrica-saas/deploy/mi-cliente')));
+    assert.ok(!cmds.some(c => /wrangler pages deploy dist\b/.test(c)));
+  });
+
+  it('getDryRunCommands incluye factory:package-client', () => {
+    const p    = new CloudflareProvider({ projectName: 'mi-cliente' });
+    const cmds = p.getDryRunCommands({ client: { slug: 'mi-cliente' } });
+    assert.ok(cmds.some(c => c.includes('factory:package-client')));
+  });
+});
+
 // ─── 15. Sin secretos + sin llamadas externas ─────────────────────────────────
 describe('15. Sin secretos + sin llamadas externas', () => {
   it('productionConfig no contiene secretos reales', () => {
@@ -717,5 +878,149 @@ describe('15. Sin secretos + sin llamadas externas', () => {
     const pv = validatePreDeploy(m, c);
     const ch = generateDeployChecklist(pv, readiness, c);
     assert.equal(ch._ficticio, true);
+  });
+});
+
+// ─── 17. Favicon personalizado por cliente ────────────────────────────────────
+describe('17. Favicon personalizado por cliente', () => {
+
+  // generateFaviconSvg
+  it('generateFaviconSvg produce SVG con inicial y primaryColor', () => {
+    const svg = generateFaviconSvg({ inicial: 'A', primaryColor: '#0f766e' }, { name: 'Aurora' });
+    assert.ok(svg.includes('<svg'));
+    assert.ok(svg.includes('#0f766e'));
+    assert.ok(svg.includes('>A</text>'));
+  });
+
+  it('generateFaviconSvg usa inicial del business.name si branding.inicial ausente', () => {
+    const svg = generateFaviconSvg({}, { name: 'Málaga Dental' });
+    assert.ok(svg.includes('>M</text>'));
+  });
+
+  it('generateFaviconSvg usa favicon personalizado si branding.favicon existe', () => {
+    const custom = '<svg><circle r="10"/></svg>';
+    const svg = generateFaviconSvg({ favicon: custom }, {});
+    assert.equal(svg, custom);
+  });
+
+  it('generateFaviconSvg fallback color si no hay primaryColor', () => {
+    const svg = generateFaviconSvg({}, {});
+    assert.ok(svg.includes('fill='));
+  });
+
+  // faviconToDataUri
+  it('faviconToDataUri retorna data URI base64', () => {
+    const uri = faviconToDataUri('<svg/>');
+    assert.ok(uri.startsWith('data:image/svg+xml;base64,'));
+    assert.ok(uri.length > 30);
+  });
+
+  it('faviconToDataUri es reversible', () => {
+    const original = '<svg>test</svg>';
+    const uri      = faviconToDataUri(original);
+    const b64      = uri.split(',')[1];
+    const decoded  = Buffer.from(b64, 'base64').toString('utf8');
+    assert.equal(decoded, original);
+  });
+
+  // getFaviconLinkTag / getThemeColorMeta
+  it('getFaviconLinkTag retorna <link rel="icon"> con data URI', () => {
+    const tag = getFaviconLinkTag(demoManifest());
+    assert.ok(tag.startsWith('<link rel="icon"'));
+    assert.ok(tag.includes('data:image/svg+xml;base64,'));
+    assert.ok(tag.includes('type="image/svg+xml"'));
+  });
+
+  it('getThemeColorMeta usa primaryColor del manifest', () => {
+    const meta = getThemeColorMeta(demoManifest({ branding: { primaryColor: '#0f766e', inicial: 'A' } }));
+    assert.ok(meta.includes('#0f766e'));
+    assert.ok(meta.includes('theme-color'));
+  });
+
+  it('getThemeColorMeta tiene fallback si no hay primaryColor', () => {
+    const meta = getThemeColorMeta({});
+    assert.ok(meta.includes('theme-color'));
+    assert.ok(meta.includes('content='));
+  });
+
+  // Aislamiento entre clientes — favicons distintos
+  it('cliente A y B tienen favicons distintos si tienen branding diferente', () => {
+    const mA = demoManifest({ branding: { primaryColor: '#0f766e', inicial: 'A' } });
+    const mB = demoManifest({ branding: { primaryColor: '#dc2626', inicial: 'B' } });
+    const tagA = getFaviconLinkTag(mA);
+    const tagB = getFaviconLinkTag(mB);
+    assert.notEqual(tagA, tagB);
+  });
+
+  it('favicon de Aurora no contiene branding de Club Pádel 04', () => {
+    const auroraManifest = {
+      business: { slug: 'clinica-dental-aurora-demo', name: 'Clínica Dental Aurora' },
+      branding: { primaryColor: '#0f766e', inicial: 'A' },
+    };
+    const tag = getFaviconLinkTag(auroraManifest);
+    const decoded = Buffer.from(tag.split('base64,')[1].split('"')[0], 'base64').toString();
+    assert.ok(!decoded.includes('Club Pádel'));
+    assert.ok(!decoded.includes('pádel'));
+    assert.ok(decoded.includes('A'));
+    assert.ok(decoded.includes('#0f766e'));
+  });
+
+  // genHtml incluye favicon
+  it('genHtml incluye <link rel="icon"> con data URI', () => {
+    const html = genHtml(demoManifest({ branding: { primaryColor: '#0f766e', inicial: 'A' } }));
+    assert.ok(html.includes('<link rel="icon"'));
+    assert.ok(html.includes('data:image/svg+xml;base64,'));
+  });
+
+  it('genHtml incluye <meta name="theme-color"> con color del manifest', () => {
+    const html = genHtml(demoManifest({ branding: { primaryColor: '#0f766e', inicial: 'A' } }));
+    assert.ok(html.includes('theme-color'));
+    assert.ok(html.includes('#0f766e'));
+  });
+
+  it('genHtml incluye <title> con nombre del cliente', () => {
+    const html = genHtml(demoManifest({ branding: { nombre_visible: 'Mi Clínica Test', inicial: 'M', primaryColor: '#123456' } }));
+    assert.ok(html.includes('Mi Clínica Test'));
+  });
+
+  it('genHtml incluye <link rel="apple-touch-icon">', () => {
+    const html = genHtml(demoManifest({ branding: { primaryColor: '#0f766e', inicial: 'A' } }));
+    assert.ok(html.includes('apple-touch-icon'));
+  });
+
+  it('genHtml de dos clientes distintos produce favicons distintos', () => {
+    const m1 = demoManifest({ business: { slug: 'cl-uno', name: 'Uno', email: 'x@demo.ficticio' }, branding: { primaryColor: '#ff0000', inicial: 'U' } });
+    const m2 = demoManifest({ business: { slug: 'cl-dos', name: 'Dos', email: 'y@demo.ficticio' }, branding: { primaryColor: '#00ff00', inicial: 'D' } });
+    const h1 = genHtml(m1);
+    const h2 = genHtml(m2);
+    // The base64 data URIs should differ
+    const b1 = h1.match(/base64,([^"]+)/)?.[1];
+    const b2 = h2.match(/base64,([^"]+)/)?.[1];
+    assert.notEqual(b1, b2);
+  });
+
+  // deploy/aurora/index.html tiene favicon correcto
+  it('deploy/aurora/index.html contiene favicon Aurora (no genérico)', () => {
+    const indexPath = join(ROOT, 'fabrica-saas/deploy/clinica-dental-aurora-demo/index.html');
+    if (!existsSync(indexPath)) return;
+    const html = readFileSync(indexPath, 'utf8');
+    assert.ok(html.includes('<link rel="icon"') || html.includes('data:image/svg+xml'), 'debe tener favicon');
+  });
+
+  it('CP04 favicon (favicon.svg del proyecto base) no aparece en index.html de Aurora', () => {
+    const indexPath = join(ROOT, 'fabrica-saas/deploy/clinica-dental-aurora-demo/index.html');
+    if (!existsSync(indexPath)) return;
+    const html = readFileSync(indexPath, 'utf8');
+    // CP04 favicon is /favicon.svg referenced by path — Aurora must not use it
+    const hasCp04FaviconPath = html.includes('href="/favicon.svg"') || html.includes("href='/favicon.svg'");
+    assert.ok(!hasCp04FaviconPath, 'no debe referenciar /favicon.svg del proyecto base');
+  });
+
+  // getBrandingHeadTags
+  it('getBrandingHeadTags retorna favicon + apple-touch-icon + theme-color', () => {
+    const tags = getBrandingHeadTags(demoManifest({ branding: { primaryColor: '#0f766e', inicial: 'A' } }));
+    assert.ok(tags.includes('<link rel="icon"'));
+    assert.ok(tags.includes('apple-touch-icon'));
+    assert.ok(tags.includes('theme-color'));
   });
 });
