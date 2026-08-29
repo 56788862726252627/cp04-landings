@@ -1,0 +1,25 @@
+{
+  "output": {
+    "filePath": "fabrica-saas/.ai/context/generated/architecture.xml",
+    "style": "xml",
+    "compress": true,
+    "showLineNumbers": true,
+    "headerText": "FABRICA SAAS — Architecture Context — schemas, policies, documentation only"
+  },
+  "include": [
+    "fabrica-saas/**/*.md",
+    "fabrica-saas/generator/schema/**/*.js",
+    "fabrica-saas/.ai/**/*.json",
+    "fabrica-saas/.ai/**/*.md"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "node_modules/**",
+      "fabrica-saas/.ai/context/generated/**",
+      "**/.env*",
+      "**/*.secret"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "output": {
+    "filePath": "fabrica-saas/.ai/context/generated/design-system.xml",
+    "style": "xml",
+    "compress": true,
+    "showLineNumbers": true,
+    "headerText": "FABRICA SAAS — Design System Context — tokens, AppShell, vertical themes"
+  },
+  "include": [
+    "fabrica-saas/core/branding/**/*.js",
+    "fabrica-saas/core/AppShell.jsx",
+    "fabrica-saas/core/ChatComponents.jsx",
+    "fabrica-saas/FACTORY_DESIGN_SYSTEM_V1_6.md",
+    "fabrica-saas/FACTORY_V1_5_STANDARD.md"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "node_modules/**",
+      "**/.env*"
+    ]
+  }
+}
