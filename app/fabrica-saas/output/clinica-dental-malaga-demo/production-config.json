@@ -1,0 +1,70 @@
+{
+  "clientId": "clinica-dental-malaga-demo",
+  "vertical": "unknown",
+  "environment": "production",
+  "domain": "NOT_CONFIGURED",
+  "apiBaseUrl": "NOT_CONFIGURED",
+  "authMode": "real-placeholder",
+  "enabledModules": [
+    "chatbot_ia",
+    "crm",
+    "recuperacion_leads",
+    "dashboard"
+  ],
+  "requiredEnv": [
+    {
+      "name": "VITE_API_BASE_URL",
+      "scope": "vite_public",
+      "description": "URL del Worker CF o API backend"
+    },
+    {
+      "name": "AIRTABLE_API_KEY",
+      "scope": "worker_secret",
+      "description": "Clave API de Airtable (solo Worker)"
+    },
+    {
+      "name": "AIRTABLE_BASE_ID",
+      "scope": "worker_secret",
+      "description": "Base ID de Airtable (solo Worker)"
+    }
+  ],
+  "optionalEnv": [
+    {
+      "name": "VITE_CHATBOT_WIDGET_KEY",
+      "scope": "optional",
+      "description": "API key pública del widget chatbot"
+    },
+    {
+      "name": "VITE_SENTRY_DSN",
+      "scope": "optional",
+      "description": "DSN de Sentry para error tracking"
+    }
+  ],
+  "featureFlags": {},
+  "healthPath": "/api/health",
+  "buildMetadata": {
+    "generatedAt": "2026-08-29T04:37:35.520Z",
+    "version": "v1.4",
+    "factory": "fabrica-saas-v1.4",
+    "_ficticio": true
+  },
+  "adapterModes": {
+    "auth": "mock",
+    "crm": "mock",
+    "booking": "mock",
+    "notification": "mock",
+    "analytics": "mock",
+    "storage": "mock",
+    "integration": "mock"
+  },
+  "loggingMode": "structured",
+  "productionReady": false,
+  "productionBlockers": [
+    "modo_demo debe ser false",
+    "integraciones.reales debe ser true",
+    "domain no configurado",
+    "apiBaseUrl no configurada"
+  ],
+  "_generatedBy": "fabrica-saas-v1.4",
+  "_ficticio": true
+}

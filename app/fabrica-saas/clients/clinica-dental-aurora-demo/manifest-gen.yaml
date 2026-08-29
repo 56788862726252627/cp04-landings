@@ -1,4 +1,4 @@
-# Fábrica SaaS · Aurora DEMO · manifest para generador V1.2
+# Fábrica SaaS · Aurora DEMO · manifest para generador V1.5
 # Datos 100% ficticios. Sin credenciales. Sin datos reales.
 # Uso: node create-client.mjs --manifest .../manifest-gen.yaml
 # El manifest V1.4 (manifest.yaml) sigue siendo el canonical para deploy pipeline.
@@ -13,17 +13,30 @@ modo_demo: true
 
 branding:
   nombre_visible: "Clínica Dental Aurora"
+  tagline: "Salud dental de excelencia para toda la familia"
   inicial: "A"
-  primaryColor: "#0f766e"
+  primaryColor: "#0c7873"
+  secondaryColor: "#0284c7"
+  accentColor: "#06b6d4"
   estilo: "sanitario premium, limpio, moderno"
+  tono: "profesional, cercano y confiable"
   copiar_marca_real: false
 
 modules:
+  - landing
   - chatbot_ia
-  - crm
-  - reservas
+  - agenda
+  - tratamientos
+  - pacientes_crm
+  - profesionales
   - recuperacion_leads
+  - presupuestos
   - dashboard
+
+experiencia:
+  publica: true
+  interna: true
+  booking_cta: "Reservar cita gratis"
 
 sedes:
   - id: aurora-centro
@@ -59,11 +72,22 @@ demoData:
       fecha: "2026-09-15 (ficticio)"
       hora: "09:00"
       profesionalId: prof-001
+      profesional: "Dra. Martínez Ruiz (ficticio)"
+      sede: "Aurora Centro (ficticio)"
       disponible: true
     - id: slot-002
       fecha: "2026-09-15 (ficticio)"
       hora: "10:30"
       profesionalId: prof-002
+      profesional: "Dr. García Sánchez (ficticio)"
+      sede: "Aurora Norte (ficticio)"
+      disponible: true
+    - id: slot-003
+      fecha: "2026-09-16 (ficticio)"
+      hora: "11:00"
+      profesionalId: prof-003
+      profesional: "Dra. López Torres (ficticio)"
+      sede: "Aurora Centro (ficticio)"
       disponible: true
 
   clients:
@@ -71,17 +95,46 @@ demoData:
       nombre: "Paciente Ejemplo Uno (ficticio)"
       email: paciente1@demo.ficticio
       telefono: "+34 600 000 001 (ficticio)"
+      tratamiento_interes: "Ortodoncia"
+      estado: activo
+      origen: web
     - id: pac-002
       nombre: "Paciente Ejemplo Dos (ficticio)"
       email: paciente2@demo.ficticio
       telefono: "+34 600 000 002 (ficticio)"
+      tratamiento_interes: "Implantes"
+      estado: en_tratamiento
+      origen: referido
+    - id: pac-003
+      nombre: "Paciente Ejemplo Tres (ficticio)"
+      email: paciente3@demo.ficticio
+      telefono: "+34 600 000 003 (ficticio)"
+      tratamiento_interes: "Blanqueamiento"
+      estado: nuevo
+      origen: google
 
   leads_abandono:
     - id: lead-001
       nombre: "Lead Ejemplo Uno (ficticio)"
       email: lead1@demo.ficticio
+      tratamiento: "Ortodoncia invisible"
+      dias_inactivo: 12
+      estado: en_proceso
+      accion_sugerida: "Enviar recordatorio con oferta de primera cita gratuita"
       fuente: web
     - id: lead-002
       nombre: "Lead Ejemplo Dos (ficticio)"
       email: lead2@demo.ficticio
+      tratamiento: "Implante dental"
+      dias_inactivo: 21
+      estado: en_proceso
+      accion_sugerida: "Llamada de seguimiento personalizado con Dr. García"
       fuente: referido
+    - id: lead-003
+      nombre: "Lead Ejemplo Tres (ficticio)"
+      email: lead3@demo.ficticio
+      tratamiento: "Blanqueamiento"
+      dias_inactivo: 5
+      estado: en_proceso
+      accion_sugerida: "Envío de información de precios y financiación"
+      fuente: instagram

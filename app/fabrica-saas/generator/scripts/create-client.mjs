@@ -35,6 +35,11 @@ import {
   genRecovery,
   genMain,
   genHtml,
+  genLanding,
+  genAgenda,
+  genTratamientos,
+  genProfesionales,
+  genPresupuestos,
 } from '../templates/componentTemplates.mjs';
 
 // ── Paths base ────────────────────────────────────────────────────────────────
@@ -170,6 +175,7 @@ export async function createClient({ manifestPath, verbose = false }) {
   mkdirSync(outDir, { recursive: true });
 
   // 4. Generar archivos
+  const mods = manifest.modules ?? [];
   const files = [
     { name: `${pascal}MockData.js`,    content: genMockData(manifest) },
     { name: `${pascal}App.jsx`,        content: genApp(manifest) },
@@ -179,6 +185,12 @@ export async function createClient({ manifestPath, verbose = false }) {
     { name: `${pascal}Recovery.jsx`,   content: genRecovery(manifest) },
     { name: 'main.jsx',                content: genMain(manifest) },
     { name: 'runtime-config.js',       content: generateRuntimeConfig(manifest) },
+    // V1.5 modules (conditional)
+    ...(mods.includes('landing')       ? [{ name: `${pascal}Landing.jsx`,       content: genLanding(manifest) }]       : []),
+    ...(mods.includes('agenda')        ? [{ name: `${pascal}Agenda.jsx`,        content: genAgenda(manifest) }]        : []),
+    ...(mods.includes('tratamientos')  ? [{ name: `${pascal}Tratamientos.jsx`,  content: genTratamientos(manifest) }]  : []),
+    ...(mods.includes('profesionales') ? [{ name: `${pascal}Profesionales.jsx`, content: genProfesionales(manifest) }] : []),
+    ...(mods.includes('presupuestos')  ? [{ name: `${pascal}Presupuestos.jsx`,  content: genPresupuestos(manifest) }]  : []),
   ];
 
   const results = [];

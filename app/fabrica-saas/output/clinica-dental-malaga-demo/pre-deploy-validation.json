@@ -1,0 +1,12 @@
+{
+  "ready": false,
+  "blockers": [
+    "vertical faltante en manifest",
+    "production guard: modo_demo debe ser false",
+    "production guard: integraciones.reales debe ser true",
+    "production guard: domain no configurado",
+    "production guard: apiBaseUrl no configurada"
+  ],
+  "warnings": [],
+  "checkedAt": "2026-08-29T04:37:35.521Z"
+}

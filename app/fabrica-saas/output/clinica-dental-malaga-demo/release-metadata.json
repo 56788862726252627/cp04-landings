@@ -1,0 +1,16 @@
+{
+  "version": "v1.4",
+  "generatedAt": "2026-08-29T04:37:35.520Z",
+  "clientId": "clinica-dental-malaga-demo",
+  "environment": "production",
+  "factory": "fabrica-saas-v1.4",
+  "modules": [
+    "chatbot_ia",
+    "crm",
+    "recuperacion_leads",
+    "dashboard"
+  ],
+  "domain": "NOT_CONFIGURED",
+  "productionReady": false,
+  "_ficticio": true
+}

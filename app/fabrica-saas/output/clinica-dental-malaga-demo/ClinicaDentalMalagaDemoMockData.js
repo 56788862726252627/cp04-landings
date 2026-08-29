@@ -1,6 +1,6 @@
 /**
  * OUTPUT GENERADO · Clínica Dental Málaga Demo · Datos demo
- * Generado por Fábrica SaaS V1.2 · create-client.mjs
+ * Generado por Fábrica SaaS V1.5 · create-client.mjs
  * Datos 100% ficticios. No representan personas ni casos reales.
  * No usar en producción. No incluir datos personales reales.
  */
@@ -161,6 +161,8 @@ export const MOCK_METRICAS = {
   "tasa_conversion": 61,
   "valor_pipeline": "21.400 € (ficticio)",
   "ingresos_mes": "11.200 € (ficticio)",
+  "citas_hoy": 12,
+  "nuevos_pacientes": 8,
   "por_sede": [
     {
       "sede": "(ficticio)",

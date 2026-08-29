@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-08-29T06:23:52.520Z",
+  "clientId": "clinica-dental-aurora-demo",
+  "schema_valid": true,
+  "pre_deploy_ready": false,
+  "staging_ready": true,
+  "production_ready": false,
+  "blockers": [
+    "production guard: modo_demo debe ser false",
+    "production guard: integraciones.reales debe ser true",
+    "production guard: domain no configurado",
+    "production guard: apiBaseUrl no configurada",
+    "email @demo.ficticio no permitido en producción"
+  ],
+  "warnings": [],
+  "items": [
+    {
+      "step": "lint",
+      "command": "npm run lint",
+      "auto": true,
+      "done": false
+    },
+    {
+      "step": "test",
+      "command": "npm run factory:test:all",
+      "auto": true,
+      "done": false
+    },
+    {
+      "step": "build",
+      "command": "npm run build",
+      "auto": true,
+      "done": false
+    },
+    {
+      "step": "env_vars",
+      "command": "wrangler secret put <VAR>",
+      "auto": false,
+      "manual": true,
+      "note": "MANUAL_BOUNDARY"
+    },
+    {
+      "step": "deploy",
+      "command": "wrangler pages deploy dist",
+      "auto": false,
+      "manual": true,
+      "note": "MANUAL_BOUNDARY"
+    },
+    {
+      "step": "verify",
+      "command": "curl https://<domain>/api/health",
+      "auto": false,
+      "manual": true
+    },
+    {
+      "step": "rollback",
+      "command": "See rollback-instructions.txt",
+      "auto": false,
+      "manual": true
+    }
+  ],
+  "_ficticio": true
+}

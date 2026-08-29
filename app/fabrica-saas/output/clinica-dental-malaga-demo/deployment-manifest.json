@@ -1,0 +1,41 @@
+{
+  "_version": "v1.3",
+  "_generatedAt": "2026-08-29T04:37:35.522Z",
+  "_generator": "Fábrica SaaS V1.3 · generate-deployment.mjs",
+  "_ficticio": true,
+  "client": {
+    "slug": "clinica-dental-malaga-demo",
+    "name": "Clínica Dental Málaga Demo",
+    "vertical": "dental",
+    "email": "NOT_CONFIGURED"
+  },
+  "deployment": {
+    "mode": "demo",
+    "entryHtml": "clinica-dental-malaga-demo.html",
+    "outputDir": "fabrica-saas/output/clinica-dental-malaga-demo/",
+    "buildCmd": "npm run build",
+    "previewCmd": "npm run dev -- --port 5175"
+  },
+  "runtime": {
+    "authMode": "mock",
+    "apiBaseUrl": "NOT_CONFIGURED",
+    "domain": "NOT_CONFIGURED",
+    "reales": false
+  },
+  "modules": [
+    "chatbot_ia",
+    "crm",
+    "recuperacion_leads",
+    "dashboard"
+  ],
+  "checklist": {
+    "schema_valid": true,
+    "files_generated": true,
+    "vite_registered": true,
+    "no_real_credentials": true,
+    "no_personal_data": true,
+    "staging_ready": false,
+    "production_ready": false
+  },
+  "required_env_vars": []
+}
