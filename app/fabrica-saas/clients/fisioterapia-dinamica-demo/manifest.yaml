@@ -1,0 +1,121 @@
+# Manifest V1.7 — Demo Cliente: Clínica Fisioterapia Dinámica
+# Propósito: cliente de prueba interno para validar motion e interacciones V1.7
+# NO es el ejemplo comercial completo; NO hay datos reales ni producción
+
+version: "1.7"
+vertical: physio
+
+branding:
+  nombre: "FisioMovimiento"
+  tagline: "Recupera tu movimiento, recupera tu vida"
+  primaryColor: "#0d9488"
+  secondaryColor: "#0891b2"
+  accentColor:   "#5eead4"
+
+# ── V1.7: Experience config ───────────────────────────────────────────────────
+
+experience:
+  preset:       calm
+  motion:       low
+  transitions:  true
+  scrollEffects:
+    - fade-in
+    - slide-up
+    - stagger-reveal
+    - counter-on-visible
+  interactions:
+    - animated-metrics
+    - expandable-cards
+    - before-after-slider
+    - interactive-timeline
+    - animated-progress
+    - interactive-calendar
+    - cta-feedback
+  animatedMetrics: true
+  reducedMotion: auto
+
+# ── V1.7: Video config ────────────────────────────────────────────────────────
+
+video:
+  autoplay:      false
+  muted:         true
+  mobileEnabled: false
+  lazyLoad:      true
+  hero:
+    autoplay:   false
+    controls:   true
+    preload:    metadata
+    poster:     null          # usa placeholder automático
+  services:
+    autoplay:   false
+    controls:   true
+
+# ── V1.7: Dynamic sections ───────────────────────────────────────────────────
+
+dynamicSections:
+  - type:     metric-row
+    trigger:  on-view
+    behavior: animate-count
+  - type:     before-after
+    trigger:  on-view
+    behavior: drag-to-reveal
+  - type:     timeline
+    trigger:  on-scroll
+    behavior: stagger-reveal
+  - type:     faq-accordion
+    trigger:  immediate
+    behavior: expand-on-click
+
+# ── V1.6 fields (backward compat) ─────────────────────────────────────────────
+
+ai:
+  routing:        TIER2_CONTEXT
+  localModel:     "qwen2.5-coder:1.5b"
+  contextProfile: client
+
+design:
+  vertical:   physio
+  density:    comfortable
+  radius:     md
+  typography: sans
+
+media:
+  hero: null           # placeholder
+  gallery: []
+  team: []
+
+components:
+  variantSet: default
+
+# ── Negocio ───────────────────────────────────────────────────────────────────
+
+negocio:
+  tipo:          clinica-fisioterapia
+  descripcion:   >
+    Clínica de fisioterapia con enfoque en recuperación funcional,
+    deporte y bienestar. Demo interno para validar V1.7 motion.
+  servicios:
+    - nombre: Fisioterapia Deportiva
+      descripcion: Recuperación para deportistas
+      duracion: "45 min"
+    - nombre: Rehabilitación Postoperatoria
+      descripcion: Recuperación tras cirugía
+      duracion: "60 min"
+    - nombre: Tratamiento de Columna
+      descripcion: Dolor de espalda y cervical
+      duracion: "45 min"
+  metricas:
+    - valor: 95
+      unidad: "%"
+      etiqueta: "Pacientes recuperados"
+    - valor: 2500
+      unidad: "+"
+      etiqueta: "Tratamientos realizados"
+    - valor: 8
+      unidad: " años"
+      etiqueta: "Experiencia clínica"
+  horario: "Lunes–Viernes 8:00–20:00 · Sábados 9:00–14:00"
+  ubicacion: "Demo City, España (datos ficticios)"
+  contacto:
+    telefono: "+34 900 000 000 (demo)"
+    email:    "demo@fisiomovimiento-demo.local"
