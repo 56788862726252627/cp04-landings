@@ -13,8 +13,22 @@ export const AI_TIERS = Object.freeze({
   TIER4_REVIEW:  'TIER4_REVIEW',
 });
 
+/**
+ * Normalize text for classification: strip accents and lowercase.
+ * Allows Spanish keywords ("producción", "autenticación") to match
+ * normalized pattern list entries ("produccion", "autenticacion").
+ */
+export function normalizeForClassification(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
+
 // Task type keywords → tier mapping
+// All patterns are pre-normalized (no accents, lowercase).
 const TIER1_PATTERNS = [
+  // English
   'search', 'find', 'grep', 'lookup',
   'document', 'docstring', 'jsdoc',
   'test-unit', 'test-simple',
@@ -23,26 +37,37 @@ const TIER1_PATTERNS = [
   'rename', 'reformat',
   'list', 'inspect',
   'repetitive', 'generate-repeated',
+  // Spanish (imperative + infinitive forms)
+  'buscar', 'busca', 'listar', 'lista ', 'inspeccionar', 'documentar',
 ];
 
 const TIER2_PATTERNS = [
+  // English
   'refactor-medium', 'refactor',
   'module-new', 'feature-small',
   'multi-file', 'cross-file',
   'manifest-edit', 'client-new',
   'analyze-several',
+  // Spanish
+  'refactorizar', 'modulo nuevo', 'cliente nuevo', 'caracteristica',
 ];
 
 const TIER3_PATTERNS = [
+  // English
   'architecture', 'design-system',
   'security', 'auth',
   'migration', 'schema-change',
   'debug-complex', 'performance',
   'integration', 'api-design',
   'critical-decision', 'breaking-change',
+  // Spanish (normalized — no accents)
+  'arquitectura', 'esquema', 'rendimiento',
+  'seguridad', 'sistema de diseno', 'diseno del sistema',
+  'depuracion', 'integracion', 'migracion',
 ];
 
 const TIER4_PATTERNS = [
+  // English
   'production', 'deploy',
   'payment', 'stripe',
   'credentials', 'secrets',
@@ -50,6 +75,11 @@ const TIER4_PATTERNS = [
   'infrastructure',
   'data-loss-risk',
   'auth-critical',
+  // Spanish (normalized — no accents)
+  'produccion', 'despliegue', 'desplegar', 'despliega',
+  'autenticacion', 'secretos', 'credenciales',
+  'facturacion', 'pagos',
+  'infraestructura', 'seguridad critica', 'infraestructura critica',
 ];
 
 /**
@@ -60,7 +90,7 @@ const TIER4_PATTERNS = [
  */
 export function classifyTask(taskDescription, opts = {}) {
   const { localModelAvailable = false } = opts;
-  const desc = taskDescription.toLowerCase();
+  const desc = normalizeForClassification(taskDescription);
 
   // TIER 4 — highest priority check
   if (TIER4_PATTERNS.some(p => desc.includes(p))) {
