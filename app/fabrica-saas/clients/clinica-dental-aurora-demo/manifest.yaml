@@ -1,0 +1,117 @@
+## Fábrica SaaS V1.4 · Cliente controlado de validación
+## Todos los datos son 100% ficticios. NO contiene credenciales reales.
+## Vertical: dental (sin crear nueva vertical)
+
+business:
+  slug: clinica-dental-aurora-demo
+  name: Clínica Dental Aurora (Demo)
+  email: contacto@demo.ficticio
+  telefono: "+34 900 000 001 (ficticio)"
+
+vertical: dental
+modo_demo: true
+
+branding:
+  nombre_visible: Clínica Dental Aurora
+  inicial: A
+  primaryColor: "#0f766e"
+  emoji_sector: "🦷"
+
+locale: es-ES
+timezone: Europe/Madrid
+
+modules:
+  - chatbot_ia
+  - crm
+  - reservas
+  - recuperacion_leads
+  - dashboard
+  - auth
+  - rbac
+  - logs
+  - analytics
+
+integraciones:
+  reales: false
+  apiBaseUrl: NOT_CONFIGURED
+  domain: NOT_CONFIGURED
+  authMode: mock
+
+featureFlags:
+  multiSede: true
+  videoConsulta: false
+  pagosOnline: false
+
+demoData:
+  sedes:
+    - id: sede-aurora-001
+      nombre: Aurora Centro (ficticio)
+      direccion: Calle Ficticia 1, 28001 Madrid
+    - id: sede-aurora-002
+      nombre: Aurora Norte (ficticio)
+      direccion: Calle Inventada 45, 28050 Madrid
+
+  profesionales:
+    - id: prof-001
+      nombre: Dra. Martínez Ruiz (ficticio)
+      especialidad: Ortodoncia
+      email: dra.martinez@demo.ficticio
+    - id: prof-002
+      nombre: Dr. García Sánchez (ficticio)
+      especialidad: Implantes
+      email: dr.garcia@demo.ficticio
+    - id: prof-003
+      nombre: Dra. López Torres (ficticio)
+      especialidad: Endodoncia
+      email: dra.lopez@demo.ficticio
+
+  slots:
+    - id: slot-001
+      fecha: "2026-09-15 (ficticio)"
+      hora: "09:00"
+      profesionalId: prof-001
+      disponible: true
+    - id: slot-002
+      fecha: "2026-09-15 (ficticio)"
+      hora: "10:30"
+      profesionalId: prof-002
+      disponible: true
+    - id: slot-003
+      fecha: "2026-09-16 (ficticio)"
+      hora: "12:00"
+      profesionalId: prof-003
+      disponible: false
+
+  clientes:
+    - id: pac-001
+      nombre: Paciente Ejemplo Uno (ficticio)
+      email: paciente1@demo.ficticio
+      telefono: "+34 600 000 001 (ficticio)"
+    - id: pac-002
+      nombre: Paciente Ejemplo Dos (ficticio)
+      email: paciente2@demo.ficticio
+      telefono: "+34 600 000 002 (ficticio)"
+
+  leads:
+    - id: lead-001
+      nombre: Lead Ejemplo Uno (ficticio)
+      email: lead1@demo.ficticio
+      fuente: web
+    - id: lead-002
+      nombre: Lead Ejemplo Dos (ficticio)
+      email: lead2@demo.ficticio
+      fuente: referido
+
+  metricas:
+    consultas_mes: 47
+    tasa_conversion: 68
+    nps: 82
+    ingresos_demo: 0
+
+  pricing_demo:
+    - servicio: "Revisión general (ficticio)"
+      precio_demo: 0
+      nota: "Precio ficticio, no representa precio real"
+    - servicio: "Ortodoncia (ficticio)"
+      precio_demo: 0
+      nota: "Precio ficticio, no representa precio real"

@@ -14,7 +14,7 @@ const ROOT  = resolve(__dir, '../../..');
 
 export function generateDeploymentManifest(manifest) {
   const slug      = manifest?.business?.slug;
-  const vertical  = manifest?.vertical;
+  const vertical  = manifest?.vertical ?? manifest?.business?.vertical;
   const modoDemo  = manifest?.modo_demo ?? true;
 
   if (!slug || !vertical) {
