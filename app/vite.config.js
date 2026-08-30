@@ -14,6 +14,7 @@ export default defineConfig({
         'clinica-dental-malaga-demo': 'clinica-dental-malaga-demo.html',
         'clinica-dental-aurora-demo': 'clinica-dental-aurora-demo.html',
         'fisionova-demo': 'fisionova-demo.html',
+        'educa-archidona-demo': 'educa-archidona-demo.html',
       },
     },
   },
