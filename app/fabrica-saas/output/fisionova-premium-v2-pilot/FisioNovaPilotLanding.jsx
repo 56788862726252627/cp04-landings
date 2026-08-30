@@ -16,16 +16,17 @@ const S = BRANDING_V2.surfaceColor;   // #f0f9ff
 
 /* ── Motion tokens (reduced-motion safe) ────────────────────────────── */
 function useReducedMotion() {
-  const mq = typeof window !== 'undefined'
-    ? window.matchMedia('(prefers-reduced-motion: reduce)')
-    : null;
-  const [reduced, setReduced] = useState(mq?.matches ?? false);
+  const [reduced, setReduced] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false
+  );
   useEffect(() => {
-    if (!mq) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const handler = (e) => setReduced(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
-  }, [mq]);
+  }, []);
   return reduced;
 }
 
@@ -144,7 +145,7 @@ function Nav({ onCita }) {
 }
 
 /* ── Hero (split-content recipe) ─────────────────────────────────────── */
-function HeroSplit({ onCita }) {
+function HeroSplit({ onCita, onVerServicios }) {
   const reduced = useReducedMotion();
   return (
     <section style={{
@@ -210,12 +211,14 @@ function HeroSplit({ onCita }) {
               >
                 Solicitar primera cita
               </button>
-              <button style={{
-                background: 'rgba(255,255,255,.12)', color: '#fff',
-                border: '1.5px solid rgba(255,255,255,.35)',
-                borderRadius: 10, padding: '14px 28px', fontSize: 16, fontWeight: 600,
-                cursor: 'pointer', transition: 'background .2s',
-              }}
+              <button
+                onClick={onVerServicios}
+                style={{
+                  background: 'rgba(255,255,255,.12)', color: '#fff',
+                  border: '1.5px solid rgba(255,255,255,.35)',
+                  borderRadius: 10, padding: '14px 28px', fontSize: 16, fontWeight: 600,
+                  cursor: 'pointer', transition: 'background .2s',
+                }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.2)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.12)'; }}
               >
@@ -298,7 +301,7 @@ function TrustStrip() {
 function ServiciosSection() {
   const [hoveredId, setHoveredId] = useState(null);
   return (
-    <section style={{ padding: '80px 48px', background: S }}>
+    <section id="servicios" style={{ padding: '80px 48px', background: S }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <FadeSlide>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
@@ -759,19 +762,29 @@ function BookingModal({ onClose }) {
 }
 
 /* ── Root ─────────────────────────────────────────────────────────────── */
-export function FisioNovaPilotLanding() {
+export function FisioNovaPilotLanding({ onOpenBooking, onNavigate }) {
   const [showModal, setShowModal] = useState(false);
+
+  const handleCita = () => {
+    if (onOpenBooking) onOpenBooking();
+    else setShowModal(true);
+  };
+
+  const handleScrollServicios = () => {
+    document.getElementById('servicios')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div style={{ fontFamily: "'Inter', 'DM Sans', system-ui, sans-serif", background: BRANDING_V2.bgColor }}>
-      <Nav onCita={() => setShowModal(true)} />
-      <HeroSplit onCita={() => setShowModal(true)} />
+      <Nav onCita={handleCita} />
+      <HeroSplit onCita={handleCita} onVerServicios={handleScrollServicios} />
       <TrustStrip />
       <ServiciosSection />
       <ProcesoSection />
       <TestimoniosSection />
       <EquipoSection />
       <FaqSection />
-      <CtaFinal onCita={() => setShowModal(true)} />
+      <CtaFinal onCita={handleCita} />
       <Footer />
       {showModal && <BookingModal onClose={() => setShowModal(false)} />}
     </div>

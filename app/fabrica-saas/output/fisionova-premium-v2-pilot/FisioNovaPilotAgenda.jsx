@@ -86,8 +86,14 @@ function CitaCard({ cita, onClick, index }) {
 
 /* ── Drawer detalle cita ──────────────────────────────────────────────── */
 function CitaDrawer({ cita, onClose }) {
+  const [drawerAction, setDrawerAction] = useState(null); // 'confirmada' | 'cancelada'
   if (!cita) return null;
   const col = ESTADO_COLORS[cita.estado] || ESTADO_COLORS.pendiente;
+
+  const handleAction = (action) => {
+    setDrawerAction(action);
+    setTimeout(onClose, 1400);
+  };
   return (
     <>
       <div
@@ -152,30 +158,52 @@ function CitaDrawer({ cita, onClose }) {
             </div>
           ))}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
-            <button style={{
-              background: `${A}15`, color: '#059669', border: `1.5px solid ${A}44`,
-              borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              transition: 'background .15s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = `${A}25`; }}
-              onMouseLeave={e => { e.currentTarget.style.background = `${A}15`; }}
-            >✓ Confirmar</button>
-            <button style={{
-              background: '#fee2e210', color: '#dc2626', border: '1.5px solid #fca5a5',
-              borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              transition: 'background .15s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#fee2e230'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#fee2e210'; }}
-            >✕ Cancelar</button>
-          </div>
+          {drawerAction ? (
+            <div style={{
+              background: drawerAction === 'confirmada' ? `${A}12` : '#fee2e2',
+              border: `1.5px solid ${drawerAction === 'confirmada' ? A : '#fca5a5'}`,
+              borderRadius: 12, padding: '14px', textAlign: 'center',
+              animation: 'fadeIn .3s ease',
+            }}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>
+                {drawerAction === 'confirmada' ? '✅' : '❌'}
+              </div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: drawerAction === 'confirmada' ? '#059669' : '#dc2626' }}>
+                Cita {drawerAction === 'confirmada' ? 'confirmada' : 'cancelada'}
+              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Demo · Cerrando...</div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
+              <button
+                onClick={() => handleAction('confirmada')}
+                style={{
+                  background: `${A}15`, color: '#059669', border: `1.5px solid ${A}44`,
+                  borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  transition: 'background .15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${A}25`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = `${A}15`; }}
+              >✓ Confirmar</button>
+              <button
+                onClick={() => handleAction('cancelada')}
+                style={{
+                  background: '#fee2e210', color: '#dc2626', border: '1.5px solid #fca5a5',
+                  borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  transition: 'background .15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#fee2e230'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#fee2e210'; }}
+              >✕ Cancelar</button>
+            </div>
+          )}
           <div style={{ fontSize: 10, color: '#94a3b8', textAlign: 'center' }}>Demo: acciones simuladas · Sin datos reales</div>
         </div>
       </div>
       <style>{`
         @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes drawerIn { from { transform: translateX(100%); } to { transform: none; } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: none; } }
       `}</style>
     </>
   );
@@ -226,7 +254,7 @@ function WeekNav({ selectedDay, onSelect }) {
 }
 
 /* ── Root ─────────────────────────────────────────────────────────────── */
-export function FisioNovaPilotAgenda() {
+export function FisioNovaPilotAgenda({ onOpenBooking }) {
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(4); // Viernes
   const [selectedCita, setSelectedCita] = useState(null);
@@ -251,11 +279,14 @@ export function FisioNovaPilotAgenda() {
           <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0c1b33', marginBottom: 2 }}>Agenda</h1>
           <p style={{ fontSize: 12, color: '#94a3b8' }}>{citas.length} citas · Demo datos ficticios</p>
         </div>
-        <button style={{
-          background: `linear-gradient(135deg, ${P}, #0284c7)`, color: '#fff',
-          border: 'none', borderRadius: 10, padding: '9px 18px', fontSize: 13, fontWeight: 600,
-          cursor: 'pointer', boxShadow: `0 3px 12px ${P}44`,
-        }}>+ Cita</button>
+        <button
+          onClick={onOpenBooking}
+          style={{
+            background: `linear-gradient(135deg, ${P}, #0284c7)`, color: '#fff',
+            border: 'none', borderRadius: 10, padding: '9px 18px', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', boxShadow: `0 3px 12px ${P}44`,
+          }}
+        >+ Cita</button>
       </div>
 
       {/* Week nav */}

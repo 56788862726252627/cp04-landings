@@ -254,7 +254,7 @@ function EvolucionMini() {
 }
 
 /* ── Dashboard Root ───────────────────────────────────────────────────── */
-export function FisioNovaPilotDashboard() {
+export function FisioNovaPilotDashboard({ onOpenBooking, onNavigate }) {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 700); return () => clearTimeout(t); }, []);
 
@@ -273,11 +273,14 @@ export function FisioNovaPilotDashboard() {
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0c1b33', marginBottom: 2 }}>Panel de control</h1>
           <p style={{ fontSize: 13, color: '#94a3b8' }}>Hoy, 30 agosto 2026 · Demo: datos ficticios</p>
         </div>
-        <button style={{
-          background: `linear-gradient(135deg, ${P}, #0284c7)`, color: '#fff',
-          border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 600,
-          cursor: 'pointer', boxShadow: `0 3px 12px ${P}44`,
-        }}>+ Nueva cita</button>
+        <button
+          onClick={onOpenBooking}
+          style={{
+            background: `linear-gradient(135deg, ${P}, #0284c7)`, color: '#fff',
+            border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 600,
+            cursor: 'pointer', boxShadow: `0 3px 12px ${P}44`,
+          }}
+        >+ Nueva cita</button>
       </div>
 
       {/* Stats row */}
@@ -355,17 +358,19 @@ export function FisioNovaPilotDashboard() {
           <div style={{ fontWeight: 700, fontSize: 14, color: '#0c1b33', marginBottom: 14 }}>Acciones rápidas</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {[
-              { label: 'Nueva cita', icon: '📅', color: P },
-              { label: 'Nuevo paciente', icon: '👤', color: A },
-              { label: 'Registrar pago', icon: '💳', color: '#7c3aed' },
-              { label: 'Ver informes', icon: '📊', color: '#f59e0b' },
+              { label: 'Nueva cita',     icon: '📅', color: P,        action: () => onOpenBooking?.() },
+              { label: 'Nuevo paciente', icon: '👤', color: A,        action: () => onNavigate?.('pacientes') },
+              { label: 'Ver agenda',     icon: '📋', color: '#7c3aed', action: () => onNavigate?.('agenda') },
+              { label: 'Ver informes',   icon: '📊', color: '#f59e0b', action: () => onNavigate?.('evolucion') },
             ].map((a, i) => (
-              <button key={i} style={{
-                background: `${a.color}12`, border: `1px solid ${a.color}22`,
-                borderRadius: 10, padding: '12px 8px', cursor: 'pointer',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                transition: 'background .15s, transform .15s',
-              }}
+              <button key={i}
+                onClick={a.action}
+                style={{
+                  background: `${a.color}12`, border: `1px solid ${a.color}22`,
+                  borderRadius: 10, padding: '12px 8px', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                  transition: 'background .15s, transform .15s',
+                }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${a.color}22`; e.currentTarget.style.transform = 'scale(1.03)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = `${a.color}12`; e.currentTarget.style.transform = ''; }}
               >
