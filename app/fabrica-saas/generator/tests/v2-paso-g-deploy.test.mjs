@@ -785,10 +785,11 @@ describe('postDeployHandoff', () => {
   });
 });
 
-// ─── 23. registry v2.7.0 ─────────────────────────────────────────────────────
+// ─── 23. registry v2.7.0+ ────────────────────────────────────────────────────
 describe('registry v2.7.0', () => {
-  it('REGISTRY_VERSION is 2.7.0', () => {
-    assert.equal(registry.REGISTRY_VERSION, '2.7.0');
+  it('REGISTRY_VERSION is 2.7.0 or higher (updated by Paso H)', () => {
+    const version = registry.REGISTRY_VERSION;
+    assert.ok(version >= '2.7.0', `Expected >= 2.7.0, got ${version}`);
   });
 
   it('PASO_G_STATUS_MAIN is 100_PERCENT', () => {
