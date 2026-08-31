@@ -21,9 +21,8 @@ export function recommendCommercialPackage(businessProfile = {}, brief = {}, mod
   const automationCount  = brief.automationNeeds?.length ?? 0;
   const aiAgentCount     = brief.aiNeeds?.length ?? 0;
   const roleCount        = brief.roles?.length ?? 0;
-  const sector           = brief.sector ?? businessProfile.sector ?? 'default';
-  const riskTier         = businessProfile.riskProfile?.tier ?? 'low';
-  const integrationCount = brief.requiredModules?.length ?? 0;
+  const sector   = brief.sector ?? businessProfile.sector ?? 'default';
+  const riskTier = businessProfile.riskProfile?.tier ?? 'low';
 
   const override = getVerticalOverride(sector);
   const reasoning = [];
