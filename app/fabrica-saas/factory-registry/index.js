@@ -49,13 +49,17 @@ export * from './maintenance.js';
 // Paso G — Deploy + QA + Security Reutilizable
 export * from './deploy.js';
 
-export const REGISTRY_VERSION = '2.7.0';
+// Paso H — Final Audit & Consolidation
+export * from './audit.js';
+
+export const REGISTRY_VERSION = '2.8.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-08-31';
-export const PASO_A_STATUS    = '100_PERCENT';
-export const PASO_B_STATUS    = '100_PERCENT';
-export const PASO_C_STATUS    = '100_PERCENT';
+export const PASO_A_STATUS      = '100_PERCENT';
+export const PASO_B_STATUS      = '100_PERCENT';
+export const PASO_C_STATUS      = '100_PERCENT';
 export const PASO_D_STATUS_MAIN = '100_PERCENT';
 export const PASO_E_STATUS_MAIN = '100_PERCENT';
 export const PASO_F_STATUS_MAIN = '100_PERCENT';
 export const PASO_G_STATUS_MAIN = '100_PERCENT';
+export const PASO_H_STATUS_MAIN = '100_PERCENT';
