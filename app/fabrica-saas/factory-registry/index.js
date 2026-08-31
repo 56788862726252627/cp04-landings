@@ -52,7 +52,10 @@ export * from './deploy.js';
 // Paso H — Final Audit & Consolidation
 export * from './audit.js';
 
-export const REGISTRY_VERSION = '2.8.0';
+// ADV-01 — Transversal Observability
+export * from './observability.js';
+
+export const REGISTRY_VERSION = '2.9.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-08-31';
 export const PASO_A_STATUS      = '100_PERCENT';
