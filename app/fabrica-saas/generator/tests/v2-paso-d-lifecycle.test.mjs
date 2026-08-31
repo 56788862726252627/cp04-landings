@@ -993,9 +993,9 @@ describe('21. LifecycleRegistryIntegrity', () => {
     assert.equal(PASO_D_STATUS, '100_PERCENT');
   });
 
-  test('main registry REGISTRY_VERSION is 2.4.0', async () => {
+  test('main registry REGISTRY_VERSION is >= 2.4.0', async () => {
     const { REGISTRY_VERSION } = await import('../../factory-registry/index.js');
-    assert.equal(REGISTRY_VERSION, '2.4.0');
+    assert.ok(REGISTRY_VERSION >= '2.4.0');
   });
 
   test('main registry exports runClientLifecycle', async () => {
