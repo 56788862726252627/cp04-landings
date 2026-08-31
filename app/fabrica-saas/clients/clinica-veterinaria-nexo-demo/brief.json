@@ -1,0 +1,60 @@
+{
+  "businessName": "Clínica Veterinaria Nexo",
+  "businessType": "veterinary clinic",
+  "sector": "veterinary",
+  "location": {
+    "city": "Málaga",
+    "region": "Andalucía",
+    "country": "España"
+  },
+  "targetAudience": "particular — propietarios de mascotas, familias",
+  "services": [
+    "Consulta general",
+    "Vacunación y desparasitación",
+    "Cirugía veterinaria",
+    "Nutrición y bienestar",
+    "Peluquería animal",
+    "Hospitalizacion"
+  ],
+  "brandTone": "friendly",
+  "conversionGoal": "booking",
+  "roles": ["admin", "reception", "veterinarian", "owner"],
+  "requiredModules": ["dashboard", "booking", "patients", "history", "vaccinations", "reminders", "chatbot", "calendar"],
+  "optionalModules": ["treatments", "loyalty", "reports"],
+  "automationNeeds": ["booking-confirmation", "appointment-reminder", "vaccination-reminder", "pet-new-owner"],
+  "aiNeeds": ["appointment-assistant", "pet-care-guide", "vaccination-reminder", "faq-responder"],
+  "dataNeeds": {
+    "demo": true,
+    "production": false,
+    "sensitive": false
+  },
+  "bookingNeeds": {
+    "enabled": true,
+    "realBookings": false
+  },
+  "paymentNeeds": {
+    "enabled": false,
+    "realPayments": false
+  },
+  "contentNeeds": {
+    "language": "es",
+    "multilingual": false
+  },
+  "devicePriority": "mobile",
+  "accessibilityNeeds": {
+    "wcagLevel": "AA"
+  },
+  "language": "es",
+  "legalConstraints": {
+    "minorsPolicy": false,
+    "gdpr": true,
+    "healthData": false
+  },
+  "specialRequirements": [
+    "mobile-first",
+    "warm-friendly-premium",
+    "no-real-data",
+    "no-real-payments",
+    "no-real-bookings"
+  ]
+}
