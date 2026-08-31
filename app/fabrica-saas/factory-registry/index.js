@@ -43,7 +43,10 @@ export * from './lifecycle.js';
 // Paso E — SOP + BPMN Operating System
 export * from './sop.js';
 
-export const REGISTRY_VERSION = '2.5.0';
+// Paso F — Maintenance, Support & Backup Operating System
+export * from './maintenance.js';
+
+export const REGISTRY_VERSION = '2.6.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-08-31';
 export const PASO_A_STATUS    = '100_PERCENT';
@@ -51,3 +54,4 @@ export const PASO_B_STATUS    = '100_PERCENT';
 export const PASO_C_STATUS    = '100_PERCENT';
 export const PASO_D_STATUS_MAIN = '100_PERCENT';
 export const PASO_E_STATUS_MAIN = '100_PERCENT';
+export const PASO_F_STATUS_MAIN = '100_PERCENT';
