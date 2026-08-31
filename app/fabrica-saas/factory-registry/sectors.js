@@ -19,6 +19,7 @@ export const SECTOR_REGISTRY = Object.freeze([
   { id: 'comercio',   label: 'Comercio Local',    preset: 'friendly-human',         icon: '🏪', color: '#15803d' },
   { id: 'portfolio',  label: 'Portfolio / Agencia',preset: 'immersive-showcase',    icon: '🎨', color: '#7c3aed' },
   { id: 'analytics',  label: 'Analítica / ERP',   preset: 'data-heavy-saas',        icon: '📊', color: '#3b82f6' },
+  { id: 'veterinary', label: 'Clínica Veterinaria',preset: 'friendly-human',          icon: '🐾', color: '#0d9488' },
 ]);
 
 export function getSectorById(id) {

@@ -19,7 +19,23 @@ export { COMPAT_REGISTRY }      from './compatibility.js';
 
 export { DEAD_CONTROL_GATE, FUNCTIONAL_EXPERIENCE_GATE, MOBILE_PRODUCT_GATE, FACTORY_GATES, BREAKPOINTS } from '../core/gates/index.js';
 
-export const REGISTRY_VERSION = '2.1.0';
+// Paso B — One Prompt → SaaS Pipeline
+export { validateBrief, BRIEF_SCHEMA, FIELD_STATUS }        from '../generator/schema/onePromptSchema.js';
+export { analyzeBusiness }                                   from '../core/businessAnalyzer.js';
+export { resolveVertical }                                   from '../core/verticalResolver.js';
+export { generateBranding }                                  from '../core/brandEngine.js';
+export { planModules }                                       from '../core/modulePlanner.js';
+export { planRoles }                                         from '../core/roleEngine.js';
+export { planDataModel }                                     from '../core/dataModelPlanner.js';
+export { planAIAgents }                                      from '../core/aiAgentPlanner.js';
+export { generateMakeManifest }                              from '../core/makeManifest.js';
+export { generateContent }                                   from '../core/contentEngine.js';
+export { generateIntegrationManifest }                       from '../core/integrationManifest.js';
+export { getSectorById, listSectorIds }                      from './sectors.js';
+export { VETERINARY_CONFIG }                                 from '../verticals/veterinary/config.js';
+
+export const REGISTRY_VERSION = '2.2.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-08-31';
 export const PASO_A_STATUS    = '100_PERCENT';
+export const PASO_B_STATUS    = 'IN_PROGRESS';

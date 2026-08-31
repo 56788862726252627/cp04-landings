@@ -330,8 +330,8 @@ describe('Factory Registry — Recipes', () => {
     assert.equal(RECIPE_REGISTRY.dashboard.length, 8);
   });
 
-  it('total recipe count is 42', () => {
-    assert.equal(RECIPE_COUNT, 42);
+  it('total recipe count is 54', () => {
+    assert.equal(RECIPE_COUNT, 54);
   });
 
   it('each recipe has required fields', () => {
@@ -339,8 +339,9 @@ describe('Factory Registry — Recipes', () => {
       for (const recipe of recipes) {
         assert.ok('id' in recipe, `recipe missing id`);
         assert.ok('name' in recipe, `${recipe.id} missing name`);
-        assert.ok('description' in recipe, `${recipe.id} missing description`);
-        assert.ok('layout' in recipe, `${recipe.id} missing layout`);
+        // interactive patterns use `purpose` instead of `description` and `layout`
+        assert.ok('description' in recipe || 'purpose' in recipe, `${recipe.id} missing description or purpose`);
+        assert.ok('layout' in recipe || 'purpose' in recipe, `${recipe.id} missing layout or purpose`);
       }
     }
   });
@@ -356,11 +357,11 @@ describe('Factory Registry — Recipes', () => {
     assert.equal(result, null);
   });
 
-  it('listAllRecipeIds returns 42 ids', () => {
+  it('listAllRecipeIds returns 54 ids', () => {
     const ids = listAllRecipeIds();
-    assert.equal(ids.length, 42);
+    assert.equal(ids.length, 54);
     const unique = new Set(ids);
-    assert.equal(unique.size, 42, 'All recipe IDs must be unique');
+    assert.equal(unique.size, 54, 'All recipe IDs must be unique');
   });
 });
 
