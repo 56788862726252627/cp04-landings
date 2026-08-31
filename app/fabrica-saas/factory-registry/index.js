@@ -37,9 +37,13 @@ export { VETERINARY_CONFIG }                                 from '../verticals/
 // Paso C — Commercial Product & Pricing System
 export * from './commercial.js';
 
-export const REGISTRY_VERSION = '2.3.0';
+// Paso D — Client Lifecycle Pipeline
+export * from './lifecycle.js';
+
+export const REGISTRY_VERSION = '2.4.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-08-31';
 export const PASO_A_STATUS    = '100_PERCENT';
 export const PASO_B_STATUS    = '100_PERCENT';
 export const PASO_C_STATUS    = '100_PERCENT';
+export const PASO_D_STATUS_MAIN = '100_PERCENT';
