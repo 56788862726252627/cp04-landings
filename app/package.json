@@ -22,7 +22,8 @@
     "factory:test:v1.2": "node --test fabrica-saas/generator/tests/v1.2-cases.test.mjs",
     "factory:test:v1.3": "node --test fabrica-saas/generator/tests/v1.3-cases.test.mjs",
     "factory:test:v1.4": "node --test fabrica-saas/generator/tests/v1.4-cases.test.mjs",
-    "factory:test:all": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs fabrica-saas/generator/tests/physio-cases.test.mjs fabrica-saas/generator/tests/estetica-cases.test.mjs fabrica-saas/generator/tests/abogados-cases.test.mjs fabrica-saas/generator/tests/v1.2-cases.test.mjs fabrica-saas/generator/tests/v1.3-cases.test.mjs fabrica-saas/generator/tests/v1.4-cases.test.mjs fabrica-saas/generator/tests/v1.5-cases.test.mjs fabrica-saas/generator/tests/v1.6-cases.test.mjs fabrica-saas/generator/tests/v1.6.1-cases.test.mjs",
+    "factory:test:fisionova-v2-pilot": "node --test fabrica-saas/generator/tests/v2-fisionova-pilot.test.mjs",
+    "factory:test:all": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs fabrica-saas/generator/tests/physio-cases.test.mjs fabrica-saas/generator/tests/estetica-cases.test.mjs fabrica-saas/generator/tests/abogados-cases.test.mjs fabrica-saas/generator/tests/v1.2-cases.test.mjs fabrica-saas/generator/tests/v1.3-cases.test.mjs fabrica-saas/generator/tests/v1.4-cases.test.mjs fabrica-saas/generator/tests/v1.5-cases.test.mjs fabrica-saas/generator/tests/v1.6-cases.test.mjs fabrica-saas/generator/tests/v1.6.1-cases.test.mjs fabrica-saas/generator/tests/v1.7-cases.test.mjs fabrica-saas/generator/tests/v1.7-fisionova.test.mjs fabrica-saas/generator/tests/v1.8-educa-archidona.test.mjs fabrica-saas/generator/tests/v2-premium-experience.test.mjs fabrica-saas/generator/tests/v2-fisionova-pilot.test.mjs",
     "factory:deploy:manifest": "node fabrica-saas/generator/scripts/generate-deployment.mjs",
     "factory:prepare-deploy": "node fabrica-saas/generator/scripts/prepare-deploy.mjs",
     "factory:package-client": "node fabrica-saas/generator/scripts/package-client.mjs",
@@ -46,9 +47,11 @@
     "factory:test:fisionova": "node --test fabrica-saas/generator/tests/v1.7-fisionova.test.mjs",
     "factory:test:educa-archidona": "node --test fabrica-saas/generator/tests/v1.8-educa-archidona.test.mjs",
     "factory:test:v1.8": "node --test fabrica-saas/generator/tests/v1.8-educa-archidona.test.mjs",
-    "factory:test:all": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs fabrica-saas/generator/tests/physio-cases.test.mjs fabrica-saas/generator/tests/estetica-cases.test.mjs fabrica-saas/generator/tests/abogados-cases.test.mjs fabrica-saas/generator/tests/v1.2-cases.test.mjs fabrica-saas/generator/tests/v1.3-cases.test.mjs fabrica-saas/generator/tests/v1.4-cases.test.mjs fabrica-saas/generator/tests/v1.5-cases.test.mjs fabrica-saas/generator/tests/v1.6-cases.test.mjs fabrica-saas/generator/tests/v1.6.1-cases.test.mjs fabrica-saas/generator/tests/v1.7-cases.test.mjs fabrica-saas/generator/tests/v1.7-fisionova.test.mjs fabrica-saas/generator/tests/v1.8-educa-archidona.test.mjs"
+    "factory:test:v2": "node --test fabrica-saas/generator/tests/v2-premium-experience.test.mjs",
+    "factory:test:all-v2": "node --test fabrica-saas/generator/tests/generator.test.mjs fabrica-saas/generator/tests/dental-cases.test.mjs fabrica-saas/generator/tests/physio-cases.test.mjs fabrica-saas/generator/tests/estetica-cases.test.mjs fabrica-saas/generator/tests/abogados-cases.test.mjs fabrica-saas/generator/tests/v1.2-cases.test.mjs fabrica-saas/generator/tests/v1.3-cases.test.mjs fabrica-saas/generator/tests/v1.4-cases.test.mjs fabrica-saas/generator/tests/v1.5-cases.test.mjs fabrica-saas/generator/tests/v1.6-cases.test.mjs fabrica-saas/generator/tests/v1.6.1-cases.test.mjs fabrica-saas/generator/tests/v1.7-cases.test.mjs fabrica-saas/generator/tests/v1.7-fisionova.test.mjs fabrica-saas/generator/tests/v1.8-educa-archidona.test.mjs fabrica-saas/generator/tests/v2-premium-experience.test.mjs"
   },
   "dependencies": {
+    "motion": "^13.1.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
