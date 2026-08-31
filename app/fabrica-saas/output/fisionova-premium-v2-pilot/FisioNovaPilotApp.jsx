@@ -524,8 +524,6 @@ export function FisioNovaPilotApp() {
   const handleCloseBooking = useCallback(() => setBookingOpen(false), []);
   const handleNavigate = useCallback((viewId) => handleNav(viewId), [handleNav]);
 
-  const roleInfo = ROLES.find(r => r.id === role);
-
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: "'Inter', 'DM Sans', system-ui, sans-serif", background: '#f8faff', overflow: 'hidden' }}>
 

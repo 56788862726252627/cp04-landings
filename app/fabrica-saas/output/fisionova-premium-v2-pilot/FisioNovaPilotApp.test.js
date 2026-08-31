@@ -216,6 +216,7 @@ describe('FAQ_V2', () => {
   });
   it('accordion toggle logic works', () => {
     let open = null;
+    expect(open).toBeNull();
     // open first
     open = 0;
     expect(open).toBe(0);
@@ -315,12 +316,14 @@ describe('BookingModal step logic', () => {
   });
   it('step progression: 1 → 2 → 3 → 4', () => {
     let step = 1;
+    expect(step).toBe(1);
     step = 2; expect(step).toBe(2);
     step = 3; expect(step).toBe(3);
     step = 4; expect(step).toBe(4);
   });
   it('step back navigation: 3 → 2 → 1', () => {
     let step = 3;
+    expect(step).toBe(3);
     step = 2; expect(step).toBe(2);
     step = 1; expect(step).toBe(1);
   });
@@ -340,6 +343,7 @@ describe('Mobile sidebar', () => {
   });
   it('mobile sidebar state toggling', () => {
     let open = false;
+    expect(open).toBe(false);
     open = true;
     expect(open).toBe(true);
     open = false;

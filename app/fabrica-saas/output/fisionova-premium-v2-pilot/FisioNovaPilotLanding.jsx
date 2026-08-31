@@ -762,7 +762,7 @@ function BookingModal({ onClose }) {
 }
 
 /* ── Root ─────────────────────────────────────────────────────────────── */
-export function FisioNovaPilotLanding({ onOpenBooking, onNavigate }) {
+export function FisioNovaPilotLanding({ onOpenBooking }) {
   const [showModal, setShowModal] = useState(false);
 
   const handleCita = () => {

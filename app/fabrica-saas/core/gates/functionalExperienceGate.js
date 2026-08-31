@@ -93,9 +93,6 @@ function isFunctionDefined(val) {
     (typeof val === 'function' || typeof val === 'string');
 }
 
-function isArrayDefined(val) {
-  return Array.isArray(val) && val.length > 0;
-}
 
 function isPropPresent(spec, field) {
   if (!(field in spec)) return false;
