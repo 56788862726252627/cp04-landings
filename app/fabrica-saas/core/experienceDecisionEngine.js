@@ -151,4 +151,81 @@ export function applyAudienceAdjustments(decision, audience) {
   return { ...decision, ...adj };
 }
 
-export const DECISION_ENGINE_VERSION = '2.0.0';
+// ─── Premium V2 Default Policy (Paso A addition) ─────────────────────────────
+
+/**
+ * FACTORY_PREMIUM_V2_DEFAULT_POLICY
+ *
+ * Premium Experience V2 is the default for all new Factory projects.
+ * The Decision Engine selects appropriate intensity based on context —
+ * it does NOT mean maximum animation/motion at all times.
+ *
+ * Intensity levels (driven by sector, audience, accessibility, device):
+ *   low    — subtle transitions, no auto-play, reduced animations
+ *   medium — standard hover effects, scroll animations, page transitions
+ *   high   — rich motion, video, parallax, complex interactions
+ *
+ * This policy only applies to new projects.
+ * Existing demos (Aurora, FisioNova V1, EducaArchidona) are NOT auto-migrated.
+ */
+export const PREMIUM_V2_DEFAULT_POLICY = Object.freeze({
+  enabled: true,
+  defaultIntensity: 'medium',
+  intensityMatrix: {
+    // sector → default intensity
+    fisioterapia:    'medium',
+    dental:          'medium',
+    estetica:        'medium',
+    educacion:       'medium',
+    abogados:        'low',
+    tech:            'high',
+    padel:           'medium',
+    inmobiliaria:    'low',
+    restauracion:    'high',
+    moda:            'high',
+    default:         'medium',
+  },
+  intensityOverrideBy: {
+    // audience → intensity cap
+    senior:       'low',
+    professional: 'low',
+    youth:        'high',
+    'mobile-first': 'low',
+  },
+  gates: {
+    deadControlGate: true,
+    functionalExperienceGate: true,
+    mobileProductGate: true,
+    accessibilityGate: true,
+  },
+  mobileAware: true,
+  reducedMotionSafe: true,
+  errorBoundaryRequired: true,
+  basicProfessionalStandard: '8.5/10',
+  advancedPolish: '9.5-10/10 (optional future enhancement)',
+  adoptedFrom: 'FisioNova Premium V2 Pilot (2026-08-31)',
+});
+
+/**
+ * Resolve Premium V2 intensity for a given sector + audience + device.
+ */
+export function resolvePremiumV2Intensity(sector = 'default', audience = 'general', isMobile = false) {
+  const matrixIntensity = PREMIUM_V2_DEFAULT_POLICY.intensityMatrix[sector]
+    ?? PREMIUM_V2_DEFAULT_POLICY.intensityMatrix.default;
+  const audienceCap = PREMIUM_V2_DEFAULT_POLICY.intensityOverrideBy[audience];
+  const intensityOrder = ['none', 'low', 'medium', 'high'];
+
+  let resolved = matrixIntensity;
+
+  if (audienceCap) {
+    const matrixIdx  = intensityOrder.indexOf(matrixIntensity);
+    const audienceIdx = intensityOrder.indexOf(audienceCap);
+    resolved = intensityOrder[Math.min(matrixIdx, audienceIdx)];
+  }
+
+  if (isMobile && resolved === 'high') resolved = 'medium';
+
+  return resolved;
+}
+
+export const DECISION_ENGINE_VERSION = '2.1.0';

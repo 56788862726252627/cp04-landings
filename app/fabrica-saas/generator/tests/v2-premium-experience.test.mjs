@@ -473,7 +473,7 @@ describe('Experience Decision Engine', () => {
   });
 
   it('version is 2.0.0', () => {
-    assert.equal(DECISION_ENGINE_VERSION, '2.0.0');
+    assert.equal(DECISION_ENGINE_VERSION, '2.1.0');
   });
 });
 
@@ -632,7 +632,7 @@ describe('AI Router V2', () => {
   });
 
   it('version is 2.0.0', () => {
-    assert.equal(AI_ROUTER_V2_VERSION, '2.0.0');
+    assert.equal(AI_ROUTER_V2_VERSION, '2.1.0');
   });
 });
 

@@ -160,4 +160,69 @@ export function compressContextForAI(experience) {
   return keyFacts.join(' | ');
 }
 
-export const AI_ROUTER_V2_VERSION = '2.0.0';
+// ─── Tier 0 Registry Lookup (Paso A addition) ────────────────────────────────
+
+/**
+ * Tier 0 Registry Pattern Lookup.
+ * Before escalating to AI generation (Tiers 1-4), check if the requested
+ * pattern already exists in the Interactive Pattern Registry.
+ * If it does, return the recipe — no AI call needed.
+ *
+ * Tier 0 → Registry lookup (no AI, no cost)
+ * Tier 1 → Ollama / Haiku selection (minimal AI)
+ * Tier 2 → Ollama + compressed context (standard AI)
+ * Tier 3 → Claude advanced composition (premium AI)
+ * Tier 4 → Production review (expert AI)
+ */
+export function lookupPatternRegistry(patternId, options = {}) {
+  const { getInteractivePatternById } = options._registry ?? {};
+
+  if (typeof getInteractivePatternById !== 'function') {
+    return { found: false, tier: 1, reason: 'Registry not injected' };
+  }
+
+  const recipe = getInteractivePatternById(patternId);
+  if (!recipe) {
+    return { found: false, tier: 1, reason: `Pattern "${patternId}" not in registry` };
+  }
+
+  return {
+    found: true,
+    tier: 0,
+    recipe,
+    source: 'interactive-pattern-registry',
+    aiCallNeeded: false,
+    reason: `Pattern "${patternId}" resolved from registry — no AI generation needed`,
+  };
+}
+
+/**
+ * Route a generation request with Tier 0 registry check first.
+ *
+ * @param {{ patternId?, manifest? }} request
+ * @param {{ _registry? }} options
+ * @returns {{ tier: number, source: string, recipe? }}
+ */
+export function routeRequest(request = {}, options = {}) {
+  const { patternId, manifest = {} } = request;
+
+  // Step 1: Tier 0 — registry lookup
+  if (patternId) {
+    const lookup = lookupPatternRegistry(patternId, options);
+    if (lookup.found) return lookup;
+  }
+
+  // Step 2: Tier 1-4 — AI generation
+  const tier = selectTier(manifest);
+  return {
+    found: false,
+    tier: tier.id,
+    tierLabel: tier.label,
+    source: 'ai-generation',
+    aiCallNeeded: true,
+    context: buildAIContext(manifest, tier),
+    reason: `No registry match — routing to Tier ${tier.id} (${tier.label})`,
+  };
+}
+
+export const AI_ROUTER_V2_VERSION = '2.1.0';

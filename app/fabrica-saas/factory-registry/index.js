@@ -17,5 +17,9 @@ export { A11Y_REGISTRY }        from './accessibility.js';
 export { PERF_REGISTRY }        from './performance.js';
 export { COMPAT_REGISTRY }      from './compatibility.js';
 
-export const REGISTRY_VERSION = '2.0.0';
+export { DEAD_CONTROL_GATE, FUNCTIONAL_EXPERIENCE_GATE, MOBILE_PRODUCT_GATE, FACTORY_GATES, BREAKPOINTS } from '../core/gates/index.js';
+
+export const REGISTRY_VERSION = '2.1.0';
 export const REGISTRY_CREATED = '2026-08-30';
+export const REGISTRY_UPDATED = '2026-08-31';
+export const PASO_A_STATUS    = '100_PERCENT';
