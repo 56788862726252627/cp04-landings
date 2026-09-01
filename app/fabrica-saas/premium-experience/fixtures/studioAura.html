@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es" data-vertical="beauty" data-profile="ELEGANT_DISPLAY" data-surface="PREMIUM_GLASS">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio Aura — Belleza premium en Madrid</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #d97706;
+      --primary-light: #f59e0b;
+      --accent: #f43f5e;
+      --accent-warm: #fb7185;
+      --surface: #fdf8f3;
+      --surface-glass: rgba(255,251,235,.85);
+      --surface-card: #ffffff;
+      --border: #f3e6d6;
+      --border-gold: #d97706;
+      --text: #1c1917;
+      --text-light: #78716c;
+      --heading-font: 'Palatino Linotype', 'Book Antiqua', 'Palatino', Georgia, serif;
+      --display-font: 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+      --body-font: 'Lato', system-ui, sans-serif;
+      --radius-sm: 2px;
+      --radius-md: 4px;
+      --radius-lg: 8px;
+      --shadow-luxury: 0 8px 32px rgba(180,120,60,.10);
+    }
+    body {
+      font-family: var(--body-font);
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* Skip link */
+    .skip-link {
+      position: absolute; top: -100px; left: 1rem;
+      background: var(--primary); color: white;
+      padding: .5rem 1rem; border-radius: var(--radius-md);
+      font-weight: 700; transition: top .2s; z-index: 9999;
+    }
+    .skip-link:focus { top: 1rem; }
+
+    /* NAV */
+    nav[role="navigation"] {
+      background: rgba(253,248,243,.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 72px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand {
+      font-family: var(--display-font);
+      font-size: 1.5rem; font-weight: 400;
+      color: var(--text); letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .nav-brand em { font-style: italic; color: var(--primary); }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-size: .8125rem; font-weight: 300; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--text-light);
+      transition: color .15s;
+    }
+    .nav-links a:hover { color: var(--primary); }
+    .nav-cta {
+      background: var(--primary); color: white;
+      border: none; border-radius: var(--radius-sm);
+      padding: .625rem 1.75rem;
+      font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; cursor: pointer;
+      transition: background .15s; min-height: 44px;
+    }
+    .nav-cta:hover { background: #b45309; }
+    .nav-hamburger {
+      display: none;
+      background: none; border: 1px solid var(--border-gold);
+      border-radius: var(--radius-sm); padding: .5rem;
+      cursor: pointer; font-size: 1.25rem; color: var(--primary);
+      min-width: 44px; min-height: 44px; align-items: center; justify-content: center;
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(160deg, #1c1917 0%, #292524 40%, #3b2a1a 100%);
+      padding: 7rem 2.5rem 5rem;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: 0; right: 0; bottom: 0;
+      width: 45%; background: linear-gradient(135deg, rgba(217,119,6,.15), rgba(244,63,94,.10));
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      font-size: .6875rem; font-weight: 700; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--primary);
+      margin-bottom: 2rem;
+    }
+    .hero h1 {
+      font-family: var(--display-font);
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 400; line-height: 1.1; font-style: italic;
+      color: #fef9f0; margin-bottom: 1.5rem; max-width: 700px;
+    }
+    .hero-tagline {
+      font-size: 1rem; font-weight: 300; letter-spacing: .05em;
+      color: #d6d3d1; max-width: 480px; margin-bottom: 3rem; line-height: 1.8;
+    }
+    .hero-ctas { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+    .btn-gold {
+      background: var(--primary); color: white;
+      border: none; border-radius: var(--radius-sm);
+      padding: 1rem 2.5rem;
+      font-size: .8125rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; cursor: pointer;
+      transition: background .2s; min-height: 44px;
+    }
+    .btn-gold:hover { background: #b45309; }
+    .btn-outline-gold {
+      background: transparent; color: #fef9f0;
+      border: 1px solid rgba(217,119,6,.6); border-radius: var(--radius-sm);
+      padding: 1rem 2.5rem;
+      font-size: .8125rem; font-weight: 300; letter-spacing: .12em;
+      text-transform: uppercase; cursor: pointer;
+      transition: border-color .2s; min-height: 44px;
+    }
+    .btn-outline-gold:hover { border-color: var(--primary); }
+
+    /* TRUST STRIP */
+    .trust-strip {
+      background: var(--primary); color: white;
+      padding: .75rem 2.5rem;
+      display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;
+    }
+    .trust-strip-item { font-size: .6875rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+
+    /* SERVICES */
+    main { max-width: 1100px; margin: 0 auto; padding: 0 2.5rem; }
+    .section { padding: 5rem 0; }
+    .section-eyebrow {
+      font-size: .625rem; font-weight: 700; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--primary); margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: var(--display-font);
+      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+      font-weight: 400; font-style: italic;
+      color: var(--text); margin-bottom: 1rem;
+    }
+    .section-line {
+      width: 60px; height: 1px; background: var(--primary);
+      margin-bottom: 3rem;
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .service-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-luxury);
+      overflow: hidden;
+      transition: transform .3s, box-shadow .3s;
+    }
+    .service-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(180,120,60,.14); }
+    .service-card-top {
+      height: 80px;
+      background: linear-gradient(135deg, #fef3c7, #fed7aa);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+    }
+    .service-card-body { padding: 1.5rem; }
+    .service-card h3 {
+      font-family: var(--heading-font);
+      font-size: 1.0625rem; font-weight: 700;
+      color: var(--text); margin-bottom: .5rem;
+    }
+    .service-card p { font-size: .875rem; color: var(--text-light); line-height: 1.6; margin-bottom: 1rem; }
+    .service-cta {
+      font-size: .6875rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--primary); cursor: pointer;
+      background: none; border: none; padding: 0;
+    }
+    .service-cta:hover { text-decoration: underline; }
+
+    /* GALLERY */
+    .gallery-section {
+      background: var(--text); padding: 5rem 2.5rem;
+    }
+    .gallery-inner { max-width: 1100px; margin: 0 auto; }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .5rem; margin-top: 3rem;
+    }
+    .gallery-item {
+      background: linear-gradient(135deg, #292524, #3b2a1a);
+      aspect-ratio: 1; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; color: rgba(217,119,6,.3);
+      transition: transform .3s;
+    }
+    .gallery-item:hover { transform: scale(1.03); }
+    .gallery-item.featured { grid-column: span 2; grid-row: span 2; }
+
+    /* BOOKING FORM */
+    .booking-section {
+      background: linear-gradient(135deg, #1c1917, #292524);
+      padding: 5rem 2.5rem;
+    }
+    .booking-inner {
+      max-width: 700px; margin: 0 auto;
+    }
+    .booking-eyebrow {
+      font-size: .625rem; font-weight: 700; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--primary); margin-bottom: 1rem;
+    }
+    .booking-title {
+      font-family: var(--display-font);
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 400; font-style: italic;
+      color: #fef9f0; margin-bottom: .5rem;
+    }
+    .booking-subtitle { font-size: .9375rem; color: #a8a29e; margin-bottom: 3rem; }
+    .booking-form-card {
+      background: rgba(255,251,235,.06);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(217,119,6,.25);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label {
+      display: block; font-size: .6875rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: #d6d3d1; margin-bottom: .5rem;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      background: rgba(255,255,255,.06); color: #fef9f0;
+      border: 1px solid rgba(217,119,6,.3); border-radius: var(--radius-sm);
+      padding: .875rem 1rem; font-family: var(--body-font);
+      font-size: .9375rem; transition: border-color .15s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(217,119,6,.2);
+    }
+    .form-group input::placeholder { color: #78716c; }
+    .form-group select option { background: #1c1917; }
+    .booking-submit {
+      width: 100%; background: var(--primary); color: white;
+      border: none; border-radius: var(--radius-sm);
+      padding: 1.125rem; font-size: .8125rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      cursor: pointer; transition: background .2s; min-height: 44px;
+    }
+    .booking-submit:hover { background: #b45309; }
+    .form-success-dark {
+      display: none; background: rgba(240,253,244,.1);
+      border: 1px solid rgba(187,247,208,.3); border-radius: var(--radius-md);
+      padding: 1rem; color: #a7f3d0; text-align: center; font-weight: 600;
+    }
+    .form-success-dark.visible { display: block; }
+
+    /* FOOTER */
+    footer {
+      background: #0c0a09; color: #78716c;
+      padding: 3rem 2.5rem;
+    }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2rem; }
+    .footer-brand {
+      font-family: var(--display-font);
+      font-size: 1.25rem; font-style: italic;
+      color: #e7d4b5; margin-bottom: .5rem;
+    }
+    .footer-brand em { color: var(--primary); font-style: normal; }
+    .footer-tagline { font-size: .75rem; color: #57534e; letter-spacing: .05em; }
+    .footer-links { display: flex; flex-direction: column; gap: .5rem; }
+    .footer-links a { font-size: .8125rem; color: #57534e; letter-spacing: .05em; }
+    .footer-links a:hover { color: var(--primary); }
+    .footer-legal { width: 100%; border-top: 1px solid #1c1917; padding-top: 1.5rem; margin-top: 1rem; }
+    .footer-legal p { font-size: .6875rem; color: #44403c; }
+
+    /* MOBILE MENU */
+    .mobile-menu-aura {
+      display: none; position: fixed; top: 72px; left: 0; right: 0;
+      background: rgba(28,25,23,.97); backdrop-filter: blur(12px);
+      z-index: 99; padding: 1.5rem 2.5rem;
+      border-bottom: 1px solid rgba(217,119,6,.3);
+    }
+    .mobile-menu-aura.open { display: block; }
+    .mobile-menu-aura ul { list-style: none; }
+    .mobile-menu-aura ul li a {
+      display: block; padding: .875rem 0;
+      font-size: .8125rem; font-weight: 300; letter-spacing: .12em;
+      text-transform: uppercase; color: #e7d4b5;
+      border-bottom: 1px solid rgba(217,119,6,.1);
+    }
+
+    @media (max-width: 767px) {
+      .nav-links, .nav-cta { display: none; }
+      .nav-hamburger { display: flex; }
+      .hero { padding: 4rem 1.5rem 3rem; }
+      .hero h1 { font-size: 2.25rem; }
+      .hero-ctas { flex-direction: column; }
+      .services-grid { grid-template-columns: 1fr; }
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+      .gallery-item.featured { grid-column: span 1; grid-row: span 1; }
+      .form-row { grid-template-columns: 1fr; }
+      .trust-strip { gap: 1.5rem; }
+      .footer-inner { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Saltar al contenido</a>
+
+  <!-- NAV -->
+  <nav role="navigation" aria-label="Navegación principal">
+    <div class="nav-brand" aria-label="Studio Aura">Studio <em>Aura</em></div>
+    <ul class="nav-links">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#galeria">Galería</a></li>
+      <li><a href="#reservar">Reservar</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar ahora</button>
+    <button class="nav-hamburger" aria-expanded="false" aria-label="Abrir menú" id="hamburger" onclick="toggleMenu()">☰</button>
+  </nav>
+
+  <div class="mobile-menu-aura" id="mobileMenu">
+    <ul>
+      <li><a href="#servicios" onclick="closeMenu()">Servicios</a></li>
+      <li><a href="#galeria" onclick="closeMenu()">Galería</a></li>
+      <li><a href="#reservar" onclick="closeMenu()">Reservar</a></li>
+    </ul>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-eyebrow">Studio Aura · Madrid · Belleza de autor</div>
+    <h1 id="hero-heading">La experiencia que imaginas, la belleza que mereces</h1>
+    <p class="hero-tagline">Tratamientos exclusivos. Atención personalizada. Un espacio diseñado para que vivas tu mejor versión.</p>
+    <div class="hero-ctas">
+      <button class="btn-gold" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar ahora</button>
+      <button class="btn-outline-gold" onclick="document.getElementById('servicios').scrollIntoView({behavior:'smooth'})">Descubrir servicios</button>
+    </div>
+  </section>
+
+  <!-- TRUST STRIP -->
+  <div class="trust-strip" role="complementary">
+    <span class="trust-strip-item">Expertos certificados</span>
+    <span class="trust-strip-item">Productos premium</span>
+    <span class="trust-strip-item">Reserva en 60 segundos</span>
+    <span class="trust-strip-item">Cancelación gratuita</span>
+  </div>
+
+  <!-- MAIN -->
+  <main id="main-content">
+    <!-- SERVICIOS -->
+    <section class="section" id="servicios" aria-labelledby="services-heading">
+      <div class="section-eyebrow">Lo que ofrecemos</div>
+      <h2 class="section-title" id="services-heading">Nuestros servicios exclusivos</h2>
+      <div class="section-line" role="presentation"></div>
+      <div class="services-grid" role="list">
+        <article class="service-card" role="listitem">
+          <div class="service-card-top" aria-hidden="true">💆</div>
+          <div class="service-card-body">
+            <h3>Tratamientos faciales</h3>
+            <p>Hidratación, lifting, exfoliación y protocolos anti-edad con productos de lujo.</p>
+            <button class="service-cta" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar →</button>
+          </div>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-card-top" aria-hidden="true">✂️</div>
+          <div class="service-card-body">
+            <h3>Hair Styling Premium</h3>
+            <p>Corte, color, mechas y tratamientos capilares de alta gama.</p>
+            <button class="service-cta" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar →</button>
+          </div>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-card-top" aria-hidden="true">💅</div>
+          <div class="service-card-body">
+            <h3>Nail Art & Manicura</h3>
+            <p>Diseño exclusivo y cuidado profesional de uñas con técnicas avanzadas.</p>
+            <button class="service-cta" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar →</button>
+          </div>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-card-top" aria-hidden="true">🌿</div>
+          <div class="service-card-body">
+            <h3>Aromaterapia & Relax</h3>
+            <p>Masajes y rituales de bienestar en un entorno de calma total.</p>
+            <button class="service-cta" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar →</button>
+          </div>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-card-top" aria-hidden="true">👁️</div>
+          <div class="service-card-body">
+            <h3>Maquillaje profesional</h3>
+            <p>Looks para ocasiones especiales, bodas y sesiones de imagen personal.</p>
+            <button class="service-cta" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar →</button>
+          </div>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-card-top" aria-hidden="true">⭐</div>
+          <div class="service-card-body">
+            <h3>Pack VIP Aura</h3>
+            <p>Experiencia completa: ritual facial + peinado + maquillaje en una sesión.</p>
+            <button class="service-cta" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar →</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- GALLERY -->
+  <section class="gallery-section" id="galeria" aria-labelledby="gallery-heading">
+    <div class="gallery-inner">
+      <div class="section-eyebrow" style="color: var(--primary)">Nuestro trabajo</div>
+      <h2 class="section-title" id="gallery-heading" style="color: #fef9f0">Galería de resultados</h2>
+      <div class="section-line" role="presentation"></div>
+      <div class="gallery-grid" role="list" aria-label="Galería de trabajos">
+        <div class="gallery-item featured" role="listitem" aria-label="Imagen principal de portfolio">✦</div>
+        <div class="gallery-item" role="listitem" aria-label="Resultado tratamiento facial">◆</div>
+        <div class="gallery-item" role="listitem" aria-label="Resultado hair styling">◈</div>
+        <div class="gallery-item" role="listitem" aria-label="Resultado nail art">◇</div>
+        <div class="gallery-item" role="listitem" aria-label="Resultado maquillaje">✧</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOKING -->
+  <section class="booking-section" id="reservar" aria-labelledby="booking-heading">
+    <div class="booking-inner">
+      <div class="booking-eyebrow">Tu cita</div>
+      <h2 class="booking-title" id="booking-heading">Reserva tu experiencia Aura</h2>
+      <p class="booking-subtitle">Cancela gratis hasta 24h antes. Sin tarjeta necesaria.</p>
+      <div class="booking-form-card">
+        <form id="bookingForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required autocomplete="given-name">
+            </div>
+            <div class="form-group">
+              <label for="telefono">Teléfono</label>
+              <input type="tel" id="telefono" name="telefono" placeholder="612 345 678" required autocomplete="tel">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="servicio">Servicio</label>
+            <select id="servicio" name="servicio" required>
+              <option value="">Selecciona un servicio</option>
+              <option value="facial">Tratamiento facial</option>
+              <option value="hair">Hair Styling Premium</option>
+              <option value="nails">Nail Art</option>
+              <option value="relax">Aromaterapia & Relax</option>
+              <option value="makeup">Maquillaje profesional</option>
+              <option value="vip">Pack VIP Aura</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fecha">Fecha preferida</label>
+              <input type="date" id="fecha" name="fecha">
+            </div>
+            <div class="form-group">
+              <label for="hora">Hora preferida</label>
+              <select id="hora" name="hora">
+                <option value="">Cualquier hora</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+                <option value="19:00">19:00</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="booking-submit">Confirmar reserva</button>
+        </form>
+        <div class="form-success-dark" id="bookingSuccess" role="status" aria-live="polite">
+          ✦ Reserva confirmada. Te enviamos la confirmación por mensaje.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">Studio <em>Aura</em></div>
+        <p class="footer-tagline">Belleza premium en Madrid · Desde 2018</p>
+      </div>
+      <nav class="footer-links" aria-label="Navegación footer">
+        <a href="#servicios">Servicios</a>
+        <a href="#galeria">Galería</a>
+        <a href="#reservar">Reservar</a>
+        <a href="#">Privacidad</a>
+      </nav>
+      <div class="footer-legal">
+        <p>© 2026 Studio Aura · Datos ficticios — isReal: false · Diseño premium ADV-07</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const btn = document.getElementById('hamburger');
+      const isOpen = menu.classList.contains('open');
+      menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', !isOpen);
+    }
+    function closeMenu() {
+      document.getElementById('mobileMenu').classList.remove('open');
+      document.getElementById('hamburger').setAttribute('aria-expanded', 'false');
+    }
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      this.style.display = 'none';
+      document.getElementById('bookingSuccess').classList.add('visible');
+    });
+  </script>
+</body>
+</html>
