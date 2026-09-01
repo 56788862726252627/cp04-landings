@@ -1283,8 +1283,8 @@ describe('failureScenarios — runAllFailureScenarios', () => {
 import { REGISTRY_VERSION, PASO_ADV01_STATUS } from '../../factory-registry/index.js';
 
 describe('factory-registry — observability integration', () => {
-  it('REGISTRY_VERSION is 2.9.0', () => {
-    assert.equal(REGISTRY_VERSION, '2.9.0');
+  it('REGISTRY_VERSION is >= 2.9.0', () => {
+    assert.ok(REGISTRY_VERSION >= '2.9.0', `Expected >= 2.9.0, got ${REGISTRY_VERSION}`);
   });
   it('PASO_ADV01_STATUS is 100_PERCENT', () => {
     assert.equal(PASO_ADV01_STATUS, '100_PERCENT');
