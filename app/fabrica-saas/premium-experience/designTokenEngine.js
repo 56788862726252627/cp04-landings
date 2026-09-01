@@ -43,7 +43,7 @@ const FOCUS_TOKENS = Object.freeze({
 });
 
 export function generateDesignTokens(profile = {}) {
-  const { typographyProfile = 'DEFAULT', spacingProfile = 'BALANCED', visualDensity = 'BALANCED', surfaceProfile = 'LAYERED' } = profile;
+  const { typographyProfile = 'DEFAULT', spacingProfile = 'BALANCED', visualDensity = 'BALANCED' } = profile;
 
   const radius    = RADIUS_SCALES[typographyProfile] ?? RADIUS_SCALES.DEFAULT;
   const elevation = ELEVATION_SCALES[spacingProfile] ?? ELEVATION_SCALES[visualDensity] ?? ELEVATION_SCALES.BALANCED;

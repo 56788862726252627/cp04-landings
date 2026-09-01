@@ -28,7 +28,7 @@ const GOAL_POLICIES = Object.freeze({
   [CONVERSION_GOAL.SIGNUP]:       { frictionPoints: 2, requiresAccount: true,  socialProof: false, clarityScore: 'HIGH' },
 });
 
-export function createConversionPolicy(goal = CONVERSION_GOAL.BOOKING, options = {}) {
+export function createConversionPolicy(goal = CONVERSION_GOAL.BOOKING) {
   const spec = GOAL_POLICIES[goal] ?? GOAL_POLICIES[CONVERSION_GOAL.BOOKING];
   return Object.freeze({
     goal,

@@ -38,7 +38,7 @@ const VERTICAL_LAYOUT_MAP = Object.freeze({
 });
 
 export function resolveLayoutPattern(brief = {}) {
-  const { vertical = 'default', moduleCount = 3, audience = 'public', overridePattern } = brief;
+  const { vertical = 'default', moduleCount = 3, overridePattern } = brief;
   if (overridePattern && LAYOUT_PATTERN[overridePattern]) {
     return Object.freeze({ pattern: overridePattern, source: 'OVERRIDE', isReal: false });
   }

@@ -10,16 +10,6 @@ export const RESPONSIVE_TRANSFORM = Object.freeze({
   SPLIT_TO_TABBED:        'SPLIT_TO_TABBED',
 });
 
-const TRANSFORM_BREAKPOINTS = Object.freeze({
-  TABLE_TO_CARDS:       { mobile: true,  tablet: false, applyBelow: 768  },
-  SIDEBAR_TO_DRAWER:    { mobile: true,  tablet: true,  applyBelow: 1024 },
-  MULTI_COL_TO_STACKED: { mobile: true,  tablet: false, applyBelow: 640  },
-  ACTIONS_TO_OVERFLOW:  { mobile: true,  tablet: false, applyBelow: 768  },
-  NAV_TO_BOTTOM:        { mobile: true,  tablet: false, applyBelow: 768  },
-  FORM_TO_SINGLE_COL:   { mobile: true,  tablet: false, applyBelow: 768  },
-  SPLIT_TO_TABBED:      { mobile: true,  tablet: true,  applyBelow: 1024 },
-});
-
 export function resolveResponsiveTransform(source = '', viewport = 'mobile') {
   const transforms = [];
   const isMobile = viewport === 'mobile';

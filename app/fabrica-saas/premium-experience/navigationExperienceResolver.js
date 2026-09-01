@@ -9,37 +9,11 @@ export const NAV_PATTERN = Object.freeze({
   HYBRID:       'HYBRID',
 });
 
-const NAV_SELECTION_RULES = Object.freeze({
-  sidebar: {
-    minModules:    5,
-    maxMobileUse:  0.3,
-    complexity:    'HIGH',
-    pattern:       NAV_PATTERN.SIDEBAR,
-  },
-  top_nav: {
-    minModules:    2,
-    maxMobileUse:  1,
-    complexity:    'LOW',
-    pattern:       NAV_PATTERN.TOP_NAV,
-  },
-  bottom_nav: {
-    minModules:    2,
-    mobileFirst:   true,
-    pattern:       NAV_PATTERN.BOTTOM_NAV,
-  },
-  drawer: {
-    minModules:    4,
-    complexity:    'MEDIUM',
-    pattern:       NAV_PATTERN.DRAWER,
-  },
-});
-
 export function resolveNavigationPattern(brief = {}) {
   const {
     moduleCount     = 3,
     mobileUsageRate = 0.5,
     complexity      = 'LOW',
-    roles           = ['USER'],
     overridePattern,
   } = brief;
 

@@ -74,7 +74,6 @@ export function createSurface(type = SURFACE_TYPE.BASE, surfaceProfile = 'LAYERE
 }
 
 export function buildSurfaceSystem(surfaceProfile = 'LAYERED') {
-  const palette  = SURFACE_PALETTES[surfaceProfile] ?? SURFACE_PALETTES.LAYERED;
   const surfaces = Object.fromEntries(
     Object.values(SURFACE_TYPE).map(t => [t, createSurface(t, surfaceProfile)])
   );

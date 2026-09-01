@@ -1,5 +1,5 @@
 // Business Experience Resolver — ADV-07
-import { createPremiumExperienceProfile, BRAND_PERSONALITY, VISUAL_DENSITY, MOTION_LEVEL, INTERACTION_LEVEL, INFORMATION_DENSITY, ACCESSIBILITY_LEVEL } from './premiumExperienceProfile.js';
+import { createPremiumExperienceProfile, BRAND_PERSONALITY, VISUAL_DENSITY, MOTION_LEVEL, INTERACTION_LEVEL, INFORMATION_DENSITY } from './premiumExperienceProfile.js';
 
 const VERTICAL_CORE_PROFILES = Object.freeze({
   veterinary: {

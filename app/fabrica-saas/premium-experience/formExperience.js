@@ -33,7 +33,6 @@ export function createFormExperience(options = {}) {
     pattern    = FORM_PATTERN.STANDARD,
     fields     = [],
     submitLabel = 'Enviar',
-    vertical    = 'default',
   } = options;
 
   const spec = PATTERN_SPECS[pattern] ?? PATTERN_SPECS.STANDARD;
