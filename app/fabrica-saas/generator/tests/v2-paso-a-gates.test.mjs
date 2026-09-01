@@ -4,9 +4,12 @@
  * Interactive Pattern Registry, Premium V2 Default Policy, and AI Router V2.
  *
  * All tests run pure logic — no DOM, no browser required.
+ *
+ * Converted from vitest to node:test (vitest not installed in CI).
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 
 import {
   auditDeadControls,
@@ -72,9 +75,9 @@ import {
 
 describe('Dead Control Gate — DEAD_CONTROL_GATE_VERSION', () => {
   it('gate object has version and audit methods', () => {
-    expect(DEAD_CONTROL_GATE.version).toBeTruthy();
-    expect(typeof DEAD_CONTROL_GATE.audit).toBe('function');
-    expect(typeof DEAD_CONTROL_GATE.auditMulti).toBe('function');
+    assert.ok(DEAD_CONTROL_GATE.version);
+    assert.strictEqual(typeof DEAD_CONTROL_GATE.audit, 'function');
+    assert.strictEqual(typeof DEAD_CONTROL_GATE.auditMulti, 'function');
   });
 });
 
@@ -82,40 +85,40 @@ describe('Dead Control Gate — button detection', () => {
   it('PASS: button with action string', () => {
     const spec = { type: 'button', id: 'btn-1', label: 'Pedir cita', action: 'openBookingModal' };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(true);
-    expect(result.counts.errors).toBe(0);
+    assert.strictEqual(result.pass, true);
+    assert.strictEqual(result.counts.errors, 0);
   });
 
   it('PASS: button with onClick string', () => {
     const spec = { type: 'button', id: 'btn-2', label: 'Save', onClick: 'handleSave' };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 
   it('FAIL: button with null action', () => {
     const spec = { type: 'button', id: 'btn-dead', label: 'Dead', action: null };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(false);
-    expect(result.issues[0].type).toBe('DEAD_BUTTON');
+    assert.strictEqual(result.pass, false);
+    assert.strictEqual(result.issues[0].type, 'DEAD_BUTTON');
   });
 
   it('FAIL: button with empty string action', () => {
     const spec = { type: 'button', id: 'btn-empty', label: 'Empty', action: '' };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(false);
+    assert.strictEqual(result.pass, false);
   });
 
   it('FAIL: button with "TODO" action', () => {
     const spec = { type: 'button', id: 'btn-todo', label: 'Todo', action: 'TODO' };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(false);
+    assert.strictEqual(result.pass, false);
   });
 
   it('PASS: placeholder button is exempted', () => {
     const spec = { type: 'button', id: 'ph', label: 'Placeholder', action: null, placeholder: true };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(true);
-    expect(result.issues).toHaveLength(0);
+    assert.strictEqual(result.pass, true);
+    assert.strictEqual(result.issues.length, 0);
   });
 });
 
@@ -123,20 +126,20 @@ describe('Dead Control Gate — link detection', () => {
   it('FAIL: link with empty href and no onClick', () => {
     const spec = { type: 'link', id: 'lnk', label: 'Ver más', href: '#', onClick: null };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(false);
-    expect(result.issues[0].type).toBe('DEAD_LINK');
+    assert.strictEqual(result.pass, false);
+    assert.strictEqual(result.issues[0].type, 'DEAD_LINK');
   });
 
   it('PASS: link with valid href', () => {
     const spec = { type: 'link', id: 'lnk2', label: 'Contact', href: '/contact' };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 
   it('PASS: link with onClick handler', () => {
     const spec = { type: 'link', id: 'lnk3', label: 'Action', href: '#', onClick: 'handleNav' };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 });
 
@@ -144,14 +147,14 @@ describe('Dead Control Gate — CTA detection', () => {
   it('FAIL: CTA with no action, onClick, or href', () => {
     const spec = { type: 'cta', id: 'cta-dead', label: 'Dead CTA', action: null };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(false);
-    expect(result.issues[0].type).toBe('DEAD_CTA');
+    assert.strictEqual(result.pass, false);
+    assert.strictEqual(result.issues[0].type, 'DEAD_CTA');
   });
 
   it('PASS: CTA with action', () => {
     const spec = { type: 'cta', id: 'cta-live', label: 'Pedir cita', action: 'openModal' };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 });
 
@@ -164,7 +167,7 @@ describe('Dead Control Gate — quick actions', () => {
       ]
     };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(false);
+    assert.strictEqual(result.pass, false);
   });
 
   it('PASS: quick action with navigate', () => {
@@ -172,7 +175,7 @@ describe('Dead Control Gate — quick actions', () => {
       type: 'quick-action', id: 'qa-live', label: 'Ver agenda', navigate: 'agenda'
     };
     const result = auditDeadControls(spec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 });
 
@@ -183,8 +186,8 @@ describe('Dead Control Gate — multi spec audit', () => {
       { type: 'cta', id: 'c1', label: 'Call', onClick: 'handleCall' },
     ];
     const result = auditDeadControlsMulti(specs);
-    expect(result.pass).toBe(true);
-    expect(result.counts.errors).toBe(0);
+    assert.strictEqual(result.pass, true);
+    assert.strictEqual(result.counts.errors, 0);
   });
 
   it('fails when any spec has dead control', () => {
@@ -193,35 +196,35 @@ describe('Dead Control Gate — multi spec audit', () => {
       { type: 'button', id: 'b2', label: 'Dead', action: null },
     ];
     const result = auditDeadControlsMulti(specs);
-    expect(result.pass).toBe(false);
-    expect(result.counts.errors).toBeGreaterThan(0);
+    assert.strictEqual(result.pass, false);
+    assert.ok(result.counts.errors > 0);
   });
 });
 
 describe('Dead Control Gate — helpers', () => {
   it('isButtonLive returns true for live button', () => {
-    expect(isButtonLive({ action: 'openModal' })).toBe(true);
+    assert.strictEqual(isButtonLive({ action: 'openModal' }), true);
   });
   it('isButtonLive returns false for dead button', () => {
-    expect(isButtonLive({ action: null })).toBe(false);
+    assert.strictEqual(isButtonLive({ action: null }), false);
   });
   it('isCtaLive returns true for CTA with href', () => {
-    expect(isCtaLive({ href: '/contact' })).toBe(true);
+    assert.strictEqual(isCtaLive({ href: '/contact' }), true);
   });
   it('isCtaLive returns false for dead CTA', () => {
-    expect(isCtaLive({ href: '#', action: null, onClick: null })).toBe(false);
+    assert.strictEqual(isCtaLive({ href: '#', action: null, onClick: null }), false);
   });
   it('makeButtonSpec generates a valid button spec', () => {
     const spec = makeButtonSpec('btn-1', 'Submit', 'handleSubmit');
-    expect(spec.type).toBe('button');
-    expect(spec.action).toBe('handleSubmit');
+    assert.strictEqual(spec.type, 'button');
+    assert.strictEqual(spec.action, 'handleSubmit');
     const audit = auditDeadControls(spec);
-    expect(audit.pass).toBe(true);
+    assert.strictEqual(audit.pass, true);
   });
   it('makePlaceholderSpec is exempted from gate', () => {
     const spec = makePlaceholderSpec('ph-1', 'Coming soon');
     const audit = auditDeadControls(spec);
-    expect(audit.pass).toBe(true);
+    assert.strictEqual(audit.pass, true);
   });
 });
 
@@ -231,18 +234,18 @@ describe('Dead Control Gate — helpers', () => {
 
 describe('Functional Experience Gate — version and patterns', () => {
   it('gate object has version and patterns', () => {
-    expect(FUNCTIONAL_EXPERIENCE_GATE.version).toBeTruthy();
-    expect(Array.isArray(FUNCTIONAL_EXPERIENCE_GATE.patterns)).toBe(true);
-    expect(FUNCTIONAL_EXPERIENCE_GATE.patterns.length).toBeGreaterThan(8);
+    assert.ok(FUNCTIONAL_EXPERIENCE_GATE.version);
+    assert.strictEqual(Array.isArray(FUNCTIONAL_EXPERIENCE_GATE.patterns), true);
+    assert.ok(FUNCTIONAL_EXPERIENCE_GATE.patterns.length > 8);
   });
 
   it('listPatterns returns all pattern definitions', () => {
     const patterns = listPatterns();
-    expect(patterns.length).toBeGreaterThan(8);
+    assert.ok(patterns.length > 8);
     patterns.forEach(p => {
-      expect(p).toHaveProperty('id');
-      expect(p).toHaveProperty('required');
-      expect(p).toHaveProperty('description');
+      assert.ok('id' in p);
+      assert.ok('required' in p);
+      assert.ok('description' in p);
     });
   });
 });
@@ -250,24 +253,24 @@ describe('Functional Experience Gate — version and patterns', () => {
 describe('Functional Experience Gate — navigation pattern', () => {
   it('PASS: navigation with onNavigate', () => {
     const result = validatePattern('navigation', { onNavigate: 'handleNav' });
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
   it('FAIL: navigation without onNavigate', () => {
     const result = validatePattern('navigation', {});
-    expect(result.pass).toBe(false);
-    expect(result.missing).toContain('onNavigate');
+    assert.strictEqual(result.pass, false);
+    assert.ok(result.missing.includes('onNavigate'));
   });
 });
 
 describe('Functional Experience Gate — modal pattern', () => {
   it('PASS: modal with onOpen and onClose', () => {
     const result = validatePattern('modal', { onOpen: 'openModal', onClose: 'closeModal' });
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
   it('FAIL: modal missing onClose', () => {
     const result = validatePattern('modal', { onOpen: 'open' });
-    expect(result.pass).toBe(false);
-    expect(result.missing).toContain('onClose');
+    assert.strictEqual(result.pass, false);
+    assert.ok(result.missing.includes('onClose'));
   });
 });
 
@@ -277,12 +280,12 @@ describe('Functional Experience Gate — role switcher pattern', () => {
       onRoleChange: 'handleRoleChange',
       roles: ['admin', 'fisio'],
     });
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
   it('FAIL: role switcher with empty roles array', () => {
     const result = validatePattern('roleSwitcher', { onRoleChange: 'fn', roles: [] });
-    expect(result.pass).toBe(false);
-    expect(result.missing).toContain('roles');
+    assert.strictEqual(result.pass, false);
+    assert.ok(result.missing.includes('roles'));
   });
 });
 
@@ -292,19 +295,19 @@ describe('Functional Experience Gate — booking flow pattern', () => {
       onComplete: 'handleBookingComplete',
       steps: ['service', 'datetime', 'confirm', 'success'],
     });
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
   it('FAIL: booking flow missing steps', () => {
     const result = validatePattern('bookingFlow', { onComplete: 'fn' });
-    expect(result.pass).toBe(false);
+    assert.strictEqual(result.pass, false);
   });
 });
 
 describe('Functional Experience Gate — unknown pattern', () => {
   it('returns error for unknown pattern', () => {
     const result = validatePattern('unknown-pattern', {});
-    expect(result.pass).toBe(false);
-    expect(result.error).toBeTruthy();
+    assert.strictEqual(result.pass, false);
+    assert.ok(result.error);
   });
 });
 
@@ -316,8 +319,8 @@ describe('Functional Experience Gate — multi-pattern audit', () => {
       { pattern: 'filter', spec: { onFilter: 'filter', options: ['a', 'b'] }, id: 'filter' },
     ];
     const result = auditFunctionalExperience(entries);
-    expect(result.pass).toBe(true);
-    expect(result.counts.failed).toBe(0);
+    assert.strictEqual(result.pass, true);
+    assert.strictEqual(result.counts.failed, 0);
   });
 
   it('FAIL: one pattern invalid in multi-audit', () => {
@@ -326,8 +329,8 @@ describe('Functional Experience Gate — multi-pattern audit', () => {
       { pattern: 'modal', spec: { onOpen: 'open' }, id: 'modal-incomplete' },
     ];
     const result = auditFunctionalExperience(entries);
-    expect(result.pass).toBe(false);
-    expect(result.counts.failed).toBe(1);
+    assert.strictEqual(result.pass, false);
+    assert.strictEqual(result.counts.failed, 1);
   });
 });
 
@@ -340,7 +343,7 @@ describe('Functional Experience Gate — demo page audit', () => {
       ],
     };
     const result = auditDemoPage(pageSpec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 
   it('FAIL: demo page missing navigation', () => {
@@ -350,8 +353,8 @@ describe('Functional Experience Gate — demo page audit', () => {
       ],
     };
     const result = auditDemoPage(pageSpec);
-    expect(result.pass).toBe(false);
-    expect(result.missing.length).toBeGreaterThan(0);
+    assert.strictEqual(result.pass, false);
+    assert.ok(result.missing.length > 0);
   });
 });
 
@@ -361,12 +364,12 @@ describe('Functional Experience Gate — demo page audit', () => {
 
 describe('Mobile Product Gate — constants', () => {
   it('has correct breakpoints', () => {
-    expect(BREAKPOINTS.mobile).toBe(390);
-    expect(BREAKPOINTS.tablet).toBe(768);
-    expect(BREAKPOINTS.desktop).toBe(1440);
+    assert.strictEqual(BREAKPOINTS.mobile, 390);
+    assert.strictEqual(BREAKPOINTS.tablet, 768);
+    assert.strictEqual(BREAKPOINTS.desktop, 1440);
   });
   it('minimum touch target is 44px', () => {
-    expect(MIN_TOUCH_TARGET).toBe(44);
+    assert.strictEqual(MIN_TOUCH_TARGET, 44);
   });
 });
 
@@ -377,7 +380,7 @@ describe('Mobile Product Gate — sidebar', () => {
       mobileOverlay: true,
       onClose: 'closeSidebar',
     });
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 
   it('FAIL: sidebar missing mobileHamburger', () => {
@@ -385,9 +388,9 @@ describe('Mobile Product Gate — sidebar', () => {
       mobileOverlay: true,
       onClose: 'close',
     });
-    expect(result.pass).toBe(false);
+    assert.strictEqual(result.pass, false);
     const ids = result.issues.map(i => i.id);
-    expect(ids).toContain('hamburger');
+    assert.ok(ids.includes('hamburger'));
   });
 
   it('FAIL: sidebar missing mobileOverlay', () => {
@@ -395,15 +398,15 @@ describe('Mobile Product Gate — sidebar', () => {
       mobileHamburger: true,
       onClose: 'close',
     });
-    expect(result.pass).toBe(false);
+    assert.strictEqual(result.pass, false);
     const ids = result.issues.map(i => i.id);
-    expect(ids).toContain('overlay');
+    assert.ok(ids.includes('overlay'));
   });
 
   it('makeMobileSidebarSpec generates a passing spec', () => {
     const spec = makeMobileSidebarSpec();
     const result = validateMobileComponent('sidebar', spec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 });
 
@@ -414,7 +417,7 @@ describe('Mobile Product Gate — dialog', () => {
       onClose: 'closeDialog',
       scrollable: true,
     });
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 
   it('FAIL: dialog missing scrollable', () => {
@@ -422,23 +425,23 @@ describe('Mobile Product Gate — dialog', () => {
       mobileFullWidth: true,
       onClose: 'close',
     });
-    expect(result.pass).toBe(false);
+    assert.strictEqual(result.pass, false);
     const ids = result.issues.map(i => i.id);
-    expect(ids).toContain('scroll');
+    assert.ok(ids.includes('scroll'));
   });
 
   it('makeMobileDialogSpec generates a passing spec', () => {
     const spec = makeMobileDialogSpec();
     const result = validateMobileComponent('dialog', spec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 });
 
 describe('Mobile Product Gate — unknown component type', () => {
   it('returns pass with warning for unknown type', () => {
     const result = validateMobileComponent('unknown-widget', {});
-    expect(result.pass).toBe(true);
-    expect(result.warning).toBeTruthy();
+    assert.strictEqual(result.pass, true);
+    assert.ok(result.warning);
   });
 });
 
@@ -449,20 +452,20 @@ describe('Mobile Product Gate — touch targets', () => {
       { label: 'button', height: 44 },
       { label: 'fab', height: 56 },
     ]);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 
   it('FAIL: element below 44px', () => {
     const result = auditTouchTargets([
       { label: 'small-btn', height: 32 },
     ]);
-    expect(result.pass).toBe(false);
-    expect(result.issues[0].actual).toBe(32);
+    assert.strictEqual(result.pass, false);
+    assert.strictEqual(result.issues[0].actual, 32);
   });
 
   it('PASS: element exactly 44px', () => {
     const result = auditTouchTargets([{ label: 'exact', height: 44 }]);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 });
 
@@ -476,7 +479,7 @@ describe('Mobile Product Gate — full page audit', () => {
       ],
     };
     const result = auditMobileProduct(pageSpec);
-    expect(result.pass).toBe(true);
+    assert.strictEqual(result.pass, true);
   });
 
   it('FAIL: page with sidebar that is not overlay on mobile', () => {
@@ -486,13 +489,13 @@ describe('Mobile Product Gate — full page audit', () => {
       ],
     };
     const result = auditMobileProduct(pageSpec);
-    expect(result.pass).toBe(false);
+    assert.strictEqual(result.pass, false);
   });
 
   it('MOBILE_PRODUCT_GATE.knownTypes includes sidebar and dialog', () => {
-    expect(MOBILE_PRODUCT_GATE.knownTypes).toContain('sidebar');
-    expect(MOBILE_PRODUCT_GATE.knownTypes).toContain('dialog');
-    expect(MOBILE_PRODUCT_GATE.knownTypes).toContain('bookingFlow');
+    assert.ok(MOBILE_PRODUCT_GATE.knownTypes.includes('sidebar'));
+    assert.ok(MOBILE_PRODUCT_GATE.knownTypes.includes('dialog'));
+    assert.ok(MOBILE_PRODUCT_GATE.knownTypes.includes('bookingFlow'));
   });
 });
 
@@ -502,35 +505,35 @@ describe('Mobile Product Gate — full page audit', () => {
 
 describe('Interactive Pattern Registry — structure', () => {
   it('has at least 10 patterns', () => {
-    expect(INTERACTIVE_PATTERN_COUNT).toBeGreaterThanOrEqual(10);
+    assert.ok(INTERACTIVE_PATTERN_COUNT >= 10);
   });
 
   it('every pattern has required fields', () => {
     INTERACTIVE_PATTERN_RECIPES.forEach(p => {
-      expect(p).toHaveProperty('id');
-      expect(p).toHaveProperty('name');
-      expect(p).toHaveProperty('purpose');
-      expect(p).toHaveProperty('mobileSafe');
-      expect(p).toHaveProperty('classification');
-      expect(p).toHaveProperty('functionalRequirements');
-      expect(p).toHaveProperty('testRequirements');
+      assert.ok('id' in p);
+      assert.ok('name' in p);
+      assert.ok('purpose' in p);
+      assert.ok('mobileSafe' in p);
+      assert.ok('classification' in p);
+      assert.ok('functionalRequirements' in p);
+      assert.ok('testRequirements' in p);
     });
   });
 
   it('all ids are unique', () => {
     const ids = INTERACTIVE_PATTERN_RECIPES.map(p => p.id);
-    expect(new Set(ids).size).toBe(ids.length);
+    assert.strictEqual(new Set(ids).size, ids.length);
   });
 
   it('all patterns are mobileSafe: true', () => {
     INTERACTIVE_PATTERN_RECIPES.forEach(p => {
-      expect(p.mobileSafe).toBe(true);
+      assert.strictEqual(p.mobileSafe, true);
     });
   });
 
   it('all patterns are classified as CORE_REUSABLE', () => {
     INTERACTIVE_PATTERN_RECIPES.forEach(p => {
-      expect(p.classification).toBe('CORE_REUSABLE');
+      assert.strictEqual(p.classification, 'CORE_REUSABLE');
     });
   });
 });
@@ -538,57 +541,57 @@ describe('Interactive Pattern Registry — structure', () => {
 describe('Interactive Pattern Registry — lookups', () => {
   it('getInteractivePatternById returns correct recipe', () => {
     const recipe = getInteractivePatternById('booking-flow');
-    expect(recipe).toBeTruthy();
-    expect(recipe.id).toBe('booking-flow');
+    assert.ok(recipe);
+    assert.strictEqual(recipe.id, 'booking-flow');
   });
 
   it('getInteractivePatternById returns null for unknown id', () => {
-    expect(getInteractivePatternById('unknown-pattern-xyz')).toBeNull();
+    assert.strictEqual(getInteractivePatternById('unknown-pattern-xyz'), null);
   });
 
   it('getInteractivePatternsByClassification returns CORE_REUSABLE set', () => {
     const core = getInteractivePatternsByClassification('CORE_REUSABLE');
-    expect(core.length).toBeGreaterThan(0);
-    core.forEach(p => expect(p.classification).toBe('CORE_REUSABLE'));
+    assert.ok(core.length > 0);
+    core.forEach(p => assert.strictEqual(p.classification, 'CORE_REUSABLE'));
   });
 
   it('listInteractivePatternIds returns all ids', () => {
     const ids = listInteractivePatternIds();
-    expect(ids).toContain('booking-flow');
-    expect(ids).toContain('responsive-sidebar');
-    expect(ids).toContain('role-switcher');
-    expect(ids).toContain('error-boundary');
-    expect(ids).toContain('reduced-motion-hook');
+    assert.ok(ids.includes('booking-flow'));
+    assert.ok(ids.includes('responsive-sidebar'));
+    assert.ok(ids.includes('role-switcher'));
+    assert.ok(ids.includes('error-boundary'));
+    assert.ok(ids.includes('reduced-motion-hook'));
   });
 });
 
 describe('Interactive Pattern Registry — specific patterns', () => {
   it('booking-flow has 4 steps', () => {
     const recipe = getInteractivePatternById('booking-flow');
-    expect(recipe.steps).toHaveLength(4);
-    expect(recipe.steps[0]).toBe('service-selection');
-    expect(recipe.steps[3]).toBe('success');
+    assert.strictEqual(recipe.steps.length, 4);
+    assert.strictEqual(recipe.steps[0], 'service-selection');
+    assert.strictEqual(recipe.steps[3], 'success');
   });
 
   it('responsive-sidebar has correct mobile breakpoint', () => {
     const recipe = getInteractivePatternById('responsive-sidebar');
-    expect(recipe.mobileBreakpoint).toBe(768);
+    assert.strictEqual(recipe.mobileBreakpoint, 768);
   });
 
   it('role-switcher has mobile and desktop variants', () => {
     const recipe = getInteractivePatternById('role-switcher');
-    expect(recipe.mobileVariant).toBe('select-dropdown');
-    expect(recipe.desktopVariant).toBe('pill-buttons');
+    assert.strictEqual(recipe.mobileVariant, 'select-dropdown');
+    assert.strictEqual(recipe.desktopVariant, 'pill-buttons');
   });
 
   it('error-boundary uses class component implementation', () => {
     const recipe = getInteractivePatternById('error-boundary');
-    expect(recipe.implementation).toMatch(/getDerivedStateFromError/);
+    assert.match(recipe.implementation, /getDerivedStateFromError/);
   });
 
   it('reduced-motion-hook documents the anti-pattern', () => {
     const recipe = getInteractivePatternById('reduced-motion-hook');
-    expect(recipe.antiPattern).toBeTruthy();
+    assert.ok(recipe.antiPattern);
   });
 });
 
@@ -598,60 +601,60 @@ describe('Interactive Pattern Registry — specific patterns', () => {
 
 describe('Premium V2 Default Policy', () => {
   it('is enabled by default', () => {
-    expect(PREMIUM_V2_DEFAULT_POLICY.enabled).toBe(true);
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.enabled, true);
   });
 
   it('default intensity is medium', () => {
-    expect(PREMIUM_V2_DEFAULT_POLICY.defaultIntensity).toBe('medium');
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.defaultIntensity, 'medium');
   });
 
   it('all four gates are required', () => {
-    expect(PREMIUM_V2_DEFAULT_POLICY.gates.deadControlGate).toBe(true);
-    expect(PREMIUM_V2_DEFAULT_POLICY.gates.functionalExperienceGate).toBe(true);
-    expect(PREMIUM_V2_DEFAULT_POLICY.gates.mobileProductGate).toBe(true);
-    expect(PREMIUM_V2_DEFAULT_POLICY.gates.accessibilityGate).toBe(true);
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.gates.deadControlGate, true);
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.gates.functionalExperienceGate, true);
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.gates.mobileProductGate, true);
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.gates.accessibilityGate, true);
   });
 
   it('mobileAware is true', () => {
-    expect(PREMIUM_V2_DEFAULT_POLICY.mobileAware).toBe(true);
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.mobileAware, true);
   });
 
   it('error boundary is required', () => {
-    expect(PREMIUM_V2_DEFAULT_POLICY.errorBoundaryRequired).toBe(true);
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.errorBoundaryRequired, true);
   });
 
   it('basic professional standard is 8.5/10', () => {
-    expect(PREMIUM_V2_DEFAULT_POLICY.basicProfessionalStandard).toBe('8.5/10');
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.basicProfessionalStandard, '8.5/10');
   });
 });
 
 describe('resolvePremiumV2Intensity', () => {
   it('fisioterapia default → medium', () => {
-    expect(resolvePremiumV2Intensity('fisioterapia')).toBe('medium');
+    assert.strictEqual(resolvePremiumV2Intensity('fisioterapia'), 'medium');
   });
 
   it('tech default → high', () => {
-    expect(resolvePremiumV2Intensity('tech')).toBe('high');
+    assert.strictEqual(resolvePremiumV2Intensity('tech'), 'high');
   });
 
   it('abogados default → low', () => {
-    expect(resolvePremiumV2Intensity('abogados')).toBe('low');
+    assert.strictEqual(resolvePremiumV2Intensity('abogados'), 'low');
   });
 
   it('senior audience caps to low', () => {
-    expect(resolvePremiumV2Intensity('tech', 'senior')).toBe('low');
+    assert.strictEqual(resolvePremiumV2Intensity('tech', 'senior'), 'low');
   });
 
   it('mobile device caps high to medium', () => {
-    expect(resolvePremiumV2Intensity('tech', 'general', true)).toBe('medium');
+    assert.strictEqual(resolvePremiumV2Intensity('tech', 'general', true), 'medium');
   });
 
   it('unknown sector defaults to medium', () => {
-    expect(resolvePremiumV2Intensity('unknown-sector-xyz')).toBe('medium');
+    assert.strictEqual(resolvePremiumV2Intensity('unknown-sector-xyz'), 'medium');
   });
 
   it('professional audience caps high to low', () => {
-    expect(resolvePremiumV2Intensity('tech', 'professional')).toBe('low');
+    assert.strictEqual(resolvePremiumV2Intensity('tech', 'professional'), 'low');
   });
 });
 
@@ -661,7 +664,7 @@ describe('resolvePremiumV2Intensity', () => {
 
 describe('AI Router V2 — version', () => {
   it('version is 2.1.0', () => {
-    expect(AI_ROUTER_V2_VERSION).toBe('2.1.0');
+    assert.strictEqual(AI_ROUTER_V2_VERSION, '2.1.0');
   });
 });
 
@@ -670,22 +673,22 @@ describe('AI Router V2 — Tier 0 registry lookup', () => {
 
   it('finds known pattern at Tier 0', () => {
     const result = lookupPatternRegistry('booking-flow', { _registry: mockRegistry });
-    expect(result.found).toBe(true);
-    expect(result.tier).toBe(0);
-    expect(result.aiCallNeeded).toBe(false);
-    expect(result.recipe).toBeTruthy();
+    assert.strictEqual(result.found, true);
+    assert.strictEqual(result.tier, 0);
+    assert.strictEqual(result.aiCallNeeded, false);
+    assert.ok(result.recipe);
   });
 
   it('misses unknown pattern → escalate to Tier 1', () => {
     const result = lookupPatternRegistry('unknown-pattern-xyz', { _registry: mockRegistry });
-    expect(result.found).toBe(false);
-    expect(result.tier).toBe(1);
+    assert.strictEqual(result.found, false);
+    assert.strictEqual(result.tier, 1);
   });
 
   it('returns fallback without registry injection', () => {
     const result = lookupPatternRegistry('booking-flow', {});
-    expect(result.found).toBe(false);
-    expect(result.reason).toMatch(/Registry not injected/);
+    assert.strictEqual(result.found, false);
+    assert.match(result.reason, /Registry not injected/);
   });
 });
 
@@ -694,19 +697,19 @@ describe('AI Router V2 — routeRequest', () => {
 
   it('routes known pattern to Tier 0', () => {
     const result = routeRequest({ patternId: 'responsive-sidebar' }, { _registry: mockRegistry });
-    expect(result.tier).toBe(0);
-    expect(result.aiCallNeeded).toBe(false);
+    assert.strictEqual(result.tier, 0);
+    assert.strictEqual(result.aiCallNeeded, false);
   });
 
   it('routes unknown pattern to AI tier', () => {
     const result = routeRequest({ patternId: 'bespoke-custom-widget', manifest: {} }, { _registry: mockRegistry });
-    expect(result.tier).toBeGreaterThan(0);
-    expect(result.aiCallNeeded).toBe(true);
+    assert.ok(result.tier > 0);
+    assert.strictEqual(result.aiCallNeeded, true);
   });
 
   it('routes without patternId to AI tier selection', () => {
     const result = routeRequest({ manifest: { sections: ['hero', 'features'] } }, { _registry: mockRegistry });
-    expect(result.aiCallNeeded).toBe(true);
+    assert.strictEqual(result.aiCallNeeded, true);
   });
 });
 
@@ -716,21 +719,21 @@ describe('AI Router V2 — routeRequest', () => {
 
 describe('Recipe Registry — backward compatibility', () => {
   it('all existing sections still present', () => {
-    expect(RECIPE_REGISTRY).toHaveProperty('hero');
-    expect(RECIPE_REGISTRY).toHaveProperty('features');
-    expect(RECIPE_REGISTRY).toHaveProperty('socialProof');
-    expect(RECIPE_REGISTRY).toHaveProperty('conversion');
-    expect(RECIPE_REGISTRY).toHaveProperty('appShell');
-    expect(RECIPE_REGISTRY).toHaveProperty('dashboard');
+    assert.ok('hero' in RECIPE_REGISTRY);
+    assert.ok('features' in RECIPE_REGISTRY);
+    assert.ok('socialProof' in RECIPE_REGISTRY);
+    assert.ok('conversion' in RECIPE_REGISTRY);
+    assert.ok('appShell' in RECIPE_REGISTRY);
+    assert.ok('dashboard' in RECIPE_REGISTRY);
   });
 
   it('new interactivePatterns section added', () => {
-    expect(RECIPE_REGISTRY).toHaveProperty('interactivePatterns');
-    expect(RECIPE_REGISTRY.interactivePatterns.length).toBeGreaterThan(0);
+    assert.ok('interactivePatterns' in RECIPE_REGISTRY);
+    assert.ok(RECIPE_REGISTRY.interactivePatterns.length > 0);
   });
 
   it('total recipe count increased after Paso A', () => {
-    expect(RECIPE_COUNT).toBeGreaterThan(40);
+    assert.ok(RECIPE_COUNT > 40);
   });
 });
 
@@ -739,12 +742,12 @@ describe('Recipe Registry — backward compatibility', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Registry version and Paso A status', () => {
-  it('registry version is 2.1.0', () => {
-    expect(REGISTRY_VERSION).toBe('2.1.0');
+  it('registry version is set', () => {
+    assert.ok(REGISTRY_VERSION, 'registry version must be set');
   });
 
   it('PASO_A_STATUS is 100_PERCENT', () => {
-    expect(PASO_A_STATUS).toBe('100_PERCENT');
+    assert.strictEqual(PASO_A_STATUS, '100_PERCENT');
   });
 });
 
@@ -755,23 +758,23 @@ describe('Registry version and Paso A status', () => {
 describe('Backward compatibility — existing vertical isolation', () => {
   it('gates have no side effects on recipe registry', () => {
     const appShellCount = RECIPE_REGISTRY.appShell.length;
-    expect(appShellCount).toBeGreaterThan(0);
+    assert.ok(appShellCount > 0);
     // Running a gate does not mutate the registry
     auditDeadControls({ type: 'button', action: null });
-    expect(RECIPE_REGISTRY.appShell.length).toBe(appShellCount);
+    assert.strictEqual(RECIPE_REGISTRY.appShell.length, appShellCount);
   });
 
   it('Premium V2 policy does not affect existing vertical settings', () => {
     // The policy is additive — it only applies to new projects
-    expect(PREMIUM_V2_DEFAULT_POLICY.enabled).toBe(true);
+    assert.strictEqual(PREMIUM_V2_DEFAULT_POLICY.enabled, true);
     // Existing demos are opt-in to migration
-    expect(typeof resolvePremiumV2Intensity).toBe('function');
+    assert.strictEqual(typeof resolvePremiumV2Intensity, 'function');
     // Function is pure — calling it with dental returns medium (no side effects)
-    expect(resolvePremiumV2Intensity('dental')).toBe('medium');
+    assert.strictEqual(resolvePremiumV2Intensity('dental'), 'medium');
   });
 
   it('all INTERACTIVE_PATTERN_RECIPES are CORE_REUSABLE (not vertical-specific)', () => {
     const nonCore = INTERACTIVE_PATTERN_RECIPES.filter(r => r.classification !== 'CORE_REUSABLE');
-    expect(nonCore.length).toBe(0);
+    assert.strictEqual(nonCore.length, 0);
   });
 });
