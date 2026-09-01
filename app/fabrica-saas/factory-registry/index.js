@@ -58,7 +58,13 @@ export * from './observability.js';
 // ADV-02 — CI/CD Automatizado
 export * from './cicd.js';
 
-export const REGISTRY_VERSION = '3.0.0';
+// ADV-06 — Browser QA Engine
+export { BROWSER_QA_REGISTRY } from './browserQA.js';
+
+// ADV-07 — Premium Experience Engine
+export { PREMIUM_EXPERIENCE_REGISTRY } from './premiumExperience.js';
+
+export const REGISTRY_VERSION = '3.1.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-09-01';
 export const PASO_A_STATUS      = '100_PERCENT';
@@ -71,3 +77,5 @@ export const PASO_G_STATUS_MAIN = '100_PERCENT';
 export const PASO_H_STATUS_MAIN  = '100_PERCENT';
 export const PASO_ADV01_STATUS   = '100_PERCENT';
 export const PASO_ADV02_STATUS   = '100_PERCENT';
+export const PASO_ADV06_STATUS   = '100_PERCENT';
+export const PASO_ADV07_STATUS   = '100_PERCENT';
