@@ -16,7 +16,7 @@ export const INSTALL_STRATEGY = Object.freeze({
 });
 
 export function evaluateDependencyState(config = {}) {
-  const { hasLockfile = true, lockfileType = 'package-lock.json', expectedPM = 'npm', detectedPM = 'npm', hasNodeModules = false } = config;
+  const { hasLockfile = true, expectedPM = 'npm', detectedPM = 'npm', hasNodeModules = false } = config;
 
   const issues = [];
 
