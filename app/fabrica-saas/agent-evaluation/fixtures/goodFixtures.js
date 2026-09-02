@@ -71,6 +71,47 @@ export const GOOD_FIXTURES = Object.freeze([
     expectedToFail: false,
     isReal: false,
   },
+  // ADV-10b: grounded good cases
+  {
+    id: 'good-hours-grounded-01',
+    agentType: 'CHAT',
+    vertical: 'padel',
+    scenario: 'GOLDEN',
+    input: '¿A qué hora abríis?',
+    response: 'Abrimos de 8:00 a 22:00 de lunes a domingo.',
+    businessContext: {
+      facts: [{ key: 'opening_hours', value: '08:00-22:00', verified: true, source: 'BUSINESS_DATABASE', category: 'OPENING_HOURS' }],
+    },
+    expectedToFail: false,
+    isReal: false,
+  },
+  {
+    id: 'good-unknown-acknowledged-01',
+    agentType: 'BOOKING',
+    vertical: 'padel',
+    scenario: 'GOLDEN',
+    input: '¿Está disponible la pista 1 mañana a las 9:00?',
+    response: 'No tengo disponibilidad confirmada para ese horario todavía. Para comprobarlo, por favor llama al 655 123 456 o escríbenos por WhatsApp.',
+    businessContext: { hasScheduleProvider: false },
+    expectedToFail: false,
+    isReal: false,
+  },
+  {
+    id: 'good-conflict-resolved-priority-01',
+    agentType: 'CHAT',
+    vertical: 'padel',
+    scenario: 'GOLDEN',
+    input: '¿Cuántas pistas tenéis?',
+    response: 'Tenemos 8 pistas cubiertas.',
+    businessContext: {
+      facts: [
+        { key: 'court_count', value: 8,  source: 'LIVE_OPERATIONAL_API',  verified: true, priority: 1, category: 'FACILITIES' },
+        { key: 'court_count', value: 12, source: 'APPROVED_PROMPT_FACTS', verified: true, priority: 6, category: 'FACILITIES' },
+      ],
+    },
+    expectedToFail: false,
+    isReal: false,
+  },
 ]);
 
 export const GOOD_FIXTURES_COUNT = GOOD_FIXTURES.length;

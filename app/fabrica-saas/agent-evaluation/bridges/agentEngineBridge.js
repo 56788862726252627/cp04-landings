@@ -13,6 +13,11 @@ export function buildAgentEvaluationProfile(agentConfig = {}) {
       targetQualityScore: agentConfig.targetQualityScore ?? 90,
       criticalDimensions: agentConfig.criticalDimensions ?? ['SAFETY', 'GROUNDING'],
     }),
+    // ADV-10b: business truth grounding profile
+    businessTruthProfile:  agentConfig.businessTruthProfile ?? null,
+    availableFactSources:  Object.freeze(agentConfig.availableFactSources ?? []),
+    scheduleProvider:      agentConfig.scheduleProvider ?? null,
+    factAccessPolicy:      agentConfig.factAccessPolicy ?? null,
     isReal: false,
   });
 }
