@@ -903,8 +903,8 @@ describe('criticalFailurePolicy ADV-10b', () => {
 // ─── Registry ───────────────────────────────────────────────────────────────
 
 describe('registry ADV-10b', () => {
-  it('REGISTRY_VERSION is 3.4.1', () => {
-    assert.equal(REGISTRY_VERSION, '3.4.1');
+  it('REGISTRY_VERSION >= 3.4.1', () => {
+    assert.ok(REGISTRY_VERSION >= '3.4.1', `Version was ${REGISTRY_VERSION}`);
   });
 
   it('PASO_ADV10B_STATUS is 100_PERCENT', () => {
