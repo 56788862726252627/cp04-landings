@@ -88,7 +88,10 @@ export { SOCIAL_CONTENT_REGISTRY } from './socialContent.js';
 // ADV-15 — Docker + Reproducible Environments (Local / CI / Staging / Production)
 export { REPRODUCIBLE_ENVS_REGISTRY } from './reproducibleEnvs.js';
 
-export const REGISTRY_VERSION = '3.9.0';
+// ADV-16 — OpenRouter inside AI Router (Multi-Provider Model Routing + Fallback + Cost/Quality Policy)
+export { AI_ROUTER_REGISTRY } from './aiRouter.js';
+
+export const REGISTRY_VERSION = '4.0.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-09-02';
 export const PASO_A_STATUS      = '100_PERCENT';
@@ -112,3 +115,4 @@ export const PASO_ADV12_STATUS   = '100_PERCENT';
 export const PASO_ADV13_STATUS   = '100_PERCENT';
 export const PASO_ADV14_STATUS   = '100_PERCENT';
 export const PASO_ADV15_STATUS   = '100_PERCENT';
+export const PASO_ADV16_STATUS   = '100_PERCENT';
