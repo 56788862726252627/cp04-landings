@@ -2,7 +2,7 @@
 // Simulates execution pipeline without any side effects
 
 import { findTool }                         from '../registry/mcpRegistry.js';
-import { validateMCPToolCall, VALIDATION_RESULT } from '../validation/mcpContractValidator.js';
+import { validateMCPToolCall } from '../validation/mcpContractValidator.js';
 import { sanitizeMCPArguments }             from '../validation/mcpArgumentSanitizer.js';
 import { evaluateHumanApproval }            from '../policies/mcpHumanApprovalPolicy.js';
 import { evaluateCostGuard }                from '../policies/mcpCostGuard.js';
