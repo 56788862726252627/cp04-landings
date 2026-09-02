@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 // Media TTS Bridge — ADV-13 (bridges ADV-11 voice agent)
 
 export const TTS_PROVIDER_STATUS = Object.freeze({

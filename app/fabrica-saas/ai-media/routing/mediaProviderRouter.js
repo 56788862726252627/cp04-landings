@@ -16,7 +16,7 @@ export const ROUTING_CRITERIA = Object.freeze({
   AVAILABILITY:     'AVAILABILITY',
 });
 
-export function routeAvatarProvider(criteria = {}) {
+export function routeAvatarProvider(_criteria = {}) { // eslint-disable-line no-unused-vars
   return Object.freeze({
     provider: FixtureAvatarProvider,
     reason:   'FIXTURE_SAFE_DEFAULT',
@@ -24,7 +24,7 @@ export function routeAvatarProvider(criteria = {}) {
   });
 }
 
-export function routeLipSyncProvider(criteria = {}) {
+export function routeLipSyncProvider(_criteria = {}) { // eslint-disable-line no-unused-vars
   return Object.freeze({
     provider: FixtureLipSyncProvider,
     reason:   'FIXTURE_SAFE_DEFAULT',
