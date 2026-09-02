@@ -76,7 +76,10 @@ export { AGENT_EVALUATION_REGISTRY } from './agentEvaluation.js';
 // ADV-11 — Voice Agent Engine (Humanized AI Telephone Agents)
 export { VOICE_AGENT_REGISTRY } from './voiceAgent.js';
 
-export const REGISTRY_VERSION = '3.5.0';
+// ADV-12 — MCP Avanzado (Model Context Protocol + Tool Interoperability)
+export { MCP_REGISTRY } from './mcp.js';
+
+export const REGISTRY_VERSION = '3.6.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-09-02';
 export const PASO_A_STATUS      = '100_PERCENT';
@@ -96,3 +99,4 @@ export const PASO_ADV09_STATUS   = '100_PERCENT';
 export const PASO_ADV10_STATUS   = '100_PERCENT';
 export const PASO_ADV10B_STATUS  = '100_PERCENT';
 export const PASO_ADV11_STATUS   = '100_PERCENT';
+export const PASO_ADV12_STATUS   = '100_PERCENT';
