@@ -10,6 +10,7 @@ export const BOOKING_GROUNDING_RESULT = Object.freeze({
   UNCERTAIN:     'UNCERTAIN',
 });
 
+// eslint-disable-next-line no-unused-vars
 export function checkBookingGrounding(claim = {}, scheduleProvider = null, facts = []) {
   const { claimsAvailability, claimsOpen, day, time, slot, resourceId } = claim;
   const issues = [];

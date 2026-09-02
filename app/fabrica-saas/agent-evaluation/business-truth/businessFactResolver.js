@@ -11,6 +11,7 @@ export const FACT_RESOLUTION = Object.freeze({
   STALE:    'STALE',
 });
 
+// eslint-disable-next-line no-unused-vars
 export function resolveBusinessFact(clientId = '', factKey = '', facts = [], context = {}, timestamp = Date.now()) {
   const clientFacts = facts.filter(f => f.clientId === clientId && f.key === factKey && isFactActive(f));
 

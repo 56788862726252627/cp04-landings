@@ -11,7 +11,7 @@ export const AVAILABILITY_STATUS = Object.freeze({
 });
 
 export function resolveBusinessAvailability(params = {}, scheduleProvider = null) {
-  const { day, time, slot, resourceId, clientId } = params;
+  const { day, time, slot } = params;
 
   if (!scheduleProvider) {
     return Object.freeze({

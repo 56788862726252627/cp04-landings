@@ -9,6 +9,7 @@ export const CONSISTENCY_ISSUE = Object.freeze({
   CONFLICTING_FACT:     'CONFLICTING_FACT',
 });
 
+// eslint-disable-next-line no-unused-vars
 export function runBusinessFactConsistencyCheck(facts = [], context = {}) {
   const issues = [];
 

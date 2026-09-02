@@ -12,7 +12,6 @@ export const AVAILABILITY_GROUNDING_FAILURE = Object.freeze({
 
 export function evaluateAvailabilityGrounding(response = {}, scheduleContext = {}) {
   const failures  = [];
-  const text      = response.text ?? '';
   const claimsAvailable = response.claimsAvailability ?? false;
   const claimedDay = response.claimedDay ?? null;
 

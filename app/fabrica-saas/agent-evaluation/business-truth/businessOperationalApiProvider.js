@@ -1,4 +1,5 @@
 // Business Operational API Provider — ADV-10b
+/* eslint-disable no-unused-vars */
 
 export const BusinessOperationalApiProvider = Object.freeze({
   type:        'LIVE_OPERATIONAL_API',

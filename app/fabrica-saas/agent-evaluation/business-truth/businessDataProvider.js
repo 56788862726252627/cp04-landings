@@ -1,4 +1,5 @@
 // Business Data Provider — DB foundation — ADV-10b
+/* eslint-disable no-unused-vars */
 
 export const BusinessDataProvider = Object.freeze({
   type:        'BUSINESS_DATABASE',

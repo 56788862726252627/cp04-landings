@@ -1,7 +1,5 @@
 // Business Fact Grounding Evaluator — ADV-10b
 
-import { FACT_RESOLUTION } from './business-truth/businessFactResolver.js';
-
 export const BUSINESS_GROUNDING_STATUS = Object.freeze({
   SUPPORTED:           'SUPPORTED',
   PARTIALLY_SUPPORTED: 'PARTIALLY_SUPPORTED',
@@ -11,9 +9,8 @@ export const BUSINESS_GROUNDING_STATUS = Object.freeze({
 });
 
 export function evaluateBusinessFactGrounding(response = {}, facts = []) {
-  const claims        = response.claims ?? [];
-  const responseText  = response.text ?? '';
-  const evaluations   = [];
+  const claims      = response.claims ?? [];
+  const evaluations = [];
 
   for (const claim of claims) {
     const matchingFact = facts.find(f => f.key === claim.key && f.clientId === (response.clientId ?? f.clientId));

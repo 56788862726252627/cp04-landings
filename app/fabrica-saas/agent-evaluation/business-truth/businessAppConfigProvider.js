@@ -1,4 +1,5 @@
 // Business App Config Provider — ADV-10b
+/* eslint-disable no-unused-vars */
 
 export const BusinessAppConfigProvider = Object.freeze({
   type:        'APP_CONFIG',
