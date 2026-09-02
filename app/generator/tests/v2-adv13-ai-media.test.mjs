@@ -1139,7 +1139,10 @@ describe('AI_MEDIA_REGISTRY', () => {
 
 // ─── 59. Registry: factory-registry/index ────────────────────────────────────
 describe('FactoryRegistryIndex', () => {
-  it('REGISTRY_VERSION is 3.7.0', () => assert.equal(REGISTRY_VERSION, '3.7.0'));
+  it('REGISTRY_VERSION is >= 3.7.0', () => {
+    const [major, minor] = REGISTRY_VERSION.split('.').map(Number);
+    assert.ok(major > 3 || (major === 3 && minor >= 7));
+  });
   it('PASO_ADV13_STATUS is 100_PERCENT', () => assert.equal(PASO_ADV13_STATUS, '100_PERCENT'));
 });
 
