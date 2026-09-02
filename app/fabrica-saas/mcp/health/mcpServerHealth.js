@@ -10,7 +10,7 @@ export const HEALTH_STATUS = Object.freeze({
 export function evaluateMCPHealth(server, metrics = {}) {
   if (!server) return Object.freeze({ status: HEALTH_STATUS.UNKNOWN, isReal: false });
 
-  const { errorRate = 0, latencyMs = 0, successCount = 0, failureCount = 0 } = metrics;
+  const { latencyMs = 0, successCount = 0, failureCount = 0 } = metrics;
   const total = successCount + failureCount;
   const rate  = total > 0 ? failureCount / total : 0;
 
