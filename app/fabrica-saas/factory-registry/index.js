@@ -79,7 +79,10 @@ export { VOICE_AGENT_REGISTRY } from './voiceAgent.js';
 // ADV-12 — MCP Avanzado (Model Context Protocol + Tool Interoperability)
 export { MCP_REGISTRY } from './mcp.js';
 
-export const REGISTRY_VERSION = '3.6.0';
+// ADV-13 — AI Media Engine V1 (Avatar + Voice + Video IA)
+export { AI_MEDIA_REGISTRY } from './aiMedia.js';
+
+export const REGISTRY_VERSION = '3.7.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-09-02';
 export const PASO_A_STATUS      = '100_PERCENT';
@@ -100,3 +103,4 @@ export const PASO_ADV10_STATUS   = '100_PERCENT';
 export const PASO_ADV10B_STATUS  = '100_PERCENT';
 export const PASO_ADV11_STATUS   = '100_PERCENT';
 export const PASO_ADV12_STATUS   = '100_PERCENT';
+export const PASO_ADV13_STATUS   = '100_PERCENT';
