@@ -85,7 +85,10 @@ export { AI_MEDIA_REGISTRY } from './aiMedia.js';
 // ADV-14 — Social Content Engine (Strategy + Generation + Calendar + QA + Make Bridge)
 export { SOCIAL_CONTENT_REGISTRY } from './socialContent.js';
 
-export const REGISTRY_VERSION = '3.8.0';
+// ADV-15 — Docker + Reproducible Environments (Local / CI / Staging / Production)
+export { REPRODUCIBLE_ENVS_REGISTRY } from './reproducibleEnvs.js';
+
+export const REGISTRY_VERSION = '3.9.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-09-02';
 export const PASO_A_STATUS      = '100_PERCENT';
@@ -108,3 +111,4 @@ export const PASO_ADV11_STATUS   = '100_PERCENT';
 export const PASO_ADV12_STATUS   = '100_PERCENT';
 export const PASO_ADV13_STATUS   = '100_PERCENT';
 export const PASO_ADV14_STATUS   = '100_PERCENT';
+export const PASO_ADV15_STATUS   = '100_PERCENT';
