@@ -1,0 +1,58 @@
+// Team Fixtures — ADV-17 (6 pre-built teams, fixture/simulation only)
+
+export const TEAM_FIXTURES = Object.freeze([
+  {
+    id:          'team-sales-001',
+    preset:      'SALES',
+    description: 'Full sales team: lead qualification → pitch → CRM update',
+    agents:      Object.freeze(['lead-1', 'sales-1', 'crm-1']),
+    supervisor:  'SUPERVISOR',
+    objective:   'Qualify and close new SaaS leads',
+    isReal:      false,
+  },
+  {
+    id:          'team-booking-001',
+    preset:      'BOOKING',
+    description: 'Chat + booking specialist for reservations and schedule conflicts',
+    agents:      Object.freeze(['chat-1', 'booking-1']),
+    supervisor:  'SUPERVISOR',
+    objective:   'Handle booking requests end to end',
+    isReal:      false,
+  },
+  {
+    id:          'team-support-001',
+    preset:      'SUPPORT',
+    description: 'First-line support with human escalation path',
+    agents:      Object.freeze(['chat-1', 'support-1']),
+    supervisor:  'SUPERVISOR',
+    objective:   'Resolve customer support tickets',
+    isReal:      false,
+  },
+  {
+    id:          'team-content-001',
+    preset:      'CONTENT',
+    description: 'Content pipeline: research → write → media production',
+    agents:      Object.freeze(['research-1', 'content-1', 'media-1']),
+    supervisor:  'SUPERVISOR',
+    objective:   'Produce marketing content for social channels',
+    isReal:      false,
+  },
+  {
+    id:          'team-operations-001',
+    preset:      'OPERATIONS',
+    description: 'Operations team: QA + ops + CRM for business health checks',
+    agents:      Object.freeze(['qa-1', 'ops-1', 'crm-1']),
+    supervisor:  'SUPERVISOR',
+    objective:   'Run weekly business operations audit',
+    isReal:      false,
+  },
+  {
+    id:          'team-general-001',
+    preset:      'GENERAL_ASSISTANT',
+    description: 'Single-agent general assistant — chat only',
+    agents:      Object.freeze(['chat-1']),
+    supervisor:  'SUPERVISOR',
+    objective:   'Handle general FAQ and triage',
+    isReal:      false,
+  },
+]);
