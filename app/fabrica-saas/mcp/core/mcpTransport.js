@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 // MCP Transport — ADV-12 (foundation stubs — NO_REAL_MCP_CREDENTIALS=SI)
 
 export const TRANSPORT_TYPE = Object.freeze({

@@ -100,7 +100,10 @@ export { BACKUP_RESTORE_REGISTRY } from './backupRestore.js';
 // ADV-19 — Security Engine + Privacy by Design + Consent Foundation + GDPR Technical Readiness
 export { SECURITY_PRIVACY_REGISTRY } from './securityPrivacy.js';
 
-export const REGISTRY_VERSION = '4.3.0';
+// ADV-20 — Health Dashboard Transversal
+export { HEALTH_DASHBOARD_REGISTRY } from './healthDashboard.js';
+
+export const REGISTRY_VERSION = '4.5.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-09-03';
 export const PASO_A_STATUS      = '100_PERCENT';
@@ -113,6 +116,9 @@ export const PASO_G_STATUS_MAIN = '100_PERCENT';
 export const PASO_H_STATUS_MAIN  = '100_PERCENT';
 export const PASO_ADV01_STATUS   = '100_PERCENT';
 export const PASO_ADV02_STATUS   = '100_PERCENT';
+export const PASO_ADV03_STATUS   = '100_PERCENT';
+export const PASO_ADV04_STATUS   = '100_PERCENT';
+export const PASO_ADV05_STATUS   = '100_PERCENT';
 export const PASO_ADV06_STATUS   = '100_PERCENT';
 export const PASO_ADV07_STATUS   = '100_PERCENT';
 export const PASO_ADV08_STATUS   = '100_PERCENT';
@@ -128,3 +134,5 @@ export const PASO_ADV16_STATUS   = '100_PERCENT';
 export const PASO_ADV17_STATUS   = '100_PERCENT';
 export const PASO_ADV18_STATUS   = '100_PERCENT';
 export const PASO_ADV19_STATUS   = '100_PERCENT';
+export const PASO_ADV20_STATUS   = '100_PERCENT';
+export const PASO_ADV21_STATUS   = '100_PERCENT';
