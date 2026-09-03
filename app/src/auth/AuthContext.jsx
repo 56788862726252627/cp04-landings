@@ -34,9 +34,19 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
 
+    // El access_token ya no se persiste (corrección P0 2026-09-03): cada
+    // carga de la app arranca sin él en memoria, así que la única forma de
+    // recuperar una sesión existente es intentar refreshSession() contra
+    // la cookie HttpOnly del Worker. Si no hay cookie (visitante sin
+    // sesión, o la cookie expiró), esto falla rápido y sin ruido — mismo
+    // comportamiento observable que antes para un visitante anónimo.
     async function restore() {
-      if (!authService.getAccessToken()) {
-        if (!cancelled) setLoading(false);
+      const refreshed = await authService.refreshSession();
+
+      if (cancelled) return;
+
+      if (!refreshed.ok) {
+        setLoading(false);
         return;
       }
 

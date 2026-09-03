@@ -25,6 +25,57 @@ export function parseAuthorizationHeader(request) {
   return match ? match[1].trim() : null;
 }
 
+// Cookie HttpOnly que transporta el refresh token de Supabase. El access
+// token JAMÁS se persiste en disco: vive solo en memoria del cliente (ver
+// app/src/auth/authService.js) y viaja como Authorization: Bearer en cada
+// petición. Solo el refresh token —la credencial de larga duración capaz de
+// generar nuevos access tokens días después— necesita esta protección:
+// es lo único que un XSS en el frontend podría robar de localStorage y
+// reutilizar mucho después de la sesión activa (hallazgo P0 de la
+// auditoría 2026-09-03: ambos tokens vivían en claro en localStorage).
+export const CP04_REFRESH_COOKIE_NAME = "cp04_refresh_token";
+
+const CP04_REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 días
+
+export function parseCookies(request) {
+  const raw = request?.headers?.get?.("Cookie") || "";
+  const out = {};
+
+  raw.split(";").forEach((pair) => {
+    const separatorIndex = pair.indexOf("=");
+    if (separatorIndex === -1) return;
+
+    const key = pair.slice(0, separatorIndex).trim();
+    if (!key) return;
+
+    const rawValue = pair.slice(separatorIndex + 1).trim();
+    try {
+      out[key] = decodeURIComponent(rawValue);
+    } catch {
+      out[key] = rawValue;
+    }
+  });
+
+  return out;
+}
+
+export function getRefreshTokenFromCookie(request) {
+  return parseCookies(request)[CP04_REFRESH_COOKIE_NAME] || null;
+}
+
+// SameSite=None + Secure: el Worker (workers.dev) y Cloudflare Pages
+// (pages.dev) son orígenes distintos, así que esta cookie es cross-site por
+// definición — sin None el navegador nunca la enviaría. Path restringido a
+// /api/auth: el navegador no la adjunta a /api/reservas, /api/qr ni al
+// resto de rutas de negocio.
+export function buildRefreshCookie(token) {
+  return `${CP04_REFRESH_COOKIE_NAME}=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=None; Path=/api/auth; Max-Age=${CP04_REFRESH_COOKIE_MAX_AGE_SECONDS}`;
+}
+
+export function buildClearedRefreshCookie() {
+  return `${CP04_REFRESH_COOKIE_NAME}=; HttpOnly; Secure; SameSite=None; Path=/api/auth; Max-Age=0`;
+}
+
 // Resolución ESTRICTA: a diferencia del normalizador usado para pintar la UI
 // (que degrada un rol desconocido a PLAYER por comodidad visual), aquí un rol
 // que no está en la lista oficial se considera inválido, no PLAYER.

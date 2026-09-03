@@ -5,6 +5,9 @@ import {
   authorizeRole,
   requireAuth,
   requireRoles,
+  getRefreshTokenFromCookie,
+  buildRefreshCookie,
+  buildClearedRefreshCookie,
 } from "../auth/authorization.js";
 import {
   fetchLiveMakeInventory,
@@ -70,6 +73,11 @@ function corsHeaders(request, env) {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    // Necesario para que el navegador acepte/envíe la cookie HttpOnly de
+    // refresh token en peticiones cross-site (workers.dev <-> pages.dev).
+    // Seguro porque el origen ya se valida explícitamente arriba y nunca
+    // se refleja "*".
+    "Access-Control-Allow-Credentials": "true",
     "Vary": "Origin",
   };
 }
@@ -2650,6 +2658,12 @@ async function handleAuthRoute(request, env, url) {
   }
 
   if (path === "/api/auth/logout" && method === "POST") {
+    // Se limpia la cookie de refresh SIEMPRE, exista o no Authorization
+    // Bearer: un logout debe dejar el navegador sin credencial reutilizable
+    // en ningún caso, incluso si el access token en memoria ya se perdió
+    // (recarga de página, pestaña distinta, etc.).
+    const logoutHeaders = { ...headers, "Set-Cookie": buildClearedRefreshCookie() };
+
     if (!supabaseReady) {
       return jsonResponse(
         {
@@ -2659,7 +2673,7 @@ async function handleAuthRoute(request, env, url) {
           message: "Logout preparado. Pendiente invalidar sesión real cuando exista backend auth."
         },
         200,
-        headers
+        logoutHeaders
       );
     }
 
@@ -2674,7 +2688,7 @@ async function handleAuthRoute(request, env, url) {
           message: "Sesión local cerrada. No había token Bearer que invalidar."
         },
         200,
-        headers
+        logoutHeaders
       );
     }
 
@@ -2707,7 +2721,7 @@ async function handleAuthRoute(request, env, url) {
           : "Logout solicitado, revisar proveedor."
       },
       response.ok ? 200 : response.status,
-      headers
+      logoutHeaders
     );
   }
 
@@ -2718,12 +2732,16 @@ async function handleAuthRoute(request, env, url) {
       return cp04AuthNotConfiguredResponse(request, env, {
         endpoint: "/api/auth/refresh",
         received: {
-          refresh_token: Boolean(body.refresh_token)
+          refresh_token: Boolean(body.refresh_token) || Boolean(getRefreshTokenFromCookie(request))
         }
       });
     }
 
-    const refreshToken = String(body.refresh_token || "");
+    // Preferimos la cookie HttpOnly (el frontend real ya no guarda ni envía
+    // el refresh token por JS): el body solo queda como vía de compatibilidad
+    // para llamadas de servidor a servidor / herramientas internas que
+    // posean su propio token.
+    const refreshToken = String(body.refresh_token || "").trim() || getRefreshTokenFromCookie(request) || "";
 
     if (!refreshToken) {
       return jsonResponse(
@@ -2752,19 +2770,22 @@ async function handleAuthRoute(request, env, url) {
       return cp04SupabaseErrorResponse(request, env, result, "No se pudo renovar la sesión.");
     }
 
+    // Supabase puede rotar el refresh token en cada renovación: la cookie
+    // siempre se reescribe con el que devuelva, nunca con el antiguo.
+    const rotatedRefreshToken = result.data?.refresh_token || refreshToken;
+
     return jsonResponse(
       {
         ok: true,
         auth_ready: true,
         provider: "supabase",
         access_token: result.data?.access_token || null,
-        refresh_token: result.data?.refresh_token || null,
         expires_in: result.data?.expires_in || null,
         token_type: result.data?.token_type || "bearer",
         session: "active"
       },
       200,
-      headers
+      { ...headers, "Set-Cookie": buildRefreshCookie(rotatedRefreshToken) }
     );
   }
 
@@ -2809,6 +2830,14 @@ async function handleAuthRoute(request, env, url) {
 
     const user = cp04MapSupabaseUserToCp04(result.data?.user, "PLAYER");
 
+    // El refresh token NUNCA viaja en el JSON al cliente: solo como cookie
+    // HttpOnly (ver auth/authorization.js, buildRefreshCookie). El frontend
+    // solo recibe el access_token, de vida corta, para usar como Bearer.
+    const loginRefreshToken = result.data?.refresh_token || null;
+    const loginHeaders = loginRefreshToken
+      ? { ...headers, "Set-Cookie": buildRefreshCookie(loginRefreshToken) }
+      : headers;
+
     return jsonResponse(
       {
         ok: true,
@@ -2818,13 +2847,12 @@ async function handleAuthRoute(request, env, url) {
         role: user.role,
         permissions: user.permissions,
         access_token: result.data?.access_token || null,
-        refresh_token: result.data?.refresh_token || null,
         expires_in: result.data?.expires_in || null,
         token_type: result.data?.token_type || "bearer",
         session: "active"
       },
       200,
-      headers
+      loginHeaders
     );
   }
 
