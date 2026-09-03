@@ -104,6 +104,58 @@ const ROLES = {
   },
 };
 
+// ─── Fondos premium por rol (Login split-panel) ───────────────────────────────
+const ROLE_BG = {
+  _default: {
+    grad: `linear-gradient(140deg, #071e3d 0%, ${C.primary} 60%, #0c3460 100%)`,
+    overlay: 'radial-gradient(circle at 20% 80%, rgba(14,165,233,0.25) 0%, transparent 45%), radial-gradient(circle at 80% 15%, rgba(3,105,161,0.35) 0%, transparent 40%)',
+    headline: 'Bienvenido/a a Lumen Dental',
+    sub: 'La plataforma digital de tu clínica dental premium.',
+    points: ['Gestión integral de pacientes', 'Automatizaciones inteligentes', 'Seguimiento en tiempo real', 'Datos 100% seguros'],
+    accent: C.primaryL,
+  },
+  admin: {
+    grad: 'linear-gradient(140deg, #071524 0%, #0B2545 45%, #0E3F6B 100%)',
+    overlay: 'radial-gradient(circle at 15% 20%, rgba(3,105,161,0.4) 0%, transparent 40%), radial-gradient(circle at 85% 85%, rgba(6,182,212,0.2) 0%, transparent 35%)',
+    headline: 'Control total.\nDecisiones inteligentes.',
+    sub: 'Panel ejecutivo con visión 360° del negocio.',
+    points: ['KPIs ejecutivos en tiempo real', 'CRM + pipeline de conversión', '20 automatizaciones activas', '16 integraciones auditadas'],
+    accent: C.primaryL,
+  },
+  staff: {
+    grad: 'linear-gradient(140deg, #1E1B4B 0%, #312E81 50%, #1e3a5f 100%)',
+    overlay: 'radial-gradient(circle at 30% 70%, rgba(124,58,237,0.35) 0%, transparent 45%), radial-gradient(circle at 75% 15%, rgba(99,102,241,0.25) 0%, transparent 40%)',
+    headline: 'La primera sonrisa\nempieza aquí.',
+    sub: 'Recepción moderna. Gestión ágil. Pacientes felices.',
+    points: ['Agenda del día en tiempo real', 'Check-in en un clic', 'Comunicación directa', 'Alertas automáticas'],
+    accent: '#A78BFA',
+  },
+  dentist: {
+    grad: 'linear-gradient(140deg, #052e16 0%, #065f46 45%, #0f2437 100%)',
+    overlay: 'radial-gradient(circle at 25% 30%, rgba(16,185,129,0.3) 0%, transparent 45%), radial-gradient(circle at 80% 75%, rgba(5,150,105,0.2) 0%, transparent 40%)',
+    headline: 'Tecnología al servicio\nde la salud.',
+    sub: 'Tu consulta digital. Precisa, rápida y sin papeles.',
+    points: ['Agenda propia filtrada', 'Historial clínico digital', 'Presupuestos en segundos', 'Seguimiento de tratamientos'],
+    accent: '#34D399',
+  },
+  marketing: {
+    grad: 'linear-gradient(140deg, #1c1007 0%, #78350f 45%, #1c0e2e 100%)',
+    overlay: 'radial-gradient(circle at 20% 30%, rgba(245,158,11,0.35) 0%, transparent 45%), radial-gradient(circle at 85% 70%, rgba(251,191,36,0.2) 0%, transparent 40%)',
+    headline: 'Convierte datos\nen pacientes.',
+    sub: 'Pipeline de leads, campañas, SEO y social desde un panel.',
+    points: ['KPIs de captación en vivo', 'Leads con scoring automático', 'Email + Social + SEO', 'ROI por canal de captación'],
+    accent: '#FCD34D',
+  },
+  patient: {
+    grad: 'linear-gradient(140deg, #0b1426 0%, #0c4a6e 50%, #0369a1 100%)',
+    overlay: 'radial-gradient(circle at 50% 80%, rgba(14,165,233,0.2) 0%, transparent 45%), radial-gradient(circle at 80% 10%, rgba(236,72,153,0.15) 0%, transparent 40%)',
+    headline: 'Tu salud,\nen tus manos.',
+    sub: 'Tu espacio personal seguro. Citas, historial y facturas.',
+    points: ['Citas online en segundos', 'Historial siempre disponible', 'Facturas y presupuestos PDF', 'Mensajes con tu clínica'],
+    accent: '#F9A8D4',
+  },
+};
+
 // ─── Componentes base ─────────────────────────────────────────────────────────
 function Pill({ label, color, sm }) {
   const c = color || C.primary;
@@ -115,12 +167,21 @@ function Pill({ label, color, sm }) {
     }}>{label}</span>
   );
 }
-function Kpi({ label, value, sub, color, icon }) {
+function Kpi({ label, value, sub, color, icon, trend }) {
+  // trend: { dir: 'up'|'down', pct: '12%', label?: 'vs mes ant.' }
+  const trendColor = trend?.dir === 'up' ? C.success : C.danger;
+  const trendArrow = trend?.dir === 'up' ? '↑' : '↓';
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 16px', textAlign: 'center' }}>
-      {icon && <div style={{ fontSize: 22, marginBottom: 4 }}>{icon}</div>}
-      <div style={{ fontSize: 24, fontWeight: 800, color: color || C.primary }}>{value}</div>
-      <div style={{ fontSize: 12, color: C.text, fontWeight: 600, marginTop: 3 }}>{label}</div>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: '18px 16px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.18)', transition: '0.2s' }}>
+      {icon && <div style={{ fontSize: 22, marginBottom: 6 }}>{icon}</div>}
+      <div style={{ fontSize: 26, fontWeight: 900, color: color || C.primary, letterSpacing: '-0.5px' }}>{value}</div>
+      {trend && (
+        <div style={{ fontSize: 11, color: trendColor, fontWeight: 700, marginTop: 2 }}>
+          {trendArrow} {trend.pct}
+          {trend.label && <span style={{ color: C.muted, fontWeight: 400 }}> {trend.label}</span>}
+        </div>
+      )}
+      <div style={{ fontSize: 12, color: C.text, fontWeight: 600, marginTop: 4 }}>{label}</div>
       {sub && <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{sub}</div>}
     </div>
   );
@@ -169,33 +230,60 @@ function LandingPage({ onLogin }) {
         </div>
       </nav>
 
-      {/* HERO */}
-      <section style={{ background: `linear-gradient(135deg, ${C.primary} 0%, #0B2545 55%, #1a0e35 100%)`, padding: '80px 32px 90px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(14,165,233,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245,158,11,0.1) 0%, transparent 40%)', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: 680, margin: '0 auto', position: 'relative' }}>
-          <div style={{ display: 'inline-block', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: 20, padding: '5px 16px', marginBottom: 20, fontSize: 13, fontWeight: 600, color: C.accent }}>
-            ✨ Primera visita gratuita · Sin compromiso
+      {/* HERO — dual column */}
+      <section style={{ background: `linear-gradient(135deg, #071e3d 0%, ${C.primary} 50%, #0c3460 100%)`, padding: '0 0 0', position: 'relative', overflow: 'hidden', minHeight: 560, display: 'flex', alignItems: 'stretch' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 10% 80%, rgba(14,165,233,0.18) 0%, transparent 50%), radial-gradient(circle at 85% 15%, rgba(245,158,11,0.12) 0%, transparent 45%)', pointerEvents: 'none' }} />
+        {/* Decorative ring */}
+        <div style={{ position: 'absolute', right: -120, top: '50%', transform: 'translateY(-50%)', width: 500, height: 500, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', right: -60, top: '50%', transform: 'translateY(-50%)', width: 360, height: 360, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px', width: '100%', display: 'flex', gap: 48, alignItems: 'center', position: 'relative' }}>
+          {/* Left column */}
+          <div style={{ flex: '1 1 52%' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 24, padding: '6px 16px', marginBottom: 24, fontSize: 12, fontWeight: 700, color: C.accent }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.accent, display: 'inline-block' }} />
+              Primera visita gratuita · Sin compromiso
+            </div>
+            <h1 style={{ margin: '0 0 20px', fontSize: 'clamp(34px, 4vw, 56px)', fontWeight: 900, color: C.white, lineHeight: 1.12, letterSpacing: '-0.5px' }}>
+              Tu sonrisa merece<br />
+              <span style={{ background: `linear-gradient(90deg, ${C.accent} 0%, #FDE68A 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                el mejor cuidado
+              </span>
+            </h1>
+            <p style={{ color: 'rgba(186,230,253,0.9)', fontSize: 17, lineHeight: 1.7, marginBottom: 32, maxWidth: 460 }}>
+              Clínica dental de referencia en Málaga. Tecnología de vanguardia, especialistas con más de 15 años de experiencia y financiación hasta 24 meses sin intereses.
+            </p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40 }}>
+              {btn('Pedir cita gratis →', true, onLogin)}
+              {btn('Ver tratamientos', false, () => {})}
+            </div>
           </div>
-          <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(32px, 5vw, 54px)', fontWeight: 900, color: C.white, lineHeight: 1.15 }}>
-            Tu sonrisa merece<br />
-            <span style={{ background: `linear-gradient(90deg, ${C.accent}, #FDE68A)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              la mejor atención
-            </span>
-          </h1>
-          <p style={{ color: '#BAE6FD', fontSize: 18, lineHeight: 1.6, marginBottom: 32, maxWidth: 520, margin: '0 auto 32px' }}>
-            Tecnología dental de vanguardia con el trato cercano que mereces. Sin esperas, sin letra pequeña y con financiación real hasta 24 meses.
-          </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {btn('Pedir cita gratis →', true, onLogin)}
-            {btn('Ver tratamientos', false, () => {})}
-          </div>
-          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 36, flexWrap: 'wrap' }}>
-            {[['⭐ 4.8/5', '240+ reseñas'], ['🦷 +1.200', 'pacientes activos'], ['💳', 'Fin. 0% interés']].map(([v, l], i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: C.white }}>{v}</div>
-                <div style={{ fontSize: 12, color: '#93C5FD' }}>{l}</div>
-              </div>
-            ))}
+          {/* Right column — visual card */}
+          <div style={{ flex: '0 0 340px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 24 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 16, fontWeight: 600 }}>Próximas citas disponibles</div>
+              {AGENDA_HOY.slice(0, 3).map(c => (
+                <div key={c.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ background: C.primary + '44', color: C.primaryL, borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 800, minWidth: 50, textAlign: 'center' }}>{c.hora}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, color: C.white, fontWeight: 600 }}>{c.tratamiento}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>{c.prof}</div>
+                  </div>
+                  <Pill label={c.estado} color={c.estado === 'urgente' ? C.danger : c.estado === 'confirmada' ? C.success : C.muted} sm />
+                </div>
+              ))}
+              <button onClick={onLogin} style={{ marginTop: 16, width: '100%', background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '11px 0', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                Solicitar cita →
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {[['🔬', '3D Scan', 'Diagnóstico digital'], ['💳', '0% interés', '24 meses'], ['⚡', 'Urgencias', 'Mismo día'], ['📱', 'App propia', 'Sin papeles']].map(([ic, t, s]) => (
+                <div key={t} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px' }}>
+                  <div style={{ fontSize: 18, marginBottom: 4 }}>{ic}</div>
+                  <div style={{ fontSize: 12, color: C.white, fontWeight: 700 }}>{t}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>{s}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -287,16 +375,42 @@ function LandingPage({ onLogin }) {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section style={{ background: C.lBg, padding: '72px 32px' }}>
+        <div style={{ maxWidth: 740, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: C.primary, textTransform: 'uppercase', marginBottom: 8 }}>Preguntas frecuentes</div>
+            <h2 style={{ fontSize: 30, fontWeight: 800, color: C.lText, margin: 0 }}>Todo lo que quieres saber</h2>
+          </div>
+          {[
+            { q: '¿Duele un implante dental?', a: 'El procedimiento se realiza bajo anestesia local. La mayoría de pacientes lo describen como indoloro durante la intervención y con molestias leves las primeras 24-48h.' },
+            { q: '¿Cuánto tiempo dura un tratamiento de ortodoncia?', a: 'Depende del caso. Los alineadores Invisalign suelen durar entre 6 y 18 meses. La ortodoncia tradicional puede extenderse 18-24 meses en casos complejos.' },
+            { q: '¿Ofrecéis financiación?', a: 'Sí. Ofrecemos financiación propia hasta 24 meses sin intereses, aprobada en clínica en el mismo día, sin trámites externos.' },
+            { q: '¿Cuándo puedo pedir cita para urgencias?', a: 'Atendemos urgencias el mismo día. Llámanos y te asignamos el primer hueco disponible, habitualmente en menos de 2 horas.' },
+            { q: '¿Tiene la clínica parking?', a: 'Disponemos de plazas de aparcamiento en el edificio y zona de parking gratuito en la calle adyacente.' },
+          ].map((faq, i) => (
+            <div key={i} style={{ borderBottom: `1px solid ${C.lBorder}`, padding: '20px 0' }}>
+              <div style={{ fontWeight: 700, color: C.lText, fontSize: 15, marginBottom: 8 }}>
+                <span style={{ color: C.primary, marginRight: 10 }}>Q.</span>{faq.q}
+              </div>
+              <div style={{ color: C.lMuted, fontSize: 14, lineHeight: 1.6, paddingLeft: 22 }}>{faq.a}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* CTA FINAL */}
-      <section style={{ background: C.lSurface, padding: '80px 32px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 560, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 36, fontWeight: 800, color: C.lText, margin: '0 0 12px' }}>Tu primera visita es gratuita</h2>
-          <p style={{ color: C.lMuted, fontSize: 16, marginBottom: 32 }}>Sin compromiso. Sin papeleos. Solo ven, conoce al equipo y descubre qué podemos hacer por tu sonrisa.</p>
-          <button onClick={onLogin} style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 12, padding: '16px 40px', fontWeight: 800, fontSize: 17, cursor: 'pointer', boxShadow: `0 8px 24px ${C.primary}55` }}>
+      <section style={{ background: `linear-gradient(135deg, #071e3d 0%, ${C.primary} 100%)`, padding: '80px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 30% 50%, rgba(14,165,233,0.15) 0%, transparent 50%)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 560, margin: '0 auto', position: 'relative' }}>
+          <div style={{ fontSize: 14, color: C.accent, fontWeight: 700, marginBottom: 12, letterSpacing: '0.04em' }}>PRIMERA CONSULTA GRATUITA</div>
+          <h2 style={{ fontSize: 38, fontWeight: 900, color: C.white, margin: '0 0 14px', letterSpacing: '-0.5px', lineHeight: 1.2 }}>Empieza hoy tu camino<br />hacia la sonrisa perfecta</h2>
+          <p style={{ color: 'rgba(186,230,253,0.85)', fontSize: 16, marginBottom: 32, lineHeight: 1.6 }}>Sin compromiso. Sin papeleos. Ven, conoce al equipo y descubre qué podemos hacer.</p>
+          <button onClick={onLogin} style={{ background: C.white, color: C.primary, border: 'none', borderRadius: 12, padding: '16px 44px', fontWeight: 900, fontSize: 16, cursor: 'pointer', boxShadow: '0 8px 28px rgba(0,0,0,0.25)' }}>
             Pedir cita gratis →
           </button>
-          <div style={{ marginTop: 24, color: C.lMuted, fontSize: 13 }}>
-            📞 +34 951 000 001 (demo) &nbsp;|&nbsp; 📧 hola@lumendental.demo
+          <div style={{ marginTop: 24, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
+            📞 +34 951 000 001 &nbsp;·&nbsp; 📧 hola@lumendental.demo &nbsp;·&nbsp; C/ Larios 12, Málaga
           </div>
         </div>
       </section>
@@ -333,72 +447,117 @@ function LoginPage({ onLogin, onBack }) {
   const [selected, setSelected] = useState(null);
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
+
   const handleLogin = () => {
     if (!selected) return;
     const role = ROLES[selected];
-    if (pass === role.pass || pass === '') {
-      onLogin(selected);
-    } else {
-      setError('Contraseña incorrecta. Usa la contraseña demo mostrada abajo.');
-    }
+    if (pass === role.pass || pass === '') { onLogin(selected); }
+    else { setError('Contraseña incorrecta. Usa la mostrada en las credenciales demo.'); }
   };
+
+  const bg = ROLE_BG[selected] || ROLE_BG._default;
+  const roleColor = selected ? ROLES[selected].color : C.primaryL;
+
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ width: '100%', maxWidth: 640 }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>🦷</div>
-          <h1 style={{ color: C.white, fontSize: 26, fontWeight: 800, margin: 0 }}>Lumen Dental</h1>
-          <p style={{ color: C.muted, fontSize: 14, margin: '6px 0 0' }}>Selecciona tu perfil para acceder</p>
+    <div style={{ height: '100vh', display: 'flex', fontFamily: "'DM Sans','Inter',system-ui,sans-serif", overflow: 'hidden' }}>
+      {/* LEFT — visual panel */}
+      <div style={{
+        flex: 1, position: 'relative', overflow: 'hidden',
+        background: bg.grad, transition: 'background 0.5s ease',
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '48px 44px',
+      }}>
+        {/* Overlay pattern */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: bg.overlay, pointerEvents: 'none', transition: '0.5s' }} />
+        {/* Decorative circles */}
+        <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', border: `1px solid ${roleColor}22`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', border: `1px solid ${roleColor}18`, pointerEvents: 'none' }} />
+        {/* Logo top-left */}
+        <div style={{ position: 'absolute', top: 32, left: 44, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 28 }}>🦷</span>
+          <span style={{ fontWeight: 800, color: C.white, fontSize: 18, letterSpacing: '-0.3px' }}>Lumen Dental</span>
         </div>
-        {/* Role cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))', gap: 12, marginBottom: 24 }}>
+        {/* Headline */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h2 style={{
+            margin: '0 0 12px', fontSize: 34, fontWeight: 900, color: C.white,
+            lineHeight: 1.2, letterSpacing: '-0.5px', whiteSpace: 'pre-line',
+          }}>{bg.headline}</h2>
+          <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 1.6 }}>{bg.sub}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {bg.points.map((pt, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: bg.accent + '33', border: `1px solid ${bg.accent}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, color: bg.accent, fontWeight: 800 }}>✓</span>
+                </div>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>{pt}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Bottom badge */}
+        <div style={{ position: 'relative', zIndex: 1, marginTop: 32, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 24, padding: '8px 16px', width: 'fit-content' }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.success, display: 'inline-block', boxShadow: `0 0 6px ${C.success}` }} />
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Sistema activo · Datos 100% ficticios</span>
+        </div>
+      </div>
+
+      {/* RIGHT — form panel */}
+      <div style={{ width: 420, background: C.surface, borderLeft: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px 36px', overflowY: 'auto' }}>
+        <div style={{ marginBottom: 28 }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: C.white }}>Acceso al sistema</h3>
+          <p style={{ margin: 0, fontSize: 13, color: C.muted }}>Selecciona tu perfil para continuar</p>
+        </div>
+
+        {/* Role buttons — vertical list */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
           {Object.values(ROLES).map(r => (
             <button key={r.id} onClick={() => { setSelected(r.id); setPass(''); setError(''); }} style={{
-              background: selected === r.id ? r.color + '22' : C.card,
-              border: `2px solid ${selected === r.id ? r.color : C.border}`,
-              borderRadius: 12, padding: '16px 12px', cursor: 'pointer', textAlign: 'center',
-              transition: '0.15s',
+              background: selected === r.id ? r.color + '18' : 'transparent',
+              border: `1.5px solid ${selected === r.id ? r.color : C.border}`,
+              borderRadius: 10, padding: '11px 14px', cursor: 'pointer', textAlign: 'left',
+              display: 'flex', alignItems: 'center', gap: 12, transition: '0.15s',
             }}>
-              <div style={{ fontSize: 28, marginBottom: 6 }}>{r.icon}</div>
-              <div style={{ fontWeight: 700, color: C.text, fontSize: 13, marginBottom: 4 }}>{r.label}</div>
-              <div style={{ fontSize: 10, color: C.muted, lineHeight: 1.4 }}>{r.desc.split('.')[0]}.</div>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>{r.icon}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, color: selected === r.id ? r.color : C.text, fontSize: 13 }}>{r.label}</div>
+                <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{r.user}</div>
+              </div>
               {selected === r.id && (
-                <div style={{ marginTop: 8, fontSize: 10, color: r.color, fontWeight: 600 }}>
-                  {r.user} · {r.pass}
-                </div>
+                <span style={{ fontSize: 10, color: r.color, fontWeight: 700, background: r.color + '18', padding: '2px 8px', borderRadius: 10 }}>activo</span>
               )}
             </button>
           ))}
         </div>
-        {/* Password + login */}
+
+        {/* Credentials hint + password */}
         {selected && (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>
-              Accediendo como <span style={{ color: ROLES[selected].color, fontWeight: 700 }}>{ROLES[selected].label}</span>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ background: ROLES[selected].color + '12', border: `1px solid ${ROLES[selected].color}30`, borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 12 }}>
+              <span style={{ color: C.muted }}>Contraseña demo: </span>
+              <span style={{ color: ROLES[selected].color, fontWeight: 800, letterSpacing: '0.05em' }}>{ROLES[selected].pass}</span>
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type="password"
-                placeholder={`Contraseña demo: ${ROLES[selected].pass}`}
+                placeholder="Contraseña (o deja vacío)"
                 value={pass}
                 onChange={e => setPass(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                style={{ flex: 1, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, outline: 'none' }}
+                style={{ flex: 1, background: C.card, border: `1.5px solid ${C.border}`, borderRadius: 8, padding: '11px 14px', color: C.text, fontSize: 13, outline: 'none' }}
               />
-              <button onClick={handleLogin} style={{ background: ROLES[selected].color, color: C.white, border: 'none', borderRadius: 8, padding: '10px 20px', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
-                Entrar →
-              </button>
+              <button onClick={handleLogin} style={{
+                background: ROLES[selected].color, color: C.white, border: 'none',
+                borderRadius: 8, padding: '11px 20px', fontWeight: 800, cursor: 'pointer', fontSize: 13,
+                whiteSpace: 'nowrap',
+              }}>Entrar →</button>
             </div>
             {error && <div style={{ color: C.danger, fontSize: 12, marginTop: 8 }}>⚠️ {error}</div>}
-            <div style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>Pulsa Entrar sin contraseña para acceso rápido demo.</div>
           </div>
         )}
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <button onClick={onBack} style={{ background: 'transparent', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12 }}>
-            ← Volver a la web de Lumen Dental
-          </button>
-        </div>
+
+        <button onClick={onBack} style={{ background: 'transparent', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, padding: 0, textAlign: 'left' }}>
+          ← Volver a la landing de Lumen Dental
+        </button>
       </div>
     </div>
   );
@@ -407,47 +566,84 @@ function LoginPage({ onLogin, onBack }) {
 // ─── APP SHELL (autenticado) ──────────────────────────────────────────────────
 function AppShell({ role, page, onPage, onLogout, children }) {
   const R = ROLES[role];
+  const currentNav = R.nav.find(n => n.id === page);
+  const notifCount = role === 'admin' ? 3 : role === 'staff' ? 2 : 0;
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       {/* Sidebar */}
-      <div style={{ width: 220, background: C.surface, borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      <div style={{ width: 228, background: C.surface, borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
         {/* Logo */}
-        <div style={{ padding: '18px 16px', borderBottom: `1px solid ${C.border}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 22 }}>🦷</span>
+        <div style={{ padding: '16px 18px', borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, background: `linear-gradient(135deg, ${C.primary}, ${C.primaryL})`, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, boxShadow: `0 2px 8px ${C.primary}55` }}>🦷</div>
             <div>
-              <div style={{ fontWeight: 800, color: C.white, fontSize: 14 }}>Lumen Dental</div>
-              <div style={{ fontSize: 10, color: R.color, fontWeight: 600 }}>{R.label}</div>
+              <div style={{ fontWeight: 800, color: C.white, fontSize: 14, letterSpacing: '-0.2px' }}>Lumen Dental</div>
+              <div style={{ fontSize: 10, color: R.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{R.label}</div>
             </div>
           </div>
         </div>
         {/* Nav */}
-        <nav style={{ flex: 1, padding: '8px 0', overflowY: 'auto' }}>
-          {R.nav.map(item => (
-            <button key={item.id} onClick={() => onPage(item.id)} style={{
-              width: '100%', background: page === item.id ? R.color + '22' : 'transparent',
-              border: 'none', borderLeft: `3px solid ${page === item.id ? R.color : 'transparent'}`,
-              color: page === item.id ? R.color : C.muted,
-              padding: '11px 16px', cursor: 'pointer', textAlign: 'left',
-              fontSize: 13, fontWeight: page === item.id ? 700 : 400,
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
-              <span>{item.icon}</span><span>{item.label}</span>
-            </button>
-          ))}
+        <nav style={{ flex: 1, padding: '10px 8px', overflowY: 'auto' }}>
+          {R.nav.map(item => {
+            const active = page === item.id;
+            return (
+              <button key={item.id} onClick={() => onPage(item.id)} style={{
+                width: '100%', background: active ? R.color + '18' : 'transparent',
+                border: 'none', borderRadius: 8,
+                color: active ? R.color : C.muted,
+                padding: '10px 12px', cursor: 'pointer', textAlign: 'left', marginBottom: 2,
+                fontSize: 13, fontWeight: active ? 700 : 400,
+                display: 'flex', alignItems: 'center', gap: 10,
+                boxShadow: active ? `inset 2px 0 0 ${R.color}` : 'none',
+              }}>
+                <span style={{ fontSize: 16 }}>{item.icon}</span>
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.id === 'overview' && notifCount > 0 && (
+                  <span style={{ background: C.danger, color: C.white, fontSize: 9, fontWeight: 800, borderRadius: 10, padding: '1px 6px', minWidth: 16, textAlign: 'center' }}>{notifCount}</span>
+                )}
+              </button>
+            );
+          })}
         </nav>
-        {/* User + logout */}
+        {/* User footer */}
         <div style={{ padding: '12px 16px', borderTop: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}>{ROLES[role].user}</div>
-          <button onClick={onLogout} style={{ background: C.card, border: `1px solid ${C.border}`, color: C.muted, borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 11, width: '100%' }}>
-            Cerrar sesión
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{ width: 30, height: 30, background: R.color + '22', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, border: `1.5px solid ${R.color}44` }}>{R.icon}</div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 11, color: C.text, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{R.user.split('@')[0]}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>@lumen.demo</div>
+            </div>
+          </div>
+          <button onClick={onLogout} style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 7, padding: '6px 0', cursor: 'pointer', fontSize: 11, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span>↩</span> Cerrar sesión
           </button>
         </div>
       </div>
-      {/* Content */}
-      <main style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', background: C.bg }}>
-        {children}
-      </main>
+      {/* Content area */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Top bar */}
+        <div style={{ height: 52, background: C.surface, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 28px', gap: 12, flexShrink: 0 }}>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 11, color: C.muted }}>Lumen Dental</span>
+            <span style={{ fontSize: 11, color: C.muted }}> / </span>
+            <span style={{ fontSize: 11, color: C.text, fontWeight: 600 }}>{currentNav?.label || page}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ fontSize: 11, color: C.muted, background: C.card, border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 10px' }}>
+              {new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </div>
+            {notifCount > 0 && (
+              <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => demoToast(`🔔 ${notifCount} notificaciones pendientes`)}>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>🔔</div>
+                <span style={{ position: 'absolute', top: -4, right: -4, background: C.danger, color: C.white, fontSize: 9, fontWeight: 800, borderRadius: 8, padding: '1px 5px', minWidth: 14, textAlign: 'center' }}>{notifCount}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <main style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', background: C.bg }}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
@@ -472,13 +668,13 @@ function AdminOverview() {
   return (
     <div>
       <PageHeader title="Dashboard Ejecutivo" subtitle={`Lumen Dental · ${new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' })}`} badge="Admin" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <Kpi icon="📅" label="Citas hoy" value={METRICAS.citasHoy} color={C.primary} />
-        <Kpi icon="👥" label="Nuevos pacientes" value={METRICAS.nuevosPacientes} color={C.success} />
-        <Kpi icon="💰" label="Ingresos mes" value={METRICAS.ingresosMes} color={C.accent} />
-        <Kpi icon="📊" label="Pipeline" value={METRICAS.valorPipeline} color={C.primaryL} />
-        <Kpi icon="⭐" label="Satisfacción" value={`${METRICAS.satisfaccion}/5`} color={C.accent} />
-        <Kpi icon="🎯" label="Conversión" value={`${METRICAS.tasaConversion}%`} color={C.success} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 14, marginBottom: 24 }}>
+        <Kpi icon="📅" label="Citas hoy" value={METRICAS.citasHoy} color={C.primary} trend={{ dir: 'up', pct: '+2', label: 'vs ayer' }} />
+        <Kpi icon="👥" label="Nuevos pacientes" value={METRICAS.nuevosPacientes} color={C.success} trend={{ dir: 'up', pct: '+18%', label: 'vs mes ant.' }} />
+        <Kpi icon="💰" label="Ingresos mes" value={METRICAS.ingresosMes} color={C.accent} trend={{ dir: 'up', pct: '+11%', label: 'objetivo 95%' }} />
+        <Kpi icon="📊" label="Pipeline leads" value={METRICAS.valorPipeline} color={C.primaryL} trend={{ dir: 'up', pct: '+4k€' }} />
+        <Kpi icon="⭐" label="Satisfacción" value={`${METRICAS.satisfaccion}/5`} color={C.accent} trend={{ dir: 'up', pct: '+0.2', label: 'vs trim. ant.' }} />
+        <Kpi icon="🎯" label="Conversión" value={`${METRICAS.tasaConversion}%`} color={C.success} trend={{ dir: 'down', pct: '-2pp', label: 'vs mes ant.' }} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         {/* Agenda resumen */}
