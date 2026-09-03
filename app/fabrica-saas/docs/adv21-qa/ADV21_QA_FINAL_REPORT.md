@@ -130,11 +130,15 @@ Los siguientes adapters, bridges y componentes funcionan para cualquier sector s
 
 ---
 
-## Issues preexistentes (no atribuibles a ADV-01…ADV-21)
+## Issues preexistentes — RESUELTOS en cierre técnico definitivo
 
-1. `mcp/core/mcpTransport.js:1` — warning eslint-disable directiva innecesaria. Preexistente, sin impacto funcional.
-2. Algunos fixtures de la serie HEALTHY tienen `overallStatus` no definido (son fixtures de componente, no de snapshot completo). Comportamiento esperado y documentado.
-3. `computeHealthDashboardQualityScore` devuelve 99.99 en lugar de 100 para inputs perfectos (artefacto de redondeo de punto flotante con 9 factores de 100/9). No es un bug — la puntuación es ≥99 y el grade es A+.
+| # | Archivo | Incidencia | Estado |
+|---|---------|-----------|--------|
+| 1 | `mcp/core/mcpTransport.js:1` | Directiva `eslint-disable no-unused-vars` innecesaria eliminada | **RESOLVED** |
+| 2 | `health/fixtures/healthyFixtures.js` | 4 fixtures de componente sin `overallStatus`/`productionReady`; `'OPERATIONAL'` no válido en uno | **RESOLVED** — todos tienen `overallStatus: HEALTHY, productionReady: true` |
+| 3 | `health/quality/healthDashboardQualityScore.js` | Devolvía 99.99 en lugar de 100 para inputs perfectos (redondeo acumulado por factor) | **RESOLVED** — acumulación raw sin redondeo intermedio, clamp final `Math.min(100,…)` |
+
+**Post-cierre:** lint 0 errores / 0 warnings | 6277/6277 tests PASS | build ✓ 2.88s
 
 ---
 

@@ -200,6 +200,8 @@ export const HEALTHY_FIXTURE_FACTORY_SCORE_HIGH = Object.freeze({
     productionReadyHealthy: true,
   }),
   expectedFactoryScore: 100,
+  overallStatus: S.HEALTHY,
+  productionReady: true,
   isReal: false,
 });
 
@@ -212,6 +214,8 @@ export const HEALTHY_FIXTURE_SLO_MET = Object.freeze({
     Object.freeze({ type: 'BACKUP_FRESHNESS', target: 24, current: 2, status: 'MET' }),
     Object.freeze({ type: 'RECOVERY_READINESS', target: 95, current: 98, status: 'MET' }),
   ]),
+  overallStatus: S.HEALTHY,
+  productionReady: true,
   isReal: false,
 });
 
@@ -301,7 +305,8 @@ export const HEALTHY_FIXTURE_AUTOMATION_OPERATIONAL = Object.freeze({
     Object.freeze({ engine: 'MCP', status: 'OPERATIONAL', successRate: 100 }),
     Object.freeze({ engine: 'AGENT', status: 'OPERATIONAL', successRate: 97 }),
   ]),
-  overallStatus: 'OPERATIONAL',
+  overallStatus: S.HEALTHY,
+  productionReady: true,
   isReal: false,
 });
 
@@ -319,6 +324,8 @@ export const HEALTHY_FIXTURE_QUALITY_GATE_PASSES = Object.freeze({
     dependencyPropagationWrong: false,
   }),
   expectedPassed: true,
+  overallStatus: S.HEALTHY,
+  productionReady: true,
   isReal: false,
 });
 

@@ -274,11 +274,15 @@ describe('ADV-21 — Health Dashboard scenarios (HEALTHY / DEGRADED / BLOCKED / 
     assert.equal(snap.productionReady, false);
   });
 
-  it('all 21 healthy fixtures are present with id and description', () => {
+  it('all 21 healthy fixtures have id, description, overallStatus and productionReady', () => {
     assert.equal(ALL_HEALTHY_FIXTURES.length, 21);
+    const validStatuses = new Set(Object.values(HEALTH_STATUS));
     for (const f of ALL_HEALTHY_FIXTURES) {
       assert.ok(f.id, `Fixture missing id`);
       assert.ok(f.description, `Fixture ${f.id} missing description`);
+      assert.ok(f.overallStatus !== undefined, `Fixture ${f.id} missing overallStatus`);
+      assert.ok(validStatuses.has(f.overallStatus), `Fixture ${f.id} has invalid overallStatus: ${f.overallStatus}`);
+      assert.equal(f.productionReady, true, `Fixture ${f.id} missing productionReady=true`);
     }
   });
 
@@ -490,11 +494,12 @@ describe('ADV-21 — Freshness + Unknown handling', () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 describe('ADV-21 — Quality score', () => {
-  it('perfect quality score returns high score and grade A+', () => {
+  it('perfect quality score returns exactly 100 and grade A+', () => {
     const factors = {};
-    for (const k of Object.values(QUALITY_FACTOR)) factors[k] = 100;
+    for (const k of Object.values(QUALITY_FACTOR)) factors[k] = 1;
     const result = computeHealthDashboardQualityScore(factors);
-    assert.ok(result.score >= 99, `Expected score >= 99 but got ${result.score}`);
+    assert.equal(result.score, 100, `Expected score === 100 but got ${result.score}`);
+    assert.equal(result.maxScore, 100);
     assert.equal(result.grade, 'A+');
   });
 

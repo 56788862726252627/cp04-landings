@@ -17,16 +17,18 @@ const MAX_FACTOR_SCORE = 100 / Object.keys(QUALITY_FACTOR).length;
 export function computeHealthDashboardQualityScore(factors = {}) {
   const keys = Object.keys(QUALITY_FACTOR);
   const factorScores = {};
-  let total = 0;
+  let rawTotal = 0;
 
   for (const key of keys) {
     const v = factors[key] ?? 0;
     const clamped = Math.min(1, Math.max(0, v));
-    factorScores[key] = Math.round(clamped * MAX_FACTOR_SCORE * 100) / 100;
-    total += factorScores[key];
+    const raw = clamped * MAX_FACTOR_SCORE;
+    factorScores[key] = Math.round(raw * 100) / 100;
+    rawTotal += raw;
   }
 
-  total = Math.round(total * 100) / 100;
+  // Accumulate unrounded contributions; clamp prevents float overshoot above 100
+  const total = Math.min(100, Math.max(0, Math.round(rawTotal * 100) / 100));
 
   return Object.freeze({
     score: total,
