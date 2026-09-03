@@ -4,7 +4,7 @@
  * Login multirol · Dashboard por rol · Landing premium
  * NO_REAL_EXTERNAL_ACTION=SI · isReal:false en todos los outputs
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   SERVICIOS, PROFESIONALES, AGENDA_HOY, PACIENTES,
   PRESUPUESTOS, LEADS, METRICAS, AUTOMATIZACIONES,
@@ -538,7 +538,7 @@ function AdminAgenda() {
               <button key={v} style={{ background: v === 'Hoy' ? C.primary : C.surface, color: v === 'Hoy' ? C.white : C.muted, border: `1px solid ${C.border}`, borderRadius: 7, padding: '5px 14px', fontSize: 12, cursor: 'pointer' }}>{v}</button>
             ))}
           </div>
-          <button style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>+ Nueva cita</button>
+          <button onClick={() => demoToast('✅ Demo: abrir formulario nueva cita — disponible en producción')} style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>+ Nueva cita</button>
         </div>
         <div style={{ padding: 20 }}>
           {AGENDA_HOY.map(c => (
@@ -770,7 +770,7 @@ function StaffAgenda() {
             </div>
             <Pill label={c.estado} color={c.estado === 'urgente' ? C.danger : c.estado === 'confirmada' ? C.success : C.muted} />
             <div style={{ display: 'flex', gap: 6 }}>
-              <button style={{ background: C.success, border: 'none', borderRadius: 6, padding: '6px 12px', color: C.white, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Check-in</button>
+              <button onClick={() => demoToast('✅ Check-in registrado (demo)')} style={{ background: C.success, border: 'none', borderRadius: 6, padding: '6px 12px', color: C.white, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Check-in</button>
               <button style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: '6px 10px', color: C.muted, fontSize: 11, cursor: 'pointer' }}>📞</button>
             </div>
           </div>
@@ -790,7 +790,7 @@ function StaffCheckin() {
           <label style={{ display: 'block', color: C.muted, fontSize: 12, marginBottom: 6 }}>Nombre o número de HC</label>
           <input placeholder="Buscar paciente…" style={{ width: '100%', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
         </div>
-        <button style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '12px 24px', fontWeight: 700, fontSize: 14, cursor: 'pointer', width: '100%' }}>
+        <button onClick={() => demoToast('✅ Llegada registrada — sistema notificado (demo)')} style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '12px 24px', fontWeight: 700, fontSize: 14, cursor: 'pointer', width: '100%' }}>
           ✅ Registrar llegada
         </button>
         <div style={{ marginTop: 20, borderTop: `1px solid ${C.border}`, paddingTop: 16, fontSize: 12, color: C.muted }}>
@@ -927,7 +927,7 @@ function MktLeads() {
               <div style={{ fontSize: 11, color: C.accent, marginTop: 2 }}>→ {l.accion}</div>
             </div>
             <Pill label={`${l.diasInactivo}d inactivo`} color={l.diasInactivo > 14 ? C.danger : l.diasInactivo > 7 ? C.warning : C.success} sm />
-            <button style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 6, padding: '7px 14px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Contactar</button>
+            <button onClick={() => demoToast('📧 Secuencia de contacto iniciada (demo — sin envío real)')} style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 6, padding: '7px 14px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Contactar</button>
           </div>
         ))}
       </div>
@@ -1032,7 +1032,7 @@ function PatientMisCitas() {
             <option>Selecciona tratamiento…</option>
             {SERVICIOS.map(s => <option key={s.id}>{s.nombre}</option>)}
           </select>
-          <button style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Solicitar →</button>
+          <button onClick={() => demoToast('📅 Solicitud enviada — el equipo confirmará en 24h (demo)')} style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Solicitar →</button>
         </div>
       </div>
     </div>
@@ -1097,11 +1097,33 @@ const PAGE_MAP = {
   patient:  { mis_citas: PatientMisCitas, historial_p: PatientHistorial, facturas: PatientFacturas, mensajes_p: PatientMensajes },
 };
 
+// ─── Toast global (DOM-based, sin prop-drilling) ─────────────────────────────
+function demoToast(msg) {
+  const el = document.getElementById('ld-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  el.style.transform = 'translateY(0)';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; }, 2200);
+}
+
 // ─── APP PRINCIPAL ────────────────────────────────────────────────────────────
 export function LumenDentalPremiumApp() {
-  const [view, setView] = useState('landing'); // landing | login | app
-  const [role, setRole] = useState(null);
-  const [page, setPage] = useState(null);
+  // Hash-based deep-link auto-login: #admin #staff #dentist #marketing #patient
+  const initHash = () => {
+    const h = window.location.hash.slice(1);
+    return ROLES[h] ? h : null;
+  };
+  const initRole = initHash();
+  const [view, setView] = useState(initRole ? 'app' : 'landing');
+  const [role, setRole] = useState(initRole);
+  const [page, setPage] = useState(initRole ? ROLES[initRole].nav[0].id : null);
+
+  // Sync hash when role changes
+  useEffect(() => {
+    window.location.hash = role || '';
+  }, [role]);
 
   const handleLogin = (r) => {
     setRole(r);
@@ -1114,9 +1136,12 @@ export function LumenDentalPremiumApp() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', fontFamily: "'DM Sans','Inter',system-ui,sans-serif" }}>
+      {/* Toast */}
+      <div id="ld-toast" style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translate(-50%, 8px)', background: '#1E293B', color: '#F1F5F9', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, border: '1px solid #334155', zIndex: 9999, opacity: 0, transition: 'opacity 0.25s, transform 0.25s', pointerEvents: 'none' }} />
       {/* Demo Banner */}
-      <div style={{ background: '#7C3AED', color: '#fff', textAlign: 'center', padding: '6px 16px', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', flexShrink: 0, zIndex: 100 }}>
-        ⚠️ PROTOTIPO DEMO · DATOS 100% FICTICIOS · NO CONECTADO A SISTEMAS REALES · Fábrica SaaS V1.8 / ADV-01…ADV-21
+      <div style={{ background: '#0F172A', borderBottom: '1px solid #1E3A5F', color: '#64748B', textAlign: 'center', padding: '5px 16px', fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', flexShrink: 0, zIndex: 100 }}>
+        PROTOTIPO DEMO · DATOS 100% FICTICIOS · Fábrica SaaS V1.8
+        {role && <span style={{ marginLeft: 16, color: ROLES[role]?.color }}>● {ROLES[role]?.label}</span>}
       </div>
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {view === 'landing' && <div style={{ height: '100%', overflowY: 'auto' }}><LandingPage onLogin={() => setView('login')} /></div>}
