@@ -16,6 +16,7 @@ export default defineConfig({
         'fisionova-demo': 'fisionova-demo.html',
         'educa-archidona-demo': 'educa-archidona-demo.html',
         'fisionova-premium-v2-pilot': 'fisionova-premium-v2-pilot.html',
+        'lumen-dental-demo': 'lumen-dental-demo.html',
       },
     },
   },
