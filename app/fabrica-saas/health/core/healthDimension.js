@@ -1,0 +1,81 @@
+// Health Dimension + Status — ADV-20
+
+export const HEALTH_DIMENSION = Object.freeze({
+  SYSTEM:               'SYSTEM',
+  APPLICATION:          'APPLICATION',
+  BUILD:                'BUILD',
+  TESTS:                'TESTS',
+  CI_CD:                'CI_CD',
+  DEPLOYMENT:           'DEPLOYMENT',
+  OBSERVABILITY:        'OBSERVABILITY',
+  SECURITY:             'SECURITY',
+  PRIVACY:              'PRIVACY',
+  GDPR:                 'GDPR',
+  CMP:                  'CMP',
+  BACKUPS:              'BACKUPS',
+  RESTORE:              'RESTORE',
+  BUSINESS_TRUTH:       'BUSINESS_TRUTH',
+  AI_ROUTER:            'AI_ROUTER',
+  AGENTS:               'AGENTS',
+  MULTIAGENT:           'MULTIAGENT',
+  MCP:                  'MCP',
+  VOICE:                'VOICE',
+  CRM:                  'CRM',
+  LEADS:                'LEADS',
+  SOCIAL:               'SOCIAL',
+  MEDIA:                'MEDIA',
+  BROWSER_QA:           'BROWSER_QA',
+  RUNTIME:              'RUNTIME',
+  CLIENT_ISOLATION:     'CLIENT_ISOLATION',
+  PRODUCTION_READINESS: 'PRODUCTION_READINESS',
+});
+
+export const HEALTH_STATUS = Object.freeze({
+  HEALTHY:        'HEALTHY',
+  DEGRADED:       'DEGRADED',
+  WARNING:        'WARNING',
+  CRITICAL:       'CRITICAL',
+  BLOCKED:        'BLOCKED',
+  UNKNOWN:        'UNKNOWN',
+  NOT_APPLICABLE: 'NOT_APPLICABLE',
+});
+
+export const HEALTH_SEVERITY = Object.freeze({
+  INFO:     'INFO',
+  LOW:      'LOW',
+  MEDIUM:   'MEDIUM',
+  HIGH:     'HIGH',
+  CRITICAL: 'CRITICAL',
+});
+
+export const HEALTH_DIMENSION_PRIORITY = Object.freeze({
+  [HEALTH_DIMENSION.SECURITY]:             1,
+  [HEALTH_DIMENSION.CLIENT_ISOLATION]:     1,
+  [HEALTH_DIMENSION.PRODUCTION_READINESS]: 2,
+  [HEALTH_DIMENSION.BACKUPS]:              2,
+  [HEALTH_DIMENSION.RESTORE]:              2,
+  [HEALTH_DIMENSION.CI_CD]:               3,
+  [HEALTH_DIMENSION.BUILD]:               3,
+  [HEALTH_DIMENSION.TESTS]:               3,
+  [HEALTH_DIMENSION.PRIVACY]:             3,
+  [HEALTH_DIMENSION.GDPR]:               3,
+  [HEALTH_DIMENSION.BUSINESS_TRUTH]:      4,
+  [HEALTH_DIMENSION.AGENTS]:              4,
+  [HEALTH_DIMENSION.MULTIAGENT]:          4,
+  [HEALTH_DIMENSION.AI_ROUTER]:           4,
+  [HEALTH_DIMENSION.MCP]:                4,
+  [HEALTH_DIMENSION.OBSERVABILITY]:       5,
+  [HEALTH_DIMENSION.CMP]:                5,
+  [HEALTH_DIMENSION.DEPLOYMENT]:          5,
+  [HEALTH_DIMENSION.SYSTEM]:              5,
+  [HEALTH_DIMENSION.APPLICATION]:         5,
+  [HEALTH_DIMENSION.CRM]:                6,
+  [HEALTH_DIMENSION.LEADS]:              6,
+  [HEALTH_DIMENSION.VOICE]:              6,
+  [HEALTH_DIMENSION.RUNTIME]:            6,
+  [HEALTH_DIMENSION.BROWSER_QA]:         7,
+  [HEALTH_DIMENSION.SOCIAL]:             7,
+  [HEALTH_DIMENSION.MEDIA]:              7,
+});
+
+export const HEALTH_DIMENSION_VERSION = '1.0.0';
