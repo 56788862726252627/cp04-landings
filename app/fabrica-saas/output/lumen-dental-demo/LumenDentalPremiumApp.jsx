@@ -13,22 +13,22 @@ import {
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
 const IMGS = {
-  A1: '/lumen-dental/assets/A1_hero_landing.svg',
-  A2: '/lumen-dental/assets/A2_consulta_odontologa.svg',
-  B1: '/lumen-dental/assets/B1_retrato_directora.svg',
-  B2: '/lumen-dental/assets/B2_retrato_dra_vidal.svg',
-  B3: '/lumen-dental/assets/B3_retrato_recepcionista.svg',
-  B4: '/lumen-dental/assets/B4_retrato_implantologo.svg',
-  C1: '/lumen-dental/assets/C1_recepcion.svg',
-  C2: '/lumen-dental/assets/C2_gabinete.svg',
-  C3: '/lumen-dental/assets/C3_sala_espera.svg',
-  D1: '/lumen-dental/assets/D1_login_administracion.svg',
-  D2: '/lumen-dental/assets/D2_login_recepcion_staff.svg',
-  D3: '/lumen-dental/assets/D3_login_odontologo.svg',
-  D4: '/lumen-dental/assets/D4_login_marketing_comercial.svg',
-  D5: '/lumen-dental/assets/D5_login_paciente_demo.svg',
-  E1: '/lumen-dental/assets/E1_escaner_3d.svg',
-  E2: '/lumen-dental/assets/E2_radiografia_digital.svg',
+  A1: '/lumen-dental/assets/A1_hero_landing.png',
+  A2: '/lumen-dental/assets/A2_consulta_odontologa.png',
+  B1: '/lumen-dental/assets/B1_retrato_directora.png',
+  B2: '/lumen-dental/assets/B2_retrato_dra_vidal.png',
+  B3: '/lumen-dental/assets/B3_retrato_recepcionista.png',
+  B4: '/lumen-dental/assets/B4_retrato_implantologo.png',
+  C1: '/lumen-dental/assets/C1_recepcion.png',
+  C2: '/lumen-dental/assets/C2_gabinete.png',
+  C3: '/lumen-dental/assets/C3_sala_espera.png',
+  D1: '/lumen-dental/assets/D1_login_administracion.png',
+  D2: '/lumen-dental/assets/D2_login_recepcion_staff.png',
+  D3: '/lumen-dental/assets/D3_login_odontologo.png',
+  D4: '/lumen-dental/assets/D4_login_marketing_comercial.png',
+  D5: '/lumen-dental/assets/D5_login_paciente_demo.png',
+  E1: '/lumen-dental/assets/E1_escaner_3d.png',
+  E2: '/lumen-dental/assets/E2_radiografia_digital.png',
 };
 
 // ─── Colores ──────────────────────────────────────────────────────────────────
@@ -265,7 +265,7 @@ function LoginPage({ onLogin }) {
               transform: sel?.id === r.id ? 'scale(1.03)' : 'scale(1)',
               transition: '0.18s', boxShadow: sel?.id === r.id ? `0 0 0 3px ${r.color}33` : 'none',
             }}>
-              <img src={r.img} alt={r.label} style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} />
+              <img src={r.img} alt={r.label} style={{ width: '100%', height: 110, objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />
               <div style={{
                 background: 'rgba(0,0,0,0.72)', padding: '10px 10px 12px',
                 textAlign: 'left',
@@ -375,7 +375,7 @@ function LandingPage({ onLogin }) {
 
       {/* HERO — imagen A1 */}
       <section style={{ position: 'relative', minHeight: mob ? 420 : 580, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-        <img src={IMGS.A1} alt="Clínica dental premium" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={IMGS.A1} alt="Clínica dental premium" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(7,25,61,0.88) 0%, rgba(3,105,161,0.65) 60%, transparent 100%)' }} />
         <div style={{ position: 'relative', maxWidth: 1100, margin: '0 auto', padding: `0 ${mob ? 24 : 60}px`, width: '100%' }}>
           <div style={{
@@ -492,7 +492,7 @@ function LandingPage({ onLogin }) {
               { img: IMGS.E2, title: 'Radiografía Digital Panorámica', desc: 'Imagen completa en baja radiación. Diagnóstico inmediato y archivado seguro en tu historial digital.' },
             ].map(({ img, title, desc }) => (
               <div key={title} style={{ background: C.subtle, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden' }}>
-                <img src={img} alt={title} style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
+                <img src={img} alt={title} style={{ width: '100%', height: 220, objectFit: 'cover', objectPosition: 'center center', display: 'block' }} />
                 <div style={{ padding: 24 }}>
                   <div style={{ fontWeight: 800, color: C.text, fontSize: 17, marginBottom: 8 }}>{title}</div>
                   <div style={{ color: C.muted, fontSize: 14, lineHeight: 1.6 }}>{desc}</div>
@@ -507,7 +507,7 @@ function LandingPage({ onLogin }) {
       <section style={{ background: C.primary, padding: mob ? '56px 24px' : '80px 40px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: mob ? 'block' : 'flex', gap: 60, alignItems: 'center' }}>
           <div style={{ flex: 1, marginBottom: mob ? 28 : 0 }}>
-            <img src={IMGS.A2} alt="Consulta dental premium" style={{ width: '100%', borderRadius: 16, display: 'block', maxHeight: 320, objectFit: 'cover' }} />
+            <img src={IMGS.A2} alt="Consulta dental premium" style={{ width: '100%', borderRadius: 16, display: 'block', maxHeight: 340, objectFit: 'cover', objectPosition: 'center 25%' }} />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', marginBottom: 10 }}>Tu primera visita</div>
@@ -534,7 +534,7 @@ function LandingPage({ onLogin }) {
           <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr 1fr' : 'repeat(4,1fr)', gap: 20 }}>
             {team.map(({ img, name, role, esp }) => (
               <div key={name} style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: `1px solid ${C.border}` }}>
-                <img src={img} alt={name} style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }} />
+                <img src={img} alt={name} style={{ width: '100%', height: 220, objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
                 <div style={{ padding: '16px 18px 18px' }}>
                   <div style={{ fontWeight: 800, color: C.text, fontSize: 15 }}>{name}</div>
                   <div style={{ color: C.primary, fontWeight: 700, fontSize: 12, marginBottom: 4 }}>{role}</div>
@@ -553,7 +553,7 @@ function LandingPage({ onLogin }) {
           <div style={{ display: 'grid', gridTemplateColumns: mob ? '1fr' : 'repeat(3,1fr)', gap: 20 }}>
             {facilities.map(({ img, title, desc }) => (
               <div key={title} style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${C.border}`, background: C.subtle }}>
-                <img src={img} alt={title} style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
+                <img src={img} alt={title} style={{ width: '100%', height: 220, objectFit: 'cover', objectPosition: 'center center', display: 'block' }} />
                 <div style={{ padding: '18px 20px 20px' }}>
                   <div style={{ fontWeight: 800, color: C.text, fontSize: 15, marginBottom: 6 }}>{title}</div>
                   <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.5 }}>{desc}</div>
