@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <radialGradient id="bgMR" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" style="stop-color:#F59E0B"/>
+      <stop offset="100%" style="stop-color:#b45309"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bgMR)"/>
+  <circle cx="300" cy="220" r="120" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+  <circle cx="300" cy="220" r="80" fill="rgba(255,255,255,0.2)"/>
+  <text x="300" y="240" font-family="Inter,system-ui,sans-serif" font-size="48" font-weight="900" fill="rgba(255,255,255,0.9)" text-anchor="middle">MR</text>
+  <rect x="80" y="380" width="440" height="60" rx="10" fill="rgba(0,0,0,0.2)"/>
+  <text x="300" y="417" font-family="Inter,system-ui,sans-serif" font-size="18" font-weight="700" fill="white" text-anchor="middle">Dr. M. Rueda</text>
+  <text x="300" y="575" font-family="Inter,system-ui,sans-serif" font-size="10" fill="rgba(255,255,255,0.4)" text-anchor="middle">Lumen Dental · Demo</text>
+</svg>
