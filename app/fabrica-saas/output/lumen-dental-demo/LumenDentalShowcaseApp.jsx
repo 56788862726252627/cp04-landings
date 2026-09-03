@@ -1027,8 +1027,6 @@ const NAV_ITEMS = [
 // ─── App principal ─────────────────────────────────────────────────────────────
 export function LumenDentalShowcaseApp() {
   const [activeSection, setActiveSection] = useState('inicio');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const renderSection = () => {
     const secs = {
       inicio:           <SeccionBienvenida onNav={setActiveSection} />,

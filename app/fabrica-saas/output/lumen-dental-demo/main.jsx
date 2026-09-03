@@ -4,10 +4,10 @@
  */
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { LumenDentalShowcaseApp } from './LumenDentalShowcaseApp.jsx';
+import { LumenDentalPremiumApp } from './LumenDentalPremiumApp.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <LumenDentalShowcaseApp />
+    <LumenDentalPremiumApp />
   </StrictMode>
 );
