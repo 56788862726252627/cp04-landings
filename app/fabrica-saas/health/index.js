@@ -94,8 +94,8 @@ export { computeHealthDashboardQualityScore, QUALITY_FACTOR } from './quality/he
 export { runHealthDashboardQualityGate, QUALITY_GATE_BLOCK_REASON } from './quality/healthDashboardQualityGate.js';
 
 // Fixtures
-export { ALL_HEALTHY_FIXTURES } from './fixtures/healthyFixtures.js';
-export { ALL_FAILURE_FIXTURES } from './fixtures/failureFixtures.js';
+export { ALL_HEALTHY_FIXTURES, HEALTHY_FIXTURE_ALL_GREEN } from './fixtures/healthyFixtures.js';
+export { ALL_FAILURE_FIXTURES, FAILURE_FIXTURE_HIGH_SCORE_BUT_BLOCKED, FAILURE_FIXTURE_STALE_SIGNALS } from './fixtures/failureFixtures.js';
 export { ALL_CASCADING_FIXTURES } from './fixtures/cascadingFixtures.js';
 export { ALL_RECOVERY_FIXTURES } from './fixtures/recoveryFixtures.js';
 

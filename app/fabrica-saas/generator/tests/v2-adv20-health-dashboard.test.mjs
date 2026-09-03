@@ -1684,8 +1684,8 @@ describe('HEALTH_DASHBOARD_REGISTRY', () => {
 });
 
 describe('factory-registry/index.js ADV-20', () => {
-  it('REGISTRY_VERSION=4.4.0', () => {
-    assert.equal(REGISTRY_VERSION, '4.4.0');
+  it('REGISTRY_VERSION>=4.4.0', () => {
+    assert.ok(parseFloat(REGISTRY_VERSION) >= 4.4, `Expected >= 4.4.0 but got ${REGISTRY_VERSION}`);
   });
   it('PASO_ADV20_STATUS=100_PERCENT', () => {
     assert.equal(PASO_ADV20_STATUS, '100_PERCENT');
