@@ -94,7 +94,10 @@ export { AI_ROUTER_REGISTRY } from './aiRouter.js';
 // ADV-17 — Agent Engine V2 Multi-Agent (Orchestration + Delegation + Supervision + Handoff + Shared Memory)
 export { MULTI_AGENT_REGISTRY } from './multiAgent.js';
 
-export const REGISTRY_VERSION = '4.1.0';
+// ADV-18 — Backup Engine + Restore Validation + Disaster Recovery Foundation
+export { BACKUP_RESTORE_REGISTRY } from './backupRestore.js';
+
+export const REGISTRY_VERSION = '4.2.0';
 export const REGISTRY_CREATED = '2026-08-30';
 export const REGISTRY_UPDATED = '2026-09-03';
 export const PASO_A_STATUS      = '100_PERCENT';
@@ -120,3 +123,4 @@ export const PASO_ADV14_STATUS   = '100_PERCENT';
 export const PASO_ADV15_STATUS   = '100_PERCENT';
 export const PASO_ADV16_STATUS   = '100_PERCENT';
 export const PASO_ADV17_STATUS   = '100_PERCENT';
+export const PASO_ADV18_STATUS   = '100_PERCENT';
