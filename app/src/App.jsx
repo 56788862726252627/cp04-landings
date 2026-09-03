@@ -3438,6 +3438,62 @@ function Inicio({ navigate, selectedRole }) {
   const diasLargo = tx("home.dias_largo").split(",");
   const canAccess = (section) => cp04CanAccessSection(selectedRole, section);
 
+  // Personalización por rol (auditoría Premium V2 2026-09-03): antes este
+  // dashboard era idéntico para los 4 roles — un PLAYER veía ingresos del
+  // club y salud de las automatizaciones Make, datos a los que ni siquiera
+  // tiene acceso desde el sidebar (rbac.js). Se deriva de los mismos
+  // permisos ya definidos, nunca de un chequeo de rol nuevo y paralelo:
+  // - showRevenue/showOpsHealth: exactamente quien ya ve "facturacion_pagos"
+  //   / "dashboard_kpi" en el sidebar (ADMIN + SUPPORT).
+  // - isInternalRole: cualquier rol de plantilla (STAFF/ADMIN/SUPPORT),
+  //   distinguido de PLAYER por tener "gestion".
+  const showRevenue = canAccess("facturacion_pagos");
+  const showOpsHealth = canAccess("dashboard_kpi");
+  const isInternalRole = canAccess("gestion");
+  const isPlayer = !isInternalRole;
+
+  // Acciones rápidas: antes eran 4 huecos fijos (2 de ellos condicionales a
+  // flujos_make/alta_jugador) que para PLAYER y STAFF quedaban vacíos sin
+  // sustituto. Ahora se completan con la siguiente acción relevante que ese
+  // rol sí tiene, tomada siempre de canAccess (nunca inventada).
+  const quickActions = [
+    { key: "reservar", label: `🎾 ${tx("home.reservar")}` , onClick: () => navigate("reservas") },
+    { key: "torneo", label: `🏆 ${tx("home.torneo")}`, variant: "secondary", onClick: () => navigate("torneos") },
+  ];
+  if (canAccess("flujos_make")) {
+    quickActions.push({ key: "procesos", label: `⚙️ ${tx("home.procesos")}`, variant: "secondary", onClick: () => navigate("flujos_make") });
+  }
+  if (canAccess("alta_jugador")) {
+    quickActions.push({ key: "alta", label: `👤 ${tx("home.alta")}`, variant: "secondary", onClick: () => navigate("alta_jugador") });
+  }
+  if (!canAccess("flujos_make") && canAccess("cierre_pistas")) {
+    quickActions.push({ key: "cierre", label: "🔒 Cierre temporal", variant: "secondary", onClick: () => navigate("cierre_pistas") });
+  }
+  if (!canAccess("alta_jugador") && canAccess("lista_espera")) {
+    quickActions.push({ key: "espera", label: "📋 Lista de espera", variant: "secondary", onClick: () => navigate("lista_espera") });
+  }
+  if (isPlayer && canAccess("ranking")) {
+    quickActions.push({ key: "ranking", label: "🏅 Ranking", variant: "secondary", onClick: () => navigate("ranking") });
+  }
+
+  // KPI de negocio (socios/ingresos/salud Make) solo para quien ya los ve
+  // en otra parte del sidebar; reservas/ocupación/torneos son operativos y
+  // útiles para elegir cuándo jugar, así que se mantienen para todos.
+  const kpiCards = [
+    { key: "reservasHoy", label: tx("home.reservas_hoy"), value: kpi.reservasHoy, sub: `vs 10 ${tx("home.vs_ayer")}`, trend: 20, icon: "🎾" },
+    { key: "ocupacion", label: tx("home.ocupacion_media"), value: kpi.ocupacionMedia + "%", sub: tx("home.pistas_activas"), trend: 4, color: T.accent2, icon: "🏟" },
+  ];
+  if (isInternalRole) {
+    kpiCards.push({ key: "socios", label: tx("home.socios_activos"), value: kpi.jugadoresActivos, sub: `+${kpi.nuevosJugadores} ${tx("home.este_mes")}`, trend: 6, color: "#a78bfa", icon: "👤" });
+  }
+  kpiCards.push({ key: "torneos", label: tx("home.torneos_activos"), value: kpi.torneosActivos, sub: tx("home.en_curso"), trend: null, color: T.warning, icon: "🏆" });
+  if (showOpsHealth) {
+    kpiCards.push({ key: "procesos", label: tx("home.procesos_activos"), value: `${MAKE_FLUJOS_COUNTERS.conectados}/${MAKE_FLUJOS_COUNTERS.total}`, sub: `${MAKE_FLUJOS_COUNTERS.operativos} ${tx("home.operativo_probado")}`, trend: null, color: makeOk ? T.accent : T.warning, icon: "⚡" });
+  }
+  if (showRevenue) {
+    kpiCards.push({ key: "ingresos", label: tx("home.ingresos_mes"), value: `${kpi.ingresosMes}€`, sub: tx("home.estimacion_mensual"), trend: 12, color: T.metricPositive, icon: "💶" });
+  }
+
   return (
     <div style={{ padding: "clamp(24px,4vw,48px) 24px clamp(60px,10vw,96px)", maxWidth: 1220, margin: "0 auto" }}>
 
@@ -3458,6 +3514,8 @@ function Inicio({ navigate, selectedRole }) {
             <Btn onClick={() => navigate("reservas")}>🎾 {tx("home.reservar")}</Btn>
             <Btn variant="secondary" onClick={() => navigate("torneos")}>🏆 {tx("home.btn_torneos")}</Btn>
             {canAccess("admin") && <Btn variant="secondary" onClick={() => navigate("admin")}>📊 {tx("home.btn_admin")}</Btn>}
+            {!canAccess("admin") && canAccess("gestion") && <Btn variant="secondary" onClick={() => navigate("gestion")}>🗂️ Gestión</Btn>}
+            {!canAccess("admin") && !canAccess("gestion") && canAccess("ranking") && <Btn variant="secondary" onClick={() => navigate("ranking")}>🏅 Ranking</Btn>}
           </div>
         </div>
 
@@ -3471,28 +3529,33 @@ function Inicio({ navigate, selectedRole }) {
 
           {/* Acciones rápidas */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <Btn onClick={() => navigate("reservas")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>🎾 {tx("home.reservar")}</Btn>
-            <Btn variant="secondary" onClick={() => navigate("torneos")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>🏆 {tx("home.torneo")}</Btn>
-            {canAccess("flujos_make") && <Btn variant="secondary" onClick={() => navigate("flujos_make")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>⚙️ {tx("home.procesos")}</Btn>}
-            {canAccess("alta_jugador") && <Btn variant="secondary" onClick={() => navigate("alta_jugador")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>👤 {tx("home.alta")}</Btn>}
+            {quickActions.slice(0, 4).map(action => (
+              <Btn key={action.key} variant={action.variant} onClick={action.onClick} style={{ padding: "10px 12px", fontSize: ".82rem" }}>{action.label}</Btn>
+            ))}
           </div>
 
-          {/* Estado operativo */}
+          {/* Estado operativo (roles internos) / ocupación (PLAYER) */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid rgba(255,255,255,.07)`, paddingTop: 12 }}>
-            <span style={{ color: T.textDim, fontSize: ".78rem" }}>{tx("home.estado_operativo")}</span>
-            <FlowStatusBadge status={makeStatus} />
+            {isInternalRole ? (
+              <>
+                <span style={{ color: T.textDim, fontSize: ".78rem" }}>{tx("home.estado_operativo")}</span>
+                <FlowStatusBadge status={makeStatus} />
+              </>
+            ) : (
+              <>
+                <span style={{ color: T.textDim, fontSize: ".78rem" }}>{tx("home.ocupacion_media")}</span>
+                <span style={{ color: T.accent, fontWeight: 900, fontSize: ".9rem" }}>{kpi.ocupacionMedia}%</span>
+              </>
+            )}
           </div>
         </div>
       </section>
 
       {/* KPI STRIP */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10, marginBottom: 24 }}>
-        <MetricCard label={tx("home.reservas_hoy")} value={kpi.reservasHoy} sub={`vs 10 ${tx("home.vs_ayer")}`} trend={20} icon="🎾" />
-        <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
-        <MetricCard label={tx("home.socios_activos")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
-        <MetricCard label={tx("home.procesos_activos")} value={`${MAKE_FLUJOS_COUNTERS.conectados}/${MAKE_FLUJOS_COUNTERS.total}`} sub={`${MAKE_FLUJOS_COUNTERS.operativos} ${tx("home.operativo_probado")}`} trend={null} color={makeOk ? T.accent : T.warning} icon="⚡" />
-        <MetricCard label={tx("home.ingresos_mes")} value={`${kpi.ingresosMes}€`} sub={tx("home.estimacion_mensual")} trend={12} color={T.metricPositive} icon="💶" />
-        <MetricCard label={tx("home.torneos_activos")} value={kpi.torneosActivos} sub={tx("home.en_curso")} trend={null} color={T.warning} icon="🏆" />
+        {kpiCards.map(card => (
+          <MetricCard key={card.key} label={card.label} value={card.value} sub={card.sub} trend={card.trend} color={card.color} icon={card.icon} />
+        ))}
       </div>
 
       {/* GRÁFICAS HOME */}
@@ -3511,16 +3574,20 @@ function Inicio({ navigate, selectedRole }) {
         <ChartCard title={tx("home.ocupacion_pista")} sub={tx("home.porcentaje_uso")}>
           <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} unit="%" />
         </ChartCard>
-        <ChartCard title={tx("home.estado_procesos")} sub={`${MAKE_FLUJOS_COUNTERS.total} ${tx("home.flujos_totales")}`}>
-          <DonutChart size={100} label="Sistema" segments={[
-            { l: tx("home.activos"),      v: MAKE_FLUJOS_COUNTERS.conectados, c: T.accent },
-            { l: tx("home.pausados"),     v: MAKE_FLUJOS_COUNTERS.total - MAKE_FLUJOS_COUNTERS.conectados, c: T.warning },
-          ]} />
-        </ChartCard>
+        {showOpsHealth && (
+          <ChartCard title={tx("home.estado_procesos")} sub={`${MAKE_FLUJOS_COUNTERS.total} ${tx("home.flujos_totales")}`}>
+            <DonutChart size={100} label="Sistema" segments={[
+              { l: tx("home.activos"),      v: MAKE_FLUJOS_COUNTERS.conectados, c: T.accent },
+              { l: tx("home.pausados"),     v: MAKE_FLUJOS_COUNTERS.total - MAKE_FLUJOS_COUNTERS.conectados, c: T.warning },
+            ]} />
+          </ChartCard>
+        )}
       </div>
 
-      {/* ALERTAS / AVISOS */}
-      {(kpi.makeErrores > 0 || kpi.incidenciasAbiertas > 0) && (
+      {/* ALERTAS / AVISOS (solo roles internos: un PLAYER no gestiona
+          incidencias ni automatizaciones Make, no debe verlas en su
+          dashboard) */}
+      {isInternalRole && (kpi.makeErrores > 0 || kpi.incidenciasAbiertas > 0) && (
         <div style={{ borderRadius: 16, border: `1px solid ${T.warning}55`, background: `rgba(255,173,71,.07)`, padding: "12px 16px", marginBottom: 22, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <span style={{ fontSize: "1.2rem" }}>⚠️</span>
           <div style={{ flex: 1 }}>
