@@ -1071,18 +1071,86 @@ function DentistHistorial() {
   );
 }
 function DentistTratamientos() {
+  const protocolos = [
+    { pac: 'Ana Gómez Pérez', trat: 'Invisalign', pasoActual: 8, totalPasos: 14, proxCita: '15 Sep 2026', icon: '✨', color: C.primaryL, nota: 'Paso 8/14. Buen anclaje. Revisar alineador inferior derecho.' },
+    { pac: 'Luis Martínez Font', trat: 'Implante x2 — Fase 2', pasoActual: 2, totalPasos: 4, proxCita: '22 Sep 2026', icon: '🔩', color: C.accent, nota: 'Colocación corona provisional. Esperar osteointegración 6 semanas.' },
+    { pac: 'Carlos Díaz Ramos', trat: 'Ortodoncia metálica', pasoActual: 5, totalPasos: 18, proxCita: '28 Sep 2026', icon: '😁', color: C.success, nota: 'Cambio arco 0.17×0.25. Activar muelle canino superior.' },
+    { pac: 'Javier Blanco Vera', trat: 'Carillas x6', pasoActual: 1, totalPasos: 3, proxCita: '10 Oct 2026', icon: '💎', color: C.primary, nota: 'Tallado completado. Cita provisional entregada. Esperar laboratorio.' },
+  ];
   return (
     <div>
-      <PageHeader title="Tratamientos activos" subtitle="Protocolos y seguimiento clínico" badge="Odontólogo" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-        {SERVICIOS.slice(0, 6).map(s => (
-          <div key={s.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
-            <div style={{ fontSize: 26, marginBottom: 8 }}>{s.icono}</div>
-            <div style={{ fontWeight: 700, color: C.text, fontSize: 13, marginBottom: 4 }}>{s.nombre}</div>
-            <div style={{ color: C.muted, fontSize: 12, marginBottom: 8 }}>{s.desc.substring(0, 80)}…</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Pill label={s.categoria} color={C.primaryL} sm />
-              <span style={{ fontSize: 11, color: C.muted }}>{s.duracion}</span>
+      <PageHeader title="Tratamientos activos" subtitle="Seguimiento clínico por paciente" badge="Odontólogo" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+        {protocolos.map((p, i) => {
+          const pct = Math.round((p.pasoActual / p.totalPasos) * 100);
+          return (
+            <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, borderTop: `3px solid ${p.color}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontWeight: 800, color: C.text, fontSize: 14 }}>{p.pac.split(' ').slice(0,2).join(' ')} <span style={{ fontSize: 11, color: C.muted, fontWeight: 400 }}>(ficticio)</span></div>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                    <span style={{ fontSize: 18 }}>{p.icon}</span>
+                    <Pill label={p.trat} color={p.color} sm />
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 700, color: p.color, fontSize: 22 }}>{pct}%</div>
+                  <div style={{ fontSize: 10, color: C.muted }}>completado</div>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: C.muted }}>Sesión {p.pasoActual} / {p.totalPasos}</span>
+                  <span style={{ fontSize: 11, color: C.muted }}>Próx: {p.proxCita}</span>
+                </div>
+                <div style={{ background: C.border + '55', borderRadius: 6, height: 8 }}>
+                  <div style={{ width: `${pct}%`, height: 8, background: p.color, borderRadius: 6, transition: 'width 0.6s' }} />
+                </div>
+              </div>
+              {/* Nota clínica */}
+              <div style={{ background: C.surface, borderRadius: 8, padding: '8px 12px', fontSize: 11, color: C.muted, borderLeft: `2px solid ${p.color}`, fontStyle: 'italic' }}>
+                {p.nota}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                {['HC completa', 'Rx digitales', 'Añadir nota'].map(btn => (
+                  <button key={btn} onClick={() => demoToast(`${btn} — módulo demo`)} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: '5px 10px', color: C.muted, fontSize: 11, cursor: 'pointer' }}>{btn}</button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+function DentistPresupuestos() {
+  const misPresupuestos = PRESUPUESTOS.filter(p => ['Invisalign', 'Ortodoncia', 'Higiene', 'Control Revisión'].some(t => p.tratamiento.includes(t))).slice(0, 4);
+  const display = misPresupuestos.length > 0 ? misPresupuestos : PRESUPUESTOS.slice(0, 4);
+  return (
+    <div>
+      <PageHeader title="Mis Presupuestos" subtitle="Presupuestos emitidos por Dra. Vidal" badge="Odontólogo" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+        <Kpi label="Emitidos mes" value={display.length} color={C.primary} icon="📄" />
+        <Kpi label="Valor total" value={`${display.reduce((s, p) => s + parseInt(p.importe.replace(/[^\d]/g, '') || 0), 0).toLocaleString('es-ES')} €`} color={C.accent} icon="💶" />
+        <Kpi label="Aceptados" value={display.filter(p => ['aceptado','firmado','completado'].includes(p.estado)).length} color={C.success} icon="✅" />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {display.map(p => (
+          <div key={p.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18, display: 'flex', gap: 14, alignItems: 'center' }}>
+            <div style={{ width: 42, height: 42, background: C.primary + '20', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>📄</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>{p.tratamiento}</div>
+              <div style={{ color: C.muted, fontSize: 11 }}>{p.paciente.split('(')[0].trim()} · {p.fecha}</div>
+              {p.notas && <div style={{ fontSize: 11, color: C.primaryL, marginTop: 2, fontStyle: 'italic' }}>{p.notas}</div>}
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontWeight: 800, color: C.accent, fontSize: 18 }}>{p.importe}</div>
+              <Pill label={p.estado} color={['aceptado','firmado','completado'].includes(p.estado) ? C.success : p.estado === 'pendiente' ? C.warning : C.muted} sm />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <button onClick={() => demoToast('📄 PDF generado (demo)')} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: '6px 12px', color: C.muted, fontSize: 11, cursor: 'pointer' }}>PDF</button>
+              <button onClick={() => demoToast('✉️ Enviado al paciente (demo — sin envío real)')} style={{ background: C.primary + '22', border: `1px solid ${C.primary}44`, borderRadius: 6, padding: '6px 12px', color: C.primaryL, fontSize: 11, cursor: 'pointer' }}>Enviar</button>
             </div>
           </div>
         ))}
@@ -1090,22 +1158,80 @@ function DentistTratamientos() {
     </div>
   );
 }
-function DentistPresupuestos() { return <AdminFacturacion />; }
 
 // ── MARKETING PAGES ──
 function MktKPIs() {
+  const funnel = [
+    { label: 'Visitas web', value: 4230, pct: 100, color: C.primary },
+    { label: 'Leads captados', value: 312, pct: 74, color: C.primaryL },
+    { label: 'Consultas realizadas', value: parseInt(METRICAS.consultasMes), pct: 46, color: C.accent },
+    { label: 'Citas confirmadas', value: 87, pct: 21, color: C.success },
+    { label: 'Pacientes activos', value: 34, pct: 8, color: '#10B981' },
+  ];
+  const campanas = [
+    { nombre: 'Invisalign Septiembre', canal: 'Google Ads', estado: 'Activa', clics: 1240, leads: 28, coste: '380 €', roi: '+340%', color: C.success },
+    { nombre: 'Implantes — Reactivación', canal: 'Email', estado: 'Activa', clics: 860, leads: 19, coste: '0 €', roi: '+∞', color: C.success },
+    { nombre: 'Blanqueamiento Verano', canal: 'Instagram', estado: 'Pausada', clics: 3100, leads: 41, coste: '220 €', roi: '+180%', color: C.warning },
+    { nombre: 'Primera Visita Gratis', canal: 'Web', estado: 'Activa', clics: 590, leads: 67, coste: '0 €', roi: '+∞', color: C.success },
+  ];
   return (
     <div>
       <PageHeader title="KPIs Marketing" subtitle="Métricas de captación y conversión" badge="Marketing" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <Kpi icon="👁️" label="Visitas web" value="4.230" sub="mes actual" color={C.primary} />
-        <Kpi icon="🎯" label="Lead→Cita" value={METRICAS.lead_a_cita} color={C.success} />
-        <Kpi icon="⭐" label="Satisfacción" value={`${METRICAS.satisfaccion}/5`} color={C.accent} />
-        <Kpi icon="💬" label="NPS" value={METRICAS.netPromoterScore} color={C.primaryL} />
-        <Kpi icon="👥" label="Consultas" value={METRICAS.consultasMes} color={C.success} />
-        <Kpi icon="📊" label="Conversión" value={`${METRICAS.tasaConversion}%`} color={C.primary} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12, marginBottom: 24 }}>
+        <Kpi icon="👁️" label="Visitas web" value="4.230" sub="mes actual" color={C.primary} trend={{ dir: 'up', pct: '+22%', label: 'vs ago' }} />
+        <Kpi icon="🎯" label="Lead→Cita" value={METRICAS.lead_a_cita} color={C.success} trend={{ dir: 'up', pct: '+8%' }} />
+        <Kpi icon="⭐" label="Satisfacción" value={`${METRICAS.satisfaccion}/5`} color={C.accent} trend={{ dir: 'up', pct: '+0.3' }} />
+        <Kpi icon="💬" label="NPS" value={METRICAS.netPromoterScore} color={C.primaryL} trend={{ dir: 'up', pct: '+12' }} />
+        <Kpi icon="👥" label="Consultas" value={METRICAS.consultasMes} color={C.success} trend={{ dir: 'up', pct: '+15%' }} />
+        <Kpi icon="📊" label="Conversión" value={`${METRICAS.tasaConversion}%`} color={C.primary} trend={{ dir: 'up', pct: '+2.1pp' }} />
       </div>
-      <AdminMarketing />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+        {/* Funnel captación */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+          <div style={{ fontWeight: 700, color: C.text, fontSize: 14, marginBottom: 16 }}>Embudo de captación — sept.</div>
+          {funnel.map((f, i) => (
+            <div key={i} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 12, color: C.text, fontWeight: 600 }}>{f.label}</span>
+                <span style={{ fontSize: 12, color: f.color, fontWeight: 800 }}>{f.value.toLocaleString('es-ES')}</span>
+              </div>
+              <div style={{ background: C.border + '44', borderRadius: 4, height: 6 }}>
+                <div style={{ width: `${f.pct}%`, height: 6, background: f.color, borderRadius: 4, transition: 'width 0.6s' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Origen de leads */}
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+          <div style={{ fontWeight: 700, color: C.text, fontSize: 14, marginBottom: 16 }}>Origen de leads</div>
+          {[['Búsqueda orgánica', 38, C.primary], ['Instagram Ads', 28, '#E1306C'], ['Referidos', 22, C.success], ['Google Ads', 12, '#4285F4']].map(([src, pct, color]) => (
+            <div key={src} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 12, color: C.text }}>{src}</span>
+                <span style={{ fontSize: 12, color, fontWeight: 700 }}>{pct}%</span>
+              </div>
+              <Bar pct={pct} color={color} />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Campañas activas */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, fontWeight: 700, color: C.text, fontSize: 14 }}>Campañas activas</div>
+        {campanas.map((cam, i) => (
+          <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '12px 20px', borderBottom: `1px solid ${C.border}20` }}>
+            <Pill label={cam.estado} color={cam.color} sm />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, color: C.text, fontSize: 13 }}>{cam.nombre}</div>
+              <div style={{ color: C.muted, fontSize: 11 }}>{cam.canal} · {cam.clics.toLocaleString('es-ES')} clics · {cam.leads} leads</div>
+            </div>
+            <div style={{ textAlign: 'right', minWidth: 80 }}>
+              <div style={{ fontWeight: 800, color: C.success, fontSize: 13 }}>{cam.roi}</div>
+              <div style={{ color: C.muted, fontSize: 11 }}>ROI · {cam.coste}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1197,38 +1323,66 @@ function MktSEO() {
 // ── PATIENT PAGES ──
 function PatientMisCitas() {
   const p = PACIENTES[0];
+  const misCitas = AGENDA_HOY.filter(c => c.paciente.startsWith('Ana Gómez'));
+  const proximas = [
+    { fecha: '15 sep 2026', hora: '09:00', trat: 'Control Invisalign — Paso 9/14', prof: 'Dra. Clara Vidal', sala: 'Gabinete 1', estado: 'confirmada' },
+    { fecha: '10 oct 2026', hora: '10:30', trat: 'Higiene semestral', prof: 'Dra. Elena Pons', sala: 'Gabinete 2', estado: 'pendiente' },
+  ];
+  const progreso = Math.round((8 / 14) * 100);
   return (
     <div>
       <PageHeader title="Mis Citas" subtitle={`Área personal — ${p.nombre.split('(')[0].trim()}`} badge="Paciente" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-        <Kpi label="Próxima cita" value="15 Sep" color={C.primary} />
-        <Kpi label="Tratamiento" value={p.tratamiento} color={C.success} />
-        <Kpi label="Historial" value={p.hc} color={C.muted} />
+      {/* Progress Invisalign */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+          <div>
+            <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>Tratamiento activo: Invisalign</div>
+            <div style={{ color: C.muted, fontSize: 12 }}>Dra. Clara Vidal · Inicio enero 2026</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 900, color: C.primaryL, fontSize: 24 }}>{progreso}%</div>
+            <div style={{ fontSize: 11, color: C.muted }}>completado</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ fontSize: 11, color: C.muted }}>Paso 8 de 14 alineadores</span>
+          <span style={{ fontSize: 11, color: C.success, fontWeight: 700 }}>En curso ✓</span>
+        </div>
+        <div style={{ background: C.border + '44', borderRadius: 6, height: 10, marginBottom: 8 }}>
+          <div style={{ width: `${progreso}%`, height: 10, background: `linear-gradient(90deg, ${C.primary}, ${C.primaryL})`, borderRadius: 6 }} />
+        </div>
+        <div style={{ fontSize: 11, color: C.muted }}>Fin estimado: marzo 2027 · Revisión cada 6 semanas</div>
       </div>
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, fontWeight: 700, color: C.text, fontSize: 14 }}>Mis próximas citas</div>
-        {AGENDA_HOY.slice(0, 3).map(c => (
-          <div key={c.id} style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}20`, display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, color: C.primary, fontSize: 14, minWidth: 48 }}>{c.hora}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, color: C.text, fontSize: 13 }}>{c.tratamiento}</div>
-              <div style={{ color: C.muted, fontSize: 11 }}>{c.prof}</div>
+      {/* Próximas citas */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+        <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, fontWeight: 700, color: C.text, fontSize: 14 }}>Próximas citas</div>
+        {(misCitas.length > 0 ? misCitas.map(c => ({ fecha: 'Hoy', hora: c.hora, trat: c.tratamiento, prof: c.prof, sala: 'Gabinete 1', estado: c.estado })) : proximas).map((c, i) => (
+          <div key={i} style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}20`, display: 'flex', gap: 14, alignItems: 'center' }}>
+            <div style={{ background: C.primary + '20', borderRadius: 8, padding: '6px 10px', minWidth: 60, textAlign: 'center' }}>
+              <div style={{ fontWeight: 800, color: C.primary, fontSize: 13 }}>{c.hora}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>{c.fecha}</div>
             </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, color: C.text, fontSize: 13 }}>{c.trat}</div>
+              <div style={{ color: C.muted, fontSize: 11 }}>{c.prof} · {c.sala}</div>
+            </div>
+            <Pill label={c.estado} color={c.estado === 'confirmada' ? C.success : C.warning} sm />
             <div style={{ display: 'flex', gap: 6 }}>
-              <button style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: '5px 10px', color: C.muted, fontSize: 11, cursor: 'pointer' }}>Añadir al calendario</button>
-              <button style={{ background: '#EF444422', border: `1px solid #EF444444`, borderRadius: 6, padding: '5px 10px', color: C.danger, fontSize: 11, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => demoToast('📅 Añadido a Google Calendar (demo)')} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: '5px 10px', color: C.muted, fontSize: 11, cursor: 'pointer' }}>📅</button>
+              <button onClick={() => demoToast('❌ Solicitud de cancelación enviada (demo — sin acción real)')} style={{ background: '#EF444414', border: `1px solid #EF444430`, borderRadius: 6, padding: '5px 10px', color: C.danger, fontSize: 11, cursor: 'pointer' }}>Cancelar</button>
             </div>
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 16, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+      {/* Pedir cita */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
         <div style={{ fontWeight: 700, color: C.text, fontSize: 14, marginBottom: 10 }}>Pedir nueva cita</div>
         <div style={{ display: 'flex', gap: 10 }}>
           <select style={{ flex: 1, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 12px', color: C.text, fontSize: 13 }}>
             <option>Selecciona tratamiento…</option>
             {SERVICIOS.map(s => <option key={s.id}>{s.nombre}</option>)}
           </select>
-          <button onClick={() => demoToast('📅 Solicitud enviada — el equipo confirmará en 24h (demo)')} style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Solicitar →</button>
+          <button onClick={() => demoToast('📅 Solicitud enviada — confirmaremos en 24h (demo)')} style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Solicitar →</button>
         </div>
       </div>
     </div>
@@ -1282,7 +1436,41 @@ function PatientFacturas() {
     </div>
   );
 }
-function PatientMensajes() { return <StaffMensajes />; }
+function PatientMensajes() {
+  const mensajes = [
+    { de: 'Lumen Dental', tipo: 'clínica', msg: 'Recordatorio: su cita de control Invisalign es el 15 de septiembre a las 09:00.', tiempo: 'Hace 1 día', leido: true, color: C.primary },
+    { de: 'Dra. Clara Vidal', tipo: 'odontóloga', msg: 'Ana, el alineador 8 va perfecto. Siga con el protocolo de 22h al día. Hasta pronto.', tiempo: 'Hace 3 días', leido: true, color: C.success },
+    { de: 'Lumen Dental', tipo: 'clínica', msg: 'Su factura de agosto está disponible. Puede descargarla en el área de "Mis Facturas".', tiempo: 'Hace 1 semana', leido: false, color: C.primary },
+    { de: 'Dra. Elena Pons', tipo: 'odontóloga', msg: 'Muy bien en la higiene semestral. Recuerde usar el hilo interdental a diario.', tiempo: 'Hace 3 meses', leido: true, color: C.success },
+  ];
+  return (
+    <div>
+      <PageHeader title="Mis mensajes" subtitle="Comunicaciones de su clínica (demo)" badge="Paciente" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {mensajes.map((m, i) => (
+          <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18, display: 'flex', gap: 14, alignItems: 'flex-start', borderLeft: `3px solid ${m.leido ? C.border : m.color}` }}>
+            <div style={{ width: 40, height: 40, background: m.color + '20', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+              {m.tipo === 'clínica' ? '🦷' : '👩‍⚕️'}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ fontWeight: 700, color: C.text, fontSize: 13 }}>{m.de} <span style={{ fontSize: 10, color: m.color, fontWeight: 500, marginLeft: 4 }}>{m.tipo}</span></div>
+                {!m.leido && <div style={{ width: 7, height: 7, background: m.color, borderRadius: '50%', marginTop: 4 }} />}
+              </div>
+              <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.5 }}>{m.msg}</div>
+              <div style={{ fontSize: 11, color: C.border, marginTop: 6 }}>{m.tiempo}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 16, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
+        <div style={{ fontWeight: 700, color: C.text, fontSize: 14, marginBottom: 10 }}>Enviar consulta</div>
+        <textarea placeholder="Escriba su consulta aquí…" rows={3} style={{ width: '100%', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 14px', color: C.text, fontSize: 13, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }} />
+        <button onClick={() => demoToast('💬 Consulta enviada — responderemos en 24h (demo — sin envío real)')} style={{ background: C.primary, color: C.white, border: 'none', borderRadius: 8, padding: '10px 20px', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginTop: 10 }}>Enviar consulta →</button>
+      </div>
+    </div>
+  );
+}
 
 // ─── ROUTING POR ROL ─────────────────────────────────────────────────────────
 const PAGE_MAP = {
