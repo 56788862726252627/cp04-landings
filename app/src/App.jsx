@@ -65,6 +65,13 @@ import {
 import { cp04ApplyScreenState } from "./cp04-apply-screen-state.js";
 import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
 import { LazyComunidad } from "./components/lazy/lazyComunidad.js";
+import Landing from "./components/landing/Landing.jsx";
+import {
+  IconHome, IconCalendar, IconUsers, IconDocument, IconRefresh, IconClose,
+  IconFolder, IconAlertTriangle, IconBell, IconQrCode, IconClock, IconMail,
+  IconTrophy, IconChartBar, IconShieldCheck, IconCreditCard, IconChat,
+  IconRobot, IconWrench, IconBolt, IconGear, IconLogout,
+} from "./components/icons/Icons.jsx";
 import { T } from "./theme.js";
 /**
  * Club Pádel 04 · SaaS App segura
@@ -3316,23 +3323,27 @@ function LangOption({ lang, selected, onSelect }) {
 function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, onClose }) {
   const lang = useLang();
   const tx = key => t(key, lang);
+  // Iconos propios (auditoría Premium V2 2026-09-03: sidebar 100% emoji,
+  // cero librería de iconos). Se sustituye este único punto — el resto de
+  // usos de emoji dispersos por los módulos queda fuera de esta pasada,
+  // ver docs/audit/premium-v2-t3.md.
   const navKeys = [
-    ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
+    ["inicio","nav.inicio",IconHome],["reservas","nav.reservar",IconCalendar],["alta_jugador","nav.alta_jugador",IconUsers],
     // PASO 07I (2026-07-19): acceso directo a Baja de Jugador (Paso 07C),
     // justo después de Alta de jugador — mismo componente AltaJugador(),
     // solo cambia la pestaña inicial (ver modules.baja_jugador). Mismo gate
     // de rol que "alta_jugador" (ver CP04_ROLE_PERMISSIONS en rbac.js).
-    ["baja_jugador","nav.baja_jugador","🧾"],
-    ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
+    ["baja_jugador","nav.baja_jugador",IconDocument],
+    ["reprogramar","nav.reprogramar",IconRefresh],["cancelar","nav.cancelar",IconClose],["gestion","nav.gestion",IconFolder],
     // PASO 07G (2026-07-19): acceso directo al módulo de Cierre Temporal de
     // Pistas (Paso 07E), antes solo visible como card dentro de "gestion".
     // Mismo gate de rol que "gestion" (ver CP04_ROLE_PERMISSIONS en rbac.js).
-    ["cierre_pistas","nav.cierre_pistas","🚧"],
+    ["cierre_pistas","nav.cierre_pistas",IconAlertTriangle],
     // PASO 07N (2026-07-20): módulo visual preparado para Gestión Lista de
     // Espera (Make ID 5791113, grupo E del mapa App↔Make hasta este paso).
     // No llama a ningún endpoint real todavía — mismo gate de rol que
     // "cierre_pistas" (ver CP04_ROLE_PERMISSIONS en rbac.js).
-    ["lista_espera","nav.lista_espera","📋"],
+    ["lista_espera","nav.lista_espera",IconBell],
     // PASO 07O (2026-07-20): consolidación de módulos de sidebar para 14
     // escenarios más del inventario Make, agrupados en 4 módulos visuales
     // (ver docs/paso-07o-sidebar-flujos-50/). "control_qr" y
@@ -3340,23 +3351,23 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
     // "cierre_pistas"/"lista_espera". "dashboard_kpi" y
     // "backups_seguridad" están gateados como "admin" (ADMIN+SUPPORT, sin
     // STAFF) — ver CP04_ROLE_PERMISSIONS en rbac.js.
-    ["control_qr","nav.control_qr","🔐"],
-    ["pistas_recordatorios","nav.pistas_recordatorios","🔔"],
+    ["control_qr","nav.control_qr",IconQrCode],
+    ["pistas_recordatorios","nav.pistas_recordatorios",IconClock],
     // PASO 07P (2026-07-20): ampliación de sidebar para 20 escenarios más
     // del inventario Make (ver docs/paso-07p-ampliacion-sidebar-31-flujos/).
     // "comunicaciones_socio" y "calendario_disponibilidad" son operación
     // diaria, mismo gate que "control_qr"/"pistas_recordatorios"
     // (STAFF/ADMIN/SUPPORT). "facturacion_pagos" y "automatizaciones_bots"
     // están gateados como "admin" (ADMIN+SUPPORT, sin STAFF).
-    ["comunicaciones_socio","nav.comunicaciones_socio","💌"],
-    ["calendario_disponibilidad","nav.calendario_disponibilidad","🗓️"],
-    ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["comunidad","nav.comunidad","👥"],["admin","nav.admin","📊"],
-    ["dashboard_kpi","nav.dashboard_kpi","📈"],
-    ["backups_seguridad","nav.backups_seguridad","🗂️"],
-    ["facturacion_pagos","nav.facturacion_pagos","💳"],
-    ["asistente_ia","nav.asistente_ia","💬"],
-    ["automatizaciones_bots","nav.automatizaciones_bots","🤖"],
-    ["flujos_make","nav.flujos_make","🛠️"],["soporte","nav.soporte","🛠️"],["perfil","nav.perfil","⚙️"],
+    ["comunicaciones_socio","nav.comunicaciones_socio",IconMail],
+    ["calendario_disponibilidad","nav.calendario_disponibilidad",IconCalendar],
+    ["torneos","nav.torneos",IconTrophy],["ranking","nav.ranking",IconTrophy],["comunidad","nav.comunidad",IconUsers],["admin","nav.admin",IconChartBar],
+    ["dashboard_kpi","nav.dashboard_kpi",IconBolt],
+    ["backups_seguridad","nav.backups_seguridad",IconShieldCheck],
+    ["facturacion_pagos","nav.facturacion_pagos",IconCreditCard],
+    ["asistente_ia","nav.asistente_ia",IconChat],
+    ["automatizaciones_bots","nav.automatizaciones_bots",IconRobot],
+    ["flujos_make","nav.flujos_make",IconBolt],["soporte","nav.soporte",IconWrench],["perfil","nav.perfil",IconGear],
   ];
   // Antes había un mapa de permisos propio y duplicado aquí (menuByRole),
   // mantenido a mano en paralelo a CP04_ROLE_PERMISSIONS. Se ha unificado:
@@ -3379,7 +3390,7 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
         <button className="cp04-menu-button cp04-sidebar-close" type="button" onClick={onClose} aria-label="Cerrar menú">{tx("nav.cerrar_menu")}</button>
       </div>
       <nav style={{ display:"grid", gap:8 }}>
-        {visibleItems.map(([id, key, icon]) => {
+        {visibleItems.map(([id, key, Icon]) => {
           const label = tx(key);
           return (
             <button
@@ -3407,15 +3418,15 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
                 transition:"background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, transform .1s ease",
                 boxShadow: current===id ? "0 0 0 1px rgba(182,255,0,.28), 0 0 18px rgba(182,255,0,.18)" : "none"
               }}>
-              <span aria-hidden="true">{icon}</span><span>{label}</span>
+              <Icon size={18} /><span>{label}</span>
             </button>
           );
         })}
       </nav>
       {onClearRole && (
         <button className="cp04-menu-button cp04-sidebar-logout-btn" type="button" onClick={onClearRole}
-          style={{ width:"100%", marginTop:14, marginBottom:10, justifyContent:"center", borderColor:"rgba(182,255,0,.32)" }}>
-          🚪 {tx("nav.cerrar_sesion")}
+          style={{ width:"100%", marginTop:14, marginBottom:10, justifyContent:"center", gap:8, borderColor:"rgba(182,255,0,.32)" }}>
+          <IconLogout size={17} /> {tx("nav.cerrar_sesion")}
         </button>
       )}
       <div style={{ marginTop:18 }}><LanguageSelector /></div>
@@ -8581,7 +8592,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
                 })()}
               </div>
             )}
-            <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:8, width:"100%" }}>🚪 {tx("perfil.cerrar_sesion")}</Btn>
+            <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:8, width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}><IconLogout size={17} /> {tx("perfil.cerrar_sesion")}</Btn>
             {onOpenTutorial && (
               <Btn variant="secondary" data-tour="perfil-tutorial-btn" onClick={onOpenTutorial} style={{ marginTop:6, width:"100%", borderColor:"rgba(182,255,0,.32)", color:"#b6ff00" }}>🎯 Ver tutorial rápido</Btn>
             )}
@@ -8959,6 +8970,12 @@ export default function ClubPadel04SaaSApp() {
   const auth = useAuth();
   const [current, setCurrent] = useState("inicio");
   const [selectedRole, setSelectedRole] = useState(() => localStorage.getItem("cp04_role") || "");
+  // Landing comercial premium (auditoría Premium V2, 2026-09-03): antes el
+  // primer contacto era directamente el login. Se enseña solo mientras no
+  // haya rol/sesión y el visitante no haya pulsado ya "Iniciar sesión"/
+  // "Acceso para clubes ya clientes" en esta pestaña — no depende de
+  // localStorage a propósito: cada visita nueva vuelve a ver la landing.
+  const [showLanding, setShowLanding] = useState(true);
   const [pendingRole, setPendingRole] = useState("");
   const [rolePassword, setRolePassword] = useState("");
   const [showRolePassword, setShowRolePassword] = useState(false);
@@ -9516,6 +9533,10 @@ export default function ClubPadel04SaaSApp() {
     );
   }
 
+  if (!selectedRole && showLanding) {
+    return <Landing onEnterLogin={() => setShowLanding(false)} />;
+  }
+
   if (!selectedRole) {
     const roleLabels = {
       PLAYER:  { label: ltx("role.PLAYER.label"),  desc: ltx("role.PLAYER.desc")  },
@@ -9530,8 +9551,17 @@ export default function ClubPadel04SaaSApp() {
         <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:"radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), #050910", color:"white" }}>
           <section style={{ width:"min(1080px, 100%)", border:"1px solid rgba(255,255,255,.12)", borderRadius:34, padding:"clamp(24px, 4vw, 48px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:18 }}>
-              <div style={{ color:T.accent, fontSize:".78rem", letterSpacing:".22em", textTransform:"uppercase", fontWeight:900 }}>
-                {ltx("login.sesion_label")}
+              <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowLanding(true)}
+                  style={{ background:"transparent", border:"none", color:T.textDim, fontSize:".78rem", cursor:"pointer", padding:0, display:"flex", alignItems:"center", gap:4, textDecoration:"underline", textUnderlineOffset:3 }}
+                >
+                  ← Volver
+                </button>
+                <div style={{ color:T.accent, fontSize:".78rem", letterSpacing:".22em", textTransform:"uppercase", fontWeight:900 }}>
+                  {ltx("login.sesion_label")}
+                </div>
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
                 <div style={{ minWidth:180, maxWidth:220 }}><LanguageSelector /></div>
