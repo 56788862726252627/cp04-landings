@@ -72,6 +72,7 @@ import {
   IconTrophy, IconChartBar, IconShieldCheck, IconCreditCard, IconChat,
   IconRobot, IconWrench, IconBolt, IconGear, IconLogout,
 } from "./components/icons/Icons.jsx";
+import { StatusCard, LoadingInline } from "./components/states/UiStates.jsx";
 import { T } from "./theme.js";
 /**
  * Club Pádel 04 · SaaS App segura
@@ -793,13 +794,11 @@ function CalendarioDisponibilidad({
       </div>
 
       {mensaje && (
-        <div style={{
-          color: estado === "error" ? T.danger : estado === "closed" ? T.warning : T.textDim,
-          marginBottom: 16,
-          fontWeight: 800
-        }}>
-          {mensaje}
-        </div>
+        <StatusCard
+          status={estado === "error" ? "error" : estado === "closed" ? "warning" : "pending"}
+          text={mensaje}
+          style={{ marginBottom: 16, fontWeight: 800 }}
+        />
       )}
 
       <div style={{ display: "grid", gap: 14 }}>
@@ -3387,6 +3386,14 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
             <div style={{ color:T.textDim, fontSize:".78rem" }}>{tx("nav.saas_label")}</div>
           </div>
         </div>
+        {selectedRole && (
+          <span
+            aria-label={`Rol actual: ${selectedRole}`}
+            style={{ color:T.accent, background:"rgba(182,255,0,.1)", border:"1px solid rgba(182,255,0,.3)", borderRadius:999, padding:"3px 10px", fontSize:".68rem", fontWeight:900, letterSpacing:".05em", whiteSpace:"nowrap" }}
+          >
+            {cp04NormalizeRole(selectedRole)}
+          </span>
+        )}
         <button className="cp04-menu-button cp04-sidebar-close" type="button" onClick={onClose} aria-label="Cerrar menú">{tx("nav.cerrar_menu")}</button>
       </div>
       <nav style={{ display:"grid", gap:8 }}>
@@ -3600,7 +3607,7 @@ function Inicio({ navigate, selectedRole }) {
           dashboard) */}
       {isInternalRole && (kpi.makeErrores > 0 || kpi.incidenciasAbiertas > 0) && (
         <div style={{ borderRadius: 16, border: `1px solid ${T.warning}55`, background: `rgba(255,173,71,.07)`, padding: "12px 16px", marginBottom: 22, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "1.2rem" }}>⚠️</span>
+          <IconAlertTriangle size={22} color={T.warning} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <strong style={{ color: T.warning }}>{tx("home.avisos_activos")}</strong>
             <div style={{ color: T.textDim, fontSize: ".82rem", marginTop: 3 }}>
@@ -3729,13 +3736,16 @@ function Reservas() {
   const price = priceFor(court, duration);
   const payload = useMemo(() => prepareBookingPayload(form, court), [form, court]);
   const sending = status === "sending";
+  // El color por estado ahora lo decide StatusCard (components/states/UiStates.jsx)
+  // a partir de `status`, no un tercer valor por entrada aquí — mismo
+  // estado/lógica, solo se retira el color que ya no se usa en el render.
   const statusMap = {
-    pending: [tx("status.reserva.pendiente"), tx("status.reserva.pendiente_txt"), T.warning],
-    sending: [tx("status.reserva.enviando"), tx("status.reserva.enviando_txt"), T.warning],
-    success: [tx("status.reserva.exito"), tx("status.reserva.exito_txt"), T.accent],
-    error: [tx("status.reserva.error"), statusMessage || tx("status.reserva.error_txt"), T.danger],
+    pending: [tx("status.reserva.pendiente"), tx("status.reserva.pendiente_txt")],
+    sending: [tx("status.reserva.enviando"), tx("status.reserva.enviando_txt")],
+    success: [tx("status.reserva.exito"), tx("status.reserva.exito_txt")],
+    error: [tx("status.reserva.error"), statusMessage || tx("status.reserva.error_txt")],
   };
-  const [statusTitle, statusText, statusColor] = statusMap[status];
+  const [statusTitle, statusText] = statusMap[status];
 
   function updateForm(field, value) {
     setForm((current) => {
@@ -3881,7 +3891,7 @@ function Reservas() {
     setCourt(pista);
     setStep(1);
   }}
-/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para confirmar esta reserva. El resumen que has revisado se mantiene." />}{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,getAvailableDurationsForHour(h)[0]??duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${h}`)}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{getAvailableDurationsForHour(form.hora).map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+/><StatusCard status={status} title={statusTitle} text={statusText} style={{ marginBottom: 20 }} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para confirmar esta reserva. El resumen que has revisado se mantiene." />}{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,getAvailableDurationsForHour(h)[0]??duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${h}`)}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{getAvailableDurationsForHour(form.hora).map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
 }
 
 function CancelarReserva({ setCurrent }) {
@@ -3898,12 +3908,12 @@ function CancelarReserva({ setCurrent }) {
   const success = status === "success";
 
   const statusMap = {
-    idle: [tx("status.cancelar.idle"), tx("status.cancelar.idle_txt"), T.warning],
-    sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt"), T.warning],
-    success: [tx("status.cancelar.exito"), tx("status.cancelar.exito_txt"), T.accent],
-    error: [tx("status.cancelar.error"), error || tx("status.cancelar.error_txt"), T.danger],
+    idle: [tx("status.cancelar.idle"), tx("status.cancelar.idle_txt")],
+    sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt")],
+    success: [tx("status.cancelar.exito"), tx("status.cancelar.exito_txt")],
+    error: [tx("status.cancelar.error"), error || tx("status.cancelar.error_txt")],
   };
-  const [statusTitle, statusText, statusColor] = statusMap[status];
+  const [statusTitle, statusText] = statusMap[status];
 
   function updateClave(value) {
     setClave(value);
@@ -3995,7 +4005,7 @@ function CancelarReserva({ setCurrent }) {
     }
   }
 
-  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para cancelar esta reserva. La clave que has introducido se mantiene." />}<Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para cancelar esta reserva. La clave que has introducido se mantiene." />}<StatusCard status={status} title={statusTitle} text={statusText} style={{ marginBottom:20 }} /><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
 }
 
 
@@ -4026,12 +4036,12 @@ function ReprogramarReserva({ setCurrent }) {
   );
 
   const statusMap = {
-    idle: [tx("status.reprog.idle"), tx("status.reprog.idle_txt"), T.warning],
-    sending: [tx("status.reprog.enviando"), tx("status.reprog.enviando_txt"), T.warning],
-    success: [tx("status.reprog.exito"), statusMessage || tx("status.reprog.exito_txt"), T.accent],
-    error: [tx("status.reprog.error"), statusMessage || tx("status.reprog.error_txt"), T.danger],
+    idle: [tx("status.reprog.idle"), tx("status.reprog.idle_txt")],
+    sending: [tx("status.reprog.enviando"), tx("status.reprog.enviando_txt")],
+    success: [tx("status.reprog.exito"), statusMessage || tx("status.reprog.exito_txt")],
+    error: [tx("status.reprog.error"), statusMessage || tx("status.reprog.error_txt")],
   };
-  const [statusTitle, statusText, statusColor] = statusMap[status];
+  const [statusTitle, statusText] = statusMap[status];
 
   function updateForm(field, value) {
     setForm((current) => {
@@ -4173,16 +4183,7 @@ function ReprogramarReserva({ setCurrent }) {
         <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para reprogramar esta reserva. La fecha, hora y pista ya elegidas se mantienen." />
       )}
 
-      <Card
-        style={{
-          marginBottom: 20,
-          borderColor: statusColor,
-          color: statusColor,
-        }}
-      >
-        <strong>{statusTitle}</strong>
-        <div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div>
-      </Card>
+      <StatusCard status={status} title={statusTitle} text={statusText} style={{ marginBottom: 20 }} />
 
       <CalendarioDisponibilidad
         initialDate={form.nueva_fecha_reserva}
@@ -4628,11 +4629,9 @@ function CierreTemporalPista() {
             <input type="checkbox" checked={cierreForm.notify_players} onChange={e => updateCierreForm("notify_players", e.target.checked)} />
             <span>Notificar a los jugadores con reserva en ese horario, si aplica.</span>
           </label>
-          {cierreServerError && <p style={{ color: T.danger, marginTop: 16 }}>{cierreServerError}</p>}
+          {cierreServerError && <StatusCard status="error" text={cierreServerError} style={{ marginTop: 16 }} />}
           {cierreSuccess && (
-            <p style={{ color: T.accent, marginTop: 16 }}>
-              Solicitud de cierre temporal enviada correctamente. No se considera confirmada hasta que el sistema lo confirme.
-            </p>
+            <StatusCard status="success" text="Solicitud de cierre temporal enviada correctamente. No se considera confirmada hasta que el sistema lo confirme." style={{ marginTop: 16 }} />
           )}
           <div style={{ marginTop: 22 }}>
             {/* PASO 07H (2026-07-19): contraste reforzado a petición de QA
@@ -5043,7 +5042,7 @@ function ControlQrAccesos() {
 
   const pistasDisponibles = ["Pista 1", "Pista 2", "Pista 3", "Pista 4"];
   const decisionColor = valResult
-    ? (valResult.decision === "ALLOW" ? T.success : T.error)
+    ? (valResult.decision === "ALLOW" ? T.accent : T.dangerText)
     : T.text;
 
   return (
@@ -5057,7 +5056,7 @@ function ControlQrAccesos() {
       {/* Flujo productivo: buscar reserva real → precargar datos */}
       <Card style={{ marginBottom: 24, borderColor: T.accent + "55" }}>
         <h3 style={{ marginTop: 0 }}>🔍 Buscar reserva confirmada</h3>
-        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 0 }}>
+        <p style={{ color: T.textDim, fontSize: ".87rem", marginTop: 0 }}>
           Flujo productivo: busca por email del jugador y selecciona la reserva para precargar
           record_id, nombre, email, hora_fin y demás campos directamente desde Airtable vía Make.
           Ningún dato se inventa ni hardcodea.
@@ -5078,16 +5077,16 @@ function ControlQrAccesos() {
           </Btn>
         </form>
         {lookupError && (
-          <p style={{ color: T.error, fontSize: ".86rem", margin: "10px 0 0" }}>{lookupError}</p>
+          <StatusCard status="error" text={lookupError} style={{ marginTop: 10 }} />
         )}
         {lookupDone && lookupResults.length === 0 && !lookupError && (
-          <p style={{ color: T.textMuted, fontSize: ".86rem", margin: "10px 0 0" }}>
+          <p style={{ color: T.textDim, fontSize: ".86rem", margin: "10px 0 0" }}>
             No se encontraron reservas confirmadas para ese email.
           </p>
         )}
         {lookupResults.length > 0 && (
           <div style={{ marginTop: 16 }}>
-            <p style={{ fontSize: ".85rem", color: T.textMuted, marginBottom: 8 }}>
+            <p style={{ fontSize: ".85rem", color: T.textDim, marginBottom: 8 }}>
               Selecciona la reserva para precargar los datos del QR:
             </p>
             {lookupResults.map((r) => (
@@ -5098,11 +5097,11 @@ function ControlQrAccesos() {
               >
                 <div>
                   <span style={{ fontWeight: 600, fontSize: ".9rem" }}>{r.clave || r.id}</span>
-                  <span style={{ color: T.textMuted, fontSize: ".84rem", marginLeft: 12 }}>
+                  <span style={{ color: T.textDim, fontSize: ".84rem", marginLeft: 12 }}>
                     {r.fecha} · {r.horaInicio}{r.horaFin ? `–${r.horaFin}` : ""} · {r.pista}
                   </span>
                   {!r.horaFin && (
-                    <span style={{ color: T.error, fontSize: ".8rem", marginLeft: 8 }}>⚠ sin hora_fin</span>
+                    <span style={{ color: T.dangerText, fontSize: ".8rem", marginLeft: 8 }}>⚠ sin hora_fin</span>
                   )}
                 </div>
                 <span style={{ fontSize: ".82rem", color: T.accent, whiteSpace: "nowrap" }}>Precargar →</span>
@@ -5117,17 +5116,17 @@ function ControlQrAccesos() {
         <h3 style={{ marginTop: 0 }}>
           🔑 Generar QR de acceso
           {genFromReal && (
-            <span style={{ fontSize: ".76rem", color: T.success, marginLeft: 10, fontWeight: 400 }}>
+            <span style={{ fontSize: ".76rem", color: T.accent, marginLeft: 10, fontWeight: 400 }}>
               ✓ datos desde reserva real
             </span>
           )}
         </h3>
         {!genFromReal && (
-          <p style={{ color: T.textMuted, fontSize: ".83rem", marginTop: 0, padding: "6px 10px", borderRadius: 6, background: `${T.accent}14`, border: `1px solid ${T.accent}33` }}>
+          <p style={{ color: T.textDim, fontSize: ".83rem", marginTop: 0, padding: "6px 10px", borderRadius: 6, background: `${T.accent}14`, border: `1px solid ${T.accent}33` }}>
             ⚠ Entrada manual — usa el buscador anterior para precargar datos reales desde Airtable.
           </p>
         )}
-        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 8 }}>
+        <p style={{ color: T.textDim, fontSize: ".87rem", marginTop: 8 }}>
           El QR será procesado por Make y enviado al jugador (WhatsApp/email).
         </p>
         <form onSubmit={handleGenerarQr} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -5219,20 +5218,20 @@ function ControlQrAccesos() {
             </label>
           </div>
           {genError && (
-            <p style={{ color: T.error, fontSize: ".86rem", margin: 0 }}>{genError}</p>
+            <StatusCard status="error" text={genError} />
           )}
           <Btn type="submit" disabled={genLoading} variant="primary">
             {genLoading ? "Generando…" : "Generar QR de acceso"}
           </Btn>
         </form>
         {genResult && (
-          <div style={{ marginTop: 20, padding: 16, borderRadius: 8, background: `${T.success}18`, border: `1px solid ${T.success}44` }}>
-            <p style={{ color: T.success, fontWeight: 700, margin: "0 0 8px" }}>QR generado — pendiente de confirmación Make</p>
-            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Clave: <strong>{genResult.clave_reserva}</strong></p>
-            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Pista: {genResult.pista} · Fecha: {genResult.fecha} · {genResult.hora_inicio}</p>
-            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Válido desde: {genResult.valid_from ? new Date(genResult.valid_from).toLocaleString("es-ES") : "—"}</p>
-            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Válido hasta: {genResult.valid_until ? new Date(genResult.valid_until).toLocaleString("es-ES") : "—"}</p>
-            <p style={{ fontSize: ".82rem", margin: "8px 0 0", color: T.textMuted }}>Make procesará la entrega del QR al jugador según la configuración del club.</p>
+          <div style={{ marginTop: 20, padding: 16, borderRadius: 8, background: `${T.accent}18`, border: `1px solid ${T.accent}44` }}>
+            <StatusCard status="success" title="QR generado — pendiente de confirmación Make" style={{ background: "transparent", border: "none", padding: 0, marginBottom: 8 }} />
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Clave: <strong>{genResult.clave_reserva}</strong></p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Pista: {genResult.pista} · Fecha: {genResult.fecha} · {genResult.hora_inicio}</p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Válido desde: {genResult.valid_from ? new Date(genResult.valid_from).toLocaleString("es-ES") : "—"}</p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Válido hasta: {genResult.valid_until ? new Date(genResult.valid_until).toLocaleString("es-ES") : "—"}</p>
+            <p style={{ fontSize: ".82rem", margin: "8px 0 0", color: T.textDim }}>Make procesará la entrega del QR al jugador según la configuración del club.</p>
           </div>
         )}
       </Card>
@@ -5240,7 +5239,7 @@ function ControlQrAccesos() {
       {/* Panel Control / Validación QR */}
       <Card>
         <h3 style={{ marginTop: 0 }}>🔐 Verificar acceso QR</h3>
-        <p style={{ color: T.textMuted, fontSize: ".87rem", marginTop: 0 }}>
+        <p style={{ color: T.textDim, fontSize: ".87rem", marginTop: 0 }}>
           Introduce la clave de reserva escaneada o tecleada manualmente. Make comprobará el estado real en Airtable.
         </p>
         <form onSubmit={handleValidarQr} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -5275,22 +5274,22 @@ function ControlQrAccesos() {
             </label>
           </div>
           {valError && (
-            <p style={{ color: T.error, fontSize: ".86rem", margin: 0 }}>{valError}</p>
+            <StatusCard status="error" text={valError} />
           )}
           <Btn type="submit" disabled={valLoading} variant="primary">
             {valLoading ? "Verificando…" : "Verificar acceso"}
           </Btn>
         </form>
         {valResult && (
-          <div style={{ marginTop: 20, padding: 20, borderRadius: 8, background: valResult.decision === "ALLOW" ? `${T.success}18` : `${T.error}18`, border: `2px solid ${decisionColor}` }}>
+          <div style={{ marginTop: 20, padding: 20, borderRadius: 8, background: valResult.decision === "ALLOW" ? `${T.accent}18` : `${T.dangerText}18`, border: `2px solid ${decisionColor}` }}>
             <p style={{ color: decisionColor, fontWeight: 800, fontSize: "1.1rem", margin: "0 0 8px" }}>
               {valResult.decision === "ALLOW" ? "✅ ACCESO PERMITIDO" : "❌ ACCESO DENEGADO"}
             </p>
-            <p style={{ fontSize: ".87rem", margin: "4px 0", color: T.textMuted }}>
+            <p style={{ fontSize: ".87rem", margin: "4px 0", color: T.textDim }}>
               Motivo: <strong>{valResult.reason}</strong>
             </p>
-            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textMuted }}>Pista: {valResult.pista}</p>
-            <p style={{ fontSize: ".82rem", margin: "8px 0 0", color: T.textMuted }}>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Pista: {valResult.pista}</p>
+            <p style={{ fontSize: ".82rem", margin: "8px 0 0", color: T.textDim }}>
               Validado: {new Date(valResult.scanned_at).toLocaleString("es-ES")}
             </p>
           </div>
@@ -6617,8 +6616,8 @@ function AltaJugador({ initialModo = "alta" } = {}) {
             <p style={{ color:T.textDim, fontSize:".8rem", marginTop:8, marginBottom:0 }}>
               La promoción se gestionará desde "Lista de espera" cuando la integración real esté disponible.
             </p>
-            {bajaServerError && <p style={{ color:T.danger, marginTop:16 }}>{bajaServerError}</p>}
-            {bajaSuccess && <p style={{ color:T.accent, marginTop:16 }}>Baja registrada correctamente.</p>}
+            {bajaServerError && <StatusCard status="error" text={bajaServerError} style={{ marginTop:16 }} />}
+            {bajaSuccess && <StatusCard status="success" text="Baja registrada correctamente." style={{ marginTop:16 }} />}
             <div style={{ marginTop:22 }}>
               {/* PASO 07J/07K/07L/07M (2026-07-19): refuerzo de contraste +
                   clase dedicada `cp04-offboarding-submit-button` con CSS de
@@ -6712,8 +6711,8 @@ function AltaJugador({ initialModo = "alta" } = {}) {
             <span>{tx("alta.acepta")}</span>
           </label>
           <FieldError>{errors.acepta_condiciones}</FieldError>
-          {serverError && <p style={{ color:T.danger, marginTop:16 }}>{serverError}</p>}
-          {success && <p style={{ color:T.accent, marginTop:16 }}>{tx("alta.exito")}</p>}
+          {serverError && <StatusCard status="error" text={serverError} style={{ marginTop:16 }} />}
+          {success && <StatusCard status="success" text={tx("alta.exito")} style={{ marginTop:16 }} />}
           <div style={{ marginTop:22 }}>
             <Btn type="submit" disabled={sending} className="cp04-fix-white-action-btn cp04-fix-dar-alta-btn">{sending ? tx("alta.registrando") : tx("alta.btn")}</Btn>
           </div>
@@ -7360,7 +7359,7 @@ function Torneos({ selectedRole } = {}) {
               </div>
             </div>
           </div>
-          {customError && <p style={{ color: T.dangerText, margin: "10px 0 0", fontSize: ".82rem", fontWeight: 700 }}>⚠️ {customError}</p>}
+          {customError && <StatusCard status="error" text={customError} style={{ marginTop: 10 }} />}
           <p style={{ color: T.textDim, fontSize: ".78rem", marginTop: 12, marginBottom: 0, lineHeight: 1.55 }}>
             {isRoundRobin
               ? "Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Tras configurar el número, genera el calendario con el botón «📅 Generar calendario» en Controles."
@@ -8506,11 +8505,11 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
 
         {/* SESIÓN Y ROL */}
         <div style={cs}>
-          <h3 style={hs}>⚡ {tx("perfil.sesion")}</h3>
+          <h3 style={{ ...hs, display:"flex", alignItems:"center", gap:8 }}><IconBolt size={18} color={T.accent} /> {tx("perfil.sesion")}</h3>
           <div style={{ display:"flex", flexDirection:"column", gap:10, marginTop:14 }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <span style={{ color:T.textDim, fontSize:".86rem" }}>{tx("perfil.rol_actual")}</span>
-              <strong style={{ color:T.text, fontSize:".88rem" }}>{roleLabels[selectedRole]||selectedRole}</strong>
+              <span style={{ color:T.accent, background:"rgba(182,255,0,.1)", border:"1px solid rgba(182,255,0,.3)", borderRadius:999, padding:"3px 12px", fontSize:".78rem", fontWeight:900, letterSpacing:".04em" }}>{roleLabels[selectedRole]||selectedRole}</span>
             </div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <span style={{ color:T.textDim, fontSize:".86rem" }}>{tx("perfil.idioma")}</span>
@@ -8802,7 +8801,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
       {/* ── MIS DERECHOS GDPR (flujo #9, Make 6323457) ── */}
       <div style={{ marginBottom:24 }}>
         <div style={cs}>
-          <h3 style={{ ...hs, marginBottom:10 }}>⚖️ Mis derechos GDPR</h3>
+          <h3 style={{ ...hs, marginBottom:10, display:"flex", alignItems:"center", gap:8 }}><IconShieldCheck size={20} color={T.accent} /> Mis derechos GDPR</h3>
           <p style={{ color:T.textDim, fontSize:".82rem", marginBottom:18, lineHeight:1.5 }}>
             Solicita una copia de tus datos personales o pide su eliminación, conforme al RGPD.
           </p>
@@ -8816,7 +8815,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
             </Btn>
           </div>
 
-          {gdprAccesoError && <div style={{ color:T.danger, fontSize:".82rem", marginTop:12 }}>{gdprAccesoError}</div>}
+          {gdprAccesoError && <StatusCard status="error" text={gdprAccesoError} style={{ marginTop:12 }} />}
           {gdprAccesoResult && (
             <div style={{ marginTop:16, padding:14, border:`1px solid ${T.line}`, borderRadius:12, fontSize:".82rem", lineHeight:1.6 }}>
               <div style={{ color:T.text, fontWeight:700, marginBottom:6 }}>Datos generados el {new Date(gdprAccesoResult.generado_en).toLocaleString()}</div>
@@ -8849,7 +8848,7 @@ function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
             </div>
           )}
 
-          {gdprOlvidoError && <div style={{ color:T.danger, fontSize:".82rem", marginTop:12 }}>{gdprOlvidoError}</div>}
+          {gdprOlvidoError && <StatusCard status="error" text={gdprOlvidoError} style={{ marginTop:12 }} />}
           {gdprOlvidoResult && (
             <div style={{ marginTop:16, padding:14, border:`1px solid ${T.line}`, borderRadius:12, fontSize:".82rem", lineHeight:1.6 }}>
               <div style={{ color:T.text, fontWeight:700, marginBottom:6 }}>Solicitud registrada — estado: {gdprOlvidoResult.estado}</div>
@@ -9432,8 +9431,7 @@ export default function ClubPadel04SaaSApp() {
 
             {recoveryStep === "success" ? (
               <>
-                <div style={{ color:T.accent, fontWeight:900, fontSize:"1.8rem", marginBottom:12 }}>✓</div>
-                <strong style={{ display:"block", marginBottom:8, fontSize:"1.1rem" }}>Contraseña actualizada correctamente.</strong>
+                <StatusCard status="success" title="Contraseña actualizada correctamente." style={{ marginBottom:16, border:"none", background:"transparent", padding:0 }} />
                 <p style={{ color:T.textDim, marginBottom:24, lineHeight:1.6 }}>Ya puedes iniciar sesión con tu nueva contraseña.</p>
                 <button type="button" onClick={handleRecoveryCancel} style={{ padding:"13px 22px", borderRadius:14, border:`1px solid ${T.line}`, background:"transparent", color:T.text, fontWeight:800, cursor:"pointer", fontSize:"1rem" }}>
                   Ir al inicio de sesión
@@ -9502,9 +9500,7 @@ export default function ClubPadel04SaaSApp() {
                     )}
                   </button>
                 </div>
-                {recoveryError && (
-                  <div role="alert" style={{ color:T.dangerText, fontSize:".88rem" }}>{recoveryError}</div>
-                )}
+                {recoveryError && <StatusCard status="error" text={recoveryError} />}
                 <p style={{ color:T.textDim, fontSize:".82rem", margin:"0", lineHeight:1.5 }}>
                   Mínimo 8 caracteres, mayúscula, minúscula y número.
                 </p>
@@ -9810,7 +9806,7 @@ export default function ClubPadel04SaaSApp() {
                         autoFocus
                         style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
                       />
-                      {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
+                      {forgotPwdEmailError && <StatusCard status="error" text={forgotPwdEmailError} style={{ marginBottom:10 }} />}
                       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
                         <button type="submit" className="cp04-menu-button cp04-login-entrar-white-btn"
                           style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
@@ -9825,12 +9821,11 @@ export default function ClubPadel04SaaSApp() {
                   </>
                 )}
                 {forgotPwdStep === "loading" && (
-                  <p style={{ color:T.textDim, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_cargando")}</p>
+                  <LoadingInline label={ltx("login.recuperar_cargando")} />
                 )}
                 {forgotPwdStep === "sent" && (
                   <>
-                    <div style={{ color:T.accent, fontWeight:900, fontSize:"1.4rem", marginBottom:10 }}>✓</div>
-                    <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
+                    <StatusCard status="success" title={ltx("login.recuperar_title")} style={{ marginBottom:18, border:"none", background:"transparent", padding:0 }} />
                     <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_enviado")}</p>
                     <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
                       style={{ background:"transparent", border:`1px solid ${T.line}` }}>
@@ -9840,8 +9835,7 @@ export default function ClubPadel04SaaSApp() {
                 )}
                 {forgotPwdStep === "unavailable" && (
                   <>
-                    <div style={{ color:T.warning, fontWeight:900, fontSize:"1.4rem", marginBottom:10 }}>⚠</div>
-                    <strong style={{ display:"block", marginBottom:8, fontSize:"1.05rem" }}>{ltx("login.recuperar_title")}</strong>
+                    <StatusCard status="warning" title={ltx("login.recuperar_title")} style={{ marginBottom:18, border:"none", background:"transparent", padding:0 }} />
                     <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_no_disponible")}</p>
                     <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
                       style={{ background:"transparent", border:`1px solid ${T.line}` }}>
