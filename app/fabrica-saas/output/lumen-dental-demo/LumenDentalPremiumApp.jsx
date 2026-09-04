@@ -349,87 +349,119 @@ function LoginPage({ onLogin }) {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh', background: C.dark, display: 'flex',
-      flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      padding: '24px 16px', fontFamily: "'DM Sans','Inter',system-ui,sans-serif",
-    }}>
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-        <div style={{ width: 40, height: 40, background: C.primary, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🦷</div>
-        <span style={{ fontSize: 24, fontWeight: 800, color: C.white }}>Lumen Dental</span>
-        <span style={{ background: C.primary + '33', color: C.primaryL, borderRadius: 6, fontSize: 10, fontWeight: 700, padding: '2px 8px', marginLeft: 4 }}>DEMO</span>
-      </div>
+    <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', fontFamily: "'DM Sans','Inter',system-ui,sans-serif" }}>
+      {/* Imagen de fondo — rol seleccionado */}
+      {sel && (
+        <img src={sel.img} alt="" aria-hidden="true" style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%',
+          objectFit: 'cover', objectPosition: 'center',
+        }} />
+      )}
+      {/* Overlay oscuro con acento del rol */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: sel
+          ? `linear-gradient(135deg, rgba(7,12,24,0.82) 0%, rgba(10,18,36,0.74) 55%, rgba(0,0,0,0.60) 100%)`
+          : C.dark,
+        transition: '0.35s',
+      }} />
 
-      <div style={{ maxWidth: 960, width: '100%' }}>
-        <h2 style={{ color: C.white, textAlign: 'center', fontWeight: 700, fontSize: 18, margin: '0 0 8px' }}>Selecciona tu rol de acceso</h2>
-        <p style={{ color: C.darkMuted, textAlign: 'center', fontSize: 13, margin: '0 0 28px' }}>Credenciales pre-rellenadas. Haz clic en una tarjeta para continuar.</p>
-
-        {/* Role cards grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: mob ? '1fr 1fr' : 'repeat(5,1fr)',
-          gap: 12, marginBottom: 32,
-        }}>
-          {roleList.map(r => (
-            <button key={r.id} onClick={() => handleSel(r)} style={{
-              border: `2px solid ${sel?.id === r.id ? r.color : 'transparent'}`,
-              borderRadius: 14, overflow: 'hidden', cursor: 'pointer',
-              background: 'transparent', padding: 0, position: 'relative',
-              transform: sel?.id === r.id ? 'scale(1.03)' : 'scale(1)',
-              transition: '0.18s', boxShadow: sel?.id === r.id ? `0 0 0 3px ${r.color}33` : 'none',
-            }}>
-              <img src={r.img} alt={r.label} style={{ width: '100%', height: 110, objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />
-              <div style={{
-                background: 'rgba(0,0,0,0.72)', padding: '10px 10px 12px',
-                textAlign: 'left',
-              }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: r.color, marginBottom: 2 }}>{r.short}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>{r.desc}</div>
-              </div>
-              {sel?.id === r.id && (
-                <div style={{ position: 'absolute', top: 8, right: 8, background: r.color, borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✓</div>
-              )}
-            </button>
-          ))}
+      {/* Contenido (z-1) */}
+      <div style={{
+        position: 'relative', zIndex: 1, minHeight: '100vh',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        padding: '24px 16px',
+      }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
+          <div style={{ width: 40, height: 40, background: C.primary, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🦷</div>
+          <span style={{ fontSize: 24, fontWeight: 800, color: C.white }}>Lumen Dental</span>
+          <span style={{ background: C.primary + '33', color: C.primaryL, borderRadius: 6, fontSize: 10, fontWeight: 700, padding: '2px 8px', marginLeft: 4 }}>DEMO</span>
         </div>
 
-        {/* Form */}
-        {sel && (
-          <div style={{ maxWidth: 400, margin: '0 auto', background: C.darkCard, border: `1px solid ${C.sbBorder}`, borderRadius: 16, padding: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-              <div style={{ fontSize: 24 }}>{sel.icon}</div>
-              <div>
-                <div style={{ color: C.white, fontWeight: 700, fontSize: 15 }}>{sel.label}</div>
-                <div style={{ color: C.darkMuted, fontSize: 11 }}>{sel.user}</div>
-              </div>
-            </div>
-            <form onSubmit={handleLogin}>
-              <input value={user} onChange={e => setUser(e.target.value)} placeholder="Email"
-                style={{ width: '100%', background: C.dark, border: `1px solid ${C.sbBorder}`, borderRadius: 8, padding: '10px 14px', color: C.white, fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }} />
-              <div style={{ position:'relative', marginBottom:16 }}>
-                <input type={showPass ? 'text' : 'password'} value={pass} onChange={e => setPass(e.target.value)} placeholder="Contraseña"
-                  style={{ width: '100%', background: C.dark, border: `1px solid ${C.sbBorder}`, borderRadius: 8, padding: '10px 40px 10px 14px', color: C.white, fontSize: 14, boxSizing: 'border-box' }} />
-                <button type="button" onClick={() => setShowPass(v => !v)} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:C.sbMuted, fontSize:14 }}>
-                  {showPass ? '🙈' : '👁'}
-                </button>
-              </div>
-              {err && <div style={{ color: C.danger, fontSize: 12, marginBottom: 12 }}>{err}</div>}
-              <button type="submit" disabled={loading} style={{
-                width: '100%', background: loading ? C.sbBorder : sel.color, color: C.white, border: 'none',
-                borderRadius: 10, padding: '12px 0', fontWeight: 800, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer',
-              }}>{loading ? 'Verificando...' : `Entrar como ${sel.short} →`}</button>
-            </form>
-          </div>
-        )}
-        {!sel && (
-          <p style={{ textAlign: 'center', color: C.darkMuted, fontSize: 13, marginTop: 8 }}>↑ Selecciona una tarjeta para ver el formulario</p>
-        )}
-      </div>
+        <div style={{ maxWidth: 960, width: '100%' }}>
+          <h2 style={{ color: C.white, textAlign: 'center', fontWeight: 700, fontSize: 18, margin: '0 0 8px' }}>Selecciona tu rol de acceso</h2>
+          <p style={{ color: 'rgba(255,255,255,0.50)', textAlign: 'center', fontSize: 13, margin: '0 0 28px' }}>Credenciales pre-rellenadas. Haz clic en una tarjeta para continuar.</p>
 
-      <p style={{ color: C.sbMuted, fontSize: 11, marginTop: 32, textAlign: 'center' }}>
-        Entorno de demostración · Datos ficticios · NO_REAL_EXTERNAL_ACTION=SI
-      </p>
+          {/* Role cards grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: mob ? '1fr 1fr' : 'repeat(5,1fr)',
+            gap: 12, marginBottom: 32,
+          }}>
+            {roleList.map(r => {
+              const active = sel?.id === r.id;
+              return (
+                <button key={r.id} onClick={() => handleSel(r)} style={{
+                  border: `2px solid ${active ? r.color : 'rgba(255,255,255,0.12)'}`,
+                  borderRadius: 14, overflow: 'hidden', cursor: 'pointer',
+                  background: 'transparent', padding: 0, position: 'relative',
+                  transform: active ? 'scale(1.04)' : 'scale(1)',
+                  transition: '0.18s',
+                  boxShadow: active ? `0 0 0 3px ${r.color}44, 0 8px 32px rgba(0,0,0,0.55)` : '0 2px 12px rgba(0,0,0,0.40)',
+                }}>
+                  <img src={r.img} alt={r.label} style={{ width: '100%', height: 110, objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />
+                  <div style={{
+                    background: active ? `${r.color}DD` : 'rgba(0,0,0,0.72)',
+                    padding: '10px 10px 12px', textAlign: 'left', transition: '0.18s',
+                  }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: active ? '#fff' : r.color, marginBottom: 2 }}>{r.short}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.68)', lineHeight: 1.4 }}>{r.desc}</div>
+                  </div>
+                  {active && (
+                    <div style={{ position: 'absolute', top: 8, right: 8, background: r.color, borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✓</div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Formulario con glassmorphism */}
+          {sel && (
+            <div style={{
+              maxWidth: 400, margin: '0 auto',
+              background: 'rgba(15,22,40,0.88)',
+              border: `1px solid ${sel.color}55`,
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              borderRadius: 16, padding: 28,
+              boxShadow: `0 8px 40px rgba(0,0,0,0.55), 0 0 0 1px ${sel.color}22`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                <div style={{ fontSize: 24 }}>{sel.icon}</div>
+                <div>
+                  <div style={{ color: C.white, fontWeight: 700, fontSize: 15 }}>{sel.label}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }}>{sel.user}</div>
+                </div>
+              </div>
+              <form onSubmit={handleLogin}>
+                <input value={user} onChange={e => setUser(e.target.value)} placeholder="Email"
+                  style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: `1px solid ${sel.color}44`, borderRadius: 8, padding: '10px 14px', color: C.white, fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }} />
+                <div style={{ position: 'relative', marginBottom: 16 }}>
+                  <input type={showPass ? 'text' : 'password'} value={pass} onChange={e => setPass(e.target.value)} placeholder="Contraseña"
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: `1px solid ${sel.color}44`, borderRadius: 8, padding: '10px 40px 10px 14px', color: C.white, fontSize: 14, boxSizing: 'border-box' }} />
+                  <button type="button" onClick={() => setShowPass(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.45)', fontSize: 14 }}>
+                    {showPass ? '🙈' : '👁'}
+                  </button>
+                </div>
+                {err && <div style={{ color: C.danger, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+                <button type="submit" disabled={loading} style={{
+                  width: '100%', background: loading ? 'rgba(255,255,255,0.15)' : sel.color, color: C.white, border: 'none',
+                  borderRadius: 10, padding: '12px 0', fontWeight: 800, fontSize: 15,
+                  cursor: loading ? 'not-allowed' : 'pointer', transition: '0.18s',
+                }}>{loading ? 'Verificando...' : `Entrar como ${sel.short} →`}</button>
+              </form>
+            </div>
+          )}
+          {!sel && (
+            <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.32)', fontSize: 13, marginTop: 8 }}>↑ Selecciona una tarjeta para ver el formulario</p>
+          )}
+        </div>
+
+        <p style={{ color: 'rgba(255,255,255,0.22)', fontSize: 11, marginTop: 32, textAlign: 'center' }}>
+          Entorno de demostración · Datos ficticios · NO_REAL_EXTERNAL_ACTION=SI
+        </p>
+      </div>
     </div>
   );
 }
@@ -557,7 +589,7 @@ function LandingPage({ onLogin }) {
                 <div style={{ width: 48, height: 48, background: C.primary + '14', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 14 }}>{svcIcon[i] || '🦷'}</div>
                 <div style={{ fontWeight: 800, color: C.text, fontSize: 16, marginBottom: 6 }}>{s.nombre}</div>
                 <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>{s.desc}</div>
-                <div style={{ fontWeight: 800, color: C.primary, fontSize: 16 }}>desde {s.precioDesde}€</div>
+                <div style={{ fontWeight: 800, color: C.primary, fontSize: 16 }}>desde {s.precioDesde}</div>
               </div>
             ))}
           </div>
@@ -1037,7 +1069,7 @@ function AdminMarketing() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:14, marginBottom:24 }}>
         <Kpi label="Leads este mes" value={LEADS.length} color={C.primary} icon="👥" trend={{dir:'up',pct:'18%'}} />
         <Kpi label="Conversión" value={`${METRICAS.tasaConversion}%`} color={C.success} icon="📈" />
-        <Kpi label="Coste x lead" value="29€" color={C.accent} icon="💰" />
+        <Kpi label="Coste x lead" value="29 €" color={C.accent} icon="💰" />
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
         <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:20 }}>
@@ -1366,10 +1398,10 @@ function MktKPIs() {
   ];
   const max = embudo[0].n;
   const canales = [
-    { n:'Google Ads', pct:42, gasto:'1.240€', cpl:'29€' },
-    { n:'Instagram', pct:27, gasto:'540€', cpl:'20€' },
-    { n:'SEO orgánico', pct:21, gasto:'0€', cpl:'0€' },
-    { n:'Referidos', pct:10, gasto:'0€', cpl:'0€' },
+    { n:'Google Ads', pct:42, gasto:'1.240 €', cpl:'29 €' },
+    { n:'Instagram', pct:27, gasto:'540 €', cpl:'20 €' },
+    { n:'SEO orgánico', pct:21, gasto:'0 €', cpl:'0 €' },
+    { n:'Referidos', pct:10, gasto:'0 €', cpl:'0 €' },
   ];
   return (
     <div>
@@ -1377,7 +1409,7 @@ function MktKPIs() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:14, marginBottom:24 }}>
         <Kpi label="Leads mes" value={LEADS.length} color={C.primary} icon="👥" trend={{dir:'up',pct:'18%'}} />
         <Kpi label="Conversión" value={`${m.tasaConversion}%`} color={C.success} icon="📈" />
-        <Kpi label="Coste/lead" value="29€" color={C.accent} icon="💰" />
+        <Kpi label="Coste/lead" value="29 €" color={C.accent} icon="💰" />
         <Kpi label="ROI Google" value="4.2x" color={C.success} icon="🎯" trend={{dir:'up',pct:'0.5x'}} />
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
