@@ -70,9 +70,9 @@ import {
   IconHome, IconCalendar, IconUsers, IconDocument, IconRefresh, IconClose,
   IconFolder, IconAlertTriangle, IconBell, IconQrCode, IconClock, IconMail,
   IconTrophy, IconChartBar, IconShieldCheck, IconCreditCard, IconChat,
-  IconRobot, IconWrench, IconBolt, IconGear, IconLogout,
+  IconRobot, IconWrench, IconBolt, IconGear, IconLogout, IconCheck,
 } from "./components/icons/Icons.jsx";
-import { StatusCard, LoadingInline } from "./components/states/UiStates.jsx";
+import { StatusCard, LoadingInline, EmptyState } from "./components/states/UiStates.jsx";
 import { T } from "./theme.js";
 /**
  * Club Pádel 04 · SaaS App segura
@@ -1289,6 +1289,46 @@ const DEMO_OCUPACION_PISTAS = [
   { l:"Pista 3", v:65, c:"#2f6bff" },
   { l:"Pista 4", v:91, c:"#ffad47" },
 ];
+
+// Agenda operativa (dashboard STAFF) y tickets de soporte (dashboard
+// SUPPORT): datos de ejemplo explícitamente etiquetados como tal, mismo
+// criterio que RANKING_PRO/Ranking() ("datos de ejemplo" ya visible en esa
+// pantalla). No son una fuente de negocio nueva: el Worker real
+// (GET /api/reservas, ver cp04ListReservations) exige un email concreto
+// para listar reservas — no existe hoy un endpoint que liste "todas las
+// reservas de hoy" de todo el club, así que un listado real agregado no es
+// posible sin construir esa pieza de backend (fuera de alcance de esta
+// pasada). Las ACCIONES de cada fila sí son reales: navegan a módulos
+// existentes (Reservas, Control de acceso, Lista de espera...), nunca
+// simulan una llamada de red.
+const DEMO_AGENDA_OPERATIVA = [
+  { id: 1, hora: "09:00", pista: "Pista 1", jugador: "María López", estado: "Confirmada", tipo: "Individual" },
+  { id: 2, hora: "10:00", pista: "Pista 2", jugador: "Carlos Ruiz / Ana Gómez", estado: "Check-in", tipo: "Partido" },
+  { id: 3, hora: "11:00", pista: "Pista 3", jugador: "Clase iniciación (grupo)", estado: "Pendiente", tipo: "Clase" },
+  { id: 4, hora: "12:00", pista: "Pista 1", jugador: "Javier Torres", estado: "Incidencia", tipo: "Individual" },
+  { id: 5, hora: "13:00", pista: "Pista 4", jugador: "Torneo interno — Ronda 2", estado: "Confirmada", tipo: "Torneo" },
+  { id: 6, hora: "09:00", pista: "Pista 2", jugador: "Lucía Fernández", estado: "Finalizada", tipo: "Individual" },
+];
+
+const DEMO_TICKETS_SOPORTE = [
+  { id: "TCK-001", categoria: "Reservas", severidad: "Alta", estado: "Abierto", fecha: "2026-09-04", modulo: "Reservas", responsable: "—" },
+  { id: "TCK-002", categoria: "QR", severidad: "Media", estado: "En revisión", fecha: "2026-09-03", modulo: "Control de acceso", responsable: "Soporte" },
+  { id: "TCK-003", categoria: "Lista de espera", severidad: "Baja", estado: "Resuelto", fecha: "2026-09-01", modulo: "Lista de espera", responsable: "Soporte" },
+  { id: "TCK-004", categoria: "Sistema", severidad: "Crítica", estado: "Pendiente", fecha: "2026-09-04", modulo: "Automatizaciones", responsable: "—" },
+];
+
+// Categoría de ticket -> sección real a la que navega "Abrir" (nunca una
+// acción simulada).
+const TICKET_CATEGORIA_DESTINO = {
+  Reservas: "reservas",
+  Acceso: "control_qr",
+  QR: "control_qr",
+  Usuario: "alta_jugador",
+  "Lista de espera": "lista_espera",
+  Torneos: "torneos",
+  Sistema: "flujos_make",
+  Otros: "soporte",
+};
 
 const DEMO_KPI = {
   reservasHoy: 12,
@@ -3445,6 +3485,186 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
   );
 }
 
+const AGENDA_ESTADO_STATUS = {
+  Confirmada: "success",
+  "Check-in": "loading",
+  Pendiente: "pending",
+  Incidencia: "error",
+  Finalizada: "pending",
+};
+
+const ESTADO_BADGE_COLOR = { success: T.accent, loading: T.accent2, pending: T.textDim, error: T.dangerText, warning: T.warning };
+
+// Insignia de estado genérica: recibe el `status` (pending/loading/success/
+// warning/error, mismo vocabulario que StatusCard en UiStates.jsx) ya
+// resuelto por quien la usa, para poder reutilizarla con vocabularios de
+// estado distintos (agenda de pistas, tickets de soporte...) sin acoplarla
+// a uno solo.
+function EstadoBadge({ estado, status }) {
+  const color = ESTADO_BADGE_COLOR[status] || T.textDim;
+  return (
+    <span style={{ color, background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 999, padding: "3px 10px", fontSize: ".72rem", fontWeight: 800, whiteSpace: "nowrap" }}>
+      {estado}
+    </span>
+  );
+}
+
+// Dashboard STAFF — agenda operativa del día (T3 §1). Ver comentario junto
+// a DEMO_AGENDA_OPERATIVA: datos de ejemplo explícitos, acciones reales.
+function StaffAgendaOperativa({ navigate }) {
+  const [filtroEstado, setFiltroEstado] = useState("Todas");
+  const estados = ["Todas", ...new Set(DEMO_AGENDA_OPERATIVA.map((r) => r.estado))];
+  const filas = filtroEstado === "Todas" ? DEMO_AGENDA_OPERATIVA : DEMO_AGENDA_OPERATIVA.filter((r) => r.estado === filtroEstado);
+
+  return (
+    <Card style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+        <div>
+          <h3 style={{ margin: 0, fontFamily: T.fontDisplay }}>Agenda operativa</h3>
+          <p style={{ color: T.textDim, fontSize: ".82rem", margin: "4px 0 0" }}>Reservas de hoy en todas las pistas</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: ".68rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "3px 10px" }}>Datos de ejemplo</span>
+          <select aria-label="Filtrar por estado" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={{ padding: "6px 10px", borderRadius: 10, background: "rgba(255,255,255,.05)", border: `1px solid ${T.line}`, color: T.text, fontSize: ".82rem", minHeight: "unset" }}>
+            {estados.map((e) => <option key={e} value={e}>{e}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {filas.length === 0 ? (
+        <EmptyState icon={IconCalendar} title="Sin reservas con ese estado" text="Prueba a cambiar el filtro para ver el resto de la agenda de hoy." />
+      ) : (
+        <div className="cp04-table-wrap">
+          <table className="cp04-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: T.textDim, fontSize: ".74rem", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                <th style={{ padding: "8px 10px" }}>Hora</th>
+                <th style={{ padding: "8px 10px" }}>Pista</th>
+                <th style={{ padding: "8px 10px" }}>Jugador / reserva</th>
+                <th style={{ padding: "8px 10px" }}>Tipo</th>
+                <th style={{ padding: "8px 10px" }}>Estado</th>
+                <th style={{ padding: "8px 10px" }}>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map((r) => (
+                <tr key={r.id} style={{ borderTop: `1px solid ${T.line}` }}>
+                  <td style={{ padding: "10px" }}>{r.hora}</td>
+                  <td style={{ padding: "10px" }}>{r.pista}</td>
+                  <td style={{ padding: "10px" }}>{r.jugador}</td>
+                  <td style={{ padding: "10px", color: T.textDim }}>{r.tipo}</td>
+                  <td style={{ padding: "10px" }}><EstadoBadge estado={r.estado} status={AGENDA_ESTADO_STATUS[r.estado]} /></td>
+                  <td style={{ padding: "10px" }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      <Btn variant="secondary" onClick={() => navigate("gestion")} style={{ padding: "8px 12px", fontSize: ".74rem" }}>Ver reserva</Btn>
+                      <Btn
+                        variant="secondary"
+                        disabled={r.estado === "Finalizada"}
+                        onClick={() => navigate("control_qr")}
+                        style={{ padding: "8px 12px", fontSize: ".74rem" }}
+                      >
+                        Check-in
+                      </Btn>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.line}` }}>
+        <span style={{ color: T.textDim, fontSize: ".78rem", alignSelf: "center", marginRight: 4 }}>Accesos rápidos:</span>
+        <Btn variant="secondary" onClick={() => navigate("lista_espera")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconBell size={14} /> Lista de espera</Btn>
+        <Btn variant="secondary" onClick={() => navigate("alta_jugador")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconUsers size={14} /> Alta jugador</Btn>
+        <Btn variant="secondary" onClick={() => navigate("baja_jugador")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconDocument size={14} /> Baja jugador</Btn>
+        <Btn variant="secondary" onClick={() => navigate("cierre_pistas")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconAlertTriangle size={14} /> Cierre temporal</Btn>
+        <Btn variant="secondary" onClick={() => navigate("control_qr")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconQrCode size={14} /> Control de acceso</Btn>
+      </div>
+    </Card>
+  );
+}
+
+const TICKET_SEVERIDAD_COLOR = { Baja: T.textDim, Media: T.warning, Alta: T.dangerText, Crítica: T.dangerText };
+const TICKET_ESTADO_STATUS = { Abierto: "error", "En revisión": "loading", Pendiente: "warning", Resuelto: "success" };
+
+// Dashboard SUPPORT — resumen y tabla de tickets/incidencias (T3 §2). Ver
+// comentario junto a DEMO_TICKETS_SOPORTE: datos de ejemplo explícitos,
+// acción "Abrir" navega siempre a un módulo real según categoría.
+function SupportTicketsPanel({ navigate }) {
+  const abiertos = DEMO_TICKETS_SOPORTE.filter((t) => t.estado === "Abierto").length;
+  const enRevision = DEMO_TICKETS_SOPORTE.filter((t) => t.estado === "En revisión").length;
+  const resueltos = DEMO_TICKETS_SOPORTE.filter((t) => t.estado === "Resuelto").length;
+  const criticos = DEMO_TICKETS_SOPORTE.filter((t) => t.severidad === "Crítica").length;
+  const ultimaActualizacion = DEMO_TICKETS_SOPORTE.reduce((max, t) => (t.fecha > max ? t.fecha : max), DEMO_TICKETS_SOPORTE[0]?.fecha || "—");
+
+  const resumen = [
+    { label: "Abiertos", value: abiertos, color: T.dangerText },
+    { label: "En revisión", value: enRevision, color: T.accent2 },
+    { label: "Resueltos", value: resueltos, color: T.accent },
+    { label: "Críticos", value: criticos, color: T.warning },
+  ];
+
+  return (
+    <Card style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+        <div>
+          <h3 style={{ margin: 0, fontFamily: T.fontDisplay }}>Tickets de soporte</h3>
+          <p style={{ color: T.textDim, fontSize: ".82rem", margin: "4px 0 0" }}>Última actualización: {ultimaActualizacion}</p>
+        </div>
+        <span style={{ fontSize: ".68rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "3px 10px" }}>Datos de ejemplo</span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10, marginBottom: 18 }}>
+        {resumen.map((r) => (
+          <div key={r.label} style={{ background: "rgba(255,255,255,.04)", border: `1px solid ${T.line}`, borderRadius: 14, padding: "10px 12px" }}>
+            <div style={{ color: T.textDim, fontSize: ".68rem" }}>{r.label}</div>
+            <div style={{ fontFamily: T.fontDisplay, fontSize: "1.3rem", fontWeight: 900, color: r.color }}>{r.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {DEMO_TICKETS_SOPORTE.length === 0 ? (
+        <EmptyState icon={IconCheck} title="Sin incidencias abiertas" text="No hay tickets registrados." />
+      ) : (
+        <div className="cp04-table-wrap">
+          <table className="cp04-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: T.textDim, fontSize: ".74rem", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                <th style={{ padding: "8px 10px" }}>ID</th>
+                <th style={{ padding: "8px 10px" }}>Categoría</th>
+                <th style={{ padding: "8px 10px" }}>Severidad</th>
+                <th style={{ padding: "8px 10px" }}>Estado</th>
+                <th style={{ padding: "8px 10px" }}>Fecha</th>
+                <th style={{ padding: "8px 10px" }}>Módulo</th>
+                <th style={{ padding: "8px 10px" }}>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {DEMO_TICKETS_SOPORTE.map((tck) => (
+                <tr key={tck.id} style={{ borderTop: `1px solid ${T.line}` }}>
+                  <td style={{ padding: "10px", fontWeight: 700 }}>{tck.id}</td>
+                  <td style={{ padding: "10px" }}>{tck.categoria}</td>
+                  <td style={{ padding: "10px", color: TICKET_SEVERIDAD_COLOR[tck.severidad] || T.textDim, fontWeight: 700 }}>{tck.severidad}</td>
+                  <td style={{ padding: "10px" }}>
+                    <EstadoBadge estado={tck.estado} status={TICKET_ESTADO_STATUS[tck.estado]} />
+                  </td>
+                  <td style={{ padding: "10px", color: T.textDim }}>{tck.fecha}</td>
+                  <td style={{ padding: "10px", color: T.textDim }}>{tck.modulo}</td>
+                  <td style={{ padding: "10px" }}>
+                    <Btn variant="secondary" onClick={() => navigate(TICKET_CATEGORIA_DESTINO[tck.categoria] || "soporte")} style={{ padding: "8px 12px", fontSize: ".74rem" }}>Abrir</Btn>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function Inicio({ navigate, selectedRole }) {
   const clk = useClock();
   const lang = useLang();
@@ -3469,6 +3689,12 @@ function Inicio({ navigate, selectedRole }) {
   const showOpsHealth = canAccess("dashboard_kpi");
   const isInternalRole = canAccess("gestion");
   const isPlayer = !isInternalRole;
+  // STAFF: rol interno sin dashboard_kpi (ADMIN/SUPPORT sí lo tienen) —
+  // única combinación que aísla exactamente a STAFF sin comparar strings
+  // de rol. SUPPORT: única sección verdaderamente exclusiva suya (rbac.js
+  // CP04_SUPPORT_ONLY_SECTIONS).
+  const isStaffTier = isInternalRole && !showOpsHealth;
+  const isSupportTier = canAccess("soporte");
 
   // Acciones rápidas: antes eran 4 huecos fijos (2 de ellos condicionales a
   // flujos_make/alta_jugador) que para PLAYER y STAFF quedaban vacíos sin
@@ -3618,6 +3844,12 @@ function Inicio({ navigate, selectedRole }) {
           {canAccess("flujos_make") && <Btn variant="secondary" onClick={() => navigate("flujos_make")} style={{ padding: "7px 14px", fontSize: ".8rem" }}>{tx("home.ver_procesos")}</Btn>}
         </div>
       )}
+
+      {/* DASHBOARD STAFF: agenda operativa del día (T3 §1) */}
+      {isStaffTier && <StaffAgendaOperativa navigate={navigate} />}
+
+      {/* DASHBOARD SUPPORT: tickets/incidencias (T3 §2) */}
+      {isSupportTier && <SupportTicketsPanel navigate={navigate} />}
 
       {/* GALERÍA */}
       <Gallery />
