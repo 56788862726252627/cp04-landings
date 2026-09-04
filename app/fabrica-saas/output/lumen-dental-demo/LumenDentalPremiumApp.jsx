@@ -556,8 +556,8 @@ function LandingPage({ onLogin }) {
               }}>
                 <div style={{ width: 48, height: 48, background: C.primary + '14', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 14 }}>{svcIcon[i] || '🦷'}</div>
                 <div style={{ fontWeight: 800, color: C.text, fontSize: 16, marginBottom: 6 }}>{s.nombre}</div>
-                <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>{s.descripcion}</div>
-                <div style={{ fontWeight: 800, color: C.primary, fontSize: 16 }}>desde {s.precio}€</div>
+                <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.5, marginBottom: 12 }}>{s.desc}</div>
+                <div style={{ fontWeight: 800, color: C.primary, fontSize: 16 }}>desde {s.precioDesde}€</div>
               </div>
             ))}
           </div>
@@ -642,7 +642,7 @@ function LandingPage({ onLogin }) {
             <ul style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, lineHeight: 1.8, paddingLeft: 18 }}>
               {['Revisión completa gratuita', 'Radiografía panorámica incluida', 'Presupuesto personalizado sin coste', 'Sin listas de espera'].map(p => <li key={p}>{p}</li>)}
             </ul>
-            <button onClick={onLogin} style={{ marginTop: 28, background: '#fff', color: C.primary, border: 'none', borderRadius: 10, padding: '13px 28px', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>
+            <button onClick={() => setShowBooking(true)} style={{ marginTop: 28, background: '#fff', color: C.primary, border: 'none', borderRadius: 10, padding: '13px 28px', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}>
               Pedir primera cita →
             </button>
           </div>
@@ -740,7 +740,7 @@ function LandingPage({ onLogin }) {
           <p style={{ color: 'rgba(186,230,253,0.88)', fontSize: 16, lineHeight: 1.7, marginBottom: 32 }}>
             Primera visita gratuita. Sin listas de espera. Presupuesto sin compromiso.
           </p>
-          <button onClick={onLogin} style={{
+          <button onClick={() => setShowBooking(true)} style={{
             background: '#fff', color: C.primary, border: 'none', borderRadius: 12,
             padding: '16px 40px', fontWeight: 800, fontSize: 17, cursor: 'pointer',
             boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
@@ -862,9 +862,32 @@ function AppShell({ role, page, onPage, onLogout, children }) {
           </div>
         </div>
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: mob ? 16 : 24 }}>
           {children}
         </div>
+        {/* Mobile bottom tab nav */}
+        {mob && (
+          <div style={{ background:C.sb, borderTop:`1px solid ${C.sbBorder}`, display:'flex', overflowX:'auto', flexShrink:0 }}>
+            {r.nav.map(n => {
+              const active = n.id === page;
+              return (
+                <button key={n.id} onClick={() => onPage(n.id)} style={{
+                  flex:'1 0 auto', display:'flex', flexDirection:'column', alignItems:'center', gap:2,
+                  background: active ? C.sbActive : 'transparent', border:'none', cursor:'pointer',
+                  color: active ? C.sbText : C.sbMuted,
+                  padding:'8px 6px', minWidth:48,
+                }}>
+                  <span style={{ fontSize:16 }}>{n.icon}</span>
+                  <span style={{ fontSize:9, fontWeight: active ? 700 : 400, whiteSpace:'nowrap' }}>{n.label}</span>
+                </button>
+              );
+            })}
+            <button onClick={onLogout} style={{ flex:'1 0 auto', display:'flex', flexDirection:'column', alignItems:'center', gap:2, background:'transparent', border:'none', cursor:'pointer', color:C.sbMuted, padding:'8px 6px', minWidth:48 }}>
+              <span style={{ fontSize:16 }}>🚪</span>
+              <span style={{ fontSize:9, whiteSpace:'nowrap' }}>Salir</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -970,7 +993,7 @@ function AdminPacientes() {
               </div>
             </div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              <Pill label={p.tratamientoActual||'Sin trat.'} sm />
+              <Pill label={p.tratamiento||'Sin trat.'} sm />
               <Pill label={p.estado} color={p.estado==='activo'?C.success:C.muted} sm />
             </div>
           </div>
@@ -1012,9 +1035,9 @@ function AdminMarketing() {
     <div>
       <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 20px' }}>Panel de Marketing</h2>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:14, marginBottom:24 }}>
-        <Kpi label="Leads este mes" value={METRICAS.leadsMes} color={C.primary} icon="👥" trend={{dir:'up',pct:'18%'}} />
+        <Kpi label="Leads este mes" value={LEADS.length} color={C.primary} icon="👥" trend={{dir:'up',pct:'18%'}} />
         <Kpi label="Conversión" value={`${METRICAS.tasaConversion}%`} color={C.success} icon="📈" />
-        <Kpi label="Coste x lead" value={`${METRICAS.costePorLead}€`} color={C.accent} icon="💰" />
+        <Kpi label="Coste x lead" value="29€" color={C.accent} icon="💰" />
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
         <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:20 }}>
@@ -1255,7 +1278,7 @@ function DentistHistorial() {
             <div style={{ fontWeight:700, color:C.text, fontSize:14, marginBottom:4 }}>{p.nombre}</div>
             <div style={{ fontSize:11, color:C.muted, marginBottom:10 }}>{p.email}</div>
             <div style={{ fontSize:12, color:C.text, marginBottom:10 }}>
-              <span style={{ fontWeight:600 }}>Tratamiento: </span>{p.tratamientoActual || 'Ninguno activo'}
+              <span style={{ fontWeight:600 }}>Tratamiento: </span>{p.tratamiento || 'Ninguno activo'}
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <button onClick={()=>demoToast('Historial completo (demo)')} style={{ background:C.primary+'18', border:'none', borderRadius:6, padding:'4px 10px', color:C.primary, fontWeight:700, fontSize:11, cursor:'pointer' }}>Ver HC</button>
@@ -1352,9 +1375,9 @@ function MktKPIs() {
     <div>
       <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 20px' }}>KPIs de Captación</h2>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:14, marginBottom:24 }}>
-        <Kpi label="Leads mes" value={m.leadsMes} color={C.primary} icon="👥" trend={{dir:'up',pct:'18%'}} />
+        <Kpi label="Leads mes" value={LEADS.length} color={C.primary} icon="👥" trend={{dir:'up',pct:'18%'}} />
         <Kpi label="Conversión" value={`${m.tasaConversion}%`} color={C.success} icon="📈" />
-        <Kpi label="Coste/lead" value={`${m.costePorLead}€`} color={C.accent} icon="💰" />
+        <Kpi label="Coste/lead" value="29€" color={C.accent} icon="💰" />
         <Kpi label="ROI Google" value="4.2x" color={C.success} icon="🎯" trend={{dir:'up',pct:'0.5x'}} />
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
@@ -1580,7 +1603,7 @@ function PatientFacturas() {
               <div style={{ fontWeight:700, color:C.text, fontSize:13 }}>{p.tratamiento}</div>
               <div style={{ fontSize:11, color:C.muted }}>{p.fecha || '2026'}</div>
             </div>
-            <div style={{ fontWeight:800, color:C.text, fontSize:15 }}>{p.importe.toLocaleString('es')}€</div>
+            <div style={{ fontWeight:800, color:C.text, fontSize:15 }}>{p.importe}</div>
             <Pill label={p.estado==='aceptado'?'Pagada':'Pendiente'} color={p.estado==='aceptado'?C.success:C.warning} sm />
             <button onClick={()=>demoToast('PDF descargado (demo)')} style={{ background:C.subtle, border:`1px solid ${C.border}`, borderRadius:6, padding:'4px 10px', fontSize:11, cursor:'pointer', color:C.muted }}>PDF</button>
           </div>
