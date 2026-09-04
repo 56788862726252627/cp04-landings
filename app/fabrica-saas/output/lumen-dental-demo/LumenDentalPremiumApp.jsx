@@ -1,14 +1,14 @@
 /**
- * Lumen Dental — Premium V4
- * Tema LIGHT · 16 assets · Login role-cards · Landing estructurada
+ * Lumen Dental — Premium V5
+ * Demo Comercial Interactiva · Booking Modal · Pipeline · Kanban Leads
  * NO_REAL_EXTERNAL_ACTION=SI · isReal:false en todos los outputs
  */
 import { useState, useEffect } from 'react';
 import {
   SERVICIOS, PROFESIONALES, AGENDA_HOY, PACIENTES,
   PRESUPUESTOS, LEADS, METRICAS, AUTOMATIZACIONES,
-  AGENTES_IA, EMAIL_TEMPLATES, SEO_DATA,
-  SOCIAL_POSTS,
+  AGENTES_IA, EMAIL_TEMPLATES, SEO_DATA, SOCIAL_POSTS,
+  CLIENT_PROFILE, BRANDING, HEALTH_SNAPSHOT, PLATAFORMAS,
 } from './LumenDentalMockData.js';
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
@@ -208,10 +208,123 @@ function SectionTitle({ eyebrow, title, center }) {
 }
 
 // ─── LOGIN V4: role-cards con imagen D + panel formulario ─────────────────────
+// ─── APPOINTMENT MODAL V5 ─────────────────────────────────────────────────────
+const BOOK_STEPS = ['Tratamiento','Profesional','Día y hora','Tus datos','Confirmación'];
+function AppointmentModal({ onClose }) {
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState({ trat:'', prof:'', dia:'', hora:'', nombre:'', tel:'', email:'' });
+  const horas = ['09:00','09:30','10:00','10:30','11:00','11:30','16:00','16:30','17:00'];
+  const dias  = ['Lun 8 Sep','Mar 9 Sep','Mié 10 Sep','Jue 11 Sep','Vie 12 Sep'];
+
+  function next() {
+    if (step < 4) setStep(s => s + 1);
+    else { demoToast('¡Cita solicitada! Te llamamos en 2h (demo)'); onClose(); }
+  }
+  const canNext = [
+    !!form.trat, !!form.prof, !!form.dia && !!form.hora,
+    !!form.nombre && !!form.tel, true,
+  ][step];
+
+  const overlayStyle = { position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 };
+  const boxStyle = { background:C.card, borderRadius:16, padding:28, width:'100%', maxWidth:480, boxShadow:'0 24px 64px rgba(0,0,0,0.25)' };
+  const inp = { width:'100%', border:`1px solid ${C.border}`, borderRadius:8, padding:'10px 14px', fontSize:14, color:C.text, boxSizing:'border-box', marginBottom:12 };
+
+  return (
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={boxStyle} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+          <div>
+            <div style={{ fontWeight:800, color:C.text, fontSize:17 }}>Pide tu cita</div>
+            <div style={{ fontSize:12, color:C.muted }}>Paso {step+1} de {BOOK_STEPS.length} · {BOOK_STEPS[step]}</div>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:22, cursor:'pointer', color:C.muted }}>×</button>
+        </div>
+        {/* Progress */}
+        <div style={{ display:'flex', gap:4, marginBottom:24 }}>
+          {BOOK_STEPS.map((_,i) => (
+            <div key={i} style={{ flex:1, height:3, borderRadius:2, background: i <= step ? C.primary : C.border, transition:'0.2s' }} />
+          ))}
+        </div>
+        {/* Steps */}
+        {step === 0 && (
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {SERVICIOS.slice(0,6).map(s => (
+              <button key={s.id} onClick={() => setForm(f=>({...f, trat:s.nombre}))} style={{ border:`2px solid ${form.trat===s.nombre?C.primary:C.border}`, borderRadius:10, padding:'10px 14px', background:form.trat===s.nombre?C.primary+'12':'none', cursor:'pointer', textAlign:'left' }}>
+                <span style={{ fontWeight:700, color:C.text, fontSize:13 }}>{s.icono} {s.nombre}</span>
+                <span style={{ color:C.muted, fontSize:11, marginLeft:8 }}>desde {s.precioDesde}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {step === 1 && (
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {PROFESIONALES.map(p => (
+              <button key={p.id} onClick={() => setForm(f=>({...f, prof:p.nombre}))} style={{ border:`2px solid ${form.prof===p.nombre?C.primary:C.border}`, borderRadius:10, padding:'12px 14px', background:form.prof===p.nombre?C.primary+'12':'none', cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:12 }}>
+                <span style={{ fontSize:24 }}>{p.avatar}</span>
+                <div>
+                  <div style={{ fontWeight:700, color:C.text, fontSize:13 }}>{p.nombre}</div>
+                  <div style={{ fontSize:11, color:C.muted }}>{p.especialidad}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {step === 2 && (
+          <div>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:16 }}>
+              {dias.map(d => (
+                <button key={d} onClick={() => setForm(f=>({...f, dia:d}))} style={{ border:`2px solid ${form.dia===d?C.primary:C.border}`, borderRadius:8, padding:'8px 14px', background:form.dia===d?C.primary:'none', color:form.dia===d?'#fff':C.text, fontWeight:600, fontSize:13, cursor:'pointer' }}>{d}</button>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+              {horas.map(h => (
+                <button key={h} onClick={() => setForm(f=>({...f, hora:h}))} style={{ border:`2px solid ${form.hora===h?C.primary:C.border}`, borderRadius:8, padding:'8px 14px', background:form.hora===h?C.primary:'none', color:form.hora===h?'#fff':C.text, fontWeight:600, fontSize:13, cursor:'pointer' }}>{h}</button>
+              ))}
+            </div>
+          </div>
+        )}
+        {step === 3 && (
+          <div>
+            <input value={form.nombre} onChange={e=>setForm(f=>({...f,nombre:e.target.value}))} placeholder="Tu nombre completo" style={inp} />
+            <input value={form.tel} onChange={e=>setForm(f=>({...f,tel:e.target.value}))} placeholder="Teléfono de contacto" style={inp} />
+            <input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="Email (opcional)" style={inp} />
+          </div>
+        )}
+        {step === 4 && (
+          <div style={{ textAlign:'center', padding:'8px 0' }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>🦷</div>
+            <div style={{ fontWeight:800, color:C.text, fontSize:17, marginBottom:8 }}>¡Todo listo!</div>
+            <div style={{ color:C.muted, fontSize:13, marginBottom:16, lineHeight:1.7 }}>
+              <strong>{form.trat}</strong> con <strong>{form.prof?.split(' ').slice(0,2).join(' ')}</strong><br />
+              <strong>{form.dia}</strong> a las <strong>{form.hora}</strong>
+            </div>
+            <div style={{ background:C.success+'15', border:`1px solid ${C.success}44`, borderRadius:10, padding:'10px 16px', fontSize:12, color:C.success, fontWeight:600 }}>
+              Te confirmaremos por WhatsApp en menos de 2 horas (demo)
+            </div>
+          </div>
+        )}
+        {/* Footer */}
+        <div style={{ display:'flex', gap:10, marginTop:20 }}>
+          {step > 0 && (
+            <button onClick={() => setStep(s=>s-1)} style={{ flex:1, background:C.subtle, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 0', fontWeight:700, fontSize:14, cursor:'pointer', color:C.muted }}>← Atrás</button>
+          )}
+          <button onClick={next} disabled={!canNext} style={{ flex:2, background:canNext?C.primary:C.border, color:'#fff', border:'none', borderRadius:10, padding:'11px 0', fontWeight:800, fontSize:14, cursor:canNext?'pointer':'not-allowed' }}>
+            {step === 4 ? '✅ Confirmar cita' : 'Siguiente →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── LOGIN V5 ─────────────────────────────────────────────────────────────────
 function LoginPage({ onLogin }) {
   const [sel, setSel] = useState(null);
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const mob = useMobile();
 
@@ -228,7 +341,8 @@ function LoginPage({ onLogin }) {
     e.preventDefault();
     const role = roleList.find(r => r.user === user.trim() && r.pass === pass);
     if (role) {
-      onLogin(role.id);
+      setLoading(true);
+      setTimeout(() => { setLoading(false); onLogin(role.id); }, 800);
     } else {
       setErr('Credenciales incorrectas. Usa las de la tarjeta seleccionada.');
     }
@@ -293,13 +407,18 @@ function LoginPage({ onLogin }) {
             <form onSubmit={handleLogin}>
               <input value={user} onChange={e => setUser(e.target.value)} placeholder="Email"
                 style={{ width: '100%', background: C.dark, border: `1px solid ${C.sbBorder}`, borderRadius: 8, padding: '10px 14px', color: C.white, fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }} />
-              <input type="password" value={pass} onChange={e => setPass(e.target.value)} placeholder="Contraseña"
-                style={{ width: '100%', background: C.dark, border: `1px solid ${C.sbBorder}`, borderRadius: 8, padding: '10px 14px', color: C.white, fontSize: 14, marginBottom: 16, boxSizing: 'border-box' }} />
+              <div style={{ position:'relative', marginBottom:16 }}>
+                <input type={showPass ? 'text' : 'password'} value={pass} onChange={e => setPass(e.target.value)} placeholder="Contraseña"
+                  style={{ width: '100%', background: C.dark, border: `1px solid ${C.sbBorder}`, borderRadius: 8, padding: '10px 40px 10px 14px', color: C.white, fontSize: 14, boxSizing: 'border-box' }} />
+                <button type="button" onClick={() => setShowPass(v => !v)} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:C.sbMuted, fontSize:14 }}>
+                  {showPass ? '🙈' : '👁'}
+                </button>
+              </div>
               {err && <div style={{ color: C.danger, fontSize: 12, marginBottom: 12 }}>{err}</div>}
-              <button type="submit" style={{
-                width: '100%', background: sel.color, color: C.white, border: 'none',
-                borderRadius: 10, padding: '12px 0', fontWeight: 800, fontSize: 15, cursor: 'pointer',
-              }}>Entrar como {sel.short} →</button>
+              <button type="submit" disabled={loading} style={{
+                width: '100%', background: loading ? C.sbBorder : sel.color, color: C.white, border: 'none',
+                borderRadius: 10, padding: '12px 0', fontWeight: 800, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer',
+              }}>{loading ? 'Verificando...' : `Entrar como ${sel.short} →`}</button>
             </form>
           </div>
         )}
@@ -318,7 +437,9 @@ function LoginPage({ onLogin }) {
 // ─── LANDING V4 ───────────────────────────────────────────────────────────────
 function LandingPage({ onLogin }) {
   const [openFaq, setOpenFaq] = useState(null);
+  const [showBooking, setShowBooking] = useState(false);
   const mob = useMobile();
+  const heroCta = BRANDING.ctas?.[0] || 'Pide tu cita gratis';
 
   const faqs = [
     { q: '¿Cuánto cuesta la primera visita?', a: 'La primera visita de diagnóstico es completamente gratuita y sin compromiso. Incluye revisión general y, si se necesita, una radiografía panorámica digital sin coste adicional.' },
@@ -347,6 +468,7 @@ function LandingPage({ onLogin }) {
 
   return (
     <div style={{ fontFamily: "'DM Sans','Inter',system-ui,sans-serif", color: C.text, background: '#fff', overflowX: 'hidden' }}>
+      {showBooking && <AppointmentModal onClose={() => setShowBooking(false)} />}
 
       {/* NAV */}
       <nav style={{
@@ -397,14 +519,14 @@ function LandingPage({ onLogin }) {
             </span>
           </h1>
           <p style={{ color: 'rgba(186,230,253,0.9)', fontSize: mob ? 15 : 17, lineHeight: 1.7, marginBottom: 32, maxWidth: 480 }}>
-            Clínica dental de referencia en Málaga. Tecnología de vanguardia, especialistas con más de 15 años de experiencia y financiación hasta 24 meses sin intereses.
+            {CLIENT_PROFILE.propuestaValor}
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <button onClick={onLogin} style={{ background: C.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '13px 28px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
-              Pedir cita gratis →
+            <button onClick={() => setShowBooking(true)} style={{ background: C.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '13px 28px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+              {heroCta} →
             </button>
-            <button style={{ background: 'transparent', color: '#fff', border: '2px solid rgba(255,255,255,0.4)', borderRadius: 10, padding: '13px 28px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
-              Ver tratamientos
+            <button onClick={onLogin} style={{ background: 'transparent', color: '#fff', border: '2px solid rgba(255,255,255,0.4)', borderRadius: 10, padding: '13px 28px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+              Área privada
             </button>
           </div>
         </div>
@@ -751,20 +873,36 @@ function AppShell({ role, page, onPage, onLogout, children }) {
 // ─── PÁGINAS ADMIN ─────────────────────────────────────────────────────────────
 function AdminOverview() {
   const m = METRICAS;
+  const activity = [
+    { t:'09:15', msg:'Nueva cita confirmada — Ana Gómez', ic:'📅' },
+    { t:'08:42', msg:'Lead captado desde Instagram', ic:'📱' },
+    { t:'08:20', msg:'Presupuesto #pres-02 enviado a Javier Blanco', ic:'📄' },
+    { t:'Ayer',  msg:'Informe semanal generado y enviado', ic:'📊' },
+  ];
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ color: C.text, fontWeight: 800, fontSize: 20, margin: '0 0 4px' }}>Dashboard Ejecutivo</h2>
-        <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Resumen del negocio en tiempo real · {new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})}</p>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ color: C.text, fontWeight: 800, fontSize: 20, margin: '0 0 4px' }}>Dashboard Ejecutivo — {CLIENT_PROFILE.nombre}</h2>
+        <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>{new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})} · {CLIENT_PROFILE.localidad}</p>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 14, marginBottom: 24 }}>
-        <Kpi label="Ingresos mes" value={`${m.ingresosMes?.toLocaleString('es')}€`} color={C.success} icon="💰" trend={{ dir:'up', pct:'12%', label:'vs mes ant.' }} />
-        <Kpi label="Pacientes activos" value={m.pacientesActivos} color={C.primary} icon="🦷" trend={{ dir:'up', pct:'8%' }} />
-        <Kpi label="Tasa ocupación" value={`${m.tasaOcupacion}%`} color={C.accent} icon="📅" />
-        <Kpi label="NPS pacientes" value={m.npsPacientes} color={C.success} icon="⭐" />
+      {/* KPIs row 1 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(155px,1fr))', gap: 14, marginBottom: 14 }}>
+        <Kpi label="Ingresos mes" value={m.ingresosMes} color={C.success} icon="💰" trend={{ dir:'up', pct:'12%', label:'vs mes ant.' }} />
+        <Kpi label="Pipeline valor" value={m.valorPipeline} color={C.primary} icon="📈" trend={{ dir:'up', pct:'8%' }} />
+        <Kpi label="Ticket medio" value={m.ticketMedio} color={C.accent} icon="💶" />
+        <Kpi label="NPS" value={m.netPromoterScore} color={C.success} icon="⭐" />
+        <Kpi label="Lead→cita" value={m.lead_a_cita} color='#7C3AED' icon="🎯" />
+        <Kpi label="Satisfacción" value={`${m.satisfaccion}/5`} color={C.success} icon="😊" />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 16 }}>
-        {/* Agenda hoy */}
+      {/* KPIs row 2 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(155px,1fr))', gap: 14, marginBottom: 20 }}>
+        <Kpi label="Consultas mes" value={m.consultasMes} color={C.primary} icon="🦷" />
+        <Kpi label="Citas hoy" value={m.citasHoy} color={C.accent} icon="📅" />
+        <Kpi label="Nuevos pacientes" value={m.nuevosPacientes} color={C.success} icon="👤" />
+        <Kpi label="Conversión" value={`${m.tasaConversion}%`} color='#7C3AED' icon="🔄" />
+      </div>
+      {/* Main grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
           <div style={{ fontWeight: 700, color: C.text, marginBottom: 14, fontSize: 14 }}>📅 Agenda de hoy</div>
           {AGENDA_HOY.slice(0,5).map(c => (
@@ -778,14 +916,15 @@ function AdminOverview() {
             </div>
           ))}
         </div>
-        {/* Automatizaciones */}
         <div style={{ background: C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:20 }}>
-          <div style={{ fontWeight:700, color:C.text, marginBottom:14, fontSize:14 }}>⚡ Automatizaciones</div>
-          {AUTOMATIZACIONES.slice(0,6).map(a => (
-            <div key={a.id} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
-              <StatusDot ok={a.activo} />
-              <div style={{ flex:1, fontSize:12, color:C.text }}>{a.nombre}</div>
-              <div style={{ fontSize:10, color:C.muted }}>{a.ejecucionesTotales || 0} ej.</div>
+          <div style={{ fontWeight:700, color:C.text, marginBottom:14, fontSize:14 }}>⚡ Actividad reciente</div>
+          {activity.map((a,i) => (
+            <div key={i} style={{ display:'flex', gap:8, alignItems:'flex-start', marginBottom:12 }}>
+              <span style={{ fontSize:16 }}>{a.ic}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:12, color:C.text }}>{a.msg}</div>
+                <div style={{ fontSize:10, color:C.muted }}>{a.t}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -842,15 +981,14 @@ function AdminPacientes() {
 }
 
 function AdminFacturacion() {
-  const total = PRESUPUESTOS.reduce((s,p) => s + p.importe, 0);
   return (
     <div>
       <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 20px' }}>Facturación</h2>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:14, marginBottom:24 }}>
-        <Kpi label="Total emitido" value={`${total.toLocaleString('es')}€`} color={C.success} icon="💶" />
+        <Kpi label="Pipeline" value={METRICAS.valorPipeline} color={C.success} icon="💶" />
         <Kpi label="Presupuestos" value={PRESUPUESTOS.length} color={C.primary} icon="📄" />
-        <Kpi label="Aceptados" value={PRESUPUESTOS.filter(p=>p.estado==='aceptado').length} color={C.success} icon="✅" />
-        <Kpi label="Pendientes" value={PRESUPUESTOS.filter(p=>p.estado==='pendiente').length} color={C.warning} icon="⏳" />
+        <Kpi label="Aceptados" value={PRESUPUESTOS.filter(p=>p.estado==='aceptado'||p.estado==='firmado').length} color={C.success} icon="✅" />
+        <Kpi label="Ticket medio" value={METRICAS.ticketMedio} color={C.accent} icon="💰" />
       </div>
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, overflow:'hidden' }}>
         {PRESUPUESTOS.map(p => (
@@ -859,8 +997,8 @@ function AdminFacturacion() {
               <div style={{ fontWeight:600, color:C.text, fontSize:13 }}>{p.paciente}</div>
               <div style={{ fontSize:11, color:C.muted }}>{p.tratamiento}</div>
             </div>
-            <div style={{ fontWeight:800, color:C.success, fontSize:16 }}>{p.importe.toLocaleString('es')}€</div>
-            <Pill label={p.estado} color={p.estado==='aceptado'?C.success:p.estado==='rechazado'?C.danger:C.warning} sm />
+            <div style={{ fontWeight:800, color:C.success, fontSize:15 }}>{p.importe}</div>
+            <Pill label={p.estado} color={p.estado==='aceptado'||p.estado==='firmado'?C.success:p.estado==='borrador'?C.muted:C.warning} sm />
             <button onClick={()=>demoToast('PDF generado (demo)')} style={{ background:C.subtle, border:`1px solid ${C.border}`, borderRadius:6, padding:'4px 10px', fontSize:11, cursor:'pointer', color:C.muted }}>PDF</button>
           </div>
         ))}
@@ -885,7 +1023,7 @@ function AdminMarketing() {
             <div key={l.id} style={{ display:'flex', gap:10, padding:'8px 0', borderBottom:`1px solid ${C.border}` }}>
               <div style={{ flex:1, fontSize:12, color:C.text }}>{l.nombre}</div>
               <Pill label={l.fuente} color={C.primary} sm />
-              <Pill label={l.estado} color={l.estado==='convertido'?C.success:C.muted} sm />
+              <div style={{ fontSize:10, color:C.muted }}>{l.diasInactivo}d</div>
             </div>
           ))}
         </div>
@@ -894,7 +1032,7 @@ function AdminMarketing() {
           {SOCIAL_POSTS.slice(0,5).map(s => (
             <div key={s.id} style={{ padding:'8px 0', borderBottom:`1px solid ${C.border}` }}>
               <div style={{ fontSize:12, color:C.text, fontWeight:600 }}>{s.red}</div>
-              <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{s.contenido?.substring(0,60)}...</div>
+              <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{s.copy?.substring(0,60)}...</div>
             </div>
           ))}
         </div>
@@ -912,13 +1050,11 @@ function AdminAutomatizaciones() {
           <div key={a.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:18 }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
               <div style={{ fontWeight:700, color:C.text, fontSize:13, flex:1 }}>{a.nombre}</div>
-              <Pill label={a.activo?'Activa':'Inactiva'} color={a.activo?C.success:C.muted} sm />
+              <Pill label={a.estado} color={a.estado==='MOCK'?C.success:C.accent} sm />
             </div>
-            <div style={{ fontSize:11, color:C.muted, marginBottom:10 }}>{a.trigger}</div>
-            <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:C.muted }}>
-              <span>⚡ {a.ejecucionesTotales||0} ejecuciones</span>
-              <button onClick={()=>demoToast(`${a.nombre} — test (demo)`)} style={{ background:C.subtle, border:`1px solid ${C.border}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', color:C.primary, fontWeight:700 }}>Probar</button>
-            </div>
+            <div style={{ fontSize:11, color:C.muted, marginBottom:8 }}>⚡ {a.trigger}</div>
+            <div style={{ fontSize:10, color:C.muted, marginBottom:10 }}>{a.plataformas.join(' · ')}</div>
+            <button onClick={()=>demoToast(`${a.nombre} — test (demo)`)} style={{ background:C.subtle, border:`1px solid ${C.border}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', color:C.primary, fontWeight:700, fontSize:11 }}>Probar</button>
           </div>
         ))}
       </div>
@@ -933,13 +1069,14 @@ function AdminAgentes() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
         {AGENTES_IA.map(a => (
           <div key={a.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:18 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
               <div style={{ fontWeight:700, color:C.text, fontSize:13 }}>{a.nombre}</div>
-              <Pill label={a.estado} color={a.estado==='activo'?C.success:C.warning} sm />
+              <Pill label={a.rol} color={C.primary} sm />
             </div>
-            <div style={{ fontSize:11, color:C.muted, marginBottom:12 }}>{a.descripcion}</div>
-            <div style={{ display:'flex', gap:8, justifyContent:'space-between', fontSize:11, color:C.muted }}>
-              <span>🤖 {a.tipo}</span>
+            <div style={{ fontSize:11, color:C.muted, marginBottom:8, lineHeight:1.5 }}>{a.mision}</div>
+            <div style={{ fontSize:10, color:C.danger+'bb', marginBottom:10 }}>⚠ {a.guardrail}</div>
+            <div style={{ display:'flex', gap:8, justifyContent:'space-between' }}>
+              <span style={{ fontSize:10, color:C.muted }}>↑ {a.escalado?.substring(0,40)}…</span>
               <button onClick={()=>demoToast(`${a.nombre} — respuesta demo`)} style={{ background:C.primary+'18', border:'none', borderRadius:6, padding:'3px 10px', cursor:'pointer', color:C.primary, fontWeight:700, fontSize:11 }}>Ejecutar</button>
             </div>
           </div>
@@ -950,29 +1087,43 @@ function AdminAgentes() {
 }
 
 function AdminIntegraciones() {
-  const ints = [
-    { n:'Airtable', ic:'🗃️', st:'Conectado', ok:true, desc:'Base de datos clínica' },
-    { n:'Make / Integromat', ic:'⚡', st:'Conectado', ok:true, desc:'20 escenarios activos' },
-    { n:'WhatsApp Business', ic:'💬', st:'Configurado', ok:true, desc:'Recordatorios automáticos' },
-    { n:'Stripe', ic:'💳', st:'Sandbox', ok:true, desc:'Procesamiento de pagos' },
-    { n:'Google Analytics', ic:'📊', st:'Activo', ok:true, desc:'Seguimiento web' },
-    { n:'Mailchimp', ic:'📧', st:'Conectado', ok:true, desc:'Email marketing' },
-    { n:'Google Calendar', ic:'📅', st:'Sincronizado', ok:true, desc:'Agenda clínica' },
-    { n:'DocuSign', ic:'✍️', st:'Pendiente', ok:false, desc:'Firma digital RGPD' },
-  ];
+  const hs = HEALTH_SNAPSHOT;
   return (
     <div>
-      <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 20px' }}>Integraciones</h2>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))', gap:14 }}>
-        {ints.map(i => (
-          <div key={i.n} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:18 }}>
-            <div style={{ fontSize:28, marginBottom:10 }}>{i.ic}</div>
-            <div style={{ fontWeight:700, color:C.text, fontSize:14, marginBottom:4 }}>{i.n}</div>
-            <div style={{ fontSize:12, color:C.muted, marginBottom:12 }}>{i.desc}</div>
-            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <StatusDot ok={i.ok} />
-              <span style={{ fontSize:12, color:i.ok?C.success:C.muted, fontWeight:600 }}>{i.st}</span>
+      <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 20px' }}>Integraciones & Salud del Sistema</h2>
+      {/* Health score banner */}
+      <div style={{ background: hs.score>=85?C.success+'15':C.warning+'15', border:`1px solid ${hs.score>=85?C.success+'44':C.warning+'44'}`, borderRadius:12, padding:'14px 20px', marginBottom:20, display:'flex', gap:20, alignItems:'center' }}>
+        <div style={{ fontSize:36, fontWeight:900, color:hs.score>=85?C.success:C.warning }}>{hs.score}</div>
+        <div>
+          <div style={{ fontWeight:800, color:C.text, fontSize:15 }}>Health Score — {hs.overallStatus}</div>
+          <div style={{ fontSize:12, color:C.muted }}>Sistema en {hs.productionReadinessNote}</div>
+        </div>
+      </div>
+      {/* Dimensiones */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:12, marginBottom:24 }}>
+        {hs.dimensiones.map(d => (
+          <div key={d.nombre} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:'12px 16px' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+              <div style={{ fontWeight:700, color:C.text, fontSize:13 }}>{d.nombre}</div>
+              <span style={{ fontWeight:800, color:d.estado==='HEALTHY'?C.success:C.warning, fontSize:14 }}>{d.score}</span>
             </div>
+            <Bar pct={d.score} color={d.estado==='HEALTHY'?C.success:C.warning} />
+            <div style={{ fontSize:10, color:C.muted, marginTop:6 }}>{d.nota}</div>
+          </div>
+        ))}
+      </div>
+      {/* Plataformas table */}
+      <div style={{ fontWeight:700, color:C.text, fontSize:14, marginBottom:12 }}>Plataformas</div>
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, overflow:'hidden' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 100px 80px 80px', padding:'8px 16px', background:C.subtle, borderBottom:`1px solid ${C.border}`, fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase' }}>
+          {['Plataforma','Estado','Usada','Modo'].map(h=><div key={h}>{h}</div>)}
+        </div>
+        {PLATAFORMAS.map(p => (
+          <div key={p.nombre} style={{ display:'grid', gridTemplateColumns:'1fr 100px 80px 80px', padding:'10px 16px', borderBottom:`1px solid ${C.border}`, alignItems:'center', fontSize:12 }}>
+            <div style={{ color:C.text, fontWeight:600 }}>{p.nombre}</div>
+            <Pill label={p.status==='AVAILABLE'?'OK':p.status==='REQUIRES_REAL_CREDS'?'Pendiente':'Mock'} color={p.status==='AVAILABLE'?C.success:p.status==='REQUIRES_REAL_CREDS'?C.warning:C.muted} sm />
+            <div style={{ display:'flex', alignItems:'center' }}><StatusDot ok={p.usada} /></div>
+            <Pill label={p.modo} color={p.modo==='REAL'?C.primary:C.muted} sm />
           </div>
         ))}
       </div>
@@ -1006,16 +1157,37 @@ function StaffAgenda() {
 function StaffPacientes() { return <AdminPacientes />; }
 
 function StaffCheckin() {
+  const [q, setQ] = useState('');
+  const [confirmed, setConfirmed] = useState(null);
+  const results = q.length >= 2 ? PACIENTES.filter(p => p.nombre.toLowerCase().includes(q.toLowerCase())) : [];
   return (
     <div>
       <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 20px' }}>Check-in Pacientes</h2>
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:24, maxWidth:500 }}>
-        <div style={{ marginBottom:16, fontSize:13, color:C.muted }}>Busca al paciente para registrar su llegada</div>
-        <input placeholder="Nombre del paciente..." style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:8, padding:'10px 14px', fontSize:14, color:C.text, boxSizing:'border-box', marginBottom:14 }} />
-        <div style={{ display:'flex', gap:10 }}>
-          <button onClick={()=>demoToast('Paciente encontrado (demo)')} style={{ background:C.primary, color:'#fff', border:'none', borderRadius:8, padding:'10px 20px', fontWeight:700, fontSize:13, cursor:'pointer' }}>Buscar</button>
-          <button onClick={()=>demoToast('Check-in registrado (demo)')} style={{ background:C.success+'18', color:C.success, border:`1px solid ${C.success}33`, borderRadius:8, padding:'10px 20px', fontWeight:700, fontSize:13, cursor:'pointer' }}>✅ Confirmar llegada</button>
-        </div>
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:24, maxWidth:520 }}>
+        <div style={{ marginBottom:12, fontSize:13, color:C.muted }}>Escribe al menos 2 caracteres para buscar</div>
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Nombre del paciente..." style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:8, padding:'10px 14px', fontSize:14, color:C.text, boxSizing:'border-box', marginBottom:q?12:0 }} />
+        {results.length > 0 && (
+          <div style={{ border:`1px solid ${C.border}`, borderRadius:8, overflow:'hidden', marginBottom:14 }}>
+            {results.map(p => (
+              <button key={p.id} onClick={()=>{ setConfirmed(p); demoToast(`Check-in: ${p.nombre} (demo)`); setQ(''); }} style={{ display:'flex', gap:12, alignItems:'center', width:'100%', padding:'10px 14px', background:'none', border:'none', borderBottom:`1px solid ${C.border}`, cursor:'pointer', textAlign:'left' }}>
+                <div style={{ width:32, height:32, borderRadius:'50%', background:C.primary+'18', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>🦷</div>
+                <div>
+                  <div style={{ fontWeight:700, color:C.text, fontSize:13 }}>{p.nombre}</div>
+                  <div style={{ fontSize:11, color:C.muted }}>{p.tratamiento} · {p.estado}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {q.length >= 2 && results.length === 0 && (
+          <div style={{ fontSize:13, color:C.muted, padding:'8px 0 14px' }}>Sin coincidencias</div>
+        )}
+        {confirmed && (
+          <div style={{ background:C.success+'15', border:`1px solid ${C.success}44`, borderRadius:10, padding:'12px 16px' }}>
+            <div style={{ fontWeight:700, color:C.success, fontSize:13 }}>✅ Check-in registrado</div>
+            <div style={{ fontSize:12, color:C.muted, marginTop:4 }}>{confirmed.nombre} · {new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1131,14 +1303,13 @@ function DentistTratamientos() {
 }
 
 function DentistPresupuestos() {
-  const mios = PRESUPUESTOS.filter(p => p.dentista === 'Dra. Vidal' || !p.dentista).slice(0,4);
-  const totalEmit = mios.reduce((s,p) => s+p.importe, 0);
-  const acept = mios.filter(p=>p.estado==='aceptado').length;
+  const mios = PRESUPUESTOS.slice(0,4);
+  const acept = mios.filter(p=>p.estado==='aceptado'||p.estado==='firmado').length;
   return (
     <div>
       <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 20px' }}>Mis Presupuestos</h2>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:14, marginBottom:24 }}>
-        <Kpi label="Total emitido" value={`${totalEmit.toLocaleString('es')}€`} color={C.success} icon="💶" />
+        <Kpi label="Pipeline" value={METRICAS.valorPipeline} color={C.success} icon="💶" />
         <Kpi label="Emitidos" value={mios.length} color={C.primary} icon="📄" />
         <Kpi label="Aceptados" value={acept} color={C.success} icon="✅" />
       </div>
@@ -1149,8 +1320,8 @@ function DentistPresupuestos() {
               <div style={{ fontWeight:700, color:C.text, fontSize:13 }}>{p.paciente}</div>
               <div style={{ fontSize:11, color:C.muted }}>{p.tratamiento}</div>
             </div>
-            <div style={{ fontWeight:800, color:C.success, fontSize:16 }}>{p.importe.toLocaleString('es')}€</div>
-            <Pill label={p.estado} color={p.estado==='aceptado'?C.success:p.estado==='rechazado'?C.danger:C.warning} sm />
+            <div style={{ fontWeight:800, color:C.success, fontSize:15 }}>{p.importe}</div>
+            <Pill label={p.estado} color={p.estado==='aceptado'||p.estado==='firmado'?C.success:p.estado==='borrador'?C.muted:C.warning} sm />
             <button onClick={()=>demoToast('PDF generado (demo)')} style={{ background:C.subtle, border:`1px solid ${C.border}`, borderRadius:6, padding:'4px 10px', fontSize:11, cursor:'pointer', color:C.muted }}>PDF</button>
             <button onClick={()=>demoToast('Enviado por email (demo)')} style={{ background:C.primary+'18', border:'none', borderRadius:6, padding:'4px 10px', color:C.primary, fontWeight:700, fontSize:11, cursor:'pointer' }}>Enviar</button>
           </div>
@@ -1219,23 +1390,38 @@ function MktKPIs() {
 }
 
 function MktLeads() {
+  const STAGES = [
+    { id:'nuevo',       label:'Nuevo',        color:C.muted },
+    { id:'contactado',  label:'Contactado',   color:C.primary },
+    { id:'presupuesto', label:'Presupuesto',  color:C.accent },
+    { id:'seguimiento', label:'Seguimiento',  color:'#7C3AED' },
+    { id:'ganado',      label:'Ganado',       color:C.success },
+  ];
+  const assigned = LEADS.map((l,i) => ({ ...l, stage: STAGES[i % STAGES.length].id }));
   return (
     <div>
       <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 20px' }}>Pipeline de Leads</h2>
-      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        {LEADS.map(l => (
-          <div key={l.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'14px 18px', display:'flex', gap:12, alignItems:'center' }}>
-            <div style={{ flex:1 }}>
-              <div style={{ fontWeight:700, color:C.text, fontSize:13 }}>{l.nombre}</div>
-              <div style={{ fontSize:11, color:C.muted }}>
-                {l.email} · {l.telefono} · Interés: {l.interes}
+      <div style={{ display:'flex', gap:10, overflowX:'auto', paddingBottom:8 }}>
+        {STAGES.map(st => {
+          const cols = assigned.filter(l => l.stage === st.id);
+          return (
+            <div key={st.id} style={{ minWidth:200, background:C.subtle, borderRadius:12, padding:12 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                <span style={{ fontWeight:700, fontSize:12, color:st.color }}>{st.label}</span>
+                <span style={{ background:st.color+'22', color:st.color, borderRadius:10, fontSize:11, padding:'2px 8px', fontWeight:700 }}>{cols.length}</span>
               </div>
+              {cols.map(l => (
+                <div key={l.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:12, marginBottom:8 }}>
+                  <div style={{ fontWeight:700, color:C.text, fontSize:12, marginBottom:4 }}>{l.nombre}</div>
+                  <div style={{ fontSize:11, color:C.muted, marginBottom:6 }}>🎯 {l.tratamiento}</div>
+                  <div style={{ fontSize:10, color:C.muted, marginBottom:6 }}>📍 {l.fuente} · {l.diasInactivo}d inactivo</div>
+                  <div style={{ fontSize:10, color:C.primary+'cc', fontStyle:'italic', marginBottom:8 }}>{l.accion}</div>
+                  <button onClick={()=>demoToast(`${l.nombre} → contactado (demo)`)} style={{ background:st.color+'18', border:'none', borderRadius:6, padding:'4px 10px', color:st.color, fontWeight:700, fontSize:10, cursor:'pointer', width:'100%' }}>Contactar</button>
+                </div>
+              ))}
             </div>
-            <Pill label={l.fuente} color={C.primary} sm />
-            <Pill label={l.estado} color={l.estado==='convertido'?C.success:l.estado==='contactado'?C.warning:C.muted} sm />
-            <button onClick={()=>demoToast(`Contactando ${l.nombre} (demo)`)} style={{ background:C.primary+'18', border:'none', borderRadius:6, padding:'4px 10px', color:C.primary, fontWeight:700, fontSize:11, cursor:'pointer' }}>Contactar</button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -1248,8 +1434,9 @@ function MktEmail() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
         {EMAIL_TEMPLATES.map(t => (
           <div key={t.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:18 }}>
-            <div style={{ fontWeight:700, color:C.text, fontSize:13, marginBottom:6 }}>{t.nombre}</div>
-            <div style={{ fontSize:11, color:C.muted, marginBottom:10 }}>Asunto: {t.asunto}</div>
+            <div style={{ fontWeight:700, color:C.text, fontSize:13, marginBottom:4 }}>{t.nombre}</div>
+            <div style={{ fontSize:11, color:C.muted, marginBottom:6 }}>📩 {t.asunto}</div>
+            {t.resumen && <div style={{ fontSize:11, color:C.text, lineHeight:1.5, background:C.subtle, borderRadius:6, padding:'6px 8px', marginBottom:10 }}>{t.resumen}</div>}
             <div style={{ display:'flex', gap:8 }}>
               <button onClick={()=>demoToast('Vista previa (demo)')} style={{ background:C.subtle, border:`1px solid ${C.border}`, borderRadius:6, padding:'4px 10px', fontSize:11, cursor:'pointer', color:C.muted }}>Preview</button>
               <button onClick={()=>demoToast(`Campaña "${t.nombre}" enviada (demo)`)} style={{ background:C.primary+'18', border:'none', borderRadius:6, padding:'4px 10px', color:C.primary, fontWeight:700, fontSize:11, cursor:'pointer' }}>Enviar</button>
@@ -1270,10 +1457,11 @@ function MktSocial() {
           <div key={s.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:18 }}>
             <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
               <Pill label={s.red} color={C.primary} sm />
-              <Pill label={s.estado} color={s.estado==='publicado'?C.success:C.warning} sm />
+              <Pill label={s.tipo||'Post'} color={C.accent} sm />
             </div>
-            <div style={{ fontSize:13, color:C.text, lineHeight:1.5, marginBottom:8 }}>{s.contenido?.substring(0,100)}{s.contenido?.length>100?'...':''}</div>
-            <div style={{ fontSize:11, color:C.muted }}>{s.fecha}</div>
+            <div style={{ fontSize:12, color:C.muted, marginBottom:6 }}>🎯 {s.tema}</div>
+            <div style={{ fontSize:13, color:C.text, lineHeight:1.5, marginBottom:8 }}>{s.copy?.substring(0,100)}{s.copy?.length>100?'...':''}</div>
+            <div style={{ fontSize:11, color:C.primary+'99' }}>{s.cta}</div>
           </div>
         ))}
       </div>
@@ -1292,13 +1480,16 @@ function MktSeo() {
         <Kpi label="Impresiones" value={d.impresiones||'24.600'} color={C.accent} icon="👁️" />
         <Kpi label="CTR" value={`${d.ctr||7.5}%`} color={C.success} icon="📈" />
       </div>
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:20 }}>
-        <div style={{ fontWeight:700, color:C.text, marginBottom:14, fontSize:14 }}>Palabras clave principales</div>
-        {(d.palabrasClave||['clínica dental Málaga','dentista Málaga centro','ortodoncia Málaga','implantes dentales Málaga','Invisalign Málaga']).map((k,i) => (
-          <div key={k} style={{ display:'flex', gap:10, padding:'8px 0', borderBottom:`1px solid ${C.border}` }}>
-            <div style={{ width:20, color:C.muted, fontSize:12 }}>#{i+1}</div>
-            <div style={{ flex:1, fontSize:13, color:C.text }}>{k}</div>
-            <div style={{ fontSize:12, color:C.success, fontWeight:700 }}>Top {i<2?3:i<4?5:10}</div>
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, overflow:'hidden' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 90px 80px 120px', padding:'8px 16px', background:C.subtle, borderBottom:`1px solid ${C.border}`, fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase' }}>
+          {['Keyword','Volumen','Dificultad','Intención'].map(h=><div key={h}>{h}</div>)}
+        </div>
+        {(d.keywords_principales||[]).map((k,i) => (
+          <div key={i} style={{ display:'grid', gridTemplateColumns:'1fr 90px 80px 120px', padding:'10px 16px', borderBottom:`1px solid ${C.border}`, alignItems:'center', fontSize:12 }}>
+            <div style={{ color:C.text, fontWeight:600 }}>{k.keyword}</div>
+            <div style={{ color:C.muted }}>{k.volumen}</div>
+            <Pill label={k.dificultad} color={k.dificultad==='Alta'?C.danger:k.dificultad==='Media'?C.warning:C.success} sm />
+            <Pill label={k['intención']||k.intencion} color={C.primary} sm />
           </div>
         ))}
       </div>
@@ -1308,13 +1499,25 @@ function MktSeo() {
 
 // ─── PÁGINAS PATIENT ──────────────────────────────────────────────────────────
 function PatientMisCitas() {
-  const misCitas = AGENDA_HOY.filter(c => c.paciente?.toLowerCase().includes('martín') || c.paciente?.toLowerCase().includes('demo')).concat(AGENDA_HOY.slice(0,2));
-  const citas = misCitas.slice(0,4);
+  const [showBook, setShowBook] = useState(false);
+  const proxima = AGENDA_HOY[0];
+  const citas = AGENDA_HOY.slice(0, 4);
   return (
     <div>
-      <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 8px' }}>Mis Citas</h2>
+      {showBook && <AppointmentModal onClose={() => setShowBook(false)} />}
+      <h2 style={{ color:C.text, fontWeight:800, fontSize:20, margin:'0 0 16px' }}>Mis Citas</h2>
+      {/* Próxima cita — card prominente */}
+      <div style={{ background:`linear-gradient(135deg,${C.primary},${C.primaryL})`, borderRadius:14, padding:20, marginBottom:20, color:'#fff' }}>
+        <div style={{ fontSize:11, fontWeight:700, opacity:0.8, marginBottom:6, textTransform:'uppercase', letterSpacing:1 }}>Próxima cita</div>
+        <div style={{ fontWeight:900, fontSize:22, marginBottom:4 }}>{proxima.hora} · {proxima.tratamiento}</div>
+        <div style={{ fontSize:13, opacity:0.9, marginBottom:14 }}>{proxima.prof} · Hoy</div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={()=>demoToast('Recordatorio añadido (demo)')} style={{ background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:8, padding:'7px 16px', color:'#fff', fontWeight:700, fontSize:12, cursor:'pointer' }}>📅 Añadir</button>
+          <button onClick={()=>demoToast('Cita cancelada (demo)')} style={{ background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:8, padding:'7px 16px', color:'#fff', fontSize:12, cursor:'pointer' }}>Cancelar</button>
+        </div>
+      </div>
       {/* Invisalign progress */}
-      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:18, marginBottom:20 }}>
+      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:18, marginBottom:16 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
           <div style={{ fontWeight:700, color:C.text, fontSize:14 }}>Tratamiento Invisalign en curso</div>
           <span style={{ fontWeight:800, color:C.primary, fontSize:18 }}>57%</span>
@@ -1323,20 +1526,18 @@ function PatientMisCitas() {
         <div style={{ fontSize:12, color:C.muted, marginTop:6 }}>Alineador 8 de 14 · Próxima revisión: 22 sep</div>
       </div>
       <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        {citas.map(c => (
-          <div key={c.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'14px 18px', display:'flex', gap:12, alignItems:'center' }}>
-            <div style={{ background:'#EC4899'+'18', color:'#EC4899', borderRadius:8, padding:'8px 10px', fontWeight:800, fontSize:13, textAlign:'center', minWidth:60 }}>{c.hora}</div>
+        {citas.slice(1).map(c => (
+          <div key={c.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'12px 16px', display:'flex', gap:12, alignItems:'center' }}>
+            <div style={{ background:C.primary+'18', color:C.primary, borderRadius:8, padding:'6px 10px', fontWeight:800, fontSize:13, textAlign:'center', minWidth:54 }}>{c.hora}</div>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:700, color:C.text, fontSize:13 }}>{c.tratamiento}</div>
               <div style={{ fontSize:11, color:C.muted }}>{c.prof}</div>
             </div>
             <Pill label={c.estado} color={c.estado==='confirmada'?C.success:C.warning} sm />
-            <button onClick={()=>demoToast('Recordatorio calendario añadido (demo)')} style={{ background:C.subtle, border:`1px solid ${C.border}`, borderRadius:6, padding:'4px 10px', fontSize:11, cursor:'pointer', color:C.muted }}>📅</button>
-            <button onClick={()=>demoToast('Cancelación solicitada (demo)')} style={{ background:C.danger+'18', border:'none', borderRadius:6, padding:'4px 10px', color:C.danger, fontSize:11, cursor:'pointer' }}>Cancelar</button>
           </div>
         ))}
       </div>
-      <button onClick={()=>demoToast('Nueva cita — selecciona fecha (demo)')} style={{ marginTop:20, background:C.primary, color:'#fff', border:'none', borderRadius:10, padding:'12px 24px', fontWeight:700, fontSize:14, cursor:'pointer' }}>
+      <button onClick={() => setShowBook(true)} style={{ marginTop:20, background:C.primary, color:'#fff', border:'none', borderRadius:10, padding:'12px 24px', fontWeight:700, fontSize:14, cursor:'pointer' }}>
         + Solicitar nueva cita
       </button>
     </div>
