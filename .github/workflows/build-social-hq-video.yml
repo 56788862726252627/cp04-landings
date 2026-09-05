@@ -1,0 +1,53 @@
+name: Build Social HQ Video
+
+on:
+  push:
+    branches:
+      - fix/make-50-counter-20260801
+    paths:
+      - '.github/workflows/build-social-hq-video.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-video:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: fix/make-50-counter-20260801
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Build 1080x1920 silent HQ master
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='public/social/seguimos_mejorando_club_pádel_04.png'
+          OUT='public/social/club-padel-04-linkedin-video-hq-silent.mp4'
+          test -f "$SRC"
+          ffmpeg -y -loop 1 -i "$SRC" -t 8 \
+            -vf "scale=1400:1400:force_original_aspect_ratio=decrease,pad=1400:1400:(ow-iw)/2:(oh-ih)/2:color=black,zoompan=z='min(zoom+0.00035,1.05)':d=240:s=1080x1080:fps=30,pad=1080:1920:0:420:color=0x0b0f0d,drawtext=text='SEGUIMOS MEJORANDO':fontcolor=white:fontsize=72:x=(w-text_w)/2:y=150:enable='between(t,0.3,5.8)',drawtext=text='CLUB PADEL 04':fontcolor=0x53f28c:fontsize=86:x=(w-text_w)/2:y=240:enable='between(t,0.6,7.0)',drawtext=text='Mas padel. Mas comunidad.':fontcolor=white:fontsize=48:x=(w-text_w)/2:y=1540:enable='between(t,2.5,7.5)',drawtext=text='Mas que padel. Nos vemos en pista.':fontcolor=white:fontsize=42:x=(w-text_w)/2:y=1620:enable='between(t,4.0,7.8)',fade=t=in:st=0:d=0.4,fade=t=out:st=7.6:d=0.4" \
+            -an -c:v libx264 -preset slow -crf 16 -pix_fmt yuv420p -movflags +faststart "$OUT"
+          ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,pix_fmt,r_frame_rate -of default=nw=1 "$OUT"
+          sha256sum "$OUT"
+
+      - name: Commit HQ master
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Club Pádel 04 Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add public/social/club-padel-04-linkedin-video-hq-silent.mp4
+          if git diff --cached --quiet; then
+            echo 'No video changes to commit.'
+            exit 0
+          fi
+          git commit -m 'social: add LinkedIn HQ silent video master'
+          git push origin HEAD:fix/make-50-counter-20260801
