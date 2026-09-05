@@ -1,0 +1,50 @@
+name: Build YouTube long-form test
+
+on:
+  push:
+    paths:
+      - 'public/social/.long-test-ready'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/make-50-counter-20260801
+          fetch-depth: 0
+
+      - name: Install FFmpeg
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
+      - name: Build 16m01s horizontal silent test
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='public/social/seguimos_mejorando_club_pádel_04.png'
+          OUT='public/social/club-padel-04-youtube-long-16m01s-16x9-silent.mp4'
+          test -s "$SRC"
+          ffmpeg -y -loop 1 -framerate 1 -i "$SRC" -t 961 \
+            -vf "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,drawtext=text='PRUEBA TECNICA >15 MIN':fontcolor=white:fontsize=58:x=(w-text_w)/2:y=80,drawtext=text='Club Padel 04':fontcolor=0x9CFF32:fontsize=68:x=(w-text_w)/2:y=155" \
+            -an -r 1 -c:v libx264 -preset medium -crf 18 -pix_fmt yuv420p -movflags +faststart "$OUT"
+          test "$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT" | cut -d. -f1)" -ge 961
+          test "$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$OUT" | wc -l)" = '0'
+          sha256sum "$OUT" | tee public/social/club-padel-04-youtube-long-16m01s-16x9-silent.sha256
+          rm -f public/social/.long-test-ready
+
+      - name: Commit long-form test media
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A public/social
+          git commit -m 'media: build YouTube long-form duration test' || exit 0
+          git push origin HEAD:fix/make-50-counter-20260801
