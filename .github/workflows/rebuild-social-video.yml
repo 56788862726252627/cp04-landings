@@ -49,20 +49,53 @@ jobs:
             -map "[v]" -an -r 30 -c:v libx264 -preset slow -crf 10 -pix_fmt yuv420p \
             -profile:v high -level 4.1 -movflags +faststart "$OUT"
 
+      - name: Build vertical 2160x3840 4K master
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='public/social/seguimos_mejorando_club_pádel_04.png'
+          OUT='public/social/club-padel-04-youtube-short-9x16-4k-silent.mp4'
+          test -s "$SRC"
+          ffmpeg -y -loop 1 -i "$SRC" -t 8 \
+            -vf "scale=2800:2800:force_original_aspect_ratio=decrease,pad=2800:2800:(ow-iw)/2:(oh-ih)/2:color=black,zoompan=z='min(zoom+0.00035,1.05)':d=240:s=2160x2160:fps=30,pad=2160:3840:0:840:color=0x0b0f0d,drawtext=text='SEGUIMOS MEJORANDO':fontcolor=white:fontsize=144:x=(w-text_w)/2:y=300:enable='between(t,0.3,5.8)',drawtext=text='CLUB PADEL 04':fontcolor=0x53f28c:fontsize=172:x=(w-text_w)/2:y=480:enable='between(t,0.6,7.0)',drawtext=text='Mas padel. Mas comunidad.':fontcolor=white:fontsize=96:x=(w-text_w)/2:y=3080:enable='between(t,2.5,7.5)',drawtext=text='Mas que padel. Nos vemos en pista.':fontcolor=white:fontsize=84:x=(w-text_w)/2:y=3240:enable='between(t,4.0,7.8)',fade=t=in:st=0:d=0.4,fade=t=out:st=7.6:d=0.4" \
+            -an -c:v libx264 -preset medium -crf 14 -pix_fmt yuv420p \
+            -profile:v high -level 5.2 -movflags +faststart "$OUT"
+
+      - name: Build horizontal 3840x2160 4K YouTube master
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='public/social/seguimos_mejorando_club_pádel_04.png'
+          OUT='public/social/club-padel-04-youtube-video-16x9-4k-silent.mp4'
+          test -s "$SRC"
+          ffmpeg -y -loop 1 -i "$SRC" -t 8 \
+            -filter_complex "[0:v]scale=3840:2160:force_original_aspect_ratio=increase,crop=3840:2160,boxblur=36:16,eq=brightness=-0.23:saturation=0.85[bg];[0:v]scale=1720:1720:force_original_aspect_ratio=decrease,pad=1720:1720:(ow-iw)/2:(oh-ih)/2:color=0x0b0f0d@0.0[fg];[bg][fg]overlay=2020:220,drawbox=x=0:y=0:w=1860:h=2160:color=0x08110d@0.82:t=fill,drawtext=text='SEGUIMOS':fontcolor=white:fontsize=176:x=220:y=510,drawtext=text='MEJORANDO':fontcolor=0x9CFF32:fontsize=196:x=220:y=710,drawtext=text='CLUB PADEL 04':fontcolor=white:fontsize=148:x=220:y=970,drawtext=text='Mas padel. Mas comunidad.':fontcolor=white:fontsize=84:x=220:y=1300,drawtext=text='Mas que padel. Nos vemos en pista.':fontcolor=0x9CFF32:fontsize=76:x=220:y=1430,fade=t=in:st=0:d=0.4,fade=t=out:st=7.6:d=0.4[v]" \
+            -map "[v]" -an -r 30 -c:v libx264 -preset medium -crf 14 -pix_fmt yuv420p \
+            -profile:v high -level 5.2 -movflags +faststart "$OUT"
+
       - name: Verify masters
         shell: bash
         run: |
           set -euo pipefail
           V='public/social/club-padel-04-youtube-short-9x16-hq-silent.mp4'
           H='public/social/club-padel-04-youtube-video-16x9-hq-silent.mp4'
+          V4='public/social/club-padel-04-youtube-short-9x16-4k-silent.mp4'
+          H4='public/social/club-padel-04-youtube-video-16x9-4k-silent.mp4'
           test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$V")" = '1080'
           test "$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$V")" = '1920'
           test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$H")" = '1920'
           test "$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$H")" = '1080'
-          test "$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$V" | wc -l)" = '0'
-          test "$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$H" | wc -l)" = '0'
+          test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$V4")" = '2160'
+          test "$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$V4")" = '3840'
+          test "$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$H4")" = '3840'
+          test "$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$H4")" = '2160'
+          for F in "$V" "$H" "$V4" "$H4"; do
+            test "$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$F" | wc -l)" = '0'
+          done
           sha256sum "$V" | tee public/social/club-padel-04-youtube-short-9x16-hq-silent.sha256
           sha256sum "$H" | tee public/social/club-padel-04-youtube-video-16x9-hq-silent.sha256
+          sha256sum "$V4" | tee public/social/club-padel-04-youtube-short-9x16-4k-silent.sha256
+          sha256sum "$H4" | tee public/social/club-padel-04-youtube-video-16x9-4k-silent.sha256
           sha256sum public/social/club-padel-04-linkedin-video-hq-silent.mp4 | tee public/social/club-padel-04-linkedin-video-hq-silent.sha256
           rm -f public/social/.upload-ready
 
@@ -73,5 +106,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A public/social
-          git commit -m 'media: build adaptive HQ social video variants' || exit 0
+          git commit -m 'media: build adaptive HQ and 4K social video variants' || exit 0
           git push origin HEAD:fix/make-50-counter-20260801
