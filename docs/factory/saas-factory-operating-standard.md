@@ -19,3 +19,25 @@
 15. Before every real social post, explicitly warn that it will publish for real and execute only once. Never rerun a multi-network payload after one branch already succeeded; retry only the failed network.
 16. Validate each network separately for text, image and video where supported, record execution status and returned post/share ID, and avoid duplicate production posts.
 17. This standard should be reused by the SaaS factory for new client projects, adapting branding, accounts, roles and network permissions without copying client-specific credentials or secrets.
+
+## YouTube validation status — Club Pádel 04 — 2026-09-05
+
+The current YouTube publishing scope is considered fully validated for the supported workflow: standard uploaded videos and Shorts through `Publicación Social Directa -> Social Media & Ads Hub -> YouTube`.
+
+- ✅ Automatic standard video -> horizontal 16:9 at 1080p.
+- ✅ Automatic Short -> vertical 9:16 at 1080p.
+- ✅ Forced horizontal override.
+- ✅ Forced vertical override.
+- ✅ Horizontal 4K master verified by YouTube at 3840×2160.
+- ✅ Vertical 4K master verified by YouTube at 2160×3840.
+- ✅ Privacy modes `unlisted`, `private` and `public` validated.
+- ✅ Long-form upload over 15 minutes validated at 16:01 with YouTube processing succeeded.
+- ✅ Fallback from missing platform-specific derivative URL to durable `media_url` validated.
+- ✅ Unsupported YouTube payloads (`image`, `text`, incompatible auto content types) no-op safely without upload.
+- ✅ Draft gating validated with all network booleans selected: no network posted.
+- ✅ Public test executed exactly once after explicit publication warning; only the YouTube branch ran. Public Video ID: `gOd7gfn37jQ`.
+- ✅ Public test processed by YouTube as 1920×1080 H.264, 30 fps, 8 s, privacy `public`, category `Sports`, made-for-kids false.
+- ✅ Short test asset verified as 1080×1920, 30 fps, 8 s. YouTube documentation states that square or vertical videos up to three minutes uploaded on standard channels after 2024-10-15 are categorized as Shorts.
+- ✅ YouTube OAuth connection points to Club Pádel 04 channel `UCjVskmMzmmwsCuTFYq2Miiw`.
+
+This completion applies to uploaded videos and Shorts. It does not claim coverage of separate YouTube product features that are outside this publishing workflow, such as live streaming, Premieres, Community posts, memberships or playlist administration.
