@@ -1,0 +1,35 @@
+name: Rebuild social video
+
+on:
+  push:
+    paths:
+      - 'public/social/.upload-ready'
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/make-50-counter-20260801
+          fetch-depth: 0
+      - name: Rebuild MP4 and verify checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat public/social/.video-upload/chunk_* > /tmp/video.b64
+          base64 -d /tmp/video.b64 > public/social/club-padel-04-linkedin-video-hq-silent.mp4
+          echo 'e029d6acc9bea5f74f2d7c72519ae87d7267ca3705067b119861fe4b7829c06f  public/social/club-padel-04-linkedin-video-hq-silent.mp4' | sha256sum -c -
+          rm -rf public/social/.video-upload public/social/.upload-ready
+      - name: Commit rebuilt video
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A public/social
+          git commit -m 'media: add HQ silent LinkedIn video' || exit 0
+          git push origin HEAD:fix/make-50-counter-20260801
