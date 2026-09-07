@@ -208,21 +208,47 @@ function SectionTitle({ eyebrow, title, center }) {
 }
 
 // ─── LOGIN V4: role-cards con imagen D + panel formulario ─────────────────────
-// ─── APPOINTMENT MODAL V5 ─────────────────────────────────────────────────────
+// ─── APPOINTMENT MODAL V5 — conectado a Make webhook real ─────────────────────
+const WEBHOOK_CITA = 'https://hook.eu1.make.com/mv4x2i4noerfx88tgfmtgrwu3bq6nw9o';
 const BOOK_STEPS = ['Tratamiento','Profesional','Día y hora','Tus datos','Confirmación'];
+function _nextWeekdays(n) {
+  const r=[]; const d=new Date();
+  const DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  d.setDate(d.getDate()+1);
+  while(r.length<n){const dw=d.getDay();if(dw&&dw!==6)r.push({label:`${DN[dw]} ${d.getDate()} ${MN[d.getMonth()]}`,iso:d.toISOString().split('T')[0]});d.setDate(d.getDate()+1);}
+  return r;
+}
 function AppointmentModal({ onClose }) {
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ trat:'', prof:'', dia:'', hora:'', nombre:'', tel:'', email:'' });
+  const [form, setForm] = useState({ trat:'', prof:'', diaIso:'', diaLabel:'', hora:'', nombre:'', tel:'', email:'', privacy:false });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const DIAS = _nextWeekdays(5);
   const horas = ['09:00','09:30','10:00','10:30','11:00','11:30','16:00','16:30','17:00'];
-  const dias  = ['Lun 8 Sep','Mar 9 Sep','Mié 10 Sep','Jue 11 Sep','Vie 12 Sep'];
+
+  async function submitCita() {
+    setLoading(true); setErr('');
+    try {
+      await fetch(WEBHOOK_CITA, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+        request_id: crypto.randomUUID(), nombre:form.nombre, email:form.email, telefono:form.tel,
+        tratamiento:form.trat, profesional_preferido:form.prof, fecha_preferida:form.diaIso,
+        franja_horaria:parseInt(form.hora)<14?'Mañana (9-13h)':'Tarde (15-19h)',
+        privacidad_aceptada:true, origen:'landing_web', notas:'',
+      })});
+      demoToast('¡Cita solicitada! Te confirmamos en 2h 🦷');
+      onClose();
+    } catch { setErr('Error de conexión. Inténtalo de nuevo o llámanos.'); }
+    finally { setLoading(false); }
+  }
 
   function next() {
     if (step < 4) setStep(s => s + 1);
-    else { demoToast('¡Cita solicitada! Te llamamos en 2h (demo)'); onClose(); }
+    else submitCita();
   }
   const canNext = [
-    !!form.trat, !!form.prof, !!form.dia && !!form.hora,
-    !!form.nombre && !!form.tel, true,
+    !!form.trat, !!form.prof, !!form.diaIso && !!form.hora,
+    !!form.nombre && !!form.tel && !!form.email && form.privacy, !loading,
   ][step];
 
   const overlayStyle = { position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 };
@@ -273,8 +299,8 @@ function AppointmentModal({ onClose }) {
         {step === 2 && (
           <div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:16 }}>
-              {dias.map(d => (
-                <button key={d} onClick={() => setForm(f=>({...f, dia:d}))} style={{ border:`2px solid ${form.dia===d?C.primary:C.border}`, borderRadius:8, padding:'8px 14px', background:form.dia===d?C.primary:'none', color:form.dia===d?'#fff':C.text, fontWeight:600, fontSize:13, cursor:'pointer' }}>{d}</button>
+              {DIAS.map(d => (
+                <button key={d.iso} onClick={() => setForm(f=>({...f, diaIso:d.iso, diaLabel:d.label}))} style={{ border:`2px solid ${form.diaIso===d.iso?C.primary:C.border}`, borderRadius:8, padding:'8px 14px', background:form.diaIso===d.iso?C.primary:'none', color:form.diaIso===d.iso?'#fff':C.text, fontWeight:600, fontSize:13, cursor:'pointer' }}>{d.label}</button>
               ))}
             </div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
@@ -286,9 +312,13 @@ function AppointmentModal({ onClose }) {
         )}
         {step === 3 && (
           <div>
-            <input value={form.nombre} onChange={e=>setForm(f=>({...f,nombre:e.target.value}))} placeholder="Tu nombre completo" style={inp} />
-            <input value={form.tel} onChange={e=>setForm(f=>({...f,tel:e.target.value}))} placeholder="Teléfono de contacto" style={inp} />
-            <input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="Email (opcional)" style={inp} />
+            <input value={form.nombre} onChange={e=>setForm(f=>({...f,nombre:e.target.value}))} placeholder="Tu nombre completo *" style={inp} />
+            <input value={form.tel} onChange={e=>setForm(f=>({...f,tel:e.target.value}))} placeholder="Teléfono de contacto *" style={inp} />
+            <input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="Email *" style={inp} />
+            <label style={{ display:'flex', alignItems:'center', gap:8, fontSize:12, color:C.muted, cursor:'pointer' }}>
+              <input type="checkbox" checked={form.privacy} onChange={e=>setForm(f=>({...f,privacy:e.target.checked}))} />
+              Acepto la <span style={{ color:C.primary, textDecoration:'underline' }}>política de privacidad</span> *
+            </label>
           </div>
         )}
         {step === 4 && (
@@ -297,20 +327,21 @@ function AppointmentModal({ onClose }) {
             <div style={{ fontWeight:800, color:C.text, fontSize:17, marginBottom:8 }}>¡Todo listo!</div>
             <div style={{ color:C.muted, fontSize:13, marginBottom:16, lineHeight:1.7 }}>
               <strong>{form.trat}</strong> con <strong>{form.prof?.split(' ').slice(0,2).join(' ')}</strong><br />
-              <strong>{form.dia}</strong> a las <strong>{form.hora}</strong>
+              <strong>{form.diaLabel}</strong> a las <strong>{form.hora}</strong>
             </div>
             <div style={{ background:C.success+'15', border:`1px solid ${C.success}44`, borderRadius:10, padding:'10px 16px', fontSize:12, color:C.success, fontWeight:600 }}>
-              Te confirmaremos por WhatsApp en menos de 2 horas (demo)
+              Te confirmaremos por email en menos de 2 horas
             </div>
+            {err && <div style={{ marginTop:10, color:C.danger, fontSize:12, textAlign:'left' }}>{err}</div>}
           </div>
         )}
         {/* Footer */}
         <div style={{ display:'flex', gap:10, marginTop:20 }}>
-          {step > 0 && (
+          {step > 0 && !loading && (
             <button onClick={() => setStep(s=>s-1)} style={{ flex:1, background:C.subtle, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 0', fontWeight:700, fontSize:14, cursor:'pointer', color:C.muted }}>← Atrás</button>
           )}
-          <button onClick={next} disabled={!canNext} style={{ flex:2, background:canNext?C.primary:C.border, color:'#fff', border:'none', borderRadius:10, padding:'11px 0', fontWeight:800, fontSize:14, cursor:canNext?'pointer':'not-allowed' }}>
-            {step === 4 ? '✅ Confirmar cita' : 'Siguiente →'}
+          <button onClick={next} disabled={!canNext || loading} style={{ flex:2, background:canNext&&!loading?C.primary:C.border, color:'#fff', border:'none', borderRadius:10, padding:'11px 0', fontWeight:800, fontSize:14, cursor:canNext&&!loading?'pointer':'not-allowed' }}>
+            {loading ? '⏳ Enviando...' : step === 4 ? '✅ Confirmar cita' : 'Siguiente →'}
           </button>
         </div>
       </div>
