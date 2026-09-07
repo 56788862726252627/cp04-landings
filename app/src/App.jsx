@@ -1692,7 +1692,7 @@ const TRANSLATIONS = {
     "reservas.datos_jugador":"Datos del jugador","reservas.fecha_pista":"Fecha, hora y pista",
     "reservas.hora_fin":"Hora fin","reservas.total":"Total","reservas.ver_resumen":"Ver resumen",
     "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
-    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nueva reserva",
+    "reservas.registrada":"Solicitud enviada · pendiente de confirmación","reservas.nueva_btn":"Nueva reserva",
     "reservas.nombre":"Nombre","reservas.apellidos":"Apellidos","reservas.modalidad":"Modalidad",
     "reservas.nivel_form":"Nivel","reservas.comentarios":"Comentarios","reservas.minutos":"minutos",
     "reservas.confirmacion_desc":"La confirmación real dependerá del backend y de las integraciones configuradas.",
@@ -1703,7 +1703,7 @@ const TRANSLATIONS = {
     "lang.hint":"Prueba con el país, idioma, código o bandera. Ejemplo: España, Spain, es-ES o 🇪🇸","lang.recomendados":"Recomendados","lang.todos":"Todos los idiomas",
     "status.reserva.pendiente":"Pendiente","status.reserva.pendiente_txt":"Revisa los datos antes de confirmar.",
     "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
-    "status.reserva.exito":"Éxito","status.reserva.exito_txt":"Reserva enviada correctamente. La disponibilidad se está actualizando.",
+    "status.reserva.exito":"Solicitud enviada","status.reserva.exito_txt":"Solicitud de reserva recibida y en proceso. Recibirás confirmación por email.",
     "status.reserva.error":"Error","status.reserva.error_txt":"No se pudo completar la reserva. Revisa los datos e inténtalo de nuevo.",
     "status.cancelar.idle":"Pendiente","status.cancelar.idle_txt":"Confirma la cancelación de tu reserva.",
     "status.cancelar.enviando":"Enviando","status.cancelar.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
@@ -1897,7 +1897,7 @@ const TRANSLATIONS = {
     "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
     "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
     "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
-    "reservas.registrada":"Booking registered","reservas.nueva_btn":"New booking",
+    "reservas.registrada":"Request sent · pending confirmation","reservas.nueva_btn":"New booking",
     "reservas.nombre":"First name","reservas.apellidos":"Surname","reservas.modalidad":"Mode",
     "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
     "reservas.confirmacion_desc":"Real confirmation depends on the backend and configured integrations.",
@@ -1908,7 +1908,7 @@ const TRANSLATIONS = {
     "lang.hint":"Try country, language, code or flag. Example: Spain, Español, es-ES or 🇪🇸","lang.recomendados":"Recommended","lang.todos":"All languages",
     "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
     "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
-    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+    "status.reserva.exito":"Request sent","status.reserva.exito_txt":"Booking request received and being processed. You will receive confirmation by email.",
     "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
     "status.cancelar.idle":"Pending","status.cancelar.idle_txt":"Confirm the cancellation of your booking.",
     "status.cancelar.enviando":"Sending","status.cancelar.enviando_txt":"We are sending your cancellation request.",
@@ -2102,7 +2102,7 @@ const TRANSLATIONS = {
     "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
     "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
     "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
-    "reservas.registrada":"Booking confirmed","reservas.nueva_btn":"New booking",
+    "reservas.registrada":"Request sent · pending confirmation","reservas.nueva_btn":"New booking",
     "reservas.nombre":"First name","reservas.apellidos":"Last name","reservas.modalidad":"Mode",
     "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
     "reservas.confirmacion_desc":"Confirmation depends on the backend and configured integrations.",
@@ -2113,7 +2113,7 @@ const TRANSLATIONS = {
     "lang.hint":"Try country, language, code or flag. Example: Spain, Español, es-ES or 🇪🇸","lang.recomendados":"Recommended","lang.todos":"All languages",
     "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
     "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
-    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+    "status.reserva.exito":"Request sent","status.reserva.exito_txt":"Booking request received and being processed. You will receive confirmation by email.",
     "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
     "status.cancelar.idle":"Pending","status.cancelar.idle_txt":"Confirm the cancellation of your booking.",
     "status.cancelar.enviando":"Sending","status.cancelar.enviando_txt":"We are sending your cancellation request.",
@@ -2303,7 +2303,7 @@ const TRANSLATIONS = {
     "reservas.datos_jugador":"Données du joueur","reservas.fecha_pista":"Date, heure et terrain",
     "reservas.hora_fin":"Heure de fin","reservas.total":"Total","reservas.ver_resumen":"Voir le résumé",
     "reservas.editar":"Modifier","reservas.confirmar_btn":"Confirmer","reservas.enviando":"Envoi...",
-    "reservas.registrada":"Réservation enregistrée","reservas.nueva_btn":"Nouvelle réservation",
+    "reservas.registrada":"Demande envoyée · en attente de confirmation","reservas.nueva_btn":"Nouvelle réservation",
     "reservas.nombre":"Prénom","reservas.apellidos":"Nom","reservas.modalidad":"Mode",
     "reservas.nivel_form":"Niveau","reservas.comentarios":"Commentaires","reservas.minutos":"minutes",
     "reservas.confirmacion_desc":"La confirmation dépend du backend et des intégrations configurées.",
@@ -2314,7 +2314,7 @@ const TRANSLATIONS = {
     "lang.hint":"Essayez pays, langue, code ou drapeau. Exemple: France, Français, fr-FR ou 🇫🇷","lang.recomendados":"Recommandées","lang.todos":"Toutes les langues",
     "status.reserva.pendiente":"En attente","status.reserva.pendiente_txt":"Vérifiez vos données avant de confirmer.",
     "status.reserva.enviando":"Envoi","status.reserva.enviando_txt":"Nous envoyons votre demande de réservation.",
-    "status.reserva.exito":"Succès","status.reserva.exito_txt":"Réservation envoyée avec succès. La disponibilité est mise à jour.",
+    "status.reserva.exito":"Demande envoyée","status.reserva.exito_txt":"Demande de réservation reçue et en cours de traitement. Vous recevrez une confirmation par e-mail.",
     "status.reserva.error":"Erreur","status.reserva.error_txt":"Impossible de finaliser la réservation. Vérifiez les données et réessayez.",
     "status.cancelar.idle":"En attente","status.cancelar.idle_txt":"Confirmez l'annulation de votre réservation.",
     "status.cancelar.enviando":"Envoi","status.cancelar.enviando_txt":"Nous envoyons votre demande d'annulation.",
@@ -2504,7 +2504,7 @@ const TRANSLATIONS = {
     "reservas.datos_jugador":"Dati del giocatore","reservas.fecha_pista":"Data, ora e campo",
     "reservas.hora_fin":"Ora di fine","reservas.total":"Totale","reservas.ver_resumen":"Vedi riepilogo",
     "reservas.editar":"Modifica","reservas.confirmar_btn":"Conferma","reservas.enviando":"Invio...",
-    "reservas.registrada":"Prenotazione registrata","reservas.nueva_btn":"Nuova prenotazione",
+    "reservas.registrada":"Richiesta inviata · in attesa di conferma","reservas.nueva_btn":"Nuova prenotazione",
     "reservas.nombre":"Nome","reservas.apellidos":"Cognome","reservas.modalidad":"Modalità",
     "reservas.nivel_form":"Livello","reservas.comentarios":"Commenti","reservas.minutos":"minuti",
     "reservas.confirmacion_desc":"La conferma dipende dal backend e dalle integrazioni configurate.",
@@ -2515,7 +2515,7 @@ const TRANSLATIONS = {
     "lang.hint":"Prova con paese, lingua, codice o bandiera. Esempio: Italia, Italiano, it-IT o 🇮🇹","lang.recomendados":"Consigliate","lang.todos":"Tutte le lingue",
     "status.reserva.pendiente":"In attesa","status.reserva.pendiente_txt":"Controlla i dati prima di confermare.",
     "status.reserva.enviando":"Invio","status.reserva.enviando_txt":"Stiamo inviando la tua richiesta di prenotazione.",
-    "status.reserva.exito":"Successo","status.reserva.exito_txt":"Prenotazione inviata con successo. La disponibilità viene aggiornata.",
+    "status.reserva.exito":"Richiesta inviata","status.reserva.exito_txt":"Richiesta di prenotazione ricevuta e in elaborazione. Riceverete conferma via e-mail.",
     "status.reserva.error":"Errore","status.reserva.error_txt":"Impossibile completare la prenotazione. Controlla i dati e riprova.",
     "status.cancelar.idle":"In attesa","status.cancelar.idle_txt":"Conferma la cancellazione della tua prenotazione.",
     "status.cancelar.enviando":"Invio","status.cancelar.enviando_txt":"Stiamo inviando la tua richiesta di cancellazione.",
@@ -2705,7 +2705,7 @@ const TRANSLATIONS = {
     "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e campo",
     "reservas.hora_fin":"Hora de fim","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
     "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"A enviar...",
-    "reservas.registrada":"Reserva registada","reservas.nueva_btn":"Nova reserva",
+    "reservas.registrada":"Pedido enviado · aguardando confirmação","reservas.nueva_btn":"Nova reserva",
     "reservas.nombre":"Nome","reservas.apellidos":"Apelido","reservas.modalidad":"Modalidade",
     "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
     "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
@@ -2716,7 +2716,7 @@ const TRANSLATIONS = {
     "lang.hint":"Tente com país, idioma, código ou bandeira. Exemplo: Portugal, Português, pt-PT ou 🇵🇹","lang.recomendados":"Recomendados","lang.todos":"Todos os idiomas",
     "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Reveja os dados antes de confirmar.",
     "status.reserva.enviando":"A enviar","status.reserva.enviando_txt":"Estamos a enviar o seu pedido de reserva.",
-    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está a ser atualizada.",
+    "status.reserva.exito":"Pedido enviado","status.reserva.exito_txt":"Pedido de reserva recebido e em processamento. Receberá confirmação por e-mail.",
     "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
     "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
     "status.cancelar.enviando":"A enviar","status.cancelar.enviando_txt":"Estamos a enviar o seu pedido de cancelamento.",
@@ -2906,7 +2906,7 @@ const TRANSLATIONS = {
     "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e quadra",
     "reservas.hora_fin":"Horário de término","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
     "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
-    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nova reserva",
+    "reservas.registrada":"Pedido enviado · aguardando confirmação","reservas.nueva_btn":"Nova reserva",
     "reservas.nombre":"Nome","reservas.apellidos":"Sobrenome","reservas.modalidad":"Modalidade",
     "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
     "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
@@ -2917,7 +2917,7 @@ const TRANSLATIONS = {
     "lang.hint":"Tente com país, idioma, código ou bandeira. Exemplo: Brasil, Português, pt-BR ou 🇧🇷","lang.recomendados":"Recomendados","lang.todos":"Todos os idiomas",
     "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Revise os dados antes de confirmar.",
     "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando a sua solicitação de reserva.",
-    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está sendo atualizada.",
+    "status.reserva.exito":"Pedido enviado","status.reserva.exito_txt":"Pedido de reserva recebido e em processamento. Você receberá confirmação por e-mail.",
     "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
     "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
     "status.cancelar.enviando":"Enviando","status.cancelar.enviando_txt":"Estamos enviando a sua solicitação de cancelamento.",
@@ -3107,7 +3107,7 @@ const TRANSLATIONS = {
     "reservas.datos_jugador":"Spielerdaten","reservas.fecha_pista":"Datum, Uhrzeit und Platz",
     "reservas.hora_fin":"Endzeit","reservas.total":"Gesamt","reservas.ver_resumen":"Zusammenfassung",
     "reservas.editar":"Bearbeiten","reservas.confirmar_btn":"Bestätigen","reservas.enviando":"Wird gesendet...",
-    "reservas.registrada":"Buchung registriert","reservas.nueva_btn":"Neue Buchung",
+    "reservas.registrada":"Anfrage gesendet · Bestätigung ausstehend","reservas.nueva_btn":"Neue Buchung",
     "reservas.nombre":"Vorname","reservas.apellidos":"Nachname","reservas.modalidad":"Modus",
     "reservas.nivel_form":"Niveau","reservas.comentarios":"Kommentare","reservas.minutos":"Minuten",
     "reservas.confirmacion_desc":"Die Bestätigung hängt vom Backend und den konfigurierten Integrationen ab.",
@@ -3118,7 +3118,7 @@ const TRANSLATIONS = {
     "lang.hint":"Versuchen Sie Land, Sprache, Code oder Flagge. Beispiel: Deutschland, Deutsch, de-DE oder 🇩🇪","lang.recomendados":"Empfohlen","lang.todos":"Alle Sprachen",
     "status.reserva.pendiente":"Ausstehend","status.reserva.pendiente_txt":"Überprüfen Sie Ihre Daten vor der Bestätigung.",
     "status.reserva.enviando":"Wird gesendet","status.reserva.enviando_txt":"Wir senden Ihre Buchungsanfrage.",
-    "status.reserva.exito":"Erfolg","status.reserva.exito_txt":"Buchung erfolgreich gesendet. Die Verfügbarkeit wird aktualisiert.",
+    "status.reserva.exito":"Anfrage gesendet","status.reserva.exito_txt":"Buchungsanfrage eingegangen und wird bearbeitet. Sie erhalten eine Bestätigungs-E-Mail.",
     "status.reserva.error":"Fehler","status.reserva.error_txt":"Buchung konnte nicht abgeschlossen werden. Überprüfen Sie die Daten und versuchen Sie es erneut.",
     "status.cancelar.idle":"Ausstehend","status.cancelar.idle_txt":"Bestätigen Sie die Stornierung Ihrer Buchung.",
     "status.cancelar.enviando":"Wird gesendet","status.cancelar.enviando_txt":"Wir senden Ihre Stornierungsanfrage.",
@@ -3838,7 +3838,7 @@ function Inicio({ navigate, selectedRole }) {
             <strong style={{ color: T.warning }}>{tx("home.avisos_activos")}</strong>
             <div style={{ color: T.textDim, fontSize: ".82rem", marginTop: 3 }}>
               {kpi.makeErrores > 0 && <span>{kpi.makeErrores} {kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")} · </span>}
-              {kpi.incidenciasAbiertas > 0 && <span>{kpi.incidenciasAbiertas} {tx("home.incidencias_s")}</span>}
+              {kpi.incidenciasAbiertas > 0 && <span>{kpi.incidenciasAbiertas} {kpi.incidenciasAbiertas !== 1 ? tx("home.incidencias_s") : tx("home.incidencia")}</span>}
             </div>
           </div>
           {canAccess("flujos_make") && <Btn variant="secondary" onClick={() => navigate("flujos_make")} style={{ padding: "7px 14px", fontSize: ".8rem" }}>{tx("home.ver_procesos")}</Btn>}
@@ -9312,9 +9312,23 @@ export default function ClubPadel04SaaSApp() {
   // docs/mejora-2-visual-identity-audit-20260724/14-*.md). Aquí depende
   // solo de selectedRole/safeCurrentSection, nunca del idioma activo.
   useEffect(() => {
+    // Bug real detectado en QA visual (2026-09-04): la landing comercial
+    // (T3) se enseña con selectedRole aún vacío — el mismo estado que antes
+    // SOLO alcanzaba la pantalla de login/selector de rol. Sin este `if`,
+    // heredaba "cp04-role-screen-active" (fondo decorativo Torcal + la
+    // regla `h1,h1+p{display:none}` de torcal-role-background.css,
+    // pensada para el login, no para la landing): tapaba el hero completo
+    // y ocultaba el titular. La landing no necesita ningún fondo/clase de
+    // rol — se le aplica el estado "neutro" (los 3 flags a false), que ya
+    // limpia clases e imagen de fondo sin tocar el CSS ni el resto de
+    // pantallas.
+    if (showLanding && !selectedRole) {
+      cp04ApplyScreenState({ roleScreenActive: false, moduleScreenActive: false, roleId: null, moduleId: null, moduleCategory: null });
+      return;
+    }
     const screenState = cp04ComputeScreenState({ selectedRole, moduleId: safeCurrentSection });
     cp04ApplyScreenState(screenState);
-  }, [selectedRole, safeCurrentSection]);
+  }, [selectedRole, safeCurrentSection, showLanding]);
 
   // Las contraseñas demo ya no viven aquí: están aisladas en
   // src/auth/demoAuthAdapter.js, gateadas por isDemoAuthAllowed() (solo

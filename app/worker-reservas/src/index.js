@@ -706,7 +706,7 @@ async function cp04FetchOcupadasAttempt(env, fecha) {
     ok: airtableRes.ok,
     status: airtableRes.status,
     data,
-    retryAfterHeader: airtableRes.headers.get("Retry-After"),
+    retryAfterHeader: airtableRes.headers?.get?.("Retry-After") ?? null,
   };
 }
 
@@ -1291,14 +1291,31 @@ async function handleReservas(request, env) {
     return jsonResponse({ ok: false, error: "Make webhook rejected the request" }, 502, headers);
   }
 
+  // Si MAKE_RESERVAS_WEBHOOK no está configurado en el Worker, no existe
+  // ninguna ruta real hacia Make: devolver 200 sería un falso positivo
+  // (la app mostraría "Reserva registrada" sin que la reserva haya llegado
+  // a ningún sistema). Se devuelve 503 para que el call site lo trate como
+  // error y muestre un mensaje honesto al usuario.
+  if (!makeResult.configured) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: "MAKE_NOT_CONFIGURED",
+        message: "El sistema de reservas no está disponible en este momento. Inténtalo de nuevo más tarde o contacta con recepción.",
+      },
+      503,
+      headers
+    );
+  }
+
   // PASO 06D: solo aquí, en el único camino de éxito real, se marca la
   // clave de idempotencia — ver la nota junto a cp04IsIdempotentDuplicate.
   cp04MarkIdempotentSuccess(idempotencyKey);
 
   return jsonResponse({
     ok: true,
-    status: makeResult.configured ? "forwarded" : "accepted_without_make_webhook",
-    make: { configured: makeResult.configured, status: makeResult.status },
+    status: "forwarded",
+    make: { configured: true, status: makeResult.status },
     airtable: airtableResult,
   }, 200, headers);
 }
