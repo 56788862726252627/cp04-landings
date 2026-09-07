@@ -178,3 +178,113 @@ test("regresión: /api/jugadores/alta sigue respondiendo 503 seguro sin MAKE_ALT
   assert.equal(response.status, 503);
   assert.equal(data.error, "Alta webhook not configured");
 });
+
+// --- Hardening: PLAYER_NOT_FOUND, JUGADOR_YA_INACTIVO, fail-open, false-positive ---
+
+test("handleBajaJugador: jugador no encontrado en Airtable -> 404, Make NO se llama", async () => {
+  let makeCalled = false;
+  await withFakeFetch(
+    async (url) => {
+      const urlStr = String(url?.url || url);
+      if (urlStr.includes("airtable.com")) {
+        return new Response(JSON.stringify({ records: [] }), { status: 200 });
+      }
+      makeCalled = true;
+      return new Response("OK", { status: 200 });
+    },
+    async () => {
+      const response = await worker.fetch(bajaRequest(VALID_BODY), {
+        MAKE_BAJA_JUGADOR_WEBHOOK: "https://hook.example.test/fake-baja",
+        AIRTABLE_TOKEN: "token-test",
+        AIRTABLE_BASE_ID: "appyWvzZJLzy0E6aX",
+      });
+      const data = await response.json();
+      assert.equal(response.status, 404);
+      assert.equal(data.ok, false);
+      assert.equal(data.error, "JUGADOR_NOT_FOUND");
+      assert.equal(makeCalled, false, "Make no debe llamarse si el jugador no existe");
+    }
+  );
+});
+
+test("handleBajaJugador: jugador ya INACTIVO -> 409 idempotente, Make NO se llama", async () => {
+  let makeCalled = false;
+  await withFakeFetch(
+    async (url) => {
+      const urlStr = String(url?.url || url);
+      if (urlStr.includes("airtable.com")) {
+        return new Response(
+          JSON.stringify({ records: [{ fields: { email_jugador: "qa-baja@example.test", estado_jugador: "INACTIVO" } }] }),
+          { status: 200 }
+        );
+      }
+      makeCalled = true;
+      return new Response("OK", { status: 200 });
+    },
+    async () => {
+      const response = await worker.fetch(bajaRequest(VALID_BODY), {
+        MAKE_BAJA_JUGADOR_WEBHOOK: "https://hook.example.test/fake-baja",
+        AIRTABLE_TOKEN: "token-test",
+        AIRTABLE_BASE_ID: "appyWvzZJLzy0E6aX",
+      });
+      const data = await response.json();
+      assert.equal(response.status, 409);
+      assert.equal(data.ok, false);
+      assert.equal(data.error, "JUGADOR_YA_INACTIVO");
+      assert.equal(makeCalled, false, "Make no debe llamarse si el jugador ya es INACTIVO");
+    }
+  );
+});
+
+test("handleBajaJugador: si el pre-check Airtable falla (red), continúa hacia Make (fail-open)", async () => {
+  await withFakeFetch(
+    async (url) => {
+      const urlStr = String(url?.url || url);
+      if (urlStr.includes("airtable.com")) {
+        throw new Error("Airtable no disponible");
+      }
+      return new Response("Accepted", { status: 200 });
+    },
+    async () => {
+      const response = await worker.fetch(bajaRequest(VALID_BODY), {
+        MAKE_BAJA_JUGADOR_WEBHOOK: "https://hook.example.test/fake-baja",
+        AIRTABLE_TOKEN: "token-test",
+        AIRTABLE_BASE_ID: "appyWvzZJLzy0E6aX",
+      });
+      const data = await response.json();
+      assert.equal(response.status, 200);
+      assert.equal(data.ok, true);
+      assert.equal(data.status, "forwarded", "fail-open: debe reenviar a Make aunque Airtable no responda");
+    }
+  );
+});
+
+test("handleBajaJugador: respuesta exitosa usa status:forwarded, no confirma baja como definitiva", async () => {
+  await withFakeFetch(
+    async (url) => {
+      const urlStr = String(url?.url || url);
+      if (urlStr.includes("airtable.com")) {
+        return new Response(
+          JSON.stringify({ records: [{ fields: { email_jugador: "qa-baja@example.test", estado_jugador: "ACTIVO" } }] }),
+          { status: 200 }
+        );
+      }
+      return new Response("Accepted", { status: 200 });
+    },
+    async () => {
+      const response = await worker.fetch(bajaRequest(VALID_BODY), {
+        MAKE_BAJA_JUGADOR_WEBHOOK: "https://hook.example.test/fake-baja",
+        AIRTABLE_TOKEN: "token-test",
+        AIRTABLE_BASE_ID: "appyWvzZJLzy0E6aX",
+      });
+      const data = await response.json();
+      assert.equal(response.status, 200);
+      assert.equal(data.ok, true);
+      assert.equal(data.status, "forwarded");
+      assert.ok(
+        !String(data.message).includes("registrada correctamente"),
+        "el mensaje no debe confirmar la baja como ya realizada"
+      );
+    }
+  );
+});

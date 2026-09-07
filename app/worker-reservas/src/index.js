@@ -2109,6 +2109,57 @@ async function handleBajaJugador(request, env) {
     );
   }
 
+  // Pre-check Airtable: verifica que el jugador existe y no está ya INACTIVO
+  // antes de consumir una operación Make. Fail-open: si Airtable no está
+  // disponible se continúa hacia Make para no bloquear operaciones legítimas.
+  if (env.AIRTABLE_TOKEN && env.AIRTABLE_BASE_ID) {
+    try {
+      const checkUrl = new URL(
+        `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/tblCKuA2RZaj2BsHt`
+      );
+      checkUrl.searchParams.set(
+        "filterByFormula",
+        `{email_jugador} = '${normalized.email.replace(/'/g, "\\'")}'`
+      );
+      checkUrl.searchParams.set("maxRecords", "1");
+      checkUrl.searchParams.append("fields[]", "email_jugador");
+      checkUrl.searchParams.append("fields[]", "estado_jugador");
+
+      const checkRes = await fetch(checkUrl.toString(), {
+        headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}` },
+      });
+
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (!checkData.records || checkData.records.length === 0) {
+          return jsonResponse(
+            {
+              ok: false,
+              error: "JUGADOR_NOT_FOUND",
+              message: "No se encontró ningún jugador con ese email en el sistema.",
+            },
+            404,
+            headers
+          );
+        }
+        const estadoActual = checkData.records[0]?.fields?.estado_jugador;
+        if (estadoActual === "INACTIVO") {
+          return jsonResponse(
+            {
+              ok: false,
+              error: "JUGADOR_YA_INACTIVO",
+              message: "Este jugador ya figura como dado de baja en el sistema.",
+            },
+            409,
+            headers
+          );
+        }
+      }
+    } catch {
+      // Airtable no disponible: continuar hacia Make (fail-open)
+    }
+  }
+
   const makeResponse = await fetch(env.MAKE_BAJA_JUGADOR_WEBHOOK, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -2132,7 +2183,8 @@ async function handleBajaJugador(request, env) {
   return jsonResponse(
     {
       ok: true,
-      message: "Baja de jugador registrada correctamente",
+      status: "forwarded",
+      message: "Solicitud de baja enviada · pendiente de confirmación",
       makeResponse: responseText || null,
     },
     200,

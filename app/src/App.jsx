@@ -6654,6 +6654,12 @@ function AltaJugador({ initialModo = "alta" } = {}) {
         if (data?.error === "Baja webhook not configured") {
           throw new Error("La baja de jugador todavía no está configurada en el sistema. Contacta con soporte técnico.");
         }
+        if (data?.error === "JUGADOR_NOT_FOUND") {
+          throw new Error("No se encontró ningún jugador con ese email en el sistema.");
+        }
+        if (data?.error === "JUGADOR_YA_INACTIVO") {
+          throw new Error("Este jugador ya figura como dado de baja en el sistema.");
+        }
         throw new Error(data?.message || data?.error || "No se pudo completar la baja.");
       }
 
@@ -6849,7 +6855,7 @@ function AltaJugador({ initialModo = "alta" } = {}) {
               La promoción se gestionará desde "Lista de espera" cuando la integración real esté disponible.
             </p>
             {bajaServerError && <StatusCard status="error" text={bajaServerError} style={{ marginTop:16 }} />}
-            {bajaSuccess && <StatusCard status="success" text="Baja registrada correctamente." style={{ marginTop:16 }} />}
+            {bajaSuccess && <StatusCard status="success" text="Solicitud de baja enviada · pendiente de confirmación." style={{ marginTop:16 }} />}
             <div style={{ marginTop:22 }}>
               {/* PASO 07J/07K/07L/07M (2026-07-19): refuerzo de contraste +
                   clase dedicada `cp04-offboarding-submit-button` con CSS de
