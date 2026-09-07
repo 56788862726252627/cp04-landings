@@ -12,10 +12,9 @@
 // este contexto es solo la representación de UI de esa sesión, tal y como
 // exige el principio "el rol del frontend es solo representación de UI".
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import * as authService from "./authService.js";
-
-const AuthContext = createContext(null);
+import { AuthContext } from "./authContextInstance.js";
 
 export function AuthProvider({ children }) {
   const initial = authService.getCurrentUser();
@@ -35,9 +34,19 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
 
+    // El access_token ya no se persiste (corrección P0 2026-09-03): cada
+    // carga de la app arranca sin él en memoria, así que la única forma de
+    // recuperar una sesión existente es intentar refreshSession() contra
+    // la cookie HttpOnly del Worker. Si no hay cookie (visitante sin
+    // sesión, o la cookie expiró), esto falla rápido y sin ruido — mismo
+    // comportamiento observable que antes para un visitante anónimo.
     async function restore() {
-      if (!authService.getAccessToken()) {
-        if (!cancelled) setLoading(false);
+      const refreshed = await authService.refreshSession();
+
+      if (cancelled) return;
+
+      if (!refreshed.ok) {
+        setLoading(false);
         return;
       }
 
@@ -82,6 +91,10 @@ export function AuthProvider({ children }) {
 
   const recoverPassword = useCallback((email) => authService.forgotPassword(email), []);
   const updatePassword = useCallback((newPassword) => authService.updatePassword(newPassword), []);
+  const updatePasswordWithToken = useCallback(
+    (newPassword, recoveryToken) => authService.updatePasswordWithToken(newPassword, recoveryToken),
+    []
+  );
   // register() no autoinicia sesión (ver authService.register): Supabase no
   // suele emitir token hasta confirmar el email, así que aquí no hay
   // resultado de auth que aplicar al contexto, solo se retransmite.
@@ -102,20 +115,11 @@ export function AuthProvider({ children }) {
       refreshSession,
       recoverPassword,
       updatePassword,
+      updatePasswordWithToken,
       register,
     }),
-    [user, accessToken, role, loading, authMode, login, logout, refreshSession, recoverPassword, updatePassword, register]
+    [user, accessToken, role, loading, authMode, login, logout, refreshSession, recoverPassword, updatePassword, updatePasswordWithToken, register]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-
-  if (!ctx) {
-    throw new Error("useAuth() debe usarse dentro de <AuthProvider>.");
-  }
-
-  return ctx;
 }

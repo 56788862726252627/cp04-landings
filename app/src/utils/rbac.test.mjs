@@ -122,11 +122,15 @@ test("simulación de navegación manual por URL/hash: PLAYER forzando 'baja_juga
   assert.equal(safeSection, "inicio");
 });
 
-// PASO 07N (2026-07-20): "lista_espera" (módulo visual preparado para
-// Gestión Lista de Espera, Make ID 5791113) — mismo gate de rol que
-// "cierre_pistas" (STAFF/ADMIN/SUPPORT).
-test("PLAYER no puede acceder a lista_espera", () => {
-  assert.equal(cp04CanAccessSection("PLAYER", "lista_espera"), false);
+// RBAC V2 (2026-08-27): lista_espera pasa a ser accesible también para PLAYER —
+// es el formulario de inscripción en lista de espera que un jugador necesita.
+// cierre_pistas sigue siendo solo STAFF/ADMIN/SUPPORT.
+test("PLAYER puede acceder a lista_espera (RBAC V2)", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "lista_espera"), true);
+});
+
+test("PLAYER no puede acceder a cierre_pistas (operación administrativa)", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "cierre_pistas"), false);
 });
 
 test("STAFF, ADMIN y SUPPORT pueden acceder a lista_espera", () => {
@@ -135,20 +139,17 @@ test("STAFF, ADMIN y SUPPORT pueden acceder a lista_espera", () => {
   }
 });
 
-test("simulación de navegación manual por URL/hash: PLAYER forzando 'lista_espera' no salta el guard", () => {
-  const forcedSection = "lista_espera";
-  const safeSection = cp04CanAccessSection("PLAYER", forcedSection) ? forcedSection : cp04GetSafeStartSection("PLAYER");
-  assert.notEqual(safeSection, "lista_espera");
-  assert.equal(safeSection, "inicio");
+// RBAC V2 (2026-08-27): control_qr y pistas_recordatorios pasan también a
+// PLAYER (módulos de uso personal del jugador). dashboard_kpi y
+// backups_seguridad siguen restringidos a ADMIN+SUPPORT.
+test("PLAYER puede acceder a control_qr y pistas_recordatorios (RBAC V2)", () => {
+  for (const section of ["control_qr", "pistas_recordatorios"]) {
+    assert.equal(cp04CanAccessSection("PLAYER", section), true, `PLAYER debería poder acceder a ${section}`);
+  }
 });
 
-// PASO 07O (2026-07-20): consolidación de 4 módulos visuales nuevos.
-// "control_qr" y "pistas_recordatorios" son operación diaria (mismo gate
-// que "cierre_pistas"/"lista_espera": STAFF/ADMIN/SUPPORT). "dashboard_kpi"
-// y "backups_seguridad" son métricas/infraestructura (mismo nivel que
-// "admin": ADMIN + SUPPORT, sin STAFF).
-test("PLAYER no puede acceder a ninguno de los 4 módulos nuevos del Paso 07O", () => {
-  for (const section of ["control_qr", "pistas_recordatorios", "dashboard_kpi", "backups_seguridad"]) {
+test("PLAYER no puede acceder a dashboard_kpi ni backups_seguridad (métricas/infraestructura)", () => {
+  for (const section of ["dashboard_kpi", "backups_seguridad"]) {
     assert.equal(cp04CanAccessSection("PLAYER", section), false, `PLAYER no debería poder acceder a ${section}`);
   }
 });
@@ -169,11 +170,7 @@ test("solo ADMIN y SUPPORT pueden acceder a dashboard_kpi y backups_seguridad �
   }
 });
 
-test("simulación de navegación manual por URL/hash: PLAYER y STAFF forzando los 4 módulos nuevos del Paso 07O no saltan el guard", () => {
-  for (const section of ["control_qr", "pistas_recordatorios"]) {
-    const safeSection = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
-    assert.equal(safeSection, "inicio");
-  }
+test("simulación: PLAYER forzando dashboard_kpi o backups_seguridad no salta el guard", () => {
   for (const section of ["dashboard_kpi", "backups_seguridad"]) {
     const safeForPlayer = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
     assert.equal(safeForPlayer, "inicio");
@@ -182,12 +179,19 @@ test("simulación de navegación manual por URL/hash: PLAYER y STAFF forzando lo
   }
 });
 
-// PASO 07P (2026-07-20): 4 módulos visuales más — "comunicaciones_socio" y
-// "calendario_disponibilidad" (operación diaria, STAFF/ADMIN/SUPPORT),
-// "facturacion_pagos" y "automatizaciones_bots" (gestión/técnico,
-// ADMIN+SUPPORT sin STAFF).
-test("PLAYER no puede acceder a ninguno de los 4 módulos nuevos del Paso 07P", () => {
-  for (const section of ["comunicaciones_socio", "calendario_disponibilidad", "facturacion_pagos", "automatizaciones_bots"]) {
+// RBAC V2 (2026-08-27): calendario_disponibilidad pasa a PLAYER (consulta
+// personal de disponibilidad). comunicaciones_socio sigue en STAFF+.
+// automatizaciones_bots sigue en ADMIN+SUPPORT — nunca PLAYER ni STAFF.
+test("PLAYER puede acceder a calendario_disponibilidad (RBAC V2)", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "calendario_disponibilidad"), true);
+});
+
+test("PLAYER no puede acceder a comunicaciones_socio (operación interna)", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "comunicaciones_socio"), false);
+});
+
+test("PLAYER no puede acceder a facturacion_pagos ni automatizaciones_bots", () => {
+  for (const section of ["facturacion_pagos", "automatizaciones_bots"]) {
     assert.equal(cp04CanAccessSection("PLAYER", section), false, `PLAYER no debería poder acceder a ${section}`);
   }
 });
@@ -208,16 +212,14 @@ test("solo ADMIN y SUPPORT pueden acceder a facturacion_pagos y automatizaciones
   }
 });
 
-test("simulación de navegación manual por URL/hash: PLAYER y STAFF forzando los 4 módulos nuevos del Paso 07P no saltan el guard", () => {
-  for (const section of ["comunicaciones_socio", "calendario_disponibilidad"]) {
-    const safeSection = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
-    assert.equal(safeSection, "inicio");
+test("simulación: PLAYER forzando comunicaciones_socio, facturacion_pagos o automatizaciones_bots no salta el guard", () => {
+  for (const section of ["comunicaciones_socio", "facturacion_pagos", "automatizaciones_bots"]) {
+    const safeForPlayer = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
+    assert.equal(safeForPlayer, "inicio", `${section}: PLAYER debe redirigir a inicio`);
   }
   for (const section of ["facturacion_pagos", "automatizaciones_bots"]) {
-    const safeForPlayer = cp04CanAccessSection("PLAYER", section) ? section : cp04GetSafeStartSection("PLAYER");
-    assert.equal(safeForPlayer, "inicio");
     const safeForStaff = cp04CanAccessSection("STAFF", section) ? section : cp04GetSafeStartSection("STAFF");
-    assert.notEqual(safeForStaff, section);
+    assert.notEqual(safeForStaff, section, `STAFF no debería llegar a ${section}`);
   }
 });
 
@@ -226,4 +228,78 @@ test("Centro Técnico sigue siendo exclusivo de SUPPORT tras el Paso 07P (ni ADM
     assert.equal(cp04CanAccessSection(role, "flujos_make"), false, `${role} no debería poder acceder a flujos_make`);
   }
   assert.equal(cp04CanAccessSection("SUPPORT", "flujos_make"), true);
+});
+
+// ─── RBAC V2 (2026-08-27): asistente_ia + nueva matriz PLAYER ───────────────
+
+test("todos los roles pueden acceder a asistente_ia", () => {
+  for (const role of ["PLAYER", "STAFF", "ADMIN", "SUPPORT"]) {
+    assert.equal(cp04CanAccessSection(role, "asistente_ia"), true, `${role} debería poder acceder a asistente_ia`);
+  }
+});
+
+test("automatizaciones_bots sigue siendo solo ADMIN+SUPPORT — PLAYER y STAFF no", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "automatizaciones_bots"), false);
+  assert.equal(cp04CanAccessSection("STAFF", "automatizaciones_bots"), false);
+  assert.equal(cp04CanAccessSection("ADMIN", "automatizaciones_bots"), true);
+  assert.equal(cp04CanAccessSection("SUPPORT", "automatizaciones_bots"), true);
+});
+
+test("PLAYER puede acceder a reprogramar y cancelar (módulos propios del jugador)", () => {
+  assert.equal(cp04CanAccessSection("PLAYER", "reprogramar"), true);
+  assert.equal(cp04CanAccessSection("PLAYER", "cancelar"), true);
+});
+
+test("PLAYER ve todos sus módulos propios y no ve los administrativos", () => {
+  const player = CP04_ROLE_PERMISSIONS.PLAYER;
+  // Debe tener
+  for (const s of ["inicio", "reservas", "reprogramar", "cancelar", "lista_espera", "control_qr", "pistas_recordatorios", "calendario_disponibilidad", "torneos", "ranking", "comunidad", "asistente_ia", "perfil"]) {
+    assert.ok(player.includes(s), `PLAYER debe tener ${s}`);
+  }
+  // No debe tener
+  for (const s of ["alta_jugador", "baja_jugador", "cierre_pistas", "gestion", "admin", "dashboard_kpi", "backups_seguridad", "facturacion_pagos", "comunicaciones_socio", "automatizaciones_bots", "flujos_make", "soporte"]) {
+    assert.ok(!player.includes(s), `PLAYER no debe tener ${s}`);
+  }
+});
+
+test("STAFF tiene asistente_ia pero no automatizaciones_bots ni flujos_make", () => {
+  assert.equal(cp04CanAccessSection("STAFF", "asistente_ia"), true);
+  assert.equal(cp04CanAccessSection("STAFF", "automatizaciones_bots"), false);
+  assert.equal(cp04CanAccessSection("STAFF", "flujos_make"), false);
+});
+
+test("ADMIN tiene asistente_ia y automatizaciones_bots pero no flujos_make ni soporte", () => {
+  assert.equal(cp04CanAccessSection("ADMIN", "asistente_ia"), true);
+  assert.equal(cp04CanAccessSection("ADMIN", "automatizaciones_bots"), true);
+  assert.equal(cp04CanAccessSection("ADMIN", "flujos_make"), false);
+  assert.equal(cp04CanAccessSection("ADMIN", "soporte"), false);
+});
+
+test("SUPPORT tiene todo — asistente_ia, automatizaciones_bots, flujos_make, soporte", () => {
+  for (const s of ["asistente_ia", "automatizaciones_bots", "flujos_make", "soporte"]) {
+    assert.equal(cp04CanAccessSection("SUPPORT", s), true, `SUPPORT debe tener ${s}`);
+  }
+});
+
+test("todos los roles tienen acceso a perfil", () => {
+  for (const role of ["PLAYER", "STAFF", "ADMIN", "SUPPORT"]) {
+    assert.equal(cp04CanAccessSection(role, "perfil"), true, `${role} debe tener acceso a perfil`);
+  }
+});
+
+test("ningún rol pierde acceso a reservas, torneos o comunidad por la nueva matriz", () => {
+  for (const role of ["PLAYER", "STAFF", "ADMIN", "SUPPORT"]) {
+    for (const s of ["reservas", "torneos", "comunidad"]) {
+      assert.equal(cp04CanAccessSection(role, s), true, `${role} debe mantener acceso a ${s}`);
+    }
+  }
+});
+
+test("simulación: PLAYER forzando automatizaciones_bots no salta el guard (asistente_ia es diferente)", () => {
+  const safeSection = cp04CanAccessSection("PLAYER", "automatizaciones_bots")
+    ? "automatizaciones_bots"
+    : cp04GetSafeStartSection("PLAYER");
+  assert.equal(safeSection, "inicio");
+  // asistente_ia sí es accesible para PLAYER (ruta legítima)
+  assert.equal(cp04CanAccessSection("PLAYER", "asistente_ia"), true);
 });

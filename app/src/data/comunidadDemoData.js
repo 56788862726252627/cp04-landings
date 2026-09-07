@@ -15,7 +15,6 @@ export const DEMO_PLAYER = {
   nivel: "Intermedio (3.5)",
   club: "Club Pádel 04 (demo)",
   perfilVisible: false,
-  consentimientoSocial: false,
 };
 
 export const DEMO_STAFF = {
@@ -24,47 +23,22 @@ export const DEMO_STAFF = {
   rol: "Recepción / moderación",
 };
 
-export const DEMO_FRIENDS = [
-  { id: "amigo-1", nombre: "Jugador Demo 2", estado: "amigo" },
-  { id: "amigo-2", nombre: "Jugador Demo 3", estado: "solicitud_pendiente" },
-  { id: "amigo-3", nombre: "Jugador Demo 4", estado: "bloqueado" },
+// Contactos de ejemplo para la pestaña Amigos. El estado real (amistad,
+// solicitud, bloqueo, follow) ya NO se guarda aquí como dato estático: vive
+// en el store de src/utils/communityBridge.js (community-logic real) y se
+// siembra una vez, al montar ComunidadDemo, con communitySeedDemoRelationships.
+// Estos ids son los que ese seed usa como friendId/pendingReceivedFrom/etc.
+export const DEMO_CONTACTS = [
+  { id: "amigo-1", nombre: "Jugador Demo 2" }, // amistad activa (seed)
+  { id: "amigo-2", nombre: "Jugador Demo 3" }, // solicitud de amistad recibida (seed)
+  { id: "amigo-3", nombre: "Jugador Demo 4" }, // sin amistad, pero ya seguido (seed)
+  { id: "amigo-4", nombre: "Jugador Demo 5" }, // bloqueado (seed)
+  { id: "amigo-5", nombre: "Jugador Demo 6 (perfil privado)" }, // sin relación, perfil privado
+  { id: "amigo-6", nombre: "Jugador Demo 7" }, // sin relación, público, sin sembrar (para probar el flujo completo)
 ];
 
-export const DEMO_POSTS = [
-  {
-    id: "post-1",
-    autor: "Jugador Demo",
-    texto: "¡Buena sesión de pádel esta mañana! (publicación demo)",
-    estado: "publicado",
-  },
-  {
-    id: "post-2",
-    autor: "Jugador Demo 2",
-    texto: "Buscando pareja para dobles el sábado (publicación demo)",
-    estado: "publicado",
-  },
-  {
-    id: "post-3",
-    autor: "Jugador Demo 3",
-    texto: "Publicación demo marcada como reportada para mostrar el flujo de moderación",
-    estado: "reportado",
-  },
-];
-
-export const DEMO_OPEN_MATCHES = [
-  {
-    id: "partido-1",
-    titulo: "Partido abierto demo — Nivel intermedio",
-    fecha: "Sábado 10:00 (demo)",
-    plazas: "2 de 4 plazas (demo)",
-  },
-  {
-    id: "partido-2",
-    titulo: "Partido abierto demo — Buscar compañero",
-    fecha: "Domingo 18:30 (demo)",
-    plazas: "1 de 2 plazas (demo)",
-  },
-];
+// DEMO_POSTS y DEMO_OPEN_MATCHES eliminados en P0.5:
+// la UI usa communityBridge (store real en memoria) desde P0.2/P0.3.
 
 export const DEMO_MODERATION_QUEUE = [
   {

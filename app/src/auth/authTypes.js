@@ -27,7 +27,6 @@ export const CP04_SESSION_ROLES = Object.freeze(["PLAYER", "STAFF", "ADMIN", "SU
  * @property {Cp04AuthUser} [user]
  * @property {string} [role]
  * @property {string} [accessToken]
- * @property {string} [refreshToken]
  * @property {boolean} [authReady]  // false = backend_stub, proveedor no configurado
  * @property {string} [error]
  * @property {string} [message]

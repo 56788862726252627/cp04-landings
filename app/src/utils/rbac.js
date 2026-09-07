@@ -60,11 +60,18 @@ export const CP04_SUPPORT_ONLY_SECTIONS = ["flujos_make", "soporte"];
 //     configuración técnica de bots, mismo nivel que "dashboard_kpi"/
 //     "backups_seguridad" (ADMIN + SUPPORT, sin STAFF).
 // PLAYER nunca recibe ninguno de los 4.
+// RBAC V2 (2026-08-27): alineación sidebar ↔ roles reales.
+// PLAYER gana acceso a módulos de usuario propios (reprogramar, cancelar,
+// lista_espera, control_qr, pistas_recordatorios, calendario_disponibilidad)
+// y al nuevo asistente_ia (chatbot sin info técnica interna).
+// STAFF gana asistente_ia. ADMIN y SUPPORT mantienen automatizaciones_bots
+// (con detalles Make/Telegram) y ganan asistente_ia por separado.
+// automatizaciones_bots sigue restringido a ADMIN+SUPPORT — nunca a PLAYER.
 export const CP04_ROLE_PERMISSIONS = {
-  PLAYER: ["inicio", "reservas", "torneos", "ranking", "comunidad", "perfil"],
-  STAFF: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "comunidad", "perfil"],
-  ADMIN: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "ranking", "comunidad", "admin", "dashboard_kpi", "backups_seguridad", "facturacion_pagos", "automatizaciones_bots", "perfil"],
-  SUPPORT: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "ranking", "comunidad", "admin", "dashboard_kpi", "backups_seguridad", "facturacion_pagos", "automatizaciones_bots", "flujos_make", "soporte", "perfil"],
+  PLAYER: ["inicio", "reservas", "reprogramar", "cancelar", "lista_espera", "control_qr", "pistas_recordatorios", "calendario_disponibilidad", "torneos", "ranking", "comunidad", "asistente_ia", "perfil"],
+  STAFF: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "comunidad", "asistente_ia", "perfil"],
+  ADMIN: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "ranking", "comunidad", "admin", "dashboard_kpi", "backups_seguridad", "facturacion_pagos", "asistente_ia", "automatizaciones_bots", "perfil"],
+  SUPPORT: ["inicio", "reservas", "alta_jugador", "baja_jugador", "reprogramar", "cancelar", "gestion", "cierre_pistas", "lista_espera", "control_qr", "pistas_recordatorios", "comunicaciones_socio", "calendario_disponibilidad", "torneos", "ranking", "comunidad", "admin", "dashboard_kpi", "backups_seguridad", "facturacion_pagos", "asistente_ia", "automatizaciones_bots", "flujos_make", "soporte", "perfil"],
 };
 
 // Fail-closed: cualquier valor que no sea exactamente uno de los 4 roles

@@ -1,0 +1,154 @@
+[
+  {
+    "normalizedName": "movil-android-vertical",
+    "device": "Móvil Android",
+    "system": "Android",
+    "orientation": "vertical",
+    "screenSizeInches": 6.1,
+    "resolution": {
+      "width": 412,
+      "height": 915
+    },
+    "futureCapturePath": "mockups/capturas/movil-android-vertical.png",
+    "metadata": {
+      "densityDpi": 420,
+      "notes": "Referencia tipo Pixel, densidad xxhdpi"
+    },
+    "placeholderStatus": "completed",
+    "captureStatus": "not_implemented",
+    "captureStatusReason": "requiere un motor de renderizado real (navegador headless o equivalente), no conectado en este prompt"
+  },
+  {
+    "normalizedName": "movil-ios-vertical",
+    "device": "Móvil iOS",
+    "system": "iOS",
+    "orientation": "vertical",
+    "screenSizeInches": 6.1,
+    "resolution": {
+      "width": 390,
+      "height": 844
+    },
+    "futureCapturePath": "mockups/capturas/movil-ios-vertical.png",
+    "metadata": {
+      "densityDpi": 460,
+      "notes": "Referencia tipo iPhone estándar"
+    },
+    "placeholderStatus": "completed",
+    "captureStatus": "not_implemented",
+    "captureStatusReason": "requiere un motor de renderizado real (navegador headless o equivalente), no conectado en este prompt"
+  },
+  {
+    "normalizedName": "tablet-android-horizontal",
+    "device": "Tablet Android",
+    "system": "Android",
+    "orientation": "horizontal",
+    "screenSizeInches": 10.9,
+    "resolution": {
+      "width": 1194,
+      "height": 834
+    },
+    "futureCapturePath": "mockups/capturas/tablet-android-horizontal.png",
+    "metadata": {
+      "densityDpi": 275,
+      "notes": "Rotación horizontal del tamaño tablet de referencia"
+    },
+    "placeholderStatus": "completed",
+    "captureStatus": "not_implemented",
+    "captureStatusReason": "requiere un motor de renderizado real (navegador headless o equivalente), no conectado en este prompt"
+  },
+  {
+    "normalizedName": "ipad-horizontal",
+    "device": "iPad",
+    "system": "iPadOS",
+    "orientation": "horizontal",
+    "screenSizeInches": 10.9,
+    "resolution": {
+      "width": 1194,
+      "height": 834
+    },
+    "futureCapturePath": "mockups/capturas/ipad-horizontal.png",
+    "metadata": {
+      "densityDpi": 264,
+      "notes": "Referencia tipo iPad de 11 pulgadas"
+    },
+    "placeholderStatus": "completed",
+    "captureStatus": "not_implemented",
+    "captureStatusReason": "requiere un motor de renderizado real (navegador headless o equivalente), no conectado en este prompt"
+  },
+  {
+    "normalizedName": "escritorio-windows",
+    "device": "Escritorio Windows",
+    "system": "Windows",
+    "orientation": "horizontal",
+    "screenSizeInches": 24,
+    "resolution": {
+      "width": 1920,
+      "height": 1080
+    },
+    "futureCapturePath": "mockups/capturas/escritorio-windows.png",
+    "metadata": {
+      "densityDpi": 96,
+      "notes": "Referencia 1080p estándar de escritorio"
+    },
+    "placeholderStatus": "completed",
+    "captureStatus": "not_implemented",
+    "captureStatusReason": "requiere un motor de renderizado real (navegador headless o equivalente), no conectado en este prompt"
+  },
+  {
+    "normalizedName": "escritorio-macos",
+    "device": "Escritorio macOS",
+    "system": "macOS",
+    "orientation": "horizontal",
+    "screenSizeInches": 13.6,
+    "resolution": {
+      "width": 1440,
+      "height": 900
+    },
+    "futureCapturePath": "mockups/capturas/escritorio-macos.png",
+    "metadata": {
+      "densityDpi": 110,
+      "notes": "Referencia tipo MacBook Air"
+    },
+    "placeholderStatus": "completed",
+    "captureStatus": "not_implemented",
+    "captureStatusReason": "requiere un motor de renderizado real (navegador headless o equivalente), no conectado en este prompt"
+  },
+  {
+    "normalizedName": "escritorio-linux",
+    "device": "Escritorio Linux",
+    "system": "Linux",
+    "orientation": "horizontal",
+    "screenSizeInches": 24,
+    "resolution": {
+      "width": 1920,
+      "height": 1080
+    },
+    "futureCapturePath": "mockups/capturas/escritorio-linux.png",
+    "metadata": {
+      "densityDpi": 96,
+      "notes": "Referencia 1080p, entorno de escritorio genérico (GNOME/KDE)"
+    },
+    "placeholderStatus": "completed",
+    "captureStatus": "not_implemented",
+    "captureStatusReason": "requiere un motor de renderizado real (navegador headless o equivalente), no conectado en este prompt"
+  },
+  {
+    "normalizedName": "web-pwa-responsive",
+    "device": "Web / PWA responsive",
+    "system": "Web/PWA",
+    "orientation": "adaptable",
+    "screenSizeInches": null,
+    "resolution": {
+      "width": 1024,
+      "height": 768
+    },
+    "futureCapturePath": "mockups/capturas/web-pwa-responsive.png",
+    "metadata": {
+      "densityDpi": null,
+      "notes": "Referencia intermedia; se adapta de 360px a 1920px de ancho, sin una resolución fija"
+    },
+    "placeholderStatus": "completed",
+    "captureStatus": "not_implemented",
+    "captureStatusReason": "requiere un motor de renderizado real (navegador headless o equivalente), no conectado en este prompt"
+  }
+]

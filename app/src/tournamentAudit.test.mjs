@@ -62,8 +62,29 @@ test("el aviso de eliminación con progreso usa noticeErr=true (estilo de advert
   assert.match(handlerBlock, /showNotice\(`⚠️[^`]*`,\s*true\)/);
 });
 
-test("el módulo de Torneos no implementa Round Robin (solo eliminación directa con BYE) — confirma que no se ha inventado esa función", () => {
-  assert.equal(/round.?robin/i.test(torneoSection), false);
+// Actualizado tras implementar Round Robin de verdad (ver
+// src/utils/roundRobin.js y src/utils/roundRobin.test.mjs para la lógica
+// pura, probada de forma aislada). Esta comprobación aquí es solo de
+// cableado dentro de App.jsx (que el componente Torneos importe y use el
+// motor real, no un botón sin efecto) — la corrección algorítmica se
+// prueba con ejecución real en roundRobin.test.mjs, no con regex sobre
+// el código fuente.
+test("el módulo de Torneos importa el motor real de Round Robin desde src/utils/roundRobin.js (no reimplementa la lógica inline)", () => {
+  assert.match(
+    appJsx,
+    /import\s*\{[^}]*buildRoundRobinMatches[^}]*\}\s*from\s*"\.\/utils\/roundRobin\.js"/
+  );
+});
+
+test("el selector de formato del torneo incluye Round Robin como formato real seleccionable (formatMode === \"roundrobin\")", () => {
+  assert.match(torneoSection, /v:\s*"roundrobin"/);
+  assert.match(torneoSection, /const isRoundRobin = formatMode === "roundrobin";/);
+});
+
+test("Round Robin genera su calendario con el motor real (handleGenerateRoundRobin usa buildRoundRobinMatches), no con datos inventados", () => {
+  const handlerBlock = torneoSection.match(/const handleGenerateRoundRobin = \(\) => \{[\s\S]*?\n  \};/)?.[0] || "";
+  assert.ok(handlerBlock, "debe existir el handler handleGenerateRoundRobin");
+  assert.match(handlerBlock, /buildRoundRobinMatches\(pairs\)/);
 });
 
 test("el módulo Torneos ahora recibe selectedRole y lo usa para el permiso de acción tournaments:manage (hallazgo del Prompt 7, corregido en el Prompt 8 — ver rbacActionHardening.test.mjs)", () => {

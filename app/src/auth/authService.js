@@ -14,23 +14,46 @@
 // exportadas aquí, nunca fetch()/localStorage directamente.
 
 import { AUTH_MODES } from "./authTypes.js";
+import { cp04BuildApiUrl } from "../utils/apiEndpoint.js";
 
-const AUTH_ENDPOINTS = {
-  login: "/api/auth/login",
-  register: "/api/auth/register",
-  logout: "/api/auth/logout",
-  refresh: "/api/auth/refresh",
-  me: "/api/auth/me",
-  forgotPassword: "/api/auth/forgot-password",
-  changePassword: "/api/auth/change-password",
-};
+// Bloqueo P0 2026-08-25: estas 7 rutas eran relativas hardcodeadas, sin
+// ningún mecanismo de URL base configurable (a diferencia de
+// bookingEndpoint) — en cualquier preview/producción de Cloudflare Pages
+// nunca llegaban al Worker real (caían en el fallback SPA de Pages o en un
+// 405 plano de Pages, según el método), y un login con credenciales
+// perfectamente válidas se veía como "No se pudo iniciar sesión." Se
+// construyen ahora con la misma base pública centralizada que ya usan
+// disponibilidad y reservas (src/utils/apiEndpoint.js) — sin URL/clave de
+// Supabase en el cliente: la auth real sigue viviendo enteramente en el
+// Worker.
+export function cp04BuildAuthEndpoints(env) {
+  return {
+    login: cp04BuildApiUrl("/api/auth/login", env),
+    register: cp04BuildApiUrl("/api/auth/register", env),
+    logout: cp04BuildApiUrl("/api/auth/logout", env),
+    refresh: cp04BuildApiUrl("/api/auth/refresh", env),
+    me: cp04BuildApiUrl("/api/auth/me", env),
+    forgotPassword: cp04BuildApiUrl("/api/auth/forgot-password", env),
+    changePassword: cp04BuildApiUrl("/api/auth/change-password", env),
+  };
+}
+
+const AUTH_ENDPOINTS = cp04BuildAuthEndpoints(import.meta.env);
 
 // Mismas claves que ya usaba App.jsx antes de esta fase: se mantiene el
 // formato de almacenamiento para no romper nada que todavía las lea
 // directamente durante la migración progresiva (ver Fase 6 del informe).
+//
+// Corrección P0 2026-09-03: access_token y refresh_token YA NO se guardan
+// aquí. El refresh token vive solo en una cookie HttpOnly que pone el
+// Worker (ver worker-reservas/auth/authorization.js) — este archivo nunca
+// la lee ni la escribe, el navegador la gestiona solo. El access token
+// vive solo en memoria (`state`, más abajo): de vida corta y nunca escrito
+// a disco, así que un XSS ya no puede robar una credencial reutilizable
+// leyendo localStorage. El precio es que cada recarga de página empieza
+// sin access token en memoria y depende de refreshSession() (cookie) para
+// recuperar la sesión — ver AuthContext.jsx.
 const STORAGE_KEYS = {
-  accessToken: "cp04_access_token",
-  refreshToken: "cp04_refresh_token",
   authMode: "cp04_auth_mode",
   user: "cp04_user",
   role: "cp04_role",
@@ -39,7 +62,6 @@ const STORAGE_KEYS = {
 
 let state = {
   accessToken: null,
-  refreshToken: null,
   user: null,
   role: null,
 };
@@ -58,16 +80,7 @@ function persist() {
 
   try {
     if (state.accessToken) {
-      storage.setItem(STORAGE_KEYS.accessToken, state.accessToken);
       storage.setItem(STORAGE_KEYS.authMode, "supabase_real");
-    } else {
-      storage.removeItem(STORAGE_KEYS.accessToken);
-    }
-
-    if (state.refreshToken) {
-      storage.setItem(STORAGE_KEYS.refreshToken, state.refreshToken);
-    } else {
-      storage.removeItem(STORAGE_KEYS.refreshToken);
     }
 
     if (state.user) {
@@ -92,8 +105,6 @@ function clearPersisted() {
   if (!storage) return;
 
   try {
-    storage.removeItem(STORAGE_KEYS.accessToken);
-    storage.removeItem(STORAGE_KEYS.refreshToken);
     storage.removeItem(STORAGE_KEYS.authMode);
     storage.removeItem(STORAGE_KEYS.user);
     storage.removeItem(STORAGE_KEYS.userEmail);
@@ -103,33 +114,35 @@ function clearPersisted() {
   }
 }
 
+// El access token nunca se restaura desde disco: siempre arranca en null y
+// se recupera (si hay sesión) vía refreshSession() contra la cookie
+// HttpOnly — ver AuthContext.jsx. Aquí solo se restauran datos de UI no
+// sensibles (usuario/rol mostrados de inmediato mientras se verifica la
+// sesión real) para evitar un parpadeo de "no autenticado" en cada carga.
 function restoreFromStorage() {
   const storage = safeLocalStorage();
   if (!storage) return;
 
   try {
-    const accessToken = storage.getItem(STORAGE_KEYS.accessToken);
-    const refreshToken = storage.getItem(STORAGE_KEYS.refreshToken);
     const rawUser = storage.getItem(STORAGE_KEYS.user);
     const role = storage.getItem(STORAGE_KEYS.role);
 
     state = {
-      accessToken: accessToken || null,
-      refreshToken: refreshToken || null,
+      accessToken: null,
       user: rawUser ? JSON.parse(rawUser) : null,
       role: role || null,
     };
   } catch {
     // Si el JSON guardado está corrupto, arrancamos sin sesión (fail-closed)
     // en vez de propagar un usuario a medio parsear.
-    state = { accessToken: null, refreshToken: null, user: null, role: null };
+    state = { accessToken: null, user: null, role: null };
   }
 }
 
-// Hidratación inicial síncrona: getAccessToken()/getCurrentUser() deben
-// poder responder de inmediato sin esperar un round-trip de red. La
-// verificación real (¿sigue siendo válido este token?) es getSession(),
-// que sí es asíncrona y la dispara AuthContext al montar.
+// Hidratación inicial síncrona: getCurrentUser() puede responder de
+// inmediato sin esperar un round-trip de red (solo con datos de UI no
+// sensibles). La verificación real de sesión (¿hay refresh cookie válida?)
+// es asíncrona y la dispara AuthContext al montar vía refreshSession().
 restoreFromStorage();
 
 async function readJsonSafe(response) {
@@ -145,6 +158,10 @@ export async function login(email, password) {
   try {
     response = await fetch(AUTH_ENDPOINTS.login, {
       method: "POST",
+      // Necesario para que el navegador acepte la cookie HttpOnly de
+      // refresh token que pone el Worker en la respuesta (Set-Cookie
+      // cross-site: workers.dev -> pages.dev).
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
@@ -155,19 +172,29 @@ export async function login(email, password) {
   const data = await readJsonSafe(response);
 
   if (!response.ok || !data?.ok) {
+    // Supabase devuelve error "invalid_grant" (HTTP 400) cuando las
+    // credenciales son incorrectas. Se expone un mensaje claro y sin
+    // información técnica de Supabase en lugar de "No se pudo iniciar sesión."
+    const isInvalidCredentials =
+      response.status === 400 &&
+      (data?.error === "invalid_grant" || data?.error === "INVALID_CREDENTIALS");
     return {
       ok: false,
       authReady: data?.auth_ready !== false,
       error: data?.error || "LOGIN_FAILED",
-      message: data?.message || "No se pudo iniciar sesión.",
+      message: isInvalidCredentials
+        ? "Correo electrónico o contraseña incorrectos."
+        : (data?.message || "No se pudo iniciar sesión."),
     };
   }
 
   const user = data.user || null;
 
+  // El refresh token ya no llega en el body (el Worker lo pone solo como
+  // cookie HttpOnly): aquí solo se guarda el access_token, y únicamente en
+  // memoria — nunca en localStorage.
   state = {
     accessToken: data.access_token || null,
-    refreshToken: data.refresh_token || null,
     user,
     role: data.role || user?.role || null,
   };
@@ -218,19 +245,20 @@ export async function logout(options = {}) {
   const scope = options.scope === "global" ? "global" : "local";
   const tokenToInvalidate = state.accessToken;
 
-  state = { accessToken: null, refreshToken: null, user: null, role: null };
+  state = { accessToken: null, user: null, role: null };
   clearPersisted();
 
-  if (!tokenToInvalidate) {
-    return { ok: true, message: "No había sesión que cerrar en servidor." };
-  }
-
+  // Se llama al Worker SIEMPRE, aunque no haya access_token en memoria
+  // (p.ej. tras recargar la página): es la única forma de que borre la
+  // cookie HttpOnly de refresh token en el navegador (Set-Cookie con
+  // Max-Age=0). Sin esta llamada, esa cookie sobreviviría al "logout".
   try {
     const response = await fetch(AUTH_ENDPOINTS.logout, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${tokenToInvalidate}`,
+        ...(tokenToInvalidate ? { Authorization: `Bearer ${tokenToInvalidate}` } : {}),
       },
       body: JSON.stringify({ scope }),
     });
@@ -260,7 +288,7 @@ export async function getSession() {
     // arrancar): no se puede confirmar la sesión, pero tampoco se debe
     // dejar una promesa sin capturar ni un estado a medias. Se trata igual
     // que un token inválido: fail-closed.
-    state = { accessToken: null, refreshToken: null, user: null, role: null };
+    state = { accessToken: null, user: null, role: null };
     clearPersisted();
     return { ok: false, error: "UPSTREAM_ERROR" };
   }
@@ -269,7 +297,7 @@ export async function getSession() {
 
   if (!response.ok || !data?.ok) {
     // Token inválido/expirado: se limpia la sesión, nunca se deja "a medias".
-    state = { accessToken: null, refreshToken: null, user: null, role: null };
+    state = { accessToken: null, user: null, role: null };
     clearPersisted();
     return { ok: false, error: data?.error || "SESSION_INVALID", authReady: data?.auth_ready !== false };
   }
@@ -280,17 +308,21 @@ export async function getSession() {
   return { ok: true, user: state.user, role: state.role };
 }
 
+// Ya no depende de un refresh_token en memoria/JS: el navegador adjunta
+// solo la cookie HttpOnly (credentials:"include") y el Worker la lee desde
+// ahí. Por eso esta función se puede (y debe) llamar en cada arranque de
+// la app, incluso sin ningún rastro previo de sesión en `state` — es la
+// única forma de recuperar el access_token tras recargar la página, ya
+// que este último tampoco se persiste. Sin cookie válida, el Worker
+// responde con error y aquí simplemente se propaga como "sin sesión".
 export async function refreshSession() {
-  if (!state.refreshToken) {
-    return { ok: false, error: "MISSING_REFRESH_TOKEN" };
-  }
-
   let response;
   try {
     response = await fetch(AUTH_ENDPOINTS.refresh, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: state.refreshToken }),
+      body: JSON.stringify({}),
     });
   } catch {
     return { ok: false, error: "UPSTREAM_ERROR", message: "No se pudo contactar con el backend para renovar la sesión." };
@@ -310,7 +342,6 @@ export async function refreshSession() {
   state = {
     ...state,
     accessToken: data.access_token || state.accessToken,
-    refreshToken: data.refresh_token || state.refreshToken,
   };
   persist();
 
@@ -326,8 +357,10 @@ export async function forgotPassword(email) {
       body: JSON.stringify({ email }),
     });
   } catch {
-    // Fallo de red: honesto también, nunca se traduce en "email enviado".
-    return { ok: false, authReady: false, message: "No se pudo contactar con el servidor." };
+    // Fallo de red: honesto, pero no implica proveedor no configurado.
+    // authReady queda sin definir (no false) para que el llamador distinga
+    // este caso de backend_stub (auth_ready:false explícito del backend).
+    return { ok: false, networkError: true, message: "No se pudo contactar con el servidor de autenticación." };
   }
 
   const data = await readJsonSafe(response);
@@ -373,6 +406,42 @@ export async function updatePassword(newPassword) {
 
 export function getAccessToken() {
   return state.accessToken;
+}
+
+// Flujo de recovery: usa el token capturado del hash de URL (type=recovery)
+// como Bearer directamente. El token NUNCA toca state ni se persiste:
+// se usa una sola vez y el llamador es responsable de descartarlo.
+export async function updatePasswordWithToken(newPassword, recoveryToken) {
+  if (!recoveryToken) {
+    return { ok: false, error: "MISSING_RECOVERY_TOKEN", message: "No hay token de recuperación activo." };
+  }
+
+  if (!newPassword) {
+    return { ok: false, error: "MISSING_PASSWORD", message: "La nueva contraseña no puede estar vacía." };
+  }
+
+  let response;
+  try {
+    response = await fetch(AUTH_ENDPOINTS.changePassword, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${recoveryToken}`,
+      },
+      body: JSON.stringify({ newPassword }),
+    });
+  } catch {
+    return { ok: false, error: "UPSTREAM_ERROR", message: "No se pudo contactar con el servidor." };
+  }
+
+  const data = await readJsonSafe(response);
+
+  return {
+    ok: Boolean(data?.ok),
+    authReady: data?.auth_ready !== false,
+    error: data?.error,
+    message: data?.message || "",
+  };
 }
 
 // authFetch: wrapper mínimo sobre fetch() que adjunta
