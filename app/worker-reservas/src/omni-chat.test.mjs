@@ -304,8 +304,7 @@ test("handleOmniChat: telegram con acción mutable → redirect to web", async (
 });
 
 test("handleOmniChat: web sin auth + consultar_disponibilidad + domingo → aviso cerrado", async () => {
-  const req = makeRequest({ message: "¿hay pistas el domingo 30 de agosto?", origin: "web" });
-  // domingo 2026-08-30
+  const req = makeRequest({ message: "¿hay pistas el próximo domingo?", origin: "web" });
   const res = await worker.fetch(req, makeEnv());
   const data = await res.json();
   assert.equal(data.action, OMNI_ACTIONS.CONSULTAR_DISPONIBILIDAD);
@@ -344,7 +343,7 @@ test("handleOmniChat: crear_reserva con campos incompletos → missing_fields li
 
 test("handleOmniChat: transcripción de audio (telegram_audio) con disponibilidad domingo", async () => {
   const req = makeTelegramRequest({
-    transcription: "pistas disponibles el domingo 30 de agosto",
+    transcription: "pistas disponibles el próximo domingo",
     origin: "telegram_audio",
   });
   const res = await worker.fetch(req, makeEnv());
