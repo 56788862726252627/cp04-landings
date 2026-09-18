@@ -12,6 +12,8 @@
 // enterarse de que por dentro hay Airtable/Make/Cloudflare, solo de lo que
 // eso le resuelve.
 import { useState } from "react";
+import { t } from "../../i18n/translations.js";
+import { useLang } from "../../i18n/language.js";
 import { T } from "../../theme.js";
 import {
   IconCalendar, IconShieldCheck, IconUsers, IconChartBar, IconQrCode,
@@ -19,6 +21,8 @@ import {
   IconArrowRight, IconMenu, IconClose, IconCheck,
 } from "../icons/Icons.jsx";
 import DemoRequestModal from "./DemoRequestModal.jsx";
+import LandingMedia, { LandingHeroBackground } from "../../clients/club-padel-04/LandingMedia.jsx";
+import "../../clients/club-padel-04/landingExperience.css";
 
 const MAXW = 1180;
 
@@ -71,35 +75,43 @@ function FeatureCard({ icon, title, children }) {
 }
 
 const NAV_LINKS = [
-  { href: "#producto", label: "Producto" },
-  { href: "#automatizaciones", label: "Automatizaciones" },
-  { href: "#seguridad", label: "Seguridad" },
-  { href: "#planes", label: "Planes" },
-  { href: "#faq", label: "FAQ" },
+  { href: "#producto", label: "landing.nav.producto" },
+  { href: "#automatizaciones", label: "landing.nav.automatizaciones" },
+  { href: "#seguridad", label: "landing.nav.seguridad" },
+  { href: "#planes", label: "landing.nav.planes" },
+  { href: "#faq", label: "landing.nav.faq" },
 ];
 
 function LandingNav({ onEnterLogin, onOpenDemo }) {
   const [open, setOpen] = useState(false);
+  const { lang } = useLang();
+  const tx = key => t(key, lang);
   return (
-    <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(5,8,13,.86)", backdropFilter: "blur(14px)", borderBottom: `1px solid ${T.line}` }}>
+    <header onKeyDown={event => {
+      if (event.key === "Escape" && open) {
+        setOpen(false);
+        event.currentTarget.querySelector(".cp04-landing-nav-mobile-toggle")?.focus();
+      }
+    }} style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(5,8,13,.86)", backdropFilter: "blur(14px)", borderBottom: `1px solid ${T.line}` }}>
       <Container style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 72 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: T.fontDisplay, fontWeight: 900, fontSize: "1.1rem" }}>
           <span style={{ width: 10, height: 10, borderRadius: "50%", background: T.accent, boxShadow: `0 0 10px ${T.accent}` }} />
           Club Pádel 04
         </div>
-        <nav style={{ display: "flex", alignItems: "center", gap: 28 }} className="cp04-landing-nav-desktop">
+        <nav style={{ display: "flex", alignItems: "center", gap: 28, flex: 1, justifyContent: "center", transform: "translateY(17px)" }} className="cp04-landing-nav-desktop">
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} style={{ color: T.textDim, textDecoration: "none", fontSize: ".9rem", fontWeight: 600 }}>{l.label}</a>
+            <a key={l.href} href={l.href} style={{ color: T.textDim, textDecoration: "none", fontSize: ".9rem", fontWeight: 600 }}>{tx(l.label)}</a>
           ))}
         </nav>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }} className="cp04-landing-nav-desktop">
-          <LandingBtn variant="ghost" onClick={onEnterLogin}>Iniciar sesión</LandingBtn>
-          <LandingBtn variant="primary" onClick={onOpenDemo}>Solicitar demo</LandingBtn>
+          <LandingBtn variant="ghost" onClick={onEnterLogin}>{tx("login.sign_in")}</LandingBtn>
+          <LandingBtn variant="primary" onClick={onOpenDemo}>{tx("landing.planes.cta")}</LandingBtn>
         </div>
         <button
           type="button"
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
+          aria-label={open ? tx("landing.nav.close_menu") : tx("landing.nav.open_menu")}
           aria-expanded={open}
+          aria-controls="cp04-public-mobile-menu"
           onClick={() => setOpen((v) => !v)}
           className="cp04-landing-nav-mobile-toggle"
           style={{ display: "none", background: "transparent", border: "none", color: T.text, cursor: "pointer" }}
@@ -108,13 +120,13 @@ function LandingNav({ onEnterLogin, onOpenDemo }) {
         </button>
       </Container>
       {open && (
-        <div className="cp04-landing-nav-mobile-panel" style={{ borderTop: `1px solid ${T.line}`, background: T.bg, padding: "18px 24px 26px", display: "grid", gap: 14 }}>
+        <div id="cp04-public-mobile-menu" className="cp04-landing-nav-mobile-panel" style={{ borderTop: `1px solid ${T.line}`, background: T.bg, padding: "18px 24px 26px", display: "grid", gap: 14 }}>
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} onClick={() => setOpen(false)} style={{ color: T.text, textDecoration: "none", fontWeight: 700 }}>{l.label}</a>
+            <a key={l.href} href={l.href} onClick={() => setOpen(false)} style={{ color: T.text, textDecoration: "none", fontWeight: 700 }}>{tx(l.label)}</a>
           ))}
           <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-            <LandingBtn variant="secondary" onClick={onEnterLogin} style={{ flex: 1, justifyContent: "center" }}>Iniciar sesión</LandingBtn>
-            <LandingBtn variant="primary" onClick={onOpenDemo} style={{ flex: 1, justifyContent: "center" }}>Solicitar demo</LandingBtn>
+            <LandingBtn variant="secondary" onClick={onEnterLogin} style={{ flex: 1, justifyContent: "center" }}>{tx("login.sign_in")}</LandingBtn>
+            <LandingBtn variant="primary" onClick={onOpenDemo} style={{ flex: 1, justifyContent: "center" }}>{tx("landing.planes.cta")}</LandingBtn>
           </div>
         </div>
       )}
@@ -126,32 +138,36 @@ function MockupPanel() {
   // Mockup de la app real (no un inventario técnico): reutiliza la misma
   // identidad visual (T) que Inicio() en la app autenticada, con datos de
   // ejemplo explícitamente marcados como tal.
+  const { lang } = useLang();
+  const tx = key => t(key, lang);
   return (
     <div style={{ borderRadius: 28, border: `1px solid rgba(182,255,0,.22)`, background: `linear-gradient(160deg,rgba(11,17,29,.97),rgba(47,107,255,.1)), radial-gradient(circle at 80% 0%, rgba(182,255,0,.18), transparent 45%)`, padding: "clamp(18px,3vw,26px)", boxShadow: "0 30px 90px rgba(0,0,0,.4)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <strong style={{ fontFamily: T.fontDisplay, fontSize: "1rem" }}>Panel de dirección</strong>
-        <span style={{ fontSize: ".68rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "3px 10px" }}>Datos de ejemplo</span>
+        <strong style={{ fontFamily: T.fontDisplay, fontSize: "1rem" }}>{tx("landing.mockup.panel_title")}</strong>
+        <span style={{ fontSize: ".68rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "3px 10px" }}>{tx("landing.mockup.demo_badge")}</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10, marginBottom: 14 }}>
         {[
-          { label: "Reservas hoy", value: "12" },
-          { label: "Ocupación", value: "79%" },
-          { label: "Socios activos", value: "143" },
-          { label: "Ingresos del mes", value: "4.820€" },
+          { label: "landing.mockup.stat_reservas", value: "12" },
+          { label: "landing.mockup.stat_ocupacion", value: "79%" },
+          { label: "landing.mockup.stat_socios", value: "143" },
+          { label: "landing.mockup.stat_ingresos", value: "4.820€" },
         ].map((k) => (
           <div key={k.label} style={{ background: "rgba(255,255,255,.04)", border: `1px solid ${T.line}`, borderRadius: 14, padding: "12px 14px" }}>
-            <div style={{ color: T.textDim, fontSize: ".68rem", marginBottom: 4 }}>{k.label}</div>
+            <div style={{ color: T.textDim, fontSize: ".68rem", marginBottom: 4 }}>{tx(k.label)}</div>
             <div style={{ fontFamily: T.fontDisplay, fontSize: "1.35rem", fontWeight: 900 }}>{k.value}</div>
           </div>
         ))}
       </div>
       <div style={{ background: "rgba(255,255,255,.03)", border: `1px solid ${T.line}`, borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
         <IconCheck size={18} color={T.accent} />
-        <span style={{ fontSize: ".82rem", color: T.textDim }}>Pista 2 liberada — lista de espera notificada automáticamente</span>
+        <span style={{ fontSize: ".82rem", color: T.textDim }}>{tx("landing.mockup.release_pista")}</span>
       </div>
     </div>
   );
 }
+
+const PROBLEM_KEYS = ["one", "two", "three", "four"];
 
 const PROBLEMAS = [
   { icon: <IconClock />, problema: "Recepción saturada al teléfono confirmando horas", solucion: "Reserva de pistas disponible 24/7 desde el móvil, sin llamadas." },
@@ -170,16 +186,18 @@ const PRODUCTO_SECCIONES = [
 ];
 
 const INTEGRACIONES = [
-  { name: "Cloudflare", desc: "Infraestructura y seguridad de borde" },
-  { name: "Supabase", desc: "Autenticación real de usuarios" },
-  { name: "Airtable", desc: "Base de datos operativa del club" },
-  { name: "Google Calendar", desc: "Sincronización de reservas" },
+  { name: "Cloudflare", desc: "cloudflare" },
+  { name: "Supabase", desc: "supabase" },
+  { name: "Airtable", desc: "airtable" },
+  { name: "Google Calendar", desc: "google_calendar" },
 ];
 
 const INTEGRACIONES_FUTURAS = [
-  { name: "Pagos online (Stripe)", desc: "En hoja de ruta — aún no activo" },
-  { name: "WhatsApp Business", desc: "En hoja de ruta — aún no activo" },
+  { name: "Pagos online (Stripe)", desc: "stripe" },
+  { name: "WhatsApp Business", desc: "whatsapp" },
 ];
+
+const SEGURIDAD_KEYS = ["sesion_protegida", "permisos_rol", "privacidad"];
 
 const SEGURIDAD_ITEMS = [
   { icon: <IconLock />, title: "Sesión protegida", body: "El token de sesión de larga duración vive en una cookie HttpOnly — nunca accesible desde JavaScript ni guardado en el navegador en claro." },
@@ -187,16 +205,22 @@ const SEGURIDAD_ITEMS = [
   { icon: <IconUsers />, title: "Privacidad incorporada", body: "Gestión de solicitudes de acceso y baja de datos personales integrada, no un trámite aparte." },
 ];
 
+const TESTIMONIOS_KEYS = ["one", "two"];
+
 const TESTIMONIOS = [
   { nombre: "Club de ejemplo A", cargo: "Dirección", texto: "Testimonio de ejemplo: dejamos de perder horas por llamadas cruzadas y ahora vemos la ocupación real cada semana." },
   { nombre: "Club de ejemplo B", cargo: "Recepción", texto: "Testimonio de ejemplo: el control de acceso por QR nos quitó las colas de la entrada en fin de semana." },
 ];
+
+const PLANES_KEYS = ["starter", "club", "multi_club"];
 
 const PLANES = [
   { nombre: "Starter", precio: "Consultar", desc: "Para un club con una o dos pistas empezando a digitalizar reservas.", items: ["Reservas online", "Lista de espera", "Panel básico"] },
   { nombre: "Club", precio: "Consultar", desc: "El plan más habitual: operación diaria completa.", destacado: true, items: ["Todo Starter", "Control de acceso QR", "Torneos y ranking", "Panel de dirección"] },
   { nombre: "Multi-club", precio: "Consultar", desc: "Para cadenas o gestoras con varias instalaciones.", items: ["Todo Club", "Varios clubes", "Soporte prioritario"] },
 ];
+
+const FAQ_KEYS = ["datos_reales", "instalacion", "probar", "baja", "puesta_marcha"];
 
 const FAQ = [
   { q: "¿Los datos de reservas son reales o de ejemplo?", a: "Esta landing y sus paneles de demostración usan datos de ejemplo. Al contratar, tu club opera con sus propios datos reales desde el primer día." },
@@ -205,6 +229,8 @@ const FAQ = [
   { q: "¿Qué pasa con mis datos si me doy de baja?", a: "La gestión de privacidad está integrada: puedes solicitar acceso o eliminación de tus datos desde la propia plataforma." },
   { q: "¿Cuánto tarda la puesta en marcha?", a: "Depende del número de pistas y de si migras datos de otro sistema. Se concreta en la demo." },
 ];
+
+const AUTOMATIZACIONES_KEYS = ["item_1", "item_2", "item_3", "item_4"];
 
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
@@ -226,9 +252,11 @@ function FaqItem({ q, a }) {
 
 export default function Landing({ onEnterLogin }) {
   const [demoOpen, setDemoOpen] = useState(false);
+  const lang = useLang();
+  const tx = key => t(key, lang);
 
   return (
-    <div style={{ background: T.bg, color: T.text, fontFamily: T.fontBody, minHeight: "100vh" }}>
+    <div className="cp04-public-landing saas-experience" style={{ background: T.bg, color: T.text, fontFamily: T.fontBody, minHeight: "100vh" }}>
       <style>{`
         .cp04-landing-nav-mobile-toggle { }
         @media (max-width: 860px) {
@@ -240,57 +268,53 @@ export default function Landing({ onEnterLogin }) {
       <LandingNav onEnterLogin={onEnterLogin} onOpenDemo={() => setDemoOpen(true)} />
 
       {/* HERO */}
-      <section style={{ padding: "clamp(48px,8vw,96px) 0 clamp(40px,6vw,64px)", background: "radial-gradient(circle at 15% 0%, rgba(182,255,0,.14), transparent 38%), radial-gradient(circle at 85% 10%, rgba(47,107,255,.14), transparent 40%)" }}>
+      <section id="cp04-public-hero" className="cp04-section cp04-section--hero">
+        <LandingHeroBackground />
         <Container style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,420px),1fr))", gap: "clamp(32px,5vw,56px)", alignItems: "center" }}>
-          <div>
-            <Eyebrow>SaaS para clubes de pádel</Eyebrow>
+          <div className="cp04-hero-copy">
+            <Eyebrow>{tx("landing.hero.eyebrow")}</Eyebrow>
             <h1 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(2.4rem,6vw,4.2rem)", lineHeight: .98, letterSpacing: "-.05em", margin: "0 0 20px" }}>
-              Gestiona tu club. Llena tus pistas. <span style={{ color: T.accent }}>Fideliza a tus jugadores.</span>
+              {tx("landing.hero.title")} <span style={{ color: T.accent }}>{tx("landing.hero.title_accent")}</span>
             </h1>
             <p style={{ color: T.textDim, fontSize: "clamp(1rem,1.6vw,1.15rem)", lineHeight: 1.75, maxWidth: 560, margin: "0 0 30px" }}>
-              Una única plataforma para reservas, jugadores, accesos, torneos, automatizaciones y operación diaria de tu club.
+              {tx("landing.hero.subtitle")}
             </p>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-              <LandingBtn variant="primary" onClick={() => setDemoOpen(true)}>Solicitar demo <IconArrowRight size={18} /></LandingBtn>
-              <LandingBtn variant="secondary" href="#producto">Ver cómo funciona</LandingBtn>
+              <LandingBtn variant="primary" onClick={() => setDemoOpen(true)}>{tx("landing.planes.cta")} <IconArrowRight size={18} /></LandingBtn>
+              <LandingBtn variant="secondary" href="#producto">{tx("landing.hero.cta_secondary")}</LandingBtn>
             </div>
           </div>
-          <MockupPanel />
-        </Container>
-      </section>
-
-      {/* TRUST BAR */}
-      <section style={{ borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}`, padding: "20px 0", background: "rgba(255,255,255,.02)" }}>
-        <Container style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ color: T.textDim, fontSize: ".82rem" }}>Construido sobre infraestructura real: Cloudflare · Supabase · Airtable · Google Calendar</span>
-          <span style={{ fontSize: ".72rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "4px 12px" }}>Vitrina con datos de ejemplo hasta el primer club real</span>
+          <div className="cp04-hero-direction"><MockupPanel /></div>
         </Container>
       </section>
 
       {/* PROBLEMAS QUE RESUELVE */}
-      <section style={{ padding: "clamp(56px,8vw,88px) 0" }}>
+      <section className="cp04-section cp04-section--problemas">
         <Container>
-          <SectionTitle eyebrow="El problema" title="Lo que hoy le cuesta tiempo a tu club" align="center" />
+          <SectionTitle eyebrow={tx("landing.problem.eyebrow")} title={tx("landing.problem.title")} align="center" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 18 }}>
-            {PROBLEMAS.map((p) => (
+            {PROBLEMAS.map((p, index) => (
               <div key={p.problema} style={{ padding: 22, borderRadius: 20, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.03)" }}>
                 <div style={{ color: T.accent, marginBottom: 12 }}>{p.icon}</div>
-                <div style={{ color: T.textDim, fontSize: ".82rem", textDecoration: "line-through", marginBottom: 8 }}>{p.problema}</div>
-                <div style={{ fontWeight: 700, fontSize: ".92rem", lineHeight: 1.5 }}>{p.solucion}</div>
+                <div style={{ color: T.textDim, fontSize: ".82rem", textDecoration: "line-through", marginBottom: 8 }}>{tx(`landing.problem.${PROBLEM_KEYS[index]}.before`)}</div>
+                <div style={{ fontWeight: 700, fontSize: ".92rem", lineHeight: 1.5 }}>{tx(`landing.problem.${PROBLEM_KEYS[index]}.after`)}</div>
               </div>
             ))}
           </div>
         </Container>
       </section>
 
+      {/* ZONA DE VÍDEOS · D.png (night court) */}
+      <LandingMedia blocked={demoOpen} />
+
       {/* PRODUCTO: reservas / gestión / jugador / qr / torneos / métricas */}
-      <section id="producto" style={{ padding: "clamp(56px,8vw,88px) 0", background: "rgba(255,255,255,.015)" }}>
+      <section id="producto" className="cp04-section cp04-section--producto">
         <Container>
-          <SectionTitle eyebrow="Producto" title="Todo lo que necesita la operación diaria" subtitle="Cada módulo resuelve una parte del día a día del club — sin hojas de cálculo, sin llamadas cruzadas." />
+          <SectionTitle eyebrow={tx("landing.product.eyebrow")} title={tx("landing.product.title")} subtitle={tx("landing.product.desc")} />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 18 }}>
             {PRODUCTO_SECCIONES.map((s) => (
               <div key={s.id} id={s.id}>
-                <FeatureCard icon={s.icon} title={s.title}>{s.body}</FeatureCard>
+                <FeatureCard icon={s.icon} title={tx(`landing.product.${s.id}.title`)}>{tx(`landing.product.${s.id}.body`)}</FeatureCard>
               </div>
             ))}
           </div>
@@ -298,19 +322,19 @@ export default function Landing({ onEnterLogin }) {
       </section>
 
       {/* AUTOMATIZACIONES */}
-      <section id="automatizaciones" style={{ padding: "clamp(56px,8vw,88px) 0" }}>
+      <section id="automatizaciones" className="cp04-section cp04-section--automatizaciones">
         <Container style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,380px),1fr))", gap: 40, alignItems: "center" }}>
           <div>
-            <Eyebrow>Automatizaciones</Eyebrow>
-            <h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.9rem,4vw,2.6rem)", lineHeight: 1.08, letterSpacing: "-.03em", margin: "0 0 16px" }}>El club funciona solo mientras tú diriges</h2>
+            <Eyebrow>{tx("landing.automatizaciones.eyebrow")}</Eyebrow>
+            <h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.9rem,4vw,2.6rem)", lineHeight: 1.08, letterSpacing: "-.03em", margin: "0 0 16px" }}>{tx("landing.automatizaciones.title")}</h2>
             <p style={{ color: T.textDim, lineHeight: 1.75, marginBottom: 22 }}>
-              Recordatorios de reserva, avisos de lista de espera, confirmaciones de inscripción a torneos y alertas de incidencias suceden automáticamente, sin que nadie tenga que acordarse de enviarlos.
+              {tx("landing.automatizaciones.body")}
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
-              {["Recordatorio de reserva antes de la hora", "Aviso automático cuando se libera una pista", "Confirmación de inscripción a torneos", "Alertas si algo necesita atención humana"].map((item) => (
-                <li key={item} style={{ display: "flex", gap: 10, alignItems: "flex-start", color: T.textDim, fontSize: ".92rem" }}>
+              {AUTOMATIZACIONES_KEYS.map((key) => (
+                <li key={key} style={{ display: "flex", gap: 10, alignItems: "flex-start", color: T.textDim, fontSize: ".92rem" }}>
                   <IconCheck size={18} color={T.accent} style={{ flexShrink: 0, marginTop: 2 }} />
-                  {item}
+                  {tx(`landing.automatizaciones.${key}`)}
                 </li>
               ))}
             </ul>
@@ -318,26 +342,26 @@ export default function Landing({ onEnterLogin }) {
           <div style={{ borderRadius: 24, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.03)", padding: 26 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, color: T.accent }}>
               <IconBolt size={22} />
-              <strong style={{ fontFamily: T.fontDisplay }}>Motor de automatización</strong>
+              <strong style={{ fontFamily: T.fontDisplay }}>{tx("landing.automatizaciones.motor_title")}</strong>
             </div>
             <p style={{ color: T.textDim, fontSize: ".88rem", lineHeight: 1.7 }}>
-              Funciona sobre un motor de flujos verificado internamente antes de activarse en tu club — no es un prototipo, es la misma automatización que ya usa el club piloto.
+              {tx("landing.automatizaciones.motor_body")}
             </p>
           </div>
         </Container>
       </section>
 
       {/* INTEGRACIONES */}
-      <section style={{ padding: "clamp(56px,8vw,88px) 0", background: "rgba(255,255,255,.015)" }}>
+      <section className="cp04-section cp04-section--dark">
         <Container>
-          <SectionTitle eyebrow="Integraciones" title="Tecnología real, no una promesa" align="center" />
+          <SectionTitle eyebrow={tx("landing.integraciones.eyebrow")} title={tx("landing.integraciones.title")} align="center" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 14, marginBottom: 18 }}>
             {INTEGRACIONES.map((i) => (
               <div key={i.name} style={{ padding: "18px 20px", borderRadius: 16, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.03)", display: "flex", alignItems: "center", gap: 12 }}>
                 <IconPlug size={20} color={T.accent} />
                 <div>
                   <div style={{ fontWeight: 800, fontSize: ".9rem" }}>{i.name}</div>
-                  <div style={{ color: T.textDim, fontSize: ".76rem" }}>{i.desc}</div>
+                  <div style={{ color: T.textDim, fontSize: ".76rem" }}>{tx(`landing.integraciones.${i.desc}.desc`)}</div>
                 </div>
               </div>
             ))}
@@ -348,7 +372,7 @@ export default function Landing({ onEnterLogin }) {
                 <IconClock size={20} color={T.textDim} />
                 <div>
                   <div style={{ fontWeight: 800, fontSize: ".9rem" }}>{i.name}</div>
-                  <div style={{ color: T.textDim, fontSize: ".76rem" }}>{i.desc}</div>
+                  <div style={{ color: T.textDim, fontSize: ".76rem" }}>{tx(`landing.integraciones.${i.desc}.desc`)}</div>
                 </div>
               </div>
             ))}
@@ -357,28 +381,28 @@ export default function Landing({ onEnterLogin }) {
       </section>
 
       {/* SEGURIDAD / GDPR */}
-      <section id="seguridad" style={{ padding: "clamp(56px,8vw,88px) 0" }}>
+      <section id="seguridad" className="cp04-section cp04-section--dark">
         <Container>
-          <SectionTitle eyebrow="Seguridad" title="Seguridad y privacidad incorporadas, no añadidas después" align="center" />
+          <SectionTitle eyebrow={tx("landing.seguridad.eyebrow")} title={tx("landing.seguridad.title")} align="center" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 18 }}>
-            {SEGURIDAD_ITEMS.map((s) => (
-              <FeatureCard key={s.title} icon={s.icon} title={s.title}>{s.body}</FeatureCard>
+            {SEGURIDAD_ITEMS.map((s, index) => (
+              <FeatureCard key={s.title} icon={s.icon} title={tx(`landing.seguridad.${SEGURIDAD_KEYS[index]}.title`)}>{tx(`landing.seguridad.${SEGURIDAD_KEYS[index]}.body`)}</FeatureCard>
             ))}
           </div>
         </Container>
       </section>
 
       {/* TESTIMONIOS (DEMO) */}
-      <section style={{ padding: "clamp(56px,8vw,88px) 0", background: "rgba(255,255,255,.015)" }}>
+      <section className="cp04-section cp04-section--testimonios">
         <Container>
-          <SectionTitle eyebrow="Clubes" title="Lo que dirían clubes como el tuyo" subtitle="Testimonios de ejemplo mientras incorporamos los primeros clubes reales — se sustituirán por testimonios verificados." align="center" />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 18 }}>
-            {TESTIMONIOS.map((t) => (
+          <SectionTitle eyebrow={tx("landing.testimonios.eyebrow")} title={tx("landing.testimonios.title")} subtitle={tx("landing.testimonios.subtitle")} align="center" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,280px),1fr))", gap: 18 }}>
+            {TESTIMONIOS.map((t, index) => (
               <div key={t.nombre} style={{ padding: 24, borderRadius: 20, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.03)", position: "relative" }}>
-                <span style={{ position: "absolute", top: 14, right: 18, fontSize: ".64rem", color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "2px 9px", fontWeight: 800, letterSpacing: ".08em" }}>DEMO</span>
-                <p style={{ lineHeight: 1.7, color: T.text, marginTop: 6 }}>&ldquo;{t.texto}&rdquo;</p>
-                <div style={{ marginTop: 14, fontWeight: 800, fontSize: ".88rem" }}>{t.nombre}</div>
-                <div style={{ color: T.textDim, fontSize: ".78rem" }}>{t.cargo}</div>
+                <span style={{ position: "absolute", top: 14, right: 18, fontSize: ".64rem", color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "2px 9px", fontWeight: 800, letterSpacing: ".08em" }}>{tx("landing.testimonios.demo_badge")}</span>
+                <p style={{ lineHeight: 1.7, color: T.text, marginTop: 6 }}>&ldquo;{tx(`landing.testimonios.${TESTIMONIOS_KEYS[index]}.texto`)}&rdquo;</p>
+                <div style={{ marginTop: 14, fontWeight: 800, fontSize: ".88rem" }}>{tx(`landing.testimonios.${TESTIMONIOS_KEYS[index]}.nombre`)}</div>
+                <div style={{ color: T.textDim, fontSize: ".78rem" }}>{tx(`landing.testimonios.${TESTIMONIOS_KEYS[index]}.cargo`)}</div>
               </div>
             ))}
           </div>
@@ -386,25 +410,25 @@ export default function Landing({ onEnterLogin }) {
       </section>
 
       {/* PLANES */}
-      <section id="planes" style={{ padding: "clamp(56px,8vw,88px) 0" }}>
+      <section id="planes" className="cp04-section cp04-section--dark">
         <Container>
-          <SectionTitle eyebrow="Planes" title="Un plan para cada tamaño de club" subtitle="Precios finales a medida del número de pistas y necesidades — se concretan en la demo." align="center" />
+          <SectionTitle eyebrow={tx("landing.planes.eyebrow")} title={tx("landing.planes.title")} subtitle={tx("landing.planes.subtitle")} align="center" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 18 }}>
-            {PLANES.map((p) => (
+            {PLANES.map((p, index) => (
               <div key={p.nombre} style={{ padding: 26, borderRadius: 22, border: `1px solid ${p.destacado ? T.accent : T.line}`, background: p.destacado ? "linear-gradient(160deg, rgba(182,255,0,.09), rgba(255,255,255,.02))" : "rgba(255,255,255,.03)", position: "relative" }}>
-                {p.destacado && <span style={{ position: "absolute", top: -12, left: 24, background: T.accent, color: "#06100a", fontSize: ".68rem", fontWeight: 900, padding: "4px 12px", borderRadius: 999 }}>MÁS ELEGIDO</span>}
+                {p.descacado && (<span style={{ position: "absolute", top: -12, left: 24, background: T.accent, color: "#06100a", fontSize: ".68rem", fontWeight: 900, padding: "4px 12px", borderRadius: 999 }}>{tx("landing.planes.most_chosen")}</span>)}
                 <strong style={{ fontFamily: T.fontDisplay, fontSize: "1.2rem", display: "block", marginBottom: 6 }}>{p.nombre}</strong>
-                <div style={{ color: T.accent, fontWeight: 900, fontFamily: T.fontDisplay, fontSize: "1.3rem", marginBottom: 10 }}>{p.precio}</div>
-                <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginBottom: 18 }}>{p.desc}</p>
+                <div style={{ color: T.accent, fontWeight: 900, fontFamily: T.fontDisplay, fontSize: "1.3rem", marginBottom: 10 }}>{tx(`landing.planes.${PLANES_KEYS[index]}.price`)}</div>
+                <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginBottom: 18 }}>{tx(`landing.planes.${PLANES_KEYS[index]}.desc`)}</p>
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 22px", display: "grid", gap: 10 }}>
-                  {p.items.map((item) => (
+                  {p.items.map((item, fidx) => (
                     <li key={item} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: ".84rem", color: T.textDim }}>
                       <IconCheck size={16} color={T.accent} style={{ flexShrink: 0, marginTop: 2 }} />
-                      {item}
+                      {tx(`landing.planes.${PLANES_KEYS[index]}.feature_${fidx + 1}`)}
                     </li>
                   ))}
                 </ul>
-                <LandingBtn variant={p.destacado ? "primary" : "secondary"} onClick={() => setDemoOpen(true)} style={{ width: "100%", justifyContent: "center" }}>Solicitar demo</LandingBtn>
+                <LandingBtn variant={p.destacado ? "primary" : "secondary"} onClick={() => setDemoOpen(true)} style={{ width: "100%", justifyContent: "center" }}>{tx("landing.planes.cta")}</LandingBtn>
               </div>
             ))}
           </div>
@@ -412,22 +436,22 @@ export default function Landing({ onEnterLogin }) {
       </section>
 
       {/* FAQ */}
-      <section id="faq" style={{ padding: "clamp(56px,8vw,88px) 0", background: "rgba(255,255,255,.015)" }}>
+      <section id="faq" className="cp04-section cp04-section--faq">
         <Container style={{ maxWidth: 760 }}>
-          <SectionTitle eyebrow="Preguntas frecuentes" title="Antes de pedir la demo" align="center" />
+          <SectionTitle eyebrow={tx("landing.faq.eyebrow")} title={tx("landing.faq.title")} align="center" />
           <div>
-            {FAQ.map((f) => <FaqItem key={f.q} q={f.q} a={f.a} />)}
+            {FAQ.map((f, index) => <FaqItem key={f.q} q={tx(`landing.faq.${FAQ_KEYS[index]}.question`)} a={tx(`landing.faq.${FAQ_KEYS[index]}.answer`)} />)}
           </div>
         </Container>
       </section>
 
       {/* CTA FINAL */}
-      <section style={{ padding: "clamp(56px,8vw,88px) 0" }}>
+      <section className="cp04-section cp04-section--cta">
         <Container>
           <div style={{ borderRadius: 30, border: `1px solid rgba(182,255,0,.28)`, background: `linear-gradient(135deg, rgba(182,255,0,.1), rgba(47,107,255,.08))`, padding: "clamp(32px,6vw,56px)", textAlign: "center" }}>
-            <h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.8rem,4vw,2.6rem)", letterSpacing: "-.03em", margin: "0 0 14px" }}>¿Listo para digitalizar tu club?</h2>
-            <p style={{ color: T.textDim, maxWidth: 520, margin: "0 auto 26px", lineHeight: 1.7 }}>Solicita una demo y te mostramos el panel de dirección, staff y jugador con casos reales de tu club.</p>
-            <LandingBtn variant="primary" onClick={() => setDemoOpen(true)}>Solicitar demo <IconArrowRight size={18} /></LandingBtn>
+            <h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.8rem,4vw,2.6rem)", letterSpacing: "-.03em", margin: "0 0 14px" }}>{tx("landing.cta_final.title")}</h2>
+            <p style={{ color: T.textDim, maxWidth: 520, margin: "0 auto 26px", lineHeight: 1.7 }}>{tx("landing.cta_final.subtitle")}</p>
+            <LandingBtn variant="primary" onClick={() => setDemoOpen(true)}>{tx("landing.planes.cta")} <IconArrowRight size={18} /></LandingBtn>
           </div>
         </Container>
       </section>
@@ -439,9 +463,9 @@ export default function Landing({ onEnterLogin }) {
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent }} />
             Club Pádel 04
           </div>
-          <div style={{ color: T.textDim, fontSize: ".78rem" }}>© {new Date().getFullYear()} Club Pádel 04 · SaaS para clubes de pádel</div>
+          <div style={{ color: T.textDim, fontSize: ".78rem" }}>© {new Date().getFullYear()} Club Pádel 04 · {tx("landing.footer.tagline")}</div>
           <button type="button" onClick={onEnterLogin} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: ".82rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
-            Acceso para clubes ya clientes
+            {tx("landing.footer.clients_access")}
           </button>
         </Container>
       </footer>

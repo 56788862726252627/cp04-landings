@@ -158,6 +158,44 @@ export async function runDoctorChecks({ baseDir = DEFAULT_BUSINESSES_DIR } = {})
   return { ok: overallOk, checks };
 }
 
+/**
+ * business:status — carga report.json + tenant.config.json de un negocio YA
+ * generado (no ejecuta el pipeline, no escribe nada, no toca red). Ambos
+ * archivos ya los escribe `runFactoryPipeline`; aquí solo se leen.
+ */
+export async function loadGeneratedBusinessStatusInputs({ businessId, baseDir = DEFAULT_BUSINESSES_DIR }) {
+  const outputDir = path.join(baseDir, String(businessId));
+  const reportRaw = await readFile(path.join(outputDir, "report.json"), "utf8").catch(() => {
+    throw new BusinessCliError(`No existe report.json para "${businessId}" en ${baseDir} — genera el negocio primero con business:create.`);
+  });
+  const tenantConfigRaw = await readFile(path.join(outputDir, "tenant.config.json"), "utf8").catch(() => {
+    throw new BusinessCliError(`No existe tenant.config.json para "${businessId}" en ${baseDir}.`);
+  });
+  return { report: JSON.parse(reportRaw), tenantConfig: JSON.parse(tenantConfigRaw) };
+}
+
+/**
+ * Carga los inputs de estado para TODOS los negocios generados en `baseDir`.
+ * Los negocios que fallan al cargar se devuelven en `errors`, nunca lanzan.
+ * Prompt Agencia IA 5/7 — alimenta `buildAgencyStatusReport`.
+ *
+ * @returns {{ loaded: Array<{businessId, report, tenantConfig}>, errors: Array<{businessId, error}> }}
+ */
+export async function loadAllGeneratedBusinessStatusInputs({ baseDir = DEFAULT_BUSINESSES_DIR } = {}) {
+  const businesses = await listGeneratedBusinesses({ baseDir });
+  const loaded = [];
+  const errors = [];
+  for (const { businessId } of businesses) {
+    try {
+      const { report, tenantConfig } = await loadGeneratedBusinessStatusInputs({ businessId, baseDir });
+      loaded.push({ businessId, report, tenantConfig });
+    } catch (err) {
+      errors.push({ businessId, error: err.message });
+    }
+  }
+  return { loaded, errors };
+}
+
 /** business:diff — compara un blueprint (nuevo o el ya almacenado) contra lo que hay en disco, sin escribir nada (dry-run). */
 export async function diffBusiness({ blueprint, baseDir = DEFAULT_BUSINESSES_DIR }) {
   const result = await runFactoryPipeline({ blueprint, outputBaseDir: baseDir, dryRun: true, verbose: false });

@@ -1,0 +1,26 @@
+.saas-media { margin: 0; min-width: 0; }
+.saas-media-accessible-caption { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.saas-media-stage { position: relative; aspect-ratio: 16 / 10; overflow: hidden; isolation: isolate; background: var(--media-surface, #111); border-radius: var(--media-radius, 20px); }
+.saas-media-poster, .saas-media-video, .saas-media-solid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--media-focal, 50% 50%); }
+.saas-media-solid { background: var(--media-surface, #111); }
+.saas-media-video { opacity: 0; transition: opacity var(--motion-short, 160ms); }
+.saas-media[data-playing="true"] .saas-media-video { opacity: 1; }
+.saas-media-caption { position: absolute; inset: auto 0 0; padding: 48px 24px 22px; background: linear-gradient(transparent, rgba(0,0,0,.86)); color: white; pointer-events: none; }
+.saas-media-caption span { display: block; font-size: .72rem; letter-spacing: .14em; margin-bottom: 8px; }
+.saas-media-caption strong { font-size: clamp(1.2rem, 2.5vw, 2rem); }
+.saas-media[data-playing="true"] .saas-media-caption { display: none; }
+.saas-media-controls, .saas-media-choices { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 12px 0; }
+.saas-media :is(button, summary) { min-width: 44px; min-height: 44px; padding: 10px 14px; cursor: pointer; }
+.saas-media button { color: inherit; background: var(--media-surface, #111); border: 1px solid currentColor; border-radius: 10px; }
+.saas-media-transcript p { line-height: 1.6; white-space: pre-wrap; }
+.saas-media[data-variant="panoramic"] .saas-media-stage { aspect-ratio: 21 / 9; }
+.saas-media[data-variant="split"] { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; }
+.saas-media[data-variant="split"] .saas-media-stage { grid-row: span 3; }
+.saas-media[data-variant="editorial"] .saas-media-choices { display: grid; grid-template-columns: 1fr; }
+.saas-media[data-variant="mosaic"] .saas-media-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.saas-media-choices img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+@media (max-width: 640px) {
+  .saas-media[data-variant="split"] { display: block; }
+  .saas-media-stage { aspect-ratio: 16 / 9; }
+}
+@media (prefers-reduced-motion: reduce) { .saas-media * { transition: none !important; animation: none !important; } }

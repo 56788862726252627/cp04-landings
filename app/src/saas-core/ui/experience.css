@@ -1,0 +1,30 @@
+.saas-experience {
+  --motion-short: 160ms;
+  --motion-enter: 280ms;
+  --motion-ease: cubic-bezier(.2,.7,.2,1);
+}
+.saas-experience [data-revealed="true"] { animation: saas-reveal var(--motion-enter) var(--motion-ease) both; }
+.saas-experience .saas-entrance { animation: saas-reveal var(--motion-enter) var(--motion-ease) both; }
+@keyframes saas-reveal { from { opacity: .65; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.saas-disclosure { transition: opacity var(--motion-short), transform var(--motion-short); }
+.saas-disclosure[data-open="false"] { opacity: 0; transform: translateY(-4px); pointer-events: none; }
+.saas-disclosure[data-open="true"] { animation: saas-reveal var(--motion-enter) var(--motion-ease); }
+.saas-experience :is(button, a, summary) { touch-action: manipulation; }
+.saas-experience :is(button, a, input, summary):focus-visible { outline: 3px solid var(--experience-focus, currentColor) !important; outline-offset: 4px; }
+.saas-experience button { transition: background-color var(--motion-short), border-color var(--motion-short), box-shadow var(--motion-short); }
+.saas-experience button:active { filter: brightness(.93); }
+html:has(.saas-experience), .saas-experience {
+  scrollbar-color: var(--experience-scroll-thumb, #777) var(--experience-scroll-track, #151515);
+  scrollbar-width: auto;
+}
+html:has(.saas-experience)::-webkit-scrollbar, .saas-experience ::-webkit-scrollbar { width: 12px; height: 12px; }
+html:has(.saas-experience)::-webkit-scrollbar-track, .saas-experience ::-webkit-scrollbar-track { background: var(--experience-scroll-track, #151515); }
+html:has(.saas-experience)::-webkit-scrollbar-thumb, .saas-experience ::-webkit-scrollbar-thumb { background: var(--experience-scroll-thumb, #777); border-radius: 10px; border: 2px solid var(--experience-scroll-track, #151515); }
+html:has(.saas-experience)::-webkit-scrollbar-thumb:hover { background: var(--experience-focus, #aaa); }
+html:has(.saas-experience)::-webkit-scrollbar-thumb:active { background: var(--experience-scroll-active, #ddd); }
+@media (max-width: 640px) {
+  html:has(.saas-experience)::-webkit-scrollbar, .saas-experience ::-webkit-scrollbar { width: 8px; height: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .saas-experience, .saas-experience * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

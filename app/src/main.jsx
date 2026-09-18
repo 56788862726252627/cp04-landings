@@ -3,6 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './auth/AuthContext.jsx'
+import { loadSavedLanguage } from './i18n/language.js'
+
+const _savedLang = loadSavedLanguage()
+if (_savedLang?.code) document.documentElement.lang = _savedLang.code
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

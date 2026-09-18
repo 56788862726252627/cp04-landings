@@ -14,7 +14,7 @@ CP04_ENFORCE_ROLE_GATES = "true"
 # MAKE_RESERVAS_WEBHOOK
 # AIRTABLE_TOKEN
 # MAKE_ALTA_JUGADOR_WEBHOOK (usado por handleAltaJugador, POST /api/jugadores/alta)
-# MAKE_BAJA_JUGADOR_WEBHOOK (usado por handleBajaJugador, POST /api/jugadores/baja — todavía no configurado, ver comentario en el propio handler)
+# MAKE_BAJA_JUGADOR_WEBHOOK (usado por handleBajaJugador, POST /api/jugadores/baja — configurado en Cloudflare prod, confirmado 2026-09-09)
 # MAKE_GDPR_WEBHOOK (usado por handleGdprAcceso/handleGdprOlvido, POST /api/gdpr/acceso y /api/gdpr/olvido — secret configurado en Cloudflare)
 
 AIRTABLE_RESERVAS_TABLE="tblBtLjPS3sis28nz"

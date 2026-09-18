@@ -55,6 +55,15 @@ tablas-airtable.json
 tablas-final.json
 plantilla_google_drive_backup_cp04.json
 
+# Google Drive OAuth (Fase A) — credenciales/token reales, nunca en el repo
+credentials.json
+token.json
+google-credentials.json
+google-token.json
+**/credentials.json
+**/token.json
+.secrets/
+
 # Scripts temporales usados para arreglos puntuales
 comprobar_*.py
 desplegar_*.py

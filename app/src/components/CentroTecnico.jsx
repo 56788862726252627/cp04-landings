@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { T } from "../theme.js";
+import { t } from "../i18n/translations.js";
+import { useLang } from "../i18n/language.js";
 import {
   MAKE_INVENTORY,
   MAKE_INVENTORY_META,
@@ -177,7 +179,7 @@ const CP04_ARCH_PREPARADO_MSG = "Acción preparada. Pendiente de conexión real 
 // servicio externo — toda validación y "resultado" es puramente local. Se
 // desmonta/remonta por flujo vía `key` para que el formulario no arrastre
 // estado de un flujo al seleccionar otro.
-function FormularioLocalFlujo({ flujo }) {
+function FormularioLocalFlujo({ flujo, ltx }) {
   const [valor, setValor] = useState("");
   const [error, setError] = useState("");
   const [resultado, setResultado] = useState(null);
@@ -196,17 +198,17 @@ function FormularioLocalFlujo({ flujo }) {
   return (
     <div style={{ marginTop: 16, padding: 16, borderRadius: 14, border: `1px dashed ${T.primary}66`, background: "rgba(255,255,255,.02)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-        <Badge color={T.primary}>🔒 Modo seguro</Badge>
+        <Badge color={T.primary}>{ltx("centrotecnico.status.seguro")}</Badge>
         <span style={{ color: T.textDim, fontSize: ".78rem" }}>
-          Simulación local — no se realiza ninguna llamada real a Make, Airtable ni ningún otro servicio externo.
+          {ltx("centrotecnico.msg.simulacion_local")}
         </span>
       </div>
       <label htmlFor={`arch-form-${flujo.id}`} style={{ display: "block", color: T.textDim, fontSize: ".8rem", marginBottom: 6 }}>
-        Datos de entrada simulados (contrato: {flujo.datosEntrada})
+        {ltx("centrotecnico.label.datos_entrada_simulados_contrato")} {flujo.datosEntrada})
       </label>
       <textarea
         id={`arch-form-${flujo.id}`}
-        aria-label={`Datos de entrada simulados para ${flujo.nombre}`}
+        aria-label={`${ltx("centrotecnico.aria.datos_simulados")} ${flujo.nombre}`}
         value={valor}
         onChange={(e) => {
           setValor(e.target.value);
@@ -226,16 +228,16 @@ function FormularioLocalFlujo({ flujo }) {
           onClick={handleProbar}
           style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${T.primary}66`, background: `${T.primary}18`, color: T.primary, fontWeight: 800, fontSize: ".8rem", cursor: "pointer" }}
         >
-          Probar localmente (sin conexión real)
+          {ltx("centrotecnico.action.probar")}
         </button>
       </div>
       {resultado && (
         <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(182,255,0,.06)", border: `1px solid ${T.accent}44` }}>
           <div style={{ color: T.text, fontSize: ".85rem", marginBottom: 6 }}>
-            <strong>Entrada simulada:</strong> {resultado.entradaSimulada}
+            <strong>{ltx("centrotecnico.label.entrada_simulada")}</strong> {resultado.entradaSimulada}
           </div>
           <div style={{ color: T.textDim, fontSize: ".85rem", marginBottom: 6 }}>
-            <strong>Resultado esperado (simulado, no ejecutado):</strong> {flujo.resultadoEsperado}
+            <strong>{ltx("centrotecnico.label.resultado_esperado_simulado")}</strong> {flujo.resultadoEsperado}
           </div>
           <div style={{ color: T.warning, fontWeight: 700, fontSize: ".85rem" }}>{CP04_ARCH_PREPARADO_MSG}</div>
         </div>
@@ -306,6 +308,9 @@ export default function CentroTecnico({ selectedRole }) {
   const [archEstado, setArchEstado] = useState("todos");
   const [archRol, setArchRol] = useState("todos");
   const [archSeleccionado, setArchSeleccionado] = useState(null);
+
+  const { lang } = useLang();
+  const ltx = key => t(key, lang);
 
   // Estado del refresco en vivo. La decisión de qué fuente mostrar (EN VIVO
   // / SNAPSHOT / NO DISPONIBLE) vive en resolveMakeInventorySource (pura,
@@ -421,7 +426,7 @@ export default function CentroTecnico({ selectedRole }) {
   if (safeRole !== "SUPPORT") {
     return (
       <div style={{ padding: "60px 24px", textAlign: "center", color: T.textDim }}>
-        Acceso restringido. El Centro Técnico es exclusivo del rol SUPPORT.
+        {ltx("centrotecnico.msg.acceso_restringido")}
       </div>
     );
   }
@@ -435,10 +440,10 @@ export default function CentroTecnico({ selectedRole }) {
     <section style={{ padding: "clamp(18px,3vw,42px) 24px", maxWidth: 1280, margin: "0 auto" }}>
       <div style={{ marginBottom: 22 }}>
         <div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".14em", fontSize: ".78rem", textTransform: "uppercase", marginBottom: 8 }}>
-          Centro Técnico · Solo SUPPORT
+          {ltx("centrotecnico.header.subtitle")}
         </div>
         <h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.8rem,3.4vw,2.6rem)", margin: "0 0 8px", letterSpacing: "-.03em" }}>
-          Observabilidad de automatizaciones
+          {ltx("centrotecnico.header.title")}
         </h2>
         <p style={{ color: T.textDim, maxWidth: 720, lineHeight: 1.6 }}>
           {describeCentroTecnicoHeader(effectiveSource, totales.total)}
@@ -462,9 +467,9 @@ export default function CentroTecnico({ selectedRole }) {
         }}
       >
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          {effectiveSource === "live" && <Badge color={T.accent}>🟢 EN VIVO</Badge>}
-          {effectiveSource === "snapshot" && <Badge color={T.warning}>🟡 SNAPSHOT</Badge>}
-          {effectiveSource === "unavailable" && <Badge color={T.danger}>🔴 NO DISPONIBLE</Badge>}
+          {effectiveSource === "live" && <Badge color={T.accent}>{ltx("centrotecnico.header.source_live")}</Badge>}
+          {effectiveSource === "snapshot" && <Badge color={T.warning}>{ltx("centrotecnico.header.source_snapshot")}</Badge>}
+          {effectiveSource === "unavailable" && <Badge color={T.danger}>{ltx("centrotecnico.header.source_unavailable")}</Badge>}
           <span style={{ color: T.textDim, fontSize: ".8rem" }}>
             {effectiveSource === "live"
               ? `Actualizado ${new Date(lastUpdated).toLocaleString("es-ES")} · fuente: API de Make en vivo`
@@ -494,7 +499,7 @@ export default function CentroTecnico({ selectedRole }) {
             opacity: loadingLive ? 0.6 : 1,
           }}
         >
-          {loadingLive ? "Actualizando…" : "Actualizar estado"}
+          {loadingLive ? ltx("centrotecnico.status.actualizando") : ltx("centrotecnico.action.actualizar")}
         </button>
       </div>
 
@@ -526,35 +531,35 @@ export default function CentroTecnico({ selectedRole }) {
       </div>
 
       {/* A. RESUMEN TÉCNICO */}
-      <Panel eyebrow="A" title="Resumen técnico">
+      <Panel eyebrow="A" title={ltx("centrotecnico.panel.resumen")}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12 }}>
-          <KpiCard label="Total escenarios" value={totales.total} />
-          <KpiCard label="Activos" value={totales.activos} color={T.accent} />
-          <KpiCard label="Inactivos" value={totales.inactivos} color={T.textDim} />
+          <KpiCard label={ltx("centrotecnico.kpi.total_escenarios")} value={totales.total} />
+          <KpiCard label={ltx("centrotecnico.kpi.activos")} value={totales.activos} color={T.accent} />
+          <KpiCard label={ltx("centrotecnico.kpi.inactivos")} value={totales.inactivos} color={T.textDim} />
           <KpiCard
-            label="Con errores"
-            value={totales.conErrores === null ? "No disponible" : totales.conErrores}
+            label={ltx("centrotecnico.kpi.con_errores")}
+            value={totales.conErrores === null ? ltx("centrotecnico.status.no_disponible") : totales.conErrores}
             color={totales.conErrores === null ? T.textDim : (totales.conErrores ? T.danger : T.accent)}
             isPlaceholder={totales.conErrores === null}
           />
           <KpiCard
-            label="Ejecuciones acumuladas"
+            label={ltx("centrotecnico.kpi.ejecuciones")}
             value={formatMetric(totales.ejecuciones)}
             isPlaceholder={totales.ejecuciones === null}
           />
           <KpiCard
-            label="Operaciones acumuladas"
+            label={ltx("centrotecnico.kpi.operaciones")}
             value={formatMetric(totales.operaciones)}
             isPlaceholder={totales.operaciones === null}
           />
           <KpiCard
-            label="Tasa de error global"
-            value={tasaErrorGlobal === null ? "No disponible" : `${tasaErrorGlobal}%`}
+            label={ltx("centrotecnico.kpi.tasa_error")}
+            value={tasaErrorGlobal === null ? ltx("centrotecnico.status.no_disponible") : `${tasaErrorGlobal}%`}
             color={tasaErrorGlobal === null ? T.textDim : (tasaErrorGlobal > 5 ? T.warning : T.accent)}
             isPlaceholder={tasaErrorGlobal === null}
           />
           <KpiCard
-            label="Mayor volumen"
+            label={ltx("centrotecnico.kpi.mayor_volumen")}
             value={formatMetric(mayorVolumen?.operaciones)}
             sub={mayorVolumen?.nombre}
             isPlaceholder={typeof mayorVolumen?.operaciones !== "number"}
@@ -563,7 +568,7 @@ export default function CentroTecnico({ selectedRole }) {
       </Panel>
 
       {/* A2. VERIFICACIÓN 50/50 — PASO 01 (2026-07-17), auditoría manual, no Make en vivo */}
-      <Panel eyebrow="A2" title="Verificación 50/50 (auditoría manual)">
+      <Panel eyebrow="A2" title={ltx("centrotecnico.panel.verificacion")}>
         <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
           Clasificación de auditoría manual del {new Date("2026-07-17").toLocaleDateString("es-ES")}, no una conexión en vivo a Make: nadie ha
           ejecutado estos 50 escenarios hoy para "confirmarlos". Solo <strong style={{ color: T.text }}>{verificacionResumen.verificados}/{verificacionResumen.total}</strong> están
@@ -597,7 +602,7 @@ export default function CentroTecnico({ selectedRole }) {
       </Panel>
 
       {/* A3. INTEGRACIÓN APP ↔ MAKE 50/50 — PASO 07A (2026-07-19), auditoría de código, solo lectura */}
-      <Panel eyebrow="A3" title="Integración App ↔ Make 50/50">
+      <Panel eyebrow="A3" title={ltx("centrotecnico.panel.integracion")}>
         <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
           Eje distinto de "Verificación 50/50" (arriba): esto no dice si un escenario se verificó contra Make, dice si el <strong style={{ color: T.text }}>código</strong> de la app/Worker
           realmente lo dispara. Solo <strong style={{ color: T.text }}>{integracionResumen.integradoAppYWorker}/{integracionResumen.total}</strong> tienen esa doble confirmación (app + Worker/API). Panel de solo
@@ -631,7 +636,7 @@ export default function CentroTecnico({ selectedRole }) {
       </Panel>
 
       {/* A4. CENTRO DE AUTOMATIZACIONES — ARQUITECTURA APP ↔ MAKE 50/50 — PASO 08E (2026-07-20) */}
-      <Panel eyebrow="A4" title="Centro de automatizaciones · Arquitectura App ↔ Make 50/50">
+      <Panel eyebrow="A4" title={ltx("centrotecnico.panel.arquitectura")}>
         <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginTop: 0, marginBottom: 14 }}>
           Tercer eje, distinto de "Verificación 50/50" (A2) e "Integración App ↔ Make" (A3): representa qué puede ver y
           hacer <strong style={{ color: T.text }}>hoy</strong> un usuario real de la app sobre cada uno de los 50 flujos objetivo, y qué falta para
@@ -641,7 +646,7 @@ export default function CentroTecnico({ selectedRole }) {
           servicio externo.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 18 }}>
-          <KpiCard label="Total flujos objetivo" value={arquitecturaResumen.total} />
+          <KpiCard label={ltx("centrotecnico.kpi.total_flows")} value={arquitecturaResumen.total} />
           <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.OPERATIONAL]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.OPERATIONAL]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.OPERATIONAL]} />
           <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.PREPARED]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.PREPARED]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.PREPARED]} />
           <KpiCard label={ARCH_ESTADO_LABEL[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} value={arquitecturaResumen.porEstado[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} color={ARCH_ESTADO_COLOR[MAKE_ARCH_ESTADOS.EXTERNALLY_BLOCKED]} />
@@ -649,13 +654,13 @@ export default function CentroTecnico({ selectedRole }) {
         </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-          <select aria-label="Filtrar por área" value={archArea} onChange={(e) => setArchArea(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+          <select aria-label={ltx("centrotecnico.aria.filtrar_area")} value={archArea} onChange={(e) => setArchArea(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
             {ARCH_FILTERS_AREA.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
-          <select aria-label="Filtrar por estado" value={archEstado} onChange={(e) => setArchEstado(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+          <select aria-label={ltx("centrotecnico.aria.filtrar_estado")} value={archEstado} onChange={(e) => setArchEstado(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
             {ARCH_FILTERS_ESTADO.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
-          <select aria-label="Filtrar por rol autorizado" value={archRol} onChange={(e) => setArchRol(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+          <select aria-label={ltx("centrotecnico.aria.filtrar_rol")} value={archRol} onChange={(e) => setArchRol(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
             {ARCH_FILTERS_ROL.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>
           <span style={{ color: T.textDim, fontSize: ".8rem", alignSelf: "center" }}>{arquitecturaFiltrada.length} de {arquitecturaResumen.total} flujos</span>
@@ -694,7 +699,7 @@ export default function CentroTecnico({ selectedRole }) {
                 <Badge color={ARCH_ESTADO_COLOR[f.estado]}>{ARCH_ESTADO_LABEL[f.estado]}</Badge>
               </div>
             ))}
-            {arquitecturaFiltrada.length === 0 && <div style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>Sin resultados para este filtro.</div>}
+            {arquitecturaFiltrada.length === 0 && <div style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>{ltx("centrotecnico.msg.sin_resultados_filtro")}</div>}
           </div>
         </div>
 
@@ -706,54 +711,54 @@ export default function CentroTecnico({ selectedRole }) {
               <h4 style={{ margin: "0 0 4px", fontFamily: T.fontDisplay }}>{f.nombre}</h4>
               <p style={{ margin: "0 0 12px", color: T.textDim, fontSize: ".85rem" }}>{f.descripcion}</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, fontSize: ".85rem" }}>
-                <div><span style={{ color: T.textDim }}>Área funcional:</span> {f.area}</div>
-                <div><span style={{ color: T.textDim }}>Estado:</span> {ARCH_ESTADO_LABEL[f.estado]}</div>
-                <div><span style={{ color: T.textDim }}>Roles autorizados:</span> {f.rolesAutorizados.join(", ")}</div>
-                <div><span style={{ color: T.textDim }}>Módulo:</span> {f.modulo}</div>
-                <div><span style={{ color: T.textDim }}>Ruta:</span> {f.ruta}</div>
-                <div><span style={{ color: T.textDim }}>Dependencias externas:</span> {f.dependenciasExternas}</div>
-                <div><span style={{ color: T.textDim }}>¿Requiere webhook?:</span> {f.requiereWebhook ? "Sí" : "No"}</div>
-                <div><span style={{ color: T.textDim }}>¿Interfaz completa?:</span> {f.tieneInterfazCompleta ? "Sí" : "No"}</div>
-                <div><span style={{ color: T.textDim }}>¿Contrato preparado?:</span> {f.tieneContratoPreparado ? "Sí" : "No"}</div>
-                <div><span style={{ color: T.textDim }}>¿Probado E2E?:</span> {f.probadoE2E ? "Sí" : "No"}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.areafuncional")}:</span> {f.area}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.estado")}:</span> {ARCH_ESTADO_LABEL[f.estado]}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.roles_autorizados")}:</span> {f.rolesAutorizados.join(", ")}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.modulo")}:</span> {f.modulo}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.ruta")}:</span> {f.ruta}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.dependencias_externas")}:</span> {f.dependenciasExternas}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.requiere_webhook")}:</span> {f.requiereWebhook ? ltx("centrotecnico.status.si") : ltx("centrotecnico.status.no")}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.interfaz_completa")}:</span> {f.tieneInterfazCompleta ? ltx("centrotecnico.status.si") : ltx("centrotecnico.status.no")}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.contrato_preparado")}:</span> {f.tieneContratoPreparado ? ltx("centrotecnico.status.si") : ltx("centrotecnico.status.no")}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.probado_e2e")}:</span> {f.probadoE2E ? ltx("centrotecnico.status.si") : ltx("centrotecnico.status.no")}</div>
               </div>
               <div style={{ marginTop: 12, display: "grid", gap: 8, fontSize: ".85rem" }}>
-                <div><span style={{ color: T.textDim }}>Acción iniciadora:</span> {f.accionIniciadora}</div>
-                <div><span style={{ color: T.textDim }}>Datos de entrada esperados:</span> {f.datosEntrada}</div>
-                <div><span style={{ color: T.textDim }}>Resultado esperado:</span> {f.resultadoEsperado}</div>
-                <div><span style={{ color: T.textDim }}>Última validación conocida:</span> {f.ultimaValidacionConocida}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.accion_iniciadora")}</span> {f.accionIniciadora}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.datos_entrada")}</span> {f.datosEntrada}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.resultado_esperado")}</span> {f.resultadoEsperado}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.ultima_validacion")}</span> {f.ultimaValidacionConocida}</div>
               </div>
               <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.04)", color: T.textDim, fontSize: ".85rem", lineHeight: 1.5 }}>
-                ➡️ Siguiente acción necesaria: {f.siguienteAccionNecesaria}
+                {ltx("centrotecnico.label.siguiente_accion")} {f.siguienteAccionNecesaria}
               </div>
               {/* PASO 08F: representación visual mínima para los flujos que solo viven en Centro de Automatizaciones */}
-              {f.modulo === "Centro de automatizaciones" && <FormularioLocalFlujo key={f.id} flujo={f} />}
+              {f.modulo === "Centro de automatizaciones" && <FormularioLocalFlujo key={f.id} flujo={f} ltx={ltx} />}
             </div>
           );
         })()}
       </Panel>
 
       {/* C. SALUD DE AUTOMATIZACIONES */}
-      <Panel eyebrow="C" title="Salud de automatizaciones">
+      <Panel eyebrow="C" title={ltx("centrotecnico.panel.salud")}>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
           {Object.entries(porSalud).map(([k, v]) => (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Badge color={HEALTH_COLOR[k]}>{HEALTH_LABEL[k]}</Badge>
               <strong style={{ color: T.text }}>{v}</strong>
-              <span style={{ color: T.textDim, fontSize: ".8rem" }}>escenarios</span>
+              <span style={{ color: T.textDim, fontSize: ".8rem" }}>{ltx("centrotecnico.kpi.escenarios_unidades")}</span>
             </div>
           ))}
         </div>
       </Panel>
 
       {/* D. ERRORES Y ALERTAS */}
-      <Panel eyebrow="D" title="Errores y alertas">
+      <Panel eyebrow="D" title={ltx("centrotecnico.panel.errores")}>
         {totales.conErrores === null ? (
           <div style={{ color: T.textDim }}>
-            Datos de errores no disponibles en la fuente en vivo de Make para estos escenarios (el endpoint actual no expone ejecuciones/errores acumulados).
+            {ltx("centrotecnico.msg.errores_no_disponibles")}
           </div>
         ) : conErrores.length === 0 ? (
-          <div style={{ color: T.accent }}>Sin escenarios con errores registrados.</div>
+          <div style={{ color: T.accent }}>{ltx("centrotecnico.msg.sin_escenarios_errores")}</div>
         ) : (
           <div style={{ display: "grid", gap: 8 }}>
             {conErrores.map((s) => (
@@ -770,44 +775,43 @@ export default function CentroTecnico({ selectedRole }) {
       </Panel>
 
       {/* E. CONSUMO Y EFICIENCIA */}
-      <Panel eyebrow="E" title="Consumo y eficiencia">
+      <Panel eyebrow="E" title={ltx("centrotecnico.panel.consumo")}>
         <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
           {topConsumo.map((s) => (
             <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px" }}>
               <span style={{ color: T.text }}>{s.nombre}</span>
-              <span style={{ color: T.textDim }}>{formatMetric(s.operaciones)} operaciones · {formatMetric(s.ejecuciones)} ejecuciones</span>
+              <span style={{ color: T.textDim }}>{formatMetric(s.operaciones)} {ltx("centrotecnico.kpi.operaciones_unidades")} · {formatMetric(s.ejecuciones)} {ltx("centrotecnico.kpi.ejecuciones_unidades")}</span>
             </div>
           ))}
         </div>
         <div style={{ color: T.accent, fontSize: ".85rem", fontWeight: 700 }}>
-          ✅ Optimización ya aplicada: Sincronización Multi-Calendario pasó de 15 a 30 minutos de scheduling (auditoría de consumo Airtable).
+          ✅ {ltx("centrotecnico.msg.optimizacion_aplicada")}: Sincronización Multi-Calendario pasó de 15 a 30 minutos de scheduling (auditoría de consumo Airtable).
         </div>
       </Panel>
 
       {/* B. ESCENARIOS MAKE (filtros, búsqueda, orden, drill-down) */}
-      <Panel eyebrow="B" title="Escenarios Make">
+      <Panel eyebrow="B" title={ltx("centrotecnico.panel.escenarios")}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
           <input
-            aria-label="Buscar escenario por nombre"
-            placeholder="Buscar por nombre…"
+            aria-label={ltx("centrotecnico.aria.buscar_escenario")}
+            placeholder={ltx("centrotecnico.aria.buscar_placeholder")}
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             style={{ flex: "1 1 220px", padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}
           />
           <select
-            aria-label="Ordenar por"
+            aria-label={ltx("centrotecnico.aria.ordenar")}
             value={orden}
             onChange={(e) => setOrden(e.target.value)}
-            style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}
-          >
-            <option value="errores">Ordenar: errores</option>
-            <option value="ejecuciones">Ordenar: ejecuciones</option>
-            <option value="operaciones">Ordenar: operaciones</option>
-            <option value="tasaError">Ordenar: tasa de error</option>
-            <option value="ultimaModificacion">Ordenar: última modificación</option>
-            <option value="criticidad">Ordenar: criticidad</option>
-            <option value="nombre">Ordenar: nombre</option>
-            <option value="estado">Ordenar: estado</option>
+            style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.bg, color: T.text }}>
+            <option value="errores">{ltx("centrotecnico.sort.errores")}</option>
+            <option value="ejecuciones">{ltx("centrotecnico.sort.ejecuciones")}</option>
+            <option value="operaciones">{ltx("centrotecnico.sort.operaciones")}</option>
+            <option value="tasaError">{ltx("centrotecnico.sort.tasa_error")}</option>
+            <option value="ultimaModificacion">{ltx("centrotecnico.sort.ultima_modificacion")}</option>
+            <option value="criticidad">{ltx("centrotecnico.sort.criticidad")}</option>
+            <option value="nombre">{ltx("centrotecnico.sort.nombre")}</option>
+            <option value="estado">{ltx("centrotecnico.sort.estado")}</option>
           </select>
         </div>
 
@@ -865,12 +869,12 @@ export default function CentroTecnico({ selectedRole }) {
               >
                 <span style={{ color: T.text, fontWeight: 700 }}>{s.nombre}</span>
                 <Badge color={T.primary}>{CATEGORY_LABEL[s.categoria]}</Badge>
-                <Badge color={s.activo ? T.accent : T.textDim}>{s.activo ? "Activo" : "Inactivo"}</Badge>
+                <Badge color={s.activo ? T.accent : T.textDim}>{s.activo ? ltx("centrotecnico.status.activo") : ltx("centrotecnico.status.inactivo")}</Badge>
                 <Badge color={HEALTH_COLOR[s.salud]}>{HEALTH_LABEL[s.salud]}</Badge>
-                <span style={{ color: T.textDim, fontSize: ".78rem", whiteSpace: "nowrap" }}>{formatMetric(s.ejecuciones)} ejec.</span>
+                <span style={{ color: T.textDim, fontSize: ".78rem", whiteSpace: "nowrap" }}>{formatMetric(s.ejecuciones)} {ltx("centrotecnico.status.ejec_abbv")}</span>
               </div>
             ))}
-            {filtrados.length === 0 && <div style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>Sin resultados para este filtro/búsqueda.</div>}
+            {filtrados.length === 0 && <div style={{ color: T.textDim, padding: "20px 0", textAlign: "center" }}>{ltx("centrotecnico.msg.sin_resultados_busqueda")}</div>}
           </div>
         </div>
 
@@ -881,18 +885,18 @@ export default function CentroTecnico({ selectedRole }) {
             <div style={{ marginTop: 16, padding: 18, borderRadius: 16, border: `1px solid ${T.accent}55`, background: "rgba(182,255,0,.04)" }}>
               <h4 style={{ margin: "0 0 10px", fontFamily: T.fontDisplay }}>{s.nombre}</h4>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10, fontSize: ".85rem" }}>
-                <div><span style={{ color: T.textDim }}>ID lógico:</span> {s.id}</div>
-                <div><span style={{ color: T.textDim }}>Categoría:</span> {CATEGORY_LABEL[s.categoria]}</div>
-                <div><span style={{ color: T.textDim }}>Estado:</span> {s.activo ? "Activo" : "Inactivo"}</div>
-                <div><span style={{ color: T.textDim }}>Scheduling:</span> {s.scheduling}</div>
-                <div><span style={{ color: T.textDim }}>Ejecuciones:</span> {formatMetric(s.ejecuciones)}</div>
-                <div><span style={{ color: T.textDim }}>Operaciones:</span> {formatMetric(s.operaciones)}</div>
-                <div><span style={{ color: T.textDim }}>Errores:</span> {formatMetric(s.errores)} {typeof s.tasaError === "number" ? `(${s.tasaError}%)` : ""}</div>
-                <div><span style={{ color: T.textDim }}>Salud:</span> {HEALTH_LABEL[s.salud]}</div>
-                <div><span style={{ color: T.textDim }}>Criticidad:</span> {s.criticidad}</div>
-                <div><span style={{ color: T.textDim }}>Última modificación:</span> {s.ultimaModificacion ? new Date(s.ultimaModificacion).toLocaleString("es-ES") : "No disponible"}</div>
-                <div><span style={{ color: T.textDim }}>Dependencia principal:</span> {s.dependenciaPrincipal}</div>
-                <div><span style={{ color: T.textDim }}>Fuente del dato:</span> {s.fuenteDeVerdadDato}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.id_logico")}</span> {s.id}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.categoria")}</span> {CATEGORY_LABEL[s.categoria]}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.estado")}:</span> {s.activo ? ltx("centrotecnico.status.activo") : ltx("centrotecnico.status.inactivo")}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.scheduling")}:</span> {s.scheduling}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.ejecuciones")}:</span> {formatMetric(s.ejecuciones)}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.operaciones")}:</span> {formatMetric(s.operaciones)}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.errores")}:</span> {formatMetric(s.errores)} {typeof s.tasaError === "number" ? `(${s.tasaError}%)` : ""}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.salud")}:</span> {HEALTH_LABEL[s.salud]}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.criticidad")}:</span> {s.criticidad}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.ultima_modificacion")}:</span> {s.ultimaModificacion ? new Date(s.ultimaModificacion).toLocaleString("es-ES") : ltx("centrotecnico.status.no_disponible")}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.dependencia_principal")}:</span> {s.dependenciaPrincipal}</div>
+                <div><span style={{ color: T.textDim }}>{ltx("centrotecnico.label.fuente_dato")}:</span> {s.fuenteDeVerdadDato}</div>
                 {s.estadoVerificacion && (
                   <div><span style={{ color: T.textDim }}>Verificación (auditoría 2026-07-17):</span> {VERIFICATION_LABEL[s.estadoVerificacion] || s.estadoVerificacion}</div>
                 )}
@@ -908,7 +912,7 @@ export default function CentroTecnico({ selectedRole }) {
       </Panel>
 
       {/* F. INTEGRACIONES */}
-      <Panel eyebrow="F" title="Integraciones">
+      <Panel eyebrow="F" title={ltx("centrotecnico.panel.integraciones")}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10 }}>
           {INTEGRATIONS.map((i) => (
             <div key={i.sistema} style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,.03)" }}>
@@ -920,7 +924,7 @@ export default function CentroTecnico({ selectedRole }) {
       </Panel>
 
       {/* G. SEGURIDAD */}
-      <Panel eyebrow="G" title="Seguridad">
+      <Panel eyebrow="G" title={ltx("centrotecnico.panel.seguridad")}>
         <ul style={{ margin: 0, paddingLeft: 20, color: T.textDim, lineHeight: 1.8, fontSize: ".88rem" }}>
           <li>Acceso exclusivo del rol SUPPORT (navegación, guard de render y este componente lo verifican de forma independiente).</li>
           <li>Ningún token, hookId invocable, URL de webhook, credencial ni contenido HTML de email se muestra en este panel.</li>
@@ -929,7 +933,7 @@ export default function CentroTecnico({ selectedRole }) {
       </Panel>
 
       {/* H. RECOMENDACIONES */}
-      <Panel eyebrow="H" title="Recomendaciones">
+      <Panel eyebrow="H" title={ltx("centrotecnico.panel.recomendaciones")}>
         <ul style={{ margin: 0, paddingLeft: 20, color: T.textDim, lineHeight: 1.9, fontSize: ".88rem" }}>
           <li><strong style={{ color: T.text }}>Sincronización Multi-Calendario:</strong> optimización ya aplicada (15→30 min). Sin acción adicional.</li>
           <li><strong style={{ color: T.text }}>Recordatorio 24h Antes:</strong> corrección estructural aplicada; escenario inactivo; pendiente validación funcional con datos reales cuando Airtable esté disponible.</li>

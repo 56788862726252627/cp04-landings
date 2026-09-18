@@ -1,0 +1,1032 @@
+{
+  "generadoEn": "2026-08-01",
+  "contadores": {
+    "total": 50,
+    "conectados": 39,
+    "probados": 2,
+    "operativos": 1,
+    "porEstado": {
+      "NO_CONECTADO": 8,
+      "CONECTADO_SIN_PROBAR": 4,
+      "PROBADO_PARCIAL": 1,
+      "OPERATIVO": 1,
+      "BLOQUEADO": 30,
+      "NO_APLICA": 3,
+      "PENDIENTE_DE_CONFIRMAR": 3
+    }
+  },
+  "flujos": [
+    {
+      "id": 5697630,
+      "numero": 1,
+      "nombre": "📡 API Reservas",
+      "categoria": "APP_TRIGGERED",
+      "area": "Reservas",
+      "descripcion": "Crear, consultar, reprogramar y cancelar reservas de pista.",
+      "rolesAutorizados": [
+        "PLAYER",
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Reservar / Reservas",
+      "ruta": "reservas",
+      "accionIniciadora": "Jugador crea/consulta reserva; STAFF/ADMIN/SUPPORT gestionan listado",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + Google Calendar",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — webhook de Make sin configurar todavía",
+      "notas": "Configurar el secret del webhook de Make correspondiente en el Worker y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 6199248,
+      "numero": 2,
+      "nombre": "🎾 Alta de Jugador",
+      "categoria": "APP_TRIGGERED",
+      "area": "Jugadores",
+      "descripcion": "Alta de un nuevo jugador/socio en el club.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Alta de jugador",
+      "ruta": "alta_jugador",
+      "accionIniciadora": "STAFF/ADMIN/SUPPORT envía formulario de alta",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "OPERATIVO",
+      "evidencia": "7 ejecuciones históricas confirmadas en Make, 2 errores (evidencia previa a este bloque de trabajo)",
+      "notas": "Reconfirmar tras la renovación de cuota de Airtable; sin otra acción pendiente."
+    },
+    {
+      "id": 6299114,
+      "numero": 3,
+      "nombre": "⚠️ Alerta Crítica Fallos Make",
+      "categoria": "TECHNICAL_MONITORING",
+      "area": "Soporte",
+      "descripcion": "Avisa al equipo técnico ante un fallo crítico en Make.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Alerta automática ante fallo crítico en Make",
+      "webhookEsperado": "No — disparador confirmado: cada 900s (15 min)",
+      "servicioDestino": "Ninguno detectado",
+      "estadoFuncional": "NO_APLICA",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 6233755,
+      "numero": 4,
+      "nombre": "🗺️ Mapa de Flujos",
+      "categoria": "TECHNICAL_MONITORING",
+      "area": "Soporte",
+      "descripcion": "Genera un mapa visual de los flujos Make activos.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Generación automática del mapa de flujos Make",
+      "webhookEsperado": "No — disparador confirmado: semanal · lunes 07:30",
+      "servicioDestino": "Ninguno detectado",
+      "estadoFuncional": "NO_APLICA",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 6217724,
+      "numero": 5,
+      "nombre": "🔄 Backup Semanal",
+      "categoria": "SCHEDULED",
+      "area": "Seguridad y auditoría",
+      "descripcion": "Realiza una copia de seguridad semanal de los datos del club.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Backups y seguridad",
+      "ruta": "backups_seguridad",
+      "accionIniciadora": "Backup automático semanal de datos",
+      "webhookEsperado": "No — disparador confirmado: semanal · lunes 07:00",
+      "servicioDestino": "Airtable + Google Drive",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5791128,
+      "numero": 6,
+      "nombre": "👥 Emparejamiento Sin Pareja",
+      "categoria": "SCHEDULED",
+      "area": "Jugadores",
+      "descripcion": "Empareja automáticamente a jugadores que buscan compañero de partido.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Emparejamiento automático de jugadores sin pareja",
+      "webhookEsperado": "No — disparador confirmado: semanal · jueves 11:00",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5736472,
+      "numero": 7,
+      "nombre": "🚨 Alerta Pistas Libres + Flash Promo",
+      "categoria": "SCHEDULED",
+      "area": "Reservas",
+      "descripcion": "Alerta de pista libre de última hora con posible promoción flash.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Pistas libres y recordatorios",
+      "ruta": "pistas_recordatorios",
+      "accionIniciadora": "Aviso automático cuando una pista queda libre de última hora",
+      "webhookEsperado": "No — disparador confirmado: semanal · mar/vie 09:00",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5736800,
+      "numero": 8,
+      "nombre": "📋 Dashboard Ejecutivo Diario",
+      "categoria": "SCHEDULED",
+      "area": "Informes",
+      "descripcion": "Genera el dashboard ejecutivo con las métricas diarias del club.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Dashboard KPI y NPS",
+      "ruta": "dashboard_kpi",
+      "accionIniciadora": "Generación automática de dashboard ejecutivo diario",
+      "webhookEsperado": "No — disparador confirmado: semanal · diario 09:00",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5736468,
+      "numero": 9,
+      "nombre": "📊 Panel KPI Semanal",
+      "categoria": "SCHEDULED",
+      "area": "Informes",
+      "descripcion": "Genera el panel de KPIs semanales del club.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Dashboard KPI y NPS",
+      "ruta": "dashboard_kpi",
+      "accionIniciadora": "Generación automática de panel KPI semanal",
+      "webhookEsperado": "No — disparador confirmado: semanal · martes 08:00",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5736470,
+      "numero": 10,
+      "nombre": "🔁 Reactivación Inactivos 30d",
+      "categoria": "SCHEDULED",
+      "area": "Jugadores",
+      "descripcion": "Reactiva socios inactivos desde hace 30 días con una comunicación específica.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Comunicación automática a socios inactivos 30 días",
+      "webhookEsperado": "No — disparador confirmado: semanal · martes 10:00",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5799041,
+      "numero": 11,
+      "nombre": "📈 Predicción Ocupación",
+      "categoria": "SCHEDULED",
+      "area": "Informes",
+      "descripcion": "Estima la ocupación futura de las pistas por franja horaria.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Calendario y disponibilidad",
+      "ruta": "calendario_disponibilidad",
+      "accionIniciadora": "Cálculo periódico de predicción de ocupación",
+      "webhookEsperado": "No — disparador confirmado: semanal · martes 07:00",
+      "servicioDestino": "Airtable + Google Calendar",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5811864,
+      "numero": 12,
+      "nombre": "🎂 Felicitación Cumpleaños",
+      "categoria": "SCHEDULED",
+      "area": "Jugadores",
+      "descripcion": "Envía una felicitación automática de cumpleaños al socio.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Felicitación automática de cumpleaños",
+      "webhookEsperado": "No — disparador confirmado: semanal · diario 09:00",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5811901,
+      "numero": 13,
+      "nombre": "📊 Análisis NPS Semanal",
+      "categoria": "SCHEDULED",
+      "area": "Informes",
+      "descripcion": "Calcula el NPS (satisfacción) semanal de los socios.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Dashboard KPI y NPS",
+      "ruta": "dashboard_kpi",
+      "accionIniciadora": "Cálculo semanal de NPS de satisfacción",
+      "webhookEsperado": "No — disparador confirmado: semanal · martes 08:30",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5811888,
+      "numero": 14,
+      "nombre": "💸 Escalado Impagos",
+      "categoria": "SCHEDULED",
+      "area": "Administración",
+      "descripcion": "Escala automáticamente los impagos persistentes de cuota.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Facturación y pagos",
+      "ruta": "facturacion_pagos",
+      "accionIniciadora": "Escalado automático de impagos persistentes",
+      "webhookEsperado": "No — disparador confirmado: semanal · diario 08:00",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5791032,
+      "numero": 15,
+      "nombre": "💳 Recordatorio Cuota Mensual",
+      "categoria": "SCHEDULED",
+      "area": "Jugadores",
+      "descripcion": "Recuerda al socio el próximo cobro de cuota mensual.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Recordatorio automático de cuota mensual",
+      "webhookEsperado": "No — disparador confirmado: cada 2 592 000s (30 días)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5791119,
+      "numero": 16,
+      "nombre": "📊 Informe Mensual",
+      "categoria": "SCHEDULED",
+      "area": "Informes",
+      "descripcion": "Genera el informe mensual de indicadores del club.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Dashboard KPI y NPS",
+      "ruta": "dashboard_kpi",
+      "accionIniciadora": "Generación automática de informe mensual",
+      "webhookEsperado": "No — disparador confirmado: cada 2 592 000s (30 días)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5735907,
+      "numero": 17,
+      "nombre": "🗓️ Sincronización Multi-Calendario",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Reservas",
+      "descripcion": "Sincroniza las reservas del club con calendarios externos (p. ej. Google Calendar).",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Calendario y disponibilidad",
+      "ruta": "calendario_disponibilidad",
+      "accionIniciadora": "Sincronización periódica con calendarios externos",
+      "webhookEsperado": "No — disparador confirmado: cada 1800s (30 min)",
+      "servicioDestino": "Airtable + Google Calendar",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5791116,
+      "numero": 18,
+      "nombre": "🏷️ Confirmación Inscripción Torneo",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Torneos y ranking",
+      "descripcion": "Confirma automáticamente la inscripción de un jugador a un torneo.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Confirmación automática de inscripción a torneo",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "NO_CONECTADO",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 4942506,
+      "numero": 19,
+      "nombre": "🔔 Recordatorio 24h Antes",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Reservas",
+      "descripcion": "Recuerda a un jugador su reserva 24 horas antes.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Pistas libres y recordatorios",
+      "ruta": "pistas_recordatorios",
+      "accionIniciadora": "Recordatorio automático 24h antes de una reserva",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5736463,
+      "numero": 20,
+      "nombre": "⚡ Recordatorio 2h Antes",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Reservas",
+      "descripcion": "Recuerda a un jugador su reserva 2 horas antes.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Pistas libres y recordatorios",
+      "ruta": "pistas_recordatorios",
+      "accionIniciadora": "Recordatorio automático 2h antes de una reserva",
+      "webhookEsperado": "No — disparador confirmado: cada 1800s (30 min)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5736797,
+      "numero": 21,
+      "nombre": "🚫 Seguimiento No-Show",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Reservas",
+      "descripcion": "Registra y hace seguimiento de reservas no honradas (no-show).",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Pistas libres y recordatorios",
+      "ruta": "pistas_recordatorios",
+      "accionIniciadora": "Registro automático de no-show tras una reserva no honrada",
+      "webhookEsperado": "No — disparador confirmado: cada 21600s (6h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5791113,
+      "numero": 22,
+      "nombre": "📋 Gestión Lista de Espera",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Jugadores",
+      "descripcion": "Gestiona la lista de espera de jugadores y su promoción automática.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Lista de espera",
+      "ruta": "lista_espera",
+      "accionIniciadora": "STAFF/ADMIN/SUPPORT añade jugador o promociona desde lista de espera",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5750308,
+      "numero": 23,
+      "nombre": "📧 Monitor Prueba Gratuita",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Jugadores",
+      "descripcion": "Monitoriza a los socios en periodo de prueba gratuita.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Monitorización automática de socios en prueba gratuita",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5811918,
+      "numero": 24,
+      "nombre": "🔁 Onboarding Secuencial",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Jugadores",
+      "descripcion": "Envía una secuencia de mensajes de onboarding a un socio nuevo.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Secuencia automática de onboarding a nuevo socio",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5812456,
+      "numero": 25,
+      "nombre": "❄️ Congelación + Reactivación Membresía",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Jugadores",
+      "descripcion": "Gestiona la congelación temporal y reactivación de una membresía.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Congelación o reactivación automática de membresía",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5791022,
+      "numero": 26,
+      "nombre": "🎁 Bienvenida Nuevo Socio",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Jugadores",
+      "descripcion": "Da la bienvenida automática a un socio recién incorporado.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Comunicación automática de bienvenida a nuevo socio",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5812297,
+      "numero": 27,
+      "nombre": "🎁 Programa de Referidos",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Jugadores",
+      "descripcion": "Gestiona el programa de referidos entre socios.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Comunicaciones y ciclo de socio",
+      "ruta": "comunicaciones_socio",
+      "accionIniciadora": "Gestión automática del programa de referidos",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5736466,
+      "numero": 28,
+      "nombre": "⭐ Encuesta Post-Partido",
+      "categoria": "INTERNAL_OPERATION",
+      "area": "Torneos y ranking",
+      "descripcion": "Envía una encuesta de satisfacción tras un partido. Hallazgo: 89% de tasa de error histórica en Make.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Envío automático de encuesta post-partido",
+      "webhookEsperado": "No — disparador confirmado: cada 3600s (1h)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "NO_CONECTADO",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 4919937,
+      "numero": 29,
+      "nombre": "🏆 Cruces de Torneo",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Torneos y ranking",
+      "descripcion": "Genera los cruces (bracket) de un torneo a partir de los inscritos.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Generación automática de cruces de torneo",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "NO_CONECTADO",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 5330078,
+      "numero": 30,
+      "nombre": "🏅 Resultados y Clasificación",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Torneos y ranking",
+      "descripcion": "Registra resultados y actualiza la clasificación de un torneo.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Registro automático de resultados y clasificación",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "NO_CONECTADO",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 5791374,
+      "numero": 31,
+      "nombre": "🏆 Reto 04 + Puntos",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Torneos y ranking",
+      "descripcion": "Calcula puntos de un reto de gamificación, sin diseño de producto definido todavía.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Cálculo automático de puntos del reto/gamificación",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "NO_CONECTADO",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 5791133,
+      "numero": 32,
+      "nombre": "🏟️ Cierre Temporal de Pistas",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Reservas",
+      "descripcion": "Cierre temporal de una o varias pistas por mantenimiento, lluvia u otra causa.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Cierre temporal",
+      "ruta": "cierre_pistas",
+      "accionIniciadora": "STAFF/ADMIN/SUPPORT envía formulario de cierre",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + WhatsApp Business API",
+      "estadoFuncional": "PROBADO_PARCIAL",
+      "evidencia": "ninguna — webhook de Make sin configurar todavía",
+      "notas": "Configurar el secret del webhook de Make correspondiente en el Worker y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5288809,
+      "numero": 33,
+      "nombre": "❌ Baja de Jugador + Promoción",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Jugadores",
+      "descripcion": "Baja de un jugador/socio, con promoción opcional desde lista de espera.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Baja de jugador",
+      "ruta": "baja_jugador",
+      "accionIniciadora": "STAFF/ADMIN/SUPPORT envía formulario de baja",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "CONECTADO_SIN_PROBAR",
+      "evidencia": "ninguna — webhook de Make sin configurar todavía",
+      "notas": "Configurar el secret del webhook de Make correspondiente en el Worker y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5291559,
+      "numero": 34,
+      "nombre": "🔐 Control Acceso QR",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Acceso y QR",
+      "descripcion": "Verifica el código QR de acceso presentado por un jugador.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Control QR / Accesos",
+      "ruta": "control_qr",
+      "accionIniciadora": "Verificación de código QR presentado en el acceso del club",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 6244975,
+      "numero": 35,
+      "nombre": "🔑 Generación QR Acceso",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Acceso y QR",
+      "descripcion": "Genera el código QR de acceso de un jugador.",
+      "rolesAutorizados": [
+        "STAFF",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Control QR / Accesos",
+      "ruta": "control_qr",
+      "accionIniciadora": "Generación de código QR de acceso para un jugador",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Ninguno detectado",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 5799031,
+      "numero": 36,
+      "nombre": "🎧 Atención Socio WhatsApp FAQ",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Automatizaciones",
+      "descripcion": "Responde automáticamente preguntas frecuentes de socios por WhatsApp.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Automatizaciones y bots",
+      "ruta": "automatizaciones_bots",
+      "accionIniciadora": "Respuesta automática a preguntas frecuentes por WhatsApp",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + Stripe + WhatsApp Business API + Telegram Bot API + Google Calendar",
+      "estadoFuncional": "PENDIENTE_DE_CONFIRMAR",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Activar la integración externa pendiente (Stripe/WhatsApp/Telegram/Google Calendar/Make) y construir el endpoint del Worker."
+    },
+    {
+      "id": 5791124,
+      "numero": 37,
+      "nombre": "🎯 Campaña Flash WhatsApp",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Automatizaciones",
+      "descripcion": "Envía una campaña promocional flash por WhatsApp.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Automatizaciones y bots",
+      "ruta": "automatizaciones_bots",
+      "accionIniciadora": "Envío automático de campaña flash por WhatsApp",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + Stripe + WhatsApp Business API + Telegram Bot API + Google Calendar",
+      "estadoFuncional": "PENDIENTE_DE_CONFIRMAR",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Activar la integración externa pendiente (Stripe/WhatsApp/Telegram/Google Calendar/Make) y construir el endpoint del Worker."
+    },
+    {
+      "id": 5733370,
+      "numero": 38,
+      "nombre": "💰 Facturación y Cobro",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Administración",
+      "descripcion": "Genera la facturación y el cobro periódico de cuotas.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Facturación y pagos",
+      "ruta": "facturacion_pagos",
+      "accionIniciadora": "Generación automática de facturación y cobro de cuota",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + Stripe + WhatsApp Business API + Telegram Bot API + Google Calendar",
+      "estadoFuncional": "CONECTADO_SIN_PROBAR",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Activar la integración externa pendiente (Stripe/WhatsApp/Telegram/Google Calendar/Make) y construir el endpoint del Worker."
+    },
+    {
+      "id": 5799061,
+      "numero": 39,
+      "nombre": "💬 Chatbot Web Reservas",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Comunicaciones",
+      "descripcion": "Chatbot de atención en la web para consultas de reserva.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Respuesta automática de chatbot en la web de reservas",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Ninguno detectado",
+      "estadoFuncional": "NO_CONECTADO",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 5798996,
+      "numero": 40,
+      "nombre": "🤖 Bot IA Reservas WhatsApp",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Automatizaciones",
+      "descripcion": "Bot de IA que ayuda a reservar pista por WhatsApp.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Automatizaciones y bots",
+      "ruta": "automatizaciones_bots",
+      "accionIniciadora": "Reserva asistida por bot de IA vía WhatsApp",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Stripe + WhatsApp Business API + Telegram Bot API + Google Calendar",
+      "estadoFuncional": "CONECTADO_SIN_PROBAR",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Activar la integración externa pendiente (Stripe/WhatsApp/Telegram/Google Calendar/Make) y construir el endpoint del Worker."
+    },
+    {
+      "id": 4832095,
+      "numero": 41,
+      "nombre": "🤖 Bot IA Reservas Telegram",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Automatizaciones",
+      "descripcion": "Bot de IA que ayuda a reservar pista por Telegram.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Automatizaciones y bots",
+      "ruta": "automatizaciones_bots",
+      "accionIniciadora": "Reserva asistida por bot de IA vía Telegram",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (Telegram watchUpdates)",
+      "servicioDestino": "Stripe + WhatsApp Business API + Telegram Bot API + Google Calendar",
+      "estadoFuncional": "CONECTADO_SIN_PROBAR",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Activar la integración externa pendiente (Stripe/WhatsApp/Telegram/Google Calendar/Make) y construir el endpoint del Worker."
+    },
+    {
+      "id": 6323457,
+      "numero": 42,
+      "nombre": "⚖️ Solicitud GDPR Acceso u Olvido de Datos",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Seguridad y auditoría",
+      "descripcion": "Registra y tramita solicitudes de acceso u olvido de datos (RGPD).",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Backups y seguridad",
+      "ruta": "backups_seguridad",
+      "accionIniciadora": "Registro y tramitación de solicitud GDPR",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 6323450,
+      "numero": 43,
+      "nombre": "🛡️ Alerta Seguridad Acceso Sospechoso",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Seguridad y auditoría",
+      "descripcion": "Genera una alerta ante un intento de acceso sospechoso.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Backups y seguridad",
+      "ruta": "backups_seguridad",
+      "accionIniciadora": "Alerta automática ante acceso sospechoso",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Ninguno detectado",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 6323441,
+      "numero": 44,
+      "nombre": "💳 Pago Confirmado Stripe → Cuota + Recibo",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Administración",
+      "descripcion": "Procesa la confirmación de un pago Stripe y emite el recibo.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Facturación y pagos",
+      "ruta": "facturacion_pagos",
+      "accionIniciadora": "Confirmación automática de pago Stripe → cuota y recibo",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + Stripe",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 6335117,
+      "numero": 45,
+      "nombre": "🔄 Dunning Cobro Recurrente Stripe",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Administración",
+      "descripcion": "Reintenta automáticamente un cobro recurrente de Stripe fallido.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Facturación y pagos",
+      "ruta": "facturacion_pagos",
+      "accionIniciadora": "Reintento automático de cobro recurrente fallido (dunning)",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + Stripe",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    },
+    {
+      "id": 6323445,
+      "numero": 46,
+      "nombre": "🔑 Email Recuperación de Contraseña SaaS",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Administración",
+      "descripcion": "Flujo Make de recuperación de contraseña, redundante con el flujo real vía Supabase.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Envío de email de recuperación de contraseña (redundante con Supabase)",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Ninguno detectado",
+      "estadoFuncional": "NO_CONECTADO",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 6335114,
+      "numero": 47,
+      "nombre": "📸 Instagram Borrador con IA",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Promociones y marketing",
+      "descripcion": "Genera un borrador de publicación de Instagram con IA.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro de automatizaciones",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Generación automática de borrador de contenido para Instagram con IA",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + Instagram",
+      "estadoFuncional": "NO_APLICA",
+      "evidencia": "ninguna ejecución real — formulario local de simulación preparado en Paso 08F, sin llamada externa",
+      "notas": "Conectar el webhook/automatización real de Make cuando exista decisión de producto; hoy el formulario local es solo una simulación segura."
+    },
+    {
+      "id": 6335118,
+      "numero": 48,
+      "nombre": "🔔 Notificación Push PWA",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Comunicaciones",
+      "descripcion": "Envía notificaciones push a los usuarios de la PWA instalada.",
+      "rolesAutorizados": [
+        "SUPPORT"
+      ],
+      "modulo": "Centro Técnico",
+      "ruta": "flujos_make",
+      "accionIniciadora": "Envío de notificación push a la PWA instalada",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Airtable + Stripe + WhatsApp Business API + Telegram Bot API + Google Calendar",
+      "estadoFuncional": "NO_CONECTADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Activar la integración externa pendiente (Stripe/WhatsApp/Telegram/Google Calendar/Make) y construir el endpoint del Worker."
+    },
+    {
+      "id": 5747703,
+      "numero": 49,
+      "nombre": "📝 Tally → API Reservas",
+      "categoria": "EVENT_TRIGGERED",
+      "area": "Automatizaciones",
+      "descripcion": "Crea una reserva a partir de un formulario externo (Tally).",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Automatizaciones y bots",
+      "ruta": "automatizaciones_bots",
+      "accionIniciadora": "Alta de reserva desde formulario externo Tally",
+      "webhookEsperado": "Sí — disparador confirmado: webhook (immediately)",
+      "servicioDestino": "Stripe + WhatsApp Business API + Telegram Bot API + Google Calendar",
+      "estadoFuncional": "PENDIENTE_DE_CONFIRMAR",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Activar la integración externa pendiente (Stripe/WhatsApp/Telegram/Google Calendar/Make) y construir el endpoint del Worker."
+    },
+    {
+      "id": 6216523,
+      "numero": 50,
+      "nombre": "🗂️ Backup Plantilla Drive",
+      "categoria": "DEVELOPMENT_QA",
+      "area": "Seguridad y auditoría",
+      "descripcion": "Realiza una copia de seguridad de la plantilla del club en Google Drive.",
+      "rolesAutorizados": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "modulo": "Backups y seguridad",
+      "ruta": "backups_seguridad",
+      "accionIniciadora": "Backup automático de plantilla a Drive",
+      "webhookEsperado": "No — disparador confirmado: cada 900s (15 min)",
+      "servicioDestino": "Google Drive",
+      "estadoFuncional": "BLOQUEADO",
+      "evidencia": "ninguna — pendiente de validación E2E real",
+      "notas": "Esperar renovación de cuota de Airtable (429) y ejecutar el runbook 07Q."
+    }
+  ]
+}

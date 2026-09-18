@@ -1,0 +1,59 @@
+/* CLIENTE: reuse the existing CP04 lime/mint identity; scoped to navigation. */
+.cp04-skip-link {
+  position: fixed;
+  top: 8px;
+  left: 12px;
+  z-index: 1000;
+  transform: translateY(-180%);
+  background: #b6ff00;
+  color: #05080d;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+.cp04-skip-link:focus { transform: none; }
+.cp04-sidebar-header { flex-wrap: wrap; }
+.cp04-sidebar .cp04-menu-button,
+.cp04-mobilebar .cp04-menu-button,
+.cp04-navigation-return {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+.cp04-sidebar nav .cp04-menu-button { text-align: start; }
+.cp04-sidebar nav .cp04-menu-button > svg { flex-shrink: 0; }
+.cp04-sidebar nav .cp04-menu-button > span { overflow-wrap: anywhere; }
+.cp04-sidebar .cp04-menu-button:focus-visible,
+.cp04-mobilebar .cp04-menu-button:focus-visible,
+.cp04-navigation-return:focus-visible,
+.cp04-skip-link:focus-visible {
+  outline: 3px solid #b6ff00;
+  outline-offset: 3px;
+}
+.cp04-main:focus-visible { outline: 2px solid #b6ff00; outline-offset: -2px; }
+.cp04-navigation-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  color: #b6ff00;
+  background: #070b14;
+  border: 1px solid #b6ff00;
+  border-radius: 14px;
+  font: inherit;
+  cursor: pointer;
+}
+.cp04-navigation-status { position: sticky; top: 0; z-index: 65; }
+@media (max-width: 980px) {
+  .cp04-sidebar { overscroll-behavior: contain; }
+  .cp04-navigation-status { top: 66px; }
+}
+@media (max-width: 640px) {
+  .cp04-mobilebar.cp04-mobilebar { gap: 8px; }
+  /* ClockDisplay has inline display:flex; retain it on wider viewports. */
+  .cp04-mobilebar > :nth-child(2) { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp04-sidebar, .cp04-sidebar .cp04-menu-button { transition: none !important; }
+}

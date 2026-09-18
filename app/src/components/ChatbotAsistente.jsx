@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authFetch } from "../auth/authService.js";
 import { cp04BuildApiUrl } from "../utils/apiEndpoint.js";
+import { t } from "../i18n/translations.js";
+import { useLang } from "../i18n/language.js";
 
 const CHAT_ENDPOINT = cp04BuildApiUrl("/api/chat", import.meta.env);
 
 const WELCOME_MSG = {
   id: "welcome",
   role: "bot",
-  text: "Hola, soy el asistente de Club Pádel 04. Puedo ayudarte con:\n• Consultar disponibilidad de pistas\n• Orientarte para crear, cancelar o reprogramar reservas\n\nEscribe tu consulta en lenguaje natural.",
+  text: "chatbot.welcome",
 };
 
 function BotMessage({ text }) {
@@ -33,7 +35,10 @@ function TypingIndicator() {
 }
 
 export function ChatbotAsistente({ onNavigate }) {
-  const [messages, setMessages] = useState([WELCOME_MSG]);
+  const { lang } = useLang();
+  const tx = useCallback((key) => t(key, lang), [lang]);
+
+  const [messages, setMessages] = useState([{ ...WELCOME_MSG, text: tx("chatbot.welcome") }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
@@ -51,7 +56,7 @@ export function ChatbotAsistente({ onNavigate }) {
     setInput("");
     setLoading(true);
 
-    let reply = "No he podido procesar tu consulta. Inténtalo de nuevo.";
+    let reply = tx("chatbot.error_process");
     let redirectHint = null;
 
     try {
@@ -67,16 +72,16 @@ export function ChatbotAsistente({ onNavigate }) {
       if (data.redirect_hint) redirectHint = data.redirect_hint;
 
       if (data.authRequired) {
-        reply = "Para realizar esta acción necesitas iniciar sesión. Accede con tu cuenta de socio desde el menú principal.";
+        reply = tx("chatbot.error_auth");
       }
     } catch {
-      reply = "No he podido conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.";
+      reply = tx("chatbot.error_connection");
     }
 
     const botMsg = { id: Date.now() + 1, role: "bot", text: reply, redirectHint };
     setMessages((prev) => [...prev, botMsg]);
     setLoading(false);
-  }, [input, loading]);
+  }, [input, loading, tx]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -89,7 +94,7 @@ export function ChatbotAsistente({ onNavigate }) {
     <div style={styles.container}>
       <div style={styles.header}>
         <span style={styles.headerIcon}>🤖</span>
-        <span style={styles.headerTitle}>Asistente Club Pádel 04</span>
+        <span style={styles.headerTitle}>{tx("chatbot.title")}</span>
       </div>
 
       <div style={styles.messageList}>
@@ -104,7 +109,7 @@ export function ChatbotAsistente({ onNavigate }) {
                     style={styles.navBtn}
                     onClick={() => onNavigate(m.redirectHint)}
                   >
-                    Ir a {m.redirectHint}
+                    {tx("chatbot.navigate_to")} {m.redirectHint}
                   </button>
                 )}
               </div>
@@ -120,10 +125,10 @@ export function ChatbotAsistente({ onNavigate }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Escribe tu consulta… (Enter para enviar)"
+          placeholder={tx("chatbot.placeholder")}
           rows={2}
           disabled={loading}
-          aria-label="Mensaje para el asistente"
+          aria-label={tx("chatbot.message_aria")}
         />
         <button
           style={{
@@ -133,7 +138,7 @@ export function ChatbotAsistente({ onNavigate }) {
           }}
           onClick={sendMessage}
           disabled={loading || !input.trim()}
-          aria-label="Enviar mensaje"
+          aria-label={tx("chatbot.send_aria")}
         >
           ➤
         </button>

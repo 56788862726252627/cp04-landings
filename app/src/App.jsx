@@ -2,6 +2,12 @@ import './tournament-module.css';
 import './internal-module-backgrounds.css';
 import './cp04-legibility-polish.css';
 import './torcal-role-background.css';
+import './interactive-navigation.css';
+import './saas-core/ui/experience.css';
+import './clients/club-padel-04/accessExperience.css';
+import { AccessShell } from './clients/club-padel-04/AccessStory.jsx';
+import AnimatedDisclosure from './saas-core/ui/AnimatedDisclosure.jsx';
+import { attachNavigationDialog } from './saas-core/ui/navigationDialog.js';
 
 const GALLERY_REAL_IMAGE_STYLES = `
   .cp04-gallery-card,
@@ -31,6 +37,9 @@ const GALLERY_REAL_IMAGE_STYLES = `
 
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { t, TRANSLATIONS } from "./i18n/translations.js";
+import { LANGUAGES_ALL, LANGUAGES_RAW, LANGUAGES_RECOMMENDED, loadSavedLanguage, setGlobalLang, useLang } from "./i18n/language.js";
+import { createPortal } from "react-dom";
 
 import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
 import { LazyCP04GuidedTutorial } from "./components/lazy/lazyGuidedTutorial.js";
@@ -1366,182 +1375,7 @@ function normalizeSearchText(value) {
     .trim();
 }
 
-const LANGUAGES_RAW = [
-  // Recomendados (padel/sport/reservas context)
-  { code: "es-ES", label: "Español", country: "España", countryEs: "España", countryEn: "Spain", flag: "🇪🇸", recommended: true, aliases: ["España","Spain","Español","Spanish","Castellano","ES","es","es-ES","🇪🇸","espana","spain","español","spanish","castellano"] },
-  { code: "en-GB", label: "English", country: "United Kingdom", countryEs: "Reino Unido", countryEn: "United Kingdom", flag: "🇬🇧", recommended: true, aliases: ["English","Inglés","United Kingdom","Reino Unido","Great Britain","Britain","UK","GB","en","en-GB","🇬🇧","ingles","united kingdom","reino unido"] },
-  { code: "fr-FR", label: "Français", country: "France", countryEs: "Francia", countryEn: "France", flag: "🇫🇷", recommended: true, aliases: ["Français","Francés","French","France","Francia","FR","fr","fr-FR","🇫🇷","francais","frances","french","france","francia"] },
-  { code: "de-DE", label: "Deutsch", country: "Deutschland", countryEs: "Alemania", countryEn: "Germany", flag: "🇩🇪", recommended: true, aliases: ["Deutsch","Alemán","German","Deutschland","Alemania","Germany","DE","de","de-DE","🇩🇪","aleman","german","alemania","deutschland"] },
-  { code: "it-IT", label: "Italiano", country: "Italia", countryEs: "Italia", countryEn: "Italy", flag: "🇮🇹", recommended: true, aliases: ["Italiano","Italian","Italia","Italy","IT","it","it-IT","🇮🇹","italiano","italian","italia","italy"] },
-  { code: "pt-PT", label: "Português", country: "Portugal", countryEs: "Portugal", countryEn: "Portugal", flag: "🇵🇹", recommended: true, aliases: ["Português","Portugués","Portuguese","Portugal","PT","pt","pt-PT","🇵🇹","portugues","portuguese","portugal"] },
-  { code: "pt-BR", label: "Português", country: "Brasil", countryEs: "Brasil", countryEn: "Brazil", flag: "🇧🇷", recommended: true, aliases: ["Português","Portugués","Portuguese","Brasil","Brazil","BR","pt-BR","🇧🇷","portugues","portuguese","brasil","brazil"] },
-  { code: "nl-NL", label: "Nederlands", country: "Nederland", countryEs: "Países Bajos", countryEn: "Netherlands", flag: "🇳🇱", recommended: true, aliases: ["Nederlands","Neerlandés","Dutch","Nederland","Países Bajos","Netherlands","NL","nl","nl-NL","🇳🇱","neerlandes","dutch","paises bajos","netherlands","nederland"] },
-  { code: "ru-RU", label: "Русский", country: "Россия", countryEs: "Rusia", countryEn: "Russia", flag: "🇷🇺", recommended: false, aliases: ["Русский","Ruso","Russian","Россия","Rusia","Russia","RU","ru","ru-RU","🇷🇺","ruso","russian","rusia","russia"] },
-  { code: "ar-SA", label: "العربية", country: "السعودية", countryEs: "Arabia Saudí", countryEn: "Saudi Arabia", flag: "🇸🇦", recommended: false, aliases: ["العربية","Árabe","Arabic","السعودية","Arabia Saudí","Saudi Arabia","AR","ar","ar-SA","🇸🇦","arabe","arabic","arabia saudi","saudi arabia"] },
-  // All 100 languages/variants
-  { code: "af-ZA", label: "Afrikaans", country: "South Africa", countryEs: "Sudáfrica", countryEn: "South Africa", flag: "🇿🇦", recommended: false, aliases: ["Afrikaans","South Africa","Sudáfrica","ZA","af","af-ZA","🇿🇦","sudafrica","south africa"] },
-  { code: "sq-AL", label: "Shqip", country: "Shqipëri", countryEs: "Albania", countryEn: "Albania", flag: "🇦🇱", recommended: false, aliases: ["Shqip","Albanés","Albanian","Shqipëri","Albania","AL","sq","sq-AL","🇦🇱","albanes","albanian","albania"] },
-  { code: "am-ET", label: "አማርኛ", country: "ኢትዮጵያ", countryEs: "Etiopía", countryEn: "Ethiopia", flag: "🇪🇹", recommended: false, aliases: ["አማርኛ","Amhárico","Amharic","ኢትዮጵያ","Etiopía","Ethiopia","ET","am","am-ET","🇪🇹","amharico","amharic","etiopia","ethiopia"] },
-  { code: "ar-EG", label: "العربية", country: "مصر", countryEs: "Egipto", countryEn: "Egypt", flag: "🇪🇬", recommended: false, aliases: ["العربية","Árabe","Arabic","مصر","Egipto","Egypt","EG","ar-EG","🇪🇬","arabe","arabic","egipto","egypt"] },
-  { code: "ar-MA", label: "العربية", country: "المغرب", countryEs: "Marruecos", countryEn: "Morocco", flag: "🇲🇦", recommended: false, aliases: ["العربية","Árabe","Arabic","المغرب","Marruecos","Morocco","MA","ar-MA","🇲🇦","arabe","arabic","marruecos","morocco"] },
-  { code: "hy-AM", label: "Հայերեն", country: "Հայաստան", countryEs: "Armenia", countryEn: "Armenia", flag: "🇦🇲", recommended: false, aliases: ["Հայերեն","Armenio","Armenian","Հայաստան","Armenia","AM","hy","hy-AM","🇦🇲","armenio","armenian","armenia"] },
-  { code: "az-AZ", label: "Azərbaycan", country: "Azərbaycan", countryEs: "Azerbaiyán", countryEn: "Azerbaijan", flag: "🇦🇿", recommended: false, aliases: ["Azərbaycan","Azerbaiyano","Azerbaijani","Azerbaiyán","Azerbaijan","AZ","az","az-AZ","🇦🇿","azerbaiyano","azerbaijani","azerbaiyan","azerbaijan"] },
-  { code: "eu-ES", label: "Euskara", country: "Euskal Herria", countryEs: "País Vasco", countryEn: "Basque Country", flag: "🏴", recommended: false, aliases: ["Euskara","Vasco","Basque","Euskal Herria","País Vasco","Basque Country","eu","eu-ES","🏴","vasco","basque","pais vasco"] },
-  { code: "be-BY", label: "Беларуская", country: "Беларусь", countryEs: "Bielorrusia", countryEn: "Belarus", flag: "🇧🇾", recommended: false, aliases: ["Беларуская","Bielorruso","Belarusian","Беларусь","Bielorrusia","Belarus","BY","be","be-BY","🇧🇾","bielorruso","belarusian","bielorrusia","belarus"] },
-  { code: "bn-BD", label: "বাংলা", country: "বাংলাদেশ", countryEs: "Bangladés", countryEn: "Bangladesh", flag: "🇧🇩", recommended: false, aliases: ["বাংলা","Bengalí","Bengali","বাংলাদেশ","Bangladés","Bangladesh","BD","bn","bn-BD","🇧🇩","bengali","bangla","bangladesh"] },
-  { code: "bs-BA", label: "Bosanski", country: "Bosna i Hercegovina", countryEs: "Bosnia y Herzegovina", countryEn: "Bosnia and Herzegovina", flag: "🇧🇦", recommended: false, aliases: ["Bosanski","Bosnio","Bosnian","Bosna i Hercegovina","Bosnia y Herzegovina","Bosnia and Herzegovina","BA","bs","bs-BA","🇧🇦","bosnio","bosnian","bosnia"] },
-  { code: "bg-BG", label: "Български", country: "България", countryEs: "Bulgaria", countryEn: "Bulgaria", flag: "🇧🇬", recommended: false, aliases: ["Български","Búlgaro","Bulgarian","България","Bulgaria","BG","bg","bg-BG","🇧🇬","bulgaro","bulgarian","bulgaria"] },
-  { code: "ca-ES", label: "Català", country: "Catalunya", countryEs: "Cataluña", countryEn: "Catalonia", flag: "🏴", recommended: false, aliases: ["Català","Catalán","Catalan","Catalunya","Cataluña","Catalonia","ca","ca-ES","🏴","catalan","catalunya","cataluna","catalonia"] },
-  { code: "zh-CN", label: "中文", country: "中国", countryEs: "China", countryEn: "China (Simplified)", flag: "🇨🇳", recommended: false, aliases: ["中文","Chino","Chinese","中国","China","Simplified Chinese","ZH","zh","zh-CN","🇨🇳","chino","chinese","china"] },
-  { code: "zh-TW", label: "中文", country: "台灣", countryEs: "Taiwán", countryEn: "Taiwan (Traditional)", flag: "🇹🇼", recommended: false, aliases: ["中文","Chino","Chinese","台灣","Taiwán","Taiwan","Traditional Chinese","zh-TW","🇹🇼","taiwan","taiwán"] },
-  { code: "hr-HR", label: "Hrvatski", country: "Hrvatska", countryEs: "Croacia", countryEn: "Croatia", flag: "🇭🇷", recommended: false, aliases: ["Hrvatski","Croata","Croatian","Hrvatska","Croacia","Croatia","HR","hr","hr-HR","🇭🇷","croata","croatian","croacia","croatia"] },
-  { code: "cs-CZ", label: "Čeština", country: "Česká republika", countryEs: "República Checa", countryEn: "Czech Republic", flag: "🇨🇿", recommended: false, aliases: ["Čeština","Checo","Czech","Česká republika","República Checa","Czech Republic","CZ","cs","cs-CZ","🇨🇿","checo","czech","republica checa"] },
-  { code: "da-DK", label: "Dansk", country: "Danmark", countryEs: "Dinamarca", countryEn: "Denmark", flag: "🇩🇰", recommended: false, aliases: ["Dansk","Danés","Danish","Danmark","Dinamarca","Denmark","DK","da","da-DK","🇩🇰","danes","danish","dinamarca","denmark"] },
-  { code: "nl-BE", label: "Nederlands", country: "België", countryEs: "Bélgica", countryEn: "Belgium (Dutch)", flag: "🇧🇪", recommended: false, aliases: ["Nederlands","Neerlandés","Dutch","België","Bélgica","Belgium","BE","nl-BE","🇧🇪","belgica","belgium"] },
-  { code: "en-AU", label: "English", country: "Australia", countryEs: "Australia", countryEn: "Australia", flag: "🇦🇺", recommended: false, aliases: ["English","Inglés","Australia","AU","en-AU","🇦🇺","ingles","australia"] },
-  { code: "en-CA", label: "English", country: "Canada", countryEs: "Canadá", countryEn: "Canada", flag: "🇨🇦", recommended: false, aliases: ["English","Inglés","Canada","Canadá","CA","en-CA","🇨🇦","canada","ingles"] },
-  { code: "en-IN", label: "English", country: "India", countryEs: "India", countryEn: "India", flag: "🇮🇳", recommended: false, aliases: ["English","Inglés","India","IN","en-IN","🇮🇳","india","ingles"] },
-  { code: "en-NZ", label: "English", country: "New Zealand", countryEs: "Nueva Zelanda", countryEn: "New Zealand", flag: "🇳🇿", recommended: false, aliases: ["English","Inglés","New Zealand","Nueva Zelanda","NZ","en-NZ","🇳🇿","nueva zelanda","new zealand"] },
-  { code: "en-US", label: "English", country: "United States", countryEs: "Estados Unidos", countryEn: "United States", flag: "🇺🇸", recommended: false, aliases: ["English","Inglés","United States","Estados Unidos","USA","US","en-US","en","🇺🇸","estados unidos","united states"] },
-  { code: "et-EE", label: "Eesti", country: "Eesti", countryEs: "Estonia", countryEn: "Estonia", flag: "🇪🇪", recommended: false, aliases: ["Eesti","Estonio","Estonian","Estonia","EE","et","et-EE","🇪🇪","estonio","estonian","estonia"] },
-  { code: "fo-FO", label: "Føroyskt", country: "Færøerne", countryEs: "Islas Feroe", countryEn: "Faroe Islands", flag: "🇫🇴", recommended: false, aliases: ["Føroyskt","Feroés","Faroese","Færøerne","Islas Feroe","Faroe Islands","FO","fo","fo-FO","🇫🇴","feroes","faroese","islas feroe"] },
-  { code: "fi-FI", label: "Suomi", country: "Suomi", countryEs: "Finlandia", countryEn: "Finland", flag: "🇫🇮", recommended: false, aliases: ["Suomi","Finlandés","Finnish","Finlandia","Finland","FI","fi","fi-FI","🇫🇮","finlandes","finnish","finlandia","finland"] },
-  { code: "fr-BE", label: "Français", country: "Belgique", countryEs: "Bélgica (francés)", countryEn: "Belgium (French)", flag: "🇧🇪", recommended: false, aliases: ["Français","Francés","French","Belgique","Bélgica","Belgium","fr-BE","🇧🇪","frances","french","belgica"] },
-  { code: "fr-CA", label: "Français", country: "Canada", countryEs: "Canadá (francés)", countryEn: "Canada (French)", flag: "🇨🇦", recommended: false, aliases: ["Français","Francés","French","Canada","Canadá","fr-CA","🇨🇦","frances","french","canada"] },
-  { code: "fr-CH", label: "Français", country: "Suisse", countryEs: "Suiza (francés)", countryEn: "Switzerland (French)", flag: "🇨🇭", recommended: false, aliases: ["Français","Francés","French","Suisse","Suiza","Switzerland","fr-CH","🇨🇭","frances","french","suiza","switzerland"] },
-  { code: "gl-ES", label: "Galego", country: "Galicia", countryEs: "Galicia", countryEn: "Galicia", flag: "🏴", recommended: false, aliases: ["Galego","Gallego","Galician","Galicia","gl","gl-ES","🏴","gallego","galician","galicia"] },
-  { code: "ka-GE", label: "ქართული", country: "საქართველო", countryEs: "Georgia", countryEn: "Georgia", flag: "🇬🇪", recommended: false, aliases: ["ქართული","Georgiano","Georgian","საქართველო","Georgia","GE","ka","ka-GE","🇬🇪","georgiano","georgian","georgia"] },
-  { code: "de-AT", label: "Deutsch", country: "Österreich", countryEs: "Austria", countryEn: "Austria", flag: "🇦🇹", recommended: false, aliases: ["Deutsch","Alemán","German","Österreich","Austria","AT","de-AT","🇦🇹","aleman","german","austria"] },
-  { code: "de-CH", label: "Deutsch", country: "Schweiz", countryEs: "Suiza (alemán)", countryEn: "Switzerland (German)", flag: "🇨🇭", recommended: false, aliases: ["Deutsch","Alemán","German","Schweiz","Suiza","Switzerland","de-CH","🇨🇭","aleman","german","suiza"] },
-  { code: "el-GR", label: "Ελληνικά", country: "Ελλάδα", countryEs: "Grecia", countryEn: "Greece", flag: "🇬🇷", recommended: false, aliases: ["Ελληνικά","Griego","Greek","Ελλάδα","Grecia","Greece","GR","el","el-GR","🇬🇷","griego","greek","grecia","greece"] },
-  { code: "gu-IN", label: "ગુજરાતી", country: "India", countryEs: "India (gujarati)", countryEn: "India (Gujarati)", flag: "🇮🇳", recommended: false, aliases: ["ગુજરાતી","Gujarati","India","gu","gu-IN","🇮🇳","gujarati","india"] },
-  { code: "he-IL", label: "עברית", country: "ישראל", countryEs: "Israel", countryEn: "Israel", flag: "🇮🇱", recommended: false, aliases: ["עברית","Hebreo","Hebrew","ישראל","Israel","IL","he","he-IL","🇮🇱","hebreo","hebrew","israel"] },
-  { code: "hi-IN", label: "हिन्दी", country: "भारत", countryEs: "India (hindi)", countryEn: "India (Hindi)", flag: "🇮🇳", recommended: false, aliases: ["हिन्दी","Hindi","भारत","India","hi","hi-IN","🇮🇳","hindi","india"] },
-  { code: "hu-HU", label: "Magyar", country: "Magyarország", countryEs: "Hungría", countryEn: "Hungary", flag: "🇭🇺", recommended: false, aliases: ["Magyar","Húngaro","Hungarian","Magyarország","Hungría","Hungary","HU","hu","hu-HU","🇭🇺","hungaro","hungarian","hungria","hungary"] },
-  { code: "is-IS", label: "Íslenska", country: "Ísland", countryEs: "Islandia", countryEn: "Iceland", flag: "🇮🇸", recommended: false, aliases: ["Íslenska","Islandés","Icelandic","Ísland","Islandia","Iceland","IS","is","is-IS","🇮🇸","islandes","icelandic","islandia","iceland"] },
-  { code: "id-ID", label: "Bahasa Indonesia", country: "Indonesia", countryEs: "Indonesia", countryEn: "Indonesia", flag: "🇮🇩", recommended: false, aliases: ["Bahasa Indonesia","Indonesio","Indonesian","Indonesia","ID","id","id-ID","🇮🇩","indonesio","indonesian","indonesia"] },
-  { code: "ga-IE", label: "Gaeilge", country: "Éire", countryEs: "Irlanda", countryEn: "Ireland", flag: "🇮🇪", recommended: false, aliases: ["Gaeilge","Irlandés","Irish","Éire","Irlanda","Ireland","IE","ga","ga-IE","🇮🇪","irlandes","irish","irlanda","ireland"] },
-  { code: "xh-ZA", label: "isiXhosa", country: "South Africa", countryEs: "Sudáfrica", countryEn: "South Africa", flag: "🇿🇦", recommended: false, aliases: ["isiXhosa","Xhosa","South Africa","Sudáfrica","xh","xh-ZA","🇿🇦","xhosa","sudafrica"] },
-  { code: "zu-ZA", label: "isiZulu", country: "South Africa", countryEs: "Sudáfrica", countryEn: "South Africa", flag: "🇿🇦", recommended: false, aliases: ["isiZulu","Zulú","Zulu","South Africa","Sudáfrica","zu","zu-ZA","🇿🇦","zulu","sudafrica"] },
-  { code: "ja-JP", label: "日本語", country: "日本", countryEs: "Japón", countryEn: "Japan", flag: "🇯🇵", recommended: false, aliases: ["日本語","Japonés","Japanese","日本","Japón","Japan","JP","ja","ja-JP","🇯🇵","japones","japanese","japon","japan"] },
-  { code: "kn-IN", label: "ಕನ್ನಡ", country: "India", countryEs: "India (kannada)", countryEn: "India (Kannada)", flag: "🇮🇳", recommended: false, aliases: ["ಕನ್ನಡ","Kannada","India","kn","kn-IN","🇮🇳","kannada","india"] },
-  { code: "kk-KZ", label: "Қазақ тілі", country: "Қазақстан", countryEs: "Kazajistán", countryEn: "Kazakhstan", flag: "🇰🇿", recommended: false, aliases: ["Қазақ тілі","Kazajo","Kazakh","Қазақстан","Kazajistán","Kazakhstan","KZ","kk","kk-KZ","🇰🇿","kazajo","kazakh","kazajistan","kazakhstan"] },
-  { code: "km-KH", label: "ខ្មែរ", country: "កម្ពុជា", countryEs: "Camboya", countryEn: "Cambodia", flag: "🇰🇭", recommended: false, aliases: ["ខ្មែរ","Jemer","Khmer","កម្ពុជា","Camboya","Cambodia","KH","km","km-KH","🇰🇭","jemer","khmer","camboya","cambodia"] },
-  { code: "ko-KR", label: "한국어", country: "대한민국", countryEs: "Corea del Sur", countryEn: "South Korea", flag: "🇰🇷", recommended: false, aliases: ["한국어","Coreano","Korean","대한민국","Corea del Sur","South Korea","KR","ko","ko-KR","🇰🇷","coreano","korean","corea del sur","south korea"] },
-  { code: "ky-KG", label: "Кыргызча", country: "Кыргызстан", countryEs: "Kirguistán", countryEn: "Kyrgyzstan", flag: "🇰🇬", recommended: false, aliases: ["Кыргызча","Kirguís","Kyrgyz","Кыргызстан","Kirguistán","Kyrgyzstan","KG","ky","ky-KG","🇰🇬","kirguis","kyrgyz","kirguistan","kyrgyzstan"] },
-  { code: "lo-LA", label: "ລາວ", country: "ລາວ", countryEs: "Laos", countryEn: "Laos", flag: "🇱🇦", recommended: false, aliases: ["ລາວ","Lao","Laos","LA","lo","lo-LA","🇱🇦","lao","laos"] },
-  { code: "lv-LV", label: "Latviešu", country: "Latvija", countryEs: "Letonia", countryEn: "Latvia", flag: "🇱🇻", recommended: false, aliases: ["Latviešu","Letón","Latvian","Latvija","Letonia","Latvia","LV","lv","lv-LV","🇱🇻","leton","latvian","letonia","latvia"] },
-  { code: "lt-LT", label: "Lietuvių", country: "Lietuva", countryEs: "Lituania", countryEn: "Lithuania", flag: "🇱🇹", recommended: false, aliases: ["Lietuvių","Lituano","Lithuanian","Lietuva","Lituania","Lithuania","LT","lt","lt-LT","🇱🇹","lituano","lithuanian","lituania","lithuania"] },
-  { code: "lb-LU", label: "Lëtzebuergesch", country: "Lëtzebuerg", countryEs: "Luxemburgo", countryEn: "Luxembourg", flag: "🇱🇺", recommended: false, aliases: ["Lëtzebuergesch","Luxemburgués","Luxembourgish","Lëtzebuerg","Luxemburgo","Luxembourg","LU","lb","lb-LU","🇱🇺","luxemburgo","luxembourg"] },
-  { code: "mk-MK", label: "Македонски", country: "Македонија", countryEs: "Macedonia del Norte", countryEn: "North Macedonia", flag: "🇲🇰", recommended: false, aliases: ["Македонски","Macedonio","Macedonian","Македонија","Macedonia del Norte","North Macedonia","MK","mk","mk-MK","🇲🇰","macedonio","macedonian","macedonia"] },
-  { code: "ms-MY", label: "Bahasa Melayu", country: "Malaysia", countryEs: "Malasia", countryEn: "Malaysia", flag: "🇲🇾", recommended: false, aliases: ["Bahasa Melayu","Malayo","Malay","Malaysia","Malasia","MY","ms","ms-MY","🇲🇾","malayo","malay","malasia","malaysia"] },
-  { code: "ml-IN", label: "മലയാളം", country: "India", countryEs: "India (malabar)", countryEn: "India (Malayalam)", flag: "🇮🇳", recommended: false, aliases: ["മലയാളം","Malayalam","India","ml","ml-IN","🇮🇳","malayalam","india"] },
-  { code: "mt-MT", label: "Malti", country: "Malta", countryEs: "Malta", countryEn: "Malta", flag: "🇲🇹", recommended: false, aliases: ["Malti","Maltés","Maltese","Malta","MT","mt","mt-MT","🇲🇹","maltes","maltese","malta"] },
-  { code: "mr-IN", label: "मराठी", country: "भारत", countryEs: "India (marathi)", countryEn: "India (Marathi)", flag: "🇮🇳", recommended: false, aliases: ["मराठी","Maratí","Marathi","भारत","India","mr","mr-IN","🇮🇳","marati","marathi","india"] },
-  { code: "mn-MN", label: "Монгол", country: "Монгол", countryEs: "Mongolia", countryEn: "Mongolia", flag: "🇲🇳", recommended: false, aliases: ["Монгол","Mongol","Mongolian","Mongolia","MN","mn","mn-MN","🇲🇳","mongol","mongolian","mongolia"] },
-  { code: "ne-NP", label: "नेपाली", country: "नेपाल", countryEs: "Nepal", countryEn: "Nepal", flag: "🇳🇵", recommended: false, aliases: ["नेपाली","Nepalés","Nepali","नेपाल","Nepal","NP","ne","ne-NP","🇳🇵","nepales","nepali","nepal"] },
-  { code: "nb-NO", label: "Norsk", country: "Norge", countryEs: "Noruega", countryEn: "Norway", flag: "🇳🇴", recommended: false, aliases: ["Norsk","Noruego","Norwegian","Norge","Noruega","Norway","NO","nb","nb-NO","🇳🇴","noruego","norwegian","noruega","norway"] },
-  { code: "nn-NO", label: "Nynorsk", country: "Norge", countryEs: "Noruega (nynorsk)", countryEn: "Norway (Nynorsk)", flag: "🇳🇴", recommended: false, aliases: ["Nynorsk","Noruego","Norwegian","Norge","Noruega","Norway","nn","nn-NO","🇳🇴","noruego","norwegian","noruega"] },
-  { code: "or-IN", label: "ଓଡ଼ିଆ", country: "India", countryEs: "India (odia)", countryEn: "India (Odia)", flag: "🇮🇳", recommended: false, aliases: ["ଓଡ଼ିଆ","Odia","Oriya","India","or","or-IN","🇮🇳","odia","oriya","india"] },
-  { code: "ps-AF", label: "پښتو", country: "افغانستان", countryEs: "Afganistán", countryEn: "Afghanistan", flag: "🇦🇫", recommended: false, aliases: ["پښتو","Pastún","Pashto","افغانستان","Afganistán","Afghanistan","AF","ps","ps-AF","🇦🇫","pastun","pashto","afganistan","afghanistan"] },
-  { code: "fa-IR", label: "فارسی", country: "ایران", countryEs: "Irán", countryEn: "Iran", flag: "🇮🇷", recommended: false, aliases: ["فارسی","Persa","Persian","Farsi","ایران","Irán","Iran","IR","fa","fa-IR","🇮🇷","persa","persian","farsi","iran"] },
-  { code: "pl-PL", label: "Polski", country: "Polska", countryEs: "Polonia", countryEn: "Poland", flag: "🇵🇱", recommended: false, aliases: ["Polski","Polaco","Polish","Polska","Polonia","Poland","PL","pl","pl-PL","🇵🇱","polaco","polish","polonia","poland"] },
-  { code: "pa-IN", label: "ਪੰਜਾਬੀ", country: "India", countryEs: "India (punjabi)", countryEn: "India (Punjabi)", flag: "🇮🇳", recommended: false, aliases: ["ਪੰਜਾਬੀ","Punjabí","Punjabi","India","pa","pa-IN","🇮🇳","punjabi","india"] },
-  { code: "ro-RO", label: "Română", country: "România", countryEs: "Rumanía", countryEn: "Romania", flag: "🇷🇴", recommended: false, aliases: ["Română","Rumano","Romanian","România","Rumanía","Romania","RO","ro","ro-RO","🇷🇴","rumano","romanian","rumania","romania"] },
-  { code: "sr-RS", label: "Српски", country: "Србија", countryEs: "Serbia", countryEn: "Serbia", flag: "🇷🇸", recommended: false, aliases: ["Српски","Serbio","Serbian","Србија","Serbia","RS","sr","sr-RS","🇷🇸","serbio","serbian","serbia"] },
-  { code: "si-LK", label: "සිංහල", country: "ශ්‍රී ලංකා", countryEs: "Sri Lanka", countryEn: "Sri Lanka", flag: "🇱🇰", recommended: false, aliases: ["සිංහල","Cingalés","Sinhala","ශ්‍රී ලංකා","Sri Lanka","LK","si","si-LK","🇱🇰","cingales","sinhala","sri lanka"] },
-  { code: "sk-SK", label: "Slovenčina", country: "Slovensko", countryEs: "Eslovaquia", countryEn: "Slovakia", flag: "🇸🇰", recommended: false, aliases: ["Slovenčina","Eslovaco","Slovak","Slovensko","Eslovaquia","Slovakia","SK","sk","sk-SK","🇸🇰","eslovaco","slovak","eslovaquia","slovakia"] },
-  { code: "sl-SI", label: "Slovenščina", country: "Slovenija", countryEs: "Eslovenia", countryEn: "Slovenia", flag: "🇸🇮", recommended: false, aliases: ["Slovenščina","Esloveno","Slovenian","Slovenija","Eslovenia","Slovenia","SI","sl","sl-SI","🇸🇮","esloveno","slovenian","eslovenia","slovenia"] },
-  { code: "so-SO", label: "Soomaali", country: "Soomaaliya", countryEs: "Somalia", countryEn: "Somalia", flag: "🇸🇴", recommended: false, aliases: ["Soomaali","Somalí","Somali","Soomaaliya","Somalia","SO","so","so-SO","🇸🇴","somali","somalia"] },
-  { code: "es-AR", label: "Español", country: "Argentina", countryEs: "Argentina", countryEn: "Argentina", flag: "🇦🇷", recommended: false, aliases: ["Español","Spanish","Argentina","AR","es-AR","🇦🇷","espanol","spanish","argentina"] },
-  { code: "es-CL", label: "Español", country: "Chile", countryEs: "Chile", countryEn: "Chile", flag: "🇨🇱", recommended: false, aliases: ["Español","Spanish","Chile","CL","es-CL","🇨🇱","espanol","spanish","chile"] },
-  { code: "es-CO", label: "Español", country: "Colombia", countryEs: "Colombia", countryEn: "Colombia", flag: "🇨🇴", recommended: false, aliases: ["Español","Spanish","Colombia","CO","es-CO","🇨🇴","espanol","spanish","colombia"] },
-  { code: "es-MX", label: "Español", country: "México", countryEs: "México", countryEn: "Mexico", flag: "🇲🇽", recommended: false, aliases: ["Español","Spanish","México","Mexico","MX","es-MX","🇲🇽","espanol","spanish","mexico","méxico"] },
-  { code: "es-US", label: "Español", country: "Estados Unidos", countryEs: "Estados Unidos", countryEn: "United States (Spanish)", flag: "🇺🇸", recommended: false, aliases: ["Español","Spanish","Estados Unidos","United States","US","es-US","🇺🇸","espanol","spanish","estados unidos"] },
-  { code: "sw-KE", label: "Kiswahili", country: "Kenya", countryEs: "Kenia", countryEn: "Kenya", flag: "🇰🇪", recommended: false, aliases: ["Kiswahili","Suajili","Swahili","Kenya","Kenia","KE","sw","sw-KE","🇰🇪","suajili","swahili","kenia","kenya"] },
-  { code: "sv-SE", label: "Svenska", country: "Sverige", countryEs: "Suecia", countryEn: "Sweden", flag: "🇸🇪", recommended: false, aliases: ["Svenska","Sueco","Swedish","Sverige","Suecia","Sweden","SE","sv","sv-SE","🇸🇪","sueco","swedish","suecia","sweden"] },
-  { code: "tl-PH", label: "Filipino", country: "Pilipinas", countryEs: "Filipinas", countryEn: "Philippines", flag: "🇵🇭", recommended: false, aliases: ["Filipino","Tagalog","Pilipinas","Filipinas","Philippines","PH","tl","tl-PH","🇵🇭","tagalog","filipino","filipinas","philippines"] },
-  { code: "tg-TJ", label: "Тоҷикӣ", country: "Тоҷикистон", countryEs: "Tayikistán", countryEn: "Tajikistan", flag: "🇹🇯", recommended: false, aliases: ["Тоҷикӣ","Tayiko","Tajik","Тоҷикистон","Tayikistán","Tajikistan","TJ","tg","tg-TJ","🇹🇯","tayiko","tajik","tayikistan","tajikistan"] },
-  { code: "ta-IN", label: "தமிழ்", country: "India", countryEs: "India (tamil)", countryEn: "India (Tamil)", flag: "🇮🇳", recommended: false, aliases: ["தமிழ்","Tamil","India","ta","ta-IN","🇮🇳","tamil","india"] },
-  { code: "te-IN", label: "తెలుగు", country: "India", countryEs: "India (telugu)", countryEn: "India (Telugu)", flag: "🇮🇳", recommended: false, aliases: ["తెలుగు","Telugu","India","te","te-IN","🇮🇳","telugu","india"] },
-  { code: "th-TH", label: "ภาษาไทย", country: "ประเทศไทย", countryEs: "Tailandia", countryEn: "Thailand", flag: "🇹🇭", recommended: false, aliases: ["ภาษาไทย","Tailandés","Thai","ประเทศไทย","Tailandia","Thailand","TH","th","th-TH","🇹🇭","tailandes","thai","tailandia","thailand"] },
-  { code: "ti-ER", label: "ትግርኛ", country: "ኤርትራ", countryEs: "Eritrea", countryEn: "Eritrea", flag: "🇪🇷", recommended: false, aliases: ["ትግርኛ","Tigrinya","ኤርትራ","Eritrea","ER","ti","ti-ER","🇪🇷","tigrinya","eritrea"] },
-  { code: "tr-TR", label: "Türkçe", country: "Türkiye", countryEs: "Turquía", countryEn: "Turkey", flag: "🇹🇷", recommended: false, aliases: ["Türkçe","Turco","Turkish","Türkiye","Turquía","Turkey","TR","tr","tr-TR","🇹🇷","turco","turkish","turquia","turkey"] },
-  { code: "tk-TM", label: "Türkmen", country: "Türkmenistan", countryEs: "Turkmenistán", countryEn: "Turkmenistan", flag: "🇹🇲", recommended: false, aliases: ["Türkmen","Turcomano","Turkmen","Türkmenistan","Turkmenistán","Turkmenistan","TM","tk","tk-TM","🇹🇲","turcomano","turkmen","turkmenistan"] },
-  { code: "uk-UA", label: "Українська", country: "Україна", countryEs: "Ucrania", countryEn: "Ukraine", flag: "🇺🇦", recommended: false, aliases: ["Українська","Ucraniano","Ukrainian","Україна","Ucrania","Ukraine","UA","uk","uk-UA","🇺🇦","ucraniano","ukrainian","ucrania","ukraine"] },
-  { code: "ur-PK", label: "اردو", country: "پاکستان", countryEs: "Pakistán", countryEn: "Pakistan", flag: "🇵🇰", recommended: false, aliases: ["اردو","Urdu","پاکستان","Pakistán","Pakistan","PK","ur","ur-PK","🇵🇰","urdu","pakistan","pakistán"] },
-  { code: "uz-UZ", label: "Oʻzbekcha", country: "Oʻzbekiston", countryEs: "Uzbekistán", countryEn: "Uzbekistan", flag: "🇺🇿", recommended: false, aliases: ["Oʻzbekcha","Uzbeko","Uzbek","Oʻzbekiston","Uzbekistán","Uzbekistan","UZ","uz","uz-UZ","🇺🇿","uzbeko","uzbek","uzbekistan"] },
-  { code: "vi-VN", label: "Tiếng Việt", country: "Việt Nam", countryEs: "Vietnam", countryEn: "Vietnam", flag: "🇻🇳", recommended: false, aliases: ["Tiếng Việt","Vietnamita","Vietnamese","Việt Nam","Vietnam","VN","vi","vi-VN","🇻🇳","vietnamita","vietnamese","vietnam"] },
-  { code: "cy-GB", label: "Cymraeg", country: "Cymru", countryEs: "Gales", countryEn: "Wales", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", recommended: false, aliases: ["Cymraeg","Galés","Welsh","Cymru","Gales","Wales","cy","cy-GB","🏴󠁧󠁢󠁷󠁬󠁳󠁿","gales","welsh","wales"] },
-  { code: "yi-001", label: "ייִדיש", country: "World", countryEs: "Internacional", countryEn: "International", flag: "🌍", recommended: false, aliases: ["ייִדיש","Yídish","Yiddish","International","Internacional","yi","yi-001","🌍","yidish","yiddish"] },
-  { code: "yo-NG", label: "Yorùbá", country: "Nigeria", countryEs: "Nigeria", countryEn: "Nigeria", flag: "🇳🇬", recommended: false, aliases: ["Yorùbá","Yoruba","Nigeria","NG","yo","yo-NG","🇳🇬","yoruba","nigeria"] },
-];
-
-function sortLanguages(list) {
-  return [...list].sort((a, b) => {
-    const la = normalizeSearchText(a.label);
-    const lb = normalizeSearchText(b.label);
-    if (la !== lb) return la.localeCompare(lb, "es", { sensitivity: "base" });
-    return normalizeSearchText(a.country).localeCompare(normalizeSearchText(b.country), "es", { sensitivity: "base" });
-  });
-}
-
-const LANGUAGES_ALL = sortLanguages(LANGUAGES_RAW);
-const LANGUAGES_RECOMMENDED = sortLanguages(LANGUAGES_RAW.filter(l => l.recommended));
-
-function loadSavedLanguage() {
-  try {
-    const raw = localStorage.getItem("cp04_language");
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.code && LANGUAGES_RAW.find(l => l.code === parsed.code)) return parsed;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// ============================================================
-// i18n — Sistema de traducciones global
-// ============================================================
-
-const LANG_CHANGE_EVENT = "cp04:lang-change";
-
-const _defaultLang = LANGUAGES_RAW.find(l => l.code === "es-ES");
-
-let _globalLang = (() => {
-  try {
-    const raw = localStorage.getItem("cp04_language");
-    if (!raw) return _defaultLang;
-    const parsed = JSON.parse(raw);
-    if (parsed?.code && LANGUAGES_RAW.find(l => l.code === parsed.code)) return parsed;
-  } catch {
-    // localStorage puede lanzar en modo privado/Safari; usar el idioma por defecto.
-  }
-  return _defaultLang;
-})();
-
-function setGlobalLang(lang) {
-  _globalLang = lang || _defaultLang;
-  try {
-    localStorage.setItem("cp04_language", JSON.stringify(_globalLang));
-  } catch {
-    // localStorage puede lanzar en modo privado/Safari; el idioma sigue en memoria.
-  }
-  window.dispatchEvent(new CustomEvent(LANG_CHANGE_EVENT, { detail: { lang: _globalLang } }));
-}
-
-function useLang() {
-  const [lang, setLang] = useState(() => _globalLang);
-  useEffect(() => {
-    function handler(e) { setLang(e.detail?.lang || _defaultLang); }
-    window.addEventListener(LANG_CHANGE_EVENT, handler);
-    return () => window.removeEventListener(LANG_CHANGE_EVENT, handler);
-  }, []);
-  return lang;
-}
-
-
+// Shared language selection state: see src/i18n/language.js
 /* AUDITORIA 20 · AUTH REAL HELPERS
    Preparación para autenticación real sin romper modo demo/local.
    El backend/Worker debe ser la autoridad final en producción. */
@@ -1565,1656 +1399,7 @@ function cp04GetStoredAuthMode() {
 }
 
 
-const TRANSLATIONS = {
-  "es-ES": {
-    "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
-    "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
-    // PASO 07G/07I/07N (2026-07-19/20): solo se añaden a es-ES
-    // deliberadamente — t() ya hace fallback a es-ES cuando un idioma no
-    // tiene la clave (ver función t() más abajo), así que el resto de
-    // idiomas mostrará este mismo texto en español hasta que se traduzca,
-    // en vez de la clave cruda o un string vacío.
-    "nav.cierre_pistas":"Cierre temporal",
-    "nav.baja_jugador":"Baja de jugador",
-    "nav.lista_espera":"Lista de espera",
-    "nav.control_qr":"Control QR / Accesos",
-    "nav.pistas_recordatorios":"Pistas libres y recordatorios",
-    "nav.dashboard_kpi":"Dashboard KPI y NPS",
-    "nav.backups_seguridad":"Backups y seguridad",
-    "nav.comunicaciones_socio":"Comunicaciones y ciclo de socio",
-    "nav.calendario_disponibilidad":"Calendario y disponibilidad",
-    "nav.facturacion_pagos":"Facturación y pagos",
-    "nav.asistente_ia":"Asistente IA",
-    "nav.automatizaciones_bots":"Automatizaciones y bots",
-    "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
-    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
-    "nav.comunidad":"Comunidad",
-    "nav.cerrar_sesion":"Cerrar sesión","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Cerrar","nav.abrir_menu":"Menú",
-    "login.title":"Iniciar como rol","login.entrar":"Entrar","login.cancelar":"Cancelar",
-    "login.password":"Contraseña","login.ver_pwd":"👁️ Ver contraseña","login.ocultar_pwd":"🙈 Ocultar contraseña",
-    "login.guardar_sesion":"Guardar sesión en este dispositivo","login.acceder_como":"Acceder como",
-    "login.intro_pwd":"Introduce la contraseña asignada a este rol.",
-    "login.error_rol":"Selecciona un rol válido.","login.error_pwd":"Contraseña incorrecta para este rol.",
-    "login.sesion_label":"Club Pádel 04 · Inicio de sesión",
-    "login.legal":"Acceso local protegido por contraseña. Puedes guardar sesión solo en este dispositivo. Para producción real, las credenciales deberán validarse desde backend/autenticación segura.",
-    "login.olvide_pwd":"¿Has olvidado tu contraseña?","login.recuperar_title":"Recuperar acceso","login.recuperar_desc":"Introduce tu correo electrónico y, si la cuenta existe, recibirás instrucciones para restablecer el acceso.","login.recuperar_email":"Correo electrónico","login.recuperar_btn":"Enviar instrucciones","login.recuperar_enviado":"Si esa dirección está registrada en el sistema, recibirás instrucciones en breve. Revisa también la carpeta de spam.","login.recuperar_volver":"Volver al inicio de sesión","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"Recuperación de contraseña aún no disponible en este entorno: pendiente de activar el proveedor de autenticación.","login.recuperar_cargando":"Enviando instrucciones…",
-    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
-    "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
-    "login.idioma":"Idioma",
-    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
-    "role.STAFF.label":"Staff / recepción","role.STAFF.desc":"Gestión diaria de reservas, altas y atención al jugador.",
-    "role.ADMIN.label":"Administrador / jefe","role.ADMIN.desc":"Panel de dirección, métricas y control operativo.",
-    "role.SUPPORT.label":"Soporte técnico","role.SUPPORT.desc":"Zona técnica, integraciones y diagnóstico interno.",
-    "home.reservas_hoy":"Reservas hoy","home.ocupacion_media":"Ocupación media",
-    "home.socios_activos":"Socios activos","home.procesos_activos":"Procesos activos",
-    "home.ingresos_mes":"Ingresos mes","home.torneos_activos":"Torneos activos",
-    "home.estado_operativo":"Estado operativo","home.reservar":"Reservar",
-    "home.torneo":"Torneo","home.alta":"Alta","home.procesos":"Procesos",
-    "home.avisos_activos":"Avisos activos","home.ver_procesos":"Ver procesos",
-    "home.vs_ayer":"vs ayer","home.pistas_activas":"4 pistas activas",
-    "home.estimacion_mensual":"Estimación mensual","home.en_curso":"En curso",
-    "home.este_mes":"este mes","home.incidencia":"incidencia","home.incidencias_s":"incidencias",
-    "home.franja_horaria":"Franja horaria","home.tendencia_semanal":"Tendencia semanal",
-    "home.porcentaje_uso":"Porcentaje de uso","home.procesos_conectados":"procesos conectados",
-    "home.activos":"Activos","home.pausados":"Pausados","home.incidencias":"Incidencias","home.flujos_totales":"flujos totales","home.operativo_probado":"operativo (probado E2E)",
-    "home.reservas_hora":"Reservas por hora — hoy","home.reservas_7dias":"Reservas últimos 7 días",
-    "home.ocupacion_pista":"Ocupación por pista","home.estado_procesos":"Estado de procesos",
-    "home.club_operativo":"Club de pádel","home.hero_accent":"operativo",
-    "home.hero_subtitle":"SaaS separado por roles: jugador, recepción, administración y soporte.",
-    "home.btn_torneos":"Torneos","home.btn_admin":"Admin",
-    "home.ir_reservas":"Ir a reservas","home.ver_gestion":"Ver gestión",
-    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver soporte",
-    "home.galeria":"Galería del club",
-    "home.dias_semana":"L,M,X,J,V,S,D",
-    "home.dias_largo":"Lun,Mar,Mié,Jue,Vie,Sáb,Dom",
-    "admin.panel":"Panel de dirección","admin.metricas":"Métricas globales del club.",
-    "admin.reservas_mes":"Reservas mes","admin.ocupacion":"Ocupación media",
-    "admin.socios":"Socios activos","admin.procesos":"Procesos activos",
-    "admin.backup":"Último backup","admin.ingr_mes":"Ingresos mes",
-    "admin.vs_mes_anterior":"vs mes anterior","admin.prox_lunes":"Próximo: lunes 07:00",
-    "admin.graf_hoy":"Reservas por hora — hoy","admin.graf_semana":"Evolución semanal",
-    "admin.graf_pista":"Ocupación por pista","admin.sub_hoy":"Franja horaria · demo",
-    "admin.sub_semana":"Reservas últimos 7 días · demo","admin.sub_pista":"Porcentaje de uso · demo",
-    "admin.backup_semana":"Backup semanal","admin.integraciones":"Estado de integraciones",
-    "admin.integ_desc":"Preparadas, pendientes de credenciales o pendientes de despliegue.",
-    "soporte.title":"Soporte técnico","soporte.desc":"Control técnico de la aplicación.",
-    "soporte.proteccion":"Protección requerida en producción",
-    "soporte.vars":"Variables privadas",
-    "flujos.title":"Centro técnico","flujos.desc":"Estado de automatizaciones del sistema.",
-    "torneos.title":"Torneos","torneos.bracket":"Bracket interactivo",
-    "torneos.anyadir":"Añadir pareja","torneos.reordenar":"Reordenar cruces",
-    "torneos.autoasignar":"Autoasignar","torneos.guardar":"Guardar cuadro",
-    "torneos.publicar":"Publicar","torneos.exportar":"Exportar",
-    "torneos.ver_ranking":"Ver ranking completo","torneos.personalizado":"Personalizado",
-    "torneos.jugadores":"Jugadores","torneos.parejas":"Parejas","torneos.ganador":"Ganador",
-    "torneos.eliminada":"Eliminada","torneos.avanza":"Avanza","torneos.bye":"BYE",
-    "torneos.pase_directo":"Pase directo","torneos.campeon":"Campeón",
-    "torneos.subcampeon":"Subcampeón","torneos.tercer_puesto":"Tercer puesto",
-    "reservas.nueva":"Nueva reserva","reservas.fecha":"Fecha","reservas.hora":"Hora",
-    "reservas.pista":"Pista","reservas.duracion":"Duración","reservas.confirmar":"Confirmar reserva",
-    "reservas.resumen":"Resumen","reservas.disponible":"Disponible","reservas.no_disponible":"No disponible",
-    "reprog.clave":"Clave de reserva","reprog.nueva_fecha":"Nueva fecha",
-    "reprog.nueva_hora":"Nueva hora de inicio","reprog.nueva_pista":"Nueva pista",
-    "reprog.resumen":"Resumen del cambio","reprog.confirmo":"Confirmo que quiero trasladar esta reserva",
-    "reprog.btn":"Reprogramar reserva","reprog.volver":"Volver a Reservas",
-    "cancelar.motivo":"Motivo","cancelar.confirmar":"Confirmar cancelación","cancelar.volver":"Volver",
-    "ranking.title":"Ranking","ranking.subtitle":"Clasificación general de jugadores y parejas",
-    "ranking.categoria":"Categoría","ranking.nivel":"Nivel","ranking.puntos":"Puntos",
-    "ranking.pts":"Pts","ranking.pareja":"Pareja","ranking.jugadores":"Jugadores",
-    "ranking.v":"V","ranking.d":"D","ranking.pj":"PJ","ranking.racha":"Racha",
-    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Última actualización",
-    "ranking.filtrar":"Buscar jugador o pareja...","ranking.general":"General",
-    "ranking.masculino":"Masculino","ranking.femenino":"Femenino","ranking.mixto":"Mixto",
-    "ranking.iniciacion":"Iniciación","ranking.medio":"Medio","ranking.avanzado":"Avanzado",
-    "ranking.podio":"Podio — Top 3","ranking.tabla":"Clasificación completa",
-    "ranking.datos_ejemplo":"Datos de ejemplo","ranking.sistema_puntos":"Sistema de puntos del club configurable.",
-    "ranking.temporada":"Temporada","ranking.buscar":"Buscar...",
-    "ranking.campeon":"Campeón","ranking.subcampeon":"Subcampeón","ranking.tercero":"3er puesto",
-    "ranking.mejor_pareja":"Mejor pareja","ranking.pts_totales":"pts totales",
-    "ranking.sin_resultados":"Sin resultados con esos filtros.",
-    "ranking.estado":"Estado","ranking.activo":"Activo",
-    "common.cargando":"Cargando...","common.error":"Error","common.cancelar":"Cancelar",
-    "common.confirmar":"Confirmar","common.guardar":"Guardar","common.volver":"Volver",
-    "common.editar":"Editar","common.modo_seguro":"Modo seguro","common.entorno":"Entorno protegido",
-    "common.sin_cambios":"Sin cambios",
-    "alta.title":"Alta de jugador","alta.eyebrow":"Jugadores","alta.desc":"Añade un jugador al club.",
-    "alta.nombre":"Nombre","alta.apellidos":"Apellidos","alta.email":"Email","alta.telefono":"Teléfono",
-    "alta.fecha_nac":"Fecha de nacimiento","alta.nivel":"Nivel","alta.genero":"Género",
-    "alta.comentarios":"Comentarios","alta.seleccionar":"Seleccionar",
-    "alta.acepta":"Acepto las condiciones y privacidad.",
-    "alta.exito":"✅ Jugador registrado correctamente.","alta.registrando":"Registrando...","alta.btn":"Dar de alta",
-    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicita la cancelación de una reserva.",
-    "cancelar.clave":"Clave de reserva","cancelar.clave_ph":"Introduce tu clave de reserva",
-    "cancelar.confirmo_check":"Confirmo que quiero solicitar la cancelación de esta reserva.",
-    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Volver a Reservas",
-    "cancelar.que_ocurre":"Qué ocurre después",
-    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
-    "reservas.datos_jugador":"Datos del jugador","reservas.fecha_pista":"Fecha, hora y pista",
-    "reservas.hora_fin":"Hora fin","reservas.total":"Total","reservas.ver_resumen":"Ver resumen",
-    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
-    "reservas.registrada":"Solicitud enviada · pendiente de confirmación","reservas.nueva_btn":"Nueva reserva",
-    "reservas.nombre":"Nombre","reservas.apellidos":"Apellidos","reservas.modalidad":"Modalidad",
-    "reservas.nivel_form":"Nivel","reservas.comentarios":"Comentarios","reservas.minutos":"minutos",
-    "reservas.confirmacion_desc":"La confirmación real dependerá del backend y de las integraciones configuradas.",
-    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
-    "reprog.hora_fin":"Hora fin","reprog.que_ocurre":"Qué ocurre después","reprog.enviando":"Enviando...","reprog.editar":"Editar",
-    "soporte.eyebrow":"Soporte",
-    "lang.buscar":"Buscar idioma, país, código, bandera…","lang.no_encontrados":"No se encontraron idiomas.",
-    "lang.hint":"Prueba con el país, idioma, código o bandera. Ejemplo: España, Spain, es-ES o 🇪🇸","lang.recomendados":"Recomendados","lang.todos":"Todos los idiomas",
-    "status.reserva.pendiente":"Pendiente","status.reserva.pendiente_txt":"Revisa los datos antes de confirmar.",
-    "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
-    "status.reserva.exito":"Solicitud enviada","status.reserva.exito_txt":"Solicitud de reserva recibida y en proceso. Recibirás confirmación por email.",
-    "status.reserva.error":"Error","status.reserva.error_txt":"No se pudo completar la reserva. Revisa los datos e inténtalo de nuevo.",
-    "status.cancelar.idle":"Pendiente","status.cancelar.idle_txt":"Confirma la cancelación de tu reserva.",
-    "status.cancelar.enviando":"Enviando","status.cancelar.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
-    "status.cancelar.exito":"Solicitud enviada","status.cancelar.exito_txt":"Solicitud de cancelación enviada correctamente.",
-    "status.cancelar.error":"No se pudo enviar","status.cancelar.error_txt":"Revisa la clave e inténtalo de nuevo.",
-    "status.reprog.idle":"Pendiente","status.reprog.idle_txt":"Elige una nueva fecha u horario.",
-    "status.reprog.enviando":"Reprogramando","status.reprog.enviando_txt":"Estamos comprobando la disponibilidad y actualizando tu reserva.",
-    "status.reprog.exito":"Reserva reprogramada","status.reprog.exito_txt":"La reserva se ha actualizado correctamente.",
-    "status.reprog.error":"No se pudo reprogramar","status.reprog.error_txt":"Revisa los datos y vuelve a intentarlo.",
-    "errors.nombre":"Introduce un nombre válido.","errors.apellidos":"Introduce apellidos válidos.",
-    "errors.email":"Introduce un email válido.","errors.telefono":"Introduce un teléfono válido.",
-    "errors.fecha":"Selecciona una fecha.","errors.fecha_pasado":"La fecha no puede ser anterior a hoy.",
-    "errors.fecha_domingo":"El club está cerrado los domingos.",
-    "errors.hora":"Selecciona una hora disponible.","errors.duracion":"Selecciona una duración válida.",
-    "errors.hora_pasada":"La franja seleccionada ya ha pasado.",
-    "errors.hora_cierre":"La reserva terminaría después del cierre del club.",
-    "errors.pista":"Selecciona una pista válida.","errors.modalidad":"Selecciona una modalidad válida.",
-    "errors.nivel":"Selecciona un nivel válido.",
-    "errors.clave":"Introduce la clave de reserva.","errors.clave_incompleta":"La clave de reserva parece incompleta.",
-    "errors.nueva_fecha":"Selecciona la nueva fecha.","errors.nueva_fecha_pasado":"La nueva fecha no puede ser anterior a hoy.",
-    "errors.confirmado_reprog":"Confirma que quieres reprogramar la reserva.",
-    "errors.confirmado_cancelar":"Confirma que quieres solicitar la cancelación antes de enviar.",
-    "errors.datos_incompletos":"Hay datos incompletos o no válidos. Corrígelos antes de confirmar.",
-    "errors.horario_ocupado":"Ese horario acaba de ocuparse. Elige otro hueco libre.",
-    "errors.reserva_error":"No se pudo completar la reserva. Inténtalo de nuevo en unos segundos.",
-    "errors.cancelar_error":"No se pudo enviar la solicitud. Revisa la clave e inténtalo de nuevo.",
-    "errors.reprog_campos":"Completa correctamente todos los campos obligatorios.",
-    "errors.reprog_ocupado":"Ese horario acaba de ocuparse. Selecciona otra franja libre.",
-    "errors.reprog_error":"No se pudo completar la reprogramación. Comprueba la clave y vuelve a intentarlo.",
-    "badge.confirmed":"Confirmada","badge.pending":"Pendiente","badge.completed":"Completada",
-    "home.galeria_eyebrow":"Galería","home.galeria_desc":"Galería visual del club.","home.sistema":"Sistema",
-    "cancelar.info1":"Procesaremos tu solicitud de forma segura.",
-    "cancelar.info2":"La cancelación quedará registrada.",
-    "cancelar.info3":"Puedes volver al calendario cuando quieras.",
-    "reprog.info1":"La clave identifica la reserva que quieres cambiar.",
-    "reprog.info2":"Se mantiene la misma clave después de reprogramar.",
-    "reprog.info3":"Recibirás la confirmación por correo una vez procesado el cambio.",
-    "reprog.info4":"Las notificaciones se activarán en una fase posterior.",
-    "reprog.nueva_disponibilidad":"Nueva disponibilidad","reprog.selecciona_franja":"Selecciona una nueva franja disponible.",
-    "flujos.exportar_json":"⬇ Exportar JSON","flujos.total_procesos":"Total procesos","flujos.auditados":"Auditados",
-    "flujos.activos_label":"Activos","flujos.conectados":"Conectados","flujos.pausados_label":"Pausados",
-    "flujos.en_pausa":"En pausa","flujos.incidencias_label":"Incidencias","flujos.ultimas_24h":"Últimas 24h",
-    "flujos.tasa_exito":"Tasa de éxito","flujos.global_sistema":"Global del sistema",
-    "flujos.ultimo_backup":"Último backup","flujos.automatico":"Automático",
-    "flujos.estado_procesos_label":"Estado de procesos","flujos.por_estado":"Por estado de conexión",
-    "flujos.actividad_24h":"Actividad últimas 24h","flujos.por_hora":"Por hora del día",
-    "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"ejecuciones",
-    "flujos.por_categoria":"Procesos por categoría","flujos.distribucion":"Distribución de los 50 procesos",
-    "flujos.mas_activos":"Procesos más activos","flujos.con_incidencias":"Procesos con incidencias",
-    "flujos.sin_errores":"✅ Sin errores registrados","flujos.criticos":"Estado de procesos críticos",
-    "flujos.estado_op":"Estado operativo","flujos.todos_flujos":"Todos los flujos",
-    "flujos.ocultar_tabla":"▲ Ocultar tabla","flujos.ver_tabla":"▼ Ver tabla completa",
-    "flujos.col_flujo":"Flujo","flujos.col_categoria":"Categoría","flujos.col_estado":"Estado",
-    "flujos.nota_integracion":"Integración técnica conectada. Los datos en tiempo real requieren conexión al backend del club.",
-    "admin.gestion_eyebrow":"Gestión","admin.gestion_title":"Pistas y clientes",
-    "admin.gestion_desc":"Módulos preparados para dirección operativa.",
-    "admin.gestion_item1":"Gestión de pistas","admin.gestion_item2":"Clientes y perfiles",
-    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Reglas de disponibilidad",
-    "admin.crec_eyebrow":"Crecimiento","admin.crec_title":"Torneos y procesos",
-    "admin.crec_desc":"Zona preparada para activar procesos cuando exista backend.",
-    "admin.crec_item1":"Torneos","admin.crec_item2":"Ranking y categorías",
-    "admin.crec_item3":"Sistema de clasificación","admin.crec_item4":"Pagos futuros",
-    "admin.backup_eyebrow":"Sistema activo","admin.backup_desc":"Copia automática de reservas y socios activos.",
-    "admin.backup_item1":"Programación: lunes 07:00","admin.backup_item2":"Origen: Base de datos",
-    "admin.backup_item3":"Destino: Almacenamiento","admin.backup_item4":"Confirmación: Notificaciones",
-    "admin.sistema_eyebrow":"Sistema","admin.exito_label":"Éxito:",
-    "auth.roles_title":"Roles y accesos","auth.pending_badge":"Pendiente de configurar",
-    "auth.pending_desc":"Sistema de acceso configurado por roles. En producción debe protegerse por autenticación y backend de usuarios.",
-    "auth.secciones":"Secciones:",
-    "soporte.proteccion_h3":"Protección requerida en producción",
-    "soporte.estado_tec_eyebrow":"Estado de integraciones","soporte.estado_tec_title":"Estado técnico",
-    "soporte.estado_tec_desc":"Checklist de conexión backend.",
-    "soporte.worker_item":"Worker de reservas preparado",
-    "soporte.make_item":"Automatizaciones pendientes de secreto privado",
-    "soporte.airtable_item":"Base de datos preparada sin escritura activa",
-    "soporte.stripe_item":"Pagos y mensajería pendientes de configuración",
-    "soporte.obs_eyebrow":"Observabilidad","soporte.obs_title":"Logs y errores",
-    "soporte.obs_desc":"Zona reservada para diagnóstico cuando exista backend real.",
-    "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
-    "soporte.logs_errores":"Errores de integraciones","soporte.logs_alertas":"Alertas técnicas futuras",
-    "soporte.vars_h3":"Estado de seguridad: variables protegidas",
-    "soporte.vars_no_names":"Los nombres y valores internos no se muestran en la interfaz.",
-    "soporte.vars_validacion":"Validación disponible solo en documentación interna o consola segura.",
-  },
-  "en-GB": {
-    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
-    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
-    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
-    "nav.admin":"Admin","nav.flujos_make":"Tech centre","nav.soporte":"Support",
-    "nav.comunidad":"Community",
-    "nav.cerrar_sesion":"Sign out","nav.saas_label":"Secure SaaS","nav.cerrar_menu":"Close","nav.abrir_menu":"Menu",
-    "login.title":"Log in as role","login.entrar":"Enter","login.cancelar":"Cancel",
-    "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
-    "login.guardar_sesion":"Remember me on this device","login.acceder_como":"Log in as",
-    "login.intro_pwd":"Enter the password assigned to this role.",
-    "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
-    "login.sesion_label":"Club Pádel 04 · Login",
-    "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
-    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"Password recovery is not available in this environment yet: pending activation of the authentication provider.","login.recuperar_cargando":"Sending instructions…",
-    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
-    "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
-    "login.idioma":"Language",
-    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, check bookings and ranking.",
-    "role.STAFF.label":"Staff / reception","role.STAFF.desc":"Daily management of bookings, sign-ups and player assistance.",
-    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Management panel, metrics and operational control.",
-    "role.SUPPORT.label":"Technical support","role.SUPPORT.desc":"Technical zone, integrations and internal diagnostics.",
-    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
-    "home.socios_activos":"Active members","home.procesos_activos":"Active processes",
-    "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
-    "home.estado_operativo":"Operational status","home.reservar":"Book",
-    "home.torneo":"Tournament","home.alta":"Sign up","home.procesos":"Processes",
-    "home.avisos_activos":"Active alerts","home.ver_procesos":"View processes",
-    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
-    "home.estimacion_mensual":"Monthly estimate","home.en_curso":"In progress",
-    "home.este_mes":"this month","home.incidencia":"incident","home.incidencias_s":"incidents",
-    "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
-    "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
-    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents","home.flujos_totales":"total flows","home.operativo_probado":"operational (E2E tested)",
-    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
-    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
-    "home.club_operativo":"Padel club","home.hero_accent":"operational",
-    "home.hero_subtitle":"SaaS by roles: player, reception, administration and support.",
-    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
-    "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
-    "home.ver_admin":"View admin","home.ver_soporte":"View support",
-    "home.galeria":"Club gallery",
-    "home.dias_semana":"M,T,W,T,F,S,S",
-    "home.dias_largo":"Mon,Tue,Wed,Thu,Fri,Sat,Sun",
-    "admin.panel":"Management panel","admin.metricas":"Club global metrics.",
-    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
-    "admin.socios":"Active members","admin.procesos":"Active processes",
-    "admin.backup":"Last backup","admin.ingr_mes":"Monthly revenue",
-    "admin.vs_mes_anterior":"vs previous month","admin.prox_lunes":"Next: Monday 07:00",
-    "admin.graf_hoy":"Bookings by hour — today","admin.graf_semana":"Weekly evolution",
-    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
-    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
-    "admin.backup_semana":"Weekly backup","admin.integraciones":"Integration status",
-    "admin.integ_desc":"Ready, pending credentials or pending deployment.",
-    "soporte.title":"Technical support","soporte.desc":"Application technical control.",
-    "soporte.proteccion":"Production protection required",
-    "soporte.vars":"Private variables",
-    "flujos.title":"Tech centre","flujos.desc":"System automation status.",
-    "torneos.title":"Tournaments","torneos.bracket":"Interactive bracket",
-    "torneos.anyadir":"Add pair","torneos.reordenar":"Reorder matches",
-    "torneos.autoasignar":"Auto-assign","torneos.guardar":"Save bracket",
-    "torneos.publicar":"Publish","torneos.exportar":"Export",
-    "torneos.ver_ranking":"View full ranking","torneos.personalizado":"Custom",
-    "torneos.jugadores":"Players","torneos.parejas":"Pairs","torneos.ganador":"Winner",
-    "torneos.eliminada":"Eliminated","torneos.avanza":"Advances","torneos.bye":"BYE",
-    "torneos.pase_directo":"Direct pass","torneos.campeon":"Champion",
-    "torneos.subcampeon":"Runner-up","torneos.tercer_puesto":"Third place",
-    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
-    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
-    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
-    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
-    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
-    "reprog.resumen":"Change summary","reprog.confirmo":"I confirm I want to reschedule this booking",
-    "reprog.btn":"Reschedule booking","reprog.volver":"Back to bookings",
-    "cancelar.motivo":"Reason","cancelar.confirmar":"Confirm cancellation","cancelar.volver":"Back",
-    "ranking.title":"Ranking","ranking.subtitle":"General ranking of players and pairs",
-    "ranking.categoria":"Category","ranking.nivel":"Level","ranking.puntos":"Points",
-    "ranking.pts":"Pts","ranking.pareja":"Pair","ranking.jugadores":"Players",
-    "ranking.v":"W","ranking.d":"L","ranking.pj":"P","ranking.racha":"Streak",
-    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Last updated",
-    "ranking.filtrar":"Search player or pair...","ranking.general":"General",
-    "ranking.masculino":"Men's","ranking.femenino":"Women's","ranking.mixto":"Mixed",
-    "ranking.iniciacion":"Beginner","ranking.medio":"Intermediate","ranking.avanzado":"Advanced",
-    "ranking.podio":"Podium — Top 3","ranking.tabla":"Full ranking",
-    "ranking.datos_ejemplo":"Sample data","ranking.sistema_puntos":"Club configurable points system.",
-    "ranking.temporada":"Season","ranking.buscar":"Search...",
-    "ranking.campeon":"Champion","ranking.subcampeon":"Runner-up","ranking.tercero":"3rd place",
-    "ranking.mejor_pareja":"Best pair","ranking.pts_totales":"total pts",
-    "ranking.sin_resultados":"No results with those filters.",
-    "ranking.estado":"Status","ranking.activo":"Active",
-    "common.cargando":"Loading...","common.error":"Error","common.cancelar":"Cancel",
-    "common.confirmar":"Confirm","common.guardar":"Save","common.volver":"Back",
-    "common.editar":"Edit","common.modo_seguro":"Safe mode","common.entorno":"Protected environment",
-    "common.sin_cambios":"No change",
-    "alta.title":"Player registration","alta.eyebrow":"Players","alta.desc":"Add a player to the club.",
-    "alta.nombre":"First name","alta.apellidos":"Surname","alta.email":"Email","alta.telefono":"Phone",
-    "alta.fecha_nac":"Date of birth","alta.nivel":"Level","alta.genero":"Gender",
-    "alta.comentarios":"Comments","alta.seleccionar":"Select",
-    "alta.acepta":"I accept the terms and privacy policy.",
-    "alta.exito":"✅ Player registered successfully.","alta.registrando":"Registering...","alta.btn":"Register player",
-    "cancelar.title":"Cancel booking","cancelar.eyebrow":"Bookings","cancelar.desc":"Request cancellation of a booking.",
-    "cancelar.clave":"Booking key","cancelar.clave_ph":"Enter your booking key",
-    "cancelar.confirmo_check":"I confirm I want to request cancellation of this booking.",
-    "cancelar.btn":"Cancel booking","cancelar.enviando":"Sending...","cancelar.volver_reservas":"Back to bookings",
-    "cancelar.que_ocurre":"What happens next",
-    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
-    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
-    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
-    "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
-    "reservas.registrada":"Request sent · pending confirmation","reservas.nueva_btn":"New booking",
-    "reservas.nombre":"First name","reservas.apellidos":"Surname","reservas.modalidad":"Mode",
-    "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
-    "reservas.confirmacion_desc":"Real confirmation depends on the backend and configured integrations.",
-    "reprog.title":"Reschedule booking","reprog.eyebrow":"Bookings","reprog.desc":"Change the date or time of your booking.",
-    "reprog.hora_fin":"End time","reprog.que_ocurre":"What happens next","reprog.enviando":"Sending...","reprog.editar":"Edit",
-    "soporte.eyebrow":"Support",
-    "lang.buscar":"Search language, country, code, flag…","lang.no_encontrados":"No languages found.",
-    "lang.hint":"Try country, language, code or flag. Example: Spain, Español, es-ES or 🇪🇸","lang.recomendados":"Recommended","lang.todos":"All languages",
-    "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
-    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
-    "status.reserva.exito":"Request sent","status.reserva.exito_txt":"Booking request received and being processed. You will receive confirmation by email.",
-    "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
-    "status.cancelar.idle":"Pending","status.cancelar.idle_txt":"Confirm the cancellation of your booking.",
-    "status.cancelar.enviando":"Sending","status.cancelar.enviando_txt":"We are sending your cancellation request.",
-    "status.cancelar.exito":"Request sent","status.cancelar.exito_txt":"Cancellation request sent successfully.",
-    "status.cancelar.error":"Could not send","status.cancelar.error_txt":"Check the key and try again.",
-    "status.reprog.idle":"Pending","status.reprog.idle_txt":"Choose a new date or time.",
-    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
-    "status.reprog.exito":"Booking rescheduled","status.reprog.exito_txt":"Your booking has been updated successfully.",
-    "status.reprog.error":"Could not reschedule","status.reprog.error_txt":"Check your details and try again.",
-    "errors.nombre":"Please enter a valid first name.","errors.apellidos":"Please enter a valid surname.",
-    "errors.email":"Please enter a valid email.","errors.telefono":"Please enter a valid phone number.",
-    "errors.fecha":"Please select a date.","errors.fecha_pasado":"The date cannot be in the past.",
-    "errors.fecha_domingo":"The club is closed on Sundays.",
-    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
-    "errors.hora_pasada":"The selected slot has already passed.",
-    "errors.hora_cierre":"The booking would end after club closing time.",
-    "errors.pista":"Please select a valid court.","errors.modalidad":"Please select a valid mode.",
-    "errors.nivel":"Please select a valid level.",
-    "errors.clave":"Please enter the booking key.","errors.clave_incompleta":"The booking key seems incomplete.",
-    "errors.nueva_fecha":"Please select the new date.","errors.nueva_fecha_pasado":"The new date cannot be in the past.",
-    "errors.confirmado_reprog":"Please confirm you want to reschedule the booking.",
-    "errors.confirmado_cancelar":"Please confirm you want to request cancellation before sending.",
-    "errors.datos_incompletos":"Some details are incomplete or invalid. Please correct them before confirming.",
-    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
-    "errors.reserva_error":"Could not complete the booking. Please try again in a few seconds.",
-    "errors.cancelar_error":"Could not send the request. Check the key and try again.",
-    "errors.reprog_campos":"Please fill in all required fields correctly.",
-    "errors.reprog_ocupado":"That slot has just been taken. Please select another.",
-    "errors.reprog_error":"Could not complete the reschedule. Check the key and try again.",
-    "badge.confirmed":"Confirmed","badge.pending":"Pending","badge.completed":"Completed",
-    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
-    "cancelar.info1":"We will process your request securely.",
-    "cancelar.info2":"The cancellation will be recorded.",
-    "cancelar.info3":"You can return to the calendar whenever you like.",
-    "reprog.info1":"The key identifies the booking you want to change.",
-    "reprog.info2":"The same key is kept after rescheduling.",
-    "reprog.info3":"You will receive confirmation by email once the change is processed.",
-    "reprog.info4":"Notifications will be activated in a later phase.",
-    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
-    "flujos.exportar_json":"⬇ Export JSON","flujos.total_procesos":"Total processes","flujos.auditados":"Audited",
-    "flujos.activos_label":"Active","flujos.conectados":"Connected","flujos.pausados_label":"Paused",
-    "flujos.en_pausa":"On pause","flujos.incidencias_label":"Incidents","flujos.ultimas_24h":"Last 24h",
-    "flujos.tasa_exito":"Success rate","flujos.global_sistema":"System global",
-    "flujos.ultimo_backup":"Last backup","flujos.automatico":"Automatic",
-    "flujos.estado_procesos_label":"Process status","flujos.por_estado":"By connection status",
-    "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
-    "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"executions",
-    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 50 processes",
-    "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
-    "flujos.sin_errores":"✅ No errors recorded","flujos.criticos":"Critical process status",
-    "flujos.estado_op":"Operational status","flujos.todos_flujos":"All processes",
-    "flujos.ocultar_tabla":"▲ Hide table","flujos.ver_tabla":"▼ View full table",
-    "flujos.col_flujo":"Process","flujos.col_categoria":"Category","flujos.col_estado":"Status",
-    "flujos.nota_integracion":"Technical integration connected. Real-time data requires connection to the club backend.",
-    "admin.gestion_eyebrow":"Management","admin.gestion_title":"Courts and clients",
-    "admin.gestion_desc":"Modules ready for operational management.",
-    "admin.gestion_item1":"Court management","admin.gestion_item2":"Clients and profiles",
-    "admin.gestion_item3":"Booking history","admin.gestion_item4":"Availability rules",
-    "admin.crec_eyebrow":"Growth","admin.crec_title":"Tournaments and processes",
-    "admin.crec_desc":"Area ready to activate processes when backend is available.",
-    "admin.crec_item1":"Tournaments","admin.crec_item2":"Ranking and categories",
-    "admin.crec_item3":"Classification system","admin.crec_item4":"Future payments",
-    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
-    "admin.backup_item1":"Schedule: Monday 07:00","admin.backup_item2":"Source: Database",
-    "admin.backup_item3":"Destination: Storage","admin.backup_item4":"Confirmation: Notifications",
-    "admin.sistema_eyebrow":"System","admin.exito_label":"Success:",
-    "auth.roles_title":"Roles and access","auth.pending_badge":"Pending configuration",
-    "auth.pending_desc":"Role-based access system. In production it must be protected by an authentication provider and user backend.",
-    "auth.secciones":"Sections:",
-    "soporte.proteccion_h3":"Production protection required",
-    "soporte.estado_tec_eyebrow":"Integration status","soporte.estado_tec_title":"Technical status",
-    "soporte.estado_tec_desc":"Backend connection checklist.",
-    "soporte.worker_item":"Booking worker ready",
-    "soporte.make_item":"Automations pending private secret",
-    "soporte.airtable_item":"Database ready without active writes",
-    "soporte.stripe_item":"Payments and messaging pending configuration",
-    "soporte.obs_eyebrow":"Observability","soporte.obs_title":"Logs and errors",
-    "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
-    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
-    "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
-    "soporte.vars_h3":"Security status: protected variables",
-    "soporte.vars_no_names":"Internal names and values are not shown in the interface.",
-    "soporte.vars_validacion":"Validation available only in internal documentation or a secure console.",
-  },
-  "en-US": {
-    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
-    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
-    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
-    "nav.admin":"Admin","nav.flujos_make":"Tech center","nav.soporte":"Support",
-    "nav.comunidad":"Community",
-    "nav.cerrar_sesion":"Sign out","nav.saas_label":"Secure SaaS","nav.cerrar_menu":"Close","nav.abrir_menu":"Menu",
-    "login.title":"Sign in as role","login.entrar":"Sign in","login.cancelar":"Cancel",
-    "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
-    "login.guardar_sesion":"Remember me on this device","login.acceder_como":"Sign in as",
-    "login.intro_pwd":"Enter the password assigned to this role.",
-    "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
-    "login.sesion_label":"Club Pádel 04 · Sign In",
-    "login.legal":"Local access protected by password. Session can be saved on this device only.",
-    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"Password recovery is not available in this environment yet: pending activation of the authentication provider.","login.recuperar_cargando":"Sending instructions…",
-    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
-    "login.subtitle":"Select how you want to enter the app. Each role has an experience tailored to its permissions.",
-    "login.idioma":"Language",
-    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, view bookings and ranking.",
-    "role.STAFF.label":"Staff / front desk","role.STAFF.desc":"Daily management of bookings and player assistance.",
-    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Dashboard, metrics and operational control.",
-    "role.SUPPORT.label":"Technical support","role.SUPPORT.desc":"Technical zone, integrations and internal diagnostics.",
-    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
-    "home.socios_activos":"Active members","home.procesos_activos":"Active processes",
-    "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
-    "home.estado_operativo":"System status","home.reservar":"Book",
-    "home.torneo":"Tournament","home.alta":"Register","home.procesos":"Processes",
-    "home.avisos_activos":"Active alerts","home.ver_procesos":"View processes",
-    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
-    "home.estimacion_mensual":"Monthly estimate","home.en_curso":"In progress",
-    "home.este_mes":"this month","home.incidencia":"incident","home.incidencias_s":"incidents",
-    "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
-    "home.porcentaje_uso":"Usage %","home.procesos_conectados":"connected processes",
-    "home.activos":"Active","home.pausados":"Paused","home.incidencias":"Incidents","home.flujos_totales":"total flows","home.operativo_probado":"operational (E2E tested)",
-    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
-    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
-    "home.club_operativo":"Padel club","home.hero_accent":"operational",
-    "home.hero_subtitle":"SaaS by roles: player, front desk, administration and support.",
-    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
-    "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
-    "home.ver_admin":"View admin","home.ver_soporte":"View support",
-    "home.galeria":"Club gallery",
-    "home.dias_semana":"M,T,W,T,F,S,S",
-    "home.dias_largo":"Mon,Tue,Wed,Thu,Fri,Sat,Sun",
-    "admin.panel":"Management panel","admin.metricas":"Club global metrics.",
-    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
-    "admin.socios":"Active members","admin.procesos":"Active processes",
-    "admin.backup":"Last backup","admin.ingr_mes":"Monthly revenue",
-    "admin.vs_mes_anterior":"vs previous month","admin.prox_lunes":"Next: Monday 07:00",
-    "admin.graf_hoy":"Bookings by hour — today","admin.graf_semana":"Weekly evolution",
-    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
-    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
-    "admin.backup_semana":"Weekly backup","admin.integraciones":"Integration status",
-    "admin.integ_desc":"Ready, pending credentials or pending deployment.",
-    "soporte.title":"Technical support","soporte.desc":"Application technical control.",
-    "soporte.proteccion":"Production protection required",
-    "soporte.vars":"Private variables",
-    "flujos.title":"Tech center","flujos.desc":"System automation status.",
-    "torneos.title":"Tournaments","torneos.bracket":"Interactive bracket",
-    "torneos.anyadir":"Add pair","torneos.reordenar":"Reorder matches",
-    "torneos.autoasignar":"Auto-assign","torneos.guardar":"Save bracket",
-    "torneos.publicar":"Publish","torneos.exportar":"Export",
-    "torneos.ver_ranking":"View full ranking","torneos.personalizado":"Custom",
-    "torneos.jugadores":"Players","torneos.parejas":"Pairs","torneos.ganador":"Winner",
-    "torneos.eliminada":"Eliminated","torneos.avanza":"Advances","torneos.bye":"BYE",
-    "torneos.pase_directo":"Direct pass","torneos.campeon":"Champion",
-    "torneos.subcampeon":"Runner-up","torneos.tercer_puesto":"Third place",
-    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
-    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
-    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
-    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
-    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
-    "reprog.resumen":"Change summary","reprog.confirmo":"I confirm I want to reschedule this booking",
-    "reprog.btn":"Reschedule booking","reprog.volver":"Back to bookings",
-    "cancelar.motivo":"Reason","cancelar.confirmar":"Confirm cancellation","cancelar.volver":"Back",
-    "ranking.title":"Ranking","ranking.subtitle":"General ranking of players and pairs",
-    "ranking.categoria":"Category","ranking.nivel":"Level","ranking.puntos":"Points",
-    "ranking.pts":"Pts","ranking.pareja":"Pair","ranking.jugadores":"Players",
-    "ranking.v":"W","ranking.d":"L","ranking.pj":"P","ranking.racha":"Streak",
-    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Last updated",
-    "ranking.filtrar":"Search player or pair...","ranking.general":"General",
-    "ranking.masculino":"Men's","ranking.femenino":"Women's","ranking.mixto":"Mixed",
-    "ranking.iniciacion":"Beginner","ranking.medio":"Intermediate","ranking.avanzado":"Advanced",
-    "ranking.podio":"Podium — Top 3","ranking.tabla":"Full ranking",
-    "ranking.datos_ejemplo":"Sample data","ranking.sistema_puntos":"Club configurable points system.",
-    "ranking.temporada":"Season","ranking.buscar":"Search...",
-    "ranking.campeon":"Champion","ranking.subcampeon":"Runner-up","ranking.tercero":"3rd place",
-    "ranking.mejor_pareja":"Best pair","ranking.pts_totales":"total pts",
-    "ranking.sin_resultados":"No results with those filters.",
-    "ranking.estado":"Status","ranking.activo":"Active",
-    "common.cargando":"Loading...","common.error":"Error","common.cancelar":"Cancel",
-    "common.confirmar":"Confirm","common.guardar":"Save","common.volver":"Back",
-    "common.editar":"Edit","common.modo_seguro":"Safe mode","common.entorno":"Protected environment",
-    "common.sin_cambios":"No change",
-    "alta.title":"Player registration","alta.eyebrow":"Players","alta.desc":"Add a player to the club.",
-    "alta.nombre":"First name","alta.apellidos":"Last name","alta.email":"Email","alta.telefono":"Phone",
-    "alta.fecha_nac":"Date of birth","alta.nivel":"Level","alta.genero":"Gender",
-    "alta.comentarios":"Comments","alta.seleccionar":"Select",
-    "alta.acepta":"I accept the terms and privacy policy.",
-    "alta.exito":"✅ Player registered successfully.","alta.registrando":"Registering...","alta.btn":"Register player",
-    "cancelar.title":"Cancel booking","cancelar.eyebrow":"Bookings","cancelar.desc":"Request cancellation of a booking.",
-    "cancelar.clave":"Booking key","cancelar.clave_ph":"Enter your booking key",
-    "cancelar.confirmo_check":"I confirm I want to cancel this booking.",
-    "cancelar.btn":"Cancel booking","cancelar.enviando":"Sending...","cancelar.volver_reservas":"Back to bookings",
-    "cancelar.que_ocurre":"What happens next",
-    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
-    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
-    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
-    "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
-    "reservas.registrada":"Request sent · pending confirmation","reservas.nueva_btn":"New booking",
-    "reservas.nombre":"First name","reservas.apellidos":"Last name","reservas.modalidad":"Mode",
-    "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
-    "reservas.confirmacion_desc":"Confirmation depends on the backend and configured integrations.",
-    "reprog.title":"Reschedule booking","reprog.eyebrow":"Bookings","reprog.desc":"Change the date or time of your booking.",
-    "reprog.hora_fin":"End time","reprog.que_ocurre":"What happens next","reprog.enviando":"Sending...","reprog.editar":"Edit",
-    "soporte.eyebrow":"Support",
-    "lang.buscar":"Search language, country, code, flag…","lang.no_encontrados":"No languages found.",
-    "lang.hint":"Try country, language, code or flag. Example: Spain, Español, es-ES or 🇪🇸","lang.recomendados":"Recommended","lang.todos":"All languages",
-    "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
-    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
-    "status.reserva.exito":"Request sent","status.reserva.exito_txt":"Booking request received and being processed. You will receive confirmation by email.",
-    "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
-    "status.cancelar.idle":"Pending","status.cancelar.idle_txt":"Confirm the cancellation of your booking.",
-    "status.cancelar.enviando":"Sending","status.cancelar.enviando_txt":"We are sending your cancellation request.",
-    "status.cancelar.exito":"Request sent","status.cancelar.exito_txt":"Cancellation request sent successfully.",
-    "status.cancelar.error":"Could not send","status.cancelar.error_txt":"Check the key and try again.",
-    "status.reprog.idle":"Pending","status.reprog.idle_txt":"Choose a new date or time.",
-    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
-    "status.reprog.exito":"Booking rescheduled","status.reprog.exito_txt":"Your booking has been updated successfully.",
-    "status.reprog.error":"Could not reschedule","status.reprog.error_txt":"Check your details and try again.",
-    "errors.nombre":"Please enter a valid first name.","errors.apellidos":"Please enter a valid last name.",
-    "errors.email":"Please enter a valid email.","errors.telefono":"Please enter a valid phone number.",
-    "errors.fecha":"Please select a date.","errors.fecha_pasado":"The date cannot be in the past.",
-    "errors.fecha_domingo":"The club is closed on Sundays.",
-    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
-    "errors.hora_pasada":"The selected slot has already passed.",
-    "errors.hora_cierre":"The booking would end after club closing time.",
-    "errors.pista":"Please select a valid court.","errors.modalidad":"Please select a valid mode.",
-    "errors.nivel":"Please select a valid level.",
-    "errors.clave":"Please enter the booking key.","errors.clave_incompleta":"The booking key seems incomplete.",
-    "errors.nueva_fecha":"Please select the new date.","errors.nueva_fecha_pasado":"The new date cannot be in the past.",
-    "errors.confirmado_reprog":"Please confirm you want to reschedule the booking.",
-    "errors.confirmado_cancelar":"Please confirm you want to request cancellation before sending.",
-    "errors.datos_incompletos":"Some details are incomplete or invalid. Please correct them before confirming.",
-    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
-    "errors.reserva_error":"Could not complete the booking. Please try again in a few seconds.",
-    "errors.cancelar_error":"Could not send the request. Check the key and try again.",
-    "errors.reprog_campos":"Please fill in all required fields correctly.",
-    "errors.reprog_ocupado":"That slot has just been taken. Please select another.",
-    "errors.reprog_error":"Could not complete the reschedule. Check the key and try again.",
-    "badge.confirmed":"Confirmed","badge.pending":"Pending","badge.completed":"Completed",
-    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
-    "cancelar.info1":"We will process your request securely.",
-    "cancelar.info2":"The cancellation will be recorded.",
-    "cancelar.info3":"You can return to the calendar whenever you like.",
-    "reprog.info1":"The key identifies the booking you want to change.",
-    "reprog.info2":"The same key is kept after rescheduling.",
-    "reprog.info3":"You will receive confirmation by email once the change is processed.",
-    "reprog.info4":"Notifications will be activated in a later phase.",
-    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
-    "flujos.exportar_json":"⬇ Export JSON","flujos.total_procesos":"Total processes","flujos.auditados":"Audited",
-    "flujos.activos_label":"Active","flujos.conectados":"Connected","flujos.pausados_label":"Paused",
-    "flujos.en_pausa":"On pause","flujos.incidencias_label":"Incidents","flujos.ultimas_24h":"Last 24h",
-    "flujos.tasa_exito":"Success rate","flujos.global_sistema":"System global",
-    "flujos.ultimo_backup":"Last backup","flujos.automatico":"Automatic",
-    "flujos.estado_procesos_label":"Process status","flujos.por_estado":"By connection status",
-    "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
-    "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"executions",
-    "flujos.por_categoria":"Processes by category","flujos.distribucion":"Distribution of 50 processes",
-    "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
-    "flujos.sin_errores":"✅ No errors recorded","flujos.criticos":"Critical process status",
-    "flujos.estado_op":"Operational status","flujos.todos_flujos":"All processes",
-    "flujos.ocultar_tabla":"▲ Hide table","flujos.ver_tabla":"▼ View full table",
-    "flujos.col_flujo":"Process","flujos.col_categoria":"Category","flujos.col_estado":"Status",
-    "flujos.nota_integracion":"Technical integration connected. Real-time data requires connection to the club backend.",
-    "admin.gestion_eyebrow":"Management","admin.gestion_title":"Courts and clients",
-    "admin.gestion_desc":"Modules ready for operational management.",
-    "admin.gestion_item1":"Court management","admin.gestion_item2":"Clients and profiles",
-    "admin.gestion_item3":"Booking history","admin.gestion_item4":"Availability rules",
-    "admin.crec_eyebrow":"Growth","admin.crec_title":"Tournaments and processes",
-    "admin.crec_desc":"Area ready to activate processes when backend is available.",
-    "admin.crec_item1":"Tournaments","admin.crec_item2":"Ranking and categories",
-    "admin.crec_item3":"Classification system","admin.crec_item4":"Future payments",
-    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
-    "admin.backup_item1":"Schedule: Monday 07:00","admin.backup_item2":"Source: Database",
-    "admin.backup_item3":"Destination: Storage","admin.backup_item4":"Confirmation: Notifications",
-    "admin.sistema_eyebrow":"System","admin.exito_label":"Success:",
-    "auth.roles_title":"Roles and access","auth.pending_badge":"Pending configuration",
-    "auth.pending_desc":"Role-based access system. In production it must be protected by an authentication provider and user backend.",
-    "auth.secciones":"Sections:",
-    "soporte.proteccion_h3":"Production protection required",
-    "soporte.estado_tec_eyebrow":"Integration status","soporte.estado_tec_title":"Technical status",
-    "soporte.estado_tec_desc":"Backend connection checklist.",
-    "soporte.worker_item":"Booking worker ready",
-    "soporte.make_item":"Automations pending private secret",
-    "soporte.airtable_item":"Database ready without active writes",
-    "soporte.stripe_item":"Payments and messaging pending configuration",
-    "soporte.obs_eyebrow":"Observability","soporte.obs_title":"Logs and errors",
-    "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
-    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
-    "soporte.logs_errores":"Integration errors","soporte.logs_alertas":"Future technical alerts",
-    "soporte.vars_h3":"Security status: protected variables",
-    "soporte.vars_no_names":"Internal names and values are not shown in the interface.",
-    "soporte.vars_validacion":"Validation available only in internal documentation or a secure console.",
-  },
-  "fr-FR": {
-    "nav.inicio":"Accueil","nav.reservar":"Réserver","nav.alta_jugador":"Inscription joueur",
-    "nav.reprogramar":"Reporter","nav.cancelar":"Annuler réservation",
-    "nav.gestion":"Réservations","nav.torneos":"Tournois","nav.ranking":"Classement",
-    "nav.admin":"Admin","nav.flujos_make":"Centre technique","nav.soporte":"Support",
-    "nav.comunidad":"Communauté",
-    "nav.cerrar_sesion":"Déconnexion","nav.saas_label":"SaaS sécurisé","nav.cerrar_menu":"Fermer","nav.abrir_menu":"Menu",
-    "login.title":"Se connecter en tant que rôle","login.entrar":"Entrer","login.cancelar":"Annuler",
-    "login.password":"Mot de passe","login.ver_pwd":"👁️ Voir le mot de passe","login.ocultar_pwd":"🙈 Masquer",
-    "login.guardar_sesion":"Mémoriser sur cet appareil","login.acceder_como":"Se connecter en tant que",
-    "login.intro_pwd":"Entrez le mot de passe attribué à ce rôle.",
-    "login.error_rol":"Veuillez sélectionner un rôle valide.","login.error_pwd":"Mot de passe incorrect.",
-    "login.sesion_label":"Club Pádel 04 · Connexion",
-    "login.legal":"Accès local protégé par mot de passe. Session sauvegardable sur cet appareil uniquement.",
-    "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password","login.recuperar_no_disponible":"La récupération de mot de passe n'est pas encore disponible dans cet environnement : en attente d'activation du fournisseur d'authentification.","login.recuperar_cargando":"Envoi des instructions…",
-    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
-    "login.subtitle":"Sélectionnez comment vous souhaitez entrer dans l'application.",
-    "login.idioma":"Langue",
-    "role.PLAYER.label":"Joueur / client","role.PLAYER.desc":"Réserver des courts, consulter les réservations et le classement.",
-    "role.STAFF.label":"Staff / accueil","role.STAFF.desc":"Gestion quotidienne des réservations et assistance aux joueurs.",
-    "role.ADMIN.label":"Administrateur","role.ADMIN.desc":"Tableau de bord, métriques et contrôle opérationnel.",
-    "role.SUPPORT.label":"Support technique","role.SUPPORT.desc":"Zone technique, intégrations et diagnostics internes.",
-    "home.reservas_hoy":"Réservations auj.","home.ocupacion_media":"Occupation moy.",
-    "home.socios_activos":"Membres actifs","home.procesos_activos":"Processus actifs",
-    "home.ingresos_mes":"Revenus du mois","home.torneos_activos":"Tournois actifs",
-    "home.estado_operativo":"État opérationnel","home.reservar":"Réserver",
-    "home.torneo":"Tournoi","home.alta":"Inscription","home.procesos":"Processus",
-    "home.avisos_activos":"Alertes actives","home.ver_procesos":"Voir processus",
-    "home.vs_ayer":"vs hier","home.pistas_activas":"4 courts actifs",
-    "home.estimacion_mensual":"Estimation mensuelle","home.en_curso":"En cours",
-    "home.este_mes":"ce mois","home.incidencia":"incident","home.incidencias_s":"incidents",
-    "home.franja_horaria":"Créneau horaire","home.tendencia_semanal":"Tendance hebdomadaire",
-    "home.porcentaje_uso":"% d'utilisation","home.procesos_conectados":"processus connectés",
-    "home.activos":"Actifs","home.pausados":"En pause","home.incidencias":"Incidents","home.flujos_totales":"flux au total","home.operativo_probado":"opérationnel (testé E2E)",
-    "home.reservas_hora":"Réservations par heure — auj.","home.reservas_7dias":"Réservations 7 derniers jours",
-    "home.ocupacion_pista":"Occupation par court","home.estado_procesos":"État des processus",
-    "home.club_operativo":"Club de padel","home.hero_accent":"opérationnel",
-    "home.hero_subtitle":"SaaS par rôles: joueur, accueil, administration et support.",
-    "home.btn_torneos":"Tournois","home.btn_admin":"Admin",
-    "home.ir_reservas":"Aller aux réservations","home.ver_gestion":"Gérer réservations",
-    "home.ver_admin":"Voir admin","home.ver_soporte":"Voir support",
-    "home.galeria":"Galerie du club",
-    "home.dias_semana":"L,M,M,J,V,S,D","home.dias_largo":"Lun,Mar,Mer,Jeu,Ven,Sam,Dim",
-    "admin.panel":"Tableau de bord","admin.metricas":"Métriques globales du club.",
-    "admin.reservas_mes":"Réservations du mois","admin.ocupacion":"Occupation moy.",
-    "admin.socios":"Membres actifs","admin.procesos":"Processus actifs",
-    "admin.backup":"Dernier backup","admin.ingr_mes":"Revenus du mois",
-    "admin.vs_mes_anterior":"vs mois précédent","admin.prox_lunes":"Prochain: lundi 07:00",
-    "admin.graf_hoy":"Réservations par heure — auj.","admin.graf_semana":"Évolution hebdomadaire",
-    "admin.graf_pista":"Occupation par court","admin.sub_hoy":"Créneau · démo",
-    "admin.sub_semana":"Réservations 7 jours · démo","admin.sub_pista":"% utilisation · démo",
-    "admin.backup_semana":"Backup hebdomadaire","admin.integraciones":"État des intégrations",
-    "admin.integ_desc":"Prêtes, en attente de credentials ou de déploiement.",
-    "soporte.title":"Support technique","soporte.desc":"Contrôle technique de l'application.",
-    "soporte.proteccion":"Protection requise en production","soporte.vars":"Variables privées",
-    "flujos.title":"Centre technique","flujos.desc":"État des automatisations du système.",
-    "torneos.title":"Tournois","torneos.bracket":"Tableau interactif",
-    "torneos.anyadir":"Ajouter paire","torneos.guardar":"Sauvegarder","torneos.publicar":"Publier",
-    "torneos.exportar":"Exporter","torneos.campeon":"Champion","torneos.subcampeon":"Finaliste",
-    "torneos.tercer_puesto":"3e place","torneos.jugadores":"Joueurs","torneos.parejas":"Paires",
-    "torneos.ganador":"Vainqueur","torneos.eliminada":"Éliminé","torneos.avanza":"Avance",
-    "torneos.bye":"BYE","torneos.pase_directo":"Passage direct","torneos.personalizado":"Personnalisé",
-    "torneos.ver_ranking":"Voir classement complet","torneos.autoasignar":"Auto-assigner","torneos.reordenar":"Réordonner",
-    "reservas.nueva":"Nouvelle réservation","reservas.fecha":"Date","reservas.hora":"Heure",
-    "reservas.pista":"Court","reservas.duracion":"Durée","reservas.confirmar":"Confirmer réservation",
-    "reservas.resumen":"Résumé","reservas.disponible":"Disponible","reservas.no_disponible":"Indisponible",
-    "reprog.clave":"Clé de réservation","reprog.nueva_fecha":"Nouvelle date",
-    "reprog.nueva_hora":"Nouvelle heure de début","reprog.nueva_pista":"Nouveau court",
-    "reprog.resumen":"Résumé du changement","reprog.confirmo":"Je confirme le report de cette réservation",
-    "reprog.btn":"Reporter la réservation","reprog.volver":"Retour aux réservations",
-    "cancelar.motivo":"Motif","cancelar.confirmar":"Confirmer l'annulation","cancelar.volver":"Retour",
-    "ranking.title":"Classement","ranking.subtitle":"Classement général des joueurs et paires",
-    "ranking.categoria":"Catégorie","ranking.nivel":"Niveau","ranking.puntos":"Points",
-    "ranking.pts":"Pts","ranking.pareja":"Paire","ranking.jugadores":"Joueurs",
-    "ranking.v":"V","ranking.d":"D","ranking.pj":"M","ranking.racha":"Série",
-    "ranking.mov":"Mouv.","ranking.pos":"#","ranking.ultima_act":"Dernière mise à jour",
-    "ranking.filtrar":"Rechercher joueur ou paire...","ranking.general":"Général",
-    "ranking.masculino":"Masculin","ranking.femenino":"Féminin","ranking.mixto":"Mixte",
-    "ranking.iniciacion":"Débutant","ranking.medio":"Intermédiaire","ranking.avanzado":"Avancé",
-    "ranking.podio":"Podium — Top 3","ranking.tabla":"Classement complet",
-    "ranking.datos_ejemplo":"Données d'exemple","ranking.sistema_puntos":"Système de points du club configurable.",
-    "ranking.temporada":"Saison","ranking.buscar":"Rechercher...",
-    "ranking.campeon":"Champion","ranking.subcampeon":"Finaliste","ranking.tercero":"3e place",
-    "ranking.mejor_pareja":"Meilleure paire","ranking.pts_totales":"pts totaux",
-    "ranking.sin_resultados":"Aucun résultat avec ces filtres.",
-    "ranking.estado":"Statut","ranking.activo":"Actif",
-    "common.cargando":"Chargement...","common.error":"Erreur","common.cancelar":"Annuler",
-    "common.confirmar":"Confirmer","common.guardar":"Sauvegarder","common.volver":"Retour",
-    "common.editar":"Modifier","common.modo_seguro":"Mode sécurisé","common.entorno":"Environnement protégé",
-    "common.sin_cambios":"Sans changement",
-    "alta.title":"Inscription joueur","alta.eyebrow":"Joueurs","alta.desc":"Ajouter un joueur au club.",
-    "alta.nombre":"Prénom","alta.apellidos":"Nom","alta.email":"Email","alta.telefono":"Téléphone",
-    "alta.fecha_nac":"Date de naissance","alta.nivel":"Niveau","alta.genero":"Genre",
-    "alta.comentarios":"Commentaires","alta.seleccionar":"Sélectionner",
-    "alta.acepta":"J'accepte les conditions et la politique de confidentialité.",
-    "alta.exito":"✅ Joueur enregistré avec succès.","alta.registrando":"Enregistrement...","alta.btn":"Inscrire le joueur",
-    "cancelar.title":"Annuler la réservation","cancelar.eyebrow":"Réservations","cancelar.desc":"Demander l'annulation d'une réservation.",
-    "cancelar.clave":"Clé de réservation","cancelar.clave_ph":"Entrez votre clé de réservation",
-    "cancelar.confirmo_check":"Je confirme que je veux annuler cette réservation.",
-    "cancelar.btn":"Annuler la réservation","cancelar.enviando":"Envoi en cours...","cancelar.volver_reservas":"Retour aux réservations",
-    "cancelar.que_ocurre":"Que se passe-t-il ensuite",
-    "reservas.title":"Réserver un terrain","reservas.eyebrow":"Réservations","reservas.desc":"Réservez votre terrain en quelques secondes.",
-    "reservas.datos_jugador":"Données du joueur","reservas.fecha_pista":"Date, heure et terrain",
-    "reservas.hora_fin":"Heure de fin","reservas.total":"Total","reservas.ver_resumen":"Voir le résumé",
-    "reservas.editar":"Modifier","reservas.confirmar_btn":"Confirmer","reservas.enviando":"Envoi...",
-    "reservas.registrada":"Demande envoyée · en attente de confirmation","reservas.nueva_btn":"Nouvelle réservation",
-    "reservas.nombre":"Prénom","reservas.apellidos":"Nom","reservas.modalidad":"Mode",
-    "reservas.nivel_form":"Niveau","reservas.comentarios":"Commentaires","reservas.minutos":"minutes",
-    "reservas.confirmacion_desc":"La confirmation dépend du backend et des intégrations configurées.",
-    "reprog.title":"Reprogrammer la réservation","reprog.eyebrow":"Réservations","reprog.desc":"Changer la date ou l'heure de votre réservation.",
-    "reprog.hora_fin":"Heure de fin","reprog.que_ocurre":"Que se passe-t-il ensuite","reprog.enviando":"Envoi...","reprog.editar":"Modifier",
-    "soporte.eyebrow":"Support",
-    "lang.buscar":"Rechercher langue, pays, code, drapeau…","lang.no_encontrados":"Aucune langue trouvée.",
-    "lang.hint":"Essayez pays, langue, code ou drapeau. Exemple: France, Français, fr-FR ou 🇫🇷","lang.recomendados":"Recommandées","lang.todos":"Toutes les langues",
-    "status.reserva.pendiente":"En attente","status.reserva.pendiente_txt":"Vérifiez vos données avant de confirmer.",
-    "status.reserva.enviando":"Envoi","status.reserva.enviando_txt":"Nous envoyons votre demande de réservation.",
-    "status.reserva.exito":"Demande envoyée","status.reserva.exito_txt":"Demande de réservation reçue et en cours de traitement. Vous recevrez une confirmation par e-mail.",
-    "status.reserva.error":"Erreur","status.reserva.error_txt":"Impossible de finaliser la réservation. Vérifiez les données et réessayez.",
-    "status.cancelar.idle":"En attente","status.cancelar.idle_txt":"Confirmez l'annulation de votre réservation.",
-    "status.cancelar.enviando":"Envoi","status.cancelar.enviando_txt":"Nous envoyons votre demande d'annulation.",
-    "status.cancelar.exito":"Demande envoyée","status.cancelar.exito_txt":"Demande d'annulation envoyée avec succès.",
-    "status.cancelar.error":"Envoi impossible","status.cancelar.error_txt":"Vérifiez la clé et réessayez.",
-    "status.reprog.idle":"En attente","status.reprog.idle_txt":"Choisissez une nouvelle date ou heure.",
-    "status.reprog.enviando":"Report en cours","status.reprog.enviando_txt":"Vérification de la disponibilité et mise à jour de votre réservation.",
-    "status.reprog.exito":"Réservation reportée","status.reprog.exito_txt":"Votre réservation a été mise à jour avec succès.",
-    "status.reprog.error":"Report impossible","status.reprog.error_txt":"Vérifiez les données et réessayez.",
-    "errors.nombre":"Veuillez entrer un prénom valide.","errors.apellidos":"Veuillez entrer un nom valide.",
-    "errors.email":"Veuillez entrer un email valide.","errors.telefono":"Veuillez entrer un numéro de téléphone valide.",
-    "errors.fecha":"Veuillez sélectionner une date.","errors.fecha_pasado":"La date ne peut pas être dans le passé.",
-    "errors.fecha_domingo":"Le club est fermé le dimanche.",
-    "errors.hora":"Veuillez sélectionner une heure disponible.","errors.duracion":"Veuillez sélectionner une durée valide.",
-    "errors.hora_pasada":"Le créneau sélectionné est déjà passé.",
-    "errors.hora_cierre":"La réservation se terminerait après la fermeture du club.",
-    "errors.pista":"Veuillez sélectionner un terrain valide.","errors.modalidad":"Veuillez sélectionner un mode valide.",
-    "errors.nivel":"Veuillez sélectionner un niveau valide.",
-    "errors.clave":"Veuillez entrer la clé de réservation.","errors.clave_incompleta":"La clé de réservation semble incomplète.",
-    "errors.nueva_fecha":"Veuillez sélectionner la nouvelle date.","errors.nueva_fecha_pasado":"La nouvelle date ne peut pas être dans le passé.",
-    "errors.confirmado_reprog":"Veuillez confirmer que vous souhaitez reporter la réservation.",
-    "errors.confirmado_cancelar":"Veuillez confirmer que vous souhaitez demander l'annulation.",
-    "errors.datos_incompletos":"Certaines données sont incomplètes ou invalides. Corrigez-les avant de confirmer.",
-    "errors.horario_ocupado":"Ce créneau vient d'être pris. Veuillez en choisir un autre.",
-    "errors.reserva_error":"Impossible de finaliser la réservation. Réessayez dans quelques secondes.",
-    "errors.cancelar_error":"Impossible d'envoyer la demande. Vérifiez la clé et réessayez.",
-    "errors.reprog_campos":"Veuillez remplir correctement tous les champs obligatoires.",
-    "errors.reprog_ocupado":"Ce créneau vient d'être pris. Veuillez en sélectionner un autre.",
-    "errors.reprog_error":"Impossible de finaliser le report. Vérifiez la clé et réessayez.",
-    "badge.confirmed":"Confirmée","badge.pending":"En attente","badge.completed":"Terminée",
-    "home.galeria_eyebrow":"Galerie","home.galeria_desc":"Galerie visuelle du club.","home.sistema":"Système",
-    "cancelar.info1":"Nous traiterons votre demande en toute sécurité.",
-    "cancelar.info2":"L'annulation sera enregistrée.",
-    "cancelar.info3":"Vous pouvez revenir au calendrier quand vous voulez.",
-    "reprog.info1":"La clé identifie la réservation que vous souhaitez modifier.",
-    "reprog.info2":"La même clé est conservée après le report.",
-    "reprog.info3":"Vous recevrez une confirmation par email une fois le changement traité.",
-    "reprog.info4":"Les notifications seront activées dans une phase ultérieure.",
-    "reprog.nueva_disponibilidad":"Nouvelle disponibilité","reprog.selecciona_franja":"Sélectionnez un nouveau créneau disponible.",
-    "flujos.exportar_json":"⬇ Exporter JSON","flujos.total_procesos":"Total processus","flujos.auditados":"Audités",
-    "flujos.activos_label":"Actifs","flujos.conectados":"Connectés","flujos.pausados_label":"En pause",
-    "flujos.en_pausa":"En pause","flujos.incidencias_label":"Incidents","flujos.ultimas_24h":"Dernières 24h",
-    "flujos.tasa_exito":"Taux de succès","flujos.global_sistema":"Global système",
-    "flujos.ultimo_backup":"Dernier backup","flujos.automatico":"Automatique",
-    "flujos.estado_procesos_label":"État des processus","flujos.por_estado":"Par état de connexion",
-    "flujos.actividad_24h":"Activité dernières 24h","flujos.por_hora":"Par heure de la journée",
-    "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"exécutions",
-    "flujos.por_categoria":"Processus par catégorie","flujos.distribucion":"Répartition des 50 processus",
-    "flujos.mas_activos":"Processus les plus actifs","flujos.con_incidencias":"Processus avec incidents",
-    "flujos.sin_errores":"✅ Aucune erreur enregistrée","flujos.criticos":"État des processus critiques",
-    "flujos.estado_op":"État opérationnel","flujos.todos_flujos":"Tous les processus",
-    "flujos.ocultar_tabla":"▲ Masquer tableau","flujos.ver_tabla":"▼ Voir tableau complet",
-    "flujos.col_flujo":"Processus","flujos.col_categoria":"Catégorie","flujos.col_estado":"État",
-    "flujos.nota_integracion":"Intégration technique connectée. Les données en temps réel nécessitent une connexion au backend du club.",
-    "admin.gestion_eyebrow":"Gestion","admin.gestion_title":"Terrains et clients",
-    "admin.gestion_desc":"Modules prêts pour la gestion opérationnelle.",
-    "admin.gestion_item1":"Gestion des terrains","admin.gestion_item2":"Clients et profils",
-    "admin.gestion_item3":"Historique des réservations","admin.gestion_item4":"Règles de disponibilité",
-    "admin.crec_eyebrow":"Croissance","admin.crec_title":"Tournois et processus",
-    "admin.crec_desc":"Zone prête à activer des processus quand le backend sera disponible.",
-    "admin.crec_item1":"Tournois","admin.crec_item2":"Classement et catégories",
-    "admin.crec_item3":"Système de classement","admin.crec_item4":"Paiements futurs",
-    "admin.backup_eyebrow":"Système actif","admin.backup_desc":"Sauvegarde automatique des réservations et membres actifs.",
-    "admin.backup_item1":"Planification : lundi 07:00","admin.backup_item2":"Source : Base de données",
-    "admin.backup_item3":"Destination : Stockage","admin.backup_item4":"Confirmation : Notifications",
-    "admin.sistema_eyebrow":"Système","admin.exito_label":"Succès :",
-    "auth.roles_title":"Rôles et accès","auth.pending_badge":"Configuration en attente",
-    "auth.pending_desc":"Système d'accès par rôles. En production, il doit être protégé par un fournisseur d'authentification.",
-    "auth.secciones":"Sections :",
-    "soporte.proteccion_h3":"Protection requise en production",
-    "soporte.estado_tec_eyebrow":"État des intégrations","soporte.estado_tec_title":"État technique",
-    "soporte.estado_tec_desc":"Liste de vérification de connexion backend.",
-    "soporte.worker_item":"Worker de réservations prêt",
-    "soporte.make_item":"Automatisations en attente de secret privé",
-    "soporte.airtable_item":"Base de données prête sans écriture active",
-    "soporte.stripe_item":"Paiements et messagerie en attente de configuration",
-    "soporte.obs_eyebrow":"Observabilité","soporte.obs_title":"Logs et erreurs",
-    "soporte.obs_desc":"Zone réservée au diagnostic quand le backend réel sera disponible.",
-    "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
-    "soporte.logs_errores":"Erreurs d'intégrations","soporte.logs_alertas":"Alertes techniques futures",
-    "soporte.vars_h3":"État de sécurité : variables protégées",
-    "soporte.vars_no_names":"Les noms et valeurs internes ne sont pas affichés dans l'interface.",
-    "soporte.vars_validacion":"Validation disponible uniquement dans la documentation interne ou une console sécurisée.",
-  },
-  "it-IT": {
-    "nav.inicio":"Inizio","nav.reservar":"Prenota","nav.alta_jugador":"Iscrizione giocatore",
-    "nav.reprogramar":"Riprogramma","nav.cancelar":"Annulla prenotazione",
-    "nav.gestion":"Prenotazioni","nav.torneos":"Tornei","nav.ranking":"Classifica",
-    "nav.admin":"Admin","nav.flujos_make":"Centro tecnico","nav.soporte":"Supporto",
-    "nav.comunidad":"Comunità",
-    "nav.cerrar_sesion":"Disconnetti","nav.saas_label":"SaaS sicuro","nav.cerrar_menu":"Chiudi","nav.abrir_menu":"Menu",
-    "login.title":"Accedi come ruolo","login.entrar":"Entra","login.cancelar":"Annulla",
-    "login.password":"Password","login.ver_pwd":"👁️ Mostra password","login.ocultar_pwd":"🙈 Nascondi",
-    "login.guardar_sesion":"Ricordami su questo dispositivo","login.acceder_como":"Accedi come",
-    "login.intro_pwd":"Inserisci la password assegnata a questo ruolo.",
-    "login.error_rol":"Seleziona un ruolo valido.","login.error_pwd":"Password errata per questo ruolo.",
-    "login.sesion_label":"Club Pádel 04 · Accesso",
-    "login.legal":"Accesso locale protetto da password. Sessione salvabile solo su questo dispositivo.",
-    "login.olvide_pwd":"Hai dimenticato la password?","login.recuperar_title":"Recupera l'accesso","login.recuperar_desc":"Inserisci il tuo indirizzo e-mail e, se l'account esiste, riceverai le istruzioni per reimpostare l'accesso.","login.recuperar_email":"Indirizzo e-mail","login.recuperar_btn":"Invia istruzioni","login.recuperar_enviado":"Se quell'indirizzo è registrato nel sistema, riceverai le istruzioni a breve. Controlla anche la cartella spam.","login.recuperar_volver":"Torna al login","login.recuperar_preparado":"Pronto per l'endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"Il recupero della password non è ancora disponibile in questo ambiente: in attesa di attivazione del provider di autenticazione.","login.recuperar_cargando":"Invio delle istruzioni…",
-    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
-    "login.subtitle":"Seleziona come vuoi accedere all'applicazione.",
-    "login.idioma":"Lingua",
-    "role.PLAYER.label":"Giocatore / cliente","role.PLAYER.desc":"Prenota campi, consulta prenotazioni e classifica.",
-    "role.STAFF.label":"Staff / reception","role.STAFF.desc":"Gestione quotidiana delle prenotazioni e assistenza ai giocatori.",
-    "role.ADMIN.label":"Amministratore","role.ADMIN.desc":"Pannello di gestione, metriche e controllo operativo.",
-    "role.SUPPORT.label":"Supporto tecnico","role.SUPPORT.desc":"Zona tecnica, integrazioni e diagnostica interna.",
-    "home.reservas_hoy":"Prenotazioni oggi","home.ocupacion_media":"Occupazione media",
-    "home.socios_activos":"Soci attivi","home.procesos_activos":"Processi attivi",
-    "home.ingresos_mes":"Entrate mensili","home.torneos_activos":"Tornei attivi",
-    "home.estado_operativo":"Stato operativo","home.reservar":"Prenota",
-    "home.torneo":"Torneo","home.alta":"Iscrizione","home.procesos":"Processi",
-    "home.avisos_activos":"Avvisi attivi","home.ver_procesos":"Vedi processi",
-    "home.vs_ayer":"vs ieri","home.pistas_activas":"4 campi attivi",
-    "home.estimacion_mensual":"Stima mensile","home.en_curso":"In corso",
-    "home.este_mes":"questo mese","home.incidencia":"incidente","home.incidencias_s":"incidenti",
-    "home.franja_horaria":"Fascia oraria","home.tendencia_semanal":"Tendenza settimanale",
-    "home.porcentaje_uso":"% utilizzo","home.procesos_conectados":"processi connessi",
-    "home.activos":"Attivi","home.pausados":"In pausa","home.incidencias":"Incidenti","home.flujos_totales":"flussi totali","home.operativo_probado":"operativo (testato E2E)",
-    "home.reservas_hora":"Prenotazioni per ora — oggi","home.reservas_7dias":"Prenotazioni ultimi 7 giorni",
-    "home.ocupacion_pista":"Occupazione per campo","home.estado_procesos":"Stato processi",
-    "home.club_operativo":"Club di padel","home.hero_accent":"operativo",
-    "home.hero_subtitle":"SaaS per ruoli: giocatore, reception, amministrazione e supporto.",
-    "home.btn_torneos":"Tornei","home.btn_admin":"Admin",
-    "home.ir_reservas":"Vai alle prenotazioni","home.ver_gestion":"Gestisci prenotazioni",
-    "home.ver_admin":"Vedi admin","home.ver_soporte":"Vedi supporto",
-    "home.galeria":"Galleria del club",
-    "home.dias_semana":"L,M,M,G,V,S,D","home.dias_largo":"Lun,Mar,Mer,Gio,Ven,Sab,Dom",
-    "admin.panel":"Pannello di gestione","admin.metricas":"Metriche globali del club.",
-    "admin.reservas_mes":"Prenotazioni mensili","admin.ocupacion":"Occupazione media",
-    "admin.socios":"Soci attivi","admin.procesos":"Processi attivi",
-    "admin.backup":"Ultimo backup","admin.ingr_mes":"Entrate mensili",
-    "admin.vs_mes_anterior":"vs mese precedente","admin.prox_lunes":"Prossimo: lunedì 07:00",
-    "admin.graf_hoy":"Prenotazioni per ora — oggi","admin.graf_semana":"Evoluzione settimanale",
-    "admin.graf_pista":"Occupazione per campo","admin.sub_hoy":"Fascia oraria · demo",
-    "admin.sub_semana":"Prenotazioni 7 giorni · demo","admin.sub_pista":"% utilizzo · demo",
-    "admin.backup_semana":"Backup settimanale","admin.integraciones":"Stato integrazioni",
-    "admin.integ_desc":"Pronte, in attesa di credenziali o di distribuzione.",
-    "soporte.title":"Supporto tecnico","soporte.desc":"Controllo tecnico dell'applicazione.",
-    "soporte.proteccion":"Protezione richiesta in produzione","soporte.vars":"Variabili private",
-    "flujos.title":"Centro tecnico","flujos.desc":"Stato delle automazioni del sistema.",
-    "torneos.title":"Tornei","torneos.bracket":"Tabellone interattivo",
-    "torneos.anyadir":"Aggiungi coppia","torneos.guardar":"Salva","torneos.publicar":"Pubblica",
-    "torneos.exportar":"Esporta","torneos.campeon":"Campione","torneos.subcampeon":"Finalista",
-    "torneos.tercer_puesto":"3° posto","torneos.jugadores":"Giocatori","torneos.parejas":"Coppie",
-    "torneos.ganador":"Vincitore","torneos.eliminada":"Eliminato","torneos.avanza":"Avanza",
-    "torneos.bye":"BYE","torneos.pase_directo":"Passaggio diretto","torneos.personalizado":"Personalizzato",
-    "torneos.ver_ranking":"Vedi classifica completa","torneos.autoasignar":"Auto-assegna","torneos.reordenar":"Riordina",
-    "reservas.nueva":"Nuova prenotazione","reservas.fecha":"Data","reservas.hora":"Ora",
-    "reservas.pista":"Campo","reservas.duracion":"Durata","reservas.confirmar":"Conferma prenotazione",
-    "reservas.resumen":"Riepilogo","reservas.disponible":"Disponibile","reservas.no_disponible":"Non disponibile",
-    "reprog.clave":"Chiave prenotazione","reprog.nueva_fecha":"Nuova data",
-    "reprog.nueva_hora":"Nuovo orario di inizio","reprog.nueva_pista":"Nuovo campo",
-    "reprog.resumen":"Riepilogo cambio","reprog.confirmo":"Confermo che voglio riprogrammare questa prenotazione",
-    "reprog.btn":"Riprogramma prenotazione","reprog.volver":"Torna alle prenotazioni",
-    "cancelar.motivo":"Motivo","cancelar.confirmar":"Conferma cancellazione","cancelar.volver":"Indietro",
-    "ranking.title":"Classifica","ranking.subtitle":"Classifica generale di giocatori e coppie",
-    "ranking.categoria":"Categoria","ranking.nivel":"Livello","ranking.puntos":"Punti",
-    "ranking.pts":"Pts","ranking.pareja":"Coppia","ranking.jugadores":"Giocatori",
-    "ranking.v":"V","ranking.d":"P","ranking.pj":"G","ranking.racha":"Serie",
-    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Ultimo aggiornamento",
-    "ranking.filtrar":"Cerca giocatore o coppia...","ranking.general":"Generale",
-    "ranking.masculino":"Maschile","ranking.femenino":"Femminile","ranking.mixto":"Misto",
-    "ranking.iniciacion":"Principiante","ranking.medio":"Intermedio","ranking.avanzado":"Avanzato",
-    "ranking.podio":"Podio — Top 3","ranking.tabla":"Classifica completa",
-    "ranking.datos_ejemplo":"Dati di esempio","ranking.sistema_puntos":"Sistema punti del club configurabile.",
-    "ranking.temporada":"Stagione","ranking.buscar":"Cerca...",
-    "ranking.campeon":"Campione","ranking.subcampeon":"Finalista","ranking.tercero":"3° posto",
-    "ranking.mejor_pareja":"Migliore coppia","ranking.pts_totales":"punti totali",
-    "ranking.sin_resultados":"Nessun risultato con questi filtri.",
-    "ranking.estado":"Stato","ranking.activo":"Attivo",
-    "common.cargando":"Caricamento...","common.error":"Errore","common.cancelar":"Annulla",
-    "common.confirmar":"Conferma","common.guardar":"Salva","common.volver":"Indietro",
-    "common.editar":"Modifica","common.modo_seguro":"Modalità sicura","common.entorno":"Ambiente protetto",
-    "common.sin_cambios":"Nessun cambiamento",
-    "alta.title":"Registrazione giocatore","alta.eyebrow":"Giocatori","alta.desc":"Aggiungi un giocatore al club.",
-    "alta.nombre":"Nome","alta.apellidos":"Cognome","alta.email":"Email","alta.telefono":"Telefono",
-    "alta.fecha_nac":"Data di nascita","alta.nivel":"Livello","alta.genero":"Genere",
-    "alta.comentarios":"Commenti","alta.seleccionar":"Seleziona",
-    "alta.acepta":"Accetto i termini e la politica sulla privacy.",
-    "alta.exito":"✅ Giocatore registrato con successo.","alta.registrando":"Registrazione...","alta.btn":"Registra giocatore",
-    "cancelar.title":"Cancella prenotazione","cancelar.eyebrow":"Prenotazioni","cancelar.desc":"Richiedi la cancellazione di una prenotazione.",
-    "cancelar.clave":"Codice prenotazione","cancelar.clave_ph":"Inserisci il codice prenotazione",
-    "cancelar.confirmo_check":"Confermo di voler cancellare questa prenotazione.",
-    "cancelar.btn":"Cancella prenotazione","cancelar.enviando":"Invio...","cancelar.volver_reservas":"Torna alle prenotazioni",
-    "cancelar.que_ocurre":"Cosa succede dopo",
-    "reservas.title":"Prenota un campo","reservas.eyebrow":"Prenotazioni","reservas.desc":"Prenota il tuo campo in pochi secondi.",
-    "reservas.datos_jugador":"Dati del giocatore","reservas.fecha_pista":"Data, ora e campo",
-    "reservas.hora_fin":"Ora di fine","reservas.total":"Totale","reservas.ver_resumen":"Vedi riepilogo",
-    "reservas.editar":"Modifica","reservas.confirmar_btn":"Conferma","reservas.enviando":"Invio...",
-    "reservas.registrada":"Richiesta inviata · in attesa di conferma","reservas.nueva_btn":"Nuova prenotazione",
-    "reservas.nombre":"Nome","reservas.apellidos":"Cognome","reservas.modalidad":"Modalità",
-    "reservas.nivel_form":"Livello","reservas.comentarios":"Commenti","reservas.minutos":"minuti",
-    "reservas.confirmacion_desc":"La conferma dipende dal backend e dalle integrazioni configurate.",
-    "reprog.title":"Riprogramma prenotazione","reprog.eyebrow":"Prenotazioni","reprog.desc":"Cambia data o ora della tua prenotazione.",
-    "reprog.hora_fin":"Ora di fine","reprog.que_ocurre":"Cosa succede dopo","reprog.enviando":"Invio...","reprog.editar":"Modifica",
-    "soporte.eyebrow":"Supporto",
-    "lang.buscar":"Cerca lingua, paese, codice, bandiera…","lang.no_encontrados":"Nessuna lingua trovata.",
-    "lang.hint":"Prova con paese, lingua, codice o bandiera. Esempio: Italia, Italiano, it-IT o 🇮🇹","lang.recomendados":"Consigliate","lang.todos":"Tutte le lingue",
-    "status.reserva.pendiente":"In attesa","status.reserva.pendiente_txt":"Controlla i dati prima di confermare.",
-    "status.reserva.enviando":"Invio","status.reserva.enviando_txt":"Stiamo inviando la tua richiesta di prenotazione.",
-    "status.reserva.exito":"Richiesta inviata","status.reserva.exito_txt":"Richiesta di prenotazione ricevuta e in elaborazione. Riceverete conferma via e-mail.",
-    "status.reserva.error":"Errore","status.reserva.error_txt":"Impossibile completare la prenotazione. Controlla i dati e riprova.",
-    "status.cancelar.idle":"In attesa","status.cancelar.idle_txt":"Conferma la cancellazione della tua prenotazione.",
-    "status.cancelar.enviando":"Invio","status.cancelar.enviando_txt":"Stiamo inviando la tua richiesta di cancellazione.",
-    "status.cancelar.exito":"Richiesta inviata","status.cancelar.exito_txt":"Richiesta di cancellazione inviata con successo.",
-    "status.cancelar.error":"Invio non riuscito","status.cancelar.error_txt":"Controlla il codice e riprova.",
-    "status.reprog.idle":"In attesa","status.reprog.idle_txt":"Scegli una nuova data o orario.",
-    "status.reprog.enviando":"Riprogrammazione","status.reprog.enviando_txt":"Verifica disponibilità e aggiornamento prenotazione.",
-    "status.reprog.exito":"Prenotazione riprogrammata","status.reprog.exito_txt":"La prenotazione è stata aggiornata con successo.",
-    "status.reprog.error":"Riprogrammazione non riuscita","status.reprog.error_txt":"Controlla i dati e riprova.",
-    "errors.nombre":"Inserisci un nome valido.","errors.apellidos":"Inserisci un cognome valido.",
-    "errors.email":"Inserisci un'email valida.","errors.telefono":"Inserisci un numero di telefono valido.",
-    "errors.fecha":"Seleziona una data.","errors.fecha_pasado":"La data non può essere nel passato.",
-    "errors.fecha_domingo":"Il club è chiuso la domenica.",
-    "errors.hora":"Seleziona un orario disponibile.","errors.duracion":"Seleziona una durata valida.",
-    "errors.hora_pasada":"La fascia oraria selezionata è già passata.",
-    "errors.hora_cierre":"La prenotazione terminerebbe dopo la chiusura del club.",
-    "errors.pista":"Seleziona un campo valido.","errors.modalidad":"Seleziona una modalità valida.",
-    "errors.nivel":"Seleziona un livello valido.",
-    "errors.clave":"Inserisci il codice prenotazione.","errors.clave_incompleta":"Il codice prenotazione sembra incompleto.",
-    "errors.nueva_fecha":"Seleziona la nuova data.","errors.nueva_fecha_pasado":"La nuova data non può essere nel passato.",
-    "errors.confirmado_reprog":"Conferma che vuoi riprogrammare la prenotazione.",
-    "errors.confirmado_cancelar":"Conferma che vuoi richiedere la cancellazione prima di inviare.",
-    "errors.datos_incompletos":"Alcuni dati sono incompleti o non validi. Correggili prima di confermare.",
-    "errors.horario_ocupado":"Quella fascia oraria è appena stata occupata. Scegline un'altra.",
-    "errors.reserva_error":"Impossibile completare la prenotazione. Riprova tra qualche secondo.",
-    "errors.cancelar_error":"Impossibile inviare la richiesta. Controlla il codice e riprova.",
-    "errors.reprog_campos":"Compila correttamente tutti i campi obbligatori.",
-    "errors.reprog_ocupado":"Quella fascia oraria è appena stata occupata. Selezionane un'altra.",
-    "errors.reprog_error":"Impossibile completare la riprogrammazione. Controlla il codice e riprova.",
-    "badge.confirmed":"Confermata","badge.pending":"In attesa","badge.completed":"Completata",
-    "home.galeria_eyebrow":"Galleria","home.galeria_desc":"Galleria visiva del club.","home.sistema":"Sistema",
-    "cancelar.info1":"Elaboreremo la tua richiesta in modo sicuro.",
-    "cancelar.info2":"La cancellazione verrà registrata.",
-    "cancelar.info3":"Puoi tornare al calendario quando vuoi.",
-    "reprog.info1":"Il codice identifica la prenotazione che vuoi modificare.",
-    "reprog.info2":"Lo stesso codice viene mantenuto dopo la riprogrammazione.",
-    "reprog.info3":"Riceverai conferma via email una volta elaborato il cambiamento.",
-    "reprog.info4":"Le notifiche saranno attivate in una fase successiva.",
-    "reprog.nueva_disponibilidad":"Nuova disponibilità","reprog.selecciona_franja":"Seleziona una nuova fascia disponibile.",
-    "flujos.exportar_json":"⬇ Esporta JSON","flujos.total_procesos":"Totale processi","flujos.auditados":"Verificati",
-    "flujos.activos_label":"Attivi","flujos.conectados":"Connessi","flujos.pausados_label":"In pausa",
-    "flujos.en_pausa":"In pausa","flujos.incidencias_label":"Incidenti","flujos.ultimas_24h":"Ultime 24h",
-    "flujos.tasa_exito":"Tasso di successo","flujos.global_sistema":"Globale sistema",
-    "flujos.ultimo_backup":"Ultimo backup","flujos.automatico":"Automatico",
-    "flujos.estado_procesos_label":"Stato processi","flujos.por_estado":"Per stato di connessione",
-    "flujos.actividad_24h":"Attività ultime 24h","flujos.por_hora":"Per ora del giorno",
-    "flujos.total_24h_label":"Totale 24h","flujos.ejecuciones":"esecuzioni",
-    "flujos.por_categoria":"Processi per categoria","flujos.distribucion":"Distribuzione dei 50 processi",
-    "flujos.mas_activos":"Processi più attivi","flujos.con_incidencias":"Processi con incidenti",
-    "flujos.sin_errores":"✅ Nessun errore registrato","flujos.criticos":"Stato processi critici",
-    "flujos.estado_op":"Stato operativo","flujos.todos_flujos":"Tutti i processi",
-    "flujos.ocultar_tabla":"▲ Nascondi tabella","flujos.ver_tabla":"▼ Vedi tabella completa",
-    "flujos.col_flujo":"Processo","flujos.col_categoria":"Categoria","flujos.col_estado":"Stato",
-    "flujos.nota_integracion":"Integrazione tecnica connessa. I dati in tempo reale richiedono connessione al backend del club.",
-    "admin.gestion_eyebrow":"Gestione","admin.gestion_title":"Campi e clienti",
-    "admin.gestion_desc":"Moduli pronti per la gestione operativa.",
-    "admin.gestion_item1":"Gestione campi","admin.gestion_item2":"Clienti e profili",
-    "admin.gestion_item3":"Storico prenotazioni","admin.gestion_item4":"Regole di disponibilità",
-    "admin.crec_eyebrow":"Crescita","admin.crec_title":"Tornei e processi",
-    "admin.crec_desc":"Area pronta ad attivare processi quando il backend sarà disponibile.",
-    "admin.crec_item1":"Tornei","admin.crec_item2":"Classifica e categorie",
-    "admin.crec_item3":"Sistema di classificazione","admin.crec_item4":"Pagamenti futuri",
-    "admin.backup_eyebrow":"Sistema attivo","admin.backup_desc":"Backup automatico di prenotazioni e soci attivi.",
-    "admin.backup_item1":"Programmazione: lunedì 07:00","admin.backup_item2":"Origine: Database",
-    "admin.backup_item3":"Destinazione: Archiviazione","admin.backup_item4":"Conferma: Notifiche",
-    "admin.sistema_eyebrow":"Sistema","admin.exito_label":"Successo:",
-    "auth.roles_title":"Ruoli e accessi","auth.pending_badge":"Configurazione in attesa",
-    "auth.pending_desc":"Sistema di accesso per ruoli. In produzione deve essere protetto da un provider di autenticazione.",
-    "auth.secciones":"Sezioni:",
-    "soporte.proteccion_h3":"Protezione richiesta in produzione",
-    "soporte.estado_tec_eyebrow":"Stato integrazioni","soporte.estado_tec_title":"Stato tecnico",
-    "soporte.estado_tec_desc":"Checklist di connessione backend.",
-    "soporte.worker_item":"Worker prenotazioni pronto",
-    "soporte.make_item":"Automazioni in attesa di segreto privato",
-    "soporte.airtable_item":"Database pronto senza scritture attive",
-    "soporte.stripe_item":"Pagamenti e messaggistica in attesa di configurazione",
-    "soporte.obs_eyebrow":"Osservabilità","soporte.obs_title":"Log ed errori",
-    "soporte.obs_desc":"Area riservata alla diagnostica quando il backend reale sarà disponibile.",
-    "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
-    "soporte.logs_errores":"Errori di integrazioni","soporte.logs_alertas":"Avvisi tecnici futuri",
-    "soporte.vars_h3":"Stato di sicurezza: variabili protette",
-    "soporte.vars_no_names":"I nomi e i valori interni non vengono mostrati nell'interfaccia.",
-    "soporte.vars_validacion":"Convalida disponibile solo nella documentazione interna o in una console sicura.",
-  },
-  "pt-PT": {
-    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Registo de jogador",
-    "nav.reprogramar":"Reagendar","nav.cancelar":"Cancelar reserva",
-    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Classificação",
-    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Suporte",
-    "nav.comunidad":"Comunidade",
-    "nav.cerrar_sesion":"Terminar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
-    "login.title":"Entrar como função","login.entrar":"Entrar","login.cancelar":"Cancelar",
-    "login.password":"Palavra-passe","login.ver_pwd":"👁️ Ver palavra-passe","login.ocultar_pwd":"🙈 Ocultar",
-    "login.guardar_sesion":"Guardar sessão neste dispositivo","login.acceder_como":"Entrar como",
-    "login.intro_pwd":"Introduza a palavra-passe atribuída a esta função.",
-    "login.error_rol":"Selecione uma função válida.","login.error_pwd":"Palavra-passe incorreta.",
-    "login.sesion_label":"Club Pádel 04 · Início de sessão",
-    "login.legal":"Acesso local protegido por palavra-passe. Sessão guardável apenas neste dispositivo.",
-    "login.olvide_pwd":"Esqueceu a palavra-passe?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Introduza o seu e-mail e, se a conta existir, receberá instruções para repor o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver registado no sistema, receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao início de sessão","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"A recuperação de palavra-passe ainda não está disponível neste ambiente: pendente de ativação do fornecedor de autenticação.","login.recuperar_cargando":"A enviar instruções…",
-    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
-    "login.subtitle":"Selecione como pretende entrar na aplicação.",
-    "login.idioma":"Idioma",
-    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar campos, consultar reservas e classificação.",
-    "role.STAFF.label":"Staff / receção","role.STAFF.desc":"Gestão diária de reservas e assistência a jogadores.",
-    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controlo operacional.",
-    "role.SUPPORT.label":"Suporte técnico","role.SUPPORT.desc":"Zona técnica, integrações e diagnóstico interno.",
-    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
-    "home.socios_activos":"Sócios ativos","home.procesos_activos":"Processos ativos",
-    "home.ingresos_mes":"Receitas do mês","home.torneos_activos":"Torneios ativos",
-    "home.estado_operativo":"Estado operacional","home.reservar":"Reservar",
-    "home.torneo":"Torneio","home.alta":"Registo","home.procesos":"Processos",
-    "home.avisos_activos":"Alertas ativos","home.ver_procesos":"Ver processos",
-    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 campos ativos",
-    "home.estimacion_mensual":"Estimativa mensal","home.en_curso":"Em curso",
-    "home.este_mes":"este mês","home.incidencia":"incidente","home.incidencias_s":"incidentes",
-    "home.franja_horaria":"Faixa horária","home.tendencia_semanal":"Tendência semanal",
-    "home.porcentaje_uso":"% utilização","home.procesos_conectados":"processos conectados",
-    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes","home.flujos_totales":"fluxos totais","home.operativo_probado":"operacional (testado E2E)",
-    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
-    "home.ocupacion_pista":"Ocupação por campo","home.estado_procesos":"Estado dos processos",
-    "home.club_operativo":"Clube de padel","home.hero_accent":"operacional",
-    "home.hero_subtitle":"SaaS por funções: jogador, receção, administração e suporte.",
-    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
-    "home.ir_reservas":"Ir para reservas","home.ver_gestion":"Gerir reservas",
-    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver suporte",
-    "home.galeria":"Galeria do clube",
-    "home.dias_semana":"S,T,Q,Q,S,S,D","home.dias_largo":"Seg,Ter,Qua,Qui,Sex,Sáb,Dom",
-    "admin.panel":"Painel de gestão","admin.metricas":"Métricas globais do clube.",
-    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
-    "admin.socios":"Sócios ativos","admin.procesos":"Processos ativos",
-    "admin.backup":"Último backup","admin.ingr_mes":"Receitas do mês",
-    "admin.vs_mes_anterior":"vs mês anterior","admin.prox_lunes":"Próximo: segunda 07:00",
-    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
-    "admin.graf_pista":"Ocupação por campo","admin.sub_hoy":"Faixa horária · demo",
-    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
-    "admin.backup_semana":"Backup semanal","admin.integraciones":"Estado das integrações",
-    "admin.integ_desc":"Prontas, pendentes de credenciais ou de implementação.",
-    "soporte.title":"Suporte técnico","soporte.desc":"Controlo técnico da aplicação.",
-    "soporte.proteccion":"Proteção necessária em produção","soporte.vars":"Variáveis privadas",
-    "flujos.title":"Centro técnico","flujos.desc":"Estado das automatizações do sistema.",
-    "torneos.title":"Torneios","torneos.bracket":"Tabela interativa",
-    "torneos.anyadir":"Adicionar par","torneos.guardar":"Guardar","torneos.publicar":"Publicar",
-    "torneos.exportar":"Exportar","torneos.campeon":"Campeão","torneos.subcampeon":"Vice-campeão",
-    "torneos.tercer_puesto":"3.º lugar","torneos.jugadores":"Jogadores","torneos.parejas":"Pares",
-    "torneos.ganador":"Vencedor","torneos.eliminada":"Eliminado","torneos.avanza":"Avança",
-    "torneos.bye":"BYE","torneos.pase_directo":"Passe direto","torneos.personalizado":"Personalizado",
-    "torneos.ver_ranking":"Ver classificação completa","torneos.autoasignar":"Auto-atribuir","torneos.reordenar":"Reordenar",
-    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Hora",
-    "reservas.pista":"Campo","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
-    "reservas.resumen":"Resumo","reservas.disponible":"Disponível","reservas.no_disponible":"Indisponível",
-    "reprog.clave":"Chave de reserva","reprog.nueva_fecha":"Nova data",
-    "reprog.nueva_hora":"Nova hora de início","reprog.nueva_pista":"Novo campo",
-    "reprog.resumen":"Resumo da alteração","reprog.confirmo":"Confirmo que quero reagendar esta reserva",
-    "reprog.btn":"Reagendar reserva","reprog.volver":"Voltar às reservas",
-    "cancelar.motivo":"Motivo","cancelar.confirmar":"Confirmar cancelamento","cancelar.volver":"Voltar",
-    "ranking.title":"Classificação","ranking.subtitle":"Classificação geral de jogadores e pares",
-    "ranking.categoria":"Categoria","ranking.nivel":"Nível","ranking.puntos":"Pontos",
-    "ranking.pts":"Pts","ranking.pareja":"Par","ranking.jugadores":"Jogadores",
-    "ranking.v":"V","ranking.d":"D","ranking.pj":"J","ranking.racha":"Sequência",
-    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Última atualização",
-    "ranking.filtrar":"Pesquisar jogador ou par...","ranking.general":"Geral",
-    "ranking.masculino":"Masculino","ranking.femenino":"Feminino","ranking.mixto":"Misto",
-    "ranking.iniciacion":"Iniciação","ranking.medio":"Intermédio","ranking.avanzado":"Avançado",
-    "ranking.podio":"Pódio — Top 3","ranking.tabla":"Classificação completa",
-    "ranking.datos_ejemplo":"Dados de exemplo","ranking.sistema_puntos":"Sistema de pontos do clube configurável.",
-    "ranking.temporada":"Época","ranking.buscar":"Pesquisar...",
-    "ranking.campeon":"Campeão","ranking.subcampeon":"Vice-campeão","ranking.tercero":"3.º lugar",
-    "ranking.mejor_pareja":"Melhor par","ranking.pts_totales":"pontos totais",
-    "ranking.sin_resultados":"Sem resultados com esses filtros.",
-    "ranking.estado":"Estado","ranking.activo":"Ativo",
-    "common.cargando":"A carregar...","common.error":"Erro","common.cancelar":"Cancelar",
-    "common.confirmar":"Confirmar","common.guardar":"Guardar","common.volver":"Voltar",
-    "common.editar":"Editar","common.modo_seguro":"Modo seguro","common.entorno":"Ambiente protegido",
-    "common.sin_cambios":"Sem alterações",
-    "alta.title":"Registo de jogador","alta.eyebrow":"Jogadores","alta.desc":"Adiciona um jogador ao clube.",
-    "alta.nombre":"Nome","alta.apellidos":"Apelido","alta.email":"Email","alta.telefono":"Telefone",
-    "alta.fecha_nac":"Data de nascimento","alta.nivel":"Nível","alta.genero":"Género",
-    "alta.comentarios":"Comentários","alta.seleccionar":"Selecionar",
-    "alta.acepta":"Aceito os termos e política de privacidade.",
-    "alta.exito":"✅ Jogador registado com sucesso.","alta.registrando":"A registar...","alta.btn":"Registar jogador",
-    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
-    "cancelar.clave":"Código de reserva","cancelar.clave_ph":"Introduza o seu código de reserva",
-    "cancelar.confirmo_check":"Confirmo que quero cancelar esta reserva.",
-    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"A enviar...","cancelar.volver_reservas":"Voltar às reservas",
-    "cancelar.que_ocurre":"O que acontece a seguir",
-    "reservas.title":"Reservar campo","reservas.eyebrow":"Reservas","reservas.desc":"Reserve o seu campo em segundos.",
-    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e campo",
-    "reservas.hora_fin":"Hora de fim","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
-    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"A enviar...",
-    "reservas.registrada":"Pedido enviado · aguardando confirmação","reservas.nueva_btn":"Nova reserva",
-    "reservas.nombre":"Nome","reservas.apellidos":"Apelido","reservas.modalidad":"Modalidade",
-    "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
-    "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
-    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou hora da sua reserva.",
-    "reprog.hora_fin":"Hora de fim","reprog.que_ocurre":"O que acontece a seguir","reprog.enviando":"A enviar...","reprog.editar":"Editar",
-    "soporte.eyebrow":"Suporte",
-    "lang.buscar":"Pesquisar idioma, país, código, bandeira…","lang.no_encontrados":"Nenhum idioma encontrado.",
-    "lang.hint":"Tente com país, idioma, código ou bandeira. Exemplo: Portugal, Português, pt-PT ou 🇵🇹","lang.recomendados":"Recomendados","lang.todos":"Todos os idiomas",
-    "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Reveja os dados antes de confirmar.",
-    "status.reserva.enviando":"A enviar","status.reserva.enviando_txt":"Estamos a enviar o seu pedido de reserva.",
-    "status.reserva.exito":"Pedido enviado","status.reserva.exito_txt":"Pedido de reserva recebido e em processamento. Receberá confirmação por e-mail.",
-    "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
-    "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
-    "status.cancelar.enviando":"A enviar","status.cancelar.enviando_txt":"Estamos a enviar o seu pedido de cancelamento.",
-    "status.cancelar.exito":"Pedido enviado","status.cancelar.exito_txt":"Pedido de cancelamento enviado com sucesso.",
-    "status.cancelar.error":"Não foi possível enviar","status.cancelar.error_txt":"Verifique o código e tente novamente.",
-    "status.reprog.idle":"Pendente","status.reprog.idle_txt":"Escolha uma nova data ou horário.",
-    "status.reprog.enviando":"A reagendar","status.reprog.enviando_txt":"A verificar disponibilidade e a atualizar a sua reserva.",
-    "status.reprog.exito":"Reserva reagendada","status.reprog.exito_txt":"A sua reserva foi atualizada com sucesso.",
-    "status.reprog.error":"Não foi possível reagendar","status.reprog.error_txt":"Verifique os dados e tente novamente.",
-    "errors.nombre":"Introduza um nome válido.","errors.apellidos":"Introduza apelidos válidos.",
-    "errors.email":"Introduza um email válido.","errors.telefono":"Introduza um número de telefone válido.",
-    "errors.fecha":"Selecione uma data.","errors.fecha_pasado":"A data não pode ser anterior a hoje.",
-    "errors.fecha_domingo":"O clube está fechado aos domingos.",
-    "errors.hora":"Selecione um horário disponível.","errors.duracion":"Selecione uma duração válida.",
-    "errors.hora_pasada":"A faixa horária selecionada já passou.",
-    "errors.hora_cierre":"A reserva terminaria depois do encerramento do clube.",
-    "errors.pista":"Selecione um campo válido.","errors.modalidad":"Selecione uma modalidade válida.",
-    "errors.nivel":"Selecione um nível válido.",
-    "errors.clave":"Introduza o código de reserva.","errors.clave_incompleta":"O código de reserva parece incompleto.",
-    "errors.nueva_fecha":"Selecione a nova data.","errors.nueva_fecha_pasado":"A nova data não pode ser anterior a hoje.",
-    "errors.confirmado_reprog":"Confirme que pretende reagendar a reserva.",
-    "errors.confirmado_cancelar":"Confirme que pretende solicitar o cancelamento antes de enviar.",
-    "errors.datos_incompletos":"Alguns dados estão incompletos ou inválidos. Corrija-os antes de confirmar.",
-    "errors.horario_ocupado":"Esse horário acabou de ser ocupado. Escolha outro.",
-    "errors.reserva_error":"Não foi possível completar a reserva. Tente novamente em alguns segundos.",
-    "errors.cancelar_error":"Não foi possível enviar o pedido. Verifique o código e tente novamente.",
-    "errors.reprog_campos":"Preencha corretamente todos os campos obrigatórios.",
-    "errors.reprog_ocupado":"Esse horário acabou de ser ocupado. Selecione outro.",
-    "errors.reprog_error":"Não foi possível completar o reagendamento. Verifique o código e tente novamente.",
-    "badge.confirmed":"Confirmada","badge.pending":"Pendente","badge.completed":"Concluída",
-    "home.galeria_eyebrow":"Galeria","home.galeria_desc":"Galeria visual do clube.","home.sistema":"Sistema",
-    "cancelar.info1":"Processaremos o seu pedido de forma segura.",
-    "cancelar.info2":"O cancelamento ficará registado.",
-    "cancelar.info3":"Pode voltar ao calendário quando quiser.",
-    "reprog.info1":"O código identifica a reserva que pretende alterar.",
-    "reprog.info2":"O mesmo código é mantido após o reagendamento.",
-    "reprog.info3":"Receberá confirmação por email assim que a alteração for processada.",
-    "reprog.info4":"As notificações serão ativadas numa fase posterior.",
-    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
-    "flujos.exportar_json":"⬇ Exportar JSON","flujos.total_procesos":"Total processos","flujos.auditados":"Auditados",
-    "flujos.activos_label":"Ativos","flujos.conectados":"Conectados","flujos.pausados_label":"Pausados",
-    "flujos.en_pausa":"Em pausa","flujos.incidencias_label":"Incidentes","flujos.ultimas_24h":"Últimas 24h",
-    "flujos.tasa_exito":"Taxa de sucesso","flujos.global_sistema":"Global do sistema",
-    "flujos.ultimo_backup":"Último backup","flujos.automatico":"Automático",
-    "flujos.estado_procesos_label":"Estado dos processos","flujos.por_estado":"Por estado de ligação",
-    "flujos.actividad_24h":"Atividade últimas 24h","flujos.por_hora":"Por hora do dia",
-    "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"execuções",
-    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 50 processos",
-    "flujos.mas_activos":"Processos mais ativos","flujos.con_incidencias":"Processos com incidentes",
-    "flujos.sin_errores":"✅ Sem erros registados","flujos.criticos":"Estado dos processos críticos",
-    "flujos.estado_op":"Estado operacional","flujos.todos_flujos":"Todos os processos",
-    "flujos.ocultar_tabla":"▲ Ocultar tabela","flujos.ver_tabla":"▼ Ver tabela completa",
-    "flujos.col_flujo":"Processo","flujos.col_categoria":"Categoria","flujos.col_estado":"Estado",
-    "flujos.nota_integracion":"Integração técnica conectada. Os dados em tempo real requerem ligação ao backend do clube.",
-    "admin.gestion_eyebrow":"Gestão","admin.gestion_title":"Campos e clientes",
-    "admin.gestion_desc":"Módulos preparados para gestão operacional.",
-    "admin.gestion_item1":"Gestão de campos","admin.gestion_item2":"Clientes e perfis",
-    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
-    "admin.crec_eyebrow":"Crescimento","admin.crec_title":"Torneios e processos",
-    "admin.crec_desc":"Zona preparada para ativar processos quando existir backend.",
-    "admin.crec_item1":"Torneios","admin.crec_item2":"Classificação e categorias",
-    "admin.crec_item3":"Sistema de classificação","admin.crec_item4":"Pagamentos futuros",
-    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
-    "admin.backup_item1":"Programação: segunda 07:00","admin.backup_item2":"Origem: Base de dados",
-    "admin.backup_item3":"Destino: Armazenamento","admin.backup_item4":"Confirmação: Notificações",
-    "admin.sistema_eyebrow":"Sistema","admin.exito_label":"Sucesso:",
-    "auth.roles_title":"Funções e acessos","auth.pending_badge":"Configuração pendente",
-    "auth.pending_desc":"Sistema de acesso por funções. Em produção deve ser protegido por fornecedor de autenticação.",
-    "auth.secciones":"Secções:",
-    "soporte.proteccion_h3":"Proteção necessária em produção",
-    "soporte.estado_tec_eyebrow":"Estado das integrações","soporte.estado_tec_title":"Estado técnico",
-    "soporte.estado_tec_desc":"Checklist de ligação backend.",
-    "soporte.worker_item":"Worker de reservas preparado",
-    "soporte.make_item":"Automatizações pendentes de segredo privado",
-    "soporte.airtable_item":"Base de dados preparada sem escrita ativa",
-    "soporte.stripe_item":"Pagamentos e mensagens pendentes de configuração",
-    "soporte.obs_eyebrow":"Observabilidade","soporte.obs_title":"Logs e erros",
-    "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
-    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
-    "soporte.logs_errores":"Erros de integrações","soporte.logs_alertas":"Alertas técnicos futuros",
-    "soporte.vars_h3":"Estado de segurança: variáveis protegidas",
-    "soporte.vars_no_names":"Os nomes e valores internos não são mostrados na interface.",
-    "soporte.vars_validacion":"Validação disponível apenas na documentação interna ou numa consola segura.",
-  },
-  "pt-BR": {
-    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Cadastro de jogador",
-    "nav.reprogramar":"Remarcar","nav.cancelar":"Cancelar reserva",
-    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Ranking",
-    "nav.admin":"Admin","nav.flujos_make":"Central técnica","nav.soporte":"Suporte",
-    "nav.comunidad":"Comunidade",
-    "nav.cerrar_sesion":"Encerrar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
-    "login.title":"Entrar como perfil","login.entrar":"Entrar","login.cancelar":"Cancelar",
-    "login.password":"Senha","login.ver_pwd":"👁️ Mostrar senha","login.ocultar_pwd":"🙈 Ocultar",
-    "login.guardar_sesion":"Lembrar neste dispositivo","login.acceder_como":"Entrar como",
-    "login.intro_pwd":"Digite a senha atribuída a este perfil.",
-    "login.error_rol":"Selecione um perfil válido.","login.error_pwd":"Senha incorreta para este perfil.",
-    "login.sesion_label":"Club Pádel 04 · Login",
-    "login.legal":"Acesso local protegido por senha. Sessão salvável apenas neste dispositivo.",
-    "login.olvide_pwd":"Esqueceu a senha?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Insira seu e-mail e, se a conta existir, você receberá instruções para redefinir o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver cadastrado no sistema, você receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao login","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password","login.recuperar_no_disponible":"A recuperação de senha ainda não está disponível neste ambiente: pendente de ativação do provedor de autenticação.","login.recuperar_cargando":"Enviando instruções…",
-    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
-    "login.subtitle":"Selecione como deseja entrar na aplicação.",
-    "login.idioma":"Idioma",
-    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar quadras, consultar reservas e ranking.",
-    "role.STAFF.label":"Staff / recepção","role.STAFF.desc":"Gestão diária de reservas e atendimento aos jogadores.",
-    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controle operacional.",
-    "role.SUPPORT.label":"Suporte técnico","role.SUPPORT.desc":"Zona técnica, integrações e diagnóstico interno.",
-    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
-    "home.socios_activos":"Sócios ativos","home.procesos_activos":"Processos ativos",
-    "home.ingresos_mes":"Receita do mês","home.torneos_activos":"Torneios ativos",
-    "home.estado_operativo":"Status operacional","home.reservar":"Reservar",
-    "home.torneo":"Torneio","home.alta":"Cadastro","home.procesos":"Processos",
-    "home.avisos_activos":"Alertas ativos","home.ver_procesos":"Ver processos",
-    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 quadras ativas",
-    "home.estimacion_mensual":"Estimativa mensal","home.en_curso":"Em andamento",
-    "home.este_mes":"este mês","home.incidencia":"incidente","home.incidencias_s":"incidentes",
-    "home.franja_horaria":"Faixa horária","home.tendencia_semanal":"Tendência semanal",
-    "home.porcentaje_uso":"% utilização","home.procesos_conectados":"processos conectados",
-    "home.activos":"Ativos","home.pausados":"Pausados","home.incidencias":"Incidentes","home.flujos_totales":"fluxos totais","home.operativo_probado":"operacional (testado E2E)",
-    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
-    "home.ocupacion_pista":"Ocupação por quadra","home.estado_procesos":"Status dos processos",
-    "home.club_operativo":"Clube de padel","home.hero_accent":"operacional",
-    "home.hero_subtitle":"SaaS por perfis: jogador, recepção, administração e suporte.",
-    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
-    "home.ir_reservas":"Ir para reservas","home.ver_gestion":"Gerenciar reservas",
-    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver suporte",
-    "home.galeria":"Galeria do clube",
-    "home.dias_semana":"S,T,Q,Q,S,S,D","home.dias_largo":"Seg,Ter,Qua,Qui,Sex,Sáb,Dom",
-    "admin.panel":"Painel de gestão","admin.metricas":"Métricas globais do clube.",
-    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
-    "admin.socios":"Sócios ativos","admin.procesos":"Processos ativos",
-    "admin.backup":"Último backup","admin.ingr_mes":"Receita do mês",
-    "admin.vs_mes_anterior":"vs mês anterior","admin.prox_lunes":"Próximo: segunda 07:00",
-    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
-    "admin.graf_pista":"Ocupação por quadra","admin.sub_hoy":"Faixa horária · demo",
-    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
-    "admin.backup_semana":"Backup semanal","admin.integraciones":"Status das integrações",
-    "admin.integ_desc":"Prontas, pendentes de credenciais ou de implantação.",
-    "soporte.title":"Suporte técnico","soporte.desc":"Controle técnico da aplicação.",
-    "soporte.proteccion":"Proteção necessária em produção","soporte.vars":"Variáveis privadas",
-    "flujos.title":"Central técnica","flujos.desc":"Status das automações do sistema.",
-    "torneos.title":"Torneios","torneos.bracket":"Chave interativa",
-    "torneos.anyadir":"Adicionar dupla","torneos.guardar":"Salvar","torneos.publicar":"Publicar",
-    "torneos.exportar":"Exportar","torneos.campeon":"Campeão","torneos.subcampeon":"Vice-campeão",
-    "torneos.tercer_puesto":"3.º lugar","torneos.jugadores":"Jogadores","torneos.parejas":"Duplas",
-    "torneos.ganador":"Vencedor","torneos.eliminada":"Eliminado","torneos.avanza":"Avança",
-    "torneos.bye":"BYE","torneos.pase_directo":"Passe direto","torneos.personalizado":"Personalizado",
-    "torneos.ver_ranking":"Ver ranking completo","torneos.autoasignar":"Auto-atribuir","torneos.reordenar":"Reordenar",
-    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Horário",
-    "reservas.pista":"Quadra","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
-    "reservas.resumen":"Resumo","reservas.disponible":"Disponível","reservas.no_disponible":"Indisponível",
-    "reprog.clave":"Código da reserva","reprog.nueva_fecha":"Nova data",
-    "reprog.nueva_hora":"Novo horário de início","reprog.nueva_pista":"Nova quadra",
-    "reprog.resumen":"Resumo da alteração","reprog.confirmo":"Confirmo que quero remarcar esta reserva",
-    "reprog.btn":"Remarcar reserva","reprog.volver":"Voltar às reservas",
-    "cancelar.motivo":"Motivo","cancelar.confirmar":"Confirmar cancelamento","cancelar.volver":"Voltar",
-    "ranking.title":"Ranking","ranking.subtitle":"Classificação geral de jogadores e duplas",
-    "ranking.categoria":"Categoria","ranking.nivel":"Nível","ranking.puntos":"Pontos",
-    "ranking.pts":"Pts","ranking.pareja":"Dupla","ranking.jugadores":"Jogadores",
-    "ranking.v":"V","ranking.d":"D","ranking.pj":"J","ranking.racha":"Sequência",
-    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Última atualização",
-    "ranking.filtrar":"Buscar jogador ou dupla...","ranking.general":"Geral",
-    "ranking.masculino":"Masculino","ranking.femenino":"Feminino","ranking.mixto":"Misto",
-    "ranking.iniciacion":"Iniciante","ranking.medio":"Intermediário","ranking.avanzado":"Avançado",
-    "ranking.podio":"Pódio — Top 3","ranking.tabla":"Ranking completo",
-    "ranking.datos_ejemplo":"Dados de exemplo","ranking.sistema_puntos":"Sistema de pontos do clube configurável.",
-    "ranking.temporada":"Temporada","ranking.buscar":"Buscar...",
-    "ranking.campeon":"Campeão","ranking.subcampeon":"Vice-campeão","ranking.tercero":"3.º lugar",
-    "ranking.mejor_pareja":"Melhor dupla","ranking.pts_totales":"pontos totais",
-    "ranking.sin_resultados":"Sem resultados com esses filtros.",
-    "ranking.estado":"Status","ranking.activo":"Ativo",
-    "common.cargando":"Carregando...","common.error":"Erro","common.cancelar":"Cancelar",
-    "common.confirmar":"Confirmar","common.guardar":"Salvar","common.volver":"Voltar",
-    "common.editar":"Editar","common.modo_seguro":"Modo seguro","common.entorno":"Ambiente protegido",
-    "common.sin_cambios":"Sem alterações",
-    "alta.title":"Cadastro de jogador","alta.eyebrow":"Jogadores","alta.desc":"Adicione um jogador ao clube.",
-    "alta.nombre":"Nome","alta.apellidos":"Sobrenome","alta.email":"Email","alta.telefono":"Telefone",
-    "alta.fecha_nac":"Data de nascimento","alta.nivel":"Nível","alta.genero":"Gênero",
-    "alta.comentarios":"Comentários","alta.seleccionar":"Selecionar",
-    "alta.acepta":"Aceito os termos e política de privacidade.",
-    "alta.exito":"✅ Jogador cadastrado com sucesso.","alta.registrando":"Cadastrando...","alta.btn":"Cadastrar jogador",
-    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
-    "cancelar.clave":"Código de reserva","cancelar.clave_ph":"Digite o código da sua reserva",
-    "cancelar.confirmo_check":"Confirmo que quero cancelar esta reserva.",
-    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Voltar para reservas",
-    "cancelar.que_ocurre":"O que acontece depois",
-    "reservas.title":"Reservar quadra","reservas.eyebrow":"Reservas","reservas.desc":"Reserve sua quadra em segundos.",
-    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e quadra",
-    "reservas.hora_fin":"Horário de término","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
-    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
-    "reservas.registrada":"Pedido enviado · aguardando confirmação","reservas.nueva_btn":"Nova reserva",
-    "reservas.nombre":"Nome","reservas.apellidos":"Sobrenome","reservas.modalidad":"Modalidade",
-    "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
-    "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
-    "reprog.title":"Reagendar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou horário da sua reserva.",
-    "reprog.hora_fin":"Horário de término","reprog.que_ocurre":"O que acontece depois","reprog.enviando":"Enviando...","reprog.editar":"Editar",
-    "soporte.eyebrow":"Suporte",
-    "lang.buscar":"Pesquisar idioma, país, código, bandeira…","lang.no_encontrados":"Nenhum idioma encontrado.",
-    "lang.hint":"Tente com país, idioma, código ou bandeira. Exemplo: Brasil, Português, pt-BR ou 🇧🇷","lang.recomendados":"Recomendados","lang.todos":"Todos os idiomas",
-    "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Revise os dados antes de confirmar.",
-    "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando a sua solicitação de reserva.",
-    "status.reserva.exito":"Pedido enviado","status.reserva.exito_txt":"Pedido de reserva recebido e em processamento. Você receberá confirmação por e-mail.",
-    "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
-    "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
-    "status.cancelar.enviando":"Enviando","status.cancelar.enviando_txt":"Estamos enviando a sua solicitação de cancelamento.",
-    "status.cancelar.exito":"Solicitação enviada","status.cancelar.exito_txt":"Solicitação de cancelamento enviada com sucesso.",
-    "status.cancelar.error":"Não foi possível enviar","status.cancelar.error_txt":"Verifique o código e tente novamente.",
-    "status.reprog.idle":"Pendente","status.reprog.idle_txt":"Escolha uma nova data ou horário.",
-    "status.reprog.enviando":"Remarcando","status.reprog.enviando_txt":"Verificando disponibilidade e atualizando sua reserva.",
-    "status.reprog.exito":"Reserva remarcada","status.reprog.exito_txt":"Sua reserva foi atualizada com sucesso.",
-    "status.reprog.error":"Não foi possível remarcar","status.reprog.error_txt":"Verifique os dados e tente novamente.",
-    "errors.nombre":"Informe um nome válido.","errors.apellidos":"Informe sobrenomes válidos.",
-    "errors.email":"Informe um email válido.","errors.telefono":"Informe um número de telefone válido.",
-    "errors.fecha":"Selecione uma data.","errors.fecha_pasado":"A data não pode ser anterior a hoje.",
-    "errors.fecha_domingo":"O clube está fechado aos domingos.",
-    "errors.hora":"Selecione um horário disponível.","errors.duracion":"Selecione uma duração válida.",
-    "errors.hora_pasada":"A faixa horária selecionada já passou.",
-    "errors.hora_cierre":"A reserva terminaria depois do fechamento do clube.",
-    "errors.pista":"Selecione uma quadra válida.","errors.modalidad":"Selecione uma modalidade válida.",
-    "errors.nivel":"Selecione um nível válido.",
-    "errors.clave":"Informe o código da reserva.","errors.clave_incompleta":"O código da reserva parece incompleto.",
-    "errors.nueva_fecha":"Selecione a nova data.","errors.nueva_fecha_pasado":"A nova data não pode ser anterior a hoje.",
-    "errors.confirmado_reprog":"Confirme que deseja remarcar a reserva.",
-    "errors.confirmado_cancelar":"Confirme que deseja solicitar o cancelamento antes de enviar.",
-    "errors.datos_incompletos":"Alguns dados estão incompletos ou inválidos. Corrija-os antes de confirmar.",
-    "errors.horario_ocupado":"Esse horário acabou de ser ocupado. Escolha outro.",
-    "errors.reserva_error":"Não foi possível completar a reserva. Tente novamente em alguns segundos.",
-    "errors.cancelar_error":"Não foi possível enviar a solicitação. Verifique o código e tente novamente.",
-    "errors.reprog_campos":"Preencha corretamente todos os campos obrigatórios.",
-    "errors.reprog_ocupado":"Esse horário acabou de ser ocupado. Selecione outro.",
-    "errors.reprog_error":"Não foi possível completar a remarcação. Verifique o código e tente novamente.",
-    "badge.confirmed":"Confirmada","badge.pending":"Pendente","badge.completed":"Concluída",
-    "home.galeria_eyebrow":"Galeria","home.galeria_desc":"Galeria visual do clube.","home.sistema":"Sistema",
-    "cancelar.info1":"Processaremos a sua solicitação com segurança.",
-    "cancelar.info2":"O cancelamento ficará registrado.",
-    "cancelar.info3":"Você pode voltar ao calendário quando quiser.",
-    "reprog.info1":"O código identifica a reserva que você quer alterar.",
-    "reprog.info2":"O mesmo código é mantido após a remarcação.",
-    "reprog.info3":"Você receberá confirmação por email assim que a alteração for processada.",
-    "reprog.info4":"As notificações serão ativadas em uma fase posterior.",
-    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
-    "flujos.exportar_json":"⬇ Exportar JSON","flujos.total_procesos":"Total processos","flujos.auditados":"Auditados",
-    "flujos.activos_label":"Ativos","flujos.conectados":"Conectados","flujos.pausados_label":"Pausados",
-    "flujos.en_pausa":"Em pausa","flujos.incidencias_label":"Incidentes","flujos.ultimas_24h":"Últimas 24h",
-    "flujos.tasa_exito":"Taxa de sucesso","flujos.global_sistema":"Global do sistema",
-    "flujos.ultimo_backup":"Último backup","flujos.automatico":"Automático",
-    "flujos.estado_procesos_label":"Status dos processos","flujos.por_estado":"Por status de conexão",
-    "flujos.actividad_24h":"Atividade últimas 24h","flujos.por_hora":"Por hora do dia",
-    "flujos.total_24h_label":"Total 24h","flujos.ejecuciones":"execuções",
-    "flujos.por_categoria":"Processos por categoria","flujos.distribucion":"Distribuição dos 50 processos",
-    "flujos.mas_activos":"Processos mais ativos","flujos.con_incidencias":"Processos com incidentes",
-    "flujos.sin_errores":"✅ Sem erros registrados","flujos.criticos":"Status dos processos críticos",
-    "flujos.estado_op":"Status operacional","flujos.todos_flujos":"Todos os processos",
-    "flujos.ocultar_tabla":"▲ Ocultar tabela","flujos.ver_tabla":"▼ Ver tabela completa",
-    "flujos.col_flujo":"Processo","flujos.col_categoria":"Categoria","flujos.col_estado":"Status",
-    "flujos.nota_integracion":"Integração técnica conectada. Os dados em tempo real requerem conexão ao backend do clube.",
-    "admin.gestion_eyebrow":"Gestão","admin.gestion_title":"Quadras e clientes",
-    "admin.gestion_desc":"Módulos preparados para gestão operacional.",
-    "admin.gestion_item1":"Gestão de quadras","admin.gestion_item2":"Clientes e perfis",
-    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
-    "admin.crec_eyebrow":"Crescimento","admin.crec_title":"Torneios e processos",
-    "admin.crec_desc":"Zona preparada para ativar processos quando existir backend.",
-    "admin.crec_item1":"Torneios","admin.crec_item2":"Ranking e categorias",
-    "admin.crec_item3":"Sistema de classificação","admin.crec_item4":"Pagamentos futuros",
-    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
-    "admin.backup_item1":"Programação: segunda 07:00","admin.backup_item2":"Origem: Banco de dados",
-    "admin.backup_item3":"Destino: Armazenamento","admin.backup_item4":"Confirmação: Notificações",
-    "admin.sistema_eyebrow":"Sistema","admin.exito_label":"Sucesso:",
-    "auth.roles_title":"Perfis e acessos","auth.pending_badge":"Configuração pendente",
-    "auth.pending_desc":"Sistema de acesso por perfis. Em produção deve ser protegido por provedor de autenticação.",
-    "auth.secciones":"Seções:",
-    "soporte.proteccion_h3":"Proteção necessária em produção",
-    "soporte.estado_tec_eyebrow":"Status das integrações","soporte.estado_tec_title":"Status técnico",
-    "soporte.estado_tec_desc":"Checklist de conexão backend.",
-    "soporte.worker_item":"Worker de reservas pronto",
-    "soporte.make_item":"Automações pendentes de segredo privado",
-    "soporte.airtable_item":"Banco de dados preparado sem escritas ativas",
-    "soporte.stripe_item":"Pagamentos e mensagens pendentes de configuração",
-    "soporte.obs_eyebrow":"Observabilidade","soporte.obs_title":"Logs e erros",
-    "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
-    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
-    "soporte.logs_errores":"Erros de integrações","soporte.logs_alertas":"Alertas técnicos futuros",
-    "soporte.vars_h3":"Estado de segurança: variáveis protegidas",
-    "soporte.vars_no_names":"Os nomes e valores internos não são exibidos na interface.",
-    "soporte.vars_validacion":"Validação disponível apenas na documentação interna ou em um console seguro.",
-  },
-  "de-DE": {
-    "nav.inicio":"Start","nav.reservar":"Buchen","nav.alta_jugador":"Spieler registrieren",
-    "nav.reprogramar":"Umbuchen","nav.cancelar":"Buchung stornieren",
-    "nav.gestion":"Buchungen","nav.torneos":"Turniere","nav.ranking":"Rangliste",
-    "nav.admin":"Admin","nav.flujos_make":"Technisches Zentrum","nav.soporte":"Support",
-    "nav.comunidad":"Gemeinschaft",
-    "nav.cerrar_sesion":"Abmelden","nav.saas_label":"Sicheres SaaS","nav.cerrar_menu":"Schließen","nav.abrir_menu":"Menü",
-    "login.title":"Als Rolle anmelden","login.entrar":"Eintreten","login.cancelar":"Abbrechen",
-    "login.password":"Passwort","login.ver_pwd":"👁️ Passwort anzeigen","login.ocultar_pwd":"🙈 Ausblenden",
-    "login.guardar_sesion":"Auf diesem Gerät speichern","login.acceder_como":"Anmelden als",
-    "login.intro_pwd":"Geben Sie das dieser Rolle zugewiesene Passwort ein.",
-    "login.error_rol":"Bitte wählen Sie eine gültige Rolle.","login.error_pwd":"Falsches Passwort für diese Rolle.",
-    "login.sesion_label":"Club Pádel 04 · Anmeldung",
-    "login.legal":"Lokaler Zugang durch Passwort geschützt. Sitzung nur auf diesem Gerät speicherbar.",
-    "login.olvide_pwd":"Passwort vergessen?","login.recuperar_title":"Zugang wiederherstellen","login.recuperar_desc":"Geben Sie Ihre E-Mail-Adresse ein und, wenn das Konto existiert, erhalten Sie Anweisungen zur Zurücksetzung.","login.recuperar_email":"E-Mail-Adresse","login.recuperar_btn":"Anweisungen senden","login.recuperar_enviado":"Wenn diese Adresse im System registriert ist, erhalten Sie in Kürze Anweisungen. Prüfen Sie auch Ihren Spam-Ordner.","login.recuperar_volver":"Zurück zum Login","login.recuperar_preparado":"Bereit für Endpunkt: /api/auth/forgot-password","login.recuperar_no_disponible":"Die Passwort-Wiederherstellung ist in dieser Umgebung noch nicht verfügbar: Aktivierung des Authentifizierungsanbieters ausstehend.","login.recuperar_cargando":"Anweisungen werden gesendet…",
-    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
-    "login.subtitle":"Wählen Sie aus, wie Sie die Anwendung betreten möchten.",
-    "login.idioma":"Sprache",
-    "role.PLAYER.label":"Spieler / Kunde","role.PLAYER.desc":"Plätze buchen, Buchungen und Rangliste einsehen.",
-    "role.STAFF.label":"Personal / Empfang","role.STAFF.desc":"Tägliche Buchungsverwaltung und Spielerbetreuung.",
-    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Verwaltungspanel, Metriken und Betriebskontrolle.",
-    "role.SUPPORT.label":"Technischer Support","role.SUPPORT.desc":"Technische Zone, Integrationen und interne Diagnose.",
-    "home.reservas_hoy":"Buchungen heute","home.ocupacion_media":"Durchschn. Auslastung",
-    "home.socios_activos":"Aktive Mitglieder","home.procesos_activos":"Aktive Prozesse",
-    "home.ingresos_mes":"Monatseinnahmen","home.torneos_activos":"Aktive Turniere",
-    "home.estado_operativo":"Betriebsstatus","home.reservar":"Buchen",
-    "home.torneo":"Turnier","home.alta":"Registrierung","home.procesos":"Prozesse",
-    "home.avisos_activos":"Aktive Meldungen","home.ver_procesos":"Prozesse anzeigen",
-    "home.vs_ayer":"vs gestern","home.pistas_activas":"4 aktive Plätze",
-    "home.estimacion_mensual":"Monatliche Schätzung","home.en_curso":"Laufend",
-    "home.este_mes":"diesen Monat","home.incidencia":"Vorfall","home.incidencias_s":"Vorfälle",
-    "home.franja_horaria":"Zeitfenster","home.tendencia_semanal":"Wöchentlicher Trend",
-    "home.porcentaje_uso":"% Nutzung","home.procesos_conectados":"verbundene Prozesse",
-    "home.activos":"Aktiv","home.pausados":"Pausiert","home.incidencias":"Vorfälle","home.flujos_totales":"Abläufe insgesamt","home.operativo_probado":"operativ (E2E getestet)",
-    "home.reservas_hora":"Buchungen pro Stunde — heute","home.reservas_7dias":"Buchungen letzte 7 Tage",
-    "home.ocupacion_pista":"Auslastung je Platz","home.estado_procesos":"Prozessstatus",
-    "home.club_operativo":"Padel-Club","home.hero_accent":"in Betrieb",
-    "home.hero_subtitle":"SaaS nach Rollen: Spieler, Empfang, Verwaltung und Support.",
-    "home.btn_torneos":"Turniere","home.btn_admin":"Admin",
-    "home.ir_reservas":"Zu Buchungen","home.ver_gestion":"Buchungen verwalten",
-    "home.ver_admin":"Admin anzeigen","home.ver_soporte":"Support anzeigen",
-    "home.galeria":"Club-Galerie",
-    "home.dias_semana":"Mo,Di,Mi,Do,Fr,Sa,So","home.dias_largo":"Mo,Di,Mi,Do,Fr,Sa,So",
-    "admin.panel":"Verwaltungspanel","admin.metricas":"Globale Club-Metriken.",
-    "admin.reservas_mes":"Monatliche Buchungen","admin.ocupacion":"Durchschn. Auslastung",
-    "admin.socios":"Aktive Mitglieder","admin.procesos":"Aktive Prozesse",
-    "admin.backup":"Letztes Backup","admin.ingr_mes":"Monatseinnahmen",
-    "admin.vs_mes_anterior":"vs Vormonat","admin.prox_lunes":"Nächstes: Montag 07:00",
-    "admin.graf_hoy":"Buchungen pro Stunde — heute","admin.graf_semana":"Wöchentliche Entwicklung",
-    "admin.graf_pista":"Auslastung je Platz","admin.sub_hoy":"Zeitfenster · Demo",
-    "admin.sub_semana":"Buchungen 7 Tage · Demo","admin.sub_pista":"% Nutzung · Demo",
-    "admin.backup_semana":"Wöchentliches Backup","admin.integraciones":"Integrationsstatus",
-    "admin.integ_desc":"Bereit, ausstehende Anmeldedaten oder Bereitstellung.",
-    "soporte.title":"Technischer Support","soporte.desc":"Technische Kontrolle der Anwendung.",
-    "soporte.proteccion":"Schutz in Produktion erforderlich","soporte.vars":"Private Variablen",
-    "flujos.title":"Technisches Zentrum","flujos.desc":"Status der Systemautomatisierungen.",
-    "torneos.title":"Turniere","torneos.bracket":"Interaktiver Bracket",
-    "torneos.anyadir":"Paar hinzufügen","torneos.guardar":"Speichern","torneos.publicar":"Veröffentlichen",
-    "torneos.exportar":"Exportieren","torneos.campeon":"Champion","torneos.subcampeon":"Vizemeister",
-    "torneos.tercer_puesto":"3. Platz","torneos.jugadores":"Spieler","torneos.parejas":"Paare",
-    "torneos.ganador":"Gewinner","torneos.eliminada":"Ausgeschieden","torneos.avanza":"Rückt vor",
-    "torneos.bye":"BYE","torneos.pase_directo":"Direktpass","torneos.personalizado":"Benutzerdefiniert",
-    "torneos.ver_ranking":"Vollständige Rangliste","torneos.autoasignar":"Auto-zuweisen","torneos.reordenar":"Neuordnen",
-    "reservas.nueva":"Neue Buchung","reservas.fecha":"Datum","reservas.hora":"Uhrzeit",
-    "reservas.pista":"Platz","reservas.duracion":"Dauer","reservas.confirmar":"Buchung bestätigen",
-    "reservas.resumen":"Zusammenfassung","reservas.disponible":"Verfügbar","reservas.no_disponible":"Nicht verfügbar",
-    "reprog.clave":"Buchungsschlüssel","reprog.nueva_fecha":"Neues Datum",
-    "reprog.nueva_hora":"Neue Startzeit","reprog.nueva_pista":"Neuer Platz",
-    "reprog.resumen":"Änderungsübersicht","reprog.confirmo":"Ich bestätige, dass ich diese Buchung umbuchen möchte",
-    "reprog.btn":"Buchung umbuchen","reprog.volver":"Zurück zu Buchungen",
-    "cancelar.motivo":"Grund","cancelar.confirmar":"Stornierung bestätigen","cancelar.volver":"Zurück",
-    "ranking.title":"Rangliste","ranking.subtitle":"Allgemeine Rangliste der Spieler und Paare",
-    "ranking.categoria":"Kategorie","ranking.nivel":"Niveau","ranking.puntos":"Punkte",
-    "ranking.pts":"Pkt","ranking.pareja":"Paar","ranking.jugadores":"Spieler",
-    "ranking.v":"S","ranking.d":"N","ranking.pj":"Sp","ranking.racha":"Serie",
-    "ranking.mov":"Bew.","ranking.pos":"#","ranking.ultima_act":"Letzte Aktualisierung",
-    "ranking.filtrar":"Spieler oder Paar suchen...","ranking.general":"Allgemein",
-    "ranking.masculino":"Herren","ranking.femenino":"Damen","ranking.mixto":"Mixed",
-    "ranking.iniciacion":"Anfänger","ranking.medio":"Mittel","ranking.avanzado":"Fortgeschritten",
-    "ranking.podio":"Podium — Top 3","ranking.tabla":"Vollständige Rangliste",
-    "ranking.datos_ejemplo":"Beispieldaten","ranking.sistema_puntos":"Konfigurierbares Club-Punktesystem.",
-    "ranking.temporada":"Saison","ranking.buscar":"Suchen...",
-    "ranking.campeon":"Champion","ranking.subcampeon":"Vizemeister","ranking.tercero":"3. Platz",
-    "ranking.mejor_pareja":"Bestes Paar","ranking.pts_totales":"Pkt gesamt",
-    "ranking.sin_resultados":"Keine Ergebnisse mit diesen Filtern.",
-    "ranking.estado":"Status","ranking.activo":"Aktiv",
-    "common.cargando":"Laden...","common.error":"Fehler","common.cancelar":"Abbrechen",
-    "common.confirmar":"Bestätigen","common.guardar":"Speichern","common.volver":"Zurück",
-    "common.editar":"Bearbeiten","common.modo_seguro":"Sicherer Modus","common.entorno":"Geschützte Umgebung",
-    "common.sin_cambios":"Keine Änderung",
-    "alta.title":"Spieler registrieren","alta.eyebrow":"Spieler","alta.desc":"Einen Spieler zum Club hinzufügen.",
-    "alta.nombre":"Vorname","alta.apellidos":"Nachname","alta.email":"E-Mail","alta.telefono":"Telefon",
-    "alta.fecha_nac":"Geburtsdatum","alta.nivel":"Niveau","alta.genero":"Geschlecht",
-    "alta.comentarios":"Kommentare","alta.seleccionar":"Auswählen",
-    "alta.acepta":"Ich akzeptiere die Bedingungen und die Datenschutzrichtlinie.",
-    "alta.exito":"✅ Spieler erfolgreich registriert.","alta.registrando":"Wird registriert...","alta.btn":"Spieler registrieren",
-    "cancelar.title":"Buchung stornieren","cancelar.eyebrow":"Buchungen","cancelar.desc":"Stornierungsanfrage für eine Buchung stellen.",
-    "cancelar.clave":"Buchungsschlüssel","cancelar.clave_ph":"Buchungsschlüssel eingeben",
-    "cancelar.confirmo_check":"Ich bestätige, dass ich diese Buchung stornieren möchte.",
-    "cancelar.btn":"Buchung stornieren","cancelar.enviando":"Wird gesendet...","cancelar.volver_reservas":"Zurück zu Buchungen",
-    "cancelar.que_ocurre":"Was passiert als nächstes",
-    "reservas.title":"Platz buchen","reservas.eyebrow":"Buchungen","reservas.desc":"Buchen Sie Ihren Platz in Sekunden.",
-    "reservas.datos_jugador":"Spielerdaten","reservas.fecha_pista":"Datum, Uhrzeit und Platz",
-    "reservas.hora_fin":"Endzeit","reservas.total":"Gesamt","reservas.ver_resumen":"Zusammenfassung",
-    "reservas.editar":"Bearbeiten","reservas.confirmar_btn":"Bestätigen","reservas.enviando":"Wird gesendet...",
-    "reservas.registrada":"Anfrage gesendet · Bestätigung ausstehend","reservas.nueva_btn":"Neue Buchung",
-    "reservas.nombre":"Vorname","reservas.apellidos":"Nachname","reservas.modalidad":"Modus",
-    "reservas.nivel_form":"Niveau","reservas.comentarios":"Kommentare","reservas.minutos":"Minuten",
-    "reservas.confirmacion_desc":"Die Bestätigung hängt vom Backend und den konfigurierten Integrationen ab.",
-    "reprog.title":"Buchung umbuchen","reprog.eyebrow":"Buchungen","reprog.desc":"Datum oder Uhrzeit Ihrer Buchung ändern.",
-    "reprog.hora_fin":"Endzeit","reprog.que_ocurre":"Was passiert als nächstes","reprog.enviando":"Wird gesendet...","reprog.editar":"Bearbeiten",
-    "soporte.eyebrow":"Support",
-    "lang.buscar":"Sprache, Land, Code, Flagge suchen…","lang.no_encontrados":"Keine Sprachen gefunden.",
-    "lang.hint":"Versuchen Sie Land, Sprache, Code oder Flagge. Beispiel: Deutschland, Deutsch, de-DE oder 🇩🇪","lang.recomendados":"Empfohlen","lang.todos":"Alle Sprachen",
-    "status.reserva.pendiente":"Ausstehend","status.reserva.pendiente_txt":"Überprüfen Sie Ihre Daten vor der Bestätigung.",
-    "status.reserva.enviando":"Wird gesendet","status.reserva.enviando_txt":"Wir senden Ihre Buchungsanfrage.",
-    "status.reserva.exito":"Anfrage gesendet","status.reserva.exito_txt":"Buchungsanfrage eingegangen und wird bearbeitet. Sie erhalten eine Bestätigungs-E-Mail.",
-    "status.reserva.error":"Fehler","status.reserva.error_txt":"Buchung konnte nicht abgeschlossen werden. Überprüfen Sie die Daten und versuchen Sie es erneut.",
-    "status.cancelar.idle":"Ausstehend","status.cancelar.idle_txt":"Bestätigen Sie die Stornierung Ihrer Buchung.",
-    "status.cancelar.enviando":"Wird gesendet","status.cancelar.enviando_txt":"Wir senden Ihre Stornierungsanfrage.",
-    "status.cancelar.exito":"Anfrage gesendet","status.cancelar.exito_txt":"Stornierungsanfrage erfolgreich gesendet.",
-    "status.cancelar.error":"Senden fehlgeschlagen","status.cancelar.error_txt":"Überprüfen Sie den Schlüssel und versuchen Sie es erneut.",
-    "status.reprog.idle":"Ausstehend","status.reprog.idle_txt":"Wählen Sie ein neues Datum oder eine neue Uhrzeit.",
-    "status.reprog.enviando":"Wird umgebucht","status.reprog.enviando_txt":"Verfügbarkeit wird geprüft und Buchung aktualisiert.",
-    "status.reprog.exito":"Buchung umgebucht","status.reprog.exito_txt":"Ihre Buchung wurde erfolgreich aktualisiert.",
-    "status.reprog.error":"Umbuchung fehlgeschlagen","status.reprog.error_txt":"Überprüfen Sie die Daten und versuchen Sie es erneut.",
-    "errors.nombre":"Bitte geben Sie einen gültigen Vornamen ein.","errors.apellidos":"Bitte geben Sie einen gültigen Nachnamen ein.",
-    "errors.email":"Bitte geben Sie eine gültige E-Mail-Adresse ein.","errors.telefono":"Bitte geben Sie eine gültige Telefonnummer ein.",
-    "errors.fecha":"Bitte wählen Sie ein Datum.","errors.fecha_pasado":"Das Datum darf nicht in der Vergangenheit liegen.",
-    "errors.fecha_domingo":"Der Club ist sonntags geschlossen.",
-    "errors.hora":"Bitte wählen Sie eine verfügbare Uhrzeit.","errors.duracion":"Bitte wählen Sie eine gültige Dauer.",
-    "errors.hora_pasada":"Das gewählte Zeitfenster ist bereits vergangen.",
-    "errors.hora_cierre":"Die Buchung würde nach der Schließzeit des Clubs enden.",
-    "errors.pista":"Bitte wählen Sie einen gültigen Platz.","errors.modalidad":"Bitte wählen Sie einen gültigen Modus.",
-    "errors.nivel":"Bitte wählen Sie ein gültiges Niveau.",
-    "errors.clave":"Bitte geben Sie den Buchungsschlüssel ein.","errors.clave_incompleta":"Der Buchungsschlüssel scheint unvollständig.",
-    "errors.nueva_fecha":"Bitte wählen Sie das neue Datum.","errors.nueva_fecha_pasado":"Das neue Datum darf nicht in der Vergangenheit liegen.",
-    "errors.confirmado_reprog":"Bitte bestätigen Sie, dass Sie die Buchung umbuchen möchten.",
-    "errors.confirmado_cancelar":"Bitte bestätigen Sie, dass Sie eine Stornierung beantragen möchten.",
-    "errors.datos_incompletos":"Einige Daten sind unvollständig oder ungültig. Korrigieren Sie diese vor der Bestätigung.",
-    "errors.horario_ocupado":"Dieses Zeitfenster wurde gerade belegt. Bitte wählen Sie ein anderes.",
-    "errors.reserva_error":"Buchung konnte nicht abgeschlossen werden. Versuchen Sie es in einigen Sekunden erneut.",
-    "errors.cancelar_error":"Anfrage konnte nicht gesendet werden. Überprüfen Sie den Schlüssel und versuchen Sie es erneut.",
-    "errors.reprog_campos":"Bitte füllen Sie alle Pflichtfelder korrekt aus.",
-    "errors.reprog_ocupado":"Dieses Zeitfenster wurde gerade belegt. Bitte wählen Sie ein anderes.",
-    "errors.reprog_error":"Umbuchung konnte nicht abgeschlossen werden. Überprüfen Sie den Schlüssel und versuchen Sie es erneut.",
-    "badge.confirmed":"Bestätigt","badge.pending":"Ausstehend","badge.completed":"Abgeschlossen",
-    "home.galeria_eyebrow":"Galerie","home.galeria_desc":"Bildergalerie des Clubs.","home.sistema":"System",
-    "cancelar.info1":"Wir werden Ihre Anfrage sicher bearbeiten.",
-    "cancelar.info2":"Die Stornierung wird registriert.",
-    "cancelar.info3":"Sie können jederzeit zum Kalender zurückkehren.",
-    "reprog.info1":"Der Schlüssel identifiziert die Buchung, die Sie ändern möchten.",
-    "reprog.info2":"Derselbe Schlüssel wird nach der Umbuchung beibehalten.",
-    "reprog.info3":"Sie erhalten eine Bestätigung per E-Mail, sobald die Änderung verarbeitet wurde.",
-    "reprog.info4":"Benachrichtigungen werden in einer späteren Phase aktiviert.",
-    "reprog.nueva_disponibilidad":"Neue Verfügbarkeit","reprog.selecciona_franja":"Wählen Sie ein neues verfügbares Zeitfenster.",
-    "flujos.exportar_json":"⬇ JSON exportieren","flujos.total_procesos":"Prozesse gesamt","flujos.auditados":"Geprüft",
-    "flujos.activos_label":"Aktiv","flujos.conectados":"Verbunden","flujos.pausados_label":"Pausiert",
-    "flujos.en_pausa":"In Pause","flujos.incidencias_label":"Vorfälle","flujos.ultimas_24h":"Letzte 24h",
-    "flujos.tasa_exito":"Erfolgsrate","flujos.global_sistema":"System global",
-    "flujos.ultimo_backup":"Letztes Backup","flujos.automatico":"Automatisch",
-    "flujos.estado_procesos_label":"Prozessstatus","flujos.por_estado":"Nach Verbindungsstatus",
-    "flujos.actividad_24h":"Aktivität letzte 24h","flujos.por_hora":"Nach Tageszeit",
-    "flujos.total_24h_label":"Gesamt 24h","flujos.ejecuciones":"Ausführungen",
-    "flujos.por_categoria":"Prozesse nach Kategorie","flujos.distribucion":"Verteilung der 50 Prozesse",
-    "flujos.mas_activos":"Aktivste Prozesse","flujos.con_incidencias":"Prozesse mit Vorfällen",
-    "flujos.sin_errores":"✅ Keine Fehler registriert","flujos.criticos":"Status kritischer Prozesse",
-    "flujos.estado_op":"Betriebsstatus","flujos.todos_flujos":"Alle Prozesse",
-    "flujos.ocultar_tabla":"▲ Tabelle ausblenden","flujos.ver_tabla":"▼ Vollständige Tabelle",
-    "flujos.col_flujo":"Prozess","flujos.col_categoria":"Kategorie","flujos.col_estado":"Status",
-    "flujos.nota_integracion":"Technische Integration verbunden. Echtzeit-Daten erfordern Verbindung zum Club-Backend.",
-    "admin.gestion_eyebrow":"Verwaltung","admin.gestion_title":"Plätze und Kunden",
-    "admin.gestion_desc":"Module für die Betriebsleitung bereit.",
-    "admin.gestion_item1":"Platzverwaltung","admin.gestion_item2":"Kunden und Profile",
-    "admin.gestion_item3":"Buchungsverlauf","admin.gestion_item4":"Verfügbarkeitsregeln",
-    "admin.crec_eyebrow":"Wachstum","admin.crec_title":"Turniere und Prozesse",
-    "admin.crec_desc":"Bereich bereit, Prozesse zu aktivieren, wenn Backend verfügbar ist.",
-    "admin.crec_item1":"Turniere","admin.crec_item2":"Rangliste und Kategorien",
-    "admin.crec_item3":"Klassifizierungssystem","admin.crec_item4":"Zukünftige Zahlungen",
-    "admin.backup_eyebrow":"Aktives System","admin.backup_desc":"Automatische Sicherung von Buchungen und aktiven Mitgliedern.",
-    "admin.backup_item1":"Planung: Montag 07:00","admin.backup_item2":"Quelle: Datenbank",
-    "admin.backup_item3":"Ziel: Speicher","admin.backup_item4":"Bestätigung: Benachrichtigungen",
-    "admin.sistema_eyebrow":"System","admin.exito_label":"Erfolg:",
-    "auth.roles_title":"Rollen und Zugriffe","auth.pending_badge":"Konfiguration ausstehend",
-    "auth.pending_desc":"Rollenbasiertes Zugriffssystem. In Produktion muss es durch einen Authentifizierungsanbieter geschützt sein.",
-    "auth.secciones":"Bereiche:",
-    "soporte.proteccion_h3":"Produktionsschutz erforderlich",
-    "soporte.estado_tec_eyebrow":"Integrationsstatus","soporte.estado_tec_title":"Technischer Status",
-    "soporte.estado_tec_desc":"Backend-Verbindungs-Checkliste.",
-    "soporte.worker_item":"Buchungs-Worker bereit",
-    "soporte.make_item":"Automatisierungen warten auf privaten Schlüssel",
-    "soporte.airtable_item":"Datenbank bereit ohne aktive Schreibvorgänge",
-    "soporte.stripe_item":"Zahlungen und Messaging ausstehend",
-    "soporte.obs_eyebrow":"Beobachtbarkeit","soporte.obs_title":"Logs und Fehler",
-    "soporte.obs_desc":"Bereich für Diagnose wenn echtes Backend verfügbar ist.",
-    "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
-    "soporte.logs_errores":"Integrationsfehler","soporte.logs_alertas":"Künftige technische Warnungen",
-    "soporte.vars_h3":"Sicherheitsstatus: geschützte Variablen",
-    "soporte.vars_no_names":"Interne Namen und Werte werden in der Oberfläche nicht angezeigt.",
-    "soporte.vars_validacion":"Validierung nur in der internen Dokumentation oder einer sicheren Konsole verfügbar.",
-  },
-};
-
-function t(key, lang) {
-  try {
-    const code = lang?.code || "es-ES";
-    const base = code.split("-")[0];
-    const dict = TRANSLATIONS[code] || TRANSLATIONS[Object.keys(TRANSLATIONS).find(k => k.startsWith(base))] || {};
-    const esDict = TRANSLATIONS["es-ES"] || {};
-    return dict[key] ?? esDict[key] ?? key;
-  } catch { return key; }
-}
-
+// Shared locale catalog: see src/i18n/translations.js
 // ============================================================
 // END i18n sistema
 // ============================================================
@@ -3224,13 +1409,29 @@ function LanguageSelector() {
   const ltx = key => t(key, lang);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 0 });
   const [selected, setSelected] = useState(() => loadSavedLanguage() || LANGUAGES_RAW.find(l => l.code === "es-ES") || LANGUAGES_ALL[0]);
   const dropRef = useRef(null);
   const searchRef = useRef(null);
+  const menuRef = useRef(null);
   const triggerRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
+    const updatePosition = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const margin = 12;
+      const viewportWidth = window.innerWidth;
+      const maxWidth = Math.max(0, viewportWidth - margin * 2);
+      const width = Math.min(Math.max(rect.width, 280), maxWidth);
+      const left = Math.min(Math.max(margin, rect.right - width), Math.max(margin, viewportWidth - width - margin));
+      const maxHeight = Math.max(0, window.innerHeight - rect.bottom - margin - 8);
+      setMenuPosition({ top: rect.bottom + 8, left, width, maxHeight });
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
     searchRef.current?.focus();
     function onKey(e) {
       if (e.key === "Escape") {
@@ -3239,13 +1440,17 @@ function LanguageSelector() {
       }
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
     function onClickOut(e) {
-      if (dropRef.current && !dropRef.current.contains(e.target)) setOpen(false);
+      if (!dropRef.current?.contains(e.target) && !menuRef.current?.contains(e.target)) { setOpen(false); triggerRef.current?.focus(); }
     }
     document.addEventListener("mousedown", onClickOut);
     return () => document.removeEventListener("mousedown", onClickOut);
@@ -3266,11 +1471,15 @@ function LanguageSelector() {
     setOpen(false);
     setSearch("");
     setGlobalLang(lang);
+    document.documentElement.lang = lang.code;
     triggerRef.current?.focus();
   }
 
-  const filteredRecommended = filterLanguages(LANGUAGES_RECOMMENDED);
-  const filteredAll = filterLanguages(LANGUAGES_ALL);
+  const isTranslated = item => Object.prototype.hasOwnProperty.call(TRANSLATIONS, item.code);
+  const supported = LANGUAGES_ALL.filter(isTranslated);
+  const spanish = supported.find(item => item.code === "es-ES");
+  const filteredRecommended = filterLanguages(LANGUAGES_RECOMMENDED.filter(isTranslated).filter(item => item.code !== "es-ES"));
+  const filteredAll = filterLanguages(supported.filter(item => item.code !== "es-ES"));
   const hasResults = filteredRecommended.length > 0 || filteredAll.length > 0;
 
   return (
@@ -3278,7 +1487,7 @@ function LanguageSelector() {
       <button
         ref={triggerRef}
         type="button"
-        aria-label={`Idioma: ${selected.label} ${selected.flag}`}
+        aria-label={ltx("lang.selector_aria") + ": " + selected.label + " " + selected.flag}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls="cp04-lang-listbox"
@@ -3291,8 +1500,8 @@ function LanguageSelector() {
         <span style={{ color: "rgba(255,255,255,.4)", fontSize: ".75rem", marginLeft: 2 }}>{open ? "▲" : "▼"}</span>
       </button>
 
-      {open && (
-        <div style={{ position: "absolute", bottom: "calc(100% + 8px)", left: 0, right: 0, zIndex: 9999, background: "linear-gradient(160deg,#0b111d,#08101a)", border: "1px solid rgba(182,255,0,.22)", borderRadius: 18, boxShadow: "0 24px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(182,255,0,.06)", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: 380 }}>
+      {open && createPortal(
+        <div ref={menuRef} style={{ position: "fixed", top: menuPosition.top, left: menuPosition.left, width: menuPosition.width, zIndex: 2147483647, background: "linear-gradient(160deg,#0b111d,#08101a)", border: "1px solid rgba(182,255,0,.22)", borderRadius: 18, boxShadow: "0 24px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(182,255,0,.06)", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: menuPosition.maxHeight }}>
           <div style={{ padding: "10px 12px 6px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
             <input
               ref={searchRef}
@@ -3305,6 +1514,7 @@ function LanguageSelector() {
           </div>
 
           <div id="cp04-lang-listbox" role="listbox" aria-label={ltx("lang.buscar")} style={{ overflowY: "auto", flex: 1 }}>
+            {spanish && <LangOption lang={spanish} selected={selected} onSelect={selectLang} />}
             {!hasResults ? (
               <div style={{ padding: "18px 16px", textAlign: "center" }}>
                 <div style={{ color: "rgba(255,255,255,.55)", fontSize: ".84rem", marginBottom: 8 }}>{ltx("lang.no_encontrados")}</div>
@@ -3327,8 +1537,7 @@ function LanguageSelector() {
               </>
             )}
           </div>
-        </div>
-      )}
+        </div>, document.body)}
     </div>
   );
 }
@@ -3347,8 +1556,8 @@ function LangOption({ lang, selected, onSelect }) {
     >
       <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{lang.flag}</span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: "block", fontWeight: 700, fontSize: ".83rem", color: isSelected ? "rgba(182,255,0,.95)" : "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lang.label}</span>
-        <span style={{ display: "block", fontSize: ".71rem", color: "rgba(154,168,189,.7)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lang.countryEs || lang.country} · {lang.code}</span>
+        <span style={{ display: "block", fontWeight: 700, fontSize: ".83rem", color: isSelected ? "rgba(182,255,0,.95)" : "#fff", overflowWrap: "anywhere", whiteSpace: "normal", lineHeight: 1.25 }}>{lang.label}</span>
+        <span style={{ display: "block", fontSize: ".71rem", color: "rgba(154,168,189,.7)", overflowWrap: "anywhere", whiteSpace: "normal", lineHeight: 1.35 }}>{lang.countryEs || lang.country} · {lang.code}</span>
       </span>
       {isSelected && <span style={{ color: "rgba(182,255,0,.9)", fontSize: ".85rem", flexShrink: 0 }}>✓</span>}
     </button>
@@ -3359,7 +1568,7 @@ function LangOption({ lang, selected, onSelect }) {
 // END i18n
 // ============================================================
 
-function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, onClose }) {
+function Sidebar({ current, selectedRole, onClearRole, mobileOpen, mobileModal, onNavigate, onClose }) {
   const lang = useLang();
   const tx = key => t(key, lang);
   // Iconos propios (auditoría Premium V2 2026-09-03: sidebar 100% emoji,
@@ -3417,8 +1626,8 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
   const visibleItems = navKeys.filter(([id]) => allowedMenu.includes(id));
 
   return (
-    <aside id="cp04-mobile-menu" className="cp04-sidebar" data-open={mobileOpen ? "true" : "false"} aria-label="Navegación principal">
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:26 }}>
+    <aside id="cp04-mobile-menu" className="cp04-sidebar" data-open={mobileOpen ? "true" : "false"} role={mobileOpen && mobileModal ? "dialog" : undefined} aria-modal={mobileOpen && mobileModal ? "true" : undefined} aria-label={tx("aria.main_nav")} tabIndex={-1}>
+      <div className="cp04-sidebar-header" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:26 }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <span style={{ width:12, height:12, borderRadius:"50%", background:T.accent, boxShadow:`0 0 18px ${T.accent}` }} />
           <div>
@@ -3434,15 +1643,16 @@ function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, o
             {cp04NormalizeRole(selectedRole)}
           </span>
         )}
-        <button className="cp04-menu-button cp04-sidebar-close" type="button" onClick={onClose} aria-label="Cerrar menú">{tx("nav.cerrar_menu")}</button>
+        <button className="cp04-menu-button cp04-sidebar-close" type="button" onClick={onClose} aria-label={tx("aria.close_nav")}>{tx("nav.cerrar_menu")}</button>
       </div>
-      <nav style={{ display:"grid", gap:8 }}>
+      <nav aria-label={tx("aria.secciones")} style={{ display:"grid", gap:8 }}>
         {visibleItems.map(([id, key, Icon]) => {
           const label = tx(key);
           return (
             <button
               key={id}
               data-tour={`sidebar-${id}`}
+              type="button"
               onClick={() => onNavigate(id)}
               aria-current={current === id ? "page" : undefined}
               aria-label={`${label}`}
@@ -3909,7 +2119,7 @@ function ReservaAuthGate({ message }) {
         <input
           type="email"
           aria-label="Email"
-          placeholder="tu@email.com"
+          placeholder={ltx("login.email_placeholder")}
           value={email}
           onChange={e => setEmail(e.target.value)}
           autoComplete="email"
@@ -4123,7 +2333,7 @@ function Reservas() {
     setCourt(pista);
     setStep(1);
   }}
-/><StatusCard status={status} title={statusTitle} text={statusText} style={{ marginBottom: 20 }} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para confirmar esta reserva. El resumen que has revisado se mantiene." />}{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,getAvailableDurationsForHour(h)[0]??duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${h}`)}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{getAvailableDurationsForHour(form.hora).map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+/><StatusCard status={status} title={statusTitle} text={statusText} style={{ marginBottom: 20 }} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para confirmar esta reserva. El resumen que has revisado se mantiene." />}{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label={tx("reservas.email")} placeholder={tx("reservas.email")} type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label={tx("reservas.telefono")} placeholder={tx("reservas.telefono")} value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{tx(`reservas.modalidad.${m}`)}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{tx(`reservas.nivel.${n}`)}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,getAvailableDurationsForHour(h)[0]??duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${h}`)}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{getAvailableDurationsForHour(form.hora).map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
 }
 
 function CancelarReserva({ setCurrent }) {
@@ -9219,6 +7429,7 @@ export default function ClubPadel04SaaSApp() {
   const [rememberRole, setRememberRole] = useState(true);
   const [roleError, setRoleError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tutorialMenuOpen, setTutorialMenuOpen] = useState(false);
   const [tutorialRevision, setTutorialRevision] = useState(0);
   const [forgotPwdStep, setForgotPwdStep] = useState("idle");
   const [forgotPwdEmail, setForgotPwdEmail] = useState("");
@@ -9301,6 +7512,7 @@ export default function ClubPadel04SaaSApp() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- solo ejecuta al montar
 
   const menuButtonRef = useRef(null);
+  const mainContentRef = useRef(null);
   const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, asistente_ia: <AsistenteIA navigate={navigate} />, automatizaciones_bots: <AutomatizacionesBots navigate={navigate} />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
   // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
   // render nunca debe confiar únicamente en que `current` llegó por esa vía.
@@ -9309,6 +7521,15 @@ export default function ClubPadel04SaaSApp() {
   const safeCurrentSection = cp04CanAccessSection(selectedRole, current)
     ? current
     : cp04GetSafeStartSection(selectedRole);
+  const previousSectionRef = useRef(safeCurrentSection);
+  useEffect(() => {
+    if (previousSectionRef.current === safeCurrentSection) return undefined;
+    previousSectionRef.current = safeCurrentSection;
+    const frame = window.requestAnimationFrame(() => {
+      if (!document.querySelector('[role="dialog"][aria-modal="true"]')) mainContentRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [safeCurrentSection]);
 
   // Estado de pantalla (rol/módulo activo -> clases y fondo del body) —
   // única fuente de verdad, ver src/utils/screenState.js. Sustituye a los
@@ -9590,24 +7811,17 @@ export default function ClubPadel04SaaSApp() {
 
   useEffect(() => {
     if (!mobileMenuOpen) return undefined;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.querySelector("#cp04-mobile-menu button")?.focus();
-
-    function handleKeyDown(event) {
-      if (event.key === "Escape") {
-        setMobileMenuOpen(false);
-        menuButtonRef.current?.focus();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return attachNavigationDialog({
+      panel: document.getElementById("cp04-mobile-menu"),
+      trigger: menuButtonRef.current,
+      background: [
+        mainContentRef.current,
+        document.querySelector(".cp04-mobilebar"),
+        document.querySelector(".cp04-skip-link"),
+        document.querySelector(".cp04-navigation-status"),
+      ],
+      onClose: () => setMobileMenuOpen(false),
+    });
   }, [mobileMenuOpen]);
 
   function navigate(section) {
@@ -9796,16 +8010,16 @@ export default function ClubPadel04SaaSApp() {
       <>
         <style>{globalStyles}</style>
         <PwaStatusBanners />
-        <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:"radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), #050910", color:"white" }}>
-          <section style={{ width:"min(1080px, 100%)", border:"1px solid rgba(255,255,255,.12)", borderRadius:34, padding:"clamp(24px, 4vw, 48px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:18 }}>
+        <main className="cp04-access-root saas-experience" style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:"radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), #050910", color:"white" }}>
+          <AccessShell className="cp04-access-shell" aria-label={`${ltx("login.real_access")} · Club Pádel 04`} style={{ width:"min(1080px, 100%)", border:"1px solid rgba(255,255,255,.12)", borderRadius:34, padding:"clamp(24px, 4vw, 48px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
+            <div className="cp04-access-topbar" style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:18 }}>
               <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap" }}>
                 <button
                   type="button"
                   onClick={() => setShowLanding(true)}
                   style={{ background:"transparent", border:"none", color:T.textDim, fontSize:".78rem", cursor:"pointer", padding:0, display:"flex", alignItems:"center", gap:4, textDecoration:"underline", textUnderlineOffset:3 }}
                 >
-                  ← Volver
+                  ← {ltx("login.back")}
                 </button>
                 <div style={{ color:T.accent, fontSize:".78rem", letterSpacing:".22em", textTransform:"uppercase", fontWeight:900 }}>
                   {ltx("login.sesion_label")}
@@ -9820,36 +8034,40 @@ export default function ClubPadel04SaaSApp() {
               </div>
             </div>
 
+            <div className="cp04-access-intro saas-entrance">
             <h1 style={{ fontFamily:T.fontDisplay, fontSize:"clamp(2.6rem, 7vw, 5.8rem)", lineHeight:".9", letterSpacing:"-.07em", margin:"0 0 20px" }}>
-              {ltx("login.title").split(" ").slice(0,-1).join(" ")} <span style={{ color:T.accent }}>{ltx("login.title").split(" ").slice(-1)}</span>
+              Club Pádel <span style={{ color:T.accent }}>04</span>
             </h1>
 
             <p style={{ color:T.textDim, maxWidth:760, lineHeight:1.7, fontSize:"clamp(1rem, 2vw, 1.18rem)", marginBottom:34 }}>
               {ltx("login.subtitle")}
             </p>
-
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:22, marginBottom:26 }}>
-        <form onSubmit={handleUniversalLogin} style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(5,10,18,.72)" }}>
+            <a className="cp04-access-shortcut" href="#cp04-real-access">{ltx("login.real_heading")} <span aria-hidden="true"> ↗</span></a>
+            </div>
+      <div className="cp04-access-flow" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:22, marginBottom:26 }}>
+        <form id="cp04-real-access" className="cp04-access-real" aria-label="Acceso real con correo" tabIndex={-1} onSubmit={handleUniversalLogin} style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(5,10,18,.72)" }}>
           <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
-            ACCESO REAL
+            {ltx("login.real_access")}
           </div>
           <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
-            Entrar con correo personal
+            {ltx("login.real_heading")}
           </strong>
           <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.55 }}>
-            Usa tu email y contraseña. Los roles internos siguen disponibles abajo solo para validación interna.
+            {ltx("login.real_desc")}
           </p>
           <input
             type="email"
             value={loginEmail}
+            aria-label={ltx("login.email")}
             onChange={e => setLoginEmail(e.target.value)}
-            placeholder="tu@email.com"
+            placeholder={ltx("login.email_placeholder")}
             autoComplete="email"
             style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
           />
           <input
             type={showLoginPassword ? "text" : "password"}
             value={loginPassword}
+            aria-label="Contraseña del acceso real"
             onChange={e => setLoginPassword(e.target.value)}
             placeholder={ltx("login.password")}
             autoComplete="current-password"
@@ -9862,14 +8080,14 @@ export default function ClubPadel04SaaSApp() {
                   onClick={() => setShowLoginPassword(v => !v)}
                   style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
                 >
-                  {showLoginPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                  {showLoginPassword ? ltx("login.hide_password") : ltx("login.show_password")}
                 </button>
                 <button
                     type="button"
                     onClick={openRegister}
                     style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
                   >
-                    Crear cuenta
+                    {ltx("login.create_account")}
                   </button>
                   <button
                   type="button"
@@ -9891,7 +8109,7 @@ export default function ClubPadel04SaaSApp() {
                 abajo no puede ganarle a un `!important` de hoja de
                 estilos, por eso la corrección real vive en el CSS. */}
             <button type="submit" className="cp04-menu-button cp04-login-submit-btn" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
-              Iniciar sesión
+              {ltx("login.sign_in")}
             </button>
 
           </div>
@@ -9902,14 +8120,14 @@ export default function ClubPadel04SaaSApp() {
                     <div>
                       <strong style={{ display:"block", marginBottom:6 }}>Crear cuenta</strong>
                       <p style={{ color:T.textDim, marginTop:0, marginBottom:14, lineHeight:1.55, fontSize:".9rem" }}>
-                        Crea tu acceso como jugador para reservar pistas, consultar actividad y gestionar tu perfil.
+                        {ltx("login.create_desc")}
                       </p>
 
                       <input
                         type="text"
                         value={registerName}
                         onChange={e => { setRegisterName(e.target.value); localStorage.setItem("cp04_register_name", e.target.value); setRegisterError(""); }}
-                        placeholder="Nombre completo"
+                        placeholder={ltx("login.full_name")}
                         autoComplete="name"
                         style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
                       />
@@ -9945,7 +8163,7 @@ export default function ClubPadel04SaaSApp() {
 
                       <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
                         <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button cp04-login-submit-btn" style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
-                          Crear cuenta
+                          {ltx("login.create_account")}
                         </button>
                         <button type="button" className="cp04-menu-button" onClick={closeRegister} style={{ background:"transparent", border:`1px solid ${T.line}` }}>
                           Volver
@@ -9955,9 +8173,9 @@ export default function ClubPadel04SaaSApp() {
                   ) : (
                     <div>
                       <div style={{ color:T.accent, fontSize:"1.4rem", marginBottom:8 }}>✓</div>
-                      <strong style={{ display:"block", marginBottom:8 }}>Cuenta creada correctamente</strong>
+                      <strong style={{ display:"block", marginBottom:8 }}>{ltx("login.account_created")}</strong>
                       <p style={{ color:T.textDim, lineHeight:1.55, marginTop:0, fontSize:".9rem" }}>
-                        Tu cuenta se ha creado. Puede requerir confirmación por email según la configuración de seguridad. Ya puedes intentar iniciar sesión.
+                        {ltx("login.account_ready")}
                       </p>
                       <button type="button" className="cp04-menu-button" onClick={closeRegister}>
                         Volver al inicio de sesión
@@ -9968,40 +8186,42 @@ export default function ClubPadel04SaaSApp() {
               )}
 
 <p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
-            Acceso seguro conectado al sistema de autenticación real.
+            {ltx("login.secure_access")}
           </p>
         </form>
 
-        <div style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
+        <div className="cp04-access-demo-intro" style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
           <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
-            ACCESO POR ROLES
+            {ltx("login.demo_eyebrow")}
           </div>
           <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
-            Ver la app por roles
+            {ltx("login.demo_title")}
           </strong>
           <p style={{ color:T.textDim, marginTop:0, marginBottom:0, lineHeight:1.55 }}>
-            Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.
+            {ltx("login.demo_desc")}
           </p>
         </div>
       </div>
 
 
-            <div className="cp04-grid-2">
-              {Object.keys(roleConfig).map((roleId) => {
+            <div id="cp04-demo-options" className="cp04-grid-2 cp04-access-roles" role="group" aria-label={ltx("login.demo_aria")} data-reveal>
+              {Object.keys(roleConfig).map((roleId, roleIndex) => {
                 const rl = roleLabels[roleId] || roleConfig[roleId];
                 return (
-                  <button key={roleId} type="button" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
-                    style={{ textAlign:"left", border:`1px solid ${T.line}`, borderRadius:24, padding:22, background:"rgba(5,10,18,.72)", color:T.text, cursor:"pointer", minHeight:122 }}>
+                  <button key={roleId} type="button" aria-pressed={pendingRole === roleId} aria-controls="cp04-demo-panel" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
+                    style={{ "--reveal-index": roleIndex, textAlign:"left", border:`1px solid ${T.line}`, borderRadius:24, padding:22, background:"rgba(5,10,18,.72)", color:T.text, cursor:"pointer", minHeight:122 }}>
                     <div className={roleId==="PLAYER" ? "cp04-role-player-id" : undefined} style={{ color: roleId==="PLAYER" ? "#b6ff00" : T.accent, fontWeight:900, letterSpacing:".12em", fontSize:".78rem", marginBottom:8 }}>{roleId}</div>
                     <strong style={{ display:"block", fontSize:"1.1rem", marginBottom:8 }}>{rl.label}</strong>
-                    <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>
+                    <span className="cp04-access-role-icon" aria-hidden="true">{roleId === "PLAYER" ? <IconUsers size={20} /> : roleId === "STAFF" ? <IconCalendar size={20} /> : roleId === "ADMIN" ? <IconShieldCheck size={20} /> : <IconWrench size={20} />}</span>
+                    {pendingRole === roleId && <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>}
                   </button>
                 );
               })}
             </div>
 
+            <AnimatedDisclosure open={Boolean(pendingRole)} id="cp04-demo-panel" returnFocusSelector="#cp04-demo-options button">
             {pendingRole && (
-              <form onSubmit={confirmRoleAccess} style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+              <form className="cp04-access-demo-form" aria-label="Acceso de demostración" onSubmit={confirmRoleAccess} style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
                 <strong style={{ display:"block", marginBottom:8 }}>
                   {ltx("login.acceder_como")} {roleLabels[pendingRole]?.label || roleConfig[pendingRole]?.label}
                 </strong>
@@ -10009,6 +8229,7 @@ export default function ClubPadel04SaaSApp() {
                 <input
                   type={showRolePassword ? "text" : "password"}
                   value={rolePassword}
+                  aria-label={ltx("login.demo_password_aria")}
                   onChange={e => setRolePassword(e.target.value)}
                   placeholder={ltx("login.password")}
                   autoFocus
@@ -10043,8 +8264,9 @@ export default function ClubPadel04SaaSApp() {
               </form>
             )}
 
+            </AnimatedDisclosure>
             {forgotPwdStep !== "idle" && (
-              <div style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+              <div className="cp04-access-recovery" style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
                 {forgotPwdStep === "form" && (
                   <>
                     <strong style={{ display:"block", marginBottom:6 }}>{ltx("login.recuperar_title")}</strong>
@@ -10098,10 +8320,10 @@ export default function ClubPadel04SaaSApp() {
               </div>
             )}
 
-            <p style={{ color:T.textDim, marginTop:24, fontSize:".9rem" }}>
+            <p className="cp04-access-legal" style={{ color:T.textDim, marginTop:24, fontSize:".9rem" }}>
               {ltx("login.legal")}
             </p>
-          </section>
+          </AccessShell>
         </main>
       </>
     );
@@ -10112,19 +8334,25 @@ export default function ClubPadel04SaaSApp() {
       <style>{globalStyles}</style>
       <style>{GALLERY_REAL_IMAGE_STYLES}</style>
       <style>{GALLERY_FORCE_STYLES}</style>
-      <PwaStatusBanners />
+      <div className="cp04-navigation-status"><PwaStatusBanners /></div>
+      <a className="cp04-skip-link" href="#cp04-main-content">{ltx("home.skip_to_content")}</a>
       <div className="cp04-mobilebar">
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <span style={{ width:10, height:10, borderRadius:"50%", background:T.accent }} />
           <strong style={{ fontFamily:T.fontDisplay }}>CLUB PÁDEL 04</strong>
         </div>
         <ClockDisplay compact />
-        <button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú de navegación" aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>{ltx("nav.abrir_menu")}</button>
+        <button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label={ltx("aria.open_nav")} aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>{ltx("nav.abrir_menu")}</button>
       </div>
-      {mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}
+      {mobileMenuOpen && <button className="cp04-overlay" type="button" tabIndex={-1} onClick={() => setMobileMenuOpen(false)} aria-label={ltx("aria.close_nav")} />}
       <div className="cp04-layout">
-        <Sidebar current={current} selectedRole={selectedRole} onClearRole={clearRole} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} />
-        <main className="cp04-main" data-tour="main-content">
+        <Sidebar current={safeCurrentSection} selectedRole={selectedRole} onClearRole={clearRole} mobileOpen={mobileMenuOpen} mobileModal={!tutorialMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} />
+        <main ref={mainContentRef} id="cp04-main-content" className="cp04-main" data-tour="main-content" data-section={safeCurrentSection} aria-label={ltx("aria.main_content")} tabIndex={-1}>
+          {safeCurrentSection !== "inicio" && (
+            <button className="cp04-menu-button cp04-navigation-return" type="button" onClick={() => navigate("inicio")}>
+              <IconHome size={18} /> {ltx("nav.inicio")}
+            </button>
+          )}
           <LazyLoadBoundary label="Cargando módulo...">
             {modules[safeCurrentSection] || modules.inicio}
           </LazyLoadBoundary>
@@ -10135,10 +8363,12 @@ export default function ClubPadel04SaaSApp() {
           selectedRole={selectedRole}
           onNavigate={navigate}
           openRevision={tutorialRevision}
-          onSetMobileMenuOpen={setMobileMenuOpen}
+          onSetMobileMenuOpen={(open) => {
+            setTutorialMenuOpen(open);
+            setMobileMenuOpen(open);
+          }}
         />
       </Suspense>
     </>
   );
 }
-

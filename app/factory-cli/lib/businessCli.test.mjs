@@ -14,6 +14,8 @@ import {
   runDoctorChecks,
   diffBusiness,
   runFactoryPipeline,
+  loadGeneratedBusinessStatusInputs,
+  loadAllGeneratedBusinessStatusInputs,
   BusinessCliError,
 } from "./businessCli.mjs";
 import { FULL_BUSINESS_BLUEPRINT, INVALID_BUSINESS_BLUEPRINT_EXAMPLES } from "../../src/saas-core/factory/businessBlueprintExamples.js";
@@ -96,6 +98,65 @@ test("diffBusiness contra un directorio vacío reporta todo como 'a crear' y no 
     assert.ok(diff.wouldCreate.includes("tenant.config.json"));
     const list = await listGeneratedBusinesses({ baseDir: dir });
     assert.deepEqual(list, []);
+  });
+});
+
+test("loadGeneratedBusinessStatusInputs carga report.json + tenant.config.json de un negocio ya generado", async () => {
+  await withTempDir(async (dir) => {
+    await runFactoryPipeline({ blueprint: FULL_BUSINESS_BLUEPRINT, outputBaseDir: dir });
+    const { report, tenantConfig } = await loadGeneratedBusinessStatusInputs({ businessId: FULL_BUSINESS_BLUEPRINT.businessId, baseDir: dir });
+    assert.equal(report.businessId, FULL_BUSINESS_BLUEPRINT.businessId);
+    assert.equal(tenantConfig.tenantId, FULL_BUSINESS_BLUEPRINT.tenantId);
+  });
+});
+
+test("loadGeneratedBusinessStatusInputs de un negocio inexistente lanza BusinessCliError legible", async () => {
+  await withTempDir(async (dir) => {
+    await assert.rejects(() => loadGeneratedBusinessStatusInputs({ businessId: "no-existe", baseDir: dir }), BusinessCliError);
+  });
+});
+
+// --- loadAllGeneratedBusinessStatusInputs (Prompt Agencia IA 5/7) ---
+
+test("loadAllGeneratedBusinessStatusInputs en directorio vacío devuelve {loaded:[], errors:[]}", async () => {
+  await withTempDir(async (dir) => {
+    const { loaded, errors } = await loadAllGeneratedBusinessStatusInputs({ baseDir: dir });
+    assert.deepEqual(loaded, []);
+    assert.deepEqual(errors, []);
+  });
+});
+
+test("loadAllGeneratedBusinessStatusInputs carga todos los negocios disponibles sin lanzar", async () => {
+  await withTempDir(async (dir) => {
+    await runFactoryPipeline({ blueprint: FULL_BUSINESS_BLUEPRINT, outputBaseDir: dir });
+    const { loaded, errors } = await loadAllGeneratedBusinessStatusInputs({ baseDir: dir });
+    assert.equal(loaded.length, 1);
+    assert.equal(errors.length, 0);
+    assert.equal(loaded[0].businessId, FULL_BUSINESS_BLUEPRINT.businessId);
+    assert.ok(loaded[0].report);
+    assert.ok(loaded[0].tenantConfig);
+  });
+});
+
+test("loadAllGeneratedBusinessStatusInputs documenta los negocios corruptos en 'errors', nunca lanza", async () => {
+  await withTempDir(async (dir) => {
+    // Un negocio con business.blueprint.json pero sin report.json ni tenant.config.json:
+    // listGeneratedBusinesses lo encontrará, pero loadGeneratedBusinessStatusInputs fallará.
+    const { mkdir: _mkdir } = await import("node:fs/promises");
+    const corruptDir = path.join(dir, "negocio-corrupto");
+    await _mkdir(corruptDir, { recursive: true });
+    await writeFile(
+      path.join(corruptDir, "business.blueprint.json"),
+      JSON.stringify({ businessId: "negocio-corrupto", commercialName: "Corrupto", sector: "padel", plan: "starter" }),
+      "utf8"
+    );
+    // Generar uno real para confirmar que sigue funcionando en paralelo
+    await runFactoryPipeline({ blueprint: FULL_BUSINESS_BLUEPRINT, outputBaseDir: dir });
+    const { loaded, errors } = await loadAllGeneratedBusinessStatusInputs({ baseDir: dir });
+    assert.equal(loaded.length, 1);
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0].businessId, "negocio-corrupto");
+    assert.ok(typeof errors[0].error === "string");
   });
 });
 

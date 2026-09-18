@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "businessId": "clinica-dental-demo-factory",
+  "tenantId": "clinica-dental-demo-factory",
+  "commercialName": "Dental Demo Factory",
+  "legalName": "Dental Demo Factory S.L. (ficticia)",
+  "sector": "dental",
+  "subsector": "odontologia-general",
+  "country": "ES",
+  "timezone": "Europe/Madrid",
+  "locale": "es-ES",
+  "currencies": ["EUR"],
+  "publicInfo": {
+    "shortDescription": "Clínica dental ficticia de demostración de la fábrica SaaS: revisiones, limpieza y ortodoncia.",
+    "website": "https://dental-demo-factory.example",
+    "email": "hola@dental-demo-factory.example",
+    "address": { "city": "Málaga", "region": "Andalucía", "country": "ES" }
+  },
+  "branding": {
+    "logoRef": "assets/logo-placeholder.svg",
+    "colors": { "primary": "#1c6fd6", "accent": "#2fd6b0", "bg": "#ffffff", "surface": "#f4f8fb", "text": "#0c1420" },
+    "fonts": { "display": "'Poppins', sans-serif", "body": "'Inter', sans-serif" },
+    "tone": "cercano-profesional"
+  },
+  "plan": "pro",
+  "modules": [
+    "inicio", "citas", "clientes", "pagos", "automatizaciones", "soporte", "informes", "configuracion",
+    "agenda", "profesionales", "recursos", "servicios", "documentos", "formularios"
+  ],
+  "services": [
+    { "name": "Revisión general", "durationMinutes": 30, "priceHint": 35 },
+    { "name": "Limpieza dental", "durationMinutes": 45, "priceHint": 60 },
+    { "name": "Ortodoncia (consulta)", "durationMinutes": 30, "priceHint": 40 }
+  ],
+  "professionals": [
+    { "name": "Dra. Elena Ruiz (ficticia)", "role": "dentista", "functions": ["odontologia-general"] },
+    { "name": "Dr. Marcos Vidal (ficticio)", "role": "dentista", "functions": ["ortodoncia"] }
+  ],
+  "resources": [
+    { "name": "Consulta 1", "kind": "consulta" },
+    { "name": "Consulta 2", "kind": "consulta" }
+  ],
+  "schedules": {
+    "enabled": true,
+    "weekdays": { "open": "09:00", "close": "20:00" },
+    "saturday": { "open": "10:00", "close": "14:00" },
+    "sunday": null
+  },
+  "locations": [
+    { "name": "Dental Demo Factory — Centro", "city": "Málaga" }
+  ],
+  "automations": ["alta_cliente", "confirmacion", "cancelacion", "recordatorio", "encuesta", "documento", "pago"],
+  "aiCapabilities": ["demo_data_generation", "landing_copy_draft"],
+  "integrations": {
+    "automation": { "status": "not_configured", "envVars": ["MAKE_WEBHOOK_URL"] },
+    "dataRepository": { "status": "not_configured", "envVars": ["AIRTABLE_API_KEY", "AIRTABLE_BASE_ID"] },
+    "payments": { "status": "not_configured", "envVars": ["STRIPE_SECRET_KEY"] },
+    "messaging": { "status": "not_configured", "envVars": ["WHATSAPP_BUSINESS_TOKEN"] },
+    "calendar": { "status": "not_configured", "envVars": ["GOOGLE_CALENDAR_CLIENT_ID"] }
+  },
+  "pwa": {
+    "shortName": "Dental Demo",
+    "themeColor": "#1c6fd6",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": ["header", "hero", "valueProposition", "benefits", "services", "howItWorks", "testimonials", "faq", "cta", "contact", "footer"],
+    "ctaLabel": "Pedir cita",
+    "ctaHref": "#contacto"
+  },
+  "demoData": { "enabled": true, "seed": "clinica-dental-demo-factory", "sizes": { "customers": 15, "professionals": 2, "appointments": 20, "incidents": 2 } },
+  "flags": {},
+  "limits": { "maxUsers": 20, "maxLocations": 1 },
+  "privacy": { "regulatedSector": true, "sensitiveDataCategories": ["salud_o_legal_placeholder"] },
+  "manualSteps": [
+    "Revisión normativa sanitaria/odontológica antes de producción",
+    "Sustituir logotipo/branding placeholder por assets reales"
+  ],
+  "generationMeta": {
+    "generatedBy": "saas-factory:demo-fase12",
+    "sourceInstruction": "Crear una solución SaaS para una clínica dental de demostración, con dos dentistas, agenda, pacientes y recordatorios.",
+    "notes": "Caso de prueba 2/3 (PROMPT AGENCIA IA 2/7, Fase 9/12): negocio demo ficticio, sin datos reales, sin conexión a proveedores. Ejecutar SIEMPRE en dry-run. businessId distinto de la clínica dental ya generada en sesiones previas (clinica-dental-sonrisas-de-malaga) para no pisarla."
+  }
+}

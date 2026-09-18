@@ -2013,11 +2013,8 @@ async function handleAltaJugador(request, env) {
 // PASO 07C (2026-07-19): Baja de Jugador + Promoción — réplica deliberada
 // del patrón de handleAltaJugador (mismo gate RBAC, misma forma de
 // respuesta, mismo criterio de "nunca confirmar sin respuesta real de
-// Make"). MAKE_BAJA_JUGADOR_WEBHOOK todavía no está configurado como
-// secret en ningún entorno (ver wrangler.toml) — mientras no lo esté,
-// este handler responde 503 de forma segura y nunca inventa una URL ni
-// un secreto. Cuando exista el webhook real, no haría falta tocar nada
-// más de esta función: basta con configurar el secret.
+// Make"). MAKE_BAJA_JUGADOR_WEBHOOK está configurado como secret en
+// Cloudflare Workers producción (confirmado 2026-09-09 vía wrangler secret list).
 async function handleBajaJugador(request, env) {
   const headers = corsHeaders(request, env);
 
@@ -2187,6 +2184,464 @@ async function handleBajaJugador(request, env) {
       message: "Solicitud de baja enviada · pendiente de confirmación",
       makeResponse: responseText || null,
     },
+    200,
+    headers
+  );
+}
+
+// FLUJO 11 (2026-09-08): Resultados y Clasificación de Torneos — mismo patrón que
+// handleAltaJugador/handleBajaJugador. El handler recibe { id_partido, juegos_local,
+// juegos_visitante } y reenvía al webhook Make 5330078, que busca el partido en Airtable
+// (tblai3jIKBil0yeTC), calcula resultado/puntos y envía email al admin.
+// Gate de rol: solo STAFF y ADMIN pueden registrar resultados.
+// MAKE_RESULTADOS_TORNEO_WEBHOOK no configurado → 503 seguro (nunca inventa URL).
+async function handleTorneoResultado(request, env) {
+  const headers = corsHeaders(request, env);
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (request.method !== "POST") {
+    return jsonResponse(
+      { ok: false, error: "Method not allowed" },
+      405,
+      { ...headers, Allow: "POST, OPTIONS" }
+    );
+  }
+
+  if (!env.MAKE_RESULTADOS_TORNEO_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "Torneo results webhook not configured" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400, headers);
+  }
+
+  const { id_partido, juegos_local, juegos_visitante } = payload ?? {};
+
+  const fields = {};
+  if (!id_partido || typeof id_partido !== "string" || !id_partido.trim()) {
+    fields.id_partido = "Requerido";
+  }
+  if (typeof juegos_local !== "number" || !Number.isInteger(juegos_local) || juegos_local < 0) {
+    fields.juegos_local = "Número entero no negativo requerido";
+  }
+  if (typeof juegos_visitante !== "number" || !Number.isInteger(juegos_visitante) || juegos_visitante < 0) {
+    fields.juegos_visitante = "Número entero no negativo requerido";
+  }
+
+  if (Object.keys(fields).length > 0) {
+    return jsonResponse({ ok: false, error: "Validation error", fields }, 400, headers);
+  }
+
+  if (juegos_local === juegos_visitante) {
+    return jsonResponse(
+      { ok: false, error: "Draw not allowed: padel requires a winner" },
+      422,
+      headers
+    );
+  }
+
+  const makeResponse = await fetch(env.MAKE_RESULTADOS_TORNEO_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id_partido: id_partido.trim(),
+      juegos_local,
+      juegos_visitante,
+    }),
+  });
+
+  const responseText = await makeResponse.text();
+
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      { ok: false, error: "Make request failed", status: makeResponse.status },
+      502,
+      headers
+    );
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      status: "forwarded",
+      message: "Resultado enviado · clasificación pendiente de actualización",
+      makeResponse: responseText || null,
+    },
+    200,
+    headers
+  );
+}
+
+// FLUJO 13 (2026-09-08): Cruces de Torneo — registra el resultado de un partido del
+// cuadro eliminatorio en Airtable (tabla tblWPIznF0BXTteuL). La App envía partido_id,
+// equipo1 y equipo2 (nombres de las parejas) y el ganador como "equipo1" | "equipo2".
+// El Worker calcula resultado_equipo1/equipo2 server-side (1/0) — el cliente no fija
+// scores. Gate: solo STAFF y ADMIN. MAKE_CRUCES_TORNEO_WEBHOOK no configurado → 503.
+async function handleCruceTorneo(request, env) {
+  const headers = corsHeaders(request, env);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method !== "POST") {
+    return jsonResponse(
+      { ok: false, error: "Method not allowed" },
+      405,
+      { ...headers, Allow: "POST, OPTIONS" }
+    );
+  }
+  if (!env.MAKE_CRUCES_TORNEO_WEBHOOK) {
+    return jsonResponse(
+      { ok: false, error: "Cruces webhook not configured" },
+      503,
+      headers
+    );
+  }
+
+  let payload;
+  try { payload = await request.json(); } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400, headers);
+  }
+
+  const { partido_id, equipo1, equipo2, ganador } = payload ?? {};
+
+  const fields = {};
+  if (!partido_id || typeof partido_id !== "string" || !partido_id.trim()) {
+    fields.partido_id = "Requerido";
+  }
+  if (!equipo1 || typeof equipo1 !== "string" || !equipo1.trim()) {
+    fields.equipo1 = "Requerido";
+  }
+  if (!equipo2 || typeof equipo2 !== "string" || !equipo2.trim()) {
+    fields.equipo2 = "Requerido";
+  }
+  if (ganador !== "equipo1" && ganador !== "equipo2") {
+    fields.ganador = "Debe ser 'equipo1' o 'equipo2'";
+  }
+
+  if (Object.keys(fields).length > 0) {
+    return jsonResponse({ ok: false, error: "Validation error", fields }, 400, headers);
+  }
+
+  // Resultados calculados server-side — el cliente solo indica ganador, no scores
+  const resultado_equipo1 = ganador === "equipo1" ? 1 : 0;
+  const resultado_equipo2 = ganador === "equipo2" ? 1 : 0;
+
+  // Make busca el partido en Airtable por campo {Id} numérico.
+  // Si partido_id es un string puramente numérico (ej. "17"), se convierte a
+  // número para que la fórmula Airtable `{Id} = 17` funcione sin typecast.
+  const pidTrimmed = partido_id.trim();
+  const pidForMake = /^\d+$/.test(pidTrimmed) ? parseInt(pidTrimmed, 10) : pidTrimmed;
+
+  const makeResponse = await fetch(env.MAKE_CRUCES_TORNEO_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      partido_id: pidForMake,
+      resultado_equipo1,
+      resultado_equipo2,
+    }),
+  });
+
+  const responseText = await makeResponse.text();
+  if (!makeResponse.ok) {
+    return jsonResponse(
+      { ok: false, error: "Make request failed", status: makeResponse.status },
+      502,
+      headers
+    );
+  }
+  return jsonResponse(
+    {
+      ok: true,
+      status: "forwarded",
+      message: `Cruce ${pidTrimmed} registrado · ganador: ${ganador === "equipo1" ? equipo1.trim() : equipo2.trim()}`,
+      makeResponse: responseText || null,
+    },
+    200,
+    headers
+  );
+}
+
+// FLUJO 9 (2026-09-08): Confirmación Inscripción Torneo — el Worker crea la inscripción
+// en Airtable (tabla tblVyIyvBqyC6YEKo). Make 5791116 (scheduled 1h) la detecta,
+// envía el email de confirmación y marca email_confirmacion_enviado=true.
+// El cliente envía torneo_id (record ID de Airtable) + jugador_nombre + notas.
+// Email extraído del JWT — nunca del body. Idempotencia: si ya existe inscripción
+// para este email+torneo → devuelve already_registered sin crear duplicado.
+// Gate: PLAYER, STAFF, ADMIN. AIRTABLE_TOKEN no configurado → 503 seguro.
+const INSCRIPCIONES_TABLE = "tblVyIyvBqyC6YEKo";
+
+async function handleInscribirTorneo(request, env) {
+  const headers = corsHeaders(request, env);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method !== "POST") {
+    return jsonResponse(
+      { ok: false, error: "Method not allowed" },
+      405,
+      { ...headers, Allow: "POST, OPTIONS" }
+    );
+  }
+  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID) {
+    return jsonResponse({ ok: false, error: "Airtable not configured" }, 503, headers);
+  }
+
+  let payload;
+  try { payload = await request.json(); } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400, headers);
+  }
+
+  const { torneo_id, jugador_nombre, notas } = payload ?? {};
+
+  const fields = {};
+  if (!torneo_id || typeof torneo_id !== "string" || !torneo_id.startsWith("rec")) {
+    fields.torneo_id = "Requerido (record ID de Airtable, ej. recXXX)";
+  }
+  if (!jugador_nombre || typeof jugador_nombre !== "string" || !jugador_nombre.trim()) {
+    fields.jugador_nombre = "Requerido";
+  }
+  if (Object.keys(fields).length > 0) {
+    return jsonResponse({ ok: false, error: "Validation error", fields }, 400, headers);
+  }
+
+  // Email del jugador extraído del JWT — nunca del body
+  const authHeader = request.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s*/i, "").trim();
+  let emailJugador = null;
+  if (token) {
+    try {
+      const parts = token.split(".");
+      if (parts.length >= 2) {
+        const decoded = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+        emailJugador = decoded.email || decoded.sub || null;
+      }
+    } catch { emailJugador = null; }
+  }
+  if (!emailJugador || !emailJugador.includes("@")) {
+    return jsonResponse({ ok: false, error: "Cannot extract email from token" }, 400, headers);
+  }
+  const emailNorm = emailJugador.toLowerCase().trim();
+
+  // Idempotencia: buscar inscripción existente para este email + torneo
+  try {
+    const formula = encodeURIComponent(`{email_jugador}='${emailNorm}'`);
+    const searchUrl =
+      `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${INSCRIPCIONES_TABLE}` +
+      `?filterByFormula=${formula}&fields[]=fldUspk0sHvQuaLiT&maxRecords=50`;
+    const searchRes = await fetch(searchUrl, {
+      headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}` },
+    });
+    if (searchRes.ok) {
+      const data = await searchRes.json();
+      const duplicate = data.records?.find(r =>
+        r.fields?.fldUspk0sHvQuaLiT?.some(t => t.id === torneo_id)
+      );
+      if (duplicate) {
+        return jsonResponse(
+          { ok: true, status: "already_registered", record_id: duplicate.id },
+          200,
+          headers
+        );
+      }
+    }
+  } catch { /* fail-open: si Airtable no responde, intentamos crear igualmente */ }
+
+  // Crear inscripción
+  const createUrl = `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${INSCRIPCIONES_TABLE}`;
+  const createBody = {
+    fields: {
+      fldDpLwy8syXfwfgd: jugador_nombre.trim(),
+      fld2dQAPTiNIu3ABB: emailNorm,
+      fldLngU5jWJM3pal7: "Confirmada",
+      fldUspk0sHvQuaLiT: [{ id: torneo_id }],
+      fldV7yaHgndHatUnJ: new Date().toISOString(),
+      fldh7XtIgWQBFfWAq: typeof notas === "string" ? notas.trim() : "",
+      fldCjbdCrHTWxDSvJ: false,
+    },
+    typecast: true,
+  };
+  let createResp;
+  try {
+    createResp = await fetch(createUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(createBody),
+    });
+  } catch {
+    return jsonResponse({ ok: false, error: "Airtable network error" }, 502, headers);
+  }
+  if (!createResp.ok) {
+    return jsonResponse(
+      { ok: false, error: "Airtable error", status: createResp.status },
+      502,
+      headers
+    );
+  }
+  const created = await createResp.json();
+  return jsonResponse(
+    {
+      ok: true,
+      status: "inscripcion_creada",
+      record_id: created.id,
+      torneo_id,
+      jugador_nombre: jugador_nombre.trim(),
+    },
+    201,
+    headers
+  );
+}
+
+// FLUJO 12 (2026-09-08): Reto 04 + Puntos — puntos calculados server-side desde
+// RETO_CATALOG; el cliente solo envía codigo_reto. El email del jugador se extrae
+// del JWT del Bearer token (nunca del body). Idempotencia persistente: el Worker
+// verifica/escribe `historial_retos` en Airtable antes de llamar a Make.
+// Gate: cualquier rol autenticado. MAKE_RETO04_WEBHOOK no configurado → 503 seguro.
+const RETO_CATALOG = Object.freeze({
+  "RETO-NUEVO-SOCIO": { puntos: 25, descripcion: "Bienvenida al club" },
+  "RETO-PERFIL":      { puntos: 10, descripcion: "Perfil completado al 100%" },
+  "RETO-RESERVA-10":  { puntos: 5,  descripcion: "10 reservas realizadas" },
+  "RETO-RACHA-7":     { puntos: 20, descripcion: "Racha de 7 días activo" },
+  "RETO-TORNEO":      { puntos: 15, descripcion: "Torneo completado" },
+  "RETO-GEN":         { puntos: 5,  descripcion: "Logro completado" },
+});
+
+const RETO04_JUGADORES_TABLE = "tblCKuA2RZaj2BsHt";
+
+async function handleReto04Completar(request, env) {
+  const headers = corsHeaders(request, env);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method !== "POST") {
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405, { ...headers, Allow: "POST, OPTIONS" });
+  }
+  if (!env.MAKE_RETO04_WEBHOOK) {
+    return jsonResponse({ ok: false, error: "Reto webhook not configured" }, 503, headers);
+  }
+  let payload;
+  try { payload = await request.json(); } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400, headers);
+  }
+  const { codigo_reto } = payload ?? {};
+  if (!codigo_reto || typeof codigo_reto !== "string" || !codigo_reto.trim()) {
+    return jsonResponse({ ok: false, error: "Validation error", fields: { codigo_reto: "Requerido" } }, 400, headers);
+  }
+  const codigoNorm = codigo_reto.trim();
+  const reto = RETO_CATALOG[codigoNorm];
+  if (!reto) {
+    return jsonResponse({ ok: false, error: "RETO_UNKNOWN", message: `Código desconocido: ${codigo_reto}` }, 400, headers);
+  }
+
+  // Email del jugador extraído del JWT — nunca del body
+  const authHeader = request.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s*/i, "").trim();
+  let emailJugador = null;
+  if (token) {
+    try {
+      const parts = token.split(".");
+      if (parts.length >= 2) {
+        const decoded = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+        emailJugador = decoded.email || decoded.sub || null;
+      }
+    } catch { emailJugador = null; }
+  }
+  if (!emailJugador) {
+    return jsonResponse({ ok: false, error: "Cannot extract email from token" }, 400, headers);
+  }
+  const emailNorm = emailJugador.toLowerCase().trim();
+
+  // ── IDEMPOTENCIA PERSISTENTE (Airtable historial_retos) ──────────────
+  // El Worker usa AIRTABLE_TOKEN + AIRTABLE_BASE_ID (ya configurados) para:
+  // 1) buscar el jugador ACTIVO por email,
+  // 2) verificar si codigo_reto ya está en historial_retos,
+  // 3) si NO está: escribir el código en historial_retos ANTES de llamar a Make
+  //    (si Make falla después, el historial previene doble adjudicación).
+  // Si Airtable no responde (network error), fail-open: se llama a Make igualmente.
+  let jugadorRecordId = null;
+  let historialRetos = "";
+
+  if (env.AIRTABLE_TOKEN && env.AIRTABLE_BASE_ID) {
+    try {
+      const formula = encodeURIComponent(
+        `AND({email_jugador}='${emailNorm}',{estado_jugador}='ACTIVO')`
+      );
+      const searchUrl =
+        `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${RETO04_JUGADORES_TABLE}` +
+        `?filterByFormula=${formula}&fields[]=historial_retos&maxRecords=1`;
+      const searchRes = await fetch(searchUrl, {
+        headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}` },
+      });
+      if (searchRes.ok) {
+        const data = await searchRes.json();
+        const rec = data.records?.[0];
+        if (rec) {
+          jugadorRecordId = rec.id;
+          historialRetos = rec.fields?.historial_retos || "";
+        }
+      }
+    } catch { /* fail-open: Airtable no disponible */ }
+
+    const yaProcessados = historialRetos
+      .split(",")
+      .map(r => r.trim())
+      .filter(Boolean);
+
+    if (yaProcessados.includes(codigoNorm)) {
+      return jsonResponse(
+        { ok: true, status: "already_processed", idempotent: true,
+          message: `Reto ${codigoNorm} ya fue procesado para este jugador` },
+        200,
+        headers
+      );
+    }
+
+    // Escribir historial ANTES de llamar a Make para evitar doble adjudicación
+    if (jugadorRecordId) {
+      try {
+        const nuevoHistorial = yaProcessados.length > 0
+          ? `${historialRetos.trim()},${codigoNorm}`
+          : codigoNorm;
+        await fetch(
+          `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${RETO04_JUGADORES_TABLE}/${jugadorRecordId}`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ fields: { historial_retos: nuevoHistorial } }),
+          }
+        );
+      } catch { /* non-blocking: Make procesará igualmente */ }
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────
+
+  const makeResponse = await fetch(env.MAKE_RETO04_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: emailNorm,
+      puntos: reto.puntos,
+      descripcion: reto.descripcion,
+      codigo_reto: codigoNorm,
+    }),
+  });
+  const responseText = await makeResponse.text();
+  if (!makeResponse.ok) {
+    return jsonResponse({ ok: false, error: "Make request failed", status: makeResponse.status }, 502, headers);
+  }
+  return jsonResponse(
+    { ok: true, status: "forwarded", message: `Reto ${codigoNorm} registrado · ${reto.puntos} puntos en proceso`, makeResponse: responseText || null },
     200,
     headers
   );
@@ -4363,6 +4818,70 @@ export default {
         }
 
         return await handleBajaJugador(request, env);
+      }
+
+      if (
+        url.pathname === "/api/torneos/inscribir" ||
+        url.pathname === "/torneos/inscribir"
+      ) {
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["PLAYER", "STAFF", "ADMIN"]);
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+        return await handleInscribirTorneo(request, env);
+      }
+
+      if (
+        url.pathname === "/api/torneos/cruce" ||
+        url.pathname === "/torneos/cruce"
+      ) {
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["STAFF", "ADMIN"]);
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+        return await handleCruceTorneo(request, env);
+      }
+
+      if (
+        url.pathname === "/api/torneos/resultado" ||
+        url.pathname === "/torneos/resultado"
+      ) {
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["STAFF", "ADMIN"]);
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+        return await handleTorneoResultado(request, env);
+      }
+
+      if (
+        url.pathname === "/api/retos/completar" ||
+        url.pathname === "/retos/completar"
+      ) {
+        if (
+          request.method !== "OPTIONS" &&
+          env.CP04_ENFORCE_ROLE_GATES === "true"
+        ) {
+          const gate = await requireRoles(request, env, ["PLAYER", "STAFF", "ADMIN"]);
+          if (!gate.ok) {
+            return jsonResponse(gate.body, gate.status, corsHeaders(request, env));
+          }
+        }
+        return await handleReto04Completar(request, env);
       }
 
       if (
