@@ -232,6 +232,18 @@ const FAQ = [
 
 const AUTOMATIZACIONES_KEYS = ["item_1", "item_2", "item_3", "item_4"];
 
+// COMPARATIVA (Fase 1 UX 2026-09-21): gestión manual vs gestión con Club
+// Pádel 04. Patrón comercial breve y visual — no copia estructura sectorial
+// externa, solo el concepto de comparativa por filas con check/cross.
+const COMPARATIVA_KEYS = ["reservas", "espera", "acceso", "informes"];
+
+const COMPARATIVA = [
+  { aspecto: "Reservar pista", manual: "Llamadas y WhatsApp en horario de recepción", cp04: "Reserva online 24/7 desde el móvil, confirmación inmediata" },
+  { aspecto: "Pista cancelada", manual: "Hueco vacío hasta que alguien llama", cp04: "La lista de espera la reofrece automáticamente" },
+  { aspecto: "Acceso al club", manual: "Comprobar listas a mano en la entrada", cp04: "QR por reserva: entrada sin colas ni papeles" },
+  { aspecto: "Saber cómo va el club", manual: "Hojas de cálculo desactualizadas", cp04: "Ocupación, ingresos y actividad siempre al día" },
+];
+
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
@@ -307,6 +319,36 @@ export default function Landing({ onEnterLogin }) {
       {/* ZONA DE VÍDEOS · D.png (night court) */}
       <LandingMedia blocked={demoOpen} />
 
+      {/* COMPARATIVA: manual vs Club Pádel 04 (Fase 1 UX) */}
+      <section id="comparativa" className="cp04-section cp04-section--comparativa">
+        <Container>
+          <SectionTitle eyebrow={tx("landing.comparativa.eyebrow")} title={tx("landing.comparativa.title")} subtitle={tx("landing.comparativa.subtitle")} align="center" />
+          <div style={{ borderRadius: 22, border: `1px solid ${T.line}`, overflow: "hidden", background: "rgba(255,255,255,.02)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(120px,1fr) minmax(150px,1.4fr) minmax(150px,1.4fr)", background: "rgba(255,255,255,.04)", borderBottom: `1px solid ${T.line}`, fontFamily: T.fontDisplay, fontWeight: 800, fontSize: ".8rem" }}>
+              <div style={{ padding: "14px 16px", color: T.textDim }}></div>
+              <div style={{ padding: "14px 16px", color: T.textDim }}>{tx("landing.comparativa.col_manual")}</div>
+              <div style={{ padding: "14px 16px", color: T.accent, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.accent, boxShadow: `0 0 8px ${T.accent}` }} />
+                Club Pádel 04
+              </div>
+            </div>
+            {COMPARATIVA.map((row, index) => (
+              <div key={row.aspecto} style={{ display: "grid", gridTemplateColumns: "minmax(120px,1fr) minmax(150px,1.4fr) minmax(150px,1.4fr)", borderBottom: index < COMPARATIVA.length - 1 ? `1px solid ${T.line}` : "none" }}>
+                <div style={{ padding: "14px 16px", fontWeight: 700, fontSize: ".84rem" }}>{tx(`landing.comparativa.${COMPARATIVA_KEYS[index]}.aspecto`)}</div>
+                <div style={{ padding: "14px 16px", color: T.textDim, fontSize: ".84rem", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span aria-hidden="true" style={{ color: T.textDim, fontSize: ".9rem", lineHeight: 1 }}>✕</span>
+                  {tx(`landing.comparativa.${COMPARATIVA_KEYS[index]}.manual`)}
+                </div>
+                <div style={{ padding: "14px 16px", fontSize: ".84rem", display: "flex", alignItems: "center", gap: 8, background: "rgba(182,255,0,.04)" }}>
+                  <IconCheck size={15} color={T.accent} style={{ flexShrink: 0 }} />
+                  {tx(`landing.comparativa.${COMPARATIVA_KEYS[index]}.cp04`)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
       {/* PRODUCTO: reservas / gestión / jugador / qr / torneos / métricas */}
       <section id="producto" className="cp04-section cp04-section--producto">
         <Container>
@@ -351,8 +393,8 @@ export default function Landing({ onEnterLogin }) {
         </Container>
       </section>
 
-      {/* INTEGRACIONES */}
-      <section className="cp04-section cp04-section--dark">
+      {/* INTEGRACIONES — franja estándar (antes --dark, para alternar con Seguridad) */}
+      <section className="cp04-section cp04-section--integraciones">
         <Container>
           <SectionTitle eyebrow={tx("landing.integraciones.eyebrow")} title={tx("landing.integraciones.title")} align="center" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 14, marginBottom: 18 }}>
@@ -416,7 +458,7 @@ export default function Landing({ onEnterLogin }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 18 }}>
             {PLANES.map((p, index) => (
               <div key={p.nombre} style={{ padding: 26, borderRadius: 22, border: `1px solid ${p.destacado ? T.accent : T.line}`, background: p.destacado ? "linear-gradient(160deg, rgba(182,255,0,.09), rgba(255,255,255,.02))" : "rgba(255,255,255,.03)", position: "relative" }}>
-                {p.descacado && (<span style={{ position: "absolute", top: -12, left: 24, background: T.accent, color: "#06100a", fontSize: ".68rem", fontWeight: 900, padding: "4px 12px", borderRadius: 999 }}>{tx("landing.planes.most_chosen")}</span>)}
+                {p.destacado && (<span style={{ position: "absolute", top: -12, left: 24, background: T.accent, color: "#06100a", fontSize: ".68rem", fontWeight: 900, padding: "4px 12px", borderRadius: 999 }}>{tx("landing.planes.most_chosen")}</span>)}
                 <strong style={{ fontFamily: T.fontDisplay, fontSize: "1.2rem", display: "block", marginBottom: 6 }}>{p.nombre}</strong>
                 <div style={{ color: T.accent, fontWeight: 900, fontFamily: T.fontDisplay, fontSize: "1.3rem", marginBottom: 10 }}>{tx(`landing.planes.${PLANES_KEYS[index]}.price`)}</div>
                 <p style={{ color: T.textDim, fontSize: ".86rem", lineHeight: 1.6, marginBottom: 18 }}>{tx(`landing.planes.${PLANES_KEYS[index]}.desc`)}</p>
@@ -456,17 +498,37 @@ export default function Landing({ onEnterLogin }) {
         </Container>
       </section>
 
-      {/* FOOTER */}
-      <footer style={{ borderTop: `1px solid ${T.line}`, padding: "36px 0" }}>
-        <Container style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: T.fontDisplay, fontWeight: 900 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent }} />
-            Club Pádel 04
+      {/* FOOTER enriquecido (Fase 1 UX): marca+tagline / navegación / contacto+acceso */}
+      <footer style={{ borderTop: `1px solid ${T.line}`, padding: "44px 0 32px" }}>
+        <Container>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 32, marginBottom: 28 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: T.fontDisplay, fontWeight: 900, marginBottom: 10 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, boxShadow: `0 0 8px ${T.accent}` }} />
+                Club Pádel 04
+              </div>
+              <p style={{ color: T.textDim, fontSize: ".82rem", lineHeight: 1.6, margin: 0, maxWidth: 260 }}>{tx("landing.footer.tagline")}</p>
+            </div>
+            <nav aria-label={tx("landing.footer.nav_label")} style={{ display: "grid", gap: 8, alignContent: "start" }}>
+              <strong style={{ fontFamily: T.fontDisplay, fontSize: ".78rem", letterSpacing: ".12em", textTransform: "uppercase", color: T.textDim }}>{tx("landing.footer.nav_title")}</strong>
+              {NAV_LINKS.map((l) => (
+                <a key={l.href} href={l.href} style={{ color: T.textDim, textDecoration: "none", fontSize: ".86rem" }}>{tx(l.label)}</a>
+              ))}
+            </nav>
+            <div style={{ display: "grid", gap: 8, alignContent: "start" }}>
+              <strong style={{ fontFamily: T.fontDisplay, fontSize: ".78rem", letterSpacing: ".12em", textTransform: "uppercase", color: T.textDim }}>{tx("landing.footer.access_title")}</strong>
+              <button type="button" onClick={onEnterLogin} style={{ background: "transparent", border: "none", color: T.text, fontSize: ".86rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, padding: 0, textAlign: "left" }}>
+                {tx("landing.footer.clients_access")}
+              </button>
+              <button type="button" onClick={() => setDemoOpen(true)} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: ".86rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, padding: 0, textAlign: "left" }}>
+                {tx("landing.planes.cta")}
+              </button>
+            </div>
           </div>
-          <div style={{ color: T.textDim, fontSize: ".78rem" }}>© {new Date().getFullYear()} Club Pádel 04 · {tx("landing.footer.tagline")}</div>
-          <button type="button" onClick={onEnterLogin} style={{ background: "transparent", border: "none", color: T.textDim, fontSize: ".82rem", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
-            {tx("landing.footer.clients_access")}
-          </button>
+          <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 20, display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 12, alignItems: "center", color: T.textDim, fontSize: ".76rem" }}>
+            <span>© {new Date().getFullYear()} Club Pádel 04</span>
+            <span>{tx("landing.footer.legal_note")}</span>
+          </div>
         </Container>
       </footer>
 

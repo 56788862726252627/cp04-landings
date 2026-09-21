@@ -4022,6 +4022,77 @@ export function t(key, lang) {
   try {
     const code = lang?.code || "es-ES";
     const base = code.split("-")[0];
+
+const PRODUCT_NINETEENTH_TRANSLATIONS = Object.freeze({
+  "es-ES": {
+    "landing.comparativa.eyebrow": "Comparativa",
+    "landing.comparativa.title": "Gestión manual vs. gestión con Club Pádel 04",
+    "landing.comparativa.subtitle": "Lo mismo que haces hoy, sin el trabajo repetitivo.",
+    "landing.comparativa.col_manual": "Gestión manual",
+    "landing.comparativa.reservas.aspecto": "Reservar pista",
+    "landing.comparativa.reservas.manual": "Llamadas y WhatsApp en horario de recepción",
+    "landing.comparativa.reservas.cp04": "Reserva online 24/7 desde el móvil, confirmación inmediata",
+    "landing.comparativa.espera.aspecto": "Pista cancelada",
+    "landing.comparativa.espera.manual": "Hueco vacío hasta que alguien llama",
+    "landing.comparativa.espera.cp04": "La lista de espera la reofrece automáticamente",
+    "landing.comparativa.acceso.aspecto": "Acceso al club",
+    "landing.comparativa.acceso.manual": "Comprobar listas a mano en la entrada",
+    "landing.comparativa.acceso.cp04": "QR por reserva: entrada sin colas ni papeles",
+    "landing.comparativa.informes.aspecto": "Saber cómo va el club",
+    "landing.comparativa.informes.manual": "Hojas de cálculo desactualizadas",
+    "landing.comparativa.informes.cp04": "Ocupación, ingresos y actividad siempre al día",
+    "landing.footer.nav_label": "Navegación de la página",
+    "landing.footer.nav_title": "Secciones",
+    "landing.footer.access_title": "Acceso",
+    "landing.footer.legal_note": "Datos de ejemplo en las demos · Privacidad integrada (RGPD)",
+  },
+  "en-GB": {
+    "landing.comparativa.eyebrow": "Comparison",
+    "landing.comparativa.title": "Manual management vs. management with Club Pádel 04",
+    "landing.comparativa.subtitle": "Everything you do today, without the repetitive work.",
+    "landing.comparativa.col_manual": "Manual management",
+    "landing.comparativa.reservas.aspecto": "Booking a court",
+    "landing.comparativa.reservas.manual": "Phone calls and WhatsApp during reception hours",
+    "landing.comparativa.reservas.cp04": "Online booking 24/7 from mobile, instant confirmation",
+    "landing.comparativa.espera.aspecto": "Cancelled slot",
+    "landing.comparativa.espera.manual": "Empty slot until someone calls",
+    "landing.comparativa.espera.cp04": "The waiting list re-offers it automatically",
+    "landing.comparativa.acceso.aspecto": "Club access",
+    "landing.comparativa.acceso.manual": "Checking lists by hand at the entrance",
+    "landing.comparativa.acceso.cp04": "Per-booking QR: entry without queues or paperwork",
+    "landing.comparativa.informes.aspecto": "Knowing how the club is doing",
+    "landing.comparativa.informes.manual": "Outdated spreadsheets",
+    "landing.comparativa.informes.cp04": "Occupancy, revenue and activity always up to date",
+    "landing.footer.nav_label": "Page navigation",
+    "landing.footer.nav_title": "Sections",
+    "landing.footer.access_title": "Access",
+    "landing.footer.legal_note": "Sample data in demos · Privacy built in (GDPR)",
+  },
+  "en-US": {
+    "landing.comparativa.eyebrow": "Comparison",
+    "landing.comparativa.title": "Manual management vs. management with Club Pádel 04",
+    "landing.comparativa.subtitle": "Everything you do today, without the repetitive work.",
+    "landing.comparativa.col_manual": "Manual management",
+    "landing.comparativa.reservas.aspecto": "Booking a court",
+    "landing.comparativa.reservas.manual": "Phone calls and WhatsApp during reception hours",
+    "landing.comparativa.reservas.cp04": "Online booking 24/7 from mobile, instant confirmation",
+    "landing.comparativa.espera.aspecto": "Cancelled slot",
+    "landing.comparativa.espera.manual": "Empty slot until someone calls",
+    "landing.comparativa.espera.cp04": "The waiting list re-offers it automatically",
+    "landing.comparativa.acceso.aspecto": "Club access",
+    "landing.comparativa.acceso.manual": "Checking lists by hand at the entrance",
+    "landing.comparativa.acceso.cp04": "Per-booking QR: entry without queues or paperwork",
+    "landing.comparativa.informes.aspecto": "Knowing how the club is doing",
+    "landing.comparativa.informes.manual": "Outdated spreadsheets",
+    "landing.comparativa.informes.cp04": "Occupancy, revenue and activity always up to date",
+    "landing.footer.nav_label": "Page navigation",
+    "landing.footer.nav_title": "Sections",
+    "landing.footer.access_title": "Access",
+    "landing.footer.legal_note": "Sample data in demos · Privacy built in (GDPR)",
+  },
+});
+Object.entries(PRODUCT_NINETEENTH_TRANSLATIONS).forEach(([locale, additions]) => Object.assign(TRANSLATIONS[locale], additions));
+
     const dict = TRANSLATIONS[code] || TRANSLATIONS[Object.keys(TRANSLATIONS).find(k => k.startsWith(base))] || {};
     const esDict = TRANSLATIONS["es-ES"] || {};
     return dict[key] ?? esDict[key] ?? key;

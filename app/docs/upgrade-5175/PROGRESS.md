@@ -43,3 +43,31 @@ D. Footer enriquecido: 3 columnas (marca+tagline / navegación / contacto+acceso
 E. i18n: añadir claves nuevas para comparativa+footer en es-ES (fallback: si falta clave, tx devuelve la clave — usar textos por defecto del array como ya hace PROBLEMAS con tx() + keys; seguir patrón existente de claves landing.*).
 
 ### Siguiente acción: Etapa 1 — backup commit+tag local, luego push GitHub.
+
+
+### Etapa 1 — Backup ✓ (2026-09-21 02:59)
+- Commit backup: 0972aef · tag: backup-5175-pre-ux-20260921-0259
+- Push GitHub: branch OK (b327d92..0972aef) + tag OK
+- BACKUP.md creado con rollback exacto.
+
+### Etapa 5 — Mejoras aplicadas ✓ (2026-09-21)
+Archivos modificados:
+1. src/components/landing/Landing.jsx:
+   - FIX BUG: typo p.descacado→destacado (badge "más elegido" del plan Club ahora se muestra).
+   - NUEVA sección comparativa (manual vs CP04, 4 filas, check/cross, franja limpia) tras zona de vídeos.
+   - Footer enriquecido: 3 columnas (marca+tagline / navegación / acceso+demo) + línea legal RGPD.
+   - Integraciones: clase --dark→--integraciones (rompe dos franjas oscuras consecutivas).
+2. src/clients/club-padel-04/landingExperience.css:
+   - .cp04-section--comparativa (gradiente sutil, sin imagen — evita repetir A-E).
+   - .cp04-section--integraciones (padding propio 88/96px, responsive 720px).
+3. src/i18n/translations.js:
+   - PRODUCT_NINETEENTH_TRANSLATIONS: claves comparativa.* + footer.* (es-ES, en-GB, en-US; fallback es-ES para el resto).
+
+### Etapa 7 — Pruebas ✓
+- node --check translations.js: OK
+- npm run build: PASS (8.02s)
+- npm test: 2600 pass / 23 fail — MISMOS 23 que baseline (diff vacío verificado con stash): makeInventory/makeAppIntegrationMap/makeArchitectureMatrix/agencyApiRouter + fixtures fecha. CERO regresiones nuevas.
+- vite HMR 5175: módulo Landing.jsx sirve comparativa + fix destacado.
+- Cero cambios en: auth, RBAC, Worker, Make, Airtable, Supabase, Cloudflare, secrets, webhooks.
+
+### Siguiente: commit final local + FINAL_REPORT.md. SIN segundo push.

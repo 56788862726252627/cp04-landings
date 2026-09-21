@@ -235,6 +235,29 @@ html:has(.cp04-public-landing) { scrollbar-color: #789954 #09110f; }
 }
 
 
+
+
+/* Integraciones (Fase 1 UX): franja estándar — antes compartía --dark con
+   Seguridad (dos franjas mínimas consecutivas); ahora respira con su padding. */
+.cp04-section--integraciones {
+  padding: 88px 0 96px;
+}
+@media (max-width: 720px) {
+  .cp04-section--integraciones { padding: 64px 0 72px; }
+}
+
+/* Comparativa (Fase 1 UX 2026-09-21): franja limpia entre vídeos y producto —
+   sin imagen (evita repetir A-E), gradiente sutil para separar del negro. */
+.cp04-section--comparativa {
+  padding: 88px 0 96px;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(182,255,0,.05), transparent 40%),
+    linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0));
+}
+@media (max-width: 720px) {
+  .cp04-section--comparativa { padding: 64px 0 72px; }
+}
+
 /* Producto: oscuro (descanso tras vídeos) */
 .cp04-section--producto {
   /* Intentionally dark */
