@@ -4140,6 +4140,26 @@ const PRODUCT_TWENTIETH_TRANSLATIONS = Object.freeze({
 });
 Object.entries(PRODUCT_TWENTIETH_TRANSLATIONS).forEach(([locale, additions]) => Object.assign(TRANSLATIONS[locale], additions));
 
+
+const PRODUCT_TWENTYFIRST_TRANSLATIONS = Object.freeze({
+  "es-ES": {
+    "landing.donde.eyebrow": "Dónde encontrarnos",
+    "landing.donde.title": "Visítanos en Antequera",
+    "landing.donde.como_llegar": "Cómo llegar",
+  },
+  "en-GB": {
+    "landing.donde.eyebrow": "Find us",
+    "landing.donde.title": "Visit us in Antequera",
+    "landing.donde.como_llegar": "Get directions",
+  },
+  "en-US": {
+    "landing.donde.eyebrow": "Find us",
+    "landing.donde.title": "Visit us in Antequera",
+    "landing.donde.como_llegar": "Get directions",
+  },
+});
+Object.entries(PRODUCT_TWENTYFIRST_TRANSLATIONS).forEach(([locale, additions]) => Object.assign(TRANSLATIONS[locale], additions));
+
     const dict = TRANSLATIONS[code] || TRANSLATIONS[Object.keys(TRANSLATIONS).find(k => k.startsWith(base))] || {};
     const esDict = TRANSLATIONS["es-ES"] || {};
     return dict[key] ?? esDict[key] ?? key;

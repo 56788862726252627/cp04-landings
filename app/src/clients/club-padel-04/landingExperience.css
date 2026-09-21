@@ -245,6 +245,15 @@ html:has(.cp04-public-landing) { scrollbar-color: #789954 #09110f; }
     radial-gradient(circle at 85% 10%, rgba(47,107,255,.05), transparent 40%),
     linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
 }
+
+/* Dónde encontrarnos (Fase 3B): franja limpia tras contacto, antes de FAQ. */
+.cp04-section--donde {
+  padding: 72px 0 88px;
+}
+@media (max-width: 720px) {
+  .cp04-section--donde { padding: 56px 0 64px; }
+}
+
 /* Contacto y redes (Fase 3A): solo visible con canales reales configurados. */
 .cp04-section--contacto {
   padding: 72px 0 88px;

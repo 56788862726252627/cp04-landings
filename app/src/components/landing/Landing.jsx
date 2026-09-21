@@ -22,6 +22,7 @@ import {
 } from "../icons/Icons.jsx";
 import DemoRequestModal from "./DemoRequestModal.jsx";
 import { ContactAndSocial, FooterSocial } from "./ContactAndSocial.jsx";
+import { PhysicalLocation } from "./PhysicalLocation.jsx";
 import LandingMedia, { LandingHeroBackground } from "../../clients/club-padel-04/LandingMedia.jsx";
 import "../../clients/club-padel-04/landingExperience.css";
 
@@ -505,6 +506,14 @@ export default function Landing({ onEnterLogin }) {
       <ContactAndSocial
         title={tx("landing.contacto.title")}
         subtitle={tx("landing.contacto.subtitle")}
+        tx={tx}
+      />
+
+      {/* DÓNDE ENCONTRARNOS (Fase 3B — dirección real del propietario) */}
+      <PhysicalLocation
+        title={tx("landing.donde.eyebrow")}
+        subtitle={tx("landing.donde.title")}
+        howToGetLabel={tx("landing.donde.como_llegar")}
         tx={tx}
       />
 
