@@ -237,6 +237,23 @@ html:has(.cp04-public-landing) { scrollbar-color: #789954 #09110f; }
 
 
 
+
+/* Cómo empezar (Fase 3A): franja limpia entre planes y contacto/FAQ. */
+.cp04-section--como-empezar {
+  padding: 88px 0 96px;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(47,107,255,.05), transparent 40%),
+    linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+}
+/* Contacto y redes (Fase 3A): solo visible con canales reales configurados. */
+.cp04-section--contacto {
+  padding: 72px 0 88px;
+}
+@media (max-width: 720px) {
+  .cp04-section--como-empezar { padding: 64px 0 72px; }
+  .cp04-section--contacto { padding: 56px 0 64px; }
+}
+
 /* Integraciones (Fase 1 UX): franja estándar — antes compartía --dark con
    Seguridad (dos franjas mínimas consecutivas); ahora respira con su padding. */
 .cp04-section--integraciones {

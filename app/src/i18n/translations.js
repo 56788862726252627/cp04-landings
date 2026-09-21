@@ -4093,6 +4093,53 @@ const PRODUCT_NINETEENTH_TRANSLATIONS = Object.freeze({
 });
 Object.entries(PRODUCT_NINETEENTH_TRANSLATIONS).forEach(([locale, additions]) => Object.assign(TRANSLATIONS[locale], additions));
 
+
+const PRODUCT_TWENTIETH_TRANSLATIONS = Object.freeze({
+  "es-ES": {
+    "landing.hero.cta_disponibilidad": "Ver disponibilidad",
+    "landing.como_empezar.eyebrow": "Cómo empezar",
+    "landing.como_empezar.title": "De la demo a la pista en tres pasos",
+    "landing.como_empezar.subtitle": "Sin instalaciones ni hardware: el club empieza a operar desde el primer día.",
+    "landing.como_empezar.paso_1.title": "Solicita una demo",
+    "landing.como_empezar.paso_1.body": "Te enseñamos el panel de tu rol (dirección, staff o jugador) con tus casos reales de reservas, pistas y socios.",
+    "landing.como_empezar.paso_2.title": "Configuramos tu club",
+    "landing.como_empezar.paso_2.body": "Pistas, horarios, tarifas y plantilla se cargan con tus datos. Nada de plantillas genéricas.",
+    "landing.como_empezar.paso_3.title": "Opera desde el primer día",
+    "landing.como_empezar.paso_3.body": "Reservas online, lista de espera, QR de acceso y métricas funcionando para socios y dirección.",
+    "landing.contacto.title": "Contacto y redes",
+    "landing.contacto.subtitle": "Hablemos de tu club por el canal que prefieras.",
+  },
+  "en-GB": {
+    "landing.hero.cta_disponibilidad": "See availability",
+    "landing.como_empezar.eyebrow": "Getting started",
+    "landing.como_empezar.title": "From demo to court in three steps",
+    "landing.como_empezar.subtitle": "No installs, no hardware: your club operates from day one.",
+    "landing.como_empezar.paso_1.title": "Request a demo",
+    "landing.como_empezar.paso_1.body": "We walk you through your role's panel (management, staff or player) with your real booking, court and member cases.",
+    "landing.como_empezar.paso_2.title": "We set up your club",
+    "landing.como_empezar.paso_2.body": "Courts, schedules, rates and roster are loaded with your data. No generic templates.",
+    "landing.como_empezar.paso_3.title": "Operate from day one",
+    "landing.como_empezar.paso_3.body": "Online bookings, waiting list, access QR and metrics working for members and management.",
+    "landing.contacto.title": "Contact & social",
+    "landing.contacto.subtitle": "Let's talk about your club on whichever channel you prefer.",
+  },
+  "en-US": {
+    "landing.hero.cta_disponibilidad": "See availability",
+    "landing.como_empezar.eyebrow": "Getting started",
+    "landing.como_empezar.title": "From demo to court in three steps",
+    "landing.como_empezar.subtitle": "No installs, no hardware: your club operates from day one.",
+    "landing.como_empezar.paso_1.title": "Request a demo",
+    "landing.como_empezar.paso_1.body": "We walk you through your role's panel (management, staff or player) with your real booking, court and member cases.",
+    "landing.como_empezar.paso_2.title": "We set up your club",
+    "landing.como_empezar.paso_2.body": "Courts, schedules, rates and roster are loaded with your data. No generic templates.",
+    "landing.como_empezar.paso_3.title": "Operate from day one",
+    "landing.como_empezar.paso_3.body": "Online bookings, waiting list, access QR and metrics working for members and management.",
+    "landing.contacto.title": "Contact & social",
+    "landing.contacto.subtitle": "Let's talk about your club on whichever channel you prefer.",
+  },
+});
+Object.entries(PRODUCT_TWENTIETH_TRANSLATIONS).forEach(([locale, additions]) => Object.assign(TRANSLATIONS[locale], additions));
+
     const dict = TRANSLATIONS[code] || TRANSLATIONS[Object.keys(TRANSLATIONS).find(k => k.startsWith(base))] || {};
     const esDict = TRANSLATIONS["es-ES"] || {};
     return dict[key] ?? esDict[key] ?? key;

@@ -21,6 +21,7 @@ import {
   IconArrowRight, IconMenu, IconClose, IconCheck,
 } from "../icons/Icons.jsx";
 import DemoRequestModal from "./DemoRequestModal.jsx";
+import { ContactAndSocial, FooterSocial } from "./ContactAndSocial.jsx";
 import LandingMedia, { LandingHeroBackground } from "../../clients/club-padel-04/LandingMedia.jsx";
 import "../../clients/club-padel-04/landingExperience.css";
 
@@ -294,6 +295,7 @@ export default function Landing({ onEnterLogin }) {
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
               <LandingBtn variant="primary" onClick={() => setDemoOpen(true)}>{tx("landing.planes.cta")} <IconArrowRight size={18} /></LandingBtn>
               <LandingBtn variant="secondary" href="#producto">{tx("landing.hero.cta_secondary")}</LandingBtn>
+              <LandingBtn variant="ghost" onClick={onEnterLogin}>{tx("landing.hero.cta_disponibilidad")}</LandingBtn>
             </div>
           </div>
           <div className="cp04-hero-direction"><MockupPanel /></div>
@@ -477,6 +479,35 @@ export default function Landing({ onEnterLogin }) {
         </Container>
       </section>
 
+      {/* CÓMO EMPEZAR (Fase 3A — ProcessSection de la Factory, contenido real del producto) */}
+      <section id="como-empezar" className="cp04-section cp04-section--como-empezar">
+        <Container>
+          <SectionTitle eyebrow={tx("landing.como_empezar.eyebrow")} title={tx("landing.como_empezar.title")} subtitle={tx("landing.como_empezar.subtitle")} align="center" />
+          <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 18 }}>
+            {[
+              { n: 1, t: tx("landing.como_empezar.paso_1.title"), b: tx("landing.como_empezar.paso_1.body") },
+              { n: 2, t: tx("landing.como_empezar.paso_2.title"), b: tx("landing.como_empezar.paso_2.body") },
+              { n: 3, t: tx("landing.como_empezar.paso_3.title"), b: tx("landing.como_empezar.paso_3.body") },
+            ].map((paso) => (
+              <li key={paso.n} style={{ padding: "clamp(20px,3vw,28px)", borderRadius: 22, border: `1px solid ${T.line}`, background: "linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.015))", position: "relative" }}>
+                <div aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, display: "grid", placeItems: "center", fontWeight: 900, fontFamily: T.fontDisplay, marginBottom: 14 }}>
+                  {paso.n}
+                </div>
+                <strong style={{ display: "block", fontSize: "1.05rem", marginBottom: 8, fontFamily: T.fontDisplay }}>{paso.t}</strong>
+                <p style={{ color: T.textDim, lineHeight: 1.65, margin: 0, fontSize: ".92rem" }}>{paso.b}</p>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </section>
+
+      {/* CONTACTO Y REDES (Fase 3A — solo si hay canales reales configurados) */}
+      <ContactAndSocial
+        title={tx("landing.contacto.title")}
+        subtitle={tx("landing.contacto.subtitle")}
+        tx={tx}
+      />
+
       {/* FAQ */}
       <section id="faq" className="cp04-section cp04-section--faq">
         <Container style={{ maxWidth: 760 }}>
@@ -508,6 +539,9 @@ export default function Landing({ onEnterLogin }) {
                 Club Pádel 04
               </div>
               <p style={{ color: T.textDim, fontSize: ".82rem", lineHeight: 1.6, margin: 0, maxWidth: 260 }}>{tx("landing.footer.tagline")}</p>
+              <div style={{ marginTop: 14 }}>
+                <FooterSocial />
+              </div>
             </div>
             <nav aria-label={tx("landing.footer.nav_label")} style={{ display: "grid", gap: 8, alignContent: "start" }}>
               <strong style={{ fontFamily: T.fontDisplay, fontSize: ".78rem", letterSpacing: ".12em", textTransform: "uppercase", color: T.textDim }}>{tx("landing.footer.nav_title")}</strong>
