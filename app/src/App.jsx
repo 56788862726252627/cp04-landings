@@ -52,6 +52,14 @@ import { cp04BuildReservationError, cp04ReservationErrorMessage } from "./utils/
 import { cp04ShouldBlockAnonymousReservaSubmit, cp04IsSessionExpiredReservaResponse } from "./utils/reservaAuthGate.js";
 import { cp04DisponibilidadEndpoint, cp04ReservasEndpoint } from "./utils/apiEndpoint.js";
 import {
+  listaEsperaLoad,
+  listaEsperaSave,
+  listaEsperaAdd,
+  listaEsperaSetEstado,
+  listaEsperaRemove,
+  listaEsperaGetActivos,
+} from "./utils/listaEsperaLocal.js";
+import {
   CP04_ROLE_PERMISSIONS,
   CP04_PROTECTED_SECTIONS,
   cp04NormalizeRole,
@@ -3106,73 +3114,72 @@ function CierreTemporalPista() {
 // integrarse con el escenario Make "📋 Gestión Lista de Espera" (ID
 // 5791113, INTERNAL_OPERATION que ya corre solo en Make cada hora) cuando
 // Airtable esté disponible. A diferencia de Cierre Temporal de Pistas
-// (Paso 07E) o Baja de Jugador (Paso 07C), este módulo NO llama a ningún
-// endpoint del Worker todavía — no existe backend real que lo respalde, y
-// el propio encargo pide explícitamente no llamar endpoints reales ni
-// simular éxito real. Todas las acciones (añadir, promocionar, marcar
-// contactado, eliminar) solo muestran un mensaje local honesto de "acción
-// preparada, pendiente de conexión real" — nunca crean, modifican ni
-// confirman nada real. Gateado a STAFF/ADMIN/SUPPORT (ver rbac.js).
-const CP04_LISTA_ESPERA_PENDIENTE_MSG =
-  "Acción preparada. Pendiente de conexión real cuando Airtable esté disponible.";
+// Lista de espera — versión con persistencia local.
+// Los datos se guardan en localStorage (cp04-lista-espera-local-v1) y
+// sobreviven recargas. La lista local NO es la fuente de verdad: se muestra
+// siempre con el aviso "LISTA LOCAL" y persiste hasta que la integración
+// con Make/Airtable esté disponible. Gateado a STAFF/ADMIN/SUPPORT (rbac.js).
+
+const ESTADO_BADGE_STYLES = {
+  pendiente:  { color: T.warning,    label: "Pendiente" },
+  contactado: { color: T.accent2,    label: "Contactado" },
+  promovido:  { color: T.accent,     label: "Promovido" },
+  eliminado:  { color: T.textDim,    label: "Eliminado" },
+};
+
+const EMPTY_FORM = {
+  nombre: "", apellidos: "", email: "", telefono: "",
+  pista_preferida: "", fecha_preferida: "", observaciones: "",
+};
 
 function ListaEspera() {
-  const addInitialForm = {
-    nombre: "",
-    apellidos: "",
-    email: "",
-    telefono: "",
-    pista_preferida: "",
-    fecha_preferida: "",
-    observaciones: "",
-  };
-  const [addForm, setAddForm] = useState(addInitialForm);
-  const [addErrors, setAddErrors] = useState({});
-  const [actionMessage, setActionMessage] = useState("");
+  const [entries, setEntries] = useState(() => listaEsperaLoad());
+  const [form, setForm]       = useState(EMPTY_FORM);
+  const [errors, setErrors]   = useState({});
+  const [notice, setNotice]   = useState({ msg: "", ok: true });
 
-  function updateAddForm(field, value) {
-    setAddForm((previous) => ({ ...previous, [field]: value }));
-    setAddErrors((previous) => ({ ...previous, [field]: "" }));
-    setActionMessage("");
+  function updateEntries(next) {
+    setEntries(next);
+    listaEsperaSave(next);
   }
 
-  function validateAdd() {
-    const nextErrors = {};
-
-    if (addForm.nombre.trim().length < 2) {
-      nextErrors.nombre = "Introduce un nombre válido.";
-    }
-    if (addForm.apellidos.trim().length < 2) {
-      nextErrors.apellidos = "Introduce apellidos válidos.";
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim())) {
-      nextErrors.email = "Introduce un email válido.";
-    }
-    if (addForm.telefono.replace(/\D/g, "").length < 9) {
-      nextErrors.telefono = "Introduce un teléfono válido.";
-    }
-
-    return nextErrors;
+  function updateForm(field, value) {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    setErrors((previous) => ({ ...previous, [field]: "" }));
   }
 
-  // Validación local solo para dar una experiencia de formulario coherente
-  // con el resto de la app — no hay ningún envío real: nunca se llama a
-  // fetch/authFetch aquí, y el mensaje mostrado nunca dice "añadido" o
-  // "confirmado", siempre "preparado, pendiente de conexión real".
+  function validate() {
+    const e = {};
+    if (form.nombre.trim().length < 2)   e.nombre    = "Introduce un nombre válido.";
+    if (form.apellidos.trim().length < 2) e.apellidos = "Introduce apellidos válidos.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Introduce un email válido.";
+    if (form.telefono.replace(/\D/g, "").length < 9) e.telefono = "Introduce un teléfono válido.";
+    return e;
+  }
+
   function handleAdd(event) {
     event.preventDefault();
+    const e = validate();
+    setErrors(e);
+    if (Object.keys(e).length > 0) return;
 
-    const nextErrors = validateAdd();
-    setAddErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length > 0) return;
-
-    setActionMessage(`Añadir a lista de espera: ${CP04_LISTA_ESPERA_PENDIENTE_MSG}`);
+    const next = listaEsperaAdd(entries, form);
+    updateEntries(next);
+    setForm(EMPTY_FORM);
+    setNotice({ msg: `Jugador añadido a la LISTA LOCAL (${next.length} en espera). Pendiente de envío real a Airtable.`, ok: true });
   }
 
-  function handlePreparedAction(label) {
-    setActionMessage(`${label}: ${CP04_LISTA_ESPERA_PENDIENTE_MSG}`);
+  function handleSetEstado(id, estado) {
+    updateEntries(listaEsperaSetEstado(entries, id, estado));
+    setNotice({ msg: `Estado actualizado a "${ESTADO_BADGE_STYLES[estado]?.label ?? estado}" (LISTA LOCAL).`, ok: true });
   }
+
+  function handleRemove(id) {
+    updateEntries(listaEsperaRemove(entries, id));
+    setNotice({ msg: "Entrada eliminada de la LISTA LOCAL.", ok: false });
+  }
+
+  const activos = listaEsperaGetActivos(entries);
 
   return (
     <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
@@ -3181,37 +3188,41 @@ function ListaEspera() {
         title="Lista de espera"
         desc="Gestiona jugadores pendientes de plaza o promoción."
       />
+
       <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
-        Preparado para integración con Make/Airtable. Validación real pendiente por disponibilidad de Airtable.
+        ⚠ LISTA LOCAL — Los datos se guardan solo en este dispositivo (localStorage).
+        Pendiente de sincronización con Airtable cuando la integración esté disponible.
+        Nada de lo que hagas aquí se envía a ningún sistema externo.
       </Card>
 
+      {/* Formulario para añadir */}
       <Card style={{ marginBottom: 20 }}>
         <h3 style={{ marginTop: 0 }}>Añadir jugador a lista de espera</h3>
         <form onSubmit={handleAdd}>
           <div className="cp04-grid-2">
             <div>
               <label htmlFor="espera-nombre">Nombre</label>
-              <input id="espera-nombre" value={addForm.nombre} onChange={e => updateAddForm("nombre", e.target.value)} autoComplete="given-name" />
-              <FieldError>{addErrors.nombre}</FieldError>
+              <input id="espera-nombre" value={form.nombre} onChange={e => updateForm("nombre", e.target.value)} autoComplete="given-name" />
+              <FieldError>{errors.nombre}</FieldError>
             </div>
             <div>
               <label htmlFor="espera-apellidos">Apellidos</label>
-              <input id="espera-apellidos" value={addForm.apellidos} onChange={e => updateAddForm("apellidos", e.target.value)} autoComplete="family-name" />
-              <FieldError>{addErrors.apellidos}</FieldError>
+              <input id="espera-apellidos" value={form.apellidos} onChange={e => updateForm("apellidos", e.target.value)} autoComplete="family-name" />
+              <FieldError>{errors.apellidos}</FieldError>
             </div>
             <div>
               <label htmlFor="espera-email">Email</label>
-              <input id="espera-email" type="email" value={addForm.email} onChange={e => updateAddForm("email", e.target.value)} autoComplete="email" />
-              <FieldError>{addErrors.email}</FieldError>
+              <input id="espera-email" type="email" value={form.email} onChange={e => updateForm("email", e.target.value)} autoComplete="email" />
+              <FieldError>{errors.email}</FieldError>
             </div>
             <div>
               <label htmlFor="espera-telefono">Teléfono</label>
-              <input id="espera-telefono" type="tel" value={addForm.telefono} onChange={e => updateAddForm("telefono", e.target.value)} autoComplete="tel" />
-              <FieldError>{addErrors.telefono}</FieldError>
+              <input id="espera-telefono" type="tel" value={form.telefono} onChange={e => updateForm("telefono", e.target.value)} autoComplete="tel" />
+              <FieldError>{errors.telefono}</FieldError>
             </div>
             <div>
               <label htmlFor="espera-pista">Pista preferida (opcional)</label>
-              <select id="espera-pista" value={addForm.pista_preferida} onChange={e => updateAddForm("pista_preferida", e.target.value)}>
+              <select id="espera-pista" value={form.pista_preferida} onChange={e => updateForm("pista_preferida", e.target.value)}>
                 <option value="">Sin preferencia</option>
                 <option value="Pista 1">Pista 1</option>
                 <option value="Pista 2">Pista 2</option>
@@ -3221,49 +3232,105 @@ function ListaEspera() {
             </div>
             <div>
               <label htmlFor="espera-fecha">Fecha preferida (opcional)</label>
-              <input id="espera-fecha" type="date" value={addForm.fecha_preferida} onChange={e => updateAddForm("fecha_preferida", e.target.value)} />
+              <input id="espera-fecha" type="date" value={form.fecha_preferida} onChange={e => updateForm("fecha_preferida", e.target.value)} />
             </div>
           </div>
           <div style={{ marginTop: 18 }}>
             <label htmlFor="espera-observaciones">Observaciones (opcional)</label>
-            <textarea id="espera-observaciones" value={addForm.observaciones} onChange={e => updateAddForm("observaciones", e.target.value)} rows={3} />
+            <textarea id="espera-observaciones" value={form.observaciones} onChange={e => updateForm("observaciones", e.target.value)} rows={3} />
           </div>
           <div style={{ marginTop: 22 }}>
             <Btn
               type="submit"
-              className="cp04-offboarding-submit-button"
               style={{
-                width: "100%",
-                background: T.accent,
-                color: "#06100a",
-                fontSize: "1rem",
-                border: "2px solid rgba(6,16,10,.45)",
+                width: "100%", background: T.accent, color: "#06100a",
+                fontSize: "1rem", border: "2px solid rgba(6,16,10,.45)",
                 boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
               }}
             >
-              Añadir a lista de espera
+              Añadir a lista local
             </Btn>
           </div>
         </form>
       </Card>
 
-      <Card style={{ marginBottom: 20 }}>
-        <h3 style={{ marginTop: 0 }}>Acciones sobre la lista</h3>
-        <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
-          Estas acciones están preparadas visualmente. No confirman una promoción real ni crean datos reales hasta que la integración con Make/Airtable esté disponible.
-        </p>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <Btn variant="secondary" onClick={() => handlePreparedAction("Promocionar siguiente jugador")}>Promocionar siguiente jugador</Btn>
-          <Btn variant="secondary" onClick={() => handlePreparedAction("Marcar como contactado")}>Marcar como contactado</Btn>
-          <Btn variant="secondary" onClick={() => handlePreparedAction("Eliminar de lista")}>Eliminar de lista</Btn>
-        </div>
-      </Card>
-
-      {actionMessage && (
-        <Card style={{ borderColor: `${T.accent}66`, color: T.accent, fontSize: ".86rem" }}>
-          {actionMessage}
+      {/* Mensaje de feedback */}
+      {notice.msg && (
+        <Card style={{ marginBottom: 20, borderColor: `${notice.ok ? T.accent : T.warning}66`, color: notice.ok ? T.accent : T.warning, fontSize: ".86rem" }}>
+          {notice.msg}
         </Card>
       )}
+
+      {/* Lista de jugadores en espera */}
+      <Card>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+          <h3 style={{ margin: 0 }}>Jugadores en espera</h3>
+          <span style={{ fontSize: ".8rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "4px 10px" }}>
+            LISTA LOCAL · {activos.length} activo{activos.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        {activos.length === 0 ? (
+          <p style={{ color: T.textDim, margin: 0 }}>No hay jugadores en la lista local todavía.</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="cp04-table">
+              <thead>
+                <tr>
+                  <th>Jugador</th>
+                  <th>Contacto</th>
+                  <th>Preferencia</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activos.map((entry) => {
+                  const badge = ESTADO_BADGE_STYLES[entry.estado] ?? ESTADO_BADGE_STYLES.pendiente;
+                  return (
+                    <tr key={entry.id}>
+                      <td>
+                        <strong>{entry.nombre} {entry.apellidos}</strong>
+                        {entry.observaciones && (
+                          <div style={{ color: T.textDim, fontSize: ".78rem", marginTop: 3 }}>{entry.observaciones}</div>
+                        )}
+                      </td>
+                      <td style={{ fontSize: ".84rem" }}>
+                        <div>{entry.email}</div>
+                        <div style={{ color: T.textDim }}>{entry.telefono}</div>
+                      </td>
+                      <td style={{ fontSize: ".84rem" }}>
+                        {entry.pista_preferida || "—"}
+                        {entry.fecha_preferida && <div style={{ color: T.textDim }}>{entry.fecha_preferida}</div>}
+                      </td>
+                      <td>
+                        <span style={{ color: badge.color, fontWeight: 700, fontSize: ".8rem" }}>{badge.label}</span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {entry.estado === "pendiente" && (
+                            <Btn variant="secondary" style={{ padding: "5px 10px", fontSize: ".78rem" }} onClick={() => handleSetEstado(entry.id, "contactado")}>
+                              Contactado
+                            </Btn>
+                          )}
+                          {entry.estado !== "promovido" && entry.estado !== "eliminado" && (
+                            <Btn variant="secondary" style={{ padding: "5px 10px", fontSize: ".78rem" }} onClick={() => handleSetEstado(entry.id, "promovido")}>
+                              Promover
+                            </Btn>
+                          )}
+                          <Btn variant="secondary" style={{ padding: "5px 10px", fontSize: ".78rem", color: T.dangerText }} onClick={() => handleRemove(entry.id)}>
+                            Quitar
+                          </Btn>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
