@@ -1,0 +1,3 @@
+OK: dist/index.html
+OK: dist/assets
+OK: dist/_redirects SPA fallback

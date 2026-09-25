@@ -1,0 +1,11 @@
+worker-reservas/.wrangler/cache/cf.json
+worker-reservas/backups/index-antes-alta-20260616-054856.js
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md
+worker-reservas/src/index.js
+worker-reservas/ultima-alta-app.json
+worker-reservas/wr4 angler.toml0  
+worker-reservas/wrangler.toml
+worker-reservas/wrangler.toml0

@@ -1,0 +1,288 @@
+51:const T = {
+68:const CONFIG = {
+77:const GALLERY = [
+110:const COURTS = [
+117:const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+118:const BOOKING_DURATIONS = [60, 90, 120];
+119:const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
+120:const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
+122:const BOOKINGS = [
+128:const RANKING = [
+134:const RANKING_PRO = [
+152:const INTEGRATIONS = [
+161:const ROLES = [
+168:const PROTECTED_SECTIONS = ["Gestión", "Admin", "Soporte"];
+268:function calcTimeEnd(time, mins) {
+274:function priceFor(courtName, duration) {
+282:function madridDateParts(date = new Date()) {
+296:function todayISO() {
+301:function parseISODateParts(value) {
+307:function isSundayISO(value) {
+313:function isPastDateISO(value) {
+317:function minutesFromTime(value) {
+323:function madridCurrentMinutes() {
+328:function getSlotStatus(fecha, hora, duration = 90) {
+347:function formatDateEs(value) {
+353:function cleanText(value) {
+357:function validateBooking(form, courtName, tx) {
+358:  const errors = {};
+386:function prepareBookingPayload(form, courtName) {
+415:function validateReschedule(form, courtName, tx) {
+417:  const errors = {};
+465:function prepareReschedulePayload(form, courtName) {
+482:async function sendBooking(payload) {
+494:function Card({ children, style = {} }) {
+498:function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {} }) {
+499:  const map = {
+511:async function readSafeResponse(res) {
+522:async function fetchDisponibilidad(fecha) {
+534:function emitDisponibilidadUpdate(fecha) {
+538:function refreshDisponibilidadAfterChange(fecha) {
+544:function CalendarioDisponibilidad({
+603:    return () => window.clearTimeout(timer);
+614:    return () => window.clearTimeout(timer);
+618:    function handleDisponibilidadUpdate(event) {
+630:    return () => {
+635:  const cambiarFecha = (value) => {
+640:  return (
+725:                return (
+762:function SectionTitle({ eyebrow, title, desc }) {
+766:function Badge({ status }) {
+769:  const map = { confirmed: [tx("badge.confirmed"), T.accent], pending: [tx("badge.pending"), T.warning], completed: [tx("badge.completed"), T.textDim] };
+774:function FieldError({ children }) {
+779:function PanelList({ items }) {
+783:function RolePanel({ eyebrow, title, desc, items, action }) {
+787:function GalleryItem({ item, featured = false }) {
+791:function Gallery() {
+798:function IntegrationMatrix({ compact = false }) {
+799:  const colorFor = (status) => status === "Preparada" ? T.accent : status === "Pendiente de credenciales" ? T.warning : T.textDim;
+803:function AuthStatusPanel({ compact = false }) {
+814:function useClock() {
+826:    return () => clearInterval(id);
+829:    function handler(e) { setLangCode(e.detail?.lang?.code || "es-ES"); }
+831:    return () => window.removeEventListener("cp04:lang-change", handler);
+833:  const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+861:function ClockDisplay({ compact = false }) {
+864:    return (
+873:  return (
+885:function MetricCard({ label, value, sub, trend, color, icon }) {
+897:  return (
+917:function ChartTooltip({ x, y, children, visible }) {
+919:  return (
+926:function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
+933:  return (
+948:          const pxPct = (cx / W) * 100;
+949:          return (
+962:function MiniLineChart({ data, height = 60, color, labels, unit = "" }) {
+975:  return (
+1003:function DonutChart({ segments, size = 120, label }) {
+1011:    const a1 = (angle * Math.PI) / 180;
+1012:    const a2 = ((angle + pct * 360) * Math.PI) / 180;
+1020:  return (
+1054:function HorizontalBarChart({ data, color, unit = "" }) {
+1058:  return (
+1082:function FlowStatusBadge({ status }) {
+1083:  const map = {
+1091:  return (
+1099:function ChartCard({ title, sub, children, action, demo = false, style: cs = {} }) {
+1101:  return (
+1121:const dashboardDataSources = {
+1129:const DEMO_RESERVAS_HOY = [
+1135:const DEMO_RESERVAS_SEMANA = [12, 18, 24, 19, 27, 31, 22];
+1137:const DEMO_OCUPACION_PISTAS = [
+1144:const DEMO_KPI = {
+1163:const DEMO_MAKE_EJECUCIONES_24H = [42, 55, 38, 61, 47, 53, 49, 66, 71, 58, 44, 39, 52, 48, 57, 63, 70, 65, 59, 42, 38, 44, 51, 48];
+1165:const DEMO_MAKE_CATEGORIAS = [
+1178:const DEMO_MAKE_FLUJOS_TOP = [
+1186:const DEMO_MAKE_FLUJOS_ERRORES = [
+1192:const WORKFLOW_ITEMS = [
+1840:function FlujosMake() {
+1847:  const cats = ["Todas", ...Array.from(new Set(DEMO_MAKE_CATEGORIAS.map(c => c.l)))];
+1852:  const exportMakeJSON = () => {
+1859:  return (
+1986:function normalizeSearchText(value) {
+1995:const LANGUAGES_RAW = [
+2106:function sortLanguages(list) {
+2118:function loadSavedLanguage() {
+2148:function setGlobalLang(lang) {
+2154:function useLang() {
+2157:    function handler(e) { setLang(e.detail?.lang || _defaultLang); }
+2159:    return () => window.removeEventListener(LANG_CHANGE_EVENT, handler);
+2169:const CP04_AUTH_MODES = {
+2176:const CP04_PROTECTED_SECTIONS = [
+2183:const CP04_ROLE_PERMISSIONS = {
+2190:function cp04NormalizeRole(role) {
+2196:function cp04IsProtectedSection(section) {
+2200:function cp04CanAccessSection(role, section) {
+2203:  return (CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER).includes(safeSection);
+2206:function cp04GetSafeStartSection(role) {
+2212:function cp04RequiresBackendAuth(section) {
+2216:function cp04GetStoredAuthMode() {
+2225:const TRANSLATIONS = {
+3824:function t(key, lang) {
+3838:function LanguageSelector() {
+3850:    function onKey(e) { if (e.key === "Escape") setOpen(false); }
+3852:    return () => window.removeEventListener("keydown", onKey);
+3857:    function onClickOut(e) {
+3861:    return () => document.removeEventListener("mousedown", onClickOut);
+3864:  function filterLanguages(list) {
+3869:      const fields = [lang.label, lang.country, lang.countryEs, lang.countryEn, lang.code, lang.flag, ...(lang.aliases || [])];
+3874:  function selectLang(lang) {
+3885:  return (
+3941:function LangOption({ lang, selected, onSelect }) {
+3943:  return (
+3965:function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, onClose }) {
+3968:  const navKeys = [
+3974:  const menuByRole = {
+3983:  return (
+3998:          return (
+4022:function Inicio({ setCurrent }) {
+4032:  return (
+4135:function Reservas() {
+4150:  const statusMap = {
+4158:  function updateForm(field, value) {
+4165:  function review() {
+4176:  async function send() {
+4212:  function newBooking() {
+4233:function CancelarReserva({ setCurrent }) {
+4243:  const statusMap = {
+4251:  function updateClave(value) {
+4257:  function updateConfirmado(value) {
+4263:  async function submit(event) {
+4322:function ReprogramarReserva({ setCurrent }) {
+4346:  const statusMap = {
+4354:  function updateForm(field, value) {
+4361:  function chooseCourt(value) {
+4368:  async function submit(event) {
+4439:  function resetForm() {
+4453:  return (
+4574:                  return (
+4688:function Gestion() {
+4717:  function normalizarReserva(item) {
+4792:  async function cargarReservas() {
+4912:        return (
+4949:  function colorEstado(estado) {
+4968:  return (
+5321:function AltaJugador() {
+5324:  const initialForm = {
+5342:  function updateForm(field, value) {
+5349:  function validate() {
+5350:    const nextErrors = {};
+5387:  async function submit(event) {
+5432:  return (
+5509:const TORNEO_DEMO_NAMES = [
+5530:const FORMAT_MAX = { "16": 8, "32": 16, "64": 32 };
+5534:function torneoLoadSaved() {
+5546:function torneoLoadHist() {
+5554:function torneoBuildEmptyPairs(count) {
+5563:function torneoBuildFullBracket(pairs, byeId) {
+5565:  const r1 = [];
+5572:  const all = [...r1];
+5593:function torneoGetRoundLabel(rNum, total) {
+5603:function torneoAdvanceWinner(bracket, matchId, winnerId) {
+5616:function torneoGetMatchGap(round) {
+5620:function torneoGetRoundPadding(round) {
+5621:  return (Math.pow(2, round - 1) - 1) * (MATCH_H + BASE_GAP) / 2;
+5624:function Torneos() {
+5656:    const s = { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published };
+5661:  const showNotice = (msg, err = false) => {
+5666:  const pairLabel = (p) => {
+5674:  const pushHistory = (action) => {
+5676:      const snap = {
+5685:      const newSnaps = [...snaps.slice(0, idx + 1), snap].slice(-30);
+5692:  const restoreSnap = (snap) => {
+5705:  const handleUndo = () => {
+5716:  const handleRedo = () => {
+5727:  const handleRestoreVersion = (idx) => {
+5739:  const applyFormat = (fmt) => {
+5748:  const applyCustom = () => {
+5769:  const handleReorder = () => {
+5771:    const shuffled = [...pairs].sort(() => Math.random() - 0.5);
+5783:  const handleAutoAssign = () => {
+5794:  const handleSave = () => {
+5799:  const handlePublish = () => {
+5806:  const handleAddPair = () => {
+5810:    const np = { id: `p${Date.now()}`, player1: "", player2: "" };
+5811:    const upd = [...pairs, np];
+5816:  const handleDeletePair = (id) => {
+5825:  const handleEditSave = () => {
+5832:  const handleMarkWinner = (matchId, winnerId) => {
+5844:  const handleExportJSON = () => {
+5845:    const data = {
+5868:  const handleExportCSV = () => {
+5869:    const lines = ["#,Jugador 1,Jugador 2"];
+5878:  const bracketByRound = {};
+5886:  return (
+6099:                  return (
+6134:                return (
+6146:                        return (
+6234:                    return (
+6278:function RankingAvatar({ name, color = T.accent, size = 34 }) {
+6286:  return (
+6293:function MovArrow({ mov }) {
+6299:function RachaBadge({ racha }) {
+6305:function Ranking() {
+6309:  const CATS = [
+6318:  const NIVEL_COLORS = { "Avanzado":"#b6ff00", "Medio":"#20e3b2", "Iniciación":"#a78bfa" };
+6341:  const PODIO_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
+6342:  const PODIO_TROFEOS = ["🏆", "🥈", "🥉"];
+6343:  const PODIO_LABELS = [tx("ranking.campeon"), tx("ranking.subcampeon"), tx("ranking.tercero")];
+6345:  return (
+6407:              return (
+6472:                  return (
+6529:function Admin() {
+6534:  return (
+6581:function AuthProductionStatusPanel() {
+6585:  return (
+6614:function Soporte() {
+6620:function Perfil({ selectedRole, onClearRole }) {
+6623:  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+6624:  const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
+6635:  const PROFILE_BACKEND_ENDPOINTS = {
+6642:  function saveProfileFallback(key, value) {
+6652:  async function saveProfileField(field, value) {
+6660:    const storageMap = {
+6706:  const roleInitials = { PLAYER:"JG", STAFF:"ST", ADMIN:"AD", SUPPORT:"SP" };
+6710:  function computeCompleteness() {
+6723:  function handleAvatarChange(e) {
+6727:    const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
+6734:  function handleAvatarSave() {
+6741:  function handleAvatarDelete() {
+6749:  function startBioEdit() { setBioDraft(bio); setBioEdit(true); setBioMsg(""); }
+6750:  function cancelBioEdit() { setBioEdit(false); setBioDraft(""); }
+6751:  function saveBio() {
+6760:  function startDeporteEdit() { setDeporteDraft({...deporteData}); setDeporteEditing(true); }
+6761:  function cancelDeporteEdit() { setDeporteEditing(false); }
+6762:  function saveDeporte() {
+6763:    const saved = {...deporteDraft};
+6770:  function togglePriv(key, defaultOn) {
+6772:    const updated = { ...privacidad, [key]: !current };
+6779:  function handleChangePwd(e) {
+6792:  const demoMetrics = {
+6801:  const allBadges = [
+6813:  const recentActivity = [
+6822:  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+6826:  const cs = { background:T.surface2, borderRadius:20, padding:"22px 24px", border:`1px solid ${T.line}` };
+6827:  const ls = { color:T.textDim, fontWeight:700, fontSize:".8rem", letterSpacing:".06em", textTransform:"uppercase", marginBottom:6, display:"block" };
+6828:  const ss = { background:T.surface3, border:`1px solid ${T.line}`, borderRadius:10, color:T.text, padding:"10px 14px", width:"100%", fontSize:".93rem" };
+6829:  const hs = { margin:0, color:T.accent, fontFamily:T.fontDisplay, fontSize:"1rem", letterSpacing:".04em" };
+6835:  return (
+7128:              return (
+7167:export default function ClubPadel04SaaSApp() {
+7186:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+7188:  const roleConfig = {
+7215:  function selectRole(roleId) {
+7222:  function confirmRoleAccess(event) {
+7249:  function clearRole() {
+7261:  function inferRoleFromEmail(email) {
+7273:  function handleUniversalLogin(event) {
+7300:  function openForgotPwd() {
+7306:  function closeForgotPwd() {
+7312:  function handleForgotPwdSubmit(e) {
+7328:    function handleKeyDown(event) {
+7337:    return () => {
+7343:  function navigate(section) {
+7363:    const roleLabels = {
+7369:    return (
+7453:                return (
+7559:  return (

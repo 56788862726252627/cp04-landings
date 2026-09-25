@@ -1,0 +1,2 @@
+Imports lazy añadidos.
+App.jsx actualizado.

@@ -1,0 +1,1 @@
+32 src/components/ClubGallery.jsx

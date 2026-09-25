@@ -1,0 +1,530 @@
+{
+  "schemaVersion": 1,
+  "requestId": "intent-6abbf517493eed5c",
+  "language": "es",
+  "locale": "es-ES",
+  "country": "ES",
+  "currency": "EUR",
+  "timezone": "Europe/Madrid",
+  "business": {
+    "proposedName": "Despacho De Abogados (borrador)",
+    "sector": "law",
+    "locations": [],
+    "channels": [
+      "web"
+    ]
+  },
+  "objectives": [
+    "digitalizar la gestión de despacho de abogados",
+    "agilizar: consulta inicial",
+    "agilizar: gestión de casos",
+    "agilizar: facturación de honorarios"
+  ],
+  "problemsToSolve": [
+    "gestión manual/en papel de la operación diaria",
+    "falta de recordatorios automáticos para reducir ausencias"
+  ],
+  "actors": [
+    "cliente",
+    "abogado",
+    "administración",
+    "dirección"
+  ],
+  "processes": [
+    "consulta inicial",
+    "gestión de casos",
+    "facturación de honorarios"
+  ],
+  "entities": [
+    "cliente",
+    "caso",
+    "cita",
+    "documento legal"
+  ],
+  "requestedFeatures": [
+    {
+      "id": "profesionales",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "torneos",
+      "raw": "mencionado explícitamente en la petición (fuera de lo habitual para \"Despacho de abogados\"; se respeta por ser una petición explícita, revisar antes de producción)"
+    },
+    {
+      "id": "ranking",
+      "raw": "mencionado explícitamente en la petición (fuera de lo habitual para \"Despacho de abogados\"; se respeta por ser una petición explícita, revisar antes de producción)"
+    }
+  ],
+  "inferredFeatures": [
+    {
+      "id": "servicios",
+      "raw": "\"pagos\" requiere el módulo \"servicios\""
+    }
+  ],
+  "rejectedFeatures": [],
+  "modules": [
+    {
+      "id": "autenticacion",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.6,
+      "priority": "media",
+      "justification": "módulo base recomendado para cualquier negocio con clientes",
+      "dependsOn": []
+    },
+    {
+      "id": "clientes",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.6,
+      "priority": "media",
+      "justification": "módulo base recomendado para cualquier negocio con clientes",
+      "dependsOn": []
+    },
+    {
+      "id": "citas",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.55,
+      "priority": "media",
+      "justification": "recomendado por el preset sectorial \"Despacho de abogados\"",
+      "dependsOn": []
+    },
+    {
+      "id": "pagos",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.55,
+      "priority": "media",
+      "justification": "recomendado por el preset sectorial \"Despacho de abogados\"",
+      "dependsOn": []
+    },
+    {
+      "id": "membresias",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "documentos",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.55,
+      "priority": "media",
+      "justification": "recomendado por el preset sectorial \"Despacho de abogados\"",
+      "dependsOn": []
+    },
+    {
+      "id": "servicios",
+      "source": "inferred",
+      "status": "enabled",
+      "confidence": 0.7,
+      "priority": "media",
+      "justification": "\"pagos\" requiere el módulo \"servicios\"",
+      "dependsOn": [
+        "pagos"
+      ]
+    },
+    {
+      "id": "profesionales",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "soporte",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.6,
+      "priority": "media",
+      "justification": "módulo base recomendado para cualquier negocio con clientes",
+      "dependsOn": []
+    },
+    {
+      "id": "crm",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "leads",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "notificaciones",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "informes",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "dashboard",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "configuracion",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.6,
+      "priority": "media",
+      "justification": "módulo base recomendado para cualquier negocio con clientes",
+      "dependsOn": []
+    },
+    {
+      "id": "auditoria",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "backups",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "consentimientos",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "contenidos",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "torneos",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.5,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición (fuera de lo habitual para \"Despacho de abogados\"; se respeta por ser una petición explícita, revisar antes de producción)",
+      "dependsOn": []
+    },
+    {
+      "id": "ranking",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.5,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición (fuera de lo habitual para \"Despacho de abogados\"; se respeta por ser una petición explícita, revisar antes de producción)",
+      "dependsOn": []
+    }
+  ],
+  "roles": [
+    "cliente",
+    "abogado",
+    "administracion",
+    "direccion",
+    "soporte"
+  ],
+  "permissions": {
+    "cliente": [
+      "citas",
+      "documentos",
+      "servicios"
+    ],
+    "abogado": [
+      "clientes",
+      "citas",
+      "documentos",
+      "servicios",
+      "profesionales"
+    ],
+    "administracion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "pagos",
+      "documentos",
+      "servicios",
+      "profesionales",
+      "soporte",
+      "configuracion",
+      "torneos",
+      "ranking"
+    ],
+    "direccion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "pagos",
+      "documentos",
+      "servicios",
+      "profesionales",
+      "soporte",
+      "configuracion",
+      "torneos",
+      "ranking"
+    ],
+    "soporte": [
+      "soporte"
+    ]
+  },
+  "automations": [
+    {
+      "id": "confirmacion_reserva",
+      "capability": "confirmacion",
+      "trigger": "cita_creada"
+    },
+    {
+      "id": "recordatorio_24h",
+      "capability": "recordatorio",
+      "trigger": "24h_antes_de_cita"
+    },
+    {
+      "id": "no_show_seguimiento",
+      "capability": "seguimiento",
+      "trigger": "cita_marcada_no_show"
+    },
+    {
+      "id": "recordatorio_2h",
+      "capability": "recordatorio",
+      "trigger": "2h_antes_de_cita"
+    },
+    {
+      "id": "seguimiento_comercial_lead",
+      "capability": "seguimiento",
+      "trigger": "lead_creado"
+    }
+  ],
+  "integrations": {
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    }
+  },
+  "branding": {
+    "proposedName": "Despacho De Abogados (borrador)",
+    "slug": "despacho-de-abogados-borrador",
+    "tagline": "Despacho de abogados — gestión digital sencilla",
+    "tone": "formal-institucional",
+    "palette": {
+      "primary": "#1d4e89",
+      "accent": "#1f3a63",
+      "bg": "#ffffff",
+      "text": "#0c1420",
+      "contrastCheckedAgainstWcagAA": true
+    },
+    "fonts": {
+      "display": "'Inter', sans-serif",
+      "body": "'Inter', sans-serif"
+    },
+    "style": "moderno-minimalista",
+    "iconManifest": {
+      "note": "Ningún binario generado en este paso; contrato de Paso 10 (brandingEngine.js) reutilizado tal cual.",
+      "sizesPx": [
+        16,
+        32,
+        48,
+        72,
+        96,
+        128,
+        144,
+        152,
+        180,
+        192,
+        256,
+        384,
+        512
+      ],
+      "pendingAssets": [
+        "favicon_ico",
+        "icon_16",
+        "icon_32",
+        "icon_48",
+        "icon_72",
+        "icon_96",
+        "icon_128",
+        "icon_144",
+        "icon_152",
+        "icon_180",
+        "icon_192",
+        "icon_256",
+        "icon_384",
+        "icon_512",
+        "apple_touch_icon",
+        "maskable_icon_192",
+        "maskable_icon_512",
+        "manifest_webmanifest"
+      ]
+    },
+    "faviconRef": null,
+    "logoRef": null
+  },
+  "landing": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProp",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer",
+      "privacyPlaceholder"
+    ],
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto",
+    "navigation": [
+      "Inicio",
+      "Servicios",
+      "Cómo funciona",
+      "Preguntas frecuentes",
+      "Contacto"
+    ],
+    "testimonials": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de despacho de abogados.",
+        "isDemo": true
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Qué incluye la solución para despacho de abogados?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ],
+    "privacyPlaceholder": "Aviso de privacidad y términos: placeholder pendiente de revisión legal antes de producción."
+  },
+  "pwa": {
+    "shortName": "Despacho De Abogados (bo",
+    "themeColor": "#1f3a63",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/",
+    "compatibility": {
+      "mobile": true,
+      "tablet": true,
+      "desktop": true,
+      "android": true,
+      "ios": true,
+      "modernBrowsers": true
+    }
+  },
+  "analytics": {
+    "enabled": false,
+    "note": "sin proveedor real conectado en este paso"
+  },
+  "security": {
+    "regulatedSector": false,
+    "sensitiveDataCategories": []
+  },
+  "complianceNotes": [
+    "confidencialidad reforzada de documentos de clientes"
+  ],
+  "nonFunctionalRequirements": [
+    "disponible en móvil, tablet y escritorio (PWA)"
+  ],
+  "assumptions": [
+    {
+      "field": "country/timezone",
+      "assumedValue": "ES/Europe/Madrid",
+      "reason": "valor por defecto seguro (España/Europe-Madrid) al no detectarse ciudad en el texto"
+    }
+  ],
+  "ambiguities": [
+    {
+      "field": "business.locations",
+      "reason": "no se detectó ciudad ni ubicación en el texto",
+      "blocking": false
+    },
+    {
+      "field": "modules.torneos",
+      "reason": "\"torneos\" no es habitual para el sector \"Despacho de abogados\"; se mantiene por ser una petición explícita, pero conviene confirmarlo antes de producción",
+      "blocking": false
+    },
+    {
+      "field": "modules.ranking",
+      "reason": "\"ranking\" no es habitual para el sector \"Despacho de abogados\"; se mantiene por ser una petición explícita, pero conviene confirmarlo antes de producción",
+      "blocking": false
+    }
+  ],
+  "recommendedQuestions": [
+    "¿En qué ciudad y país operará el negocio?",
+    "¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?"
+  ],
+  "confidence": {
+    "overall": 0.62,
+    "bySection": {
+      "sector": 0.81,
+      "modules": 0.6,
+      "branding": 0.4
+    },
+    "explanations": {
+      "sector": "2 coincidencia(s) de palabra clave para \"Despacho de abogados\"",
+      "modules": "promedio de confianza de 11 módulo(s) habilitado(s)",
+      "branding": "branding no mencionado explícitamente; se usan valores por defecto seguros",
+      "overall": "media ponderada de secciones (sector 35% · módulos 40% · branding 25%)"
+    }
+  },
+  "sourceText": "Despacho de abogados ficticio que también quiero que tenga torneos y ranking, aunque sé que no es lo habitual para un despacho.",
+  "normalizedSummary": "Despacho de abogados (ES) — 11 módulo(s) habilitado(s).",
+  "generationMetadata": {
+    "generatedBy": "nl-builder:deterministic-v1",
+    "seed": "demo-modulos-no-recomendados-001",
+    "sourceLanguageDetected": "es",
+    "truncatedInput": false,
+    "matchedSectorKeywords": 2
+  }
+}

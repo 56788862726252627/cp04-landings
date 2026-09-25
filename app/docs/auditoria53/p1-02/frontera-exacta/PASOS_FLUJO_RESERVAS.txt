@@ -1,0 +1,88 @@
+485:async function sendBooking(payload) {
+489:    body: JSON.stringify(payload),
+2335:    "reservas.hora_fin":"Hora fin","reservas.total":"Total","reservas.ver_resumen":"Ver resumen",
+2337:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nueva reserva",
+2537:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+2539:    "reservas.registrada":"Booking registered","reservas.nueva_btn":"New booking",
+2549:    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
+2553:    "status.cancelar.enviando":"Sending","status.cancelar.enviando_txt":"We are sending your cancellation request.",
+2572:    "errors.confirmado_cancelar":"Please confirm you want to request cancellation before sending.",
+2739:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+2741:    "reservas.registrada":"Booking confirmed","reservas.nueva_btn":"New booking",
+2751:    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
+2755:    "status.cancelar.enviando":"Sending","status.cancelar.enviando_txt":"We are sending your cancellation request.",
+2774:    "errors.confirmado_cancelar":"Please confirm you want to request cancellation before sending.",
+2937:    "reservas.hora_fin":"Heure de fin","reservas.total":"Total","reservas.ver_resumen":"Voir le résumé",
+2939:    "reservas.registrada":"Réservation enregistrée","reservas.nueva_btn":"Nouvelle réservation",
+3135:    "reservas.hora_fin":"Ora di fine","reservas.total":"Totale","reservas.ver_resumen":"Vedi riepilogo",
+3137:    "reservas.registrada":"Prenotazione registrata","reservas.nueva_btn":"Nuova prenotazione",
+3333:    "reservas.hora_fin":"Hora de fim","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+3335:    "reservas.registrada":"Reserva registada","reservas.nueva_btn":"Nova reserva",
+3531:    "reservas.hora_fin":"Horário de término","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+3533:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nova reserva",
+3729:    "reservas.hora_fin":"Endzeit","reservas.total":"Gesamt","reservas.ver_resumen":"Zusammenfassung",
+3731:    "reservas.registrada":"Buchung registriert","reservas.nueva_btn":"Neue Buchung",
+4319:  const sendingRef = useRef(false);
+4323:  const payload = useMemo(() => prepareBookingPayload(form, court), [form, court]);
+4324:  const sending = status === "sending";
+4327:    sending: [tx("status.reserva.enviando"), tx("status.reserva.enviando_txt"), T.warning],
+4337:    if (status !== "sending") setStatus("pending");
+4340:  function review() {
+4348:    setStep(2);
+4352:    if (sending || sendingRef.current) return;
+4358:      setStep(1);
+4362:    sendingRef.current = true;
+4363:    setStatus("sending");
+4371:        setStep(1);
+4375:      await sendBooking(payload);
+4378:      setStep(3);
+4383:      sendingRef.current = false;
+4387:  function newBooking() {
+4388:    setStep(1);
+4403:    setStep(1);
+4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+4415:  const sendingRef = useRef(false);
+4416:  const sending = status === "sending";
+4420:    sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt"), T.warning],
+4429:    if (status !== "sending") setStatus("idle");
+4435:    if (status !== "sending") setStatus("idle");
+4440:    if (sending || sendingRef.current) return;
+4454:    setStatus("sending");
+4456:    sendingRef.current = true;
+4489:      sendingRef.current = false;
+4493:  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} /><Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+4511:  const sendingRef = useRef(false);
+4512:  const sending = status === "sending";
+4516:  const payload = useMemo(
+4523:    sending: [tx("status.reprog.enviando"), tx("status.reprog.enviando_txt"), T.warning],
+4533:    if (status !== "sending") setStatus("idle");
+4540:    if (status !== "sending") setStatus("idle");
+4545:    if (sending || sendingRef.current) return;
+4556:    sendingRef.current = true;
+4557:    setStatus("sending");
+4573:        body: JSON.stringify(payload),
+4610:      sendingRef.current = false;
+4671:              disabled={sending}
+4701:              disabled={sending}
+4714:              disabled={sending || isSundayISO(form.nueva_fecha_reserva)}
+4736:              disabled={sending}
+4753:                      disabled={sending}
+4761:                        cursor: sending ? "not-allowed" : "pointer",
+4762:                        opacity: sending ? .55 : 1,
+4796:                cursor: sending ? "not-allowed" : "pointer",
+4803:                disabled={sending}
+4809:                  cursor: sending ? "not-allowed" : "pointer",
+4826:                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+4828:                {sending ? tx("reprog.enviando") : tx("reprog.btn")}
+4830:              <Btn variant="secondary" disabled={sending} onClick={() => setCurrent("reservas")}>
+5513:  const [sending, setSending] = useState(false);
+5674:            <Btn type="submit" disabled={sending}>{sending ? tx("alta.registrando") : tx("alta.btn")}</Btn>
+6852:  const [avatarPreview, setAvatarPreview] = useState(null);
+6909:    reader.onload = ev => setAvatarPreview(ev.target.result);
+6913:    if (!avatarPreview) return;
+6914:    saveProfileField("avatar", avatarPreview);
+6915:    setAvatarSrc(avatarPreview); setAvatarPreview(null);
+6921:    setAvatarSrc(null); setAvatarPreview(null); setShowDelConfirm(false);
+7069:            {avatarPreview ? (
+7071:                <img src={avatarPreview} alt="Vista previa" style={{ width:80, height:80, borderRadius:"50%", objectFit:"cover", border:`2px solid ${T.warning}`, marginBottom:8 }} />
+7075:                  <Btn variant="secondary" onClick={() => setAvatarPreview(null)} style={{ fontSize:".82rem", padding:"7px 18px" }}>Descartar</Btn>

@@ -1,0 +1,150 @@
+{
+  "businessId": "clinica-dental-sonrisas-de-malaga",
+  "tenantId": "clinica-dental-sonrisas-de-malaga",
+  "locale": "es-ES",
+  "sectionsEnabled": [
+    "header",
+    "hero",
+    "valueProposition",
+    "benefits",
+    "services",
+    "howItWorks",
+    "testimonials",
+    "faq",
+    "cta",
+    "contact",
+    "footer"
+  ],
+  "meta": {
+    "title": "Sonrisas de Málaga | clínica dental",
+    "description": "Clínica dental ficticia de demostración en Málaga: revisiones, limpieza y ortodoncia.",
+    "canonical": "https://sonrisas-de-malaga.example",
+    "ogImage": "assets/logo-placeholder.svg",
+    "robots": "noindex,nofollow",
+    "structuredDataPrepared": true
+  },
+  "header": {
+    "brandName": "Sonrisas de Málaga",
+    "navLinks": [
+      "services",
+      "howItWorks",
+      "faq",
+      "contact"
+    ]
+  },
+  "hero": {
+    "headline": "Sonrisas de Málaga",
+    "subheadline": "Clínica dental ficticia de demostración en Málaga: revisiones, limpieza y ortodoncia.",
+    "ctaLabel": "Pedir cita",
+    "ctaHref": "#contacto"
+  },
+  "valueProposition": {
+    "heading": "Por qué elegir Sonrisas de Málaga",
+    "points": [
+      "Reservas online de citas",
+      "Recordatorios automáticos para pacientes",
+      "Gestión centralizada del equipo y la agenda"
+    ]
+  },
+  "benefits": [
+    {
+      "title": "Ahorra tiempo",
+      "description": "Automatiza confirmaciones y recordatorios de citas."
+    },
+    {
+      "title": "Sin errores de agenda",
+      "description": "Disponibilidad siempre actualizada."
+    },
+    {
+      "title": "Comunicación clara",
+      "description": "Tus pacientes siempre saben qué esperar."
+    }
+  ],
+  "services": {
+    "heading": "Servicios",
+    "items": [
+      {
+        "name": "Revisión general",
+        "durationMinutes": 30,
+        "priceHint": 35
+      },
+      {
+        "name": "Limpieza dental",
+        "durationMinutes": 45,
+        "priceHint": 60
+      },
+      {
+        "name": "Ortodoncia (consulta)",
+        "durationMinutes": 30,
+        "priceHint": 40
+      }
+    ]
+  },
+  "howItWorks": {
+    "heading": "Cómo funciona",
+    "steps": [
+      {
+        "title": "1. Elige servicio",
+        "description": "Selecciona el servicio que necesitas."
+      },
+      {
+        "title": "2. Elige horario",
+        "description": "Consulta disponibilidad en tiempo real."
+      },
+      {
+        "title": "3. Confirma",
+        "description": "Recibe confirmación y recordatorio automáticos."
+      }
+    ]
+  },
+  "testimonials": {
+    "heading": "Lo que dicen (demostración)",
+    "items": [
+      {
+        "author": "Cliente demo A (ficticio)",
+        "quote": "Reservar mi cita ahora lleva segundos.",
+        "isDemoData": true,
+        "demoLabel": "Testimonio de demostración — no corresponde a un cliente real"
+      },
+      {
+        "author": "Cliente demo B (ficticio)",
+        "quote": "Los recordatorios automáticos me han evitado olvidos.",
+        "isDemoData": true,
+        "demoLabel": "Testimonio de demostración — no corresponde a un cliente real"
+      }
+    ],
+    "demoNotice": "Todos los testimonios de esta sección son de demostración, no de clientes reales."
+  },
+  "faq": {
+    "heading": "Preguntas frecuentes",
+    "items": [
+      {
+        "question": "¿Cómo reservo un/a cita?",
+        "answer": "Desde la sección de reservas, eligiendo servicio, dentista y horario disponible."
+      },
+      {
+        "question": "¿Los datos que veo aquí son reales?",
+        "answer": "No. Esta landing y sus datos son de demostración, generados automáticamente para validar la plantilla del sector."
+      }
+    ]
+  },
+  "cta": {
+    "heading": "¿Listo para empezar con Sonrisas de Málaga?",
+    "ctaLabel": "Pedir cita",
+    "ctaHref": "#contacto"
+  },
+  "contact": {
+    "email": "hola@sonrisas-de-malaga.example",
+    "website": "https://sonrisas-de-malaga.example",
+    "address": {
+      "city": "Málaga",
+      "region": "Andalucía",
+      "country": "ES"
+    }
+  },
+  "footer": {
+    "legalName": "Sonrisas de Málaga Clínica Dental S.L. (ficticia)",
+    "privacyPlaceholder": "Aviso de privacidad pendiente de revisión legal — placeholder generado automáticamente, no usar en producción sin revisión.",
+    "termsPlaceholder": "Términos y condiciones pendientes de revisión legal — placeholder generado automáticamente."
+  }
+}

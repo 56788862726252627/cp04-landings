@@ -1,0 +1,27 @@
+205:        <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:"radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), #050910", color:"white" }}>
+207:            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:18 }}>
+211:              <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+212:                <div style={{ minWidth:180, maxWidth:220 }}><LanguageSelector /></div>
+224:            <p style={{ color:T.textDim, maxWidth:760, lineHeight:1.7, fontSize:"clamp(1rem, 2vw, 1.18rem)", marginBottom:34 }}>
+228:      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:22, marginBottom:26 }}>
+229:        <form onSubmit={handleUniversalLogin} style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(5,10,18,.72)" }}>
+245:            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+253:            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? "#ff6b6b" : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+256:              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 }}>
+280:          <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
+288:                <div style={{ marginTop:18, padding:18, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+302:                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+311:                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+320:                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+329:                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+334:                      <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+363:        <div style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
+382:                    style={{ textAlign:"left", border:`1px solid ${T.line}`, borderRadius:24, padding:22, background:"rgba(5,10,18,.72)", color:T.text, cursor:"pointer", minHeight:138 }}>
+392:              <form onSubmit={confirmRoleAccess} style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+403:                  style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${roleError?"#ff6b6b":T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+415:                <label style={{ display:"flex", alignItems:"center", gap:10, color:T.textDim, marginBottom:12, cursor:"pointer", userSelect:"none" }}>
+420:                <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+435:              <div style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+447:                        style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+450:                      <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
+492:        <div style={{ display:"flex", alignItems:"center", gap:10 }}>

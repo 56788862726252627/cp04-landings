@@ -1,0 +1,7 @@
+## getent hosts clubpadel04.com
+
+## getent hosts app.clubpadel04.com
+
+## nslookup, si existe
+
+## dig, si existe

@@ -1,0 +1,98 @@
+75:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+331:function getSlotStatus(fecha, hora, duration = 90) {
+377:    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+451:    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+705:                const slotStatus = getSlotStatus(fecha, hora, duration);
+4316:  const [errors, setErrors] = useState({});
+4335:    setErrors((current) => ({ ...current, [field]: undefined }));
+4342:    setErrors(nextErrors);
+4354:    setErrors(nextErrors);
+4391:    setErrors({});
+4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+4414:  const [error, setError] = useState("");
+4428:    setError("");
+4434:    setError("");
+4444:      setError(tx("errors.clave"));
+4449:      setError(tx("errors.confirmado_cancelar"));
+4455:    setError("");
+4486:      setError(tx("errors.cancelar_error"));
+4510:  const [errors, setErrors] = useState({});
+4531:    setErrors((current) => ({ ...current, [field]: undefined }));
+4538:    setErrors((current) => ({ ...current, nueva_pista: undefined }));
+4548:    setErrors(nextErrors);
+4623:    setErrors({});
+4720:                  disabled={getSlotStatus(form.nueva_fecha_reserva, hora, duration) !== "available"}
+4826:                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+4868:  const [errorReservas, setErrorReservas] = useState("");
+4875:    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
+4974:      setErrorReservas(
+4983:    setErrorReservas("");
+5045:      setErrorReservas(
+5190:                setErrorReservas("");
+5512:  const [errors, setErrors] = useState({});
+5515:  const [serverError, setServerError] = useState("");
+5519:    setErrors((previous) => ({ ...previous, [field]: "" }));
+5521:    setServerError("");
+5566:    setErrors(nextErrors);
+5571:    setServerError("");
+5601:      setServerError(error?.message || "No se pudo completar el alta.");
+5811:  const [customError, setCustomError] = useState("");
+5916:    setFormatMode(fmt); setCustomError("");
+5925:    if (isNaN(raw) || raw < 1) { setCustomError("Introduce un número válido."); return; }
+5928:      if (raw < 2) { setCustomError("Mínimo 2 jugadores."); return; }
+5929:      if (raw % 2 !== 0) { setCustomError("El número de jugadores debe ser par."); return; }
+5930:      if (raw > 64) { setCustomError("Máximo 64 jugadores."); return; }
+5933:      if (raw < 1) { setCustomError("Mínimo 1 pareja."); return; }
+5934:      if (raw > 32) { setCustomError("Máximo 32 parejas."); return; }
+5937:    setCustomError("");
+6127:                <button type="button" className={`cp04-format-pill${customMode === "players" ? " is-active" : ""}`} onClick={() => { setCustomMode("players"); setCustomError(""); }}>👤 Jugadores</button>
+6128:                <button type="button" className={`cp04-format-pill${customMode === "pairs" ? " is-active" : ""}`} onClick={() => { setCustomMode("pairs"); setCustomError(""); }}>🎾 Parejas</button>
+6136:                <input type="number" value={customInput} onChange={e => { setCustomInput(e.target.value); setCustomError(""); }}
+6792:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+6854:  const [avatarError, setAvatarError] = useState("");
+6882:  const [pwdError, setPwdError] = useState("");
+6904:    setAvatarError(""); setAvatarMsg("");
+6906:    if (!allowed.includes(file.type)) { setAvatarError(tx("perfil.avatar_error_tipo")); return; }
+6907:    if (file.size > 5 * 1024 * 1024) { setAvatarError(tx("perfil.avatar_error_size")); return; }
+6958:    e.preventDefault(); setPwdMsg(""); setPwdError("");
+6959:    if (!pwdActual) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
+6960:    if (pwdActual !== demoPwds[selectedRole]) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
+6962:    if (!valid) { setPwdError(tx("perfil.pwd_error_nueva")); return; }
+6963:    if (pwdNueva !== pwdConfirmar) { setPwdError(tx("perfil.pwd_error_coincide")); return; }
+7435:  const [roleError, setRoleError] = useState("");
+7440:  const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
+7447:  const [loginError, setLoginError] = useState("");
+7454:  const [registerError, setRegisterError] = useState("");
+7498:          setLoginError("");
+7502:          setLoginError("");
+7547:    setRoleError("");
+7555:      setRoleError("Selecciona un rol válido.");
+7560:      setRoleError("Contraseña incorrecta para este rol.");
+7574:    setRoleError("");
+7588:    setRoleError("");
+7593:    setLoginError("");
+7617:      setLoginError("Introduce un correo electrónico válido.");
+7622:      setLoginError("Introduce una contraseña válida.");
+7627:      setLoginError("");
+7638:        setLoginError(data?.message || "No se pudo iniciar sesión.");
+7656:        setLoginError("Login recibido, pero falta el token de sesión.");
+7670:      setLoginError("");
+7675:      setLoginError(`No se pudo completar el inicio de sesión. Detalle: ${error?.message || "error desconocido"}`);
+7688:      setRegisterError("Introduce tu nombre.");
+7693:      setRegisterError("Introduce un correo electrónico válido.");
+7698:      setRegisterError("La contraseña debe tener al menos 8 caracteres.");
+7703:      setRegisterError("Las contraseñas no coinciden.");
+7708:      setRegisterError("");
+7720:        setRegisterError(data?.message || "No se pudo crear la cuenta.");
+7734:      setRegisterError(`No se pudo completar el registro. Detalle: ${error?.message || "error desconocido"}`);
+7743:    setRegisterError("");
+7759:    setRegisterError("");
+7767:    setForgotPwdEmailError("");
+7773:    setForgotPwdEmailError("");
+7779:      setForgotPwdEmailError("Introduce un email válido.");
+7930:                        onChange={e => { setRegisterName(e.target.value); localStorage.setItem("cp04_register_name", e.target.value); setRegisterError(""); }}
+7939:                        onChange={e => { setRegisterEmail(e.target.value); localStorage.setItem("cp04_register_email", e.target.value); setRegisterError(""); }}
+7948:                        onChange={e => { setRegisterPassword(e.target.value); setRegisterError(""); }}
+7957:                        onChange={e => { setRegisterConfirm(e.target.value); setRegisterError(""); }}
+8057:                    onClick={() => { setPendingRole(""); setRolePassword(""); setRoleError(""); }}
+8075:                        onChange={e => { setForgotPwdEmail(e.target.value); setForgotPwdEmailError(""); }}

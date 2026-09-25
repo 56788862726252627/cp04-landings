@@ -1,0 +1,3 @@
+OK: index.html listo
+OK: _redirects listo
+OK: assets listos

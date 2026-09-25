@@ -2,9 +2,15 @@
 
 ## Current Status
 
-Authentication is not implemented yet. The current app shows role panels in demo mode only.
+Authentication is implemented, not merely planned:
 
-Do not publish admin, staff or support functionality as production-private data until backend authentication and server-side authorization exist.
+- Real Supabase-based auth exists in the frontend (`src/auth/AuthContext.jsx`, `src/auth/authService.js`).
+- The Worker enforces role authorization server-side (`worker-reservas/auth/authorization.js`), gated by `CP04_ENFORCE_ROLE_GATES`, which is **active in production today**.
+- The effective authorization decision is made server-side, not just hidden/shown in the UI.
+- Verification level: (b) tested locally/in QA sessions against the real deployed Worker, across all 4 roles. (c) Not yet verified: a full production rollout with real end-user accounts at scale.
+- Known open gap: the frontend still stores the Supabase access/refresh tokens in `localStorage` instead of using the Worker's existing `HttpOnly` session cookies. Auth still works, but this is a real security item to close before treating the auth flow as fully production-hardened — see `SECURITY.md`.
+
+Do not publish admin, staff or support functionality against real private data until the specific data flow involved has been verified end-to-end (auth existing is necessary but not sufficient on its own).
 
 ## Planned Roles
 
@@ -82,30 +88,28 @@ Suggested protected sections:
 
 ## Recommended Auth Options
 
+**Decision made: Supabase Auth was selected and is implemented.** The list below is kept only as historical context for why it was chosen.
+
 - Auth0
 - Clerk
-- Supabase Auth
+- Supabase Auth ← selected
 - Firebase Auth
 - Custom backend sessions with secure cookies
 
-The final choice should support role claims and server-side authorization checks.
+## Auth Variables
 
-## Future Variables
+Backend/Worker variables (already configured as Cloudflare Worker secrets, live in production):
 
-Backend/private variables:
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 
-- `AUTH_PROVIDER`
-- `AUTH_ISSUER_URL`
-- `AUTH_AUDIENCE`
-- `AUTH_CLIENT_SECRET`
-- `SESSION_SECRET`
-- `JWT_VERIFICATION_KEY` or provider-specific equivalent
+Public frontend variable actually read by the app today (`src/auth/authService.js`, documented in `.env.example`):
 
-Public frontend variables if required by the provider:
+- `VITE_CP04_AUTH_MODE`: controls demo vs. production auth behavior. Fails closed to production behavior if misconfigured in a production build.
 
-- `VITE_CP04_PUBLIC_AUTH_PROVIDER`
-- `VITE_CP04_PUBLIC_AUTH_CLIENT_ID`
-- `VITE_CP04_PUBLIC_AUTH_DOMAIN`
+The generic variables below were placeholders for a not-yet-chosen provider. They do not apply now that Supabase is the implemented provider; kept only in case an additional/alternative provider is ever added later:
+
+- `AUTH_ISSUER_URL`, `AUTH_AUDIENCE`, `AUTH_CLIENT_SECRET`, `SESSION_SECRET`, `JWT_VERIFICATION_KEY` (or provider-specific equivalents).
 
 Only public identifiers may use `VITE_`. Client secrets, session secrets and signing keys must never be exposed to the browser.
 
@@ -122,6 +126,8 @@ Minimum backend rules:
 - Log access attempts without storing secrets.
 
 ## Risks If Published Without Real Auth
+
+(Historical rationale for why auth was required — the auth described in "Current Status" above is now implemented; kept here as context for why these protections matter, not as a description of the current state.)
 
 - Admin and support panels are visible to any visitor.
 - Internal operational data could be exposed once real data is connected.

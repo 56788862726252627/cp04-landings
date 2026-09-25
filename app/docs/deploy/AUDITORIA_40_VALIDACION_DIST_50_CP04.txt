@@ -1,0 +1,2 @@
+OK: dist/index.html
+OK: dist/assets

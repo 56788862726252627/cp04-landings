@@ -1,0 +1,596 @@
+{
+  "schemaVersion": 1,
+  "requestId": "intent-31959a034111e5fc",
+  "language": "es",
+  "locale": "es-ES",
+  "country": "ES",
+  "currency": "EUR",
+  "timezone": "Europe/Madrid",
+  "business": {
+    "proposedName": "Clínica De Fisioterapia Málaga (borrador)",
+    "sector": "physiotherapy",
+    "locations": [
+      {
+        "city": "Málaga",
+        "country": "ES"
+      }
+    ],
+    "channels": [
+      "web",
+      "app"
+    ]
+  },
+  "objectives": [
+    "digitalizar la gestión de clínica de fisioterapia",
+    "agilizar: reserva de sesión",
+    "agilizar: seguimiento de tratamiento",
+    "agilizar: venta de bonos"
+  ],
+  "problemsToSolve": [
+    "gestión manual/en papel de la operación diaria",
+    "falta de recordatorios automáticos para reducir ausencias"
+  ],
+  "actors": [
+    "paciente",
+    "recepción",
+    "fisioterapeuta",
+    "dirección"
+  ],
+  "processes": [
+    "reserva de sesión",
+    "seguimiento de tratamiento",
+    "venta de bonos"
+  ],
+  "entities": [
+    "paciente",
+    "cita",
+    "sesión de tratamiento",
+    "bono de sesiones"
+  ],
+  "requestedFeatures": [
+    {
+      "id": "clientes",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "citas",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "facturacion",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "bonos",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "expedientes",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "leads",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "recordatorios",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "dashboard",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "landing",
+      "raw": "mencionado explícitamente en la petición"
+    },
+    {
+      "id": "pwa",
+      "raw": "mencionado explícitamente en la petición"
+    }
+  ],
+  "inferredFeatures": [],
+  "rejectedFeatures": [],
+  "modules": [
+    {
+      "id": "autenticacion",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.6,
+      "priority": "media",
+      "justification": "módulo base recomendado para cualquier negocio con clientes",
+      "dependsOn": []
+    },
+    {
+      "id": "clientes",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "citas",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "pagos",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.55,
+      "priority": "media",
+      "justification": "recomendado por el preset sectorial \"Clínica de fisioterapia\"",
+      "dependsOn": []
+    },
+    {
+      "id": "facturacion",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "bonos",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "membresias",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "documentos",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.55,
+      "priority": "media",
+      "justification": "recomendado por el preset sectorial \"Clínica de fisioterapia\"",
+      "dependsOn": []
+    },
+    {
+      "id": "expedientes",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "servicios",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.55,
+      "priority": "media",
+      "justification": "recomendado por el preset sectorial \"Clínica de fisioterapia\"",
+      "dependsOn": []
+    },
+    {
+      "id": "profesionales",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.55,
+      "priority": "media",
+      "justification": "recomendado por el preset sectorial \"Clínica de fisioterapia\"",
+      "dependsOn": []
+    },
+    {
+      "id": "soporte",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.6,
+      "priority": "media",
+      "justification": "módulo base recomendado para cualquier negocio con clientes",
+      "dependsOn": []
+    },
+    {
+      "id": "crm",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "leads",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "recordatorios",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "notificaciones",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "informes",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "dashboard",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "configuracion",
+      "source": "recommended",
+      "status": "enabled",
+      "confidence": 0.6,
+      "priority": "media",
+      "justification": "módulo base recomendado para cualquier negocio con clientes",
+      "dependsOn": []
+    },
+    {
+      "id": "auditoria",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "backups",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "consentimientos",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "contenidos",
+      "source": "recommended",
+      "status": "suggested",
+      "confidence": 0.3,
+      "priority": "baja",
+      "justification": "posible mejora futura, no activada por defecto",
+      "dependsOn": []
+    },
+    {
+      "id": "landing",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    },
+    {
+      "id": "pwa",
+      "source": "explicit",
+      "status": "enabled",
+      "confidence": 0.9,
+      "priority": "alta",
+      "justification": "mencionado explícitamente en la petición",
+      "dependsOn": []
+    }
+  ],
+  "roles": [
+    "paciente",
+    "recepcion",
+    "fisioterapeuta",
+    "direccion",
+    "soporte"
+  ],
+  "permissions": {
+    "paciente": [
+      "citas",
+      "documentos",
+      "servicios",
+      "landing",
+      "pwa"
+    ],
+    "recepcion": [
+      "clientes",
+      "citas",
+      "pagos",
+      "facturacion",
+      "bonos",
+      "servicios",
+      "profesionales",
+      "leads",
+      "recordatorios"
+    ],
+    "fisioterapeuta": [
+      "clientes",
+      "citas",
+      "documentos",
+      "expedientes",
+      "servicios",
+      "profesionales",
+      "recordatorios"
+    ],
+    "direccion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "pagos",
+      "facturacion",
+      "bonos",
+      "documentos",
+      "expedientes",
+      "servicios",
+      "profesionales",
+      "soporte",
+      "leads",
+      "recordatorios",
+      "dashboard",
+      "configuracion",
+      "landing",
+      "pwa"
+    ],
+    "soporte": [
+      "soporte"
+    ]
+  },
+  "automations": [
+    {
+      "id": "confirmacion_reserva",
+      "capability": "confirmacion",
+      "trigger": "cita_creada"
+    },
+    {
+      "id": "recordatorio_24h",
+      "capability": "recordatorio",
+      "trigger": "24h_antes_de_cita"
+    },
+    {
+      "id": "cancelacion_notificada",
+      "capability": "cancelacion",
+      "trigger": "cita_cancelada"
+    },
+    {
+      "id": "no_show_seguimiento",
+      "capability": "seguimiento",
+      "trigger": "cita_marcada_no_show"
+    },
+    {
+      "id": "recordatorio_2h",
+      "capability": "recordatorio",
+      "trigger": "2h_antes_de_cita"
+    },
+    {
+      "id": "seguimiento_comercial_lead",
+      "capability": "seguimiento",
+      "trigger": "lead_creado"
+    },
+    {
+      "id": "recuperacion_abandono",
+      "capability": "recuperacion",
+      "trigger": "reserva_iniciada_no_completada"
+    }
+  ],
+  "integrations": {
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    }
+  },
+  "branding": {
+    "proposedName": "Clínica De Fisioterapia Málaga (borrador)",
+    "slug": "clinica-de-fisioterapia-malaga-borrador",
+    "tagline": "Clínica de fisioterapia — gestión digital sencilla",
+    "tone": "cercano-profesional",
+    "palette": {
+      "primary": "#1d4e89",
+      "accent": "#1f7a34",
+      "bg": "#ffffff",
+      "text": "#0c1420",
+      "contrastCheckedAgainstWcagAA": true
+    },
+    "fonts": {
+      "display": "'Inter', sans-serif",
+      "body": "'Inter', sans-serif"
+    },
+    "style": "moderno-minimalista",
+    "iconManifest": {
+      "note": "Ningún binario generado en este paso; contrato de Paso 10 (brandingEngine.js) reutilizado tal cual.",
+      "sizesPx": [
+        16,
+        32,
+        48,
+        72,
+        96,
+        128,
+        144,
+        152,
+        180,
+        192,
+        256,
+        384,
+        512
+      ],
+      "pendingAssets": [
+        "favicon_ico",
+        "icon_16",
+        "icon_32",
+        "icon_48",
+        "icon_72",
+        "icon_96",
+        "icon_128",
+        "icon_144",
+        "icon_152",
+        "icon_180",
+        "icon_192",
+        "icon_256",
+        "icon_384",
+        "icon_512",
+        "apple_touch_icon",
+        "maskable_icon_192",
+        "maskable_icon_512",
+        "manifest_webmanifest"
+      ]
+    },
+    "faviconRef": null,
+    "logoRef": null
+  },
+  "landing": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProp",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer",
+      "privacyPlaceholder"
+    ],
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto",
+    "navigation": [
+      "Inicio",
+      "Servicios",
+      "Cómo funciona",
+      "Preguntas frecuentes",
+      "Contacto"
+    ],
+    "testimonials": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de clínica de fisioterapia.",
+        "isDemo": true
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Qué incluye la solución para clínica de fisioterapia?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ],
+    "privacyPlaceholder": "Aviso de privacidad y términos: placeholder pendiente de revisión legal antes de producción."
+  },
+  "pwa": {
+    "shortName": "Clínica De Fisioterapia ",
+    "themeColor": "#1f7a34",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/",
+    "compatibility": {
+      "mobile": true,
+      "tablet": true,
+      "desktop": true,
+      "android": true,
+      "ios": true,
+      "modernBrowsers": true
+    }
+  },
+  "analytics": {
+    "enabled": false,
+    "note": "sin proveedor real conectado en este paso"
+  },
+  "security": {
+    "regulatedSector": true,
+    "sensitiveDataCategories": [
+      "health"
+    ]
+  },
+  "complianceNotes": [
+    "datos de salud sujetos a normativa reforzada"
+  ],
+  "nonFunctionalRequirements": [
+    "disponible en móvil, tablet y escritorio (PWA)"
+  ],
+  "assumptions": [],
+  "ambiguities": [],
+  "recommendedQuestions": [
+    "¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?"
+  ],
+  "confidence": {
+    "overall": 0.75,
+    "bySection": {
+      "sector": 0.81,
+      "modules": 0.76,
+      "branding": 0.65
+    },
+    "explanations": {
+      "sector": "2 coincidencia(s) de palabra clave para \"Clínica de fisioterapia\"",
+      "modules": "promedio de confianza de 17 módulo(s) habilitado(s)",
+      "branding": "el texto menciona explícitamente marca/branding/tono",
+      "overall": "media ponderada de secciones (sector 35% · módulos 40% · branding 25%)"
+    }
+  },
+  "sourceText": "Crea un SaaS para una clínica de fisioterapia ficticia de Málaga con reservas, expedientes de pacientes, recordatorios, bonos, facturación, panel de administración, landing premium, PWA y automatizaciones de captación y seguimiento.",
+  "normalizedSummary": "Clínica de fisioterapia en Málaga (ES) — 17 módulo(s) habilitado(s).",
+  "generationMetadata": {
+    "generatedBy": "nl-builder:deterministic-v1",
+    "seed": "demo-001",
+    "sourceLanguageDetected": "es",
+    "truncatedInput": false,
+    "matchedSectorKeywords": 2
+  }
+}

@@ -1,0 +1,3 @@
+src/App.jsx:1:import { DemoSafeBanner } from "./components/demo/DemoSafeNotice";
+src/App.jsx:7564:      <DemoSafeBanner />
+src/components/demo/DemoSafeNotice.jsx:5:export function DemoSafeBanner() {

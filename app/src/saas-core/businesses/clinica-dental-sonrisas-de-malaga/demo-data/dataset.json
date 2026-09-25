@@ -1,0 +1,881 @@
+{
+  "sector": "dental",
+  "seed": "sonrisas-de-malaga-demo",
+  "isDemoData": true,
+  "customers": [
+    {
+      "entity": "Customer",
+      "id": "customer_sergio-fern-ndez-demo",
+      "displayName": "Sergio Fernández (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 3
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_marcos-d-az-demo",
+      "displayName": "Marcos Díaz (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 9
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_carmen-ruiz-demo",
+      "displayName": "Carmen Ruiz (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 1
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_hugo-vidal-demo",
+      "displayName": "Hugo Vidal (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 9
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_carlos-lvarez-demo",
+      "displayName": "Carlos Álvarez (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 8
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_javier-romero-demo",
+      "displayName": "Javier Romero (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 6
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_carmen-l-pez-demo",
+      "displayName": "Carmen López (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 4
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_lvaro-l-pez-demo",
+      "displayName": "Álvaro López (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 7
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_carmen-garc-a-demo",
+      "displayName": "Carmen García (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 1
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_carmen-navarro-demo",
+      "displayName": "Carmen Navarro (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 5
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_javier-moreno-demo",
+      "displayName": "Javier Moreno (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 8
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_javier-navarro-demo",
+      "displayName": "Javier Navarro (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 3
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_sof-a-navarro-demo",
+      "displayName": "Sofía Navarro (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 2
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_adri-n-vidal-demo",
+      "displayName": "Adrián Vidal (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 2
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_laura-lvarez-demo",
+      "displayName": "Laura Álvarez (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 1
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_marcos-s-nchez-demo",
+      "displayName": "Marcos Sánchez (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 0
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_carlos-navarro-demo",
+      "displayName": "Carlos Navarro (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 6
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    },
+    {
+      "entity": "Customer",
+      "id": "customer_javier-l-pez-demo",
+      "displayName": "Javier López (demo)",
+      "tags": [
+        "demo"
+      ],
+      "metrics": {
+        "visitsCount": 5
+      },
+      "contact": {
+        "email": null,
+        "phone": null
+      },
+      "isDemoData": true
+    }
+  ],
+  "professionals": [
+    {
+      "entity": "StaffMember",
+      "id": "staff_luc-a-garc-a-demo",
+      "displayName": "Lucía García (demo)",
+      "role": "dentista",
+      "functions": [],
+      "isDemoData": true
+    },
+    {
+      "entity": "StaffMember",
+      "id": "staff_irene-p-rez-demo",
+      "displayName": "Irene Pérez (demo)",
+      "role": "dentista",
+      "functions": [],
+      "isDemoData": true
+    },
+    {
+      "entity": "StaffMember",
+      "id": "staff_sof-a-vidal-demo",
+      "displayName": "Sofía Vidal (demo)",
+      "role": "dentista",
+      "functions": [],
+      "isDemoData": true
+    }
+  ],
+  "services": [
+    {
+      "entity": "Service",
+      "id": "service_revisi-n-general",
+      "name": "Revisión general",
+      "durationMinutes": 30,
+      "priceHint": null,
+      "isDemoData": true
+    },
+    {
+      "entity": "Service",
+      "id": "service_limpieza-dental",
+      "name": "Limpieza dental",
+      "durationMinutes": 30,
+      "priceHint": null,
+      "isDemoData": true
+    },
+    {
+      "entity": "Service",
+      "id": "service_ortodoncia-consulta",
+      "name": "Ortodoncia (consulta)",
+      "durationMinutes": 45,
+      "priceHint": null,
+      "isDemoData": true
+    }
+  ],
+  "resources": [
+    {
+      "entity": "Resource",
+      "id": "resource_consulta-1",
+      "label": "Consulta 1",
+      "kind": "generic",
+      "isDemoData": true
+    },
+    {
+      "entity": "Resource",
+      "id": "resource_consulta-2",
+      "label": "Consulta 2",
+      "kind": "generic",
+      "isDemoData": true
+    },
+    {
+      "entity": "Resource",
+      "id": "resource_consulta-3",
+      "label": "Consulta 3",
+      "kind": "generic",
+      "isDemoData": true
+    }
+  ],
+  "schedules": [
+    {
+      "entity": "ScheduleDay",
+      "day": "lunes",
+      "slots": [
+        "09:00",
+        "11:00",
+        "17:00",
+        "18:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "martes",
+      "slots": [
+        "10:00",
+        "16:00",
+        "18:00",
+        "19:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "miércoles",
+      "slots": [
+        "11:00",
+        "12:00",
+        "16:00",
+        "19:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "jueves",
+      "slots": [
+        "10:00",
+        "12:00",
+        "16:00",
+        "17:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "viernes",
+      "slots": [
+        "09:00",
+        "16:00",
+        "18:00",
+        "19:00"
+      ],
+      "isDemoData": true
+    },
+    {
+      "entity": "ScheduleDay",
+      "day": "sábado",
+      "slots": [
+        "10:00",
+        "11:00",
+        "12:00",
+        "19:00"
+      ],
+      "isDemoData": true
+    }
+  ],
+  "appointments": [
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_1",
+      "customerId": "customer_sergio-fern-ndez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "lunes",
+      "timeLabel": "17:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_2",
+      "customerId": "customer_adri-n-vidal-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "jueves",
+      "timeLabel": "12:00",
+      "kind": "Revisión general",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_3",
+      "customerId": "customer_carmen-ruiz-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "lunes",
+      "timeLabel": "19:00",
+      "kind": "Limpieza dental",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_4",
+      "customerId": "customer_javier-l-pez-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "viernes",
+      "timeLabel": "17:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_5",
+      "customerId": "customer_sof-a-navarro-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "martes",
+      "timeLabel": "09:00",
+      "kind": "Limpieza dental",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_6",
+      "customerId": "customer_javier-navarro-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "viernes",
+      "timeLabel": "11:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_7",
+      "customerId": "customer_javier-navarro-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "miércoles",
+      "timeLabel": "10:00",
+      "kind": "Revisión general",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_8",
+      "customerId": "customer_carlos-navarro-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "sábado",
+      "timeLabel": "11:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_9",
+      "customerId": "customer_carmen-ruiz-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "miércoles",
+      "timeLabel": "17:00",
+      "kind": "Revisión general",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_10",
+      "customerId": "customer_laura-lvarez-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "viernes",
+      "timeLabel": "17:00",
+      "kind": "Limpieza dental",
+      "status": "cancelada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_11",
+      "customerId": "customer_sergio-fern-ndez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_sof-a-vidal-demo",
+      "dateLabel": "miércoles",
+      "timeLabel": "17:00",
+      "kind": "Limpieza dental",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_12",
+      "customerId": "customer_sergio-fern-ndez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "martes",
+      "timeLabel": "12:00",
+      "kind": "Limpieza dental",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_13",
+      "customerId": "customer_javier-romero-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "jueves",
+      "timeLabel": "10:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "pendiente",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_14",
+      "customerId": "customer_sergio-fern-ndez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_sof-a-vidal-demo",
+      "dateLabel": "miércoles",
+      "timeLabel": "16:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "pendiente",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_15",
+      "customerId": "customer_javier-moreno-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "viernes",
+      "timeLabel": "10:00",
+      "kind": "Limpieza dental",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_16",
+      "customerId": "customer_carmen-ruiz-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_sof-a-vidal-demo",
+      "dateLabel": "lunes",
+      "timeLabel": "12:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "confirmada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_17",
+      "customerId": "customer_carmen-ruiz-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "jueves",
+      "timeLabel": "17:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_18",
+      "customerId": "customer_carmen-l-pez-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "jueves",
+      "timeLabel": "16:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_19",
+      "customerId": "customer_javier-l-pez-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "jueves",
+      "timeLabel": "18:00",
+      "kind": "Revisión general",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_20",
+      "customerId": "customer_hugo-vidal-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_sof-a-vidal-demo",
+      "dateLabel": "martes",
+      "timeLabel": "19:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_21",
+      "customerId": "customer_sergio-fern-ndez-demo",
+      "resourceId": "resource_consulta-2",
+      "staffId": "staff_sof-a-vidal-demo",
+      "dateLabel": "miércoles",
+      "timeLabel": "16:00",
+      "kind": "Limpieza dental",
+      "status": "pendiente",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_22",
+      "customerId": "customer_carmen-navarro-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_luc-a-garc-a-demo",
+      "dateLabel": "martes",
+      "timeLabel": "11:00",
+      "kind": "Ortodoncia (consulta)",
+      "status": "pendiente",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_23",
+      "customerId": "customer_javier-navarro-demo",
+      "resourceId": "resource_consulta-1",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "miércoles",
+      "timeLabel": "19:00",
+      "kind": "Limpieza dental",
+      "status": "completada",
+      "isDemoData": true
+    },
+    {
+      "entity": "Appointment",
+      "id": "appt_demo_24",
+      "customerId": "customer_carlos-lvarez-demo",
+      "resourceId": "resource_consulta-3",
+      "staffId": "staff_irene-p-rez-demo",
+      "dateLabel": "jueves",
+      "timeLabel": "18:00",
+      "kind": "Revisión general",
+      "status": "completada",
+      "isDemoData": true
+    }
+  ],
+  "communications": [
+    {
+      "entity": "Communication",
+      "id": "comm_demo_1",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "not_sent",
+      "relatedAppointmentId": "appt_demo_1",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_2",
+      "channel": "whatsapp",
+      "template": "recordatorio_cita",
+      "status": "not_sent",
+      "relatedAppointmentId": "appt_demo_2",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_3",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "not_sent",
+      "relatedAppointmentId": "appt_demo_3",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_4",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "queued_mock",
+      "relatedAppointmentId": "appt_demo_4",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_5",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "not_sent",
+      "relatedAppointmentId": "appt_demo_5",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_6",
+      "channel": "whatsapp",
+      "template": "recordatorio_cita",
+      "status": "not_sent",
+      "relatedAppointmentId": "appt_demo_6",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_7",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_7",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_8",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "queued_mock",
+      "relatedAppointmentId": "appt_demo_8",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_9",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_9",
+      "isDemoData": true
+    },
+    {
+      "entity": "Communication",
+      "id": "comm_demo_10",
+      "channel": "email",
+      "template": "recordatorio_cita",
+      "status": "sent_mock",
+      "relatedAppointmentId": "appt_demo_10",
+      "isDemoData": true
+    }
+  ],
+  "automations": [
+    {
+      "entity": "Automation",
+      "id": "auto_demo_1",
+      "capability": "alta_cliente",
+      "provider": null,
+      "status": "not_connected",
+      "isDemoData": true
+    },
+    {
+      "entity": "Automation",
+      "id": "auto_demo_2",
+      "capability": "confirmacion",
+      "provider": null,
+      "status": "not_connected",
+      "isDemoData": true
+    },
+    {
+      "entity": "Automation",
+      "id": "auto_demo_3",
+      "capability": "recordatorio",
+      "provider": null,
+      "status": "not_connected",
+      "isDemoData": true
+    }
+  ],
+  "metrics": {
+    "entity": "DemoMetricsSnapshot",
+    "isDemoData": true,
+    "totalCustomers": 18,
+    "totalAppointments": 24,
+    "confirmedAppointments": 15,
+    "cancelledAppointments": 5,
+    "occupancyRateHint": 0.63
+  },
+  "incidents": [
+    {
+      "entity": "DemoIncident",
+      "id": "incident_demo_1",
+      "kind": "cancelacion_tardia",
+      "description": "Cancelación fuera de la ventana permitida (dato demo)",
+      "relatedAppointmentId": "appt_demo_17",
+      "isDemoData": true
+    },
+    {
+      "entity": "DemoIncident",
+      "id": "incident_demo_2",
+      "kind": "recordatorio_no_entregado",
+      "description": "Recordatorio marcado como no entregado por el proveedor mock (dato demo)",
+      "relatedAppointmentId": "appt_demo_15",
+      "isDemoData": true
+    },
+    {
+      "entity": "DemoIncident",
+      "id": "incident_demo_3",
+      "kind": "retraso_confirmacion",
+      "description": "Confirmación automática tardó más de lo esperado (dato demo)",
+      "relatedAppointmentId": "appt_demo_7",
+      "isDemoData": true
+    }
+  ]
+}

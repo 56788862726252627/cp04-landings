@@ -1,0 +1,20 @@
+.saas-editorial-media { width: min(100%, 1180px); margin-inline: auto; padding: 40px clamp(16px,3vw,24px); color: var(--editorial-text, #fff); }
+.saas-editorial-intro { max-width: 760px; margin-bottom: 44px; }
+.saas-editorial-intro h2 { font-size: clamp(1.7rem,4vw,2.6rem); margin: 0 0 16px; }
+.saas-editorial-intro p, .saas-editorial-note { color: var(--editorial-muted, #c5ced6); line-height: 1.6; }
+.saas-editorial-piece { border-top: 1px solid var(--editorial-line, #556070); padding-top: 20px; margin-bottom: clamp(40px,6vw,76px); min-width: 0; }
+.saas-editorial-heading { display: flex; gap: 16px; align-items: baseline; margin-bottom: 18px; }
+.saas-editorial-heading h3 { font-size: clamp(1.15rem,2.7vw,1.8rem); margin: 0; flex: 1; }
+.saas-editorial-heading > span:first-child { color: var(--editorial-accent, #fff); font-size: 1.3rem; }
+.saas-editorial-heading > span:last-child { white-space: nowrap; color: var(--editorial-muted, #c5ced6); }
+.saas-editorial-stage { position: relative; aspect-ratio: 16/9; background: var(--editorial-surface, #111); overflow: hidden; }
+.saas-editorial-stage :is(img,video) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--editorial-focal, 50% 50%); }
+.saas-editorial-stage video:focus-visible { outline: 3px solid var(--editorial-accent, #fff); outline-offset: -3px; }
+.saas-editorial-controls { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 12px; }
+.saas-editorial-controls button { border: 1px solid var(--editorial-line, #556070); border-radius: 6px; background: var(--editorial-surface, #111); color: inherit; padding: 10px 16px; min-height: 44px; font: inherit; cursor: pointer; }
+.saas-editorial-controls button:disabled { opacity: .55; cursor: default; }
+.saas-editorial-media :is(button,summary):focus-visible { outline: 3px solid var(--editorial-accent, #fff); outline-offset: 3px; }
+.saas-editorial-transcript summary { cursor: pointer; min-height: 44px; padding: 12px 0; line-height: 1.4; }
+.saas-editorial-transcript p { max-width: 75ch; line-height: 1.7; }
+.saas-editorial-sr { position: absolute; width: 1px; height: 1px; padding: 0; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .saas-editorial-controls button { transition: border-color 140ms ease; } .saas-editorial-controls button:hover { border-color: var(--editorial-accent, #fff); } }

@@ -1,0 +1,284 @@
+worker-reservas/wrangler.toml:1:name = "cp04-reservas-proxy"
+worker-reservas/wrangler.toml:2:main = "src/index.js"
+worker-reservas/wrangler.toml:3:compatibility_date = "2026-06-10"
+worker-reservas/wrangler.toml:5:[vars]
+worker-reservas/wrangler.toml:6:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wrangler.toml:11:# MAKE_RESERVAS_WEBHOOK
+worker-reservas/src/index.js:18:function corsHeaders(request, env) {
+worker-reservas/src/index.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/src/index.js:414:async function forwardToMake(payload, env) {
+worker-reservas/src/index.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/src/index.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/src/index.js:428:async function prepareAirtableWrite(payload, env) {
+worker-reservas/src/index.js:430:    (env.AIRTABLE_TOKEN || env.AIRTABLE_API_KEY) &&
+worker-reservas/src/index.js:431:    env.AIRTABLE_BASE_ID &&
+worker-reservas/src/index.js:432:    (env.AIRTABLE_RESERVAS_TABLE || env.AIRTABLE_TABLE_ID)
+worker-reservas/src/index.js:444:async function handleReservas(request, env) {
+worker-reservas/src/index.js:445:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:472:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/src/index.js:473:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/src/index.js:486:async function handleDisponibilidad(request, env) {
+worker-reservas/src/index.js:487:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:508:        url.pathname === "/api/disponibilidad"
+worker-reservas/src/index.js:523:            corsHeaders(request, env)
+worker-reservas/src/index.js:538:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/src/index.js:544:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/src/index.js:545:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/src/index.js:546:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/src/index.js:564:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/src/index.js:575:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/src/index.js:618:function cp04PickField(fields, fieldId, fallbackNames = []) {
+worker-reservas/src/index.js:626:  for (const name of fallbackNames) {
+worker-reservas/src/index.js:629:      Object.prototype.hasOwnProperty.call(fields, name)
+worker-reservas/src/index.js:631:      return fields[name];
+worker-reservas/src/index.js:654:async function cp04ListReservations(request, env) {
+worker-reservas/src/index.js:655:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:680:    !env.AIRTABLE_TOKEN ||
+worker-reservas/src/index.js:681:    !env.AIRTABLE_BASE_ID ||
+worker-reservas/src/index.js:682:    !env.AIRTABLE_TABLE_ID
+worker-reservas/src/index.js:725:    `${encodeURIComponent(env.AIRTABLE_BASE_ID)}/` +
+worker-reservas/src/index.js:726:    `${encodeURIComponent(env.AIRTABLE_TABLE_ID)}`;
+worker-reservas/src/index.js:761:          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/src/index.js:965:async function handleAltaJugador(request, env) {
+worker-reservas/src/index.js:966:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:980:  if (!env.MAKE_ALTA_JUGADOR_WEBHOOK) {
+worker-reservas/src/index.js:1059:  const makeResponse = await fetch(env.MAKE_ALTA_JUGADOR_WEBHOOK, {
+worker-reservas/src/index.js:1098:function cp04SupabaseConfigured(env) {
+worker-reservas/src/index.js:1099:  return Boolean(env && env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
+worker-reservas/src/index.js:1102:function cp04SupabaseBaseUrl(env) {
+worker-reservas/src/index.js:1103:  return String(env.SUPABASE_URL || "").replace(/\/+$/, "");
+worker-reservas/src/index.js:1106:function cp04SupabaseHeaders(env, extra = {}) {
+worker-reservas/src/index.js:1108:    apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1109:    Authorization: `Bearer ${String(env.SUPABASE_ANON_KEY || "")}`,
+worker-reservas/src/index.js:1121:async function cp04SupabaseRequest(env, path, options = {}) {
+worker-reservas/src/index.js:1122:  const base = cp04SupabaseBaseUrl(env);
+worker-reservas/src/index.js:1125:    headers: cp04SupabaseHeaders(env, options.headers || {})
+worker-reservas/src/index.js:1155:    name: meta.nombre || meta.name || user?.email || "Usuario",
+worker-reservas/src/index.js:1161:function cp04SupabaseErrorResponse(request, env, result, fallbackMessage = "Error de autenticación.") {
+worker-reservas/src/index.js:1165:      auth_ready: true,
+worker-reservas/src/index.js:1167:      error: result?.data?.error || result?.data?.error_description || "SUPABASE_AUTH_ERROR",
+worker-reservas/src/index.js:1172:    corsHeaders(request, env)
+worker-reservas/src/index.js:1181:const CP04_AUTH_ROLES = ["PLAYER", "STAFF", "ADMIN", "SUPPORT"];
+worker-reservas/src/index.js:1183:const CP04_AUTH_PERMISSIONS = {
+worker-reservas/src/index.js:1192:  return CP04_AUTH_ROLES.includes(value) ? value : "PLAYER";
+worker-reservas/src/index.js:1199:    name: String(user.name || "Usuario demo"),
+worker-reservas/src/index.js:1202:    permissions: CP04_AUTH_PERMISSIONS[role] || CP04_AUTH_PERMISSIONS.PLAYER
+worker-reservas/src/index.js:1214:function cp04AuthNotConfiguredResponse(request, env, extra = {}) {
+worker-reservas/src/index.js:1218:      auth_ready: false,
+worker-reservas/src/index.js:1220:      error: "AUTH_BACKEND_NOT_CONFIGURED",
+worker-reservas/src/index.js:1223:        "AUTH_PROVIDER",
+worker-reservas/src/index.js:1231:    corsHeaders(request, env)
+worker-reservas/src/index.js:1235:async function handleAuthRoute(request, env, url) {
+worker-reservas/src/index.js:1236:  const headers = corsHeaders(request, env);
+worker-reservas/src/index.js:1237:  const path = url.pathname;
+worker-reservas/src/index.js:1239:  const supabaseReady = cp04SupabaseConfigured(env);
+worker-reservas/src/index.js:1250:          auth_ready: false,
+worker-reservas/src/index.js:1266:          auth_ready: true,
+worker-reservas/src/index.js:1276:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+worker-reservas/src/index.js:1279:        apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1297:        env,
+worker-reservas/src/index.js:1308:        auth_ready: true,
+worker-reservas/src/index.js:1324:          auth_ready: false,
+worker-reservas/src/index.js:1339:          auth_ready: true,
+worker-reservas/src/index.js:1348:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/logout`, {
+worker-reservas/src/index.js:1351:        apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1360:        auth_ready: true,
+worker-reservas/src/index.js:1373:      return cp04AuthNotConfiguredResponse(request, env, {
+worker-reservas/src/index.js:1389:          auth_ready: true,
+worker-reservas/src/index.js:1399:    const result = await cp04SupabaseRequest(env, "/auth/v1/token?grant_type=password", {
+worker-reservas/src/index.js:1405:      return cp04SupabaseErrorResponse(request, env, result, "Login no válido.");
+worker-reservas/src/index.js:1413:        auth_ready: true,
+worker-reservas/src/index.js:1432:      return cp04AuthNotConfiguredResponse(request, env, {
+worker-reservas/src/index.js:1435:          nombre: Boolean(body.nombre || body.name),
+worker-reservas/src/index.js:1445:    const nombre = String(body.nombre || body.name || "").trim();
+worker-reservas/src/index.js:1452:          auth_ready: true,
+worker-reservas/src/index.js:1462:    const result = await cp04SupabaseRequest(env, "/auth/v1/signup", {
+worker-reservas/src/index.js:1476:      return cp04SupabaseErrorResponse(request, env, result, "No se pudo registrar el usuario.");
+worker-reservas/src/index.js:1484:        auth_ready: true,
+worker-reservas/src/index.js:1503:          auth_ready: false,
+worker-reservas/src/index.js:1505:          message: "Si el correo existe, se enviarán instrucciones de recuperación cuando el proveedor de email esté configurado."
+worker-reservas/src/index.js:1515:      await cp04SupabaseRequest(env, "/auth/v1/recover", {
+worker-reservas/src/index.js:1519:          redirect_to: String(env.APP_PUBLIC_URL || "").replace(/\/+$/, "") + "/"
+worker-reservas/src/index.js:1527:        auth_ready: true,
+worker-reservas/src/index.js:1529:        message: "Si el correo existe, se enviarán instrucciones de recuperación."
+worker-reservas/src/index.js:1540:      return cp04AuthNotConfiguredResponse(request, env, {
+worker-reservas/src/index.js:1552:          auth_ready: true,
+worker-reservas/src/index.js:1562:    const response = await fetch(`${cp04SupabaseBaseUrl(env)}/auth/v1/user`, {
+worker-reservas/src/index.js:1565:        apikey: String(env.SUPABASE_ANON_KEY || ""),
+worker-reservas/src/index.js:1584:        env,
+worker-reservas/src/index.js:1593:        auth_ready: true,
+worker-reservas/src/index.js:1615:  async fetch(request, env) {
+worker-reservas/src/index.js:1620:        url.pathname === "/api/jugadores/alta" ||
+worker-reservas/src/index.js:1621:        url.pathname === "/jugadores/alta"
+worker-reservas/src/index.js:1623:        return await handleAltaJugador(request, env);
+worker-reservas/src/index.js:1626:      if (url.pathname.startsWith("/api/auth/")) {
+worker-reservas/src/index.js:1627:      return handleAuthRoute(request, env, url);
+worker-reservas/src/index.js:1630:    if (url.pathname === "/api/disponibilidad" || url.pathname === "/disponibilidad") {
+worker-reservas/src/index.js:1631:        return await handleDisponibilidad(request, env);
+worker-reservas/src/index.js:1634:      // CP04_LISTADO_RESERVAS_MAIN_DISPATCH_V4
+worker-reservas/src/index.js:1636:        url.pathname === "/api/reservas" ||
+worker-reservas/src/index.js:1637:        url.pathname === "/reservas"
+worker-reservas/src/index.js:1642:            env
+worker-reservas/src/index.js:1648:          env
+worker-reservas/src/index.js:1655:        corsHeaders(request, env)
+worker-reservas/src/index.js:1665:        corsHeaders(request, env)
+worker-reservas/.wrangler/cache/cf.json:1:{"httpProtocol":"HTTP/1.1","clientAcceptEncoding":"gzip, deflate, br","requestPriority":"","edgeRequestKeepAliveStatus":1,"requestHeaderNames":{},"clientTcpRtt":21,"clientQuicRtt":0,"colo":"MAD","asn":12479,"asOrganization":"Jazztel triple play services","country":"ES","isEUCountry":"1","city":"Málaga","continent":"EU","region":"Andalusia","regionCode":"AN","timezone":"Europe/Madrid","longitude":"-4.42034","latitude":"36.72016","postalCode":"29001","tlsVersion":"TLSv1.3","tlsCipher":"AEAD-AES256-GCM-SHA384","tlsClientRandom":"ontrifjaL1wCxO3IO87m10RbR4QkcSXrJJ5v1Ie9Hts=","tlsClientCiphersSha1":"kXrN3VEKDdzz2cPKTQaKzpxVTxQ=","tlsClientExtensionsSha1":"1eY97BUYYO8vDaTfHQywB1pcNdM=","tlsClientExtensionsSha1Le":"u4wtEMFQBY18l3BzHAvORm+KGRw=","tlsExportedAuthenticator":{"clientHandshake":"2606589ff15343629a1fc6d287549878d5c30cb63441e2270ca2826446d681c721175e47eb1050f615f992c8de11103d","serverHandshake":"5a48c06b4ff12e3c01b43c872e2bf930b23b1eb1715604091c872ff38e8d6470ab595c1ccf3febb6028a7dfe7304b79e","clientFinished":"6489d368117d34943f4dcebfb580ca2fa5d257a5b95fdb758ce7f3e8bc9d232d31e54de0a565f3f49cafcef4f1b50c51","serverFinished":"c23ce2658fb2e87860bb2275ef3a2bd889aeb95c68f21904190bb3c874178ed3a8ca358298e1abc445027fa405b53008"},"tlsClientHelloLength":"1605","tlsClientAuth":{"certPresented":"0","certVerified":"NONE","certRevoked":"0","certIssuerDN":"","certSubjectDN":"","certIssuerDNRFC2253":"","certSubjectDNRFC2253":"","certIssuerDNLegacy":"","certSubjectDNLegacy":"","certSerial":"","certIssuerSerial":"","certSKI":"","certIssuerSKI":"","certFingerprintSHA1":"","certFingerprintSHA256":"","certNotBefore":"","certNotAfter":"","certRFC9440":"","certRFC9440TooLarge":false,"certChainRFC9440":"","certChainRFC9440TooLarge":false},"verifiedBotCategory":"","edgeL4":{"deliveryRate":201699},"botManagement":{"corporateProxy":false,"verifiedBot":false,"jsDetection":{"passed":false},"staticResource":false,"detectionIds":{},"score":99}}
+worker-reservas/wrangler.toml0:1:name = "cp04-reservas-proxy"
+worker-reservas/wrangler.toml0:2:main = "src/index.js"
+worker-reservas/wrangler.toml0:3:compatibility_date = "2026-06-10"
+worker-reservas/wrangler.toml0:5:# Public/non-secret Worker variables. Override per environment in Cloudflare if needed.
+worker-reservas/wrangler.toml0:6:[vars]
+worker-reservas/wrangler.toml0:7:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wrangler.toml0:11:# wrangler secret put MAKE_RESERVAS_WEBHOOK
+worker-reservas/wr4 angler.toml0  :1:name = "cp04-reservas-proxy"
+worker-reservas/wr4 angler.toml0  :2:main = "src/index.js"
+worker-reservas/wr4 angler.toml0  :3:compatibility_date = "2026-06-10"
+worker-reservas/wr4 angler.toml0  :5:# Public/non-secret Worker variables. Override per environment in Cloudflare if needed.
+worker-reservas/wr4 angler.toml0  :6:[vars]
+worker-reservas/wr4 angler.toml0  :7:ALLOWED_ORIGIN = "https://club-padel-04.pages.dev,http://localhost:5173"
+worker-reservas/wr4 angler.toml0  :11:# wrangler secret put MAKE_RESERVAS_WEBHOOK
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:14:- cp04_auth_mode
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:239:- AUTH_PROVIDER
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:240:- AUTH_ISSUER_URL
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:241:- AUTH_AUDIENCE
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:242:- AUTH_CLIENT_ID
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:243:- AUTH_CLIENT_SECRET
+worker-reservas/docs/PLAN_BACKEND_AUTH_WORKER_CP04.md:257:- VITE_CP04_PUBLIC_AUTH_MODE
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:181:async function forwardToMake(payload, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:182:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:186:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:195:async function prepareAirtableWrite(payload, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:197:  const configured = Boolean(env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && env.AIRTABLE_RESERVAS_TABLE);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:206:async function handleReservas(request, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:207:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:234:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:235:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:248:async function handleDisponibilidad(request, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:249:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:274:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:280:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:281:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:282:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:300:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:311:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:347:  async fetch(request, env) {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:351:      if (url.pathname === "/api/disponibilidad" || url.pathname === "/disponibilidad") {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:352:        return await handleDisponibilidad(request, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:355:      if (url.pathname === "/api/reservas" || url.pathname === "/reservas") {
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:356:        return await handleReservas(request, env);
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:362:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-reprogramar-20260613-033308.js:372:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:181:async function forwardToMake(payload, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:182:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:186:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:195:async function prepareAirtableWrite(payload, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:197:  const configured = Boolean(env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && env.AIRTABLE_RESERVAS_TABLE);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:206:async function handleReservas(request, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:207:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:234:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:235:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:248:async function handleDisponibilidad(request, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:249:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:274:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:280:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:281:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:282:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:300:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:311:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:347:  async fetch(request, env) {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:351:      if (url.pathname === "/api/disponibilidad" || url.pathname === "/disponibilidad") {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:352:        return await handleDisponibilidad(request, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:355:      if (url.pathname === "/api/reservas" || url.pathname === "/reservas") {
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:356:        return await handleReservas(request, env);
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:362:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-parche-reprogramar-20260613-033646.js:372:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:414:async function forwardToMake(payload, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:428:async function prepareAirtableWrite(payload, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:430:  const configured = Boolean(env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && env.AIRTABLE_RESERVAS_TABLE);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:439:async function handleReservas(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:440:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:467:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:468:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:481:async function handleDisponibilidad(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:482:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:503:        url.pathname === "/api/disponibilidad"
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:518:            corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:533:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:539:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:540:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:541:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:559:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:570:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:613:function cp04PickField(fields, fieldId, fallbackNames = []) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:621:  for (const name of fallbackNames) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:624:      Object.prototype.hasOwnProperty.call(fields, name)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:626:      return fields[name];
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:649:async function cp04ListReservations(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:650:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:675:    !env.AIRTABLE_TOKEN ||
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:676:    !env.AIRTABLE_BASE_ID ||
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:677:    !env.AIRTABLE_TABLE_ID
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:720:    `${encodeURIComponent(env.AIRTABLE_BASE_ID)}/` +
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:721:    `${encodeURIComponent(env.AIRTABLE_TABLE_ID)}`;
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:756:          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:960:  async fetch(request, env) {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:964:      if (url.pathname === "/api/disponibilidad" || url.pathname === "/disponibilidad") {
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:965:        return await handleDisponibilidad(request, env);
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:968:      // CP04_LISTADO_RESERVAS_MAIN_DISPATCH_V4
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:970:        url.pathname === "/api/reservas" ||
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:971:        url.pathname === "/reservas"
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:976:            env
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:982:          env
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:989:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-jugador-20260616-054320.js:999:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:18:function corsHeaders(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:20:  const allowedOrigins = (env.ALLOWED_ORIGIN || "")
+worker-reservas/backups/index-antes-alta-20260616-054856.js:414:async function forwardToMake(payload, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:415:  if (!env.MAKE_RESERVAS_WEBHOOK) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:419:  const response = await fetch(env.MAKE_RESERVAS_WEBHOOK, {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:428:async function prepareAirtableWrite(payload, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:430:  const configured = Boolean(env.AIRTABLE_API_KEY && env.AIRTABLE_BASE_ID && env.AIRTABLE_RESERVAS_TABLE);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:439:async function handleReservas(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:440:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:467:  const makeResult = await forwardToMake(normalizedPayload, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:468:  const airtableResult = await prepareAirtableWrite(normalizedPayload, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:481:async function handleDisponibilidad(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:482:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:503:        url.pathname === "/api/disponibilidad"
+worker-reservas/backups/index-antes-alta-20260616-054856.js:518:            corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:533:  if (!env.AIRTABLE_TOKEN || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_ID) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:539:          token: Boolean(env.AIRTABLE_TOKEN),
+worker-reservas/backups/index-antes-alta-20260616-054856.js:540:          base: Boolean(env.AIRTABLE_BASE_ID),
+worker-reservas/backups/index-antes-alta-20260616-054856.js:541:          table: Boolean(env.AIRTABLE_TABLE_ID)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:559:    `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${env.AIRTABLE_TABLE_ID}` +
+worker-reservas/backups/index-antes-alta-20260616-054856.js:570:      Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:613:function cp04PickField(fields, fieldId, fallbackNames = []) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:621:  for (const name of fallbackNames) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:624:      Object.prototype.hasOwnProperty.call(fields, name)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:626:      return fields[name];
+worker-reservas/backups/index-antes-alta-20260616-054856.js:649:async function cp04ListReservations(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:650:  const headers = corsHeaders(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:675:    !env.AIRTABLE_TOKEN ||
+worker-reservas/backups/index-antes-alta-20260616-054856.js:676:    !env.AIRTABLE_BASE_ID ||
+worker-reservas/backups/index-antes-alta-20260616-054856.js:677:    !env.AIRTABLE_TABLE_ID
+worker-reservas/backups/index-antes-alta-20260616-054856.js:720:    `${encodeURIComponent(env.AIRTABLE_BASE_ID)}/` +
+worker-reservas/backups/index-antes-alta-20260616-054856.js:721:    `${encodeURIComponent(env.AIRTABLE_TABLE_ID)}`;
+worker-reservas/backups/index-antes-alta-20260616-054856.js:756:          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+worker-reservas/backups/index-antes-alta-20260616-054856.js:960:  async fetch(request, env) {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:964:      if (url.pathname === "/api/disponibilidad" || url.pathname === "/disponibilidad") {
+worker-reservas/backups/index-antes-alta-20260616-054856.js:965:        return await handleDisponibilidad(request, env);
+worker-reservas/backups/index-antes-alta-20260616-054856.js:968:      // CP04_LISTADO_RESERVAS_MAIN_DISPATCH_V4
+worker-reservas/backups/index-antes-alta-20260616-054856.js:970:        url.pathname === "/api/reservas" ||
+worker-reservas/backups/index-antes-alta-20260616-054856.js:971:        url.pathname === "/reservas"
+worker-reservas/backups/index-antes-alta-20260616-054856.js:976:            env
+worker-reservas/backups/index-antes-alta-20260616-054856.js:982:          env
+worker-reservas/backups/index-antes-alta-20260616-054856.js:989:        corsHeaders(request, env)
+worker-reservas/backups/index-antes-alta-20260616-054856.js:999:        corsHeaders(request, env)

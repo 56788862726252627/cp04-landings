@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "tenantId": "clinica-dental-sonrisas-malaga",
+  "slug": "clinica-dental-sonrisas-malaga",
+  "legalName": "Clínica Dental Sonrisas Málaga",
+  "displayName": "Clínica Dental Sonrisas Málaga",
+  "businessType": "healthcare-clinic",
+  "sector": "dental",
+  "locale": "es-ES",
+  "timezone": "Europe/Madrid",
+  "currency": "EUR",
+  "country": "ES",
+  "branding": {
+    "colors": {
+      "accent": "#2f6bff"
+    }
+  },
+  "roles": [
+    "CLIENT",
+    "STAFF",
+    "ADMIN",
+    "SUPPORT"
+  ],
+  "permissions": {
+    "CLIENT": [
+      "inicio",
+      "citas",
+      "servicios",
+      "pagos"
+    ],
+    "STAFF": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "servicios",
+      "recursos",
+      "pagos",
+      "documentos",
+      "formularios",
+      "soporte"
+    ],
+    "ADMIN": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "servicios",
+      "recursos",
+      "pagos",
+      "automatizaciones",
+      "documentos",
+      "formularios",
+      "soporte",
+      "informes",
+      "configuracion"
+    ],
+    "SUPPORT": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "servicios",
+      "recursos",
+      "pagos",
+      "automatizaciones",
+      "documentos",
+      "formularios",
+      "soporte",
+      "informes",
+      "configuracion"
+    ]
+  },
+  "modulesEnabled": [
+    "inicio",
+    "citas",
+    "clientes",
+    "pagos",
+    "automatizaciones",
+    "soporte",
+    "informes",
+    "configuracion",
+    "agenda",
+    "profesionales",
+    "recursos",
+    "servicios",
+    "documentos",
+    "formularios"
+  ],
+  "terminologyOverrides": {
+    "customer": {
+      "singular": "paciente",
+      "plural": "pacientes",
+      "short": "Paciente"
+    },
+    "resource": {
+      "singular": "consulta",
+      "plural": "consultas",
+      "short": "Consulta"
+    },
+    "appointment": {
+      "singular": "cita",
+      "plural": "citas",
+      "short": "Cita"
+    },
+    "staff": {
+      "singular": "dentista",
+      "plural": "dentistas",
+      "short": "Dentista"
+    },
+    "event": {
+      "singular": "campaña de salud",
+      "plural": "campañas de salud",
+      "short": "Campaña"
+    },
+    "progress": {
+      "singular": "seguimiento",
+      "plural": "seguimientos",
+      "short": "Seguimiento"
+    },
+    "organization": {
+      "singular": "clínica dental",
+      "plural": "clínicas dentales",
+      "short": "Clínica dental"
+    }
+  },
+  "integrations": {
+    "automation": {
+      "status": "not_configured",
+      "envVars": [
+        "MAKE_WEBHOOK_URL"
+      ]
+    },
+    "dataRepository": {
+      "status": "not_configured",
+      "envVars": [
+        "AIRTABLE_API_KEY",
+        "AIRTABLE_BASE_ID"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    },
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    },
+    "calendar": {
+      "status": "not_configured",
+      "envVars": [
+        "GOOGLE_CALENDAR_CLIENT_ID"
+      ]
+    }
+  },
+  "policies": {
+    "privacyReviewRequired": true,
+    "regulatedSector": true,
+    "sensitiveDataCategories": [
+      "salud_o_legal_placeholder"
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "source": "preset:dental-clinic"
+  },
+  "flags": {},
+  "meta": {
+    "templateId": "healthcare-clinic",
+    "presetId": "dental-clinic",
+    "isDefaultTenant": false,
+    "generatedBy": "tenant:create"
+  }
+}

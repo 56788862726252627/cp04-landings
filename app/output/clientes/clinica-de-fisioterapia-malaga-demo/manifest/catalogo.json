@@ -1,0 +1,215 @@
+{
+  "contrato": {
+    "id": "contrato",
+    "label": "Contrato",
+    "pipeline": "contract",
+    "folder": "Contratos",
+    "formats": [
+      "markdown",
+      "html",
+      "pdf",
+      "docx"
+    ]
+  },
+  "propuesta_comercial": {
+    "id": "propuesta_comercial",
+    "label": "Propuesta comercial",
+    "pipeline": "document",
+    "folder": "PDFs",
+    "formats": [
+      "markdown",
+      "html",
+      "pdf"
+    ]
+  },
+  "mockup_movil": {
+    "id": "mockup_movil",
+    "label": "Mockup móvil",
+    "pipeline": "mockup",
+    "folder": "Mockups",
+    "formats": [
+      "svg",
+      "html",
+      "png"
+    ]
+  },
+  "mockup_tablet": {
+    "id": "mockup_tablet",
+    "label": "Mockup tablet",
+    "pipeline": "mockup",
+    "folder": "Mockups",
+    "formats": [
+      "svg",
+      "html",
+      "png"
+    ]
+  },
+  "mockup_escritorio": {
+    "id": "mockup_escritorio",
+    "label": "Mockup escritorio",
+    "pipeline": "mockup",
+    "folder": "Mockups",
+    "formats": [
+      "svg",
+      "html",
+      "png"
+    ]
+  },
+  "mockup_android": {
+    "id": "mockup_android",
+    "label": "Mockup Android",
+    "pipeline": "mockup",
+    "folder": "Mockups",
+    "formats": [
+      "svg",
+      "html",
+      "png"
+    ]
+  },
+  "mockup_iphone": {
+    "id": "mockup_iphone",
+    "label": "Mockup iPhone",
+    "pipeline": "mockup",
+    "folder": "Mockups",
+    "formats": [
+      "svg",
+      "html",
+      "png"
+    ]
+  },
+  "mockup_ipad": {
+    "id": "mockup_ipad",
+    "label": "Mockup iPad",
+    "pipeline": "mockup",
+    "folder": "Mockups",
+    "formats": [
+      "svg",
+      "html",
+      "png"
+    ]
+  },
+  "mockup_windows": {
+    "id": "mockup_windows",
+    "label": "Mockup Windows",
+    "pipeline": "mockup",
+    "folder": "Mockups",
+    "formats": [
+      "svg",
+      "html",
+      "png"
+    ]
+  },
+  "mockup_macos": {
+    "id": "mockup_macos",
+    "label": "Mockup macOS",
+    "pipeline": "mockup",
+    "folder": "Mockups",
+    "formats": [
+      "svg",
+      "html",
+      "png"
+    ]
+  },
+  "logotipo": {
+    "id": "logotipo",
+    "label": "Logotipo",
+    "pipeline": "preview",
+    "folder": "Logos",
+    "formats": [
+      "svg",
+      "png",
+      "webp"
+    ]
+  },
+  "icono": {
+    "id": "icono",
+    "label": "Icono",
+    "pipeline": "preview",
+    "folder": "Iconos",
+    "formats": [
+      "svg",
+      "png"
+    ]
+  },
+  "fondo": {
+    "id": "fondo",
+    "label": "Fondo",
+    "pipeline": "preview",
+    "folder": "Fondos",
+    "formats": [
+      "svg",
+      "png",
+      "jpg",
+      "webp"
+    ]
+  },
+  "banner": {
+    "id": "banner",
+    "label": "Banner",
+    "pipeline": "preview",
+    "folder": "Marketing",
+    "formats": [
+      "svg",
+      "png",
+      "jpg"
+    ]
+  },
+  "presentacion": {
+    "id": "presentacion",
+    "label": "Presentación",
+    "pipeline": "presentation",
+    "folder": "Presentaciones",
+    "formats": [
+      "markdown",
+      "html",
+      "pptx",
+      "pdf"
+    ]
+  },
+  "manual": {
+    "id": "manual",
+    "label": "Manual",
+    "pipeline": "document",
+    "folder": "Documentación",
+    "formats": [
+      "markdown",
+      "html",
+      "pdf",
+      "docx"
+    ]
+  },
+  "informe": {
+    "id": "informe",
+    "label": "Informe",
+    "pipeline": "document",
+    "folder": "Informes",
+    "formats": [
+      "markdown",
+      "html",
+      "pdf"
+    ]
+  },
+  "documentacion_tecnica": {
+    "id": "documentacion_tecnica",
+    "label": "Documentación técnica",
+    "pipeline": "document",
+    "folder": "Documentación",
+    "formats": [
+      "markdown",
+      "html",
+      "pdf"
+    ]
+  },
+  "documentacion_comercial": {
+    "id": "documentacion_comercial",
+    "label": "Documentación comercial",
+    "pipeline": "document",
+    "folder": "Documentación",
+    "formats": [
+      "markdown",
+      "html",
+      "pdf",
+      "docx"
+    ]
+  }
+}

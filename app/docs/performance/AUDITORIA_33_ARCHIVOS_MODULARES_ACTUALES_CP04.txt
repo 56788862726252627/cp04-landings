@@ -1,0 +1,9 @@
+src/components/ClubGallery.jsx
+src/components/README.md
+src/components/lazy/LazyLoadBoundary.jsx
+src/components/lazy/LazySectionShell.jsx
+src/components/lazy/lazySections.js
+src/data/README.md
+src/data/performancePlan.js
+src/data/visualAssets.js
+src/utils/README.md

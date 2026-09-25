@@ -1,0 +1,40 @@
+809:  return <Card><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}><div><h3 style={{ margin: 0, fontFamily: T.fontDisplay, letterSpacing: "-.04em" }}>{tx("auth.roles_title")}</h3><p style={{ color: T.textDim, lineHeight: 1.65, marginTop: 8 }}>{tx("auth.pending_desc")}</p></div><span className="cp04-badge" style={{ color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "7px 11px", fontWeight: 900, fontSize: ".74rem", whiteSpace: "nowrap" }}>{tx("auth.pending_badge")}</span></div><div className={compact ? undefined : "cp04-grid-2"} style={compact ? { display: "grid", gap: 12 } : undefined}>{ROLES.map((role) => <div key={role.id} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 16, background: "rgba(255,255,255,.035)" }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong style={{ color: T.accent }}>{role.id}</strong><span style={{ color: T.warning, fontSize: ".82rem", fontWeight: 900 }}>{role.access}</span></div><div style={{ marginTop: 8, fontWeight: 900 }}>{role.label}</div><div style={{ color: T.textDim, marginTop: 6, lineHeight: 1.55 }}>{tx("auth.secciones")} {role.sections}</div>{!compact && <PanelList items={role.permissions} />}</div>)}</div></Card>;
+2235:    "login.title":"Iniciar como rol","login.entrar":"Entrar","login.cancelar":"Cancelar",
+2244:    "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
+2437:    "login.title":"Log in as role","login.entrar":"Enter","login.cancelar":"Cancel",
+2446:    "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
+2639:    "login.title":"Sign in as role","login.entrar":"Sign in","login.cancelar":"Cancel",
+2648:    "login.subtitle":"Select how you want to enter the app. Each role has an experience tailored to its permissions.",
+2841:    "login.title":"Se connecter en tant que rôle","login.entrar":"Entrer","login.cancelar":"Annuler",
+2850:    "login.subtitle":"Sélectionnez comment vous souhaitez entrer dans l'application.",
+3039:    "login.title":"Accedi come ruolo","login.entrar":"Entra","login.cancelar":"Annulla",
+3048:    "login.subtitle":"Seleziona come vuoi accedere all'applicazione.",
+3237:    "login.title":"Entrar como função","login.entrar":"Entrar","login.cancelar":"Cancelar",
+3246:    "login.subtitle":"Selecione como pretende entrar na aplicação.",
+3435:    "login.title":"Entrar como perfil","login.entrar":"Entrar","login.cancelar":"Cancelar",
+3444:    "login.subtitle":"Selecione como deseja entrar na aplicação.",
+3633:    "login.title":"Als Rolle anmelden","login.entrar":"Eintreten","login.cancelar":"Abbrechen",
+3642:    "login.subtitle":"Wählen Sie aus, wie Sie die Anwendung betreten möchten.",
+7431:  const [pendingRole, setPendingRole] = useState("");
+7432:  const [rolePassword, setRolePassword] = useState("");
+7438:  const [forgotPwdStep, setForgotPwdStep] = useState("idle");
+7439:  const [forgotPwdEmail, setForgotPwdEmail] = useState("");
+7440:  const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
+7550:  function confirmRoleAccess(event) {
+7553:    const role = roleConfig[pendingRole];
+7559:    if (rolePassword.trim() !== role.password) {
+7565:      localStorage.setItem("cp04_role", pendingRole);
+7569:    setSelectedRole(pendingRole);
+7778:    if (!/^\S+@\S+\.\S+$/.test(forgotPwdEmail.trim())) {
+7852:              {ltx("login.title").split(" ").slice(0,-1).join(" ")} <span style={{ color:T.accent }}>{ltx("login.title").split(" ").slice(-1)}</span>
+7856:              {ltx("login.subtitle")}
+8022:            {pendingRole && (
+8023:              <form onSubmit={confirmRoleAccess} style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+8025:                  {ltx("login.acceder_como")} {roleLabels[pendingRole]?.label || roleConfig[pendingRole]?.label}
+8030:                  value={rolePassword}
+8065:            {forgotPwdStep !== "idle" && (
+8067:                {forgotPwdStep === "form" && (
+8074:                        value={forgotPwdEmail}
+8078:                        style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+8080:                      {forgotPwdEmailError && <div style={{ color:T.danger, marginBottom:10, fontSize:".85rem" }}>{forgotPwdEmailError}</div>}
+8094:                {forgotPwdStep === "sent" && (

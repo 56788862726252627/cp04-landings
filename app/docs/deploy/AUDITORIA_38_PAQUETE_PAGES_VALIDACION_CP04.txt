@@ -1,0 +1,3 @@
+OK: index.html existe
+OK: _redirects existe
+OK: assets existe

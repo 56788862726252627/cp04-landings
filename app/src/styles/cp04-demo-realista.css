@@ -1,0 +1,364 @@
+.cp04-demo-realista {
+  position: relative;
+  overflow: hidden;
+  padding: 72px 18px;
+  background: #061f24;
+  color: #ffffff;
+}
+
+.cp04-demo-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(184, 223, 60, 0.18), transparent 26%),
+    radial-gradient(circle at 20% 80%, rgba(0, 122, 112, 0.34), transparent 30%),
+    linear-gradient(135deg, rgba(2, 29, 36, 0.98), rgba(6, 62, 65, 0.94));
+}
+
+.cp04-demo-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.14;
+}
+
+.cp04-demo-shell {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.cp04-demo-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 28px;
+}
+
+.cp04-demo-eyebrow,
+.cp04-demo-panel-title span,
+.cp04-demo-proof span {
+  color: #b8df3c;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cp04-demo-header h2 {
+  margin: 10px 0 14px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+}
+
+.cp04-demo-header p {
+  max-width: 720px;
+  color: rgba(255,255,255,0.78);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.cp04-demo-club-card,
+.cp04-demo-panel,
+.cp04-demo-proof {
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.075);
+  border-radius: 26px;
+  box-shadow: 0 22px 65px rgba(0,0,0,0.28);
+  backdrop-filter: blur(12px);
+}
+
+.cp04-demo-club-card {
+  padding: 24px;
+}
+
+.cp04-demo-club-card span {
+  color: #b8df3c;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.cp04-demo-club-card strong {
+  display: block;
+  font-size: 25px;
+  margin: 10px 0 5px;
+}
+
+.cp04-demo-club-card small {
+  color: rgba(255,255,255,0.66);
+}
+
+.cp04-demo-club-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.cp04-demo-club-metrics div {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(184,223,60,0.11);
+  border: 1px solid rgba(184,223,60,0.18);
+}
+
+.cp04-demo-club-metrics b {
+  display: block;
+  font-size: 22px;
+  color: #b8df3c;
+}
+
+.cp04-demo-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr;
+  gap: 18px;
+}
+
+.cp04-demo-panel {
+  padding: 20px;
+}
+
+.cp04-demo-panel-large {
+  grid-row: span 2;
+}
+
+.cp04-demo-panel-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cp04-demo-panel-title b {
+  font-size: 13px;
+  color: rgba(255,255,255,0.72);
+  font-weight: 700;
+}
+
+.cp04-demo-reservas {
+  display: grid;
+  gap: 12px;
+}
+
+.cp04-demo-reserva {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.075);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.cp04-demo-date {
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(184,223,60,0.12);
+  text-align: center;
+}
+
+.cp04-demo-date strong,
+.cp04-demo-date span {
+  display: block;
+}
+
+.cp04-demo-date strong {
+  color: #b8df3c;
+  font-size: 13px;
+}
+
+.cp04-demo-date span {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.cp04-demo-reserva h3,
+.cp04-demo-torneo h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.cp04-demo-reserva p,
+.cp04-demo-torneo p {
+  margin: 0;
+  color: rgba(255,255,255,0.66);
+  font-size: 14px;
+}
+
+.cp04-demo-status {
+  padding: 8px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cp04-demo-status.ok {
+  background: rgba(184,223,60,0.16);
+  color: #d8ff62;
+}
+
+.cp04-demo-status.pending {
+  background: rgba(255,192,80,0.14);
+  color: #ffd487;
+}
+
+.cp04-demo-ranking,
+.cp04-demo-list {
+  display: grid;
+  gap: 10px;
+}
+
+.cp04-demo-rank {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 11px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.065);
+}
+
+.cp04-demo-rank > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(184,223,60,0.14);
+  color: #b8df3c;
+  font-weight: 900;
+}
+
+.cp04-demo-rank strong,
+.cp04-demo-rank small {
+  display: block;
+}
+
+.cp04-demo-rank small {
+  color: rgba(255,255,255,0.58);
+}
+
+.cp04-demo-rank > b {
+  color: #b8df3c;
+}
+
+.cp04-demo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cp04-demo-list li {
+  position: relative;
+  padding-left: 24px;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.38;
+}
+
+.cp04-demo-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #b8df3c;
+  font-weight: 900;
+}
+
+.cp04-demo-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.cp04-demo-tags span {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(184,223,60,0.12);
+  color: #d8ff62;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cp04-demo-incidencias {
+  grid-column: span 2;
+}
+
+.cp04-demo-proof {
+  margin-top: 18px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.cp04-demo-proof strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 20px;
+}
+
+.cp04-demo-proof-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cp04-demo-proof-steps b {
+  padding: 10px 13px;
+  border-radius: 999px;
+  background: rgba(184,223,60,0.13);
+  color: #d8ff62;
+  font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .cp04-demo-header,
+  .cp04-demo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cp04-demo-incidencias,
+  .cp04-demo-panel-large {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .cp04-demo-proof {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cp04-demo-proof-steps {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .cp04-demo-realista {
+    padding: 50px 14px;
+  }
+
+  .cp04-demo-reserva {
+    grid-template-columns: 1fr;
+  }
+
+  .cp04-demo-status {
+    width: fit-content;
+  }
+}

@@ -1,0 +1,500 @@
+49: * - un endpoint seguro propio: /api/reservas.
+75:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+126:  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
+127:  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
+128:  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
+165:  { id: "PLAYER", label: "Jugador / cliente", access: "Activo", sections: "Inicio, Reservas, Ranking", permissions: ["Crear solicitud de reserva", "Consultar ranking del club", "Ver participación en torneos"] },
+166:  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+271:function calcTimeEnd(time, mins) {
+272:  const [h, m] = time.split(":").map(Number);
+285:function madridDateParts(date = new Date()) {
+287:    timeZone: MADRID_TIME_ZONE,
+294:  }).formatToParts(date);
+360:function validateBooking(form, courtName, tx) {
+363:  const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
+372:  else if (selectedDate < today) errors.fecha = _t("errors.fecha_pasado");
+377:    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+378:    if (slotStatus === "past") errors.hora = _t("errors.hora_pasada");
+379:    if (slotStatus === "outside_hours") errors.hora = _t("errors.hora_cierre");
+380:    if (slotStatus === "closed") errors.fecha = _t("errors.fecha_domingo");
+395:    accion: "crear_reserva",
+404:    reserva: {
+418:function validateReschedule(form, courtName, tx) {
+421:  const cleanKey = form.clave_reserva.trim();
+423:  const selectedDate = form.nueva_fecha_reserva
+424:    ? new Date(`${form.nueva_fecha_reserva}T00:00:00`)
+429:    errors.clave_reserva = _t("errors.clave");
+431:    errors.clave_reserva = _t("errors.clave_incompleta");
+434:  if (!form.nueva_fecha_reserva) {
+435:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha");
+436:  } else if (selectedDate < today) {
+437:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha_pasado");
+438:  } else if (isSundayISO(form.nueva_fecha_reserva)) {
+439:    errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+450:  if (!errors.nueva_fecha_reserva && !errors.nueva_hora_inicio && !errors.duracion_minutos) {
+451:    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+452:    if (slotStatus === "past") errors.nueva_hora_inicio = _t("errors.hora_pasada");
+453:    if (slotStatus === "outside_hours") errors.nueva_hora_inicio = _t("errors.hora_cierre");
+454:    if (slotStatus === "closed") errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+473:    accion: "reprogramar_reserva",
+474:    clave_reserva: form.clave_reserva.trim(),
+475:    nueva_fecha_reserva: form.nueva_fecha_reserva,
+481:    origen: "app_publica_reprogramar_reserva",
+486:  const res = await fetch(CONFIG.bookingEndpoint, {
+493:  if (!res.ok || data?.ok === false) throw new Error("booking_request_failed");
+531:    throw new Error("availability_request_failed");
+537:function emitDisponibilidadUpdate(fecha) {
+542:  emitDisponibilidadUpdate(fecha);
+543:  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 1500);
+544:  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 4000);
+549:  selectedCourt,
+555:  const [fecha, setFecha] = useState(initialDate || todayISO());
+556:  const [ocupadas, setOcupadas] = useState([]);
+557:  const [estado, setEstado] = useState("idle");
+558:  const [mensaje, setMensaje] = useState("");
+570:      setMensaje("Club cerrado los domingos · no se admiten reservas durante todo el día.");
+596:      setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
+605:    const timer = window.setTimeout(() => consultarDisponibilidad(fecha), 0);
+606:    return () => window.clearTimeout(timer);
+610:    const timer = window.setTimeout(() => {
+617:    return () => window.clearTimeout(timer);
+621:    function handleDisponibilidadUpdate(event) {
+631:    window.addEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+634:      window.removeEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+656:            type="date"
+693:              <strong style={{ color: pista === selectedCourt ? T.accent : T.text }}>{pista}</strong>
+705:                const slotStatus = getSlotStatus(fecha, hora, duration);
+706:                const cerrada = slotStatus === "closed";
+707:                const pasada = slotStatus === "past";
+708:                const fueraHorario = slotStatus === "outside_hours";
+818:  const [now, setNow] = useState(() => new Date());
+819:  const [langCode, setLangCode] = useState(() => {
+840:    let dayStr, dateStr;
+843:      dayStr = new Intl.DateTimeFormat(langCode, { weekday: "long", timeZone: MADRID_TIME_ZONE }).format(d);
+845:      const parts = new Intl.DateTimeFormat(langCode, { day: "2-digit", month: "2-digit", year: "numeric", timeZone: MADRID_TIME_ZONE }).formatToParts(d);
+849:      dateStr = `${pDay}${sep}${pMon}${sep}${pYr}`;
+852:      dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+855:      time: `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`,
+856:      date: dateStr,
+858:      full: `${dayStr}, ${dateStr} · ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`,
+861:  } catch { return { time:"--:--:--", date:"--/--/----", day:"--", full:"--", hour:0 }; }
+871:        <span style={{ color:T.text, fontWeight:700, fontSize:".82rem" }}>{clk.date}</span>
+872:        <span style={{ color:T.accent, fontWeight:900, fontSize:".85rem" }}>{clk.time}</span>
+878:      <div style={{ fontFamily:"monospace", fontSize:"clamp(2.2rem,6vw,3.8rem)", fontWeight:900, letterSpacing:".04em", color:T.accent, lineHeight:1 }}>{clk.time}</div>
+879:      <div style={{ color:T.textDim, fontSize:".92rem", marginTop:6 }}>{clk.day}, {clk.date}</div>
+929:function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
+931:  const [tip, setTip] = useState(null);
+967:  const [tip, setTip] = useState(null);
+1007:  const [tip, setTip] = useState(null);
+1058:  const [tip, setTip] = useState(null);
+1148:  reservasHoy: 12,
+1149:  reservasSemana: 68,
+1249:    "funcion": "Gestiona reservas desde la app.",
+1250:    "blueprint": "workflows/01-api-reservas/final/API_Reservas_Club_Padel_04_FINAL_V2_Crear_Cancelar_Ocupacion.blueprint.json",
+1264:    "funcion": "Backup semanal de reservas y socios.",
+1310:    "blueprint": "workflows/08-chatbot-web-reservas-sin-tally-padel-04/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+1459:    "funcion": "Genera QR de acceso para reserva confirmada, envía email y actualiza Airtable.",
+1475:    "blueprint": "workflows/18-gestion-lista-espera-reservas/final/Gestion_Lista_de_Espera_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+1624:    "funcion": "Envía recordatorio automático 24 horas antes de la reserva.",
+1684:    "funcion": "Sincroniza reservas confirmadas con Google Calendar y Airtable.",
+1730:    "blueprint": "workflows/36-bot-ia-reservas-telegram-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+1745:    "blueprint": "workflows/37-bot-ia-reservas-whatsapp-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+1804:    "funcion": "Envía recordatorio automático 2 horas antes de la reserva.",
+1834:    "funcion": "Flujo heredado para transición Tally hacia API de reservas.",
+1835:    "blueprint": "workflows/14-tally-api-reservas/final/Tally_API_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+1846:  const [showTable, setShowTable] = useState(false);
+1847:  const [catFilter, setCatFilter] = useState("Todas");
+1999:  // Recomendados (padel/sport/reservas context)
+2158:  const [lang, setLang] = useState(() => _globalLang);
+2187:  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
+2188:  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+2189:  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+2190:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"],
+2230:    "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
+2231:    "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
+2243:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+2246:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+2247:    "role.STAFF.label":"Staff / recepción","role.STAFF.desc":"Gestión diaria de reservas, altas y atención al jugador.",
+2250:    "home.reservas_hoy":"Reservas hoy","home.ocupacion_media":"Ocupación media",
+2253:    "home.estado_operativo":"Estado operativo","home.reservar":"Reservar",
+2262:    "home.reservas_hora":"Reservas por hora — hoy","home.reservas_7dias":"Reservas últimos 7 días",
+2267:    "home.ir_reservas":"Ir a reservas","home.ver_gestion":"Ver gestión",
+2273:    "admin.reservas_mes":"Reservas mes","admin.ocupacion":"Ocupación media",
+2295:    "reservas.nueva":"Nueva reserva","reservas.fecha":"Fecha","reservas.hora":"Hora",
+2296:    "reservas.pista":"Pista","reservas.duracion":"Duración","reservas.confirmar":"Confirmar reserva",
+2297:    "reservas.resumen":"Resumen","reservas.disponible":"Disponible","reservas.no_disponible":"No disponible",
+2298:    "reprog.clave":"Clave de reserva","reprog.nueva_fecha":"Nueva fecha",
+2300:    "reprog.resumen":"Resumen del cambio","reprog.confirmo":"Confirmo que quiero trasladar esta reserva",
+2301:    "reprog.btn":"Reprogramar reserva","reprog.volver":"Volver a Reservas",
+2328:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicita la cancelación de una reserva.",
+2329:    "cancelar.clave":"Clave de reserva","cancelar.clave_ph":"Introduce tu clave de reserva",
+2330:    "cancelar.confirmo_check":"Confirmo que quiero solicitar la cancelación de esta reserva.",
+2331:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Volver a Reservas",
+2333:    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
+2334:    "reservas.datos_jugador":"Datos del jugador","reservas.fecha_pista":"Fecha, hora y pista",
+2335:    "reservas.hora_fin":"Hora fin","reservas.total":"Total","reservas.ver_resumen":"Ver resumen",
+2336:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
+2337:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nueva reserva",
+2338:    "reservas.nombre":"Nombre","reservas.apellidos":"Apellidos","reservas.modalidad":"Modalidad",
+2339:    "reservas.nivel_form":"Nivel","reservas.comentarios":"Comentarios","reservas.minutos":"minutos",
+2340:    "reservas.confirmacion_desc":"La confirmación real dependerá del backend y de las integraciones configuradas.",
+2341:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
+2346:    "status.reserva.pendiente":"Pendiente","status.reserva.pendiente_txt":"Revisa los datos antes de confirmar.",
+2347:    "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
+2348:    "status.reserva.exito":"Éxito","status.reserva.exito_txt":"Reserva enviada correctamente. La disponibilidad se está actualizando.",
+2349:    "status.reserva.error":"Error","status.reserva.error_txt":"No se pudo completar la reserva. Revisa los datos e inténtalo de nuevo.",
+2350:    "status.cancelar.idle":"Pendiente","status.cancelar.idle_txt":"Confirma la cancelación de tu reserva.",
+2351:    "status.cancelar.enviando":"Enviando","status.cancelar.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
+2355:    "status.reprog.enviando":"Reprogramando","status.reprog.enviando_txt":"Estamos comprobando la disponibilidad y actualizando tu reserva.",
+2356:    "status.reprog.exito":"Reserva reprogramada","status.reprog.exito_txt":"La reserva se ha actualizado correctamente.",
+2364:    "errors.hora_cierre":"La reserva terminaría después del cierre del club.",
+2367:    "errors.clave":"Introduce la clave de reserva.","errors.clave_incompleta":"La clave de reserva parece incompleta.",
+2369:    "errors.confirmado_reprog":"Confirma que quieres reprogramar la reserva.",
+2373:    "errors.reserva_error":"No se pudo completar la reserva. Inténtalo de nuevo en unos segundos.",
+2383:    "reprog.info1":"La clave identifica la reserva que quieres cambiar.",
+2406:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Reglas de disponibilidad",
+2411:    "admin.backup_eyebrow":"Sistema activo","admin.backup_desc":"Copia automática de reservas y socios activos.",
+2421:    "soporte.worker_item":"Worker de reservas preparado",
+2426:    "soporte.obs_desc":"Zona reservada para diagnóstico cuando exista backend real.",
+2432:    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+2433:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+2443:    "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
+2445:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2448:    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, check bookings and ranking.",
+2449:    "role.STAFF.label":"Staff / reception","role.STAFF.desc":"Daily management of bookings, sign-ups and player assistance.",
+2452:    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+2455:    "home.estado_operativo":"Operational status","home.reservar":"Book",
+2461:    "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
+2464:    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+2469:    "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
+2475:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+2480:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+2497:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+2498:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+2499:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+2500:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+2501:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+2502:    "reprog.resumen":"Change summary","reprog.confirmo":"I confirm I want to reschedule this booking",
+2503:    "reprog.btn":"Reschedule booking","reprog.volver":"Back to bookings",
+2509:    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Last updated",
+2530:    "cancelar.title":"Cancel booking","cancelar.eyebrow":"Bookings","cancelar.desc":"Request cancellation of a booking.",
+2531:    "cancelar.clave":"Booking key","cancelar.clave_ph":"Enter your booking key",
+2532:    "cancelar.confirmo_check":"I confirm I want to request cancellation of this booking.",
+2533:    "cancelar.btn":"Cancel booking","cancelar.enviando":"Sending...","cancelar.volver_reservas":"Back to bookings",
+2535:    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
+2536:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+2537:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+2538:    "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
+2539:    "reservas.registrada":"Booking registered","reservas.nueva_btn":"New booking",
+2540:    "reservas.nombre":"First name","reservas.apellidos":"Surname","reservas.modalidad":"Mode",
+2541:    "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
+2542:    "reservas.confirmacion_desc":"Real confirmation depends on the backend and configured integrations.",
+2543:    "reprog.title":"Reschedule booking","reprog.eyebrow":"Bookings","reprog.desc":"Change the date or time of your booking.",
+2544:    "reprog.hora_fin":"End time","reprog.que_ocurre":"What happens next","reprog.enviando":"Sending...","reprog.editar":"Edit",
+2548:    "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
+2549:    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
+2550:    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+2551:    "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
+2552:    "status.cancelar.idle":"Pending","status.cancelar.idle_txt":"Confirm the cancellation of your booking.",
+2556:    "status.reprog.idle":"Pending","status.reprog.idle_txt":"Choose a new date or time.",
+2557:    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
+2558:    "status.reprog.exito":"Booking rescheduled","status.reprog.exito_txt":"Your booking has been updated successfully.",
+2562:    "errors.fecha":"Please select a date.","errors.fecha_pasado":"The date cannot be in the past.",
+2564:    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
+2565:    "errors.hora_pasada":"The selected slot has already passed.",
+2566:    "errors.hora_cierre":"The booking would end after club closing time.",
+2569:    "errors.clave":"Please enter the booking key.","errors.clave_incompleta":"The booking key seems incomplete.",
+2570:    "errors.nueva_fecha":"Please select the new date.","errors.nueva_fecha_pasado":"The new date cannot be in the past.",
+2571:    "errors.confirmado_reprog":"Please confirm you want to reschedule the booking.",
+2574:    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
+2575:    "errors.reserva_error":"Could not complete the booking. Please try again in a few seconds.",
+2578:    "errors.reprog_ocupado":"That slot has just been taken. Please select another.",
+2585:    "reprog.info1":"The key identifies the booking you want to change.",
+2589:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+2596:    "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
+2604:    "flujos.nota_integracion":"Technical integration connected. Real-time data requires connection to the club backend.",
+2613:    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
+2634:    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+2635:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+2647:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2650:    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, view bookings and ranking.",
+2651:    "role.STAFF.label":"Staff / front desk","role.STAFF.desc":"Daily management of bookings and player assistance.",
+2654:    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+2657:    "home.estado_operativo":"System status","home.reservar":"Book",
+2663:    "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
+2666:    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+2671:    "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
+2677:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+2682:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+2699:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+2700:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+2701:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+2702:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+2703:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+2704:    "reprog.resumen":"Change summary","reprog.confirmo":"I confirm I want to reschedule this booking",
+2705:    "reprog.btn":"Reschedule booking","reprog.volver":"Back to bookings",
+2711:    "ranking.mov":"Mov.","ranking.pos":"#","ranking.ultima_act":"Last updated",
+2732:    "cancelar.title":"Cancel booking","cancelar.eyebrow":"Bookings","cancelar.desc":"Request cancellation of a booking.",
+2733:    "cancelar.clave":"Booking key","cancelar.clave_ph":"Enter your booking key",
+2734:    "cancelar.confirmo_check":"I confirm I want to cancel this booking.",
+2735:    "cancelar.btn":"Cancel booking","cancelar.enviando":"Sending...","cancelar.volver_reservas":"Back to bookings",
+2737:    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
+2738:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+2739:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+2740:    "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
+2741:    "reservas.registrada":"Booking confirmed","reservas.nueva_btn":"New booking",
+2742:    "reservas.nombre":"First name","reservas.apellidos":"Last name","reservas.modalidad":"Mode",
+2743:    "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
+2744:    "reservas.confirmacion_desc":"Confirmation depends on the backend and configured integrations.",
+2745:    "reprog.title":"Reschedule booking","reprog.eyebrow":"Bookings","reprog.desc":"Change the date or time of your booking.",
+2746:    "reprog.hora_fin":"End time","reprog.que_ocurre":"What happens next","reprog.enviando":"Sending...","reprog.editar":"Edit",
+2750:    "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
+2751:    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
+2752:    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+2753:    "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
+2754:    "status.cancelar.idle":"Pending","status.cancelar.idle_txt":"Confirm the cancellation of your booking.",
+2758:    "status.reprog.idle":"Pending","status.reprog.idle_txt":"Choose a new date or time.",
+2759:    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
+2760:    "status.reprog.exito":"Booking rescheduled","status.reprog.exito_txt":"Your booking has been updated successfully.",
+2764:    "errors.fecha":"Please select a date.","errors.fecha_pasado":"The date cannot be in the past.",
+2766:    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
+2767:    "errors.hora_pasada":"The selected slot has already passed.",
+2768:    "errors.hora_cierre":"The booking would end after club closing time.",
+2771:    "errors.clave":"Please enter the booking key.","errors.clave_incompleta":"The booking key seems incomplete.",
+2772:    "errors.nueva_fecha":"Please select the new date.","errors.nueva_fecha_pasado":"The new date cannot be in the past.",
+2773:    "errors.confirmado_reprog":"Please confirm you want to reschedule the booking.",
+2776:    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
+2777:    "errors.reserva_error":"Could not complete the booking. Please try again in a few seconds.",
+2780:    "errors.reprog_ocupado":"That slot has just been taken. Please select another.",
+2787:    "reprog.info1":"The key identifies the booking you want to change.",
+2791:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+2798:    "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
+2806:    "flujos.nota_integracion":"Technical integration connected. Real-time data requires connection to the club backend.",
+2815:    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
+2836:    "nav.inicio":"Accueil","nav.reservar":"Réserver","nav.alta_jugador":"Inscription joueur",
+2849:    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
+2856:    "home.reservas_hoy":"Réservations auj.","home.ocupacion_media":"Occupation moy.",
+2859:    "home.estado_operativo":"État opérationnel","home.reservar":"Réserver",
+2868:    "home.reservas_hora":"Réservations par heure — auj.","home.reservas_7dias":"Réservations 7 derniers jours",
+2873:    "home.ir_reservas":"Aller aux réservations","home.ver_gestion":"Gérer réservations",
+2878:    "admin.reservas_mes":"Réservations du mois","admin.ocupacion":"Occupation moy.",
+2897:    "reservas.nueva":"Nouvelle réservation","reservas.fecha":"Date","reservas.hora":"Heure",
+2898:    "reservas.pista":"Court","reservas.duracion":"Durée","reservas.confirmar":"Confirmer réservation",
+2899:    "reservas.resumen":"Résumé","reservas.disponible":"Disponible","reservas.no_disponible":"Indisponible",
+2900:    "reprog.clave":"Clé de réservation","reprog.nueva_fecha":"Nouvelle date",
+2933:    "cancelar.btn":"Annuler la réservation","cancelar.enviando":"Envoi en cours...","cancelar.volver_reservas":"Retour aux réservations",
+2935:    "reservas.title":"Réserver un terrain","reservas.eyebrow":"Réservations","reservas.desc":"Réservez votre terrain en quelques secondes.",
+2936:    "reservas.datos_jugador":"Données du joueur","reservas.fecha_pista":"Date, heure et terrain",
+2937:    "reservas.hora_fin":"Heure de fin","reservas.total":"Total","reservas.ver_resumen":"Voir le résumé",
+2938:    "reservas.editar":"Modifier","reservas.confirmar_btn":"Confirmer","reservas.enviando":"Envoi...",
+2939:    "reservas.registrada":"Réservation enregistrée","reservas.nueva_btn":"Nouvelle réservation",
+2940:    "reservas.nombre":"Prénom","reservas.apellidos":"Nom","reservas.modalidad":"Mode",
+2941:    "reservas.nivel_form":"Niveau","reservas.comentarios":"Commentaires","reservas.minutos":"minutes",
+2942:    "reservas.confirmacion_desc":"La confirmation dépend du backend et des intégrations configurées.",
+2943:    "reprog.title":"Reprogrammer la réservation","reprog.eyebrow":"Réservations","reprog.desc":"Changer la date ou l'heure de votre réservation.",
+2948:    "status.reserva.pendiente":"En attente","status.reserva.pendiente_txt":"Vérifiez vos données avant de confirmer.",
+2949:    "status.reserva.enviando":"Envoi","status.reserva.enviando_txt":"Nous envoyons votre demande de réservation.",
+2950:    "status.reserva.exito":"Succès","status.reserva.exito_txt":"Réservation envoyée avec succès. La disponibilité est mise à jour.",
+2951:    "status.reserva.error":"Erreur","status.reserva.error_txt":"Impossible de finaliser la réservation. Vérifiez les données et réessayez.",
+2956:    "status.reprog.idle":"En attente","status.reprog.idle_txt":"Choisissez une nouvelle date ou heure.",
+2962:    "errors.fecha":"Veuillez sélectionner une date.","errors.fecha_pasado":"La date ne peut pas être dans le passé.",
+2970:    "errors.nueva_fecha":"Veuillez sélectionner la nouvelle date.","errors.nueva_fecha_pasado":"La nouvelle date ne peut pas être dans le passé.",
+2975:    "errors.reserva_error":"Impossible de finaliser la réservation. Réessayez dans quelques secondes.",
+3034:    "nav.inicio":"Inizio","nav.reservar":"Prenota","nav.alta_jugador":"Iscrizione giocatore",
+3047:    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
+3054:    "home.reservas_hoy":"Prenotazioni oggi","home.ocupacion_media":"Occupazione media",
+3057:    "home.estado_operativo":"Stato operativo","home.reservar":"Prenota",
+3066:    "home.reservas_hora":"Prenotazioni per ora — oggi","home.reservas_7dias":"Prenotazioni ultimi 7 giorni",
+3071:    "home.ir_reservas":"Vai alle prenotazioni","home.ver_gestion":"Gestisci prenotazioni",
+3076:    "admin.reservas_mes":"Prenotazioni mensili","admin.ocupacion":"Occupazione media",
+3095:    "reservas.nueva":"Nuova prenotazione","reservas.fecha":"Data","reservas.hora":"Ora",
+3096:    "reservas.pista":"Campo","reservas.duracion":"Durata","reservas.confirmar":"Conferma prenotazione",
+3097:    "reservas.resumen":"Riepilogo","reservas.disponible":"Disponibile","reservas.no_disponible":"Non disponibile",
+3131:    "cancelar.btn":"Cancella prenotazione","cancelar.enviando":"Invio...","cancelar.volver_reservas":"Torna alle prenotazioni",
+3133:    "reservas.title":"Prenota un campo","reservas.eyebrow":"Prenotazioni","reservas.desc":"Prenota il tuo campo in pochi secondi.",
+3134:    "reservas.datos_jugador":"Dati del giocatore","reservas.fecha_pista":"Data, ora e campo",
+3135:    "reservas.hora_fin":"Ora di fine","reservas.total":"Totale","reservas.ver_resumen":"Vedi riepilogo",
+3136:    "reservas.editar":"Modifica","reservas.confirmar_btn":"Conferma","reservas.enviando":"Invio...",
+3137:    "reservas.registrada":"Prenotazione registrata","reservas.nueva_btn":"Nuova prenotazione",
+3138:    "reservas.nombre":"Nome","reservas.apellidos":"Cognome","reservas.modalidad":"Modalità",
+3139:    "reservas.nivel_form":"Livello","reservas.comentarios":"Commenti","reservas.minutos":"minuti",
+3140:    "reservas.confirmacion_desc":"La conferma dipende dal backend e dalle integrazioni configurate.",
+3146:    "status.reserva.pendiente":"In attesa","status.reserva.pendiente_txt":"Controlla i dati prima di confermare.",
+3147:    "status.reserva.enviando":"Invio","status.reserva.enviando_txt":"Stiamo inviando la tua richiesta di prenotazione.",
+3148:    "status.reserva.exito":"Successo","status.reserva.exito_txt":"Prenotazione inviata con successo. La disponibilità viene aggiornata.",
+3149:    "status.reserva.error":"Errore","status.reserva.error_txt":"Impossibile completare la prenotazione. Controlla i dati e riprova.",
+3173:    "errors.reserva_error":"Impossibile completare la prenotazione. Riprova tra qualche secondo.",
+3190:    "flujos.en_pausa":"In pausa","flujos.incidencias_label":"Incidenti","flujos.ultimas_24h":"Ultime 24h",
+3194:    "flujos.actividad_24h":"Attività ultime 24h","flujos.por_hora":"Per ora del giorno",
+3232:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Registo de jogador",
+3233:    "nav.reprogramar":"Reagendar","nav.cancelar":"Cancelar reserva",
+3245:    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
+3248:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar campos, consultar reservas e classificação.",
+3249:    "role.STAFF.label":"Staff / receção","role.STAFF.desc":"Gestão diária de reservas e assistência a jogadores.",
+3252:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+3255:    "home.estado_operativo":"Estado operacional","home.reservar":"Reservar",
+3264:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+3269:    "home.ir_reservas":"Ir para reservas","home.ver_gestion":"Gerir reservas",
+3274:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+3293:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Hora",
+3294:    "reservas.pista":"Campo","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+3295:    "reservas.resumen":"Resumo","reservas.disponible":"Disponível","reservas.no_disponible":"Indisponível",
+3296:    "reprog.clave":"Chave de reserva","reprog.nueva_fecha":"Nova data",
+3298:    "reprog.resumen":"Resumo da alteração","reprog.confirmo":"Confirmo que quero reagendar esta reserva",
+3299:    "reprog.btn":"Reagendar reserva","reprog.volver":"Voltar às reservas",
+3326:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+3327:    "cancelar.clave":"Código de reserva","cancelar.clave_ph":"Introduza o seu código de reserva",
+3328:    "cancelar.confirmo_check":"Confirmo que quero cancelar esta reserva.",
+3329:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"A enviar...","cancelar.volver_reservas":"Voltar às reservas",
+3331:    "reservas.title":"Reservar campo","reservas.eyebrow":"Reservas","reservas.desc":"Reserve o seu campo em segundos.",
+3332:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e campo",
+3333:    "reservas.hora_fin":"Hora de fim","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+3334:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"A enviar...",
+3335:    "reservas.registrada":"Reserva registada","reservas.nueva_btn":"Nova reserva",
+3336:    "reservas.nombre":"Nome","reservas.apellidos":"Apelido","reservas.modalidad":"Modalidade",
+3337:    "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
+3338:    "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
+3339:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou hora da sua reserva.",
+3344:    "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Reveja os dados antes de confirmar.",
+3345:    "status.reserva.enviando":"A enviar","status.reserva.enviando_txt":"Estamos a enviar o seu pedido de reserva.",
+3346:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está a ser atualizada.",
+3347:    "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
+3348:    "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
+3353:    "status.reprog.enviando":"A reagendar","status.reprog.enviando_txt":"A verificar disponibilidade e a atualizar a sua reserva.",
+3354:    "status.reprog.exito":"Reserva reagendada","status.reprog.exito_txt":"A sua reserva foi atualizada com sucesso.",
+3362:    "errors.hora_cierre":"A reserva terminaria depois do encerramento do clube.",
+3365:    "errors.clave":"Introduza o código de reserva.","errors.clave_incompleta":"O código de reserva parece incompleto.",
+3367:    "errors.confirmado_reprog":"Confirme que pretende reagendar a reserva.",
+3371:    "errors.reserva_error":"Não foi possível completar a reserva. Tente novamente em alguns segundos.",
+3381:    "reprog.info1":"O código identifica a reserva que pretende alterar.",
+3404:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+3409:    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
+3419:    "soporte.worker_item":"Worker de reservas preparado",
+3424:    "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
+3430:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Cadastro de jogador",
+3431:    "nav.reprogramar":"Remarcar","nav.cancelar":"Cancelar reserva",
+3443:    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
+3446:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar quadras, consultar reservas e ranking.",
+3447:    "role.STAFF.label":"Staff / recepção","role.STAFF.desc":"Gestão diária de reservas e atendimento aos jogadores.",
+3450:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+3453:    "home.estado_operativo":"Status operacional","home.reservar":"Reservar",
+3462:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+3467:    "home.ir_reservas":"Ir para reservas","home.ver_gestion":"Gerenciar reservas",
+3472:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+3491:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Horário",
+3492:    "reservas.pista":"Quadra","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+3493:    "reservas.resumen":"Resumo","reservas.disponible":"Disponível","reservas.no_disponible":"Indisponível",
+3494:    "reprog.clave":"Código da reserva","reprog.nueva_fecha":"Nova data",
+3496:    "reprog.resumen":"Resumo da alteração","reprog.confirmo":"Confirmo que quero remarcar esta reserva",
+3497:    "reprog.btn":"Remarcar reserva","reprog.volver":"Voltar às reservas",
+3524:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+3525:    "cancelar.clave":"Código de reserva","cancelar.clave_ph":"Digite o código da sua reserva",
+3526:    "cancelar.confirmo_check":"Confirmo que quero cancelar esta reserva.",
+3527:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Voltar para reservas",
+3529:    "reservas.title":"Reservar quadra","reservas.eyebrow":"Reservas","reservas.desc":"Reserve sua quadra em segundos.",
+3530:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e quadra",
+3531:    "reservas.hora_fin":"Horário de término","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+3532:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
+3533:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nova reserva",
+3534:    "reservas.nombre":"Nome","reservas.apellidos":"Sobrenome","reservas.modalidad":"Modalidade",
+3535:    "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
+3536:    "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
+3537:    "reprog.title":"Reagendar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou horário da sua reserva.",
+3542:    "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Revise os dados antes de confirmar.",
+3543:    "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando a sua solicitação de reserva.",
+3544:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está sendo atualizada.",
+3545:    "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
+3546:    "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
+3551:    "status.reprog.enviando":"Remarcando","status.reprog.enviando_txt":"Verificando disponibilidade e atualizando sua reserva.",
+3552:    "status.reprog.exito":"Reserva remarcada","status.reprog.exito_txt":"Sua reserva foi atualizada com sucesso.",
+3560:    "errors.hora_cierre":"A reserva terminaria depois do fechamento do clube.",
+3563:    "errors.clave":"Informe o código da reserva.","errors.clave_incompleta":"O código da reserva parece incompleto.",
+3565:    "errors.confirmado_reprog":"Confirme que deseja remarcar a reserva.",
+3569:    "errors.reserva_error":"Não foi possível completar a reserva. Tente novamente em alguns segundos.",
+3579:    "reprog.info1":"O código identifica a reserva que você quer alterar.",
+3602:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+3607:    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
+3617:    "soporte.worker_item":"Worker de reservas pronto",
+3622:    "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
+3628:    "nav.inicio":"Start","nav.reservar":"Buchen","nav.alta_jugador":"Spieler registrieren",
+3641:    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
+3648:    "home.reservas_hoy":"Buchungen heute","home.ocupacion_media":"Durchschn. Auslastung",
+3651:    "home.estado_operativo":"Betriebsstatus","home.reservar":"Buchen",
+3660:    "home.reservas_hora":"Buchungen pro Stunde — heute","home.reservas_7dias":"Buchungen letzte 7 Tage",
+3665:    "home.ir_reservas":"Zu Buchungen","home.ver_gestion":"Buchungen verwalten",
+3670:    "admin.reservas_mes":"Monatliche Buchungen","admin.ocupacion":"Durchschn. Auslastung",
+3678:    "admin.integ_desc":"Bereit, ausstehende Anmeldedaten oder Bereitstellung.",
+3689:    "reservas.nueva":"Neue Buchung","reservas.fecha":"Datum","reservas.hora":"Uhrzeit",
+3690:    "reservas.pista":"Platz","reservas.duracion":"Dauer","reservas.confirmar":"Buchung bestätigen",
+3691:    "reservas.resumen":"Zusammenfassung","reservas.disponible":"Verfügbar","reservas.no_disponible":"Nicht verfügbar",
+3706:    "ranking.datos_ejemplo":"Beispieldaten","ranking.sistema_puntos":"Konfigurierbares Club-Punktesystem.",
+3725:    "cancelar.btn":"Buchung stornieren","cancelar.enviando":"Wird gesendet...","cancelar.volver_reservas":"Zurück zu Buchungen",
+3727:    "reservas.title":"Platz buchen","reservas.eyebrow":"Buchungen","reservas.desc":"Buchen Sie Ihren Platz in Sekunden.",
+3728:    "reservas.datos_jugador":"Spielerdaten","reservas.fecha_pista":"Datum, Uhrzeit und Platz",
+3729:    "reservas.hora_fin":"Endzeit","reservas.total":"Gesamt","reservas.ver_resumen":"Zusammenfassung",
+3730:    "reservas.editar":"Bearbeiten","reservas.confirmar_btn":"Bestätigen","reservas.enviando":"Wird gesendet...",
+3731:    "reservas.registrada":"Buchung registriert","reservas.nueva_btn":"Neue Buchung",
+3732:    "reservas.nombre":"Vorname","reservas.apellidos":"Nachname","reservas.modalidad":"Modus",
+3733:    "reservas.nivel_form":"Niveau","reservas.comentarios":"Kommentare","reservas.minutos":"Minuten",
+3734:    "reservas.confirmacion_desc":"Die Bestätigung hängt vom Backend und den konfigurierten Integrationen ab.",
+3740:    "status.reserva.pendiente":"Ausstehend","status.reserva.pendiente_txt":"Überprüfen Sie Ihre Daten vor der Bestätigung.",
+3741:    "status.reserva.enviando":"Wird gesendet","status.reserva.enviando_txt":"Wir senden Ihre Buchungsanfrage.",
+3742:    "status.reserva.exito":"Erfolg","status.reserva.exito_txt":"Buchung erfolgreich gesendet. Die Verfügbarkeit wird aktualisiert.",
+3743:    "status.reserva.error":"Fehler","status.reserva.error_txt":"Buchung konnte nicht abgeschlossen werden. Überprüfen Sie die Daten und versuchen Sie es erneut.",
+3767:    "errors.reserva_error":"Buchung konnte nicht abgeschlossen werden. Versuchen Sie es in einigen Sekunden erneut.",
+3844:  const [open, setOpen] = useState(false);
+3845:  const [search, setSearch] = useState("");
+3846:  const [selected, setSelected] = useState(() => loadSavedLanguage() || LANGUAGES_RAW.find(l => l.code === "es-ES") || LANGUAGES_ALL[0]);
+3972:    ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
+3978:    PLAYER: ["inicio","reservas","torneos","ranking","perfil"],
+3979:    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
+3980:    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
+3981:    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+4224:            <Btn onClick={() => setCurrent("reservas")} style={{ color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
+4234:            <div style={{ fontFamily: "monospace", fontSize: "clamp(2rem,5vw,3rem)", fontWeight: 900, color: T.accent, lineHeight: 1, letterSpacing: ".06em" }}>{clk.time}</div>
+4235:            <div style={{ color: T.textDim, fontSize: ".85rem", marginTop: 5 }}>{clk.day}, {clk.date}</div>
+4240:            <Btn onClick={() => setCurrent("reservas")} style={{ padding: "10px 12px", fontSize: ".82rem", color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
+4256:        <MetricCard label={tx("home.reservas_hoy")} value={kpi.reservasHoy} sub={`vs 10 ${tx("home.vs_ayer")}`} trend={20} icon="🎾" />
+4266:        <ChartCard title={tx("home.reservas_hora")} sub={tx("home.franja_horaria")}>
+4267:          <MiniBarChart data={DEMO_RESERVAS_HOY} height={70} color={T.accent} unit={tx("home.reservas_hoy").toLowerCase()} />
+4269:        <ChartCard title={tx("home.reservas_7dias")} sub={tx("home.tendencia_semanal")}>
+4313:  const [step, setStep] = useState(1);
+4314:  const [status, setStatus] = useState("pending");
+4315:  const [statusMessage, setStatusMessage] = useState("");
+4316:  const [errors, setErrors] = useState({});
+4317:  const [court, setCourt] = useState("Pista 1");
+4318:  const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
+4326:    pending: [tx("status.reserva.pendiente"), tx("status.reserva.pendiente_txt"), T.warning],
+4327:    sending: [tx("status.reserva.enviando"), tx("status.reserva.enviando_txt"), T.warning],
+4328:    success: [tx("status.reserva.exito"), tx("status.reserva.exito_txt"), T.accent],
+4329:    error: [tx("status.reserva.error"), statusMessage || tx("status.reserva.error_txt"), T.danger],
+4333:  function updateForm(field, value) {
+4341:    const nextErrors = validateBooking(form, court, tx);
+4353:    const nextErrors = validateBooking(form, court, tx);
+4366:      const slotKey = `${form.fecha}|${court}|${form.hora}`;
+4368:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+4380:      setStatusMessage(tx("errors.reserva_error"));
+4394:  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow={tx("reservas.eyebrow")} title={tx("reservas.title")} desc={tx("reservas.desc")} /><CalendarioDisponibilidad
+4396:  selectedCourt={court}
+4399:    updateForm("fecha", fecha);
+4400:    updateForm("hora", hora);
+4401:    updateForm("pista", pista);
+4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+4411:  const [clave, setClave] = useState("");
+4412:  const [confirmado, setConfirmado] = useState(false);
+4413:  const [status, setStatus] = useState("idle");
+4414:  const [error, setError] = useState("");
+4426:  function updateClave(value) {
+4432:  function updateConfirmado(value) {
+4459:      const res = await fetch(CONFIG.bookingEndpoint, {
+4463:          accion: "cancelar_reserva",
+4464:          clave_reserva: claveLimpia,
+4471:          origen: "app_publica_cancelar_reserva",
+4493:  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} /><Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+4500:  const [court, setCourt] = useState("Pista 1");
+4501:  const [form, setForm] = useState({
+4502:    clave_reserva: "",
+4503:    nueva_fecha_reserva: todayISO(),
+4508:  const [status, setStatus] = useState("idle");
+4509:  const [statusMessage, setStatusMessage] = useState("");
+4510:  const [errors, setErrors] = useState({});

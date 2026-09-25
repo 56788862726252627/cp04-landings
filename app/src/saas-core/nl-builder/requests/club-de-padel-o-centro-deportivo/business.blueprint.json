@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "businessId": "club-de-padel-o-centro-deportivo",
+  "tenantId": "club-de-padel-o-centro-deportivo",
+  "commercialName": "Club De Pádel O Centro Deportivo",
+  "sector": "padel",
+  "country": "ES",
+  "timezone": "Europe/Madrid",
+  "locale": "es-ES",
+  "currencies": [
+    "EUR"
+  ],
+  "plan": "pro",
+  "publicInfo": {
+    "shortDescription": "Club de pádel o centro deportivo (ES) — 10 módulo(s) habilitado(s)."
+  },
+  "branding": {
+    "logoRef": null,
+    "faviconRef": null,
+    "tone": "enérgico-cercano",
+    "colors": {
+      "primary": "#1d4e89",
+      "accent": "#146c43",
+      "bg": "#ffffff",
+      "text": "#0c1420"
+    },
+    "fonts": {
+      "display": "'Inter', sans-serif",
+      "body": "'Inter', sans-serif"
+    }
+  },
+  "modules": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "pagos",
+    "servicios",
+    "recursos",
+    "soporte",
+    "configuracion",
+    "torneos",
+    "ranking"
+  ],
+  "roles": [
+    "jugador",
+    "recepcion",
+    "administracion",
+    "soporte"
+  ],
+  "permissions": {
+    "jugador": [
+      "citas",
+      "servicios"
+    ],
+    "recepcion": [
+      "clientes",
+      "citas",
+      "pagos",
+      "servicios",
+      "recursos"
+    ],
+    "administracion": [
+      "autenticacion",
+      "clientes",
+      "citas",
+      "pagos",
+      "servicios",
+      "recursos",
+      "soporte",
+      "configuracion",
+      "torneos",
+      "ranking"
+    ],
+    "soporte": [
+      "soporte"
+    ]
+  },
+  "automations": [
+    "confirmacion",
+    "recordatorio",
+    "cancelacion",
+    "seguimiento",
+    "fidelizacion"
+  ],
+  "aiCapabilities": [],
+  "integrations": {
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    },
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    }
+  },
+  "pwa": {
+    "shortName": "Club De Pádel O Centro D",
+    "themeColor": "#146c43",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": [
+      "header",
+      "hero",
+      "valueProp",
+      "benefits",
+      "services",
+      "howItWorks",
+      "testimonials",
+      "faq",
+      "cta",
+      "contact",
+      "footer",
+      "privacyPlaceholder"
+    ],
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto",
+    "testimonials": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de club de pádel o centro deportivo.",
+        "isDemo": true
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Qué incluye la solución para club de pádel o centro deportivo?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "seed": "demo-club-padel-001",
+    "sizes": {}
+  },
+  "flags": {},
+  "limits": {},
+  "privacy": {
+    "regulatedSector": false,
+    "sensitiveDataCategories": []
+  },
+  "manualSteps": [
+    "conflictos de horario en pistas compartidas",
+    "Confirmar antes de producción: ¿En qué ciudad y país operará el negocio?",
+    "Confirmar antes de producción: ¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?",
+    "Revisar supuesto — country/timezone: se asumió \"ES/Europe/Madrid\" (valor por defecto seguro (España/Europe-Madrid) al no detectarse ciudad en el texto)"
+  ],
+  "generationMeta": {
+    "generatedBy": "nl-builder:business:compose",
+    "sourceIntentRequestId": "intent-f8a8a68cc8a87a9d",
+    "seed": "demo-club-padel-001"
+  }
+}

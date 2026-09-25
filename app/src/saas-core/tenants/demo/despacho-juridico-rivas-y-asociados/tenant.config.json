@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "tenantId": "despacho-juridico-rivas-y-asociados",
+  "slug": "despacho-juridico-rivas-y-asociados",
+  "legalName": "Despacho Jurídico Rivas y Asociados",
+  "displayName": "Despacho Jurídico Rivas y Asociados",
+  "businessType": "professional-services",
+  "sector": "law",
+  "locale": "es-ES",
+  "timezone": "Europe/Madrid",
+  "currency": "EUR",
+  "country": "ES",
+  "branding": {
+    "colors": {
+      "accent": "#2f6bff"
+    }
+  },
+  "roles": [
+    "CLIENT",
+    "STAFF",
+    "ADMIN",
+    "SUPPORT"
+  ],
+  "permissions": {
+    "CLIENT": [
+      "inicio",
+      "citas",
+      "pagos"
+    ],
+    "STAFF": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "pagos",
+      "documentos",
+      "formularios",
+      "soporte"
+    ],
+    "ADMIN": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "pagos",
+      "automatizaciones",
+      "campanas",
+      "documentos",
+      "formularios",
+      "soporte",
+      "informes",
+      "configuracion"
+    ],
+    "SUPPORT": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "pagos",
+      "automatizaciones",
+      "campanas",
+      "documentos",
+      "formularios",
+      "soporte",
+      "informes",
+      "configuracion"
+    ]
+  },
+  "modulesEnabled": [
+    "inicio",
+    "citas",
+    "clientes",
+    "pagos",
+    "automatizaciones",
+    "soporte",
+    "informes",
+    "configuracion",
+    "agenda",
+    "profesionales",
+    "documentos",
+    "formularios",
+    "campanas"
+  ],
+  "terminologyOverrides": {
+    "customer": {
+      "singular": "cliente",
+      "plural": "clientes",
+      "short": "Cliente"
+    },
+    "resource": {
+      "singular": "despacho",
+      "plural": "despachos",
+      "short": "Despacho"
+    },
+    "appointment": {
+      "singular": "cita",
+      "plural": "citas",
+      "short": "Cita"
+    },
+    "staff": {
+      "singular": "abogado/a",
+      "plural": "abogados/as",
+      "short": "Abogado/a"
+    },
+    "event": {
+      "singular": "caso",
+      "plural": "casos",
+      "short": "Caso"
+    },
+    "progress": {
+      "singular": "progreso del caso",
+      "plural": "progresos de caso",
+      "short": "Progreso"
+    },
+    "organization": {
+      "singular": "despacho de abogados",
+      "plural": "despachos de abogados",
+      "short": "Despacho"
+    }
+  },
+  "integrations": {
+    "automation": {
+      "status": "not_configured",
+      "envVars": [
+        "MAKE_WEBHOOK_URL"
+      ]
+    },
+    "dataRepository": {
+      "status": "not_configured",
+      "envVars": [
+        "AIRTABLE_API_KEY",
+        "AIRTABLE_BASE_ID"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    },
+    "email": {
+      "status": "not_configured",
+      "envVars": [
+        "GMAIL_OAUTH_CLIENT_ID"
+      ]
+    },
+    "calendar": {
+      "status": "not_configured",
+      "envVars": [
+        "GOOGLE_CALENDAR_CLIENT_ID"
+      ]
+    }
+  },
+  "policies": {
+    "privacyReviewRequired": true,
+    "regulatedSector": true,
+    "sensitiveDataCategories": [
+      "salud_o_legal_placeholder"
+    ]
+  },
+  "demoData": {
+    "enabled": true,
+    "source": "preset:law-firm"
+  },
+  "flags": {},
+  "meta": {
+    "templateId": "professional-services",
+    "presetId": "law-firm",
+    "isDefaultTenant": false,
+    "generatedBy": "tenant:create"
+  }
+}

@@ -1,0 +1,5 @@
+backups/checkpoint-auditoria35-final
+backups/checkpoint-auditoria35-inicial
+backups/checkpoint-auditoria35-pages-prep
+backups/checkpoint-auditoria35-plan-deploy
+backups/checkpoint-auditoria35-worker-prep

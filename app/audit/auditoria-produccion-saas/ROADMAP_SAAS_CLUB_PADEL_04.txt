@@ -1,0 +1,157 @@
+==============================================================
+ROADMAP SAAS — CLUB PÁDEL 04
+Versión: 2026-06-25 · Sistema de puntos configurable del club
+==============================================================
+
+─────────────────────────────────────────────────────────────
+A. CRÍTICO ANTES DE PRODUCCIÓN REAL
+─────────────────────────────────────────────────────────────
+
+#  Tarea                                   Prioridad  Impacto  Dificultad  Estado
+─────────────────────────────────────────────────────────────────────────────────
+A1  Auth backend real (JWT/session)          P0         Alto     Alta        Pendiente
+A2  Endpoint /api/auth/login                P0         Alto     Media       Pendiente
+A3  Endpoint /api/auth/forgot-password      P0         Alto     Media       UI lista ✓
+A4  Endpoint /api/auth/reset-password       P0         Alto     Media       Pendiente
+A5  Base de datos real (Supabase/PG)        P0         Alto     Alta        Pendiente
+A6  Protección rutas por rol (server)       P0         Alto     Media       Pendiente
+A7  Validación server-side de inputs        P0         Alto     Media       Pendiente
+A8  HTTPS + CORS restrictivo                P0         Alto     Baja        Pendiente
+A9  Rate limiting en auth endpoints         P0         Alto     Media       Pendiente
+A10 Backups automáticos de datos            P0         Alto     Media       Pendiente
+A11 Política de privacidad RGPD real        P0         Alto     Baja        Pendiente
+A12 Testing E2E básico (login, reserva)     P0         Alto     Media       Pendiente
+A13 Deploy estable (Vercel/Cloudflare)      P0         Alto     Baja        Pendiente
+
+Módulos afectados: Login, Auth, Todas las rutas
+Dependencias: Sin A1-A6 el resto no tiene validez en producción
+
+─────────────────────────────────────────────────────────────
+B. MVP VENDIBLE
+─────────────────────────────────────────────────────────────
+
+#  Tarea                                   Prioridad  Impacto  Dificultad  Estado
+─────────────────────────────────────────────────────────────────────────────────
+B1  Reservas reales en DB                   P1         Alto     Alta        Worker OK ✓
+B2  Disponibilidad real en tiempo real      P1         Alto     Media       Worker OK ✓
+B3  Cancelación real con política           P1         Alto     Media       Pendiente
+B4  Reprogramación real                     P1         Alto     Media       UI lista ✓
+B5  Emails confirmación (Resend/SendGrid)   P1         Alto     Media       Pendiente
+B6  Panel admin con datos reales            P1         Alto     Alta        Pendiente
+B7  Alta de socio con datos reales en DB    P1         Alto     Media       UI lista ✓
+B8  Perfil de usuario real                  P1         Medio    Media       UI demo ✓
+B9  Torneos básicos guardados en DB         P1         Medio    Alta        Local ✓
+B10 Ranking básico desde DB                 P1         Medio    Media       Demo ✓
+B11 Soporte: formulario de ticket           P1         Medio    Baja        Pendiente
+B12 Idiomas: revisión nativa de traducciones P2       Medio    Baja        Pendiente
+
+Módulos afectados: Reservas, Alta, Admin, Perfil, Soporte
+Dependencias: Requiere A1-A7
+
+─────────────────────────────────────────────────────────────
+C. SAAS PROFESIONAL
+─────────────────────────────────────────────────────────────
+
+#  Tarea                                   Prioridad  Impacto  Dificultad  Estado
+─────────────────────────────────────────────────────────────────────────────────
+C1  Stripe: pago de reservas                P2         Alto     Alta        Pendiente
+C2  Bonos de partidas con caducidad         P2         Alto     Media       Pendiente
+C3  Membresías mensuales/anuales            P2         Alto     Media       Pendiente
+C4  Notificaciones email por eventos        P2         Alto     Media       Pendiente
+C5  Recordatorios automáticos reserva       P2         Alto     Media       Pendiente
+C6  Matchmaking / partidos abiertos         P2         Medio    Alta        Pendiente
+C7  Comunidad / directorio jugadores        P2         Medio    Media       Pendiente
+C8  Valoraciones post-partido               P2         Medio    Media       Pendiente
+C9  Inscripciones online a torneos          P2         Medio    Media       UI parcial
+C10 Estadísticas avanzadas de jugador       P2         Medio    Media       Demo ✓
+C11 Promos y cupones de descuento           P3         Medio    Media       Pendiente
+C12 Favoritos / parejas frecuentes          P3         Bajo     Baja        Pendiente
+C13 Historial de pagos y facturas           P2         Alto     Media       Pendiente
+C14 No-show automático con penalización     P3         Medio    Media       Pendiente
+C15 CRM básico de clientes                  P3         Medio    Alta        Pendiente
+C16 Exportaciones admin (CSV/PDF)           P2         Medio    Baja        Demo ✓
+C17 Upload foto de perfil (Storage)         P3         Bajo     Media       Pendiente
+C18 Gestión de roles en admin               P2         Medio    Media       Simulado ✓
+
+Módulos afectados: Pagos, Bonos, Torneos, Comunidad, Admin, Perfil
+Dependencias: Requiere B1-B9 + Stripe configurado
+
+─────────────────────────────────────────────────────────────
+D. ESCALADO
+─────────────────────────────────────────────────────────────
+
+#  Tarea                                   Prioridad  Impacto  Dificultad  Estado
+─────────────────────────────────────────────────────────────────────────────────
+D1  Code splitting App.jsx (dynamic import) P3         Medio    Media       Pendiente
+D2  PWA / App instalable en móvil          P3         Alto     Media       Pendiente
+D3  Push notifications                      P3         Alto     Media       Pendiente
+D4  WhatsApp bot para reservas             P4         Alto     Alta        Pendiente
+D5  Multi-club white-label                  P4         Alto     Muy alta    Pendiente
+D6  Multi-sede / multi-pista               P3         Alto     Alta        Pendiente
+D7  API pública para integraciones          P4         Medio    Alta        Pendiente
+D8  Panel financiero avanzado               P4         Medio    Alta        Pendiente
+D9  Auditoría avanzada de acciones          P3         Medio    Media       Pendiente
+D10 CI/CD automatizado                      P3         Alto     Media       Pendiente
+
+─────────────────────────────────────────────────────────────
+E. DIFERENCIADORES PREMIUM
+─────────────────────────────────────────────────────────────
+
+#  Tarea                                   Prioridad  Impacto  Dificultad  Estado
+─────────────────────────────────────────────────────────────────────────────────
+E1  Matchmaking inteligente por nivel       P3         Alto     Alta        Pendiente
+E2  Nivel automático por resultados         P3         Alto     Alta        Pendiente
+E3  Recomendación de rivales               P4         Medio    Alta        Pendiente
+E4  Ranking con temporadas automáticas      P3         Medio    Media       Demo parcial
+E5  Sistema de puntos FAP (si validado)     P3         Alto     Alta        Configurable ✓
+E6  Fidelización: puntos por reservas       P4         Medio    Media       Pendiente
+E7  Gamificación: insignias y logros        P4         Medio    Alta        Pendiente
+E8  Retos entre jugadores                   P4         Medio    Alta        Pendiente
+E9  Comunidad: foro/feed del club           P4         Bajo     Alta        Pendiente
+E10 IA soporte: FAQ automático              P4         Medio    Alta        Pendiente
+E11 Predicción de ocupación (ML)            P4         Bajo     Muy alta    Pendiente
+E12 Precios dinámicos por franja/demanda    P4         Alto     Alta        Pendiente
+E13 Vídeos/tutoriales integrados            P4         Bajo     Media       Pendiente
+E14 Experiencia visual premium (Lottie)     P4         Medio    Media       Parcial ✓
+
+─────────────────────────────────────────────────────────────
+SISTEMA DE PUNTOS — NOTA
+─────────────────────────────────────────────────────────────
+El sistema de puntos actual es configurable por el club.
+No se afirma que sea oficial de la FAP (Federación de Pádel)
+ni de ninguna federación, salvo que el usuario aporte la
+fórmula exacta y sea correctamente implementada.
+
+Estructura preparada para adaptar cualquier normativa federada.
+Documentación: "Sistema de puntos configurable del club."
+
+─────────────────────────────────────────────────────────────
+ARQUITECTURA TÉCNICA RECOMENDADA
+─────────────────────────────────────────────────────────────
+Frontend:   React 19 + Vite (actual)
+Auth:       Supabase Auth / Auth.js / Clerk
+DB:         Supabase (PostgreSQL) / PlanetScale
+Backend:    Cloudflare Workers (actual para reservas) + Next.js API
+Pagos:      Stripe (preparado)
+Email:      Resend o SendGrid
+Storage:    Cloudflare R2 / Supabase Storage
+Deploy:     Cloudflare Pages / Vercel
+Monitoring: Sentry / Cloudflare Analytics
+
+─────────────────────────────────────────────────────────────
+PRÓXIMAS ACCIONES RECOMENDADAS
+─────────────────────────────────────────────────────────────
+1. Configurar Supabase (auth + DB) — 1-2 días
+2. Conectar login real con eliminación de contraseñas demo — 1 día
+3. Implementar /api/auth/forgot-password + email — 1 día
+4. Conectar reservas reales desde DB — 2-3 días
+5. Configurar Stripe básico para pago de reservas — 2 días
+6. Test E2E del flujo completo reserva-pago-email — 1 día
+7. Deploy en Cloudflare Pages con CI/CD — 1 día
+
+Estimación MVP vendible: 2-3 semanas de desarrollo
+
+==============================================================
+FIN DEL ROADMAP SAAS — Club Pádel 04
+2026-06-25
+==============================================================

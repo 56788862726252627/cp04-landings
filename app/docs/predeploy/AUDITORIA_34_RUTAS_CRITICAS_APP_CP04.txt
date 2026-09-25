@@ -1,0 +1,72 @@
+40:import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
+41:import { LazyClubGallery } from "./components/lazy/lazyGallery.js";
+167:  { id: "SUPPORT", label: "Soporte técnico", access: "Protegido", sections: "Soporte", permissions: ["Ver estado técnico", "Revisar configuración de conexiones", "Consultar registros del sistema", "Auditar integraciones"] },
+472:    accion: "reprogramar_reserva",
+480:    origen: "app_publica_reprogramar_reserva",
+1212:    "nombre": "🎾 Alta de Jugador · Club Pádel 04 · CORREGIDO FINAL",
+1213:    "nombre_final": "🎾 Alta de Jugador · Club Pádel 04 · CORREGIDO FINAL",
+1561:    "categoria": "Soporte Técnico",
+1696:    "categoria": "Soporte Técnico",
+1713:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+1728:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+1743:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+1758:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+1773:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+1788:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+1818:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+2187:  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+2188:  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+2189:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
+2229:    "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
+2230:    "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
+2232:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
+2242:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+2243:    "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
+2245:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+2248:    "role.SUPPORT.label":"Soporte técnico","role.SUPPORT.desc":"Zona técnica, integraciones y diagnóstico interno.",
+2281:    "soporte.title":"Soporte técnico","soporte.desc":"Control técnico de la aplicación.",
+2284:    "flujos.title":"Centro técnico","flujos.desc":"Estado de automatizaciones del sistema.",
+2300:    "reprog.btn":"Reprogramar reserva","reprog.volver":"Volver a Reservas",
+2321:    "alta.title":"Alta de jugador","alta.eyebrow":"Jugadores","alta.desc":"Añade un jugador al club.",
+2327:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicita la cancelación de una reserva.",
+2330:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Volver a Reservas",
+2332:    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
+2340:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
+2356:    "status.reprog.error":"No se pudo reprogramar","status.reprog.error_txt":"Revisa los datos y vuelve a intentarlo.",
+2368:    "errors.confirmado_reprog":"Confirma que quieres reprogramar la reserva.",
+2383:    "reprog.info2":"Se mantiene la misma clave después de reprogramar.",
+2432:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+2634:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+2836:    "nav.reprogramar":"Reporter","nav.cancelar":"Annuler réservation",
+3034:    "nav.reprogramar":"Riprogramma","nav.cancelar":"Annulla prenotazione",
+3232:    "nav.reprogramar":"Reagendar","nav.cancelar":"Cancelar reserva",
+3234:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Suporte",
+3284:    "flujos.title":"Centro técnico","flujos.desc":"Estado das automatizações do sistema.",
+3325:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+3328:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"A enviar...","cancelar.volver_reservas":"Voltar às reservas",
+3338:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou hora da sua reserva.",
+3430:    "nav.reprogramar":"Remarcar","nav.cancelar":"Cancelar reserva",
+3523:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+3526:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Voltar para reservas",
+3628:    "nav.reprogramar":"Umbuchen","nav.cancelar":"Buchung stornieren",
+3972:    ["reprogramar","nav.reprogramar","↻"],["cancelar","nav.cancelar","✕"],["gestion","nav.gestion","📅"],
+3978:    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
+3979:    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
+3980:    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+4324:function ReprogramarReserva({ setCurrent }) {
+4488:            <label htmlFor="reprogramar-clave" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+4492:              id="reprogramar-clave"
+4518:            <label htmlFor="reprogramar-fecha" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+4522:              id="reprogramar-fecha"
+4533:            <label htmlFor="reprogramar-hora" style={{ display:"block", color:T.textDim, fontWeight:900, margin:"18px 0 8px" }}>
+4537:              id="reprogramar-hora"
+4555:            <label htmlFor="reprogramar-duracion" style={{ display:"block", color:T.textDim, fontWeight:900, margin:"18px 0 8px" }}>
+4559:              id="reprogramar-duracion"
+4679:            <Btn onClick={resetForm}>Reprogramar otra reserva</Btn>
+4986:          Consultar mis reservas
+6625:  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+6824:  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+7188:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+7193:      desc: "Reservar pistas, consultar reservas y ranking.",
+7210:      label: "Soporte técnico",
+7446:            Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.

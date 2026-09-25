@@ -1,0 +1,4 @@
+OK dist
+OK index.html
+OK assets
+OK worker-reservas

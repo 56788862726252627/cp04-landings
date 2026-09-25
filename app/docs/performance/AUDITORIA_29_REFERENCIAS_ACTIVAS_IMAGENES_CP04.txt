@@ -1,0 +1,300 @@
+src/App.jsx:79:    key: "pistas",
+src/App.jsx:82:    src: "/gallery/cp04/pistas.png?v=cp04FotosSeparadasFinal2",
+src/App.jsx:85:    key: "recepcion",
+src/App.jsx:88:    src: "/gallery/cp04/recepcion.png?v=cp04FotosSeparadasFinal2",
+src/App.jsx:91:    key: "cafeteria",
+src/App.jsx:94:    src: "/gallery/cp04/cafeteria.png?v=cp04FotosSeparadasFinal2",
+src/App.jsx:97:    key: "torneos",
+src/App.jsx:100:    src: "/gallery/cp04/torneos.png?v=cp04FotosSeparadasFinal2",
+src/App.jsx:103:    key: "instalaciones",
+src/App.jsx:106:    src: "/gallery/cp04/instalaciones.png?v=cp04FotosSeparadasFinal2",
+src/App.jsx:155:  { name: "Pagos", status: "Listo para conexión", detail: "Reservas, bonos, membresías y torneos", flow: "Sistema → Pagos" },
+src/App.jsx:162:  { id: "PLAYER", label: "Jugador / cliente", access: "Activo", sections: "Inicio, Reservas, Ranking", permissions: ["Crear solicitud de reserva", "Consultar ranking del club", "Ver participación en torneos"] },
+src/App.jsx:164:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+src/App.jsx:559:  const pistas = COURTS.map((c) => c.name);
+src/App.jsx:687:        {pistas.map((pista) => (
+src/App.jsx:1150:  torneosActivos: 2,
+src/App.jsx:1202:    "blueprint": "workflows/27-alerta-pistas-libres-flash-promo/final/Alerta_Pistas_Libres_Flash_Promo_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1321:    "funcion": "Bloquea pistas temporalmente por mantenimiento, clima u otras incidencias.",
+src/App.jsx:1322:    "blueprint": "workflows/19-cierre-temporal-pistas/final/Cierre_Temporal_de_Pistas_Padel_04_DEFINITIVO.blueprint.json",
+src/App.jsx:1336:    "funcion": "Confirma inscripciones de jugadores a torneos y envía email.",
+src/App.jsx:2184:  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
+src/App.jsx:2185:  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+src/App.jsx:2186:  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+src/App.jsx:2187:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
+src/App.jsx:2229:    "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
+src/App.jsx:2240:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+src/App.jsx:2243:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+src/App.jsx:2249:    "home.ingresos_mes":"Ingresos mes","home.torneos_activos":"Torneos activos",
+src/App.jsx:2253:    "home.vs_ayer":"vs ayer","home.pistas_activas":"4 pistas activas",
+src/App.jsx:2263:    "home.btn_torneos":"Torneos","home.btn_admin":"Admin",
+src/App.jsx:2283:    "torneos.title":"Torneos","torneos.bracket":"Bracket interactivo",
+src/App.jsx:2284:    "torneos.anyadir":"Añadir pareja","torneos.reordenar":"Reordenar cruces",
+src/App.jsx:2285:    "torneos.autoasignar":"Autoasignar","torneos.guardar":"Guardar cuadro",
+src/App.jsx:2286:    "torneos.publicar":"Publicar","torneos.exportar":"Exportar",
+src/App.jsx:2287:    "torneos.ver_ranking":"Ver ranking completo","torneos.personalizado":"Personalizado",
+src/App.jsx:2288:    "torneos.jugadores":"Jugadores","torneos.parejas":"Parejas","torneos.ganador":"Ganador",
+src/App.jsx:2289:    "torneos.eliminada":"Eliminada","torneos.avanza":"Avanza","torneos.bye":"BYE",
+src/App.jsx:2290:    "torneos.pase_directo":"Pase directo","torneos.campeon":"Campeón",
+src/App.jsx:2291:    "torneos.subcampeon":"Subcampeón","torneos.tercer_puesto":"Tercer puesto",
+src/App.jsx:2402:    "admin.gestion_item1":"Gestión de pistas","admin.gestion_item2":"Clientes y perfiles",
+src/App.jsx:2431:    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+src/App.jsx:2442:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+src/App.jsx:2451:    "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
+src/App.jsx:2455:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+src/App.jsx:2465:    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+src/App.jsx:2485:    "torneos.title":"Tournaments","torneos.bracket":"Interactive bracket",
+src/App.jsx:2486:    "torneos.anyadir":"Add pair","torneos.reordenar":"Reorder matches",
+src/App.jsx:2487:    "torneos.autoasignar":"Auto-assign","torneos.guardar":"Save bracket",
+src/App.jsx:2488:    "torneos.publicar":"Publish","torneos.exportar":"Export",
+src/App.jsx:2489:    "torneos.ver_ranking":"View full ranking","torneos.personalizado":"Custom",
+src/App.jsx:2490:    "torneos.jugadores":"Players","torneos.parejas":"Pairs","torneos.ganador":"Winner",
+src/App.jsx:2491:    "torneos.eliminada":"Eliminated","torneos.avanza":"Advances","torneos.bye":"BYE",
+src/App.jsx:2492:    "torneos.pase_directo":"Direct pass","torneos.campeon":"Champion",
+src/App.jsx:2493:    "torneos.subcampeon":"Runner-up","torneos.tercer_puesto":"Third place",
+src/App.jsx:2633:    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+src/App.jsx:2644:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+src/App.jsx:2653:    "home.ingresos_mes":"Monthly revenue","home.torneos_activos":"Active tournaments",
+src/App.jsx:2657:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+src/App.jsx:2667:    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+src/App.jsx:2687:    "torneos.title":"Tournaments","torneos.bracket":"Interactive bracket",
+src/App.jsx:2688:    "torneos.anyadir":"Add pair","torneos.reordenar":"Reorder matches",
+src/App.jsx:2689:    "torneos.autoasignar":"Auto-assign","torneos.guardar":"Save bracket",
+src/App.jsx:2690:    "torneos.publicar":"Publish","torneos.exportar":"Export",
+src/App.jsx:2691:    "torneos.ver_ranking":"View full ranking","torneos.personalizado":"Custom",
+src/App.jsx:2692:    "torneos.jugadores":"Players","torneos.parejas":"Pairs","torneos.ganador":"Winner",
+src/App.jsx:2693:    "torneos.eliminada":"Eliminated","torneos.avanza":"Advances","torneos.bye":"BYE",
+src/App.jsx:2694:    "torneos.pase_directo":"Direct pass","torneos.campeon":"Champion",
+src/App.jsx:2695:    "torneos.subcampeon":"Runner-up","torneos.tercer_puesto":"Third place",
+src/App.jsx:2835:    "nav.gestion":"Réservations","nav.torneos":"Tournois","nav.ranking":"Classement",
+src/App.jsx:2846:    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
+src/App.jsx:2855:    "home.ingresos_mes":"Revenus du mois","home.torneos_activos":"Tournois actifs",
+src/App.jsx:2859:    "home.vs_ayer":"vs hier","home.pistas_activas":"4 courts actifs",
+src/App.jsx:2869:    "home.btn_torneos":"Tournois","home.btn_admin":"Admin",
+src/App.jsx:2887:    "torneos.title":"Tournois","torneos.bracket":"Tableau interactif",
+src/App.jsx:2888:    "torneos.anyadir":"Ajouter paire","torneos.guardar":"Sauvegarder","torneos.publicar":"Publier",
+src/App.jsx:2889:    "torneos.exportar":"Exporter","torneos.campeon":"Champion","torneos.subcampeon":"Finaliste",
+src/App.jsx:2890:    "torneos.tercer_puesto":"3e place","torneos.jugadores":"Joueurs","torneos.parejas":"Paires",
+src/App.jsx:2891:    "torneos.ganador":"Vainqueur","torneos.eliminada":"Éliminé","torneos.avanza":"Avance",
+src/App.jsx:2892:    "torneos.bye":"BYE","torneos.pase_directo":"Passage direct","torneos.personalizado":"Personnalisé",
+src/App.jsx:2893:    "torneos.ver_ranking":"Voir classement complet","torneos.autoasignar":"Auto-assigner","torneos.reordenar":"Réordonner",
+src/App.jsx:3033:    "nav.gestion":"Prenotazioni","nav.torneos":"Tornei","nav.ranking":"Classifica",
+src/App.jsx:3044:    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
+src/App.jsx:3053:    "home.ingresos_mes":"Entrate mensili","home.torneos_activos":"Tornei attivi",
+src/App.jsx:3057:    "home.vs_ayer":"vs ieri","home.pistas_activas":"4 campi attivi",
+src/App.jsx:3067:    "home.btn_torneos":"Tornei","home.btn_admin":"Admin",
+src/App.jsx:3085:    "torneos.title":"Tornei","torneos.bracket":"Tabellone interattivo",
+src/App.jsx:3086:    "torneos.anyadir":"Aggiungi coppia","torneos.guardar":"Salva","torneos.publicar":"Pubblica",
+src/App.jsx:3087:    "torneos.exportar":"Esporta","torneos.campeon":"Campione","torneos.subcampeon":"Finalista",
+src/App.jsx:3088:    "torneos.tercer_puesto":"3° posto","torneos.jugadores":"Giocatori","torneos.parejas":"Coppie",
+src/App.jsx:3089:    "torneos.ganador":"Vincitore","torneos.eliminada":"Eliminato","torneos.avanza":"Avanza",
+src/App.jsx:3090:    "torneos.bye":"BYE","torneos.pase_directo":"Passaggio diretto","torneos.personalizado":"Personalizzato",
+src/App.jsx:3091:    "torneos.ver_ranking":"Vedi classifica completa","torneos.autoasignar":"Auto-assegna","torneos.reordenar":"Riordina",
+src/App.jsx:3231:    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Classificação",
+src/App.jsx:3242:    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
+src/App.jsx:3251:    "home.ingresos_mes":"Receitas do mês","home.torneos_activos":"Torneios ativos",
+src/App.jsx:3255:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 campos ativos",
+src/App.jsx:3265:    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
+src/App.jsx:3283:    "torneos.title":"Torneios","torneos.bracket":"Tabela interativa",
+src/App.jsx:3284:    "torneos.anyadir":"Adicionar par","torneos.guardar":"Guardar","torneos.publicar":"Publicar",
+src/App.jsx:3285:    "torneos.exportar":"Exportar","torneos.campeon":"Campeão","torneos.subcampeon":"Vice-campeão",
+src/App.jsx:3286:    "torneos.tercer_puesto":"3.º lugar","torneos.jugadores":"Jogadores","torneos.parejas":"Pares",
+src/App.jsx:3287:    "torneos.ganador":"Vencedor","torneos.eliminada":"Eliminado","torneos.avanza":"Avança",
+src/App.jsx:3288:    "torneos.bye":"BYE","torneos.pase_directo":"Passe direto","torneos.personalizado":"Personalizado",
+src/App.jsx:3289:    "torneos.ver_ranking":"Ver classificação completa","torneos.autoasignar":"Auto-atribuir","torneos.reordenar":"Reordenar",
+src/App.jsx:3429:    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Ranking",
+src/App.jsx:3440:    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
+src/App.jsx:3449:    "home.ingresos_mes":"Receita do mês","home.torneos_activos":"Torneios ativos",
+src/App.jsx:3453:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 quadras ativas",
+src/App.jsx:3463:    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
+src/App.jsx:3481:    "torneos.title":"Torneios","torneos.bracket":"Chave interativa",
+src/App.jsx:3482:    "torneos.anyadir":"Adicionar dupla","torneos.guardar":"Salvar","torneos.publicar":"Publicar",
+src/App.jsx:3483:    "torneos.exportar":"Exportar","torneos.campeon":"Campeão","torneos.subcampeon":"Vice-campeão",
+src/App.jsx:3484:    "torneos.tercer_puesto":"3.º lugar","torneos.jugadores":"Jogadores","torneos.parejas":"Duplas",
+src/App.jsx:3485:    "torneos.ganador":"Vencedor","torneos.eliminada":"Eliminado","torneos.avanza":"Avança",
+src/App.jsx:3486:    "torneos.bye":"BYE","torneos.pase_directo":"Passe direto","torneos.personalizado":"Personalizado",
+src/App.jsx:3487:    "torneos.ver_ranking":"Ver ranking completo","torneos.autoasignar":"Auto-atribuir","torneos.reordenar":"Reordenar",
+src/App.jsx:3627:    "nav.gestion":"Buchungen","nav.torneos":"Turniere","nav.ranking":"Rangliste",
+src/App.jsx:3638:    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
+src/App.jsx:3647:    "home.ingresos_mes":"Monatseinnahmen","home.torneos_activos":"Aktive Turniere",
+src/App.jsx:3651:    "home.vs_ayer":"vs gestern","home.pistas_activas":"4 aktive Plätze",
+src/App.jsx:3661:    "home.btn_torneos":"Turniere","home.btn_admin":"Admin",
+src/App.jsx:3679:    "torneos.title":"Turniere","torneos.bracket":"Interaktiver Bracket",
+src/App.jsx:3680:    "torneos.anyadir":"Paar hinzufügen","torneos.guardar":"Speichern","torneos.publicar":"Veröffentlichen",
+src/App.jsx:3681:    "torneos.exportar":"Exportieren","torneos.campeon":"Champion","torneos.subcampeon":"Vizemeister",
+src/App.jsx:3682:    "torneos.tercer_puesto":"3. Platz","torneos.jugadores":"Spieler","torneos.parejas":"Paare",
+src/App.jsx:3683:    "torneos.ganador":"Gewinner","torneos.eliminada":"Ausgeschieden","torneos.avanza":"Rückt vor",
+src/App.jsx:3684:    "torneos.bye":"BYE","torneos.pase_directo":"Direktpass","torneos.personalizado":"Benutzerdefiniert",
+src/App.jsx:3685:    "torneos.ver_ranking":"Vollständige Rangliste","torneos.autoasignar":"Auto-zuweisen","torneos.reordenar":"Neuordnen",
+src/App.jsx:3971:    ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["admin","nav.admin","📊"],
+src/App.jsx:3975:    PLAYER: ["inicio","reservas","torneos","ranking","perfil"],
+src/App.jsx:3976:    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
+src/App.jsx:3977:    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
+src/App.jsx:3978:    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+src/App.jsx:4050:            <Btn variant="secondary" onClick={() => setCurrent("torneos")}>🏆 {tx("home.btn_torneos")}</Btn>
+src/App.jsx:4066:            <Btn variant="secondary" onClick={() => setCurrent("torneos")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>🏆 {tx("home.torneo")}</Btn>
+src/App.jsx:4082:        <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
+src/App.jsx:4086:        <MetricCard label={tx("home.torneos_activos")} value={kpi.torneosActivos} sub={tx("home.en_curso")} trend={null} color={T.warning} icon="🏆" />
+src/App.jsx:4880:  const pistasDisponibles = useMemo(
+src/App.jsx:5177:                  {pistasDisponibles.map((pista) => (
+src/App.jsx:5901:          <div style={{ color:T.accent, fontSize:".72rem", fontWeight:900, letterSpacing:".2em", textTransform:"uppercase", marginBottom:8 }}>{tx("torneos.title")}</div>
+src/App.jsx:5903:            {tx("torneos.bracket").split(" ").slice(0,-1).join(" ")} <span style={{ color:T.accent }}>{tx("torneos.bracket").split(" ").slice(-1)}</span>
+src/App.jsx:6056:              <button type="button" className="cp04-control-btn" onClick={handleReorder}>🔀 {tx("torneos.reordenar")}</button>
+src/App.jsx:6057:              <button type="button" className="cp04-control-btn" onClick={handleAutoAssign}>👤 {tx("torneos.autoasignar")}</button>
+src/App.jsx:6058:              <button type="button" className="cp04-control-btn" onClick={handleSave}>💾 {tx("torneos.guardar")}</button>
+src/App.jsx:6060:                {published ? `📝 ${tx("common.volver")}` : `📢 ${tx("torneos.publicar")}`}
+src/App.jsx:6066:            <h3 style={{ marginTop:0, marginBottom:12, fontSize:".95rem" }}>{tx("torneos.exportar")}</h3>
+src/App.jsx:6547:        <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
+src/App.jsx:6793:    PLAYER:  { partidos:24, reservas:31, torneos:3,  ranking:12,  actividad:"Alta",     valoracion:4.2, fiabilidad:96, racha:5  },
+src/App.jsx:6794:    STAFF:   { partidos:8,  reservas:187,torneos:1,  ranking:"—", actividad:"Muy alta", valoracion:4.8, fiabilidad:99, racha:12 },
+src/App.jsx:6795:    ADMIN:   { partidos:4,  reservas:312,torneos:5,  ranking:"—", actividad:"Alta",     valoracion:5.0, fiabilidad:100,racha:21 },
+src/App.jsx:6796:    SUPPORT: { partidos:2,  reservas:98, torneos:0,  ranking:"—", actividad:"Media",    valoracion:4.6, fiabilidad:98, racha:7  },
+src/App.jsx:6804:    { id:"torneo",     icon:"🏆",  label:"Torneo completado",  desc:"Ha participado en torneos",earned:metrics.torneos>0 },
+src/App.jsx:7022:                  { key:"busqueda",       label:tx("perfil.deporte_busqueda"),       opts:["Disponible para partidos","No disponible","Solo torneos","Buscando pareja"] },
+src/App.jsx:7065:            { icon:"🏆", label:tx("perfil.metricas_torneos"),   value:metrics.torneos },
+src/App.jsx:7155:          Confirmaciones de reserva &nbsp;·&nbsp; recordatorios de partido &nbsp;·&nbsp; torneos &nbsp;·&nbsp; cambios de horario
+src/App.jsx:7186:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+src/App.jsx:7191:      desc: "Reservar pistas, consultar reservas y ranking.",
+src/App.jsx:7267:    if (clean.includes("staff") || clean.includes("empleado") || clean.includes("recepcion")) return "STAFF";
+src/internal-module-backgrounds.css:27:  --cp04-current-module-bg: url('/images/user-reservas-bg.png');
+src/internal-module-backgrounds.css:31:  --cp04-current-module-bg: url('/images/admin-technical-bg.png');
+src/internal-module-backgrounds.css:35:  --cp04-current-module-bg: url('/images/general-modules-bg.png');
+src/internal-background-detector.js:23:    text.includes('staff / recepcion') &&
+src/internal-background-detector.js:72:    text.includes('torneos') ||
+src/torcal-role-background.css:25:    url('/images/torcal-padel-bg.png');
+src/torcal-role-background.css:103:    url('/images/torcal-padel-bg.png') !important;
+src/torcal-role-background.css:186:    url('/images/torcal-padel-bg.png') !important;
+src/role-background-detector.js:8:const bgImage = "linear-gradient(180deg, rgba(2,6,23,0.00) 0%, rgba(2,6,23,0.03) 45%, rgba(2,6,23,0.12) 100%), url(\'/images/torcal-padel-bg.png\')";
+src/role-background-detector.js:49:      pageText.includes('staff / recepcion') &&
+src/tournament-actions-fix.js:31:  const title = headings.find((el) => normalizeText(el.textContent).includes('torneos'));
+src/tournament-actions-fix.js:188:  if (!appText.includes('torneos') && !appText.includes('ranking completo')) return;
+src/tournament-custom-real-fix.js:109:    const title = $$("h1,h2,h3").find((el) => textOf(el).toLowerCase().includes("torneos"));
+src/tournament-custom-real-fix.js:195:            <p>Configura torneos por jugadores o por parejas. Permite parejas impares con pase directo por sorteo.</p>
+public/gallery/cp04/candidatas_manifest.txt:1:1: public/gallery/cp04/candidatas/candidata_1.jpg <- /sdcard/DCIM/Camera/20260423_104836.jpg
+public/gallery/cp04/candidatas_manifest.txt:2:2: public/gallery/cp04/candidatas/candidata_2.jpg <- /sdcard/DCIM/Camera/20260423_104724.jpg
+public/gallery/cp04/candidatas_manifest.txt:3:3: public/gallery/cp04/candidatas/candidata_3.jpg <- /sdcard/DCIM/Camera/20260423_104712.jpg
+public/gallery/cp04/candidatas_manifest.txt:4:4: public/gallery/cp04/candidatas/candidata_4.jpg <- /sdcard/DCIM/Camera/20260423_104736.jpg
+public/gallery/cp04/candidatas_manifest.txt:5:5: public/gallery/cp04/candidatas/candidata_5.jpg <- /sdcard/DCIM/Camera/20260423_104846.jpg
+public/gallery/cp04/candidatas_manifest.txt:6:6: public/gallery/cp04/candidatas/candidata_6.jpg <- /sdcard/DCIM/Camera/20260423_104905.jpg
+public/gallery/cp04/candidatas_manifest.txt:7:7: public/gallery/cp04/candidatas/candidata_7.jpg <- /sdcard/DCIM/Camera/20260423_105103.jpg
+public/gallery/cp04/candidatas_manifest.txt:8:8: public/gallery/cp04/candidatas/candidata_8.jpg <- /sdcard/DCIM/Camera/20260423_104828.jpg
+public/gallery/cp04/candidatas_manifest.txt:9:9: public/gallery/cp04/candidatas/candidata_9.jpg <- /sdcard/DCIM/Camera/20260423_105006.jpg
+public/gallery/cp04/candidatas_manifest.txt:10:10: public/gallery/cp04/candidatas/candidata_10.jpg <- /sdcard/DCIM/Camera/20260423_105115.jpg
+public/gallery/cp04/candidatas_manifest.txt:11:11: public/gallery/cp04/candidatas/candidata_11.jpg <- /sdcard/DCIM/Camera/20260423_104921.jpg
+public/gallery/cp04/candidatas_manifest.txt:12:12: public/gallery/cp04/candidatas/candidata_12.jpg <- /sdcard/DCIM/Camera/20260423_104854.jpg
+public/gallery/cp04/candidatas_manifest.txt:13:13: public/gallery/cp04/candidatas/candidata_13.jpg <- /sdcard/DCIM/Camera/20260423_104754.jpg
+public/gallery/cp04/candidatas_manifest.txt:14:14: public/gallery/cp04/candidatas/candidata_14.jpg <- /sdcard/DCIM/Camera/20260423_105110.jpg
+public/gallery/cp04/candidatas_manifest.txt:15:15: public/gallery/cp04/candidatas/candidata_15.jpg <- /sdcard/DCIM/Camera/20260423_104702.jpg
+public/gallery/cp04/candidatas_manifest.txt:16:16: public/gallery/cp04/candidatas/candidata_16.jpg <- /sdcard/DCIM/Camera/20260423_105022.jpg
+public/gallery/cp04/candidatas_manifest.txt:17:17: public/gallery/cp04/candidatas/candidata_17.jpg <- /sdcard/DCIM/Camera/20260423_104945.jpg
+public/gallery/cp04/candidatas_manifest.txt:18:18: public/gallery/cp04/candidatas/candidata_18.jpg <- /sdcard/DCIM/Camera/20260423_104632.jpg
+public/gallery/cp04/candidatas_manifest.txt:19:19: public/gallery/cp04/candidatas/candidata_19.jpg <- /sdcard/DCIM/Camera/20260423_105017.jpg
+public/gallery/cp04/candidatas_manifest.txt:20:20: public/gallery/cp04/candidatas/candidata_20.jpg <- /sdcard/DCIM/Camera/20260423_104547.jpg
+docs/phase-1-audit.md:30:- `src/assets/hero.png`: not referenced by current source.
+docs/gallery-assets.md:22:- `src/assets/hero.png`: not referenced by current source.
+docs/integraciones.md:48:- `pistas`: nombre, tipo, estado, reglas, mantenimiento.
+docs/integraciones.md:50:- `torneos`: nombre, fechas, categoria, estado, plazas.
+docs/integraciones.md:74:- Inscripciones a torneos.
+docs/final-report.md:92:- `pistas`
+docs/final-report.md:94:- `torneos`
+docs/final-cierre/ESTADO_AUDITORIA_27_BUNDLE_PERFORMANCE_FINAL.md:44:- imágenes de instalaciones/torneos/pistas.
+docs/final-cierre/ESTADO_AUDITORIA_28_OPTIMIZACION_IMAGENES_FINAL.md:40:- torcal-padel-bg.webp alrededor de 150 KB.
+docs/final-cierre/ESTADO_AUDITORIA_28_OPTIMIZACION_IMAGENES_FINAL.md:41:- user-reservas-bg.webp alrededor de 118 KB.
+docs/final-cierre/ESTADO_AUDITORIA_28_OPTIMIZACION_IMAGENES_FINAL.md:42:- admin-technical-bg.webp alrededor de 52 KB.
+docs/final-cierre/ESTADO_AUDITORIA_28_OPTIMIZACION_IMAGENES_FINAL.md:43:- pistas.webp alrededor de 58 KB.
+docs/final-cierre/ESTADO_AUDITORIA_28_OPTIMIZACION_IMAGENES_FINAL.md:44:- torneos.webp alrededor de 34 KB.
+docs/final-cierre/ESTADO_AUDITORIA_28_OPTIMIZACION_IMAGENES_FINAL.md:45:- recepcion.webp alrededor de 27 KB.
+docs/auth/PLAN_BACKEND_AUTH_WORKER_CP04.md:136:- torneos
+docs/auth/PLAN_BACKEND_AUTH_WORKER_CP04.md:148:- torneos
+docs/auth/PLAN_BACKEND_AUTH_WORKER_CP04.md:159:- torneos
+docs/auth/PLAN_BACKEND_AUTH_WORKER_CP04.md:172:- torneos
+docs/performance/AUDITORIA_27_DIAGNOSTICO_CAUSAS_BUNDLE_CP04.md:23:- módulos de torneos
+docs/performance/AUDITORIA_27_DIAGNOSTICO_CAUSAS_BUNDLE_CP04.md:38:### 3 · Módulo torneos/ranking
+docs/performance/AUDITORIA_27_DIAGNOSTICO_CAUSAS_BUNDLE_CP04.md:40:La lógica de torneos, parejas, bracket, sorteos, exportación y ranking añade peso al JS principal.
+docs/performance/AUDITORIA_27_DIAGNOSTICO_CAUSAS_BUNDLE_CP04.md:44:Admin, soporte, torneos, ranking y perfil podrían cargarse bajo demanda en una fase futura.
+docs/performance/AUDITORIA_27_ESTRATEGIA_OPTIMIZACION_BUNDLE_CP04.md:20:- Módulos de torneos/ranking.
+docs/performance/AUDITORIA_27_ESTRATEGIA_OPTIMIZACION_BUNDLE_CP04.md:60:- Extraer lógica de torneos.
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:26:- public/gallery/cp04/candidatas/*
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:27:- public/images/general-modules-bg.png
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:28:- public/images/torcal-padel-bg.png
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:29:- public/images/user-reservas-bg.png
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:30:- public/gallery/cp04/torneos.jpg
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:31:- public/gallery/cp04/recepcion.jpg
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:32:- public/gallery/cp04/pistas.jpg
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:33:- public/gallery/cp04/instalaciones.jpg
+docs/performance/AUDITORIA_27_PLAN_OPTIMIZACION_IMAGENES_CP04.md:34:- public/gallery/cp04/cafeteria.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:1:4830.85 KB  public/gallery/cp04/candidatas/candidata_1.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:2:4786.93 KB  public/gallery/cp04/candidatas/candidata_2.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:3:4780.45 KB  public/gallery/cp04/candidatas/candidata_3.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:4:4699.19 KB  public/gallery/cp04/candidatas/candidata_4.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:5:4691.25 KB  public/gallery/cp04/candidatas/candidata_5.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:6:4661.58 KB  public/gallery/cp04/candidatas/candidata_6.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:7:4627.79 KB  public/gallery/cp04/candidatas/candidata_7.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:8:4612.73 KB  public/gallery/cp04/candidatas/candidata_8.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:9:4568.99 KB  public/gallery/cp04/candidatas/candidata_9.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:10:4567.75 KB  public/gallery/cp04/candidatas/candidata_10.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:11:4527.12 KB  public/gallery/cp04/candidatas/candidata_11.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:12:4522.13 KB  public/gallery/cp04/candidatas/candidata_12.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:13:4451.13 KB  public/gallery/cp04/candidatas/candidata_13.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:14:4405.33 KB  public/gallery/cp04/candidatas/candidata_14.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:15:4393.22 KB  public/gallery/cp04/candidatas/candidata_15.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:16:4384.36 KB  public/gallery/cp04/candidatas/candidata_16.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:17:4364.06 KB  public/gallery/cp04/candidatas/candidata_17.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:18:4332.28 KB  public/gallery/cp04/candidatas/candidata_18.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:19:4329.13 KB  public/gallery/cp04/candidatas/candidata_19.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:20:4316.37 KB  public/gallery/cp04/candidatas/candidata_20.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:21:2278.98 KB  public/images/general-modules-bg.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:22:2192.01 KB  public/gallery/cp04/torneos.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:23:2192.01 KB  public/gallery/cp04/recepcion.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:24:2192.01 KB  public/gallery/cp04/pistas.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:25:2192.01 KB  public/gallery/cp04/instalaciones.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:26:2192.01 KB  public/gallery/cp04/collage_club_padel_04.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:27:2192.01 KB  public/gallery/cp04/cafeteria.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:28:2175.69 KB  public/images/torcal-padel-bg.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:29:1941.15 KB  public/images/user-reservas-bg.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:30:1907.57 KB  public/gallery/cp04/candidatas/candidata_18.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:31:1834.17 KB  public/gallery/cp04/candidatas/candidata_17.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:32:1750.06 KB  public/gallery/cp04/candidatas/candidata_20.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:33:1630.16 KB  public/images/admin-technical-bg.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:34:1552.36 KB  public/gallery/cp04/candidatas/candidata_19.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:35:718.18 KB  public/gallery/cp04/galeria_completa_club_padel_04.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:36:649.56 KB  public/gallery/cp04/pistas.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:37:574.09 KB  public/gallery/cp04/candidatas_sheet.jpg
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:38:397.18 KB  public/gallery/cp04/torneos.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:39:386.64 KB  public/gallery/cp04/instalaciones.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:40:353.11 KB  public/gallery/cp04/cafeteria.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:41:302.85 KB  public/gallery/cp04/recepcion.png
+docs/performance/AUDITORIA_28_INVENTARIO_IMAGENES_PESADAS_CP04.txt:42:12.75 KB  src/assets/hero.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:1:public/gallery/cp04/cafeteria.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:2:public/gallery/cp04/cafeteria.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:3:public/gallery/cp04/candidatas/candidata_1.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:4:public/gallery/cp04/candidatas/candidata_10.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:5:public/gallery/cp04/candidatas/candidata_11.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:6:public/gallery/cp04/candidatas/candidata_12.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:7:public/gallery/cp04/candidatas/candidata_13.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:8:public/gallery/cp04/candidatas/candidata_14.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:9:public/gallery/cp04/candidatas/candidata_15.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:10:public/gallery/cp04/candidatas/candidata_16.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:11:public/gallery/cp04/candidatas/candidata_17.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:12:public/gallery/cp04/candidatas/candidata_17.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:13:public/gallery/cp04/candidatas/candidata_18.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:14:public/gallery/cp04/candidatas/candidata_18.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:15:public/gallery/cp04/candidatas/candidata_19.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:16:public/gallery/cp04/candidatas/candidata_19.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:17:public/gallery/cp04/candidatas/candidata_2.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:18:public/gallery/cp04/candidatas/candidata_20.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:19:public/gallery/cp04/candidatas/candidata_20.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:20:public/gallery/cp04/candidatas/candidata_3.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:21:public/gallery/cp04/candidatas/candidata_4.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:22:public/gallery/cp04/candidatas/candidata_5.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:23:public/gallery/cp04/candidatas/candidata_6.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:24:public/gallery/cp04/candidatas/candidata_7.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:25:public/gallery/cp04/candidatas/candidata_8.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:26:public/gallery/cp04/candidatas/candidata_9.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:27:public/gallery/cp04/candidatas_sheet.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:28:public/gallery/cp04/collage_club_padel_04.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:29:public/gallery/cp04/galeria_completa_club_padel_04.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:30:public/gallery/cp04/instalaciones.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:31:public/gallery/cp04/instalaciones.png
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:32:public/gallery/cp04/pistas.jpg
+docs/performance/AUDITORIA_28_LISTA_IMAGENES_A_OPTIMIZAR_CP04.txt:33:public/gallery/cp04/pistas.png

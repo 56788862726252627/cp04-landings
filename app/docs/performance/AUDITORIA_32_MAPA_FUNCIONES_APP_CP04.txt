@@ -1,0 +1,566 @@
+51:const T = {
+68:const CONFIG = {
+98:    title: "Torneos",
+99:    label: "Torneos Club Pádel 04",
+123:  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
+124:  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
+125:  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
+153:  { name: "Automatización de procesos", status: "Activo", detail: "Canal interno seguro configurado", flow: "Reservas → Procesos → Base de datos" },
+155:  { name: "Pagos", status: "Listo para conexión", detail: "Reservas, bonos, membresías y torneos", flow: "Sistema → Pagos" },
+157:  { name: "Calendario", status: "Listo para conexión", detail: "Reservas, disponibilidad y eventos", flow: "Sistema → Calendario" },
+162:  { id: "PLAYER", label: "Jugador / cliente", access: "Activo", sections: "Inicio, Reservas, Ranking", permissions: ["Crear solicitud de reserva", "Consultar ranking del club", "Ver participación en torneos"] },
+163:  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+164:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+165:  { id: "SUPPORT", label: "Soporte técnico", access: "Protegido", sections: "Soporte", permissions: ["Ver estado técnico", "Revisar configuración de conexiones", "Consultar registros del sistema", "Auditar integraciones"] },
+168:const PROTECTED_SECTIONS = ["Gestión", "Admin", "Soporte"];
+268:function calcTimeEnd(time, mins) {
+274:function priceFor(courtName, duration) {
+282:function madridDateParts(date = new Date()) {
+296:function todayISO() {
+301:function parseISODateParts(value) {
+307:function isSundayISO(value) {
+313:function isPastDateISO(value) {
+317:function minutesFromTime(value) {
+323:function madridCurrentMinutes() {
+328:function getSlotStatus(fecha, hora, duration = 90) {
+347:function formatDateEs(value) {
+353:function cleanText(value) {
+357:function validateBooking(form, courtName, tx) {
+358:  const errors = {};
+386:function prepareBookingPayload(form, courtName) {
+415:function validateReschedule(form, courtName, tx) {
+417:  const errors = {};
+465:function prepareReschedulePayload(form, courtName) {
+482:async function sendBooking(payload) {
+494:function Card({ children, style = {} }) {
+498:function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {} }) {
+499:  const map = {
+511:async function readSafeResponse(res) {
+522:async function fetchDisponibilidad(fecha) {
+534:function emitDisponibilidadUpdate(fecha) {
+538:function refreshDisponibilidadAfterChange(fecha) {
+544:function CalendarioDisponibilidad({
+603:    return () => window.clearTimeout(timer);
+614:    return () => window.clearTimeout(timer);
+618:    function handleDisponibilidadUpdate(event) {
+630:    return () => {
+635:  const cambiarFecha = (value) => {
+640:  return (
+725:                return (
+762:function SectionTitle({ eyebrow, title, desc }) {
+766:function Badge({ status }) {
+769:  const map = { confirmed: [tx("badge.confirmed"), T.accent], pending: [tx("badge.pending"), T.warning], completed: [tx("badge.completed"), T.textDim] };
+774:function FieldError({ children }) {
+779:function PanelList({ items }) {
+783:function RolePanel({ eyebrow, title, desc, items, action }) {
+784:  return <Card><div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".14em", fontSize: ".72rem", textTransform: "uppercase", marginBottom: 10 }}>{eyebrow}</div><h3 style={{ fontFamily: T.fontDisplay, fontSize: "1.45rem", letterSpacing: "-.04em", margin: "0 0 10px" }}>{title}</h3><p style={{ color: T.textDim, lineHeight: 1.65, marginBottom: 18 }}>{desc}</p><PanelList items={items} />{action && <div style={{ marginTop: 20 }}>{action}</div>}</Card>;
+787:function GalleryItem({ item, featured = false }) {
+791:function Gallery() {
+795:  return <section style={{ marginTop: 42 }}><SectionTitle eyebrow={tx("home.galeria_eyebrow")} title={tx("home.galeria")} desc={tx("home.galeria_desc")} /><div className="cp04-gallery"><GalleryItem item={featured} featured /><div className="cp04-gallery-side">{rest.map((item) => <GalleryItem key={item.key} item={item} />)}</div></div></section>;
+798:function IntegrationMatrix({ compact = false }) {
+799:  const colorFor = (status) => status === "Preparada" ? T.accent : status === "Pendiente de credenciales" ? T.warning : T.textDim;
+803:function AuthStatusPanel({ compact = false }) {
+806:  return <Card><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}><div><h3 style={{ margin: 0, fontFamily: T.fontDisplay, letterSpacing: "-.04em" }}>{tx("auth.roles_title")}</h3><p style={{ color: T.textDim, lineHeight: 1.65, marginTop: 8 }}>{tx("auth.pending_desc")}</p></div><span className="cp04-badge" style={{ color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "7px 11px", fontWeight: 900, fontSize: ".74rem", whiteSpace: "nowrap" }}>{tx("auth.pending_badge")}</span></div><div className={compact ? undefined : "cp04-grid-2"} style={compact ? { display: "grid", gap: 12 } : undefined}>{ROLES.map((role) => <div key={role.id} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 16, background: "rgba(255,255,255,.035)" }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong style={{ color: T.accent }}>{role.id}</strong><span style={{ color: T.warning, fontSize: ".82rem", fontWeight: 900 }}>{role.access}</span></div><div style={{ marginTop: 8, fontWeight: 900 }}>{role.label}</div><div style={{ color: T.textDim, marginTop: 6, lineHeight: 1.55 }}>{tx("auth.secciones")} {role.sections}</div>{!compact && <PanelList items={role.permissions} />}</div>)}</div></Card>;
+814:function useClock() {
+826:    return () => clearInterval(id);
+829:    function handler(e) { setLangCode(e.detail?.lang?.code || "es-ES"); }
+831:    return () => window.removeEventListener("cp04:lang-change", handler);
+861:function ClockDisplay({ compact = false }) {
+864:    return (
+873:  return (
+885:function MetricCard({ label, value, sub, trend, color, icon }) {
+897:  return (
+917:function ChartTooltip({ x, y, children, visible }) {
+919:  return (
+926:function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
+933:  return (
+948:          const pxPct = (cx / W) * 100;
+949:          return (
+962:function MiniLineChart({ data, height = 60, color, labels, unit = "" }) {
+975:  return (
+1003:function DonutChart({ segments, size = 120, label }) {
+1011:    const a1 = (angle * Math.PI) / 180;
+1012:    const a2 = ((angle + pct * 360) * Math.PI) / 180;
+1020:  return (
+1054:function HorizontalBarChart({ data, color, unit = "" }) {
+1058:  return (
+1082:function FlowStatusBadge({ status }) {
+1083:  const map = {
+1091:  return (
+1099:function ChartCard({ title, sub, children, action, demo = false, style: cs = {} }) {
+1101:  return (
+1121:const dashboardDataSources = {
+1126:  localStorage: "active",
+1144:const DEMO_KPI = {
+1166:  { l:"Reservas", v:9, c:"#2f6bff" },
+1172:  { l:"Torneos", v:3, c:"#f59e0b" },
+1179:  { l:"API Reservas", v:892, c:"#2f6bff" },
+1189:  { l:"Export Torneos", v:1, c:"#ffad47" },
+1206:    "make_active": true
+1221:    "make_active": true
+1236:    "make_active": true
+1240:    "nombre": "📡 API Reservas Club Pádel 04 · FINAL V2 · Crear + Cancelar + Ocupación",
+1241:    "nombre_final": "📡 API Reservas Club Pádel 04 · FINAL V2 · Crear + Cancelar + Ocupación",
+1244:    "categoria": "Reservas",
+1247:    "blueprint": "workflows/01-api-reservas/final/API_Reservas_Club_Padel_04_FINAL_V2_Crear_Cancelar_Ocupacion.blueprint.json",
+1251:    "make_active": true
+1266:    "make_active": true
+1281:    "make_active": true
+1296:    "make_active": true
+1300:    "nombre": "💬 Chatbot Web Reservas Sin Tally · Pádel 04",
+1301:    "nombre_final": "💬 Chatbot Web Reservas Sin Tally · Pádel 04",
+1304:    "categoria": "Reservas",
+1311:    "make_active": true
+1319:    "categoria": "Reservas",
+1326:    "make_active": true
+1330:    "nombre": "🏷️ Confirmación Inscripción Torneo · Pádel 04 · DEFINITIVO",
+1331:    "nombre_final": "🏷️ Confirmación Inscripción Torneo · Pádel 04 · DEFINITIVO",
+1334:    "categoria": "Torneos y Liga",
+1337:    "blueprint": "workflows/23-confirmacion-inscripcion-torneo/final/Confirmacion_Inscripcion_Torneo_Padel_04_DEFINITIVO.blueprint.json",
+1341:    "make_active": true
+1356:    "make_active": true
+1371:    "make_active": true
+1375:    "nombre": "🏆 Cruces de Torneo · Pádel 04 · DEFINITIVO",
+1376:    "nombre_final": "🏆 Cruces de Torneo · Pádel 04 · DEFINITIVO",
+1379:    "categoria": "Torneos y Liga",
+1382:    "blueprint": "workflows/24-cruces-de-torneo/final/Cruces_de_Torneo_Padel_04_DEFINITIVO.blueprint.json",
+1386:    "make_active": true
+1401:    "make_active": true
+1409:    "categoria": "Torneos y Liga",
+1416:    "make_active": true
+1431:    "make_active": true
+1446:    "make_active": true
+1450:    "nombre": "🔑 Generación QR Acceso · Reserva Confirmada · Club Pádel 04 · CANDIDATO",
+1451:    "nombre_final": "🔑 Generación QR Acceso · Reserva Confirmada · Club Pádel 04 · CANDIDATO",
+1457:    "blueprint": "workflows/06-generacion-qr-acceso/final/Generacion_QR_Acceso_Reserva_Confirmada_Club_Padel_04_DEFINITIVO.blueprint.json",
+1461:    "make_active": true
+1465:    "nombre": "📋 Gestión Lista de Espera Reservas · Pádel 04 · DEFINITIVO",
+1466:    "nombre_final": "📋 Gestión Lista de Espera Reservas · Pádel 04 · DEFINITIVO",
+1469:    "categoria": "Reservas",
+1472:    "blueprint": "workflows/18-gestion-lista-espera-reservas/final/Gestion_Lista_de_Espera_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+1476:    "make_active": true
+1491:    "make_active": true
+1506:    "make_active": true
+1521:    "make_active": true
+1536:    "make_active": true
+1540:    "nombre": "📊 Panel KPI Semanal · Club Pádel 04 · DEFINITIVO",
+1541:    "nombre_final": "📊 Panel KPI Semanal · Club Pádel 04 · DEFINITIVO",
+1547:    "blueprint": "workflows/29-panel-kpi-semanal/final/Panel_KPI_Semanal_Club_Padel_04_DEFINITIVO.blueprint.json",
+1551:    "make_active": true
+1566:    "make_active": true
+1581:    "make_active": true
+1596:    "make_active": true
+1611:    "make_active": true
+1626:    "make_active": true
+1634:    "categoria": "Torneos y Liga",
+1641:    "make_active": true
+1656:    "make_active": true
+1671:    "make_active": true
+1679:    "categoria": "Reservas",
+1686:    "make_active": true
+1701:    "make_active": false
+1716:    "make_active": false
+1720:    "nombre": "🤖 Bot IA Reservas · Telegram · Pádel 04 · DEFINITIVO",
+1721:    "nombre_final": "🤖 Bot IA Reservas · Telegram · Pádel 04 · DEFINITIVO",
+1724:    "categoria": "Reservas",
+1731:    "make_active": false
+1735:    "nombre": "🤖 Bot IA Reservas · WhatsApp · Pádel 04 · DEFINITIVO",
+1736:    "nombre_final": "🤖 Bot IA Reservas · WhatsApp · Pádel 04 · DEFINITIVO",
+1739:    "categoria": "Reservas",
+1746:    "make_active": false
+1761:    "make_active": false
+1776:    "make_active": false
+1791:    "make_active": false
+1806:    "make_active": false
+1821:    "make_active": false
+1825:    "nombre": "📝 Tally → API Reservas · Pádel 04",
+1826:    "nombre_final": "📝 Tally → API Reservas · Pádel 04",
+1829:    "categoria": "Reservas",
+1832:    "blueprint": "workflows/14-tally-api-reservas/final/Tally_API_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+1836:    "make_active": false
+1840:function FlujosMake() {
+1852:  const exportMakeJSON = () => {
+1859:  return (
+1860:    <section style={{ padding: "clamp(18px,3vw,42px) 24px", maxWidth: 1220, margin: "0 auto" }}>
+1920:            { n:"API Reservas", s:"ok" }, { n:"Alta Jugador", s:"ok" }, { n:"Backup Semanal", s:"ok" },
+1964:                    <td><FlowStatusBadge status={flow.make_active ? "ok" : "paused"} /></td>
+1977:    </section>
+1986:function normalizeSearchText(value) {
+2106:function sortLanguages(list) {
+2118:function loadSavedLanguage() {
+2148:function setGlobalLang(lang) {
+2154:function useLang() {
+2157:    function handler(e) { setLang(e.detail?.lang || _defaultLang); }
+2159:    return () => window.removeEventListener(LANG_CHANGE_EVENT, handler);
+2169:const CP04_AUTH_MODES = {
+2183:const CP04_ROLE_PERMISSIONS = {
+2190:function cp04NormalizeRole(role) {
+2196:function cp04IsProtectedSection(section) {
+2197:  return CP04_PROTECTED_SECTIONS.includes(String(section || "").trim());
+2200:function cp04CanAccessSection(role, section) {
+2202:  const safeSection = String(section || "inicio").trim();
+2203:  return (CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER).includes(safeSection);
+2206:function cp04GetSafeStartSection(role) {
+2212:function cp04RequiresBackendAuth(section) {
+2213:  return cp04IsProtectedSection(section);
+2216:function cp04GetStoredAuthMode() {
+2225:const TRANSLATIONS = {
+2227:    "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
+2229:    "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
+2230:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
+2240:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+2243:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+2245:    "role.ADMIN.label":"Administrador / jefe","role.ADMIN.desc":"Panel de dirección, métricas y control operativo.",
+2247:    "home.reservas_hoy":"Reservas hoy","home.ocupacion_media":"Ocupación media",
+2249:    "home.ingresos_mes":"Ingresos mes","home.torneos_activos":"Torneos activos",
+2250:    "home.estado_operativo":"Estado operativo","home.reservar":"Reservar",
+2251:    "home.torneo":"Torneo","home.alta":"Alta","home.procesos":"Procesos",
+2259:    "home.reservas_hora":"Reservas por hora — hoy","home.reservas_7dias":"Reservas últimos 7 días",
+2263:    "home.btn_torneos":"Torneos","home.btn_admin":"Admin",
+2269:    "admin.panel":"Panel de dirección","admin.metricas":"Métricas globales del club.",
+2270:    "admin.reservas_mes":"Reservas mes","admin.ocupacion":"Ocupación media",
+2274:    "admin.graf_hoy":"Reservas por hora — hoy","admin.graf_semana":"Evolución semanal",
+2276:    "admin.sub_semana":"Reservas últimos 7 días · demo","admin.sub_pista":"Porcentaje de uso · demo",
+2283:    "torneos.title":"Torneos","torneos.bracket":"Bracket interactivo",
+2298:    "reprog.btn":"Reprogramar reserva","reprog.volver":"Volver a Reservas",
+2300:    "ranking.title":"Ranking","ranking.subtitle":"Clasificación general de jugadores y parejas",
+2325:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicita la cancelación de una reserva.",
+2328:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Volver a Reservas",
+2330:    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
+2334:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nueva reserva",
+2338:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
+2345:    "status.reserva.exito":"Éxito","status.reserva.exito_txt":"Reserva enviada correctamente. La disponibilidad se está actualizando.",
+2353:    "status.reprog.exito":"Reserva reprogramada","status.reprog.exito_txt":"La reserva se ha actualizado correctamente.",
+2404:    "admin.crec_eyebrow":"Crecimiento","admin.crec_title":"Torneos y procesos",
+2406:    "admin.crec_item1":"Torneos","admin.crec_item2":"Ranking y categorías",
+2431:    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+2432:    "nav.admin":"Admin","nav.flujos_make":"Tech centre","nav.soporte":"Support",
+2442:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2447:    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Management panel, metrics and operational control.",
+2454:    "home.avisos_activos":"Active alerts","home.ver_procesos":"View processes",
+2455:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2465:    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+2467:    "home.ver_admin":"View admin","home.ver_soporte":"View support",
+2485:    "torneos.title":"Tournaments","torneos.bracket":"Interactive bracket",
+2489:    "torneos.ver_ranking":"View full ranking","torneos.personalizado":"Custom",
+2502:    "ranking.title":"Ranking","ranking.subtitle":"General ranking of players and pairs",
+2542:    "soporte.eyebrow":"Support",
+2578:    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
+2596:    "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
+2599:    "flujos.ocultar_tabla":"▲ Hide table","flujos.ver_tabla":"▼ View full table",
+2608:    "admin.crec_item1":"Tournaments","admin.crec_item2":"Ranking and categories",
+2610:    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
+2622:    "soporte.airtable_item":"Database ready without active writes",
+2633:    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+2634:    "nav.admin":"Admin","nav.flujos_make":"Tech center","nav.soporte":"Support",
+2644:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2649:    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Dashboard, metrics and operational control.",
+2656:    "home.avisos_activos":"Active alerts","home.ver_procesos":"View processes",
+2657:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2667:    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+2669:    "home.ver_admin":"View admin","home.ver_soporte":"View support",
+2687:    "torneos.title":"Tournaments","torneos.bracket":"Interactive bracket",
+2691:    "torneos.ver_ranking":"View full ranking","torneos.personalizado":"Custom",
+2704:    "ranking.title":"Ranking","ranking.subtitle":"General ranking of players and pairs",
+2744:    "soporte.eyebrow":"Support",
+2780:    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
+2798:    "flujos.mas_activos":"Most active processes","flujos.con_incidencias":"Processes with incidents",
+2801:    "flujos.ocultar_tabla":"▲ Hide table","flujos.ver_tabla":"▼ View full table",
+2810:    "admin.crec_item1":"Tournaments","admin.crec_item2":"Ranking and categories",
+2812:    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
+2824:    "soporte.airtable_item":"Database ready without active writes",
+2836:    "nav.admin":"Admin","nav.flujos_make":"Centre technique","nav.soporte":"Support",
+2846:    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
+2851:    "role.ADMIN.label":"Administrateur","role.ADMIN.desc":"Tableau de bord, métriques et contrôle opérationnel.",
+2852:    "role.SUPPORT.label":"Support technique","role.SUPPORT.desc":"Zone technique, intégrations et diagnostics internes.",
+2858:    "home.avisos_activos":"Alertes actives","home.ver_procesos":"Voir processus",
+2869:    "home.btn_torneos":"Tournois","home.btn_admin":"Admin",
+2884:    "soporte.title":"Support technique","soporte.desc":"Contrôle technique de l'application.",
+2942:    "soporte.eyebrow":"Support",
+3007:    "admin.crec_desc":"Zone prête à activer des processus quand le backend sera disponible.",
+3022:    "soporte.airtable_item":"Base de données prête sans écriture active",
+3034:    "nav.admin":"Admin","nav.flujos_make":"Centro tecnico","nav.soporte":"Supporto",
+3050:    "role.SUPPORT.label":"Supporto tecnico","role.SUPPORT.desc":"Zona tecnica, integrazioni e diagnostica interna.",
+3055:    "home.torneo":"Torneo","home.alta":"Iscrizione","home.procesos":"Processi",
+3067:    "home.btn_torneos":"Tornei","home.btn_admin":"Admin",
+3082:    "soporte.title":"Supporto tecnico","soporte.desc":"Controllo tecnico dell'applicazione.",
+3140:    "soporte.eyebrow":"Supporto",
+3229:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Registo de jogador",
+3231:    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Classificação",
+3232:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Suporte",
+3242:    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
+3245:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar campos, consultar reservas e classificação.",
+3247:    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controlo operacional.",
+3249:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+3252:    "home.estado_operativo":"Estado operacional","home.reservar":"Reservar",
+3261:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+3265:    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
+3271:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+3275:    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
+3277:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+3323:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+3328:    "reservas.title":"Reservar campo","reservas.eyebrow":"Reservas","reservas.desc":"Reserve o seu campo em segundos.",
+3332:    "reservas.registrada":"Reserva registada","reservas.nueva_btn":"Nova reserva",
+3336:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou hora da sua reserva.",
+3343:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está a ser atualizada.",
+3351:    "status.reprog.exito":"Reserva reagendada","status.reprog.exito_txt":"A sua reserva foi atualizada com sucesso.",
+3427:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Cadastro de jogador",
+3429:    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Ranking",
+3430:    "nav.admin":"Admin","nav.flujos_make":"Central técnica","nav.soporte":"Suporte",
+3440:    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
+3443:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar quadras, consultar reservas e ranking.",
+3445:    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controle operacional.",
+3447:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+3450:    "home.estado_operativo":"Status operacional","home.reservar":"Reservar",
+3459:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+3463:    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
+3469:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+3473:    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
+3475:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+3496:    "ranking.title":"Ranking","ranking.subtitle":"Classificação geral de jogadores e duplas",
+3504:    "ranking.podio":"Pódio — Top 3","ranking.tabla":"Ranking completo",
+3521:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+3526:    "reservas.title":"Reservar quadra","reservas.eyebrow":"Reservas","reservas.desc":"Reserve sua quadra em segundos.",
+3530:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nova reserva",
+3534:    "reprog.title":"Reagendar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou horário da sua reserva.",
+3541:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está sendo atualizada.",
+3549:    "status.reprog.exito":"Reserva remarcada","status.reprog.exito_txt":"Sua reserva foi atualizada com sucesso.",
+3602:    "admin.crec_item1":"Torneios","admin.crec_item2":"Ranking e categorias",
+3628:    "nav.admin":"Admin","nav.flujos_make":"Technisches Zentrum","nav.soporte":"Support",
+3638:    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
+3643:    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Verwaltungspanel, Metriken und Betriebskontrolle.",
+3644:    "role.SUPPORT.label":"Technischer Support","role.SUPPORT.desc":"Technische Zone, Integrationen und interne Diagnose.",
+3660:    "home.hero_subtitle":"SaaS nach Rollen: Spieler, Empfang, Verwaltung und Support.",
+3661:    "home.btn_torneos":"Turniere","home.btn_admin":"Admin",
+3663:    "home.ver_admin":"Admin anzeigen","home.ver_soporte":"Support anzeigen",
+3676:    "soporte.title":"Technischer Support","soporte.desc":"Technische Kontrolle der Anwendung.",
+3734:    "soporte.eyebrow":"Support",
+3824:function t(key, lang) {
+3838:function LanguageSelector() {
+3850:    function onKey(e) { if (e.key === "Escape") setOpen(false); }
+3852:    return () => window.removeEventListener("keydown", onKey);
+3857:    function onClickOut(e) {
+3861:    return () => document.removeEventListener("mousedown", onClickOut);
+3864:  function filterLanguages(list) {
+3874:  function selectLang(lang) {
+3885:  return (
+3941:function LangOption({ lang, selected, onSelect }) {
+3943:  return (
+3965:function Sidebar({ current, selectedRole, onClearRole, mobileOpen, onNavigate, onClose }) {
+3974:  const menuByRole = {
+3983:  return (
+3998:          return (
+4022:function Inicio({ setCurrent }) {
+4032:  return (
+4036:      <section style={{ display: "grid", alignItems: "center", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,340px),1fr))", gap: "clamp(20px,4vw,48px)", marginBottom: "clamp(28px,4vw,48px)" }}>
+4077:      </section>
+4130:      <Gallery />
+4135:function Reservas() {
+4150:  const statusMap = {
+4158:  function updateForm(field, value) {
+4165:  function review() {
+4176:  async function send() {
+4212:  function newBooking() {
+4233:function CancelarReserva({ setCurrent }) {
+4243:  const statusMap = {
+4251:  function updateClave(value) {
+4257:  function updateConfirmado(value) {
+4263:  async function submit(event) {
+4318:  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} /><Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+4322:function ReprogramarReserva({ setCurrent }) {
+4346:  const statusMap = {
+4354:  function updateForm(field, value) {
+4361:  function chooseCourt(value) {
+4368:  async function submit(event) {
+4439:  function resetForm() {
+4453:  return (
+4502:              <PanelList
+4574:                  return (
+4688:function Gestion() {
+4690:  const [reservasReales, setReservasReales] = useState([]);
+4691:  const [cargandoReservas, setCargandoReservas] = useState(false);
+4692:  const [reservasConsultadas, setReservasConsultadas] = useState(false);
+4693:  const [errorReservas, setErrorReservas] = useState("");
+4694:  const [fuenteReservas, setFuenteReservas] = useState("");
+4717:  function normalizarReserva(item) {
+4792:  async function cargarReservas() {
+4799:      setErrorReservas(
+4805:    if (cargandoReservas) return;
+4807:    setCargandoReservas(true);
+4808:    setErrorReservas("");
+4847:        .map(normalizarReserva)
+4854:      setReservasReales(listaNormalizada);
+4855:      setFuenteReservas(resultado.source || "airtable");
+4856:      setReservasConsultadas(true);
+4867:      setReservasReales([]);
+4868:      setReservasConsultadas(true);
+4869:      setFuenteReservas("");
+4870:      setErrorReservas(
+4876:      setCargandoReservas(false);
+4912:        return (
+4926:  const resumenReservas = useMemo(() => {
+4949:  function colorEstado(estado) {
+4968:  return (
+4977:        eyebrow="Reservas"
+5015:                setErrorReservas("");
+5019:                  cargarReservas();
+5027:              cargandoReservas ||
+5030:            onClick={cargarReservas}
+5032:            {cargandoReservas
+5038:        {errorReservas && (
+5046:            {errorReservas}
+5051:      {reservasConsultadas && !errorReservas && (
+5074:                {resumenReservas.total}
+5090:                {resumenReservas.confirmadas}
+5106:                {resumenReservas.pendientes}
+5122:                {resumenReservas.canceladas}
+5222:              {fuenteReservas ? "base de datos" : "base de datos"}
+5321:function AltaJugador() {
+5324:  const initialForm = {
+5342:  function updateForm(field, value) {
+5349:  function validate() {
+5350:    const nextErrors = {};
+5387:  async function submit(event) {
+5432:  return (
+5530:const FORMAT_MAX = { "16": 8, "32": 16, "64": 32 };
+5534:function torneoLoadSaved() {
+5546:function torneoLoadHist() {
+5554:function torneoBuildEmptyPairs(count) {
+5563:function torneoBuildFullBracket(pairs, byeId) {
+5564:  const active = byeId ? pairs.filter(p => p.id !== byeId) : pairs;
+5566:  for (let i = 0; i < active.length; i += 2) {
+5567:    r1.push({ id: `r1m${Math.floor(i / 2)}`, round: 1, pos: Math.floor(i / 2), pairA: active[i]?.id ?? null, pairB: active[i + 1]?.id ?? null, winner: null, isBye: false });
+5593:function torneoGetRoundLabel(rNum, total) {
+5603:function torneoAdvanceWinner(bracket, matchId, winnerId) {
+5616:function torneoGetMatchGap(round) {
+5620:function torneoGetRoundPadding(round) {
+5621:  return (Math.pow(2, round - 1) - 1) * (MATCH_H + BASE_GAP) / 2;
+5624:function Torneos() {
+5645:  const [showRanking, setShowRanking] = useState(false);
+5656:    const s = { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published };
+5661:  const showNotice = (msg, err = false) => {
+5666:  const pairLabel = (p) => {
+5674:  const pushHistory = (action) => {
+5676:      const snap = {
+5692:  const restoreSnap = (snap) => {
+5705:  const handleUndo = () => {
+5716:  const handleRedo = () => {
+5727:  const handleRestoreVersion = (idx) => {
+5739:  const applyFormat = (fmt) => {
+5748:  const applyCustom = () => {
+5766:    showNotice(`Torneo configurado: ${pc} pareja${pc !== 1 ? "s" : ""}.`);
+5769:  const handleReorder = () => {
+5783:  const handleAutoAssign = () => {
+5794:  const handleSave = () => {
+5799:  const handlePublish = () => {
+5803:    showNotice(next ? "📢 Torneo publicado." : "📝 Torneo vuelto a borrador.");
+5806:  const handleAddPair = () => {
+5810:    const np = { id: `p${Date.now()}`, player1: "", player2: "" };
+5816:  const handleDeletePair = (id) => {
+5825:  const handleEditSave = () => {
+5832:  const handleMarkWinner = (matchId, winnerId) => {
+5844:  const handleExportJSON = () => {
+5845:    const data = {
+5846:      nombreTorneo: `Torneo Club Pádel 04 · ${pairs.length} parejas`,
+5858:      estadoTorneo: published ? "Publicado" : "En curso",
+5868:  const handleExportCSV = () => {
+5878:  const bracketByRound = {};
+5886:  return (
+5905:          <p style={{ color: T.textDim, margin: 0, fontSize: ".9rem" }}>Torneos por jugadores o parejas · Pares e impares · Exportación real</p>
+5939:            <button key={o.v} type="button" className={`cp04-format-pill${formatMode === o.v ? " is-active" : ""}`} onClick={() => applyFormat(o.v)}>{o.l}</button>
+5952:                <button type="button" className={`cp04-format-pill${customMode === "players" ? " is-active" : ""}`} onClick={() => { setCustomMode("players"); setCustomError(""); }}>👤 Jugadores</button>
+5953:                <button type="button" className={`cp04-format-pill${customMode === "pairs" ? " is-active" : ""}`} onClick={() => { setCustomMode("pairs"); setCustomError(""); }}>🎾 Parejas</button>
+6099:                  return (
+6134:                return (
+6146:                        return (
+6207:        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showRanking ? 14 : 0 }}>
+6209:            Ranking
+6212:          <button type="button" className="cp04-tournament-action" onClick={() => setShowRanking(r => !r)}>
+6213:            {showRanking ? "▲ Ocultar" : `▼ Ver todas (${pairs.length})`}
+6216:        {showRanking && (
+6234:                    return (
+6278:function RankingAvatar({ name, color = T.accent, size = 34 }) {
+6286:  return (
+6293:function MovArrow({ mov }) {
+6299:function RachaBadge({ racha }) {
+6305:function Ranking() {
+6318:  const NIVEL_COLORS = { "Avanzado":"#b6ff00", "Medio":"#20e3b2", "Iniciación":"#a78bfa" };
+6345:  return (
+6407:              return (
+6418:                    <RankingAvatar name={p.p1} color={pc} size={28} />
+6419:                    <RankingAvatar name={p.p2} color={pc} size={28} />
+6472:                  return (
+6480:                            <RankingAvatar name={p.p1} color={nc} size={26} />
+6481:                            <RankingAvatar name={p.p2} color={nc} size={26} />
+6529:function Admin() {
+6534:  return (
+6541:      <AuthStatusPanel compact />
+6567:        <RolePanel eyebrow={tx("admin.gestion_eyebrow")} title={tx("admin.gestion_title")} desc={tx("admin.gestion_desc")} items={[tx("admin.gestion_item1"), tx("admin.gestion_item2"), tx("admin.gestion_item3"), tx("admin.gestion_item4")]} />
+6568:        <RolePanel eyebrow={tx("admin.crec_eyebrow")} title={tx("admin.crec_title")} desc={tx("admin.crec_desc")} items={[tx("admin.crec_item1"), tx("admin.crec_item2"), tx("admin.crec_item3"), tx("admin.crec_item4")]} />
+6569:        <RolePanel eyebrow={tx("admin.backup_eyebrow")} title={tx("admin.backup_semana")} desc={tx("admin.backup_desc")} items={[tx("admin.backup_item1"), tx("admin.backup_item2"), tx("admin.backup_item3"), tx("admin.backup_item4")]} />
+6581:function AuthProductionStatusPanel() {
+6585:  return (
+6595:      <PanelList
+6614:function Soporte() {
+6617:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+6620:function Perfil({ selectedRole, onClearRole }) {
+6623:  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+6624:  const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
+6626:  // Perfil preparado para backend real.
+6635:  const PROFILE_BACKEND_ENDPOINTS = {
+6642:  function saveProfileFallback(key, value) {
+6652:  async function saveProfileField(field, value) {
+6660:    const storageMap = {
+6706:  const roleInitials = { PLAYER:"JG", STAFF:"ST", ADMIN:"AD", SUPPORT:"SP" };
+6710:  function computeCompleteness() {
+6723:  function handleAvatarChange(e) {
+6734:  function handleAvatarSave() {
+6741:  function handleAvatarDelete() {
+6749:  function startBioEdit() { setBioDraft(bio); setBioEdit(true); setBioMsg(""); }
+6750:  function cancelBioEdit() { setBioEdit(false); setBioDraft(""); }
+6751:  function saveBio() {
+6760:  function startDeporteEdit() { setDeporteDraft({...deporteData}); setDeporteEditing(true); }
+6761:  function cancelDeporteEdit() { setDeporteEditing(false); }
+6762:  function saveDeporte() {
+6763:    const saved = {...deporteDraft};
+6770:  function togglePriv(key, defaultOn) {
+6772:    const updated = { ...privacidad, [key]: !current };
+6779:  function handleChangePwd(e) {
+6792:  const demoMetrics = {
+6804:    { id:"torneo",     icon:"🏆",  label:"Torneo completado",  desc:"Ha participado en torneos",earned:metrics.torneos>0 },
+6807:    { id:"completo",   icon:"✅",  label:"Perfil completo",    desc:"Perfil al 100%",           earned:completeness===100 },
+6809:    { id:"frecuente",  icon:"📌",  label:"Reserva frecuente",  desc:"10+ reservas realizadas",  earned:metrics.reservas>=10 },
+6815:    { icon:"🏆", desc:"Torneo interno · Semifinal",         fecha:"Hace 3 días" },
+6822:  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+6826:  const cs = { background:T.surface2, borderRadius:20, padding:"22px 24px", border:`1px solid ${T.line}` };
+6827:  const ls = { color:T.textDim, fontWeight:700, fontSize:".8rem", letterSpacing:".06em", textTransform:"uppercase", marginBottom:6, display:"block" };
+6828:  const ss = { background:T.surface3, border:`1px solid ${T.line}`, borderRadius:10, color:T.text, padding:"10px 14px", width:"100%", fontSize:".93rem" };
+6829:  const hs = { margin:0, color:T.accent, fontFamily:T.fontDisplay, fontSize:"1rem", letterSpacing:".04em" };
+6833:  const complLabel = completeness===100 ? "✓ Perfil completo" : `${completeness}% completado`;
+6835:  return (
+7020:                  { key:"tipo_partida",   label:tx("perfil.deporte_tipo_partida"),   opts:["Amistosa","Competitiva","Torneo","Entrenamiento"] },
+7128:              return (
+7167:export default function ClubPadel04SaaSApp() {
+7186:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+7188:  const roleConfig = {
+7191:      desc: "Reservar pistas, consultar reservas y ranking.",
+7202:      label: "Administrador / jefe",
+7203:      desc: "Panel de dirección, métricas y control operativo.",
+7215:  function selectRole(roleId) {
+7222:  function confirmRoleAccess(event) {
+7249:  function clearRole() {
+7261:  function inferRoleFromEmail(email) {
+7273:  function handleUniversalLogin(event) {
+7300:  function openForgotPwd() {
+7306:  function closeForgotPwd() {
+7312:  function handleForgotPwdSubmit(e) {
+7328:    function handleKeyDown(event) {
+7337:    return () => {
+7343:  function navigate(section) {
+7345:    const safeSection = String(section || "inicio").trim();
+7363:    const roleLabels = {
+7369:    return (
+7373:          <section style={{ width:"min(1080px, 100%)", border:"1px solid rgba(255,255,255,.12)", borderRadius:34, padding:"clamp(24px, 4vw, 48px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
+7453:                return (
+7553:          </section>
+7559:  return (

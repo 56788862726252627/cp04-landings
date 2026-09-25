@@ -1,0 +1,23 @@
+77:      PLAYER:  { label: ltx("role.PLAYER.label"),  desc: ltx("role.PLAYER.desc")  },
+78:      STAFF:   { label: ltx("role.STAFF.label"),   desc: ltx("role.STAFF.desc")   },
+79:      ADMIN:   { label: ltx("role.ADMIN.label"),   desc: ltx("role.ADMIN.desc")   },
+80:      SUPPORT: { label: ltx("role.SUPPORT.label"), desc: ltx("role.SUPPORT.desc") },
+139:                  onClick={() => setShowLoginPassword(v => !v)}
+146:                    onClick={openRegister}
+153:                  onClick={openForgotPwd}
+215:                        <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button" style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+218:                        <button type="button" className="cp04-menu-button" onClick={closeRegister} style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+230:                      <button type="button" className="cp04-menu-button" onClick={closeRegister}>
+261:                  <button key={roleId} type="button" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
+262:                    style={{ textAlign:"left", border:`1px solid ${T.line}`, borderRadius:24, padding:22, background:"rgba(5,10,18,.72)", color:T.text, cursor:"pointer", minHeight:138 }}>
+263:                    <div className={roleId==="PLAYER" ? "cp04-role-player-id" : undefined} style={{ color: roleId==="PLAYER" ? "#b6ff00" : T.accent, fontWeight:900, letterSpacing:".12em", fontSize:".78rem", marginBottom:8 }}>{roleId}</div>
+265:                    <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>
+271:            {pendingRole && (
+274:                  {ltx("login.acceder_como")} {roleLabels[pendingRole]?.label || roleConfig[pendingRole]?.label}
+286:                  <button type="button" onClick={() => setShowRolePassword(v => !v)}
+290:                  <button type="button" onClick={openForgotPwd}
+306:                    onClick={() => { setPendingRole(""); setRolePassword(""); setRoleError(""); }}
+335:                        <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+348:                    <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+377:        <button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú de navegación" aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>{ltx("nav.abrir_menu")}</button>
+379:      {mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}

@@ -1,0 +1,113 @@
+357-  return value.trim().replace(/\s+/g, " ");
+358-}
+359-
+360-function validateBooking(form, courtName, tx) {
+361-  const errors = {};
+362-  const duration = Number(form.duracion_minutos);
+363-  const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
+364-  const today = new Date(`${todayISO()}T00:00:00`);
+365-
+366-  const _t = typeof tx === "function" ? tx : (k => k);
+367-  if (cleanText(form.nombre).length < 2) errors.nombre = _t("errors.nombre");
+368-  if (cleanText(form.apellidos).length < 2) errors.apellidos = _t("errors.apellidos");
+369-  if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = _t("errors.email");
+370-  if (form.telefono.replace(/\D/g, "").length < 9) errors.telefono = _t("errors.telefono");
+371-  if (!form.fecha) errors.fecha = _t("errors.fecha");
+372-  else if (selectedDate < today) errors.fecha = _t("errors.fecha_pasado");
+373-  else if (isSundayISO(form.fecha)) errors.fecha = _t("errors.fecha_domingo");
+374-  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = _t("errors.hora");
+375-  if (!BOOKING_DURATIONS.includes(duration)) errors.duracion_minutos = _t("errors.duracion");
+376-  if (!errors.fecha && !errors.hora && !errors.duracion_minutos) {
+377:    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+378-    if (slotStatus === "past") errors.hora = _t("errors.hora_pasada");
+379-    if (slotStatus === "outside_hours") errors.hora = _t("errors.hora_cierre");
+380-    if (slotStatus === "closed") errors.fecha = _t("errors.fecha_domingo");
+381-  }
+382-  if (!COURTS.some((court) => court.name === courtName)) errors.pista = _t("errors.pista");
+383-  if (!BOOKING_MODALITIES.includes(form.modalidad)) errors.modalidad = _t("errors.modalidad");
+384-  if (!BOOKING_LEVELS.includes(form.nivel)) errors.nivel = _t("errors.nivel");
+385-
+386-  return errors;
+387-}
+388-
+389-function prepareBookingPayload(form, courtName) {
+390-  const duration = Number(form.duracion_minutos);
+391-  const horaFin = calcTimeEnd(form.hora, duration);
+392-  const price = priceFor(courtName, duration);
+393-
+394-  return {
+395-    accion: "crear_reserva",
+396-    club: CONFIG.club,
+397-    origen: CONFIG.origen,
+398-    jugador: {
+399-      nombre: cleanText(form.nombre),
+400-      apellidos: cleanText(form.apellidos),
+401-      email: form.email.trim().toLowerCase(),
+402-      telefono: form.telefono.trim(),
+403-    },
+404-    reserva: {
+405-      fecha: form.fecha,
+406-      hora: form.hora,
+407-      hora_fin: horaFin,
+408-      duracion_minutos: duration,
+409-      pista: courtName,
+410-      modalidad: form.modalidad,
+411-      nivel: form.nivel,
+412-      precio_total: price,
+--
+4385-  }
+4386-
+4387-  function newBooking() {
+4388-    setStep(1);
+4389-    setStatus("pending");
+4390-    setStatusMessage("");
+4391-    setErrors({});
+4392-  }
+4393-
+4394-  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow={tx("reservas.eyebrow")} title={tx("reservas.title")} desc={tx("reservas.desc")} /><CalendarioDisponibilidad
+4395-  initialDate={form.fecha || todayISO()}
+4396-  selectedCourt={court}
+4397-  duration={duration}
+4398-  onSelectSlot={({ fecha, pista, hora }) => {
+4399-    updateForm("fecha", fecha);
+4400-    updateForm("hora", hora);
+4401-    updateForm("pista", pista);
+4402-    setCourt(pista);
+4403-    setStep(1);
+4404-  }}
+4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+4406-}
+4407-
+4408-function CancelarReserva({ setCurrent }) {
+4409-  const lang = useLang();
+4410-  const tx = key => t(key, lang);
+4411-  const [clave, setClave] = useState("");
+4412-  const [confirmado, setConfirmado] = useState(false);
+4413-  const [status, setStatus] = useState("idle");
+4414-  const [error, setError] = useState("");
+4415-  const sendingRef = useRef(false);
+4416-  const sending = status === "sending";
+4417-  const success = status === "success";
+4418-  const statusMap = {
+4419-    idle: [tx("status.cancelar.idle"), tx("status.cancelar.idle_txt"), T.warning],
+4420-    sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt"), T.warning],
+4421-    success: [tx("status.cancelar.exito"), tx("status.cancelar.exito_txt"), T.accent],
+4422-    error: [tx("status.cancelar.error"), error || tx("status.cancelar.error_txt"), T.danger],
+4423-  };
+4424-  const [statusTitle, statusText, statusColor] = statusMap[status];
+4425-
+4426-  function updateClave(value) {
+4427-    setClave(value);
+4428-    setError("");
+4429-    if (status !== "sending") setStatus("idle");
+4430-  }
+4431-
+4432-  function updateConfirmado(value) {
+4433-    setConfirmado(value);
+4434-    setError("");
+4435-    if (status !== "sending") setStatus("idle");
+4436-  }
+4437-
+4438-  async function submit(event) {
+4439-    event.preventDefault();
+4440-    if (sending || sendingRef.current) return;

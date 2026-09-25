@@ -1,0 +1,134 @@
+## package.json
+{
+  "name": "app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "vite": "^8.0.12"
+  }
+}
+
+## vite.config.js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: '0.0.0.0',
+    proxy: {
+      '/api': {
+        target: 'https://cp04-reservas-proxy.eduardorodriguezrodriguez24.workers.dev',
+        changeOrigin: true,
+        secure: true
+      }
+    }
+  }
+})
+
+## posibles archivos env
+./.env
+./.env.example
+./.env.production
+./audit/cancelacion-duplicado-exacto-20260614-083627/precheck.env
+./audit/deploy-pages-produccion-20260614-140517/project.env
+./audit/prueba-get-reservas-con-email-20260614-073324/resultado.env
+./backups/checkpoint-auditoria16-final/wrangler.toml
+./backups/checkpoint-auditoria21-final/wrangler.toml
+./backups/checkpoint-auditoria22-final/wrangler.toml
+./backups/checkpoint-auditoria22-supabase-70/wrangler.toml
+./backups/checkpoint-auditoria22-supabase-85/wrangler.toml
+./backups/checkpoint-auditoria23-cloudflare-commands/wrangler.toml
+./backups/checkpoint-auditoria23-deploy-checklist/wrangler.toml
+./backups/checkpoint-auditoria23-final/wrangler.toml
+./backups/checkpoint-auditoria23-preprod-90/wrangler.toml
+./backups/checkpoint-auditoria23-preprod-check/wrangler.toml
+./backups/checkpoint-auditoria23-vars-matrix/wrangler.toml
+./backups/checkpoint-auditoria24-deploy-plan/wrangler.toml
+./backups/checkpoint-auditoria24-e2e-90/wrangler.toml
+./backups/checkpoint-auditoria24-e2e-checklist/wrangler.toml
+./backups/checkpoint-auditoria24-final/wrangler.toml
+./backups/checkpoint-auditoria24-inicial/wrangler.toml
+./backups/checkpoint-auditoria24-test-plan/wrangler.toml
+./backups/checkpoint-auditoria25-cloudflare-90/wrangler.toml
+./backups/checkpoint-auditoria25-cloudflare-checklist/wrangler.toml
+./backups/checkpoint-auditoria25-cloudflare-commands/wrangler.toml
+./backups/checkpoint-auditoria25-final/wrangler.toml
+./backups/checkpoint-auditoria25-inicial/wrangler.toml
+./backups/checkpoint-auditoria25-secrets-guide/wrangler.toml
+./backups/checkpoint-auditoria26-backups-movidos/wrangler.toml
+./backups/checkpoint-auditoria26-estructura-limpia/wrangler.toml
+./backups/checkpoint-auditoria26-final/wrangler.toml
+./backups/checkpoint-auditoria26-inicial/wrangler.toml
+./backups/checkpoint-auditoria26-limpieza-verificada/wrangler.toml
+./backups/checkpoint-auditoria27-final/wrangler.toml
+./backups/checkpoint-auditoria27-inicial/wrangler.toml
+./backups/checkpoint-auditoria28-final/wrangler.toml
+./backups/checkpoint-auditoria34-final/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria34-final/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria34-inicial/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria34-inicial/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria34-predeploy/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria34-predeploy/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria34-secrets/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria34-secrets/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria34-validacion-final/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria34-validacion-final/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria35-final/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria35-final/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria35-inicial/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria35-inicial/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria35-pages-prep/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria35-pages-prep/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria35-plan-deploy/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria35-plan-deploy/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria35-worker-prep/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria35-worker-prep/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria36-checklist-final/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria36-checklist-final/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria36-final/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria36-final/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria36-guia-publicacion/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria36-guia-publicacion/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria36-inicial/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria36-inicial/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria36-preview-simulado/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria36-preview-simulado/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria37-final/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria37-final/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria37-inicial/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria37-inicial/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria37-paquete-preview/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria37-paquete-preview/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria37-validacion-preview/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria37-validacion-preview/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria38-config-pages/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria38-config-pages/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria38-final/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria38-final/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria38-inicial/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria38-inicial/worker-reservas/wrangler.toml0
+./backups/checkpoint-auditoria38-paquete-pages/worker-reservas/wrangler.toml
+./backups/checkpoint-auditoria38-paquete-pages/worker-reservas/wrangler.toml0
+./backups/paquete-final-cp04/worker/wrangler.toml
+./worker-reservas/wrangler.toml
+./worker-reservas/wrangler.toml0

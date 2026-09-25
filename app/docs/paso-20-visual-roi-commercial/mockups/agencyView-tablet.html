@@ -1,0 +1,63 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Vista interna de agencia — Tablet (Android/iPadOS)</title><style>
+  :root { --fg: #1a1a2e; --bg: #ffffff; --accent: #2b6cb0; --muted: #6b7280; --border: #e5e7eb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, sans-serif; color: var(--fg); background: var(--bg); }
+  .device-frame { margin: 24px auto; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .device-frame .device-label { background: var(--muted); color: white; font-size: 12px; padding: 6px 12px; }
+  .device-frame .device-viewport { padding: 16px; overflow-x: auto; }
+  h1 { font-size: 1.3rem; }
+  h2 { font-size: 1.05rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .disclaimer { font-size: 0.75rem; color: var(--muted); font-style: italic; }
+  .status { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+  @media (max-width: 480px) { table, thead, tbody, th, td, tr { display: block; } th { display: none; } td { padding: 4px 8px; } }
+</style></head><body><div class="device-frame" style="max-width: 834px;">
+  <div class="device-label">Tablet (Android/iPadOS) · ancho simulado 834px</div>
+  <div class="device-viewport"><header>
+    <h1>Club Pádel Demo — Club deportivo</h1>
+    <p class="score-global">Puntuación global: <strong>sin datos</strong></p>
+  </header>
+  <article class="panel-block">
+    <h2>Puntuaciones por categoría</h2>
+    <table><thead><tr><th>Categoría</th><th>Score</th><th>Cobertura</th></tr></thead><tbody><tr><td colspan=3>Sin puntuaciones disponibles</td></tr></tbody></table>
+  </article>
+  <article class="panel-block">
+    <h2>Principales riesgos</h2><ul><li>Sin riesgos registrados.</li></ul>
+    <h2>Oportunidades</h2><ul><li>Sin oportunidades registradas.</li></ul>
+    <h2>Recomendaciones prioritarias</h2><ul><li>Sin recomendaciones registradas.</li></ul>
+  </article><article class="panel-block">
+    <h2>ROI (estimaciones, nunca garantizadas)</h2>
+    <table><thead><tr><th>Escenario</th><th>Beneficio mensual</th><th>Payback (meses)</th><th>ROI a 12m</th></tr></thead><tbody><tr><td>Conservador</td><td>574.5 EUR/mes</td><td>1.7</td><td>606%</td></tr>
+<tr><td>Central</td><td>889.5 EUR/mes</td><td>1.1</td><td>1026%</td></tr>
+<tr><td>Optimista</td><td>1203 EUR/mes</td><td>0.8</td><td>1444%</td></tr></tbody></table>
+    <p class="disclaimer">Estimaciones basadas en supuestos declarados y fórmulas deterministas — NUNCA son un resultado garantizado. Cada cifra indica si fue introducida, calculada o asumida, con su fórmula y su nivel de confianza.</p>
+  </article><article class="panel-block">
+    <h2>Estado de integraciones</h2>
+    <table><thead><tr><th>Integración</th><th>Estado</th><th>Bloqueo</th></tr></thead><tbody><tr><td>Airtable</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>—</td></tr>
+<tr><td>Make (automatizaciones, 50 flujos)</td><td class="status status-MOCK">MOCK</td><td>depende de Airtable operativo (ver integración 'airtable')</td></tr>
+<tr><td>Stripe (pagos)</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>sin STRIPE_SECRET_KEY configurada (paso 5 de la secuencia de trabajo del proyecto)</td></tr>
+<tr><td>WhatsApp Business Cloud API</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>WhatsApp Business aún no contratado/configurado</td></tr>
+<tr><td>Gmail (notificaciones/soporte)</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>—</td></tr>
+<tr><td>Dominio propio</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>dominio aún no comprado</td></tr>
+<tr><td>Certificado SSL</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>depende de 'domain'</td></tr>
+<tr><td>Hosting de producción</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>depende de 'domain'</td></tr>
+<tr><td>Backups</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>depende de 'hosting'</td></tr>
+<tr><td>Monitorización</td><td class="status status-NOT_CONFIGURED">NOT_CONFIGURED</td><td>depende de 'hosting'</td></tr></tbody></table>
+    <p class="disclaimer">Ningún estado aquí proviene de una comprobación de red real — se calcula únicamente a partir de la presencia de variables de entorno y del contexto externo declarado explícitamente.</p>
+  </article><article class="panel-block">
+    <h2>Roadmap de implantación</h2><ol><li>1. Implantar: reservas online (~1 semana(s))</li>
+<li>2. Implantar: recordatorios automáticos (~1 semana(s))</li>
+<li>3. Implantar: gestión de listas de espera (~1 semana(s))</li>
+<li>4. Implantar: pagos online (~1 semana(s))</li>
+<li>5. Resolver bloqueo de "Make (automatizaciones, 50 flujos)"</li>
+<li>6. Resolver bloqueo de "Stripe (pagos)"</li>
+<li>7. Resolver bloqueo de "WhatsApp Business Cloud API"</li>
+<li>8. Resolver bloqueo de "Dominio propio"</li>
+<li>9. Resolver bloqueo de "Certificado SSL"</li>
+<li>10. Resolver bloqueo de "Hosting de producción"</li>
+<li>11. Resolver bloqueo de "Backups"</li>
+<li>12. Resolver bloqueo de "Monitorización"</li></ol>
+    <p class="disclaimer">Calendario estimado, no comprometido — cada bloqueo de integración depende de terceros (credenciales/cuotas/contratación) fuera del control de este roadmap.</p>
+  </article><article class="panel-block"><h2>Información pendiente (solo agencia)</h2><ul><li>Dato de negocio pendiente: auditScores</li><li>Dato ROI pendiente: conversionRate</li><li>Dato ROI pendiente: currentMonthlyRevenue</li><li>Supuesto usado (a confirmar con el cliente): averageTicket = 35</li><li>Supuesto usado (a confirmar con el cliente): monthlyBookings = 250</li><li>Supuesto usado (a confirmar con el cliente): noShowRate = 0.12</li><li>Supuesto usado (a confirmar con el cliente): adminHoursPerWeek = 8</li><li>Supuesto usado (a confirmar con el cliente): hourlyCost = 15</li><li>Supuesto usado (a confirmar con el cliente): implementationCost = 900</li><li>Supuesto usado (a confirmar con el cliente): monthlyMaintenanceCost = 45</li></ul></article></div>
+</div></body></html>

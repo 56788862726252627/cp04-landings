@@ -1,0 +1,45 @@
+src/experimental/reservas/components/CalendarSelector.jsx:4:  const [selectedDate, setSelectedDate] = useState('2026-07-01');
+src/experimental/reservas/components/CalendarSelector.jsx:7:    setSelectedDate(d);
+src/experimental/reservas/components/CalendarSelector.jsx:11:  const dates = ['2026-07-01', '2026-07-02', '2026-07-03'];
+src/experimental/reservas/components/CalendarSelector.jsx:18:        {dates.map(d => (
+src/experimental/reservas/components/CalendarSelector.jsx:19:          <button key={d} onClick={() => handleSelect(d)} style={{ backgroundColor: '#ccffcc', border: selectedDate === d ? '2px solid blue' : '1px solid #aaa' }}>
+src/experimental/reservas/components/SlotGrid.jsx:3:const SlotGrid = ({ onSelect }) => {
+src/experimental/reservas/components/SlotGrid.jsx:4:  const [selectedSlot, setSelectedSlot] = useState(null);
+src/experimental/reservas/components/SlotGrid.jsx:7:    setSelectedSlot(s.time);
+src/experimental/reservas/components/SlotGrid.jsx:8:    onSelect(s.time);
+src/experimental/reservas/components/SlotGrid.jsx:11:  const slots = [
+src/experimental/reservas/components/SlotGrid.jsx:12:    { time: '10:00', status: 'available' },
+src/experimental/reservas/components/SlotGrid.jsx:13:    { time: '11:30', status: 'limited' },
+src/experimental/reservas/components/SlotGrid.jsx:14:    { time: '13:00', status: 'full' },
+src/experimental/reservas/components/SlotGrid.jsx:22:        {slots.map(s => (
+src/experimental/reservas/components/SlotGrid.jsx:23:          <button key={s.time} disabled={s.status === 'full'} onClick={() => handleSelect(s)} style={{ padding: '10px', opacity: s.status === 'full' ? 0.5 : 1 }}>
+src/experimental/reservas/components/SlotGrid.jsx:24:            {s.time} ({s.status})
+src/experimental/reservas/components/SlotGrid.jsx:31:export default SlotGrid;
+src/experimental/reservas/components/ReservationWizard.jsx:3:import SlotGrid from './SlotGrid';
+src/experimental/reservas/components/ReservationWizard.jsx:4:import ReservationGuestManager from './ReservationGuestManager';
+src/experimental/reservas/components/ReservationWizard.jsx:7:const ReservationWizard = () => {
+src/experimental/reservas/components/ReservationWizard.jsx:9:  const [selection, setSelection] = useState({ date: null, slot: null });
+src/experimental/reservas/components/ReservationWizard.jsx:12:  const isComplete = selection.date && selection.slot;
+src/experimental/reservas/components/ReservationWizard.jsx:17:        <strong>Modo Experimental:</strong> Este flujo es una simulación visual. No se procesan reservas reales ni invitaciones.
+src/experimental/reservas/components/ReservationWizard.jsx:20:      <h2>Wizard de Reserva (Validación UX)</h2>
+src/experimental/reservas/components/ReservationWizard.jsx:21:      {step === 1 && <CalendarSelector onSelect={(d) => setSelection(p => ({...p, date: d}))} />}
+src/experimental/reservas/components/ReservationWizard.jsx:22:      {step === 2 && <SlotGrid onSelect={(s) => setSelection(p => ({...p, slot: s}))} />}
+src/experimental/reservas/components/ReservationWizard.jsx:23:      {step === 3 && <ReservationGuestManager />}
+src/experimental/reservas/components/ReservationWizard.jsx:32:        <strong>Resumen:</strong> {selection.date} | {selection.slot}
+src/experimental/reservas/components/ReservationWizard.jsx:34:      {confirmed && <p style={{ color: 'green' }}>Reserva simulada creada.</p>}
+src/experimental/reservas/components/ReservationWizard.jsx:38:export default ReservationWizard;
+src/experimental/reservas/components/ReservationGuestManager.jsx:4:const ReservationGuestManager = () => {
+src/experimental/reservas/components/ReservationGuestManager.jsx:20:export default ReservationGuestManager;
+src/experimental/reservas/data/mockData.js:1:// Mock de reservas para pruebas de UI
+src/experimental/reservas/data/mockData.js:2:export const mockReservations = [
+src/experimental/reservas/data/mockData.js:4:    reservationId: "mock-001",
+src/experimental/reservas/data/mockData.js:5:    courtId: "Pista 1",
+src/experimental/reservas/docs/calendar-selector.md:4:Componente reutilizable para la selección de fechas en el flujo de reservas de Club Pádel 04.
+src/experimental/reservas/docs/calendar-selector.md:12:- Datos: Consume `src/experimental/reservas/data/mockData.js`.
+src/experimental/reservas/docs/slot-grid.md:1:# Documentación: SlotGrid (Experimental)
+src/experimental/reservas/docs/slot-grid.md:4:Componente para mostrar y seleccionar franjas horarias disponibles para una reserva en Club Pádel 04.
+src/experimental/reservas/docs/reservation-wizard.md:1:# Documentación: ReservationWizard (Experimental)
+src/experimental/reservas/docs/reservation-wizard.md:4:Componente orquestador para validar la experiencia de usuario (UX) del flujo de reserva en Club Pádel 04.
+src/experimental/reservas/docs/reservation-wizard.md:11:- Orquestación entre CalendarSelector y SlotGrid.
+src/experimental/reservas/docs/reservation-guest-manager.md:1:# Documentación: ReservationGuestManager (Experimental)
+src/experimental/reservas/docs/reservation-guest-manager.md:4:Prototipar la interfaz de gestión de compañeros para reservas en Club Pádel 04.

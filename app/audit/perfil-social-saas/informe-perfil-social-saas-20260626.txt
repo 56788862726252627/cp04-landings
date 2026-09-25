@@ -1,0 +1,219 @@
+══════════════════════════════════════════════════════════════════
+INFORME — MÓDULO PERFIL SOCIAL DEPORTIVO PREMIUM
+Club Pádel 04 · SaaS
+Fecha: 2026-06-26
+Build: ✅ PASA (✓ built in ~2.7s, sin errores)
+══════════════════════════════════════════════════════════════════
+
+── ARCHIVOS MODIFICADOS ───────────────────────────────────────────
+  src/App.jsx
+    · Líneas antes:  6892
+    · Líneas después: 7329
+    · Diferencia:    +437 líneas
+
+── BACKUP CREADO ─────────────────────────────────────────────────
+  src/App.jsx.BACKUP-perfil-social-20260625-235121
+
+── CAMBIOS DE I18N ───────────────────────────────────────────────
+Se añadieron 43 nuevas claves "perfil.*" a los 8 idiomas:
+  es-ES · en-GB · en-US · fr-FR · it-IT · pt-PT · pt-BR · de-DE
+
+Claves nuevas añadidas (por idioma):
+  perfil.avatar_cambiar          — cambiar foto de perfil
+  perfil.avatar_eliminar         — eliminar foto
+  perfil.avatar_confirmar_del    — confirmación eliminación avatar
+  perfil.avatar_guardada         — mensaje éxito foto guardada
+  perfil.avatar_eliminada        — mensaje foto eliminada
+  perfil.avatar_error_tipo       — validación tipo de archivo
+  perfil.avatar_error_size       — validación tamaño máximo
+  perfil.bio_titulo              — sección presentación
+  perfil.bio_placeholder         — texto guía del textarea
+  perfil.bio_guardar             — botón guardar bio
+  perfil.bio_cancelar            — botón cancelar edición
+  perfil.bio_guardada            — confirmación bio guardada
+  perfil.bio_editar              — botón editar bio
+  perfil.bio_chars               — "caracteres" (contador)
+  perfil.deporte_titulo          — sección datos deportivos
+  perfil.deporte_guardar         — botón guardar datos deportivos
+  perfil.deporte_guardados       — confirmación datos guardados
+  perfil.deporte_mano            — mano dominante
+  perfil.deporte_posicion        — posición preferida
+  perfil.deporte_nivel           — nivel de juego
+  perfil.deporte_disponibilidad  — disponibilidad habitual
+  perfil.deporte_tipo_partida    — tipo de partida preferida
+  perfil.deporte_objetivo        — objetivo principal
+  perfil.deporte_busqueda        — estado de búsqueda
+  perfil.metricas_titulo         — sección métricas
+  perfil.metricas_partidos       — partidos jugados
+  perfil.metricas_reservas       — reservas realizadas
+  perfil.metricas_torneos        — torneos disputados
+  perfil.metricas_ranking        — ranking actual
+  perfil.metricas_actividad      — nivel de actividad
+  perfil.metricas_valoracion     — valoración deportiva
+  perfil.metricas_fiabilidad     — fiabilidad
+  perfil.metricas_racha          — racha activa
+  perfil.historial_titulo        — sección momentos del jugador
+  perfil.insignias_titulo        — sección logros
+  perfil.privacidad_config       — configuración de privacidad
+  perfil.privacidad_guardada     — confirmación privacidad actualizada
+  perfil.privacidad_perfil_visible — toggle perfil visible
+  perfil.privacidad_nivel        — toggle mostrar nivel
+  perfil.privacidad_disponibilidad — toggle mostrar disponibilidad
+  perfil.privacidad_stats        — toggle mostrar estadísticas
+  perfil.privacidad_invitaciones — toggle invitaciones
+  perfil.privacidad_recomendaciones — toggle recomendaciones
+  perfil.completitud_titulo      — completitud del perfil
+
+── FUNCIONES Y SECCIONES AÑADIDAS ────────────────────────────────
+  function Perfil() — REEMPLAZADO COMPLETAMENTE (sin romper nada)
+
+  Nuevas funciones internas:
+    computeCompleteness()  — calcula % completitud del perfil
+    handleAvatarChange()   — selecciona y valida imagen de perfil
+    handleAvatarSave()     — guarda foto en localStorage
+    handleAvatarDelete()   — elimina foto con confirmación
+    startBioEdit()         — activa modo edición de bio
+    cancelBioEdit()        — cancela edición de bio
+    saveBio()              — guarda bio en localStorage
+    startDeporteEdit()     — activa modo edición datos deportivos
+    cancelDeporteEdit()    — cancela edición deportiva
+    saveDeporte()          — guarda datos deportivos en localStorage
+    togglePriv()           — alterna opciones de privacidad
+
+  Nuevos estados (useState):
+    avatarSrc, avatarPreview, avatarMsg, avatarError, showDelConfirm
+    bio, bioEdit, bioDraft, bioMsg
+    deporteData, deporteEditing, deporteDraft, deporteMsg
+    privacidad, privMsg
+    (pwdActual, pwdNueva, pwdConfirmar, pwdMsg, pwdError — existentes, mantenidos)
+
+── SECCIONES VISUALES IMPLEMENTADAS ──────────────────────────────
+  1. CABECERA PREMIUM
+     · Avatar con foto real o iniciales generadas automáticamente
+     · Indicador de rol (Jugador / Staff / Admin / Soporte)
+     · Nivel deportivo dinámico
+     · Tag de completitud con color adaptativo
+     · Bio visible en modo lectura
+     · Barra de progreso de completitud (%) con gradiente
+     · Indicador "Activo" (punto verde sobre avatar)
+
+  2. FOTO DE PERFIL
+     · FileReader para vista previa local sin backend
+     · Validación: solo imágenes (JPEG, PNG, WEBP, GIF)
+     · Validación: máximo 5 MB
+     · Previsualización antes de guardar
+     · Botón guardar / descartar
+     · Eliminación con confirmación (doble clic protegido)
+     · Persistencia en localStorage (modo demo)
+
+  3. PRESENTACIÓN / BIO
+     · Modo lectura / modo edición
+     · Textarea con counter de caracteres (máx 220)
+     · Counter en naranja al superar 90% del límite
+     · Persistencia en localStorage
+     · Solo visible para PLAYER y STAFF
+
+  4. DATOS DEPORTIVOS (solo PLAYER)
+     · Mano dominante, posición preferida, nivel, disponibilidad
+     · Tipo de partida, objetivo, estado de búsqueda
+     · Modo lectura / modo edición con selects
+     · Persistencia en localStorage
+
+  5. SESIÓN Y ROL
+     · Rol activo + idioma actual
+     · Selector de idioma inline
+     · Botón cerrar sesión
+
+  6. CAMBIAR CONTRASEÑA
+     · Funcionalidad preexistente — MANTENIDA SIN CAMBIOS
+
+  7. MÉTRICAS DEPORTIVAS (todas las tarjetas)
+     · Partidos, reservas, torneos, ranking, actividad
+     · Valoración, fiabilidad, racha activa
+     · Datos demo diferenciados por rol
+
+  8. MOMENTOS DEL JUGADOR (solo PLAYER)
+     · Feed de actividad reciente (reservas, torneos, logros)
+     · Diseño de tarjeta con icono + descripción + fecha
+
+  9. INSIGNIAS Y LOGROS
+     · 8 badges: puntual, activo, torneo, buen compañero, racha,
+                 perfil completo, nivel verificado, reserva frecuente
+     · Earned / no earned con opacidad diferenciada
+     · Lógica de desbloqueo basada en métricas reales
+
+  10. PRIVACIDAD
+      · 6 toggles: perfil visible, nivel, disponibilidad, stats,
+                   invitaciones, recomendaciones
+      · Valores por defecto adaptados por rol
+      · Persistencia en localStorage
+
+  11. NOTIFICACIONES
+      · Sección informativa existente — MANTENIDA Y MEJORADA
+
+── INTEGRACIÓN CON ROLES ─────────────────────────────────────────
+  PLAYER:  perfil completo (avatar, bio, deportes, métricas,
+            momentos, badges, privacidad)
+  STAFF:   perfil interno (avatar, bio, sesión, métricas, badges,
+            privacidad — sin datos deportivos ni historial)
+  ADMIN:   perfil directivo (sesión, métricas, badges, privacidad)
+  SUPPORT: perfil técnico (sesión, métricas, badges, privacidad)
+
+── PERSISTENCIA LOCAL (MODO DEMO) ────────────────────────────────
+  localStorage keys utilizadas:
+    cp04_avatar     — foto de perfil (base64 local)
+    cp04_bio        — presentación del jugador
+    cp04_deporte    — datos deportivos (JSON)
+    cp04_privacidad — configuración de privacidad (JSON)
+
+── PUNTOS DE INTEGRACIÓN BACKEND DOCUMENTADOS ────────────────────
+  Los TODOs están marcados en el código:
+    GET  /api/profile/me          — cargar perfil desde servidor
+    PATCH /api/profile/me         — guardar bio, deportes, privacidad
+    POST  /api/profile/avatar     — subir foto al servidor
+    DELETE /api/profile/avatar    — eliminar foto del servidor
+    POST  /api/auth/change-password — cambio real de contraseña
+
+  Backends sugeridos para almacenamiento de avatares:
+    · Supabase Storage (bucket "avatares")
+    · Cloudflare R2
+    · Airtable Attachments (campo "Foto" en tabla Jugadores)
+
+── LIMITACIONES ACTUALES ─────────────────────────────────────────
+  · Avatar guardado en localStorage (base64) — no se sincroniza
+    entre dispositivos ni sesiones diferentes
+  · Bio y datos deportivos solo persisten en el dispositivo local
+  · Métricas son datos demo fijos (no conectados a Airtable)
+  · Badges calculados sobre datos demo (no datos reales)
+  · Actividad reciente es estática (demo)
+  · No hay sistema de búsqueda de jugadores aún (fase futura)
+  · La foto en localStorage puede ser pesada (base64 de hasta 5 MB)
+
+── SEGURIDAD Y PRIVACIDAD ────────────────────────────────────────
+  · Validación de tipo MIME en frontend (solo imágenes)
+  · Validación de tamaño máximo (5 MB)
+  · No se transmite ningún dato a servicios externos
+  · No se exponen credenciales, tokens ni endpoints privados
+  · localStorage no cifrado — adecuado solo para modo demo
+  · En producción: usar backend autenticado + HTTPS + RGPD
+
+── RECOMENDACIONES PARA BACKEND REAL ─────────────────────────────
+  1. Crear tabla "Jugadores" en Airtable con campos:
+       Bio, Mano, Posicion, Nivel, Disponibilidad, Objetivo,
+       Busqueda, Privacidad (JSON), AvatarUrl
+  2. Implementar endpoint GET/PATCH /api/profile/me
+  3. Integrar Cloudflare R2 o Supabase Storage para avatares
+  4. Conectar métricas desde tabla Reservas/Torneos de Airtable
+  5. Generar badges desde datos reales de la API
+
+── PRÓXIMO PASO RECOMENDADO ──────────────────────────────────────
+  Backend:  Crear API de perfil en el Worker (GET/PATCH /api/profile/me)
+            con persistencia en Airtable o KV de Cloudflare.
+  Avatar:   Activar Cloudflare R2 y el endpoint POST/DELETE /api/profile/avatar.
+  Métricas: Conectar con tabla Reservas y Torneos de Airtable para
+            datos reales (Airtable → Worker → frontend).
+  Badges:   Calcular desde datos reales una vez conectado el backend.
+
+══════════════════════════════════════════════════════════════════
+Build: ✅ PASA · npm run build · vite v8 · ~2.7s · sin errores
+══════════════════════════════════════════════════════════════════

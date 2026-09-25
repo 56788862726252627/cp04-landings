@@ -1,0 +1,67 @@
+47: * - No contiene webhooks reales de Make.
+49: * - un endpoint seguro propio: /api/reservas.
+51: *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
+75:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+486:  const res = await fetch(CONFIG.bookingEndpoint, {
+511:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+527:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+1122:// Los datos de Make deben venir de un endpoint propio o webhook,
+1865:      {/* TODO producción: alimentar este dashboard desde backend/proxy seguro (Make API o webhook propio). NUNCA llamar Make API con clave privada desde el frontend. */}
+2170:   El backend/Worker debe ser la autoridad final en producción. */
+2242:    "login.olvide_pwd":"¿Has olvidado tu contraseña?","login.recuperar_title":"Recuperar acceso","login.recuperar_desc":"Introduce tu correo electrónico y, si la cuenta existe, recibirás instrucciones para restablecer el acceso.","login.recuperar_email":"Correo electrónico","login.recuperar_btn":"Enviar instrucciones","login.recuperar_enviado":"Si esa dirección está registrada en el sistema, recibirás instrucciones en breve. Revisa también la carpeta de spam.","login.recuperar_volver":"Volver al inicio de sesión","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+2421:    "soporte.worker_item":"Worker de reservas preparado",
+2427:    "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
+2444:    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+2623:    "soporte.worker_item":"Booking worker ready",
+2629:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+2646:    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+2825:    "soporte.worker_item":"Booking worker ready",
+2831:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+2848:    "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password",
+3023:    "soporte.worker_item":"Worker de réservations prêt",
+3029:    "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
+3046:    "login.olvide_pwd":"Hai dimenticato la password?","login.recuperar_title":"Recupera l'accesso","login.recuperar_desc":"Inserisci il tuo indirizzo e-mail e, se l'account esiste, riceverai le istruzioni per reimpostare l'accesso.","login.recuperar_email":"Indirizzo e-mail","login.recuperar_btn":"Invia istruzioni","login.recuperar_enviado":"Se quell'indirizzo è registrato nel sistema, riceverai le istruzioni a breve. Controlla anche la cartella spam.","login.recuperar_volver":"Torna al login","login.recuperar_preparado":"Pronto per l'endpoint: /api/auth/forgot-password",
+3221:    "soporte.worker_item":"Worker prenotazioni pronto",
+3227:    "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
+3244:    "login.olvide_pwd":"Esqueceu a palavra-passe?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Introduza o seu e-mail e, se a conta existir, receberá instruções para repor o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver registado no sistema, receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao início de sessão","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+3419:    "soporte.worker_item":"Worker de reservas preparado",
+3425:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+3442:    "login.olvide_pwd":"Esqueceu a senha?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Insira seu e-mail e, se a conta existir, você receberá instruções para redefinir o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver cadastrado no sistema, você receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao login","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+3617:    "soporte.worker_item":"Worker de reservas pronto",
+3623:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+3640:    "login.olvide_pwd":"Passwort vergessen?","login.recuperar_title":"Zugang wiederherstellen","login.recuperar_desc":"Geben Sie Ihre E-Mail-Adresse ein und, wenn das Konto existiert, erhalten Sie Anweisungen zur Zurücksetzung.","login.recuperar_email":"E-Mail-Adresse","login.recuperar_btn":"Anweisungen senden","login.recuperar_enviado":"Wenn diese Adresse im System registriert ist, erhalten Sie in Kürze Anweisungen. Prüfen Sie auch Ihren Spam-Ordner.","login.recuperar_volver":"Zurück zum Login","login.recuperar_preparado":"Bereit für Endpunkt: /api/auth/forgot-password",
+3815:    "soporte.worker_item":"Buchungs-Worker bereit",
+3821:    "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
+4459:      const res = await fetch(CONFIG.bookingEndpoint, {
+4570:      const res = await fetch(CONFIG.bookingEndpoint, {
+4876:    "/api/reservas";
+4993:      const response = await fetch(url, {
+5575:      const response = await fetch("/api/jugadores/alta", {
+6766:        La app está preparada para conectar autenticación real mediante backend/Worker.
+6774:          "Login real pendiente: /api/auth/login",
+6775:          "Sesión real pendiente: /api/auth/me",
+6776:          "Recuperación real pendiente: /api/auth/forgot-password",
+6782:        el backend/Worker con sesión válida y rol real.
+6792:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+6804:  // GET    /api/profile/me
+6805:  // PATCH  /api/profile/me
+6806:  // POST   /api/profile/avatar
+6807:  // DELETE /api/profile/avatar
+6808:  // GET    /api/profile/metrics
+6809:  // POST   /api/auth/change-password
+6811:  login: "/api/auth/login",
+6812:  register: "/api/auth/register",
+6813:  forgotPassword: "/api/auth/forgot-password",
+6814:    me: "/api/auth/me",
+6815:    avatar: "/api/profile/avatar",
+6816:    metrics: "/api/profile/metrics",
+6817:    changePassword: "/api/auth/change-password",
+6833:    // await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+6850:  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+6858:  // TODO: GET/PATCH /api/profile/me { bio }
+6866:  // TODO: GET/PATCH /api/profile/me { deporteData }
+6873:  // TODO: GET/PATCH /api/profile/me { privacy }
+6966:    // TODO: POST /api/auth/change-password
+7469:        const res = await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+7629:      const res = await fetch("/api/auth/login", {
+7711:      const res = await fetch("/api/auth/register", {

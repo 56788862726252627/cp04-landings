@@ -1,0 +1,131 @@
+{
+  "businessId": "clinica-de-fisioterapia-malaga",
+  "tenantId": "clinica-de-fisioterapia-malaga",
+  "locale": "es-ES",
+  "sectionsEnabled": [
+    "header",
+    "hero",
+    "benefits",
+    "services",
+    "howItWorks",
+    "testimonials",
+    "faq",
+    "cta",
+    "contact",
+    "footer"
+  ],
+  "meta": {
+    "title": "Clínica De Fisioterapia Málaga | clínica de fisioterapia",
+    "description": "Clínica de fisioterapia en Málaga (ES) — 17 módulo(s) habilitado(s).",
+    "canonical": null,
+    "ogImage": null,
+    "robots": "noindex,nofollow",
+    "structuredDataPrepared": true
+  },
+  "header": {
+    "brandName": "Clínica De Fisioterapia Málaga",
+    "navLinks": [
+      "services",
+      "howItWorks",
+      "faq",
+      "contact"
+    ]
+  },
+  "hero": {
+    "headline": "Clínica De Fisioterapia Málaga",
+    "subheadline": "Clínica de fisioterapia en Málaga (ES) — 17 módulo(s) habilitado(s).",
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto"
+  },
+  "valueProposition": {
+    "heading": "Por qué elegir Clínica De Fisioterapia Málaga",
+    "points": [
+      "Reservas online de citas",
+      "Recordatorios automáticos para pacientes",
+      "Gestión centralizada del equipo y la agenda"
+    ]
+  },
+  "benefits": [
+    {
+      "title": "Ahorra tiempo",
+      "description": "Automatiza confirmaciones y recordatorios de citas."
+    },
+    {
+      "title": "Sin errores de agenda",
+      "description": "Disponibilidad siempre actualizada."
+    },
+    {
+      "title": "Comunicación clara",
+      "description": "Tus pacientes siempre saben qué esperar."
+    }
+  ],
+  "services": {
+    "heading": "Servicios",
+    "items": []
+  },
+  "howItWorks": {
+    "heading": "Cómo funciona",
+    "steps": [
+      {
+        "title": "1. Elige servicio",
+        "description": "Selecciona el servicio que necesitas."
+      },
+      {
+        "title": "2. Elige horario",
+        "description": "Consulta disponibilidad en tiempo real."
+      },
+      {
+        "title": "3. Confirma",
+        "description": "Recibe confirmación y recordatorio automáticos."
+      }
+    ]
+  },
+  "testimonials": {
+    "heading": "Lo que dicen (demostración)",
+    "items": [
+      {
+        "name": "Cliente demo 1",
+        "quote": "Muy contento con la gestión de clínica de fisioterapia.",
+        "isDemo": true,
+        "isDemoData": true,
+        "demoLabel": "Testimonio de demostración — no corresponde a un cliente real"
+      },
+      {
+        "name": "Cliente demo 2",
+        "quote": "El proceso de reserva es mucho más rápido ahora.",
+        "isDemo": true,
+        "isDemoData": true,
+        "demoLabel": "Testimonio de demostración — no corresponde a un cliente real"
+      }
+    ],
+    "demoNotice": "Todos los testimonios de esta sección son de demostración, no de clientes reales."
+  },
+  "faq": {
+    "heading": "Preguntas frecuentes",
+    "items": [
+      {
+        "question": "¿Qué incluye la solución para clínica de fisioterapia?",
+        "answer": "Gestión de citas, clientes y automatizaciones básicas, ampliable según el plan."
+      },
+      {
+        "question": "¿Los datos mostrados son reales?",
+        "answer": "No. Todos los datos de demostración son ficticios y están etiquetados como tal."
+      }
+    ]
+  },
+  "cta": {
+    "heading": "¿Listo para empezar con Clínica De Fisioterapia Málaga?",
+    "ctaLabel": "Solicitar una demostración",
+    "ctaHref": "#contacto"
+  },
+  "contact": {
+    "email": null,
+    "website": null,
+    "address": null
+  },
+  "footer": {
+    "legalName": "Clínica De Fisioterapia Málaga",
+    "privacyPlaceholder": "Aviso de privacidad pendiente de revisión legal — placeholder generado automáticamente, no usar en producción sin revisión.",
+    "termsPlaceholder": "Términos y condiciones pendientes de revisión legal — placeholder generado automáticamente."
+  }
+}

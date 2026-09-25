@@ -1,0 +1,300 @@
+82:    key: "pistas",
+83:    title: "Pistas",
+84:    label: "Pistas Club Pádel 04",
+85:    src: "/optimized/gallery/cp04/pistas.webp?v=cp04FotosSeparadasFinal2",
+114:  { id: 1, name: "Pista 1", type: "Cristal Pro", price60: 10, price90: 18, price120: 24 },
+115:  { id: 2, name: "Pista 2", type: "Cristal Pro", price60: 10, price90: 18, price120: 24 },
+116:  { id: 3, name: "Pista 3", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
+117:  { id: 4, name: "Pista 4", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
+126:  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
+127:  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
+128:  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
+160:  { name: "Calendario", status: "Listo para conexión", detail: "Reservas, disponibilidad y eventos", flow: "Sistema → Calendario" },
+166:  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+167:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+331:function getSlotStatus(fecha, hora, duration = 90) {
+332:  if (!fecha || !hora) return "invalid";
+336:  const startMinutes = minutesFromTime(hora);
+374:  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = _t("errors.hora");
+376:  if (!errors.fecha && !errors.hora && !errors.duracion_minutos) {
+377:    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+378:    if (slotStatus === "past") errors.hora = _t("errors.hora_pasada");
+379:    if (slotStatus === "outside_hours") errors.hora = _t("errors.hora_cierre");
+382:  if (!COURTS.some((court) => court.name === courtName)) errors.pista = _t("errors.pista");
+391:  const horaFin = calcTimeEnd(form.hora, duration);
+406:      hora: form.hora,
+407:      hora_fin: horaFin,
+409:      pista: courtName,
+442:  if (!BOOKING_HOURS.includes(form.nueva_hora_inicio)) {
+443:    errors.nueva_hora_inicio = _t("errors.hora");
+450:  if (!errors.nueva_fecha_reserva && !errors.nueva_hora_inicio && !errors.duracion_minutos) {
+451:    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+452:    if (slotStatus === "past") errors.nueva_hora_inicio = _t("errors.hora_pasada");
+453:    if (slotStatus === "outside_hours") errors.nueva_hora_inicio = _t("errors.hora_cierre");
+458:    errors.nueva_pista = _t("errors.pista");
+470:  const horaFin = calcTimeEnd(form.nueva_hora_inicio, duration);
+476:    nueva_hora_inicio: form.nueva_hora_inicio,
+477:    nueva_hora_fin: horaFin,
+478:    nueva_pista: courtName,
+479:    pista_nueva: courtName,
+511:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+512:const DISPONIBILIDAD_UPDATE_EVENT = "cp04:disponibilidad-actualizar";
+525:async function fetchDisponibilidad(fecha) {
+527:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+537:function emitDisponibilidadUpdate(fecha) {
+538:  window.dispatchEvent(new CustomEvent(DISPONIBILIDAD_UPDATE_EVENT, { detail: { fecha } }));
+541:function refreshDisponibilidadAfterChange(fecha) {
+542:  emitDisponibilidadUpdate(fecha);
+543:  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 1500);
+544:  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 4000);
+547:function CalendarioDisponibilidad({
+552:  title = "Calendario de disponibilidad",
+553:  description = "Elige fecha, hora y pista disponibles.",
+562:  const pistas = COURTS.map((c) => c.name);
+564:  const consultarDisponibilidad = useCallback(async (fechaConsulta) => {
+585:      const data = await fetchDisponibilidad(fechaConsulta);
+596:      setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
+599:      setMensaje("No se pudo actualizar la disponibilidad. Inténtalo de nuevo.");
+605:    const timer = window.setTimeout(() => consultarDisponibilidad(fecha), 0);
+607:  }, [consultarDisponibilidad, fecha]);
+621:    function handleDisponibilidadUpdate(event) {
+625:        consultarDisponibilidad(fechaEvento);
+628:      consultarDisponibilidad(fecha);
+631:    window.addEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+634:      window.removeEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+636:  }, [consultarDisponibilidad, fecha]);
+640:    consultarDisponibilidad(value);
+655:            aria-label="Fecha disponibilidad"
+672:            onClick={() => consultarDisponibilidad(fecha)}
+690:        {pistas.map((pista) => (
+691:          <div key={pista} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 14, background: "rgba(255,255,255,.035)" }}>
+693:              <strong style={{ color: pista === selectedCourt ? T.accent : T.text }}>{pista}</strong>
+697:                  : `${BOOKING_HOURS.filter((hora) => ocupadasSet.has(`${fecha}|${pista}|${hora}`)).length} ocupadas`}
+702:              {BOOKING_HOURS.map((hora) => {
+703:                const clave = `${fecha}|${pista}|${hora}`;
+705:                const slotStatus = getSlotStatus(fecha, hora, duration);
+708:                const fueraHorario = slotStatus === "outside_hours";
+709:                const bloqueada = cerrada || pasada || fueraHorario;
+715:                    : fueraHorario
+721:                const borderColor = cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent;
+722:                const background = cerrada || fueraHorario
+735:                      onSelectSlot({ fecha, pista, hora });
+742:                      color: cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent,
+749:                    <div>{hora}</div>
+750:                    <small style={{ color: cerrada || fueraHorario ? T.warning : danger ? T.danger : T.textDim }}>
+1140:const DEMO_OCUPACION_PISTAS = [
+1141:  { l:"Pista 1", v:87, c:"#b6ff00" },
+1142:  { l:"Pista 2", v:72, c:"#20e3b2" },
+1143:  { l:"Pista 3", v:65, c:"#2f6bff" },
+1144:  { l:"Pista 4", v:91, c:"#ffad47" },
+1184:  { l:"Alerta Pistas", v:521, c:"#b6ff00" },
+1198:    "nombre": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+1199:    "nombre_final": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+1205:    "blueprint": "workflows/27-alerta-pistas-libres-flash-promo/final/Alerta_Pistas_Libres_Flash_Promo_Padel_04_DEFINITIVO.blueprint.json",
+1318:    "nombre": "🏟️ Cierre Temporal de Pistas · Pádel 04 · DEFINITIVO",
+1319:    "nombre_final": "🏟️ Cierre Temporal de Pistas · Pádel 04 · DEFINITIVO",
+1324:    "funcion": "Bloquea pistas temporalmente por mantenimiento, clima u otras incidencias.",
+1325:    "blueprint": "workflows/19-cierre-temporal-pistas/final/Cierre_Temporal_de_Pistas_Padel_04_DEFINITIVO.blueprint.json",
+1474:    "funcion": "Gestiona lista de espera y promociona jugadores cuando queda una pista libre.",
+1624:    "funcion": "Envía recordatorio automático 24 horas antes de la reserva.",
+1804:    "funcion": "Envía recordatorio automático 2 horas antes de la reserva.",
+1894:        <ChartCard title={tx("flujos.actividad_24h")} sub={tx("flujos.por_hora")}>
+1924:            { n:"Alerta Pistas", s:"ok" }, { n:"NPS Semanal", s:"warn" }, { n:"Recordatorio Pago", s:"error" },
+2230:    "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
+2243:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+2246:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+2253:    "home.estado_operativo":"Estado operativo","home.reservar":"Reservar",
+2256:    "home.vs_ayer":"vs ayer","home.pistas_activas":"4 pistas activas",
+2259:    "home.franja_horaria":"Franja horaria","home.tendencia_semanal":"Tendencia semanal",
+2262:    "home.reservas_hora":"Reservas por hora — hoy","home.reservas_7dias":"Reservas últimos 7 días",
+2263:    "home.ocupacion_pista":"Ocupación por pista","home.estado_procesos":"Estado de procesos",
+2277:    "admin.graf_hoy":"Reservas por hora — hoy","admin.graf_semana":"Evolución semanal",
+2278:    "admin.graf_pista":"Ocupación por pista","admin.sub_hoy":"Franja horaria · demo",
+2279:    "admin.sub_semana":"Reservas últimos 7 días · demo","admin.sub_pista":"Porcentaje de uso · demo",
+2295:    "reservas.nueva":"Nueva reserva","reservas.fecha":"Fecha","reservas.hora":"Hora",
+2296:    "reservas.pista":"Pista","reservas.duracion":"Duración","reservas.confirmar":"Confirmar reserva",
+2299:    "reprog.nueva_hora":"Nueva hora de inicio","reprog.nueva_pista":"Nueva pista",
+2333:    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
+2334:    "reservas.datos_jugador":"Datos del jugador","reservas.fecha_pista":"Fecha, hora y pista",
+2335:    "reservas.hora_fin":"Hora fin","reservas.total":"Total","reservas.ver_resumen":"Ver resumen",
+2341:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
+2342:    "reprog.hora_fin":"Hora fin","reprog.que_ocurre":"Qué ocurre después","reprog.enviando":"Enviando...","reprog.editar":"Editar",
+2348:    "status.reserva.exito":"Éxito","status.reserva.exito_txt":"Reserva enviada correctamente. La disponibilidad se está actualizando.",
+2354:    "status.reprog.idle":"Pendiente","status.reprog.idle_txt":"Elige una nueva fecha u horario.",
+2355:    "status.reprog.enviando":"Reprogramando","status.reprog.enviando_txt":"Estamos comprobando la disponibilidad y actualizando tu reserva.",
+2362:    "errors.hora":"Selecciona una hora disponible.","errors.duracion":"Selecciona una duración válida.",
+2363:    "errors.hora_pasada":"La franja seleccionada ya ha pasado.",
+2364:    "errors.hora_cierre":"La reserva terminaría después del cierre del club.",
+2365:    "errors.pista":"Selecciona una pista válida.","errors.modalidad":"Selecciona una modalidad válida.",
+2372:    "errors.horario_ocupado":"Ese horario acaba de ocuparse. Elige otro hueco libre.",
+2376:    "errors.reprog_ocupado":"Ese horario acaba de ocuparse. Selecciona otra franja libre.",
+2387:    "reprog.nueva_disponibilidad":"Nueva disponibilidad","reprog.selecciona_franja":"Selecciona una nueva franja disponible.",
+2394:    "flujos.actividad_24h":"Actividad últimas 24h","flujos.por_hora":"Por hora del día",
+2403:    "admin.gestion_eyebrow":"Gestión","admin.gestion_title":"Pistas y clientes",
+2405:    "admin.gestion_item1":"Gestión de pistas","admin.gestion_item2":"Clientes y perfiles",
+2406:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Reglas de disponibilidad",
+2432:    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+2445:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2455:    "home.estado_operativo":"Operational status","home.reservar":"Book",
+2458:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2461:    "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
+2464:    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+2465:    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+2480:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+2481:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+2497:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+2498:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+2501:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+2536:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+2537:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+2544:    "reprog.hora_fin":"End time","reprog.que_ocurre":"What happens next","reprog.enviando":"Sending...","reprog.editar":"Edit",
+2564:    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
+2565:    "errors.hora_pasada":"The selected slot has already passed.",
+2566:    "errors.hora_cierre":"The booking would end after club closing time.",
+2567:    "errors.pista":"Please select a valid court.","errors.modalidad":"Please select a valid mode.",
+2574:    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
+2589:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+2596:    "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
+2634:    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+2647:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2657:    "home.estado_operativo":"System status","home.reservar":"Book",
+2660:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2663:    "home.franja_horaria":"Time slot","home.tendencia_semanal":"Weekly trend",
+2666:    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+2667:    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+2682:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+2683:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+2699:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+2700:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+2703:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+2738:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+2739:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+2746:    "reprog.hora_fin":"End time","reprog.que_ocurre":"What happens next","reprog.enviando":"Sending...","reprog.editar":"Edit",
+2766:    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
+2767:    "errors.hora_pasada":"The selected slot has already passed.",
+2768:    "errors.hora_cierre":"The booking would end after club closing time.",
+2769:    "errors.pista":"Please select a valid court.","errors.modalidad":"Please select a valid mode.",
+2776:    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
+2791:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+2798:    "flujos.actividad_24h":"Activity last 24h","flujos.por_hora":"By time of day",
+2836:    "nav.inicio":"Accueil","nav.reservar":"Réserver","nav.alta_jugador":"Inscription joueur",
+2849:    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
+2859:    "home.estado_operativo":"État opérationnel","home.reservar":"Réserver",
+2862:    "home.vs_ayer":"vs hier","home.pistas_activas":"4 courts actifs",
+2865:    "home.franja_horaria":"Créneau horaire","home.tendencia_semanal":"Tendance hebdomadaire",
+2868:    "home.reservas_hora":"Réservations par heure — auj.","home.reservas_7dias":"Réservations 7 derniers jours",
+2869:    "home.ocupacion_pista":"Occupation par court","home.estado_procesos":"État des processus",
+2883:    "admin.graf_pista":"Occupation par court","admin.sub_hoy":"Créneau · démo",
+2884:    "admin.sub_semana":"Réservations 7 jours · démo","admin.sub_pista":"% utilisation · démo",
+2897:    "reservas.nueva":"Nouvelle réservation","reservas.fecha":"Date","reservas.hora":"Heure",
+2898:    "reservas.pista":"Court","reservas.duracion":"Durée","reservas.confirmar":"Confirmer réservation",
+2901:    "reprog.nueva_hora":"Nouvelle heure de début","reprog.nueva_pista":"Nouveau court",
+2936:    "reservas.datos_jugador":"Données du joueur","reservas.fecha_pista":"Date, heure et terrain",
+2937:    "reservas.hora_fin":"Heure de fin","reservas.total":"Total","reservas.ver_resumen":"Voir le résumé",
+2944:    "reprog.hora_fin":"Heure de fin","reprog.que_ocurre":"Que se passe-t-il ensuite","reprog.enviando":"Envoi...","reprog.editar":"Modifier",
+2964:    "errors.hora":"Veuillez sélectionner une heure disponible.","errors.duracion":"Veuillez sélectionner une durée valide.",
+2965:    "errors.hora_pasada":"Le créneau sélectionné est déjà passé.",
+2966:    "errors.hora_cierre":"La réservation se terminerait après la fermeture du club.",
+2967:    "errors.pista":"Veuillez sélectionner un terrain valide.","errors.modalidad":"Veuillez sélectionner un mode valide.",
+2974:    "errors.horario_ocupado":"Ce créneau vient d'être pris. Veuillez en choisir un autre.",
+2989:    "reprog.nueva_disponibilidad":"Nouvelle disponibilité","reprog.selecciona_franja":"Sélectionnez un nouveau créneau disponible.",
+2996:    "flujos.actividad_24h":"Activité dernières 24h","flujos.por_hora":"Par heure de la journée",
+3034:    "nav.inicio":"Inizio","nav.reservar":"Prenota","nav.alta_jugador":"Iscrizione giocatore",
+3047:    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
+3057:    "home.estado_operativo":"Stato operativo","home.reservar":"Prenota",
+3060:    "home.vs_ayer":"vs ieri","home.pistas_activas":"4 campi attivi",
+3063:    "home.franja_horaria":"Fascia oraria","home.tendencia_semanal":"Tendenza settimanale",
+3066:    "home.reservas_hora":"Prenotazioni per ora — oggi","home.reservas_7dias":"Prenotazioni ultimi 7 giorni",
+3067:    "home.ocupacion_pista":"Occupazione per campo","home.estado_procesos":"Stato processi",
+3081:    "admin.graf_pista":"Occupazione per campo","admin.sub_hoy":"Fascia oraria · demo",
+3082:    "admin.sub_semana":"Prenotazioni 7 giorni · demo","admin.sub_pista":"% utilizzo · demo",
+3095:    "reservas.nueva":"Nuova prenotazione","reservas.fecha":"Data","reservas.hora":"Ora",
+3096:    "reservas.pista":"Campo","reservas.duracion":"Durata","reservas.confirmar":"Conferma prenotazione",
+3099:    "reprog.nueva_hora":"Nuovo orario di inizio","reprog.nueva_pista":"Nuovo campo",
+3134:    "reservas.datos_jugador":"Dati del giocatore","reservas.fecha_pista":"Data, ora e campo",
+3135:    "reservas.hora_fin":"Ora di fine","reservas.total":"Totale","reservas.ver_resumen":"Vedi riepilogo",
+3142:    "reprog.hora_fin":"Ora di fine","reprog.que_ocurre":"Cosa succede dopo","reprog.enviando":"Invio...","reprog.editar":"Modifica",
+3162:    "errors.hora":"Seleziona un orario disponibile.","errors.duracion":"Seleziona una durata valida.",
+3163:    "errors.hora_pasada":"La fascia oraria selezionata è già passata.",
+3164:    "errors.hora_cierre":"La prenotazione terminerebbe dopo la chiusura del club.",
+3165:    "errors.pista":"Seleziona un campo valido.","errors.modalidad":"Seleziona una modalità valida.",
+3172:    "errors.horario_ocupado":"Quella fascia oraria è appena stata occupata. Scegline un'altra.",
+3187:    "reprog.nueva_disponibilidad":"Nuova disponibilità","reprog.selecciona_franja":"Seleziona una nuova fascia disponibile.",
+3194:    "flujos.actividad_24h":"Attività ultime 24h","flujos.por_hora":"Per ora del giorno",
+3232:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Registo de jogador",
+3245:    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
+3248:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar campos, consultar reservas e classificação.",
+3255:    "home.estado_operativo":"Estado operacional","home.reservar":"Reservar",
+3258:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 campos ativos",
+3261:    "home.franja_horaria":"Faixa horária","home.tendencia_semanal":"Tendência semanal",
+3264:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+3265:    "home.ocupacion_pista":"Ocupação por campo","home.estado_procesos":"Estado dos processos",
+3278:    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
+3279:    "admin.graf_pista":"Ocupação por campo","admin.sub_hoy":"Faixa horária · demo",
+3280:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+3293:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Hora",
+3294:    "reservas.pista":"Campo","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+3297:    "reprog.nueva_hora":"Nova hora de início","reprog.nueva_pista":"Novo campo",
+3331:    "reservas.title":"Reservar campo","reservas.eyebrow":"Reservas","reservas.desc":"Reserve o seu campo em segundos.",
+3332:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e campo",
+3333:    "reservas.hora_fin":"Hora de fim","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+3339:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou hora da sua reserva.",
+3340:    "reprog.hora_fin":"Hora de fim","reprog.que_ocurre":"O que acontece a seguir","reprog.enviando":"A enviar...","reprog.editar":"Editar",
+3346:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está a ser atualizada.",
+3353:    "status.reprog.enviando":"A reagendar","status.reprog.enviando_txt":"A verificar disponibilidade e a atualizar a sua reserva.",
+3360:    "errors.hora":"Selecione um horário disponível.","errors.duracion":"Selecione uma duração válida.",
+3361:    "errors.hora_pasada":"A faixa horária selecionada já passou.",
+3362:    "errors.hora_cierre":"A reserva terminaria depois do encerramento do clube.",
+3363:    "errors.pista":"Selecione um campo válido.","errors.modalidad":"Selecione uma modalidade válida.",
+3370:    "errors.horario_ocupado":"Esse horário acabou de ser ocupado. Escolha outro.",
+3385:    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
+3392:    "flujos.actividad_24h":"Atividade últimas 24h","flujos.por_hora":"Por hora do dia",
+3404:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+3430:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Cadastro de jogador",
+3443:    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
+3446:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar quadras, consultar reservas e ranking.",
+3453:    "home.estado_operativo":"Status operacional","home.reservar":"Reservar",
+3456:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 quadras ativas",
+3459:    "home.franja_horaria":"Faixa horária","home.tendencia_semanal":"Tendência semanal",
+3462:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+3463:    "home.ocupacion_pista":"Ocupação por quadra","home.estado_procesos":"Status dos processos",
+3476:    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
+3477:    "admin.graf_pista":"Ocupação por quadra","admin.sub_hoy":"Faixa horária · demo",
+3478:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+3491:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Horário",
+3492:    "reservas.pista":"Quadra","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+3495:    "reprog.nueva_hora":"Novo horário de início","reprog.nueva_pista":"Nova quadra",
+3529:    "reservas.title":"Reservar quadra","reservas.eyebrow":"Reservas","reservas.desc":"Reserve sua quadra em segundos.",
+3530:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e quadra",
+3531:    "reservas.hora_fin":"Horário de término","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+3538:    "reprog.hora_fin":"Horário de término","reprog.que_ocurre":"O que acontece depois","reprog.enviando":"Enviando...","reprog.editar":"Editar",
+3544:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está sendo atualizada.",
+3551:    "status.reprog.enviando":"Remarcando","status.reprog.enviando_txt":"Verificando disponibilidade e atualizando sua reserva.",
+3558:    "errors.hora":"Selecione um horário disponível.","errors.duracion":"Selecione uma duração válida.",
+3559:    "errors.hora_pasada":"A faixa horária selecionada já passou.",
+3560:    "errors.hora_cierre":"A reserva terminaria depois do fechamento do clube.",
+3561:    "errors.pista":"Selecione uma quadra válida.","errors.modalidad":"Selecione uma modalidade válida.",
+3568:    "errors.horario_ocupado":"Esse horário acabou de ser ocupado. Escolha outro.",
+3583:    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
+3590:    "flujos.actividad_24h":"Atividade últimas 24h","flujos.por_hora":"Por hora do dia",
+3602:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+3628:    "nav.inicio":"Start","nav.reservar":"Buchen","nav.alta_jugador":"Spieler registrieren",
+3641:    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
+3651:    "home.estado_operativo":"Betriebsstatus","home.reservar":"Buchen",
+3654:    "home.vs_ayer":"vs gestern","home.pistas_activas":"4 aktive Plätze",
+3657:    "home.franja_horaria":"Zeitfenster","home.tendencia_semanal":"Wöchentlicher Trend",
+3660:    "home.reservas_hora":"Buchungen pro Stunde — heute","home.reservas_7dias":"Buchungen letzte 7 Tage",
+3661:    "home.ocupacion_pista":"Auslastung je Platz","home.estado_procesos":"Prozessstatus",
+3675:    "admin.graf_pista":"Auslastung je Platz","admin.sub_hoy":"Zeitfenster · Demo",
+3676:    "admin.sub_semana":"Buchungen 7 Tage · Demo","admin.sub_pista":"% Nutzung · Demo",
+3689:    "reservas.nueva":"Neue Buchung","reservas.fecha":"Datum","reservas.hora":"Uhrzeit",
+3690:    "reservas.pista":"Platz","reservas.duracion":"Dauer","reservas.confirmar":"Buchung bestätigen",
+3693:    "reprog.nueva_hora":"Neue Startzeit","reprog.nueva_pista":"Neuer Platz",
+3728:    "reservas.datos_jugador":"Spielerdaten","reservas.fecha_pista":"Datum, Uhrzeit und Platz",
+3729:    "reservas.hora_fin":"Endzeit","reservas.total":"Gesamt","reservas.ver_resumen":"Zusammenfassung",
+3736:    "reprog.hora_fin":"Endzeit","reprog.que_ocurre":"Was passiert als nächstes","reprog.enviando":"Wird gesendet...","reprog.editar":"Bearbeiten",
+3756:    "errors.hora":"Bitte wählen Sie eine verfügbare Uhrzeit.","errors.duracion":"Bitte wählen Sie eine gültige Dauer.",
+3757:    "errors.hora_pasada":"Das gewählte Zeitfenster ist bereits vergangen.",
+3758:    "errors.hora_cierre":"Die Buchung würde nach der Schließzeit des Clubs enden.",
+3759:    "errors.pista":"Bitte wählen Sie einen gültigen Platz.","errors.modalidad":"Bitte wählen Sie einen gültigen Modus.",
+3766:    "errors.horario_ocupado":"Dieses Zeitfenster wurde gerade belegt. Bitte wählen Sie ein anderes.",

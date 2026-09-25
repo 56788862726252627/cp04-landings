@@ -1,48 +1,151 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import './tournament-module.css';
+import './internal-module-backgrounds.css';
+import './cp04-legibility-polish.css';
+import './torcal-role-background.css';
+import './interactive-navigation.css';
+import './saas-core/ui/experience.css';
+import './clients/club-padel-04/accessExperience.css';
+import { AccessShell } from './clients/club-padel-04/AccessStory.jsx';
+import AnimatedDisclosure from './saas-core/ui/AnimatedDisclosure.jsx';
+import { attachNavigationDialog } from './saas-core/ui/navigationDialog.js';
 
+const GALLERY_REAL_IMAGE_STYLES = `
+  .cp04-gallery-card,
+  .cp04-gallery-main,
+  .cp04-gallery-side {
+    position: relative !important;
+    overflow: hidden !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  .cp04-gallery-card img,
+  .cp04-gallery-main img,
+  .cp04-gallery-side img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+`;
+
+
+
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { t, TRANSLATIONS } from "./i18n/translations.js";
+import { LANGUAGES_ALL, LANGUAGES_RAW, LANGUAGES_RECOMMENDED, loadSavedLanguage, setGlobalLang, useLang } from "./i18n/language.js";
+import { createPortal } from "react-dom";
+
+import LazyLoadBoundary from "./components/lazy/LazyLoadBoundary.jsx";
+import { LazyCP04GuidedTutorial } from "./components/lazy/lazyGuidedTutorial.js";
+import { useAuth } from "./auth/useAuth.js";
+import { verifyDemoRolePassword } from "./auth/demoAuthAdapter.js";
+import { authFetch } from "./auth/authService.js";
+import { ChatbotAsistente } from "./components/ChatbotAsistente.jsx";
+import { evaluateSlotAvailability, AVAILABILITY_STATUS } from "./utils/availability.js";
+import { cp04BuildReservationError, cp04ReservationErrorMessage } from "./utils/reservationErrors.js";
+import { cp04ShouldBlockAnonymousReservaSubmit, cp04IsSessionExpiredReservaResponse } from "./utils/reservaAuthGate.js";
+import { cp04DisponibilidadEndpoint, cp04ReservasEndpoint } from "./utils/apiEndpoint.js";
+import {
+  listaEsperaLoad,
+  listaEsperaSave,
+  listaEsperaAdd,
+  listaEsperaSetEstado,
+  listaEsperaRemove,
+  listaEsperaGetActivos,
+} from "./utils/listaEsperaLocal.js";
+import {
+  CP04_ROLE_PERMISSIONS,
+  CP04_PROTECTED_SECTIONS,
+  cp04NormalizeRole,
+  cp04CanAccessSection,
+  cp04GetSafeStartSection,
+} from "./utils/rbac.js";
+import { cp04ComputeScreenState } from "./utils/screenState.js";
+import { cp04Can } from "./utils/permissions.js";
+import { computeMasterCounters } from "./data/makeMasterRegistry.js";
+import {
+  buildRoundRobinMatches,
+  getRoundRobinRestingPairId,
+  getRoundRobinTotalRounds,
+  applyRoundRobinResult,
+  computeRoundRobinStandings,
+  sortRoundRobinStandings,
+  isRoundRobinComplete,
+  getRoundRobinChampion,
+} from "./utils/roundRobin.js";
+import { cp04ApplyScreenState } from "./cp04-apply-screen-state.js";
+import { LazyCentroTecnico } from "./components/lazy/lazyCentroTecnico.js";
+import { LazyComunidad } from "./components/lazy/lazyComunidad.js";
+import Landing from "./components/landing/Landing.jsx";
+import {
+  IconHome, IconCalendar, IconUsers, IconDocument, IconRefresh, IconClose,
+  IconFolder, IconAlertTriangle, IconBell, IconQrCode, IconClock, IconMail,
+  IconTrophy, IconChartBar, IconShieldCheck, IconCreditCard, IconChat,
+  IconRobot, IconWrench, IconBolt, IconGear, IconLogout, IconCheck,
+} from "./components/icons/Icons.jsx";
+import { StatusCard, LoadingInline, EmptyState } from "./components/states/UiStates.jsx";
+import { T } from "./theme.js";
 /**
  * Club Pádel 04 · SaaS App segura
  *
  * Versión saneada para repositorio público:
  * - No contiene webhooks reales de Make.
  * - No contiene API keys, tokens ni credenciales.
- * - El frontend envía a un endpoint seguro propio: /api/reservas.
+ * - un endpoint seguro propio: /api/reservas.
  * - La integración con Make/Airtable/Stripe debe hacerse en backend, Edge Function,
  *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
  */
 
-const T = {
-  bg: "#05080d",
-  surface: "#0b111d",
-  surface2: "#111a2b",
-  surface3: "#18243a",
-  accent: "#b6ff00",
-  accent2: "#20e3b2",
-  primary: "#2f6bff",
-  text: "#ffffff",
-  textDim: "#9aa8bd",
-  line: "rgba(255,255,255,0.10)",
-  danger: "#ff5e3a",
-  warning: "#ffad47",
-  fontDisplay: "'Syne', sans-serif",
-  fontBody: "'DM Sans', sans-serif",
-};
+// T (tokens de diseño) vive en ./theme.js: lo usan tanto App.jsx como
+// componentes externos (p. ej. CentroTecnico.jsx) sin crear un import
+// circular entre ambos.
 
 const CONFIG = {
   appName: "Club Pádel 04",
   club: "Club Pádel 04",
   origen: "github_safe_frontend",
-  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+  bookingEndpoint: cp04ReservasEndpoint(import.meta?.env),
   contactEmail: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_EMAIL || "Pendiente de configurar",
   contactPhone: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_PHONE || "Pendiente de configurar",
 };
 
 const GALLERY = [
-  { key: "pistas", title: "Pistas", label: "Imagen real pendiente", src: import.meta?.env?.VITE_CP04_PUBLIC_GALLERY_PISTAS || "" },
-  { key: "recepcion", title: "Recepción", label: "Imagen real pendiente", src: import.meta?.env?.VITE_CP04_PUBLIC_GALLERY_RECEPCION || "" },
-  { key: "cafeteria", title: "Cafetería", label: "Imagen real pendiente", src: import.meta?.env?.VITE_CP04_PUBLIC_GALLERY_CAFETERIA || "" },
-  { key: "torneos", title: "Torneos", label: "Imagen real pendiente", src: import.meta?.env?.VITE_CP04_PUBLIC_GALLERY_TORNEOS || "" },
-  { key: "instalaciones", title: "Instalaciones", label: "Imagen real pendiente", src: import.meta?.env?.VITE_CP04_PUBLIC_GALLERY_INSTALACIONES || "" },
+  {
+    key: "pistas",
+    title: "Pistas",
+    label: "Pistas Club Pádel 04",
+    src: "/optimized/gallery/cp04/pistas.webp?v=cp04FotosSeparadasFinal2",
+  },
+  {
+    key: "recepcion",
+    title: "Recepción",
+    label: "Recepción Club Pádel 04",
+    src: "/optimized/gallery/cp04/recepcion.webp?v=cp04FotosSeparadasFinal2",
+  },
+  {
+    key: "cafeteria",
+    title: "Cafetería",
+    label: "Cafetería Club Pádel 04",
+    src: "/optimized/gallery/cp04/cafeteria.webp?v=cp04FotosSeparadasFinal2",
+  },
+  {
+    key: "torneos",
+    title: "Torneos",
+    label: "Torneos Club Pádel 04",
+    src: "/optimized/gallery/cp04/torneos.webp?v=cp04FotosSeparadasFinal2",
+  },
+  {
+    key: "instalaciones",
+    title: "Instalaciones",
+    label: "Instalaciones Club Pádel 04",
+    src: "/optimized/gallery/cp04/instalaciones.webp?v=cp04FotosSeparadasFinal2",
+  },
 ];
 
 const COURTS = [
@@ -52,37 +155,43 @@ const COURTS = [
   { id: 4, name: "Pista 4", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
 ];
 
-const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
 const BOOKING_DURATIONS = [60, 90, 120];
 const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
 const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
 
-const BOOKINGS = [
-  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
-  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
-  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
-];
-
-const RANKING = [
-  { pos: 1, name: "Jugador demo 1", elo: 3.85, cat: "Demo", wins: 12, losses: 3 },
-  { pos: 2, name: "Jugador demo 2", elo: 3.72, cat: "Demo", wins: 10, losses: 4 },
-  { pos: 3, name: "Jugador demo 3", elo: 3.61, cat: "Demo", wins: 9, losses: 5 },
+const RANKING_PRO = [
+  { pos: 1, pareja: "García / Martínez", p1: "Carlos García", p2: "Pedro Martínez", pts: 1250, pj: 24, v: 19, d: 5, racha: 5, nivel: "Avanzado", cat: "Masculino", mov: 0, temporada: "2026" },
+  { pos: 2, pareja: "López / Fernández", p1: "Ana López",     p2: "Elena Fernández", pts: 1180, pj: 22, v: 17, d: 5, racha: 3, nivel: "Avanzado", cat: "Femenino",  mov: 1, temporada: "2026" },
+  { pos: 3, pareja: "Ruiz / Sánchez",   p1: "Javier Ruiz",   p2: "David Sánchez",  pts: 1120, pj: 20, v: 15, d: 5, racha: -2, nivel: "Avanzado", cat: "Masculino", mov: -1, temporada: "2026" },
+  { pos: 4, pareja: "Torres / Navarro", p1: "Marta Torres",  p2: "Sofía Navarro",  pts: 1045, pj: 19, v: 14, d: 5, racha: 2, nivel: "Avanzado", cat: "Femenino",  mov: 2, temporada: "2026" },
+  { pos: 5, pareja: "Moreno / Jiménez", p1: "Luis Moreno",   p2: "Óscar Jiménez",  pts: 990,  pj: 21, v: 13, d: 8, racha: 0, nivel: "Avanzado", cat: "Masculino", mov: -2, temporada: "2026" },
+  { pos: 6, pareja: "Díaz / Romero",    p1: "Laura Díaz",    p2: "Isabel Romero",  pts: 920,  pj: 18, v: 12, d: 6, racha: 1, nivel: "Medio",    cat: "Femenino",  mov: 1, temporada: "2026" },
+  { pos: 7, pareja: "Molina / Vega",    p1: "Miguel Molina", p2: "Raúl Vega",      pts: 870,  pj: 17, v: 11, d: 6, racha: -1, nivel: "Medio",   cat: "Masculino", mov: 0, temporada: "2026" },
+  { pos: 8, pareja: "Herrero / Blanco", p1: "Patricia Herrero", p2: "Lucía Blanco", pts: 810, pj: 16, v: 10, d: 6, racha: 2, nivel: "Medio",    cat: "Mixto",     mov: 3, temporada: "2026" },
+  { pos: 9, pareja: "Serrano / Cruz",   p1: "Álvaro Serrano", p2: "Roberto Cruz",  pts: 750,  pj: 16, v: 9, d: 7, racha: -1, nivel: "Medio",    cat: "Masculino", mov: -1, temporada: "2026" },
+  { pos: 10, pareja: "Gil / Muñoz",     p1: "Carmen Gil",    p2: "Pilar Muñoz",   pts: 690,  pj: 15, v: 8, d: 7, racha: 1, nivel: "Medio",    cat: "Femenino",  mov: 0, temporada: "2026" },
+  { pos: 11, pareja: "Marín / Ibáñez",  p1: "Pablo Marín",   p2: "Tomás Ibáñez",  pts: 620,  pj: 14, v: 7, d: 7, racha: 0, nivel: "Medio",    cat: "Masculino", mov: 1, temporada: "2026" },
+  { pos: 12, pareja: "Ortiz / Delgado", p1: "Sandra Ortiz",  p2: "Nuria Delgado", pts: 560,  pj: 13, v: 6, d: 7, racha: -2, nivel: "Iniciación", cat: "Femenino", mov: -1, temporada: "2026" },
+  { pos: 13, pareja: "Rubio / Castillo",p1: "Marcos Rubio",  p2: "Felipe Castillo",pts: 490, pj: 12, v: 5, d: 7, racha: 1, nivel: "Iniciación", cat: "Masculino", mov: 2, temporada: "2026" },
+  { pos: 14, pareja: "Vargas / Méndez", p1: "Cristina Vargas",p2: "Jorge Méndez", pts: 420,  pj: 11, v: 4, d: 7, racha: 0, nivel: "Iniciación", cat: "Mixto",    mov: 0, temporada: "2026" },
+  { pos: 15, pareja: "Guerrero / Reyes",p1: "Antonio Guerrero",p2: "Sergio Reyes",pts: 350, pj: 10, v: 3, d: 7, racha: -1, nivel: "Iniciación", cat: "Masculino", mov: -2, temporada: "2026" },
 ];
 
 const INTEGRATIONS = [
-  { name: "Make", status: "Pendiente de credenciales", detail: "Webhook privado en Worker/backend", flow: "Frontend -> /api/reservas -> Worker -> Make" },
-  { name: "Airtable", status: "Preparada", detail: "Tablas documentadas; escritura no activada", flow: "Worker/Make -> Airtable" },
-  { name: "Stripe", status: "Pendiente", detail: "Reservas, bonos, membresías, torneos y facturación", flow: "Backend -> Stripe" },
-  { name: "WhatsApp", status: "Pendiente", detail: "Confirmaciones, recordatorios y atención", flow: "Backend/Make -> proveedor WhatsApp" },
-  { name: "Google Calendar", status: "Pendiente", detail: "Reservas, disponibilidad, eventos y torneos", flow: "Backend/Make -> Calendar" },
-  { name: "Google Drive", status: "Pendiente", detail: "Documentación, backups, blueprints e informes", flow: "Backend/Make -> Drive" },
+  { name: "Automatización de procesos", status: "Activo", detail: "Canal interno seguro configurado", flow: "Reservas → Procesos → Base de datos" },
+  { name: "Base de datos", status: "Preparado", detail: "Estructura documentada y validada", flow: "Procesos internos → Base de datos" },
+  { name: "Pagos", status: "Listo para conexión", detail: "Reservas, bonos, membresías y torneos", flow: "Sistema → Pagos" },
+  { name: "Notificaciones", status: "Listo para conexión", detail: "Confirmaciones y recordatorios automáticos", flow: "Sistema → Canal de mensajería" },
+  { name: "Calendario", status: "Listo para conexión", detail: "Reservas, disponibilidad y eventos", flow: "Sistema → Calendario" },
+  { name: "Documentación", status: "Activo", detail: "Backups e informes de operativa", flow: "Sistema → Almacenamiento" },
 ];
 
 const ROLES = [
-  { id: "PLAYER", label: "Jugador / cliente", access: "Acceso demo", sections: "Inicio, Reservas, Ranking", permissions: ["Crear solicitud de reserva", "Consultar ranking demo", "Ver participación futura"] },
-  { id: "STAFF", label: "Staff / recepción", access: "Pendiente de autenticación real", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
-  { id: "ADMIN", label: "Administrador / jefe", access: "Requiere backend de usuarios", sections: "Admin", permissions: ["Ver métricas", "Gestionar pistas/clientes", "Configurar torneos", "Revisar automatizaciones"] },
-  { id: "SUPPORT", label: "Soporte técnico", access: "Requiere proveedor de autenticación", sections: "Soporte", permissions: ["Ver estado técnico", "Revisar variables pendientes", "Consultar logs futuros", "Auditar integraciones"] },
+  { id: "PLAYER", label: "Jugador / cliente", access: "Activo", sections: "Inicio, Reservas, Ranking", permissions: ["Crear solicitud de reserva", "Consultar ranking del club", "Ver participación en torneos"] },
+  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+  { id: "SUPPORT", label: "Soporte técnico", access: "Protegido", sections: "Soporte", permissions: ["Ver estado técnico", "Revisar configuración de conexiones", "Consultar registros del sistema", "Auditar integraciones"] },
 ];
 
 const PROTECTED_SECTIONS = ["Gestión", "Admin", "Soporte"];
@@ -109,7 +218,7 @@ const globalStyles = `
   .cp04-sidebar-close { display: none; }
   .cp04-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; }
   .cp04-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
-  .cp04-card { position: relative; overflow: hidden; background: linear-gradient(150deg, rgba(17,26,43,.94), rgba(8,13,23,.94)); border: 1px solid rgba(255,255,255,.11); border-radius: 26px; padding: 24px; box-shadow: 0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05); }
+  .cp04-card { position: relative; overflow: hidden; background: linear-gradient(150deg, rgba(17,26,43,.94), rgba(8,13,15,.94)); border: 1px solid rgba(255,255,255,.11); border-radius: 26px; padding: 24px; box-shadow: 0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05); }
   .cp04-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 16% 0%, rgba(182,255,0,.08), transparent 32%); }
   .cp04-card > * { position: relative; }
   .cp04-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, border-color .18s ease; }
@@ -129,6 +238,64 @@ const globalStyles = `
   @media (max-width: 1180px) { .cp04-grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
   @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.88); backdrop-filter: blur(18px); } .cp04-menu-button { background: linear-gradient(135deg, ${T.accent}, ${T.accent2}); color: #06100a; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(88vw, 340px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3, .cp04-gallery { grid-template-columns: 1fr; } .cp04-gallery-item.featured { min-height: 340px; } }
   @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } .cp04-gallery-item, .cp04-gallery-item.featured { min-height: 245px; border-radius: 22px; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+    .cp04-btn:hover:not(:disabled) { transform: none; }
+  }
+`;
+
+
+const GALLERY_FORCE_STYLES = `
+.cp04-gallery-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: rgba(8,13,15,.94);
+  min-height: 220px;
+}
+
+.cp04-gallery-card img,
+.cp04-gallery-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  object-fit: cover;
+  object-position: center;
+  border-radius: inherit;
+}
+
+.cp04-gallery-card::before {
+  display: none !important;
+}
+
+.cp04-gallery-card .cp04-gallery-label,
+.cp04-gallery-label {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+  z-index: 3;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(6,10,16,.88);
+  backdrop-filter: blur(8px);
+}
+
+.cp04-gallery-label strong {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.15;
+}
+
+.cp04-gallery-label span {
+  display: block;
+  margin-top: 4px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
 `;
 
 function calcTimeEnd(time, mins) {
@@ -137,36 +304,143 @@ function calcTimeEnd(time, mins) {
   return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
+function getAvailableDurationsForHour(hora) {
+  if (!hora || !hora.includes(":")) return BOOKING_DURATIONS;
+  const [h, m] = hora.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return BOOKING_DURATIONS;
+  const startMins = h * 60 + m;
+  return BOOKING_DURATIONS.filter((d) => startMins + d <= CLUB_CLOSING_MINUTES);
+}
+
 function priceFor(courtName, duration) {
   const court = COURTS.find((c) => c.name === courtName);
   return court?.[`price${duration}`] || 0;
 }
 
+const MADRID_TIME_ZONE = "Europe/Madrid";
+const CLUB_CLOSING_MINUTES = 23 * 60;
+
+function madridDateParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: MADRID_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+}
+
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const { year, month, day } = madridDateParts();
+  return `${year}-${month}-${day}`;
+}
+
+function parseISODateParts(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
+  if (!match) return null;
+  return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+}
+
+function isSundayISO(value) {
+  const parts = parseISODateParts(value);
+  if (!parts) return false;
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay() === 0;
+}
+
+function isPastDateISO(value) {
+  return Boolean(value) && value < todayISO();
+}
+
+// "Ahora" de Madrid, representado como un Date UTC cuyos campos coinciden
+// con la hora local de Madrid (mismo truco que ya usa isSundayISO con
+// Date.UTC): así evaluateSlotAvailability puede comparar por valores sin
+// preocuparse de zonas horarias reales.
+function madridNowAsUtcTrick() {
+  const { year, month, day, hour, minute } = madridDateParts();
+  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute)));
+}
+
+// Horario del club ya existente en el proyecto (BOOKING_HOURS/BOOKING_DURATIONS/
+// CLUB_CLOSING_MINUTES): no se inventa ninguna franja nueva, solo se agrupa
+// para pasarlo como config a evaluateSlotAvailability.
+const CLUB_OPENING_HOURS = {
+  closingMinutes: CLUB_CLOSING_MINUTES,
+  allowedStartTimes: BOOKING_HOURS,
+  allowedDurations: BOOKING_DURATIONS,
+};
+
+// Wrapper de compatibilidad: mantiene la firma y los valores de retorno que
+// ya consumían validateBooking/validateReschedule/Reservas
+// ("invalid"|"closed"|"past"|"outside_hours"|"available"), pero delega el
+// cálculo real en evaluateSlotAvailability (src/utils/availability.js) para
+// no duplicar las reglas de negocio. No comprueba ocupación (no recibe
+// courtId ni existingBookings): igual que antes, la ocupación se evalúa
+// aparte donde sí hay contexto de pista y reservas (CalendarioDisponibilidad).
+function getSlotStatus(fecha, hora, duration = 90) {
+  const { status, reason } = evaluateSlotAvailability({
+    date: fecha,
+    startTime: hora,
+    durationMinutes: Number(duration),
+    courtId: null,
+    existingBookings: [],
+    openingHours: CLUB_OPENING_HOURS,
+    currentDateTime: madridNowAsUtcTrick(),
+  });
+
+  if (status === AVAILABILITY_STATUS.AVAILABLE) return "available";
+
+  switch (reason) {
+    case "club_closed":
+      return "closed";
+    case "past_time":
+      return "past";
+    case "insufficient_remaining_time":
+    case "outside_opening_hours":
+      return "outside_hours";
+    default:
+      return "invalid";
+  }
+}
+
+function formatDateEs(value) {
+  const parts = parseISODateParts(value);
+  if (!parts) return value || "";
+  return `${String(parts.day).padStart(2, "0")}/${String(parts.month).padStart(2, "0")}/${parts.year}`;
 }
 
 function cleanText(value) {
   return value.trim().replace(/\s+/g, " ");
 }
 
-function validateBooking(form, courtName) {
+function validateBooking(form, courtName, tx) {
   const errors = {};
   const duration = Number(form.duracion_minutos);
   const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
   const today = new Date(`${todayISO()}T00:00:00`);
 
-  if (cleanText(form.nombre).length < 2) errors.nombre = "Introduce un nombre válido.";
-  if (cleanText(form.apellidos).length < 2) errors.apellidos = "Introduce apellidos válidos.";
-  if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = "Introduce un email válido.";
-  if (form.telefono.replace(/\D/g, "").length < 9) errors.telefono = "Introduce un teléfono válido.";
-  if (!form.fecha) errors.fecha = "Selecciona una fecha.";
-  else if (selectedDate < today) errors.fecha = "La fecha no puede ser anterior a hoy.";
-  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = "Selecciona una hora disponible.";
-  if (!BOOKING_DURATIONS.includes(duration)) errors.duracion_minutos = "Selecciona una duración válida.";
-  if (!COURTS.some((court) => court.name === courtName)) errors.pista = "Selecciona una pista válida.";
-  if (!BOOKING_MODALITIES.includes(form.modalidad)) errors.modalidad = "Selecciona una modalidad válida.";
-  if (!BOOKING_LEVELS.includes(form.nivel)) errors.nivel = "Selecciona un nivel válido.";
+  const _t = typeof tx === "function" ? tx : (k => k);
+  if (cleanText(form.nombre).length < 2) errors.nombre = _t("errors.nombre");
+  if (cleanText(form.apellidos).length < 2) errors.apellidos = _t("errors.apellidos");
+  if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = _t("errors.email");
+  if (form.telefono.replace(/\D/g, "").length < 9) errors.telefono = _t("errors.telefono");
+  if (!form.fecha) errors.fecha = _t("errors.fecha");
+  else if (selectedDate < today) errors.fecha = _t("errors.fecha_pasado");
+  else if (isSundayISO(form.fecha)) errors.fecha = _t("errors.fecha_domingo");
+  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = _t("errors.hora");
+  if (!BOOKING_DURATIONS.includes(duration)) errors.duracion_minutos = _t("errors.duracion");
+  if (!errors.fecha && !errors.hora && !errors.duracion_minutos) {
+    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+    if (slotStatus === "past") errors.hora = _t("errors.hora_pasada");
+    if (slotStatus === "outside_hours") errors.hora = _t("errors.hora_cierre");
+    if (slotStatus === "closed") errors.fecha = _t("errors.fecha_domingo");
+  }
+  if (!COURTS.some((court) => court.name === courtName)) errors.pista = _t("errors.pista");
+  if (!BOOKING_MODALITIES.includes(form.modalidad)) errors.modalidad = _t("errors.modalidad");
+  if (!BOOKING_LEVELS.includes(form.nivel)) errors.nivel = _t("errors.nivel");
 
   return errors;
 }
@@ -200,38 +474,476 @@ function prepareBookingPayload(form, courtName) {
   };
 }
 
-async function sendBooking(payload) {
-  const res = await fetch(CONFIG.bookingEndpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+function validateReschedule(form, courtName, tx) {
+  const _t = typeof tx === "function" ? tx : (k => k);
+  const errors = {};
+  const cleanKey = form.clave_reserva.trim();
+  const duration = Number(form.duracion_minutos);
+  const selectedDate = form.nueva_fecha_reserva
+    ? new Date(`${form.nueva_fecha_reserva}T00:00:00`)
+    : null;
+  const today = new Date(`${todayISO()}T00:00:00`);
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res;
+  if (!cleanKey) {
+    errors.clave_reserva = _t("errors.clave");
+  } else if (cleanKey.length < 8) {
+    errors.clave_reserva = _t("errors.clave_incompleta");
+  }
+
+  if (!form.nueva_fecha_reserva) {
+    errors.nueva_fecha_reserva = _t("errors.nueva_fecha");
+  } else if (selectedDate < today) {
+    errors.nueva_fecha_reserva = _t("errors.nueva_fecha_pasado");
+  } else if (isSundayISO(form.nueva_fecha_reserva)) {
+    errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+  }
+
+  if (!BOOKING_HOURS.includes(form.nueva_hora_inicio)) {
+    errors.nueva_hora_inicio = _t("errors.hora");
+  }
+
+  if (!BOOKING_DURATIONS.includes(duration)) {
+    errors.duracion_minutos = _t("errors.duracion");
+  }
+
+  if (!errors.nueva_fecha_reserva && !errors.nueva_hora_inicio && !errors.duracion_minutos) {
+    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+    if (slotStatus === "past") errors.nueva_hora_inicio = _t("errors.hora_pasada");
+    if (slotStatus === "outside_hours") errors.nueva_hora_inicio = _t("errors.hora_cierre");
+    if (slotStatus === "closed") errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+  }
+
+  if (!COURTS.some((court) => court.name === courtName)) {
+    errors.nueva_pista = _t("errors.pista");
+  }
+
+  if (!form.confirmado) {
+    errors.confirmado = _t("errors.confirmado_reprog");
+  }
+
+  return errors;
+}
+
+function prepareReschedulePayload(form, courtName) {
+  const duration = Number(form.duracion_minutos);
+  const horaFin = calcTimeEnd(form.nueva_hora_inicio, duration);
+
+  return {
+    accion: "reprogramar_reserva",
+    clave_reserva: form.clave_reserva.trim(),
+    nueva_fecha_reserva: form.nueva_fecha_reserva,
+    nueva_hora_inicio: form.nueva_hora_inicio,
+    nueva_hora_fin: horaFin,
+    nueva_pista: courtName,
+    pista_nueva: courtName,
+    club: CONFIG.club,
+    origen: "app_publica_reprogramar_reserva",
+  };
 }
 
 function Card({ children, style = {} }) {
   return <div className="cp04-card" style={style}>{children}</div>;
 }
 
-function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {} }) {
+// PASO 07M (2026-07-19): `className` opcional, mezclada con la ya
+// existente "cp04-btn" — por defecto (sin pasar className) el
+// comportamiento es idéntico al de antes de este paso, para no afectar a
+// ningún llamador existente.
+function Btn({ children, onClick, variant = "primary", disabled = false, type = "button", style = {}, className = "" }) {
   const map = {
     primary: { background: `linear-gradient(135deg, ${T.accent}, ${T.accent2})`, color: "#06100a", border: "none", boxShadow: "0 16px 36px rgba(182,255,0,.18)" },
     secondary: { background: "rgba(255,255,255,.055)", color: T.text, border: `1px solid ${T.line}` },
     danger: { background: "rgba(255,94,58,.12)", color: T.danger, border: "1px solid rgba(255,94,58,.30)" },
   };
-  return <button className="cp04-btn" type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 15, fontFamily: T.fontDisplay, fontWeight: 900, letterSpacing: "-.01em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }}>{children}</button>;
+  return <button className={`cp04-btn${className ? ` ${className}` : ""}`} type={type} onClick={onClick} disabled={disabled} style={{ ...map[variant], padding: "12px 20px", borderRadius: 15, fontFamily: T.fontDisplay, fontWeight: 900, letterSpacing: "-.01em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? .55 : 1, ...style }}>{children}</button>;
 }
+
+
+const DISPONIBILIDAD_ENDPOINT = cp04DisponibilidadEndpoint(import.meta?.env);
+const DISPONIBILIDAD_UPDATE_EVENT = "cp04:disponibilidad-actualizar";
+
+async function readSafeResponse(res) {
+  const text = await res.text();
+  if (!text.trim()) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { text };
+  }
+}
+
+async function fetchDisponibilidad(fecha) {
+  const params = new URLSearchParams({ fecha, t: String(Date.now()) });
+  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+  const data = await readSafeResponse(res);
+
+  if (!res.ok || data?.ok === false) {
+    // Se conserva el código/mensaje que ya manda el Worker (p.ej.
+    // AIRTABLE_RATE_LIMIT, ver cp04BuildAirtableDegradedResponse) para que
+    // quien llame pueda distinguir "no se pudo verificar la disponibilidad"
+    // de un error genérico, en vez de perderlo todo en un Error() plano.
+    const err = new Error(data?.code || "availability_request_failed");
+    err.apiCode = data?.code || null;
+    err.apiMessage = typeof data?.message === "string" ? data.message : null;
+    throw err;
+  }
+
+  return data || {};
+}
+
+function emitDisponibilidadUpdate(fecha) {
+  window.dispatchEvent(new CustomEvent(DISPONIBILIDAD_UPDATE_EVENT, { detail: { fecha } }));
+}
+
+function refreshDisponibilidadAfterChange(fecha) {
+  emitDisponibilidadUpdate(fecha);
+  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 1500);
+  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 4000);
+}
+
+function CalendarioDisponibilidad({
+  initialDate,
+  selectedCourt,
+  onSelectSlot,
+  onDisponibilidadChange,
+  duration = 90,
+  title = "Calendario de disponibilidad",
+  description = "Elige fecha, hora y pista disponibles.",
+}) {
+  const [fecha, setFecha] = useState(initialDate || todayISO());
+  const [ocupadas, setOcupadas] = useState([]);
+  const [ocupadasDetalle, setOcupadasDetalle] = useState([]);
+  const [estado, setEstado] = useState("idle");
+  const [mensaje, setMensaje] = useState("");
+  // Fecha para la que `ocupadas`/`ocupadasDetalle` reflejan la última
+  // respuesta REAL confirmada de Airtable (no domingo/pasado, que no
+  // consultan Airtable pero tampoco necesitan este rastro: ya son estados
+  // deterministas sin ambigüedad). Se usa para distinguir, cuando la
+  // consulta falla técnicamente (p.ej. AIRTABLE_RATE_LIMIT), si lo que hay
+  // en `ocupadas` es un último estado confirmado (aunque desactualizado) de
+  // ESTA MISMA fecha, o si nunca se llegó a confirmar nada para ella — ver
+  // consultarDisponibilidad más abajo. Deliberadamente un ref, no un
+  // useState: se lee/escribe dentro de consultarDisponibilidad (memoizada
+  // con []) sin querer que cambiar este valor dispare una nueva identidad
+  // de esa función — eso reactivaría el useEffect de abajo y crearía un
+  // bucle de refetch tras cada éxito.
+  const fechaUltimaConfirmadaRef = useRef(null);
+  const lastInitialDateRef = useRef(initialDate);
+
+  const ocupadasSet = useMemo(() => new Set(ocupadas), [ocupadas]);
+  const pistas = COURTS.map((c) => c.name);
+
+  // existingBookings para evaluateSlotAvailability: se prefiere
+  // ocupadas_detalle (hora_inicio + hora_fin reales, cuando el Worker ya lo
+  // devuelve) para detectar solapamientos por intervalo real. Si el Worker
+  // desplegado todavía no lo incluye, se cae a una aproximación derivada de
+  // la lista plana `ocupadas` asumiendo que cada slot ocupado dura lo mismo
+  // que la duración seleccionada actualmente — la misma limitación que ya
+  // existía antes de este cambio, no una regresión nueva.
+  const existingBookings = useMemo(() => {
+    if (Array.isArray(ocupadasDetalle) && ocupadasDetalle.length > 0) {
+      return ocupadasDetalle.map((item) => ({
+        courtId: item.pista,
+        date: item.fecha,
+        startTime: item.hora_inicio,
+        endTime: item.hora_fin || calcTimeEnd(item.hora_inicio, duration),
+      }));
+    }
+
+    return ocupadas.map((clave) => {
+      const [claveFecha, clavePista, claveHora] = clave.split("|");
+      return {
+        courtId: clavePista,
+        date: claveFecha,
+        startTime: claveHora,
+        endTime: calcTimeEnd(claveHora, duration),
+      };
+    });
+  }, [ocupadasDetalle, ocupadas, duration]);
+
+  const consultarDisponibilidad = useCallback(async (fechaConsulta) => {
+    if (!fechaConsulta) return;
+
+    if (isSundayISO(fechaConsulta)) {
+      setOcupadas([]);
+      setOcupadasDetalle([]);
+      setEstado("closed");
+      setMensaje("Club cerrado los domingos · no se admiten reservas durante todo el día.");
+      return;
+    }
+
+    if (isPastDateISO(fechaConsulta)) {
+      setOcupadas([]);
+      setOcupadasDetalle([]);
+      setEstado("past");
+      setMensaje("La fecha seleccionada ya ha pasado.");
+      return;
+    }
+
+    setEstado("loading");
+    setMensaje("");
+
+    try {
+      const data = await fetchDisponibilidad(fechaConsulta);
+
+      if (data.cerrado === true) {
+        setOcupadas([]);
+        setOcupadasDetalle([]);
+        setEstado("closed");
+        setMensaje(data.motivo || "Club cerrado los domingos.");
+        return;
+      }
+
+      setOcupadas(data.ocupadas || []);
+      setOcupadasDetalle(Array.isArray(data.ocupadas_detalle) ? data.ocupadas_detalle : []);
+      setEstado("success");
+      fechaUltimaConfirmadaRef.current = fechaConsulta;
+      setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
+    } catch (err) {
+      setEstado("error");
+
+      // Si ya había una disponibilidad confirmada para ESTA MISMA fecha, se
+      // conserva tal cual (nunca se borra aquí): es mejor mostrar el último
+      // estado real conocido, marcado como pendiente de actualizar, que
+      // dejar la franja en un limbo "sin datos" cuando sí los hay. Si nunca
+      // se confirmó nada para esta fecha (primera carga fallida, o cambio a
+      // una fecha nueva mientras Airtable está degradado), no hay nada
+      // fiable que conservar — se limpia y el render de abajo (variable
+      // `datosSinVerificar`) trata cada franja como "sin verificar", nunca
+      // como "No disponible" (eso sería un falso "ocupado" técnico).
+      const haySnapshotDeEstaFecha = fechaUltimaConfirmadaRef.current === fechaConsulta;
+      if (!haySnapshotDeEstaFecha) {
+        setOcupadas([]);
+        setOcupadasDetalle([]);
+      }
+
+      const mensajeApi = err?.apiMessage;
+      setMensaje(
+        haySnapshotDeEstaFecha
+          ? `No se pudo verificar la disponibilidad más reciente; mostrando el último estado confirmado, puede estar desactualizado.${mensajeApi ? ` (${mensajeApi})` : ""}`
+          : mensajeApi || "No se pudo verificar la disponibilidad. Reintenta en unos segundos."
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => consultarDisponibilidad(fecha), 0);
+    return () => window.clearTimeout(timer);
+  }, [consultarDisponibilidad, fecha]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (initialDate && initialDate !== lastInitialDateRef.current) {
+        lastInitialDateRef.current = initialDate;
+        setFecha(initialDate);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [initialDate]);
+
+  useEffect(() => {
+    function handleDisponibilidadUpdate(event) {
+      const fechaEvento = event.detail?.fecha;
+      if (fechaEvento && fechaEvento !== fecha) {
+        setFecha(fechaEvento);
+        consultarDisponibilidad(fechaEvento);
+        return;
+      }
+      consultarDisponibilidad(fecha);
+    }
+
+    window.addEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+
+    return () => {
+      window.removeEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+    };
+  }, [consultarDisponibilidad, fecha]);
+
+  // Notifica al padre (Reservas) cuando cambia la disponibilidad real del backend,
+  // para que pueda sincronizar el ocupadasSet del formulario con la misma fuente.
+  useEffect(() => {
+    if (typeof onDisponibilidadChange === "function") {
+      onDisponibilidadChange({ ocupadas, ocupadasDetalle });
+    }
+  }, [ocupadas, ocupadasDetalle, onDisponibilidadChange]);
+
+  const cambiarFecha = (value) => {
+    setFecha(value);
+    consultarDisponibilidad(value);
+  };
+
+  return (
+    <Card style={{ marginBottom: 20, borderColor: `${T.accent}55` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 18 }}>
+        <div>
+          <h3 style={{ margin: 0 }}>{title}</h3>
+          <p style={{ color: T.textDim, margin: "8px 0 0", lineHeight: 1.55 }}>
+            {description}
+          </p>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            aria-label="Fecha disponibilidad"
+            type="date"
+            min={todayISO()}
+            value={fecha}
+            onChange={(e) => cambiarFecha(e.target.value)}
+            style={{
+              padding: "12px 14px",
+              borderRadius: 14,
+              border: `1px solid ${T.line}`,
+              background: T.bg,
+              color: T.text,
+              fontWeight: 800
+            }}
+          />
+          <Btn
+            variant="secondary"
+            disabled={estado === "loading"}
+            onClick={() => consultarDisponibilidad(fecha)}
+          >
+            {estado === "loading" ? "Consultando..." : "Actualizar"}
+          </Btn>
+        </div>
+      </div>
+
+      {mensaje && (
+        <StatusCard
+          status={estado === "error" ? "error" : estado === "closed" ? "warning" : "pending"}
+          text={mensaje}
+          style={{ marginBottom: 16, fontWeight: 800 }}
+        />
+      )}
+
+      <div style={{ display: "grid", gap: 14 }}>
+        {pistas.map((pista) => (
+          <div key={pista} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 14, background: "rgba(255,255,255,.035)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 12 }}>
+              <strong style={{ color: pista === selectedCourt ? T.accent : T.text }}>{pista}</strong>
+              <span style={{ color: T.textDim, fontSize: ".8rem" }}>
+                {isSundayISO(fecha)
+                  ? "Cerrado"
+                  : `${BOOKING_HOURS.filter((hora) => ocupadasSet.has(`${fecha}|${pista}|${hora}`)).length} ocupadas`}
+              </span>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))", gap: 8 }}>
+              {BOOKING_HOURS.map((hora) => {
+                const clave = `${fecha}|${pista}|${hora}`;
+
+                // Solo se trata como "sin fuente fiable" cuando la consulta
+                // está en curso o falló Y, además, no hay ningún snapshot
+                // real confirmado para ESTA fecha (ver fechaUltimaConfirmadaRef
+                // más arriba). Si sí lo hay (p.ej. un refresco en segundo
+                // plano, o un error técnico tras haber cargado bien antes),
+                // se sigue evaluando con los datos reales ya conocidos —
+                // desactualizados, pero reales — y el aviso de "puede estar
+                // desactualizado" vive en el banner `mensaje` de arriba.
+                // Cuando NO hay ningún dato real que mostrar, el slot nunca
+                // se pinta como "No disponible" (eso sería un falso ocupado
+                // técnico) ni como "Libre" (eso sería el falso "disponible"
+                // silencioso ya corregido en apiEndpoint.js) — se marca
+                // explícitamente como sin verificar, deshabilitado.
+                const sinFuenteFiable =
+                  (estado === "loading" || estado === "error") &&
+                  fechaUltimaConfirmadaRef.current !== fecha;
+
+                // Siempre usa la duración mínima válida (normalmente 60 min).
+                // La pregunta del calendario es "¿puede INICIARSE alguna reserva aquí?"
+                // no "¿cabe mi duración seleccionada aquí?". Esto evita dos problemas:
+                // 1. 22:00 + 90min → INSUFFICIENT_REMAINING_TIME (cierre a las 23:00)
+                // 2. Reserva [22:00,23:00) bloquea visualmente 21:00 cuando dur=90
+                //    porque 21:00+90=22:30 solapa con la reserva; con 60min
+                //    21:00+60=22:00, que es el límite semiabierto, no hay solapamiento.
+                const slotDuration = getAvailableDurationsForHour(hora)[0] ?? 60;
+
+                const evaluacion = sinFuenteFiable
+                  ? { status: null, reason: null }
+                  : evaluateSlotAvailability({
+                      date: fecha,
+                      startTime: hora,
+                      durationMinutes: slotDuration,
+                      courtId: pista,
+                      existingBookings,
+                      openingHours: CLUB_OPENING_HOURS,
+                      currentDateTime: madridNowAsUtcTrick(),
+                    });
+
+                const disabled = sinFuenteFiable || evaluacion.status !== AVAILABILITY_STATUS.AVAILABLE;
+                const occupiedLike = !sinFuenteFiable && evaluacion.status === AVAILABILITY_STATUS.OCCUPIED;
+                const unavailableLike = !sinFuenteFiable && evaluacion.status === AVAILABILITY_STATUS.UNAVAILABLE;
+
+                // El usuario solo ve estos estados. El motivo interno
+                // (reason) queda solo en el title/tooltip, para soporte.
+                const label = sinFuenteFiable
+                  ? (estado === "loading" ? "Comprobando…" : "Sin verificar")
+                  : evaluacion.status === AVAILABILITY_STATUS.AVAILABLE
+                  ? "Libre"
+                  : occupiedLike
+                    ? "Ocupado"
+                    : "No disponible";
+
+                const borderColor = sinFuenteFiable
+                  ? T.textDim
+                  : unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
+                const background = sinFuenteFiable
+                  ? "rgba(255,255,255,.05)"
+                  : unavailableLike
+                    ? "rgba(255,184,77,.12)"
+                    : occupiedLike
+                      ? "rgba(255,80,80,.13)"
+                      : "rgba(185,245,0,.12)";
+                const textColor = sinFuenteFiable
+                  ? T.textDim
+                  : unavailableLike ? T.warning : occupiedLike ? T.danger : T.accent;
+                const tooltip = sinFuenteFiable
+                  ? (estado === "loading"
+                      ? "Comprobando disponibilidad…"
+                      : "No se pudo verificar la disponibilidad; reintenta con el botón «Actualizar».")
+                  : evaluacion.reason ? `${label} (${evaluacion.reason})` : label;
+
+                return (
+                  <button
+                    key={clave}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => {
+                      if (disabled) return;
+                      onSelectSlot({ fecha, pista, hora });
+                    }}
+                    title={tooltip}
+                    style={{
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      border: `1px solid ${borderColor}`,
+                      background,
+                      color: textColor,
+                      borderRadius: 14,
+                      padding: "10px 8px",
+                      fontWeight: 900,
+                      opacity: disabled ? .72 : 1
+                    }}
+                  >
+                    <div>{hora}</div>
+                    <small style={{ color: unavailableLike ? T.warning : occupiedLike ? T.danger : T.textDim }}>
+                      {label}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 
 function SectionTitle({ eyebrow, title, desc }) {
   return <div style={{ marginBottom: 30 }}>{eyebrow && <div style={{ color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".76rem", textTransform: "uppercase", marginBottom: 10 }}>{eyebrow}</div>}<h2 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(2rem,4vw,3.1rem)", lineHeight: .96, margin: 0, letterSpacing: "-.055em" }}>{title}</h2>{desc && <p style={{ color: T.textDim, lineHeight: 1.75, maxWidth: 760, marginTop: 14, fontSize: "1.02rem" }}>{desc}</p>}</div>;
-}
-
-function Badge({ status }) {
-  const map = { confirmed: ["Confirmada", T.accent], pending: ["Pendiente", T.warning], completed: ["Completada", T.textDim] };
-  const [label, color] = map[status] || map.pending;
-  return <span className="cp04-badge" style={{ color, background: "rgba(255,255,255,.07)", border: `1px solid ${color}44`, borderRadius: 999, padding: "7px 11px", fontSize: ".74rem", fontWeight: 900 }}>{label}</span>;
 }
 
 function FieldError({ children }) {
@@ -248,12 +960,14 @@ function RolePanel({ eyebrow, title, desc, items, action }) {
 }
 
 function GalleryItem({ item, featured = false }) {
-  return <div className={`cp04-gallery-item${featured ? " featured" : ""}`}>{item.src ? <img src={item.src} alt={`${item.title} de Club Pádel 04`} loading="lazy" /> : <div className="cp04-gallery-fallback" aria-hidden="true" />}<div className="cp04-gallery-caption"><strong style={{ display: "block", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>{item.title}</strong><span style={{ color: T.textDim, fontSize: ".88rem" }}>{item.src ? "Imagen configurable" : item.label}</span></div></div>;
+  return <div className={`cp04-gallery-item${featured ? " featured" : ""}`}>{item.src ? <img src={item.src} alt={`${item.title} de Club Pádel 04`} loading="lazy" /> : <div className="cp04-gallery-fallback" aria-hidden="true" />}<div className="cp04-gallery-caption"><strong style={{ display: "block", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>{item.title}</strong><span style={{ color: T.textDim, fontSize: ".88rem" }}>{item.src ? "" : item.label}</span></div></div>;
 }
 
 function Gallery() {
+  const lang = useLang();
+  const tx = key => t(key, lang);
   const [featured, ...rest] = GALLERY;
-  return <section style={{ marginTop: 42 }}><SectionTitle eyebrow="Galería configurable" title="Fotos reales preparadas" desc="Espacios listos para imágenes reales del club. Mientras no haya fotos configuradas, se muestran fallbacks visuales premium sin simular instalaciones reales." /><div className="cp04-gallery"><GalleryItem item={featured} featured /><div className="cp04-gallery-side">{rest.map((item) => <GalleryItem key={item.key} item={item} />)}</div></div></section>;
+  return <section style={{ marginTop: 42 }}><SectionTitle eyebrow={tx("home.galeria_eyebrow")} title={tx("home.galeria")} desc={tx("home.galeria_desc")} /><div className="cp04-gallery"><GalleryItem item={featured} featured /><div className="cp04-gallery-side">{rest.map((item) => <GalleryItem key={item.key} item={item} />)}</div></div></section>;
 }
 
 function IntegrationMatrix({ compact = false }) {
@@ -262,45 +976,1253 @@ function IntegrationMatrix({ compact = false }) {
 }
 
 function AuthStatusPanel({ compact = false }) {
-  return <Card><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}><div><h3 style={{ margin: 0, fontFamily: T.fontDisplay, letterSpacing: "-.04em" }}>Autenticación y roles</h3><p style={{ color: T.textDim, lineHeight: 1.65, marginTop: 8 }}>Acceso demo: no hay login real todavía. En producción debe protegerse por proveedor de autenticación y backend de usuarios.</p></div><span className="cp04-badge" style={{ color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "7px 11px", fontWeight: 900, fontSize: ".74rem", whiteSpace: "nowrap" }}>Pendiente de auth real</span></div><div className={compact ? undefined : "cp04-grid-2"} style={compact ? { display: "grid", gap: 12 } : undefined}>{ROLES.map((role) => <div key={role.id} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 16, background: "rgba(255,255,255,.035)" }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong style={{ color: T.accent }}>{role.id}</strong><span style={{ color: T.warning, fontSize: ".82rem", fontWeight: 900 }}>{role.access}</span></div><div style={{ marginTop: 8, fontWeight: 900 }}>{role.label}</div><div style={{ color: T.textDim, marginTop: 6, lineHeight: 1.55 }}>Secciones: {role.sections}</div>{!compact && <PanelList items={role.permissions} />}</div>)}</div></Card>;
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  return <Card><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}><div><h3 style={{ margin: 0, fontFamily: T.fontDisplay, letterSpacing: "-.04em" }}>{tx("auth.roles_title")}</h3><p style={{ color: T.textDim, lineHeight: 1.65, marginTop: 8 }}>{tx("auth.pending_desc")}</p></div><span className="cp04-badge" style={{ color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "7px 11px", fontWeight: 900, fontSize: ".74rem", whiteSpace: "nowrap" }}>{tx("auth.pending_badge")}</span></div><div className={compact ? undefined : "cp04-grid-2"} style={compact ? { display: "grid", gap: 12 } : undefined}>{ROLES.map((role) => <div key={role.id} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 16, background: "rgba(255,255,255,.035)" }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong style={{ color: T.accent }}>{role.id}</strong><span style={{ color: T.warning, fontSize: ".82rem", fontWeight: 900 }}>{role.access}</span></div><div style={{ marginTop: 8, fontWeight: 900 }}>{role.label}</div><div style={{ color: T.textDim, marginTop: 6, lineHeight: 1.55 }}>{tx("auth.secciones")} {role.sections}</div>{!compact && <PanelList items={role.permissions} />}</div>)}</div></Card>;
 }
 
-function Sidebar({ current, mobileOpen, onNavigate, onClose }) {
-  const items = [["inicio", "Inicio", "🏠"], ["reservas", "Reservar", "🎾"], ["gestion", "Reservas", "📅"], ["ranking", "Ranking", "🏆"], ["admin", "Admin", "📊"], ["soporte", "Soporte", "🛠️"]];
-  return <aside id="cp04-mobile-menu" className="cp04-sidebar" data-open={mobileOpen ? "true" : "false"} aria-label="Navegación principal"><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 26 }}><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 12, height: 12, borderRadius: "50%", background: T.accent, boxShadow: `0 0 18px ${T.accent}` }} /><div><div style={{ fontFamily: T.fontDisplay, fontWeight: 900 }}>CLUB PÁDEL 04</div><div style={{ color: T.textDim, fontSize: ".78rem" }}>SaaS seguro</div></div></div><button className="cp04-menu-button cp04-sidebar-close" type="button" onClick={onClose} aria-label="Cerrar menú">Cerrar</button></div><nav style={{ display: "grid", gap: 8 }}>{items.map(([id, label, icon]) => <button key={id} onClick={() => onNavigate(id)} aria-current={current === id ? "page" : undefined} aria-label={`Ir a ${label}`} style={{ display: "flex", gap: 10, width: "100%", background: current === id ? T.accent : "transparent", color: current === id ? "#07090e" : T.textDim, border: `1px solid ${current === id ? T.accent : T.line}`, borderRadius: 14, padding: "12px 14px", cursor: "pointer", fontWeight: 900 }}><span aria-hidden="true">{icon}</span><span>{label}</span></button>)}</nav><Card style={{ marginTop: 22, padding: 16 }}><strong style={{ color: T.accent }}>Modo seguro</strong><p style={{ color: T.textDim, fontSize: ".84rem", lineHeight: 1.5, marginBottom: 0 }}>Sin webhooks ni claves privadas en frontend.</p></Card></aside>;
+
+
+// ============================================================
+// SISTEMA GLOBAL DE RELOJ EN TIEMPO REAL
+// ============================================================
+function useClock() {
+  const [now, setNow] = useState(() => new Date());
+  const [langCode, setLangCode] = useState(() => {
+    try {
+      const raw = localStorage.getItem("cp04_language");
+      if (!raw) return "es-ES";
+      const p = JSON.parse(raw);
+      return p?.code || "es-ES";
+    } catch { return "es-ES"; }
+  });
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  useEffect(() => {
+    function handler(e) { setLangCode(e.detail?.lang?.code || "es-ES"); }
+    window.addEventListener("cp04:lang-change", handler);
+    return () => window.removeEventListener("cp04:lang-change", handler);
+  }, []);
+  const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  const pad = n => String(n).padStart(2,"0");
+  try {
+    const d = now;
+    let dayStr, dateStr;
+    const sep = langCode.startsWith("de") ? "." : "/";
+    try {
+      dayStr = new Intl.DateTimeFormat(langCode, { weekday: "long", timeZone: MADRID_TIME_ZONE }).format(d);
+      dayStr = dayStr.charAt(0).toUpperCase() + dayStr.slice(1);
+      const parts = new Intl.DateTimeFormat(langCode, { day: "2-digit", month: "2-digit", year: "numeric", timeZone: MADRID_TIME_ZONE }).formatToParts(d);
+      const pDay = parts.find(p => p.type === "day")?.value || pad(d.getDate());
+      const pMon = parts.find(p => p.type === "month")?.value || pad(d.getMonth()+1);
+      const pYr = parts.find(p => p.type === "year")?.value || String(d.getFullYear());
+      dateStr = `${pDay}${sep}${pMon}${sep}${pYr}`;
+    } catch {
+      dayStr = dias[d.getDay()];
+      dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+    }
+    return {
+      time: `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`,
+      date: dateStr,
+      day: dayStr,
+      full: `${dayStr}, ${dateStr} · ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`,
+      hour: d.getHours(),
+    };
+  } catch { return { time:"--:--:--", date:"--/--/----", day:"--", full:"--", hour:0 }; }
 }
 
-function Inicio({ setCurrent }) {
-  return <div style={{ padding: "clamp(30px,5vw,62px) 24px", maxWidth: 1220, margin: "0 auto" }}><section style={{ minHeight: "min(720px,72vh)", display: "grid", alignItems: "center", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,360px),1fr))", gap: "clamp(24px,4vw,54px)" }}><div><div style={{ display: "inline-flex", alignItems: "center", gap: 10, color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".78rem", textTransform: "uppercase", marginBottom: 18, padding: "8px 12px", border: `1px solid rgba(182,255,0,.22)`, borderRadius: 999, background: "rgba(182,255,0,.07)" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: T.accent }} />SaaS premium · roles claros</div><h1 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(3.1rem,8vw,6.4rem)", lineHeight: .86, margin: 0, letterSpacing: "-.075em" }}>Club de pádel<br /><span style={{ color: T.accent }}>operativo</span></h1><p style={{ color: T.textDim, fontSize: "clamp(1rem,2vw,1.18rem)", lineHeight: 1.78, maxWidth: 680, marginTop: 22 }}>Una base SaaS para separar la experiencia de jugador, recepción, administración y soporte técnico sin exponer secretos ni depender del navegador para integraciones privadas.</p><div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 30 }}><Btn onClick={() => setCurrent("reservas")}>🎾 Reservar pista</Btn><Btn variant="secondary" onClick={() => setCurrent("admin")}>Ver roles SaaS</Btn></div></div><Card style={{ minHeight: 360, display: "grid", alignContent: "space-between", background: `linear-gradient(160deg,rgba(17,26,43,.96),rgba(47,107,255,.13)), radial-gradient(circle at 70% 0%, rgba(182,255,0,.22), transparent 34%)` }}><div><Badge status="confirmed" /><h3 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(1.8rem,4vw,2.55rem)", lineHeight: 1, letterSpacing: "-.05em", margin: "22px 0 14px" }}>Reserva segura</h3><p style={{ color: T.textDim, lineHeight: 1.72 }}>El frontend envía a <code>/api/reservas</code>. Desde ahí conectas Make/Airtable sin exponer secretos.</p></div><div style={{ height: 150, borderRadius: 24, border: `1px solid ${T.line}`, background: `linear-gradient(135deg,rgba(182,255,0,.22),rgba(47,107,255,.14)), repeating-linear-gradient(90deg,rgba(255,255,255,.13) 0 1px,transparent 1px 32px)`, boxShadow: "inset 0 1px 0 rgba(255,255,255,.08)" }} aria-label="Visual abstracto de pista de pádel" /></Card></section><SectionTitle eyebrow="Mapa SaaS" title="Paneles preparados por rol" desc="Sin autenticación real todavía: esta fase ordena visualmente qué verá cada tipo de usuario cuando se conecten permisos reales." /><div className="cp04-grid-2"><RolePanel eyebrow="Jugador / cliente" title="Autoservicio" desc="Flujo orientado a quien reserva y participa." items={["Reservar pista", "Consultar reservas propias cuando exista backend", "Ver ranking", "Torneos y participación futura", "Pagos futuros preparados como módulo"]} action={<Btn onClick={() => setCurrent("reservas")}>Ir a reservas</Btn>} /><RolePanel eyebrow="Staff / recepción" title="Operativa diaria" desc="Vista preparada para ayudar a clientes y resolver incidencias." items={["Ver reservas demo", "Consultar disponibilidad futura", "Gestionar incidencias", "Ayudar a clientes en mostrador"]} action={<Btn variant="secondary" onClick={() => setCurrent("gestion")}>Ver gestión</Btn>} /><RolePanel eyebrow="Administrador / jefe" title="Dirección del club" desc="Resumen preparado para métricas y control del negocio." items={["Métricas demo", "Ingresos y ocupación", "Gestión de pistas y clientes", "Torneos y automatizaciones"]} action={<Btn variant="secondary" onClick={() => setCurrent("admin")}>Ver admin</Btn>} /><RolePanel eyebrow="Soporte técnico" title="Operación técnica" desc="Zona para integraciones, worker de reservas y errores." items={["Estado de integraciones", "Variables pendientes", "Worker de reservas", "Logs y documentación técnica"]} action={<Btn variant="secondary" onClick={() => setCurrent("soporte")}>Ver soporte</Btn>} /></div><Gallery /></div>;
+function ClockDisplay({ compact = false }) {
+  const clk = useClock();
+  if (compact) {
+    return (
+      <div style={{ display:"flex", alignItems:"center", gap:8, fontFamily:"monospace" }}>
+        <span style={{ width:7, height:7, borderRadius:"50%", background:T.accent, flexShrink:0, boxShadow:`0 0 6px ${T.accent}` }} />
+        <span style={{ color:T.textDim, fontSize:".75rem" }}>{clk.day.slice(0,3)}</span>
+        <span style={{ color:T.text, fontWeight:700, fontSize:".82rem" }}>{clk.date}</span>
+        <span style={{ color:T.accent, fontWeight:900, fontSize:".85rem" }}>{clk.time}</span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ textAlign:"center" }}>
+      <div style={{ fontFamily:"monospace", fontSize:"clamp(2.2rem,6vw,3.8rem)", fontWeight:900, letterSpacing:".04em", color:T.accent, lineHeight:1 }}>{clk.time}</div>
+      <div style={{ color:T.textDim, fontSize:".92rem", marginTop:6 }}>{clk.day}, {clk.date}</div>
+    </div>
+  );
+}
+
+// ============================================================
+// SISTEMA DE GRÁFICAS SVG PREMIUM (sin dependencias externas)
+// ============================================================
+
+function MetricCard({ label, value, sub, trend, color, icon }) {
+  const col = color || T.accent;
+  const trendUp = trend && trend > 0;
+  const trendDown = trend && trend < 0;
+  const valStr = String(value);
+  const isRatio = valStr.includes("/");
+  const longVal = valStr.length > 6 || isRatio;
+  const valFontSize = isRatio
+    ? "clamp(1.1rem,2.2vw,1.55rem)"
+    : longVal
+      ? "clamp(1.3rem,3vw,1.8rem)"
+      : "clamp(1.6rem,3.5vw,2.2rem)";
+  return (
+    <div style={{ borderRadius:18, border:`1px solid rgba(255,255,255,.09)`, background:"rgba(11,17,29,.85)", padding:"14px 16px", display:"flex", flexDirection:"column", gap:5, position:"relative", overflow:"hidden", minWidth:0 }}>
+      <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,${col},transparent)` }} />
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:4 }}>
+        <span style={{ color:T.textDim, fontSize:".68rem", fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", lineHeight:1.3, flex:1, minWidth:0 }}>{label}</span>
+        {icon && <span style={{ fontSize:"1rem", opacity:.65, flexShrink:0 }}>{icon}</span>}
+      </div>
+      <div style={{ fontFamily:T.fontDisplay, fontSize:valFontSize, fontWeight:900, color:col, lineHeight:1.1, letterSpacing:"-.02em", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"clip", minWidth:0 }}>{value}</div>
+      {sub && <div style={{ color:T.textDim, fontSize:".72rem", lineHeight:1.35, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{sub}</div>}
+      {trend !== undefined && trend !== null && (
+        <div style={{ marginTop:2 }}>
+          <span style={{ fontSize:".72rem", fontWeight:700, color: trendUp ? T.accent : trendDown ? T.danger : T.textDim }}>
+            {trendUp ? "▲" : trendDown ? "▼" : "—"} {trend !== 0 ? Math.abs(trend)+"%" : "Sin cambios"}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
+  const col = color || T.accent;
+  const [tip, setTip] = useState(null);
+  if (!data || !data.length) return null;
+  const max = Math.max(...data.map(d => d.v), 1);
+  const W = 200, H = height;
+  const barW = Math.max(4, Math.floor((W - data.length * 2) / data.length));
+  return (
+    <div style={{ position:"relative" }}>
+      {label && <div style={{ color:T.textDim, fontSize:".7rem", marginBottom:4, fontWeight:700 }}>{label}</div>}
+      {tip && (
+        <div style={{ position:"absolute", left:`${tip.px}%`, top:-38, transform:"translateX(-50%)", pointerEvents:"none", zIndex:50, background:"rgba(7,11,20,.96)", border:"1px solid rgba(182,255,0,.4)", borderRadius:9, padding:"5px 10px", whiteSpace:"nowrap", boxShadow:"0 6px 20px rgba(0,0,0,.55)", fontSize:".75rem" }}>
+          <span style={{ color:T.textDim }}>{tip.l} · </span>
+          <strong style={{ color:T.accent }}>{tip.v} {unit}</strong>
+        </div>
+      )}
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow:"visible", display:"block" }} aria-label={label || "Gráfica de barras"}
+        onMouseLeave={() => setTip(null)} onTouchEnd={() => setTimeout(() => setTip(null), 2000)}>
+        {data.map((d, i) => {
+          const bh = Math.max(2, (d.v / max) * (H - 14));
+          const x = i * (barW + 2);
+          const cx = x + barW / 2;
+          const pxPct = (cx / W) * 100;
+          return (
+            <g key={i} onMouseEnter={() => setTip({ l: d.l, v: d.v, px: pxPct })} onTouchStart={() => setTip({ l: d.l, v: d.v, px: pxPct })}>
+              <rect x={x} y={H - bh - 12} width={barW} height={bh} rx={2} fill={col}
+                opacity={tip?.l === d.l ? 1 : .7} style={{ cursor:"crosshair", transition:"opacity .15s" }} />
+              {data.length <= 8 && <text x={cx} y={H - 1} textAnchor="middle" fill={T.textDim} fontSize="8">{d.l}</text>}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function MiniLineChart({ data, height = 60, color, labels, unit = "" }) {
+  const col = color || T.accent;
+  const [tip, setTip] = useState(null);
+  if (!data || data.length < 2) return null;
+  const W = 200, H = height;
+  const max = Math.max(...data, 1);
+  const points = data.map((v, i) => ({
+    x: (i / (data.length - 1)) * W,
+    y: H - (v / max) * H + 2,
+    v, l: labels?.[i] ?? `Día ${i + 1}`,
+  }));
+  const pts = points.map(p => `${p.x},${p.y}`).join(" ");
+  const area = `0,${H} ` + pts + ` ${W},${H}`;
+  return (
+    <div style={{ position:"relative" }}>
+      {tip && (
+        <div style={{ position:"absolute", left:`${(tip.x / W) * 100}%`, top:-38, transform:"translateX(-50%)", pointerEvents:"none", zIndex:50, background:"rgba(7,11,20,.96)", border:"1px solid rgba(182,255,0,.4)", borderRadius:9, padding:"5px 10px", whiteSpace:"nowrap", boxShadow:"0 6px 20px rgba(0,0,0,.55)", fontSize:".75rem" }}>
+          <span style={{ color:T.textDim }}>{tip.l} · </span>
+          <strong style={{ color:T.accent }}>{tip.v}{unit}</strong>
+        </div>
+      )}
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display:"block", overflow:"visible" }} aria-label="Gráfica de líneas"
+        onMouseLeave={() => setTip(null)}>
+        <defs>
+          <linearGradient id="lgArea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={col} stopOpacity=".22" />
+            <stop offset="100%" stopColor={col} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon points={area} fill="url(#lgArea)" />
+        <polyline points={pts} fill="none" stroke={col} strokeWidth="1.8" strokeLinejoin="round" />
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={tip?.l === p.l ? 4 : 2.5} fill={col} opacity={tip?.l === p.l ? 1 : .6}
+            style={{ cursor:"crosshair" }}
+            onMouseEnter={() => setTip(p)} onTouchStart={() => setTip(p)} />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function DonutChart({ segments, size = 120, label }) {
+  const [tip, setTip] = useState(null);
+  if (!segments || !segments.length) return null;
+  const total = segments.reduce((s, x) => s + x.v, 0) || 1;
+  const r = 40, cx = 60, cy = 60, stroke = 14;
+  const arcs = segments.reduce((acc, seg) => {
+    const pct = seg.v / total;
+    const a1 = (acc.angle * Math.PI) / 180;
+    const a2 = ((acc.angle + pct * 360) * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+    const la = pct > 0.5 ? 1 : 0;
+    const d = `M ${x1} ${y1} A ${r} ${r} 0 ${la} 1 ${x2} ${y2}`;
+    acc.list.push({ ...seg, d, pct });
+    acc.angle += pct * 360;
+    return acc;
+  }, { angle: -90, list: [] }).list;
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+      <div style={{ position:"relative", flexShrink:0 }}>
+        {tip && (
+          <div style={{ position:"absolute", top:-36, left:"50%", transform:"translateX(-50%)", pointerEvents:"none", zIndex:50, background:"rgba(7,11,20,.96)", border:"1px solid rgba(182,255,0,.4)", borderRadius:9, padding:"4px 9px", whiteSpace:"nowrap", fontSize:".74rem" }}>
+            <span style={{ color:T.textDim }}>{tip.l}: </span>
+            <strong style={{ color:tip.c || T.accent }}>{tip.v}</strong>
+            <span style={{ color:T.textDim }}> ({Math.round(tip.v/total*100)}%)</span>
+          </div>
+        )}
+        <svg width={size} height={size} viewBox="0 0 120 120" aria-label={label || "Donut"} onMouseLeave={() => setTip(null)}>
+          {arcs.map((arc, i) => (
+            <path key={i} d={arc.d} fill="none" stroke={arc.c || T.accent} strokeWidth={tip?.l === arc.l ? stroke + 3 : stroke}
+              strokeLinecap="round" opacity={tip ? (tip.l === arc.l ? 1 : .45) : .9}
+              style={{ cursor:"pointer", transition:"all .2s" }}
+              onMouseEnter={() => setTip(arc)} onTouchStart={() => setTip(arc)} />
+          ))}
+          {label && <text x="60" y="64" textAnchor="middle" fill={T.textDim} fontSize="9" fontWeight="700">{label}</text>}
+        </svg>
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+        {segments.map((s, i) => (
+          <div key={i} style={{ display:"flex", alignItems:"center", gap:8, cursor:"default" }}
+            onMouseEnter={() => setTip(s)} onMouseLeave={() => setTip(null)}>
+            <span style={{ width:8, height:8, borderRadius:"50%", background:s.c || T.accent, flexShrink:0 }} />
+            <span style={{ color:T.textDim, fontSize:".75rem" }}>{s.l}</span>
+            <span style={{ color:T.text, fontSize:".8rem", fontWeight:700, marginLeft:"auto", paddingLeft:8 }}>{s.v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HorizontalBarChart({ data, color, unit = "" }) {
+  const [tip, setTip] = useState(null);
+  if (!data || !data.length) return null;
+  const max = Math.max(...data.map(d => d.v), 1);
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:9, position:"relative" }}>
+      {tip && (
+        <div style={{ position:"absolute", top:-36, right:0, pointerEvents:"none", zIndex:50, background:"rgba(7,11,20,.96)", border:"1px solid rgba(182,255,0,.4)", borderRadius:9, padding:"4px 10px", whiteSpace:"nowrap", fontSize:".74rem" }}>
+          <span style={{ color:T.textDim }}>{tip.l}: </span>
+          <strong style={{ color:tip.c || color || T.accent }}>{tip.v}{unit}</strong>
+        </div>
+      )}
+      {data.map((d, i) => (
+        <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:10, alignItems:"center", cursor:"default" }}
+          onMouseEnter={() => setTip(d)} onMouseLeave={() => setTip(null)} onTouchStart={() => setTip(d)}>
+          <div>
+            <div style={{ fontSize:".78rem", color:T.text, marginBottom:4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{d.l}</div>
+            <div style={{ height:6, borderRadius:3, background:"rgba(255,255,255,.07)", overflow:"hidden" }}>
+              <div style={{ height:"100%", borderRadius:3, background:d.c || color || T.accent, width:`${(d.v/max)*100}%`, transition:"width .6s ease, background .2s" }} />
+            </div>
+          </div>
+          <span style={{ color:d.c || color || T.accent, fontWeight:700, fontSize:".82rem", minWidth:30, textAlign:"right" }}>{d.v}{unit}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FlowStatusBadge({ status }) {
+  const map = {
+    ok:      { label:"OK",     col:T.accent,   dot:T.accent },
+    warn:    { label:"Revisar",col:T.warning,  dot:T.warning },
+    error:   { label:"Error",  col:T.danger,   dot:T.danger },
+    paused:  { label:"Pausa",  col:"#9aa8bd",  dot:"#9aa8bd" },
+    pending: { label:"Pend.",  col:"#9aa8bd",  dot:"#9aa8bd" },
+  };
+  const s = map[status] || map.pending;
+  return (
+    <span style={{ display:"inline-flex", alignItems:"center", gap:5, background:`${s.dot}18`, border:`1px solid ${s.dot}55`, borderRadius:999, padding:"2px 9px", fontSize:".7rem", fontWeight:800, color:s.col }}>
+      <span style={{ width:6, height:6, borderRadius:"50%", background:s.dot, boxShadow:`0 0 5px ${s.dot}` }} />
+      {s.label}
+    </span>
+  );
+}
+
+function ChartCard({ title, sub, children, action, demo = false, style: cs = {} }) {
+  const cleanSub = sub ? sub.replace(/ ?·? ?demo/gi, "").replace(/Make/gi, "Procesos").trim() : sub;
+  return (
+    <div style={{ borderRadius:20, border:`1px solid rgba(255,255,255,.09)`, background:"rgba(11,17,29,.82)", padding:"16px 18px", ...cs }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+        <div>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ fontWeight:800, fontSize:".88rem", color:T.text }}>{title}</div>
+            {demo && (
+              <span style={{ color:T.warning, border:`1px solid ${T.warning}66`, borderRadius:999, padding:"1px 7px", fontSize:".62rem", fontWeight:800, textTransform:"uppercase", letterSpacing:".04em" }}>
+                Demo
+              </span>
+            )}
+          </div>
+          {cleanSub && <div style={{ color:T.textDim, fontSize:".73rem", marginTop:2 }}>{cleanSub}</div>}
+        </div>
+        {action && <div style={{ flexShrink:0 }}>{action}</div>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ============================================================
+// DATOS DEMO DASHBOARD (separados y etiquetados)
+// ============================================================
+// TODO producción: alimentar este dashboard desde backend/proxy seguro.
+// Los datos de Make deben venir de un endpoint propio o webhook,
+// NUNCA de llamadas directas con clave privada desde el frontend.
+
+const DEMO_RESERVAS_HOY = [
+  { l:"8h", v:1 },{ l:"9h", v:3 },{ l:"10h", v:5 },{ l:"11h", v:4 },
+  { l:"12h", v:6 },{ l:"13h", v:2 },{ l:"14h", v:0 },{ l:"15h", v:1 },
+  { l:"16h", v:4 },{ l:"17h", v:7 },{ l:"18h", v:8 },{ l:"19h", v:5 },
+];
+
+const DEMO_RESERVAS_SEMANA = [12, 18, 24, 19, 27, 31, 22];
+
+const DEMO_OCUPACION_PISTAS = [
+  { l:"Pista 1", v:87, c:"#b6ff00" },
+  { l:"Pista 2", v:72, c:T.accent2 },
+  { l:"Pista 3", v:65, c:"#2f6bff" },
+  { l:"Pista 4", v:91, c:"#ffad47" },
+];
+
+// Agenda operativa (dashboard STAFF) y tickets de soporte (dashboard
+// SUPPORT): datos de ejemplo explícitamente etiquetados como tal, mismo
+// criterio que RANKING_PRO/Ranking() ("datos de ejemplo" ya visible en esa
+// pantalla). No son una fuente de negocio nueva: el Worker real
+// (GET /api/reservas, ver cp04ListReservations) exige un email concreto
+// para listar reservas — no existe hoy un endpoint que liste "todas las
+// reservas de hoy" de todo el club, así que un listado real agregado no es
+// posible sin construir esa pieza de backend (fuera de alcance de esta
+// pasada). Las ACCIONES de cada fila sí son reales: navegan a módulos
+// existentes (Reservas, Control de acceso, Lista de espera...), nunca
+// simulan una llamada de red.
+const DEMO_AGENDA_OPERATIVA = [
+  { id: 1, hora: "09:00", pista: "Pista 1", jugador: "María López", estado: "Confirmada", tipo: "Individual" },
+  { id: 2, hora: "10:00", pista: "Pista 2", jugador: "Carlos Ruiz / Ana Gómez", estado: "Check-in", tipo: "Partido" },
+  { id: 3, hora: "11:00", pista: "Pista 3", jugador: "Clase iniciación (grupo)", estado: "Pendiente", tipo: "Clase" },
+  { id: 4, hora: "12:00", pista: "Pista 1", jugador: "Javier Torres", estado: "Incidencia", tipo: "Individual" },
+  { id: 5, hora: "13:00", pista: "Pista 4", jugador: "Torneo interno — Ronda 2", estado: "Confirmada", tipo: "Torneo" },
+  { id: 6, hora: "09:00", pista: "Pista 2", jugador: "Lucía Fernández", estado: "Finalizada", tipo: "Individual" },
+];
+
+const DEMO_TICKETS_SOPORTE = [
+  { id: "TCK-001", categoria: "Reservas", severidad: "Alta", estado: "Abierto", fecha: "2026-09-04", modulo: "Reservas", responsable: "—" },
+  { id: "TCK-002", categoria: "QR", severidad: "Media", estado: "En revisión", fecha: "2026-09-03", modulo: "Control de acceso", responsable: "Soporte" },
+  { id: "TCK-003", categoria: "Lista de espera", severidad: "Baja", estado: "Resuelto", fecha: "2026-09-01", modulo: "Lista de espera", responsable: "Soporte" },
+  { id: "TCK-004", categoria: "Sistema", severidad: "Crítica", estado: "Pendiente", fecha: "2026-09-04", modulo: "Automatizaciones", responsable: "—" },
+];
+
+// Categoría de ticket -> sección real a la que navega "Abrir" (nunca una
+// acción simulada).
+const TICKET_CATEGORIA_DESTINO = {
+  Reservas: "reservas",
+  Acceso: "control_qr",
+  QR: "control_qr",
+  Usuario: "alta_jugador",
+  "Lista de espera": "lista_espera",
+  Torneos: "torneos",
+  Sistema: "flujos_make",
+  Otros: "soporte",
+};
+
+const DEMO_KPI = {
+  reservasHoy: 12,
+  reservasSemana: 68,
+  ocupacionMedia: 79,
+  jugadoresActivos: 143,
+  nuevosJugadores: 8,
+  torneosActivos: 2,
+  ingresosMes: 4820,
+  alertasCriticas: 0,
+  incidenciasAbiertas: 1,
+  makeErrores: 2,
+  tasaExitoMake: 97.4,
+  ultimoBackup: "Lun 07:00",
+  qrGenerados: 24,
+  exportaciones: 7,
+};
+
+// Fuente única de verdad de los 50 flujos Make (src/data/makeMasterRegistry.js).
+// Nunca hardcodear el total ni el desglose aquí — siempre derivado.
+const MAKE_FLUJOS_COUNTERS = computeMasterCounters();
+
+
+
+// ============================================================
+// i18n — Language Selector
+// ============================================================
+
+function normalizeSearchText(value) {
+  if (value == null) return "";
+  return String(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim();
+}
+
+// Shared language selection state: see src/i18n/language.js
+/* AUDITORIA 20 · AUTH REAL HELPERS
+   Preparación para autenticación real sin romper modo demo/local.
+   El backend/Worker debe ser la autoridad final en producción. */
+
+const CP04_AUTH_MODES = {
+  DEMO: "demo",
+  LOCAL_DEMO: "universal_demo",
+  BACKEND_READY: "backend_ready",
+  PRODUCTION: "production"
+};
+
+// RBAC movido a src/utils/rbac.js (fuente única, testeada con node --test,
+// también consumida por Sidebar). Ver import al inicio del archivo.
+
+function cp04GetStoredAuthMode() {
+  try {
+    return localStorage.getItem("cp04_auth_mode") || CP04_AUTH_MODES.DEMO;
+  } catch {
+    return CP04_AUTH_MODES.DEMO;
+  }
+}
+
+
+// Shared locale catalog: see src/i18n/translations.js
+// ============================================================
+// END i18n sistema
+// ============================================================
+
+function LanguageSelector() {
+  const lang = useLang();
+  const ltx = key => t(key, lang);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 0 });
+  const [selected, setSelected] = useState(() => loadSavedLanguage() || LANGUAGES_RAW.find(l => l.code === "es-ES") || LANGUAGES_ALL[0]);
+  const dropRef = useRef(null);
+  const searchRef = useRef(null);
+  const menuRef = useRef(null);
+  const triggerRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const updatePosition = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const margin = 12;
+      const viewportWidth = window.innerWidth;
+      const maxWidth = Math.max(0, viewportWidth - margin * 2);
+      const width = Math.min(Math.max(rect.width, 280), maxWidth);
+      const left = Math.min(Math.max(margin, rect.right - width), Math.max(margin, viewportWidth - width - margin));
+      const maxHeight = Math.max(0, window.innerHeight - rect.bottom - margin - 8);
+      setMenuPosition({ top: rect.bottom + 8, left, width, maxHeight });
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    searchRef.current?.focus();
+    function onKey(e) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClickOut(e) {
+      if (!dropRef.current?.contains(e.target) && !menuRef.current?.contains(e.target)) { setOpen(false); triggerRef.current?.focus(); }
+    }
+    document.addEventListener("mousedown", onClickOut);
+    return () => document.removeEventListener("mousedown", onClickOut);
+  }, [open]);
+
+  function filterLanguages(list) {
+    if (!search.trim()) return list;
+    const q = normalizeSearchText(search);
+    const qRaw = search.trim();
+    return list.filter(lang => {
+      const fields = [lang.label, lang.country, lang.countryEs, lang.countryEn, lang.code, lang.flag, ...(lang.aliases || [])];
+      return fields.some(f => f && (normalizeSearchText(f).includes(q) || String(f).includes(qRaw)));
+    });
+  }
+
+  function selectLang(lang) {
+    setSelected(lang);
+    setOpen(false);
+    setSearch("");
+    setGlobalLang(lang);
+    document.documentElement.lang = lang.code;
+    triggerRef.current?.focus();
+  }
+
+  const isTranslated = item => Object.prototype.hasOwnProperty.call(TRANSLATIONS, item.code);
+  const supported = LANGUAGES_ALL.filter(isTranslated);
+  const spanish = supported.find(item => item.code === "es-ES");
+  const filteredRecommended = filterLanguages(LANGUAGES_RECOMMENDED.filter(isTranslated).filter(item => item.code !== "es-ES"));
+  const filteredAll = filterLanguages(supported.filter(item => item.code !== "es-ES"));
+  const hasResults = filteredRecommended.length > 0 || filteredAll.length > 0;
+
+  return (
+    <div ref={dropRef} style={{ position: "relative", width: "100%" }}>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={ltx("lang.selector_aria") + ": " + selected.label + " " + selected.flag}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls="cp04-lang-listbox"
+        onClick={() => setOpen(o => !o)}
+        style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "rgba(182,255,0,.06)", border: `1px solid rgba(182,255,0,.18)`, borderRadius: 12, padding: "9px 13px", cursor: "pointer", color: "#fff", fontSize: ".84rem", fontWeight: 700, fontFamily: "inherit" }}
+      >
+        <span style={{ fontSize: "1.1rem" }}>{selected.flag}</span>
+        <span style={{ flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selected.label}</span>
+        <span style={{ color: "rgba(182,255,0,.7)", fontSize: ".7rem" }}>{selected.code}</span>
+        <span style={{ color: "rgba(255,255,255,.4)", fontSize: ".75rem", marginLeft: 2 }}>{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && createPortal(
+        <div ref={menuRef} style={{ position: "fixed", top: menuPosition.top, left: menuPosition.left, width: menuPosition.width, zIndex: 2147483647, background: "linear-gradient(160deg,#0b111d,#08101a)", border: "1px solid rgba(182,255,0,.22)", borderRadius: 18, boxShadow: "0 24px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(182,255,0,.06)", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: menuPosition.maxHeight }}>
+          <div style={{ padding: "10px 12px 6px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={ltx("lang.buscar")}
+              style={{ width: "100%", background: "rgba(255,255,255,.05)", border: "1px solid rgba(182,255,0,.2)", borderRadius: 10, color: "#fff", fontSize: ".82rem", padding: "8px 11px", outline: "none", fontFamily: "inherit", minHeight: "unset" }}
+            />
+          </div>
+
+          <div id="cp04-lang-listbox" role="listbox" aria-label={ltx("lang.buscar")} style={{ overflowY: "auto", flex: 1 }}>
+            {spanish && <LangOption lang={spanish} selected={selected} onSelect={selectLang} />}
+            {!hasResults ? (
+              <div style={{ padding: "18px 16px", textAlign: "center" }}>
+                <div style={{ color: "rgba(255,255,255,.55)", fontSize: ".84rem", marginBottom: 8 }}>{ltx("lang.no_encontrados")}</div>
+                <div style={{ color: "rgba(154,168,189,.5)", fontSize: ".74rem", lineHeight: 1.6 }}>{ltx("lang.hint")}</div>
+              </div>
+            ) : (
+              <>
+                {filteredRecommended.length > 0 && (
+                  <>
+                    <div style={{ padding: "8px 14px 4px", color: "rgba(182,255,0,.7)", fontSize: ".68rem", fontWeight: 900, letterSpacing: ".12em", textTransform: "uppercase" }}>{ltx("lang.recomendados")}</div>
+                    {filteredRecommended.map(lang => <LangOption key={lang.code} lang={lang} selected={selected} onSelect={selectLang} />)}
+                  </>
+                )}
+                {filteredAll.length > 0 && (
+                  <>
+                    <div style={{ padding: "8px 14px 4px", color: "rgba(154,168,189,.6)", fontSize: ".68rem", fontWeight: 900, letterSpacing: ".12em", textTransform: "uppercase", borderTop: filteredRecommended.length > 0 ? "1px solid rgba(255,255,255,.06)" : "none", marginTop: filteredRecommended.length > 0 ? 4 : 0 }}>{ltx("lang.todos")}</div>
+                    {filteredAll.map(lang => <LangOption key={lang.code} lang={lang} selected={selected} onSelect={selectLang} />)}
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>, document.body)}
+    </div>
+  );
+}
+
+function LangOption({ lang, selected, onSelect }) {
+  const isSelected = selected.code === lang.code;
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={isSelected}
+      onClick={() => onSelect(lang)}
+      style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", background: isSelected ? "rgba(182,255,0,.1)" : "transparent", border: "none", borderLeft: isSelected ? "3px solid rgba(182,255,0,.8)" : "3px solid transparent", padding: "8px 14px", cursor: "pointer", color: "#fff", textAlign: "left", transition: "background .12s ease" }}
+      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,.05)"; }}
+      onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+    >
+      <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{lang.flag}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "block", fontWeight: 700, fontSize: ".83rem", color: isSelected ? "rgba(182,255,0,.95)" : "#fff", overflowWrap: "anywhere", whiteSpace: "normal", lineHeight: 1.25 }}>{lang.label}</span>
+        <span style={{ display: "block", fontSize: ".71rem", color: "rgba(154,168,189,.7)", overflowWrap: "anywhere", whiteSpace: "normal", lineHeight: 1.35 }}>{lang.countryEs || lang.country} · {lang.code}</span>
+      </span>
+      {isSelected && <span style={{ color: "rgba(182,255,0,.9)", fontSize: ".85rem", flexShrink: 0 }}>✓</span>}
+    </button>
+  );
+}
+
+// ============================================================
+// END i18n
+// ============================================================
+
+function Sidebar({ current, selectedRole, onClearRole, mobileOpen, mobileModal, onNavigate, onClose }) {
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  // Iconos propios (auditoría Premium V2 2026-09-03: sidebar 100% emoji,
+  // cero librería de iconos). Se sustituye este único punto — el resto de
+  // usos de emoji dispersos por los módulos queda fuera de esta pasada,
+  // ver docs/audit/premium-v2-t3.md.
+  const navKeys = [
+    ["inicio","nav.inicio",IconHome],["reservas","nav.reservar",IconCalendar],["alta_jugador","nav.alta_jugador",IconUsers],
+    // PASO 07I (2026-07-19): acceso directo a Baja de Jugador (Paso 07C),
+    // justo después de Alta de jugador — mismo componente AltaJugador(),
+    // solo cambia la pestaña inicial (ver modules.baja_jugador). Mismo gate
+    // de rol que "alta_jugador" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["baja_jugador","nav.baja_jugador",IconDocument],
+    ["reprogramar","nav.reprogramar",IconRefresh],["cancelar","nav.cancelar",IconClose],["gestion","nav.gestion",IconFolder],
+    // PASO 07G (2026-07-19): acceso directo al módulo de Cierre Temporal de
+    // Pistas (Paso 07E), antes solo visible como card dentro de "gestion".
+    // Mismo gate de rol que "gestion" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["cierre_pistas","nav.cierre_pistas",IconAlertTriangle],
+    // PASO 07N (2026-07-20): módulo visual preparado para Gestión Lista de
+    // Espera (Make ID 5791113, grupo E del mapa App↔Make hasta este paso).
+    // No llama a ningún endpoint real todavía — mismo gate de rol que
+    // "cierre_pistas" (ver CP04_ROLE_PERMISSIONS en rbac.js).
+    ["lista_espera","nav.lista_espera",IconBell],
+    // PASO 07O (2026-07-20): consolidación de módulos de sidebar para 14
+    // escenarios más del inventario Make, agrupados en 4 módulos visuales
+    // (ver docs/paso-07o-sidebar-flujos-50/). "control_qr" y
+    // "pistas_recordatorios" son operación diaria, mismo gate que
+    // "cierre_pistas"/"lista_espera". "dashboard_kpi" y
+    // "backups_seguridad" están gateados como "admin" (ADMIN+SUPPORT, sin
+    // STAFF) — ver CP04_ROLE_PERMISSIONS en rbac.js.
+    ["control_qr","nav.control_qr",IconQrCode],
+    ["pistas_recordatorios","nav.pistas_recordatorios",IconClock],
+    // PASO 07P (2026-07-20): ampliación de sidebar para 20 escenarios más
+    // del inventario Make (ver docs/paso-07p-ampliacion-sidebar-31-flujos/).
+    // "comunicaciones_socio" y "calendario_disponibilidad" son operación
+    // diaria, mismo gate que "control_qr"/"pistas_recordatorios"
+    // (STAFF/ADMIN/SUPPORT). "facturacion_pagos" y "automatizaciones_bots"
+    // están gateados como "admin" (ADMIN+SUPPORT, sin STAFF).
+    ["comunicaciones_socio","nav.comunicaciones_socio",IconMail],
+    ["calendario_disponibilidad","nav.calendario_disponibilidad",IconCalendar],
+    ["torneos","nav.torneos",IconTrophy],["ranking","nav.ranking",IconTrophy],["comunidad","nav.comunidad",IconUsers],["admin","nav.admin",IconChartBar],
+    ["dashboard_kpi","nav.dashboard_kpi",IconBolt],
+    ["backups_seguridad","nav.backups_seguridad",IconShieldCheck],
+    ["facturacion_pagos","nav.facturacion_pagos",IconCreditCard],
+    ["asistente_ia","nav.asistente_ia",IconChat],
+    ["automatizaciones_bots","nav.automatizaciones_bots",IconRobot],
+    ["flujos_make","nav.flujos_make",IconBolt],["soporte","nav.soporte",IconWrench],["perfil","nav.perfil",IconGear],
+  ];
+  // Antes había un mapa de permisos propio y duplicado aquí (menuByRole),
+  // mantenido a mano en paralelo a CP04_ROLE_PERMISSIONS. Se ha unificado:
+  // ahora la navegación y el guard final de render (más abajo, en
+  // ClubPadel04SaaSApp) leen exactamente la misma fuente, para que nunca
+  // puedan desincronizarse entre sí.
+  const allowedMenu = CP04_ROLE_PERMISSIONS[cp04NormalizeRole(selectedRole)] || CP04_ROLE_PERMISSIONS.PLAYER;
+  const visibleItems = navKeys.filter(([id]) => allowedMenu.includes(id));
+
+  return (
+    <aside id="cp04-mobile-menu" className="cp04-sidebar" data-open={mobileOpen ? "true" : "false"} role={mobileOpen && mobileModal ? "dialog" : undefined} aria-modal={mobileOpen && mobileModal ? "true" : undefined} aria-label={tx("aria.main_nav")} tabIndex={-1}>
+      <div className="cp04-sidebar-header" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:26 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ width:12, height:12, borderRadius:"50%", background:T.accent, boxShadow:`0 0 18px ${T.accent}` }} />
+          <div>
+            <div style={{ fontFamily:T.fontDisplay, fontWeight:900 }}>CLUB PÁDEL 04</div>
+            <div style={{ color:T.textDim, fontSize:".78rem" }}>{tx("nav.saas_label")}</div>
+          </div>
+        </div>
+        {selectedRole && (
+          <span
+            aria-label={`Rol actual: ${selectedRole}`}
+            style={{ color:T.accent, background:"rgba(182,255,0,.1)", border:"1px solid rgba(182,255,0,.3)", borderRadius:999, padding:"3px 10px", fontSize:".68rem", fontWeight:900, letterSpacing:".05em", whiteSpace:"nowrap" }}
+          >
+            {cp04NormalizeRole(selectedRole)}
+          </span>
+        )}
+        <button className="cp04-menu-button cp04-sidebar-close" type="button" onClick={onClose} aria-label={tx("aria.close_nav")}>{tx("nav.cerrar_menu")}</button>
+      </div>
+      <nav aria-label={tx("aria.secciones")} style={{ display:"grid", gap:8 }}>
+        {visibleItems.map(([id, key, Icon]) => {
+          const label = tx(key);
+          return (
+            <button
+              key={id}
+              data-tour={`sidebar-${id}`}
+              type="button"
+              onClick={() => onNavigate(id)}
+              aria-current={current === id ? "page" : undefined}
+              aria-label={`${label}`}
+              className={`cp04-menu-button ${current===id ? "is-active" : ""} ${id==="soporte" ? "cp04-sidebar-soporte-btn" : ""}`.replace(/\s+/g," ").trim()}
+              style={{
+                display:"flex",
+                alignItems:"center",
+                gap:10,
+                width:"100%",
+                background: current===id
+                  ? "linear-gradient(135deg, #b6ff00 0%, #2df5a3 100%)"
+                  : "rgba(7,11,20,.72)",
+                color: current===id ? "#05080d" : T.textDim,
+                border:`1px solid ${current===id ? "rgba(182,255,0,.92)" : T.line}`,
+                borderRadius:14,
+                padding:"12px 14px",
+                cursor:"pointer",
+                fontWeight:900,
+                WebkitTapHighlightColor:"rgba(182,255,0,.18)",
+                transition:"background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, transform .1s ease",
+                boxShadow: current===id ? "0 0 0 1px rgba(182,255,0,.28), 0 0 18px rgba(182,255,0,.18)" : "none"
+              }}>
+              <Icon size={18} /><span>{label}</span>
+            </button>
+          );
+        })}
+      </nav>
+      {onClearRole && (
+        <button className="cp04-menu-button cp04-sidebar-logout-btn" type="button" onClick={onClearRole}
+          style={{ width:"100%", marginTop:14, marginBottom:10, justifyContent:"center", gap:8, borderColor:"rgba(182,255,0,.32)" }}>
+          <IconLogout size={17} /> {tx("nav.cerrar_sesion")}
+        </button>
+      )}
+      <div style={{ marginTop:18 }}><LanguageSelector /></div>
+      <Card style={{ marginTop:14, padding:16 }}>
+        <strong style={{ color:T.accent }}>{tx("common.modo_seguro")}</strong>
+        <p style={{ color:T.textDim, fontSize:".84rem", lineHeight:1.5, marginBottom:0 }}>{tx("common.entorno")}.</p>
+      </Card>
+    </aside>
+  );
+}
+
+const AGENDA_ESTADO_STATUS = {
+  Confirmada: "success",
+  "Check-in": "loading",
+  Pendiente: "pending",
+  Incidencia: "error",
+  Finalizada: "pending",
+};
+
+const ESTADO_BADGE_COLOR = { success: T.accent, loading: T.accent2, pending: T.textDim, error: T.dangerText, warning: T.warning };
+
+// Insignia de estado genérica: recibe el `status` (pending/loading/success/
+// warning/error, mismo vocabulario que StatusCard en UiStates.jsx) ya
+// resuelto por quien la usa, para poder reutilizarla con vocabularios de
+// estado distintos (agenda de pistas, tickets de soporte...) sin acoplarla
+// a uno solo.
+function EstadoBadge({ estado, status }) {
+  const color = ESTADO_BADGE_COLOR[status] || T.textDim;
+  return (
+    <span style={{ color, background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 999, padding: "3px 10px", fontSize: ".72rem", fontWeight: 800, whiteSpace: "nowrap" }}>
+      {estado}
+    </span>
+  );
+}
+
+// Dashboard STAFF — agenda operativa del día (T3 §1). Ver comentario junto
+// a DEMO_AGENDA_OPERATIVA: datos de ejemplo explícitos, acciones reales.
+function StaffAgendaOperativa({ navigate }) {
+  const [filtroEstado, setFiltroEstado] = useState("Todas");
+  const estados = ["Todas", ...new Set(DEMO_AGENDA_OPERATIVA.map((r) => r.estado))];
+  const filas = filtroEstado === "Todas" ? DEMO_AGENDA_OPERATIVA : DEMO_AGENDA_OPERATIVA.filter((r) => r.estado === filtroEstado);
+
+  return (
+    <Card style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+        <div>
+          <h3 style={{ margin: 0, fontFamily: T.fontDisplay }}>Agenda operativa</h3>
+          <p style={{ color: T.textDim, fontSize: ".82rem", margin: "4px 0 0" }}>Reservas de hoy en todas las pistas</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: ".68rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "3px 10px" }}>Datos de ejemplo</span>
+          <select aria-label="Filtrar por estado" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={{ padding: "6px 10px", borderRadius: 10, background: "rgba(255,255,255,.05)", border: `1px solid ${T.line}`, color: T.text, fontSize: ".82rem", minHeight: "unset" }}>
+            {estados.map((e) => <option key={e} value={e}>{e}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {filas.length === 0 ? (
+        <EmptyState icon={IconCalendar} title="Sin reservas con ese estado" text="Prueba a cambiar el filtro para ver el resto de la agenda de hoy." />
+      ) : (
+        <div className="cp04-table-wrap">
+          <table className="cp04-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: T.textDim, fontSize: ".74rem", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                <th style={{ padding: "8px 10px" }}>Hora</th>
+                <th style={{ padding: "8px 10px" }}>Pista</th>
+                <th style={{ padding: "8px 10px" }}>Jugador / reserva</th>
+                <th style={{ padding: "8px 10px" }}>Tipo</th>
+                <th style={{ padding: "8px 10px" }}>Estado</th>
+                <th style={{ padding: "8px 10px" }}>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map((r) => (
+                <tr key={r.id} style={{ borderTop: `1px solid ${T.line}` }}>
+                  <td style={{ padding: "10px" }}>{r.hora}</td>
+                  <td style={{ padding: "10px" }}>{r.pista}</td>
+                  <td style={{ padding: "10px" }}>{r.jugador}</td>
+                  <td style={{ padding: "10px", color: T.textDim }}>{r.tipo}</td>
+                  <td style={{ padding: "10px" }}><EstadoBadge estado={r.estado} status={AGENDA_ESTADO_STATUS[r.estado]} /></td>
+                  <td style={{ padding: "10px" }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      <Btn variant="secondary" onClick={() => navigate("gestion")} style={{ padding: "8px 12px", fontSize: ".74rem" }}>Ver reserva</Btn>
+                      <Btn
+                        variant="secondary"
+                        disabled={r.estado === "Finalizada"}
+                        onClick={() => navigate("control_qr")}
+                        style={{ padding: "8px 12px", fontSize: ".74rem" }}
+                      >
+                        Check-in
+                      </Btn>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.line}` }}>
+        <span style={{ color: T.textDim, fontSize: ".78rem", alignSelf: "center", marginRight: 4 }}>Accesos rápidos:</span>
+        <Btn variant="secondary" onClick={() => navigate("lista_espera")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconBell size={14} /> Lista de espera</Btn>
+        <Btn variant="secondary" onClick={() => navigate("alta_jugador")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconUsers size={14} /> Alta jugador</Btn>
+        <Btn variant="secondary" onClick={() => navigate("baja_jugador")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconDocument size={14} /> Baja jugador</Btn>
+        <Btn variant="secondary" onClick={() => navigate("cierre_pistas")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconAlertTriangle size={14} /> Cierre temporal</Btn>
+        <Btn variant="secondary" onClick={() => navigate("control_qr")} style={{ padding: "7px 12px", fontSize: ".78rem" }}><IconQrCode size={14} /> Control de acceso</Btn>
+      </div>
+    </Card>
+  );
+}
+
+const TICKET_SEVERIDAD_COLOR = { Baja: T.textDim, Media: T.warning, Alta: T.dangerText, Crítica: T.dangerText };
+const TICKET_ESTADO_STATUS = { Abierto: "error", "En revisión": "loading", Pendiente: "warning", Resuelto: "success" };
+
+// Dashboard SUPPORT — resumen y tabla de tickets/incidencias (T3 §2). Ver
+// comentario junto a DEMO_TICKETS_SOPORTE: datos de ejemplo explícitos,
+// acción "Abrir" navega siempre a un módulo real según categoría.
+function SupportTicketsPanel({ navigate }) {
+  const abiertos = DEMO_TICKETS_SOPORTE.filter((t) => t.estado === "Abierto").length;
+  const enRevision = DEMO_TICKETS_SOPORTE.filter((t) => t.estado === "En revisión").length;
+  const resueltos = DEMO_TICKETS_SOPORTE.filter((t) => t.estado === "Resuelto").length;
+  const criticos = DEMO_TICKETS_SOPORTE.filter((t) => t.severidad === "Crítica").length;
+  const ultimaActualizacion = DEMO_TICKETS_SOPORTE.reduce((max, t) => (t.fecha > max ? t.fecha : max), DEMO_TICKETS_SOPORTE[0]?.fecha || "—");
+
+  const resumen = [
+    { label: "Abiertos", value: abiertos, color: T.dangerText },
+    { label: "En revisión", value: enRevision, color: T.accent2 },
+    { label: "Resueltos", value: resueltos, color: T.accent },
+    { label: "Críticos", value: criticos, color: T.warning },
+  ];
+
+  return (
+    <Card style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
+        <div>
+          <h3 style={{ margin: 0, fontFamily: T.fontDisplay }}>Tickets de soporte</h3>
+          <p style={{ color: T.textDim, fontSize: ".82rem", margin: "4px 0 0" }}>Última actualización: {ultimaActualizacion}</p>
+        </div>
+        <span style={{ fontSize: ".68rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "3px 10px" }}>Datos de ejemplo</span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10, marginBottom: 18 }}>
+        {resumen.map((r) => (
+          <div key={r.label} style={{ background: "rgba(255,255,255,.04)", border: `1px solid ${T.line}`, borderRadius: 14, padding: "10px 12px" }}>
+            <div style={{ color: T.textDim, fontSize: ".68rem" }}>{r.label}</div>
+            <div style={{ fontFamily: T.fontDisplay, fontSize: "1.3rem", fontWeight: 900, color: r.color }}>{r.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {DEMO_TICKETS_SOPORTE.length === 0 ? (
+        <EmptyState icon={IconCheck} title="Sin incidencias abiertas" text="No hay tickets registrados." />
+      ) : (
+        <div className="cp04-table-wrap">
+          <table className="cp04-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: T.textDim, fontSize: ".74rem", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                <th style={{ padding: "8px 10px" }}>ID</th>
+                <th style={{ padding: "8px 10px" }}>Categoría</th>
+                <th style={{ padding: "8px 10px" }}>Severidad</th>
+                <th style={{ padding: "8px 10px" }}>Estado</th>
+                <th style={{ padding: "8px 10px" }}>Fecha</th>
+                <th style={{ padding: "8px 10px" }}>Módulo</th>
+                <th style={{ padding: "8px 10px" }}>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {DEMO_TICKETS_SOPORTE.map((tck) => (
+                <tr key={tck.id} style={{ borderTop: `1px solid ${T.line}` }}>
+                  <td style={{ padding: "10px", fontWeight: 700 }}>{tck.id}</td>
+                  <td style={{ padding: "10px" }}>{tck.categoria}</td>
+                  <td style={{ padding: "10px", color: TICKET_SEVERIDAD_COLOR[tck.severidad] || T.textDim, fontWeight: 700 }}>{tck.severidad}</td>
+                  <td style={{ padding: "10px" }}>
+                    <EstadoBadge estado={tck.estado} status={TICKET_ESTADO_STATUS[tck.estado]} />
+                  </td>
+                  <td style={{ padding: "10px", color: T.textDim }}>{tck.fecha}</td>
+                  <td style={{ padding: "10px", color: T.textDim }}>{tck.modulo}</td>
+                  <td style={{ padding: "10px" }}>
+                    <Btn variant="secondary" onClick={() => navigate(TICKET_CATEGORIA_DESTINO[tck.categoria] || "soporte")} style={{ padding: "8px 12px", fontSize: ".74rem" }}>Abrir</Btn>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function Inicio({ navigate, selectedRole }) {
+  const clk = useClock();
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  const kpi = DEMO_KPI;
+  const makeOk = MAKE_FLUJOS_COUNTERS.conectados >= MAKE_FLUJOS_COUNTERS.total * 0.5;
+  const makeStatus = kpi.makeErrores > 3 ? "error" : kpi.makeErrores > 0 ? "warn" : "ok";
+  const diasCortos = tx("home.dias_semana").split(",");
+  const diasLargo = tx("home.dias_largo").split(",");
+  const canAccess = (section) => cp04CanAccessSection(selectedRole, section);
+
+  // Personalización por rol (auditoría Premium V2 2026-09-03): antes este
+  // dashboard era idéntico para los 4 roles — un PLAYER veía ingresos del
+  // club y salud de las automatizaciones Make, datos a los que ni siquiera
+  // tiene acceso desde el sidebar (rbac.js). Se deriva de los mismos
+  // permisos ya definidos, nunca de un chequeo de rol nuevo y paralelo:
+  // - showRevenue/showOpsHealth: exactamente quien ya ve "facturacion_pagos"
+  //   / "dashboard_kpi" en el sidebar (ADMIN + SUPPORT).
+  // - isInternalRole: cualquier rol de plantilla (STAFF/ADMIN/SUPPORT),
+  //   distinguido de PLAYER por tener "gestion".
+  const showRevenue = canAccess("facturacion_pagos");
+  const showOpsHealth = canAccess("dashboard_kpi");
+  const isInternalRole = canAccess("gestion");
+  const isPlayer = !isInternalRole;
+  // STAFF: rol interno sin dashboard_kpi (ADMIN/SUPPORT sí lo tienen) —
+  // única combinación que aísla exactamente a STAFF sin comparar strings
+  // de rol. SUPPORT: única sección verdaderamente exclusiva suya (rbac.js
+  // CP04_SUPPORT_ONLY_SECTIONS).
+  const isStaffTier = isInternalRole && !showOpsHealth;
+  const isSupportTier = canAccess("soporte");
+
+  // Acciones rápidas: antes eran 4 huecos fijos (2 de ellos condicionales a
+  // flujos_make/alta_jugador) que para PLAYER y STAFF quedaban vacíos sin
+  // sustituto. Ahora se completan con la siguiente acción relevante que ese
+  // rol sí tiene, tomada siempre de canAccess (nunca inventada).
+  const quickActions = [
+    { key: "reservar", label: `🎾 ${tx("home.reservar")}` , onClick: () => navigate("reservas") },
+    { key: "torneo", label: `🏆 ${tx("home.torneo")}`, variant: "secondary", onClick: () => navigate("torneos") },
+  ];
+  if (canAccess("flujos_make")) {
+    quickActions.push({ key: "procesos", label: `⚙️ ${tx("home.procesos")}`, variant: "secondary", onClick: () => navigate("flujos_make") });
+  }
+  if (canAccess("alta_jugador")) {
+    quickActions.push({ key: "alta", label: `👤 ${tx("home.alta")}`, variant: "secondary", onClick: () => navigate("alta_jugador") });
+  }
+  if (!canAccess("flujos_make") && canAccess("cierre_pistas")) {
+    quickActions.push({ key: "cierre", label: "🔒 Cierre temporal", variant: "secondary", onClick: () => navigate("cierre_pistas") });
+  }
+  if (!canAccess("alta_jugador") && canAccess("lista_espera")) {
+    quickActions.push({ key: "espera", label: "📋 Lista de espera", variant: "secondary", onClick: () => navigate("lista_espera") });
+  }
+  if (isPlayer && canAccess("ranking")) {
+    quickActions.push({ key: "ranking", label: "🏅 Ranking", variant: "secondary", onClick: () => navigate("ranking") });
+  }
+
+  // KPI de negocio (socios/ingresos/salud Make) solo para quien ya los ve
+  // en otra parte del sidebar; reservas/ocupación/torneos son operativos y
+  // útiles para elegir cuándo jugar, así que se mantienen para todos.
+  const kpiCards = [
+    { key: "reservasHoy", label: tx("home.reservas_hoy"), value: kpi.reservasHoy, sub: `vs 10 ${tx("home.vs_ayer")}`, trend: 20, icon: "🎾" },
+    { key: "ocupacion", label: tx("home.ocupacion_media"), value: kpi.ocupacionMedia + "%", sub: tx("home.pistas_activas"), trend: 4, color: T.accent2, icon: "🏟" },
+  ];
+  if (isInternalRole) {
+    kpiCards.push({ key: "socios", label: tx("home.socios_activos"), value: kpi.jugadoresActivos, sub: `+${kpi.nuevosJugadores} ${tx("home.este_mes")}`, trend: 6, color: "#a78bfa", icon: "👤" });
+  }
+  kpiCards.push({ key: "torneos", label: tx("home.torneos_activos"), value: kpi.torneosActivos, sub: tx("home.en_curso"), trend: null, color: T.warning, icon: "🏆" });
+  if (showOpsHealth) {
+    kpiCards.push({ key: "procesos", label: tx("home.procesos_activos"), value: `${MAKE_FLUJOS_COUNTERS.conectados}/${MAKE_FLUJOS_COUNTERS.total}`, sub: `${MAKE_FLUJOS_COUNTERS.operativos} ${tx("home.operativo_probado")}`, trend: null, color: makeOk ? T.accent : T.warning, icon: "⚡" });
+  }
+  if (showRevenue) {
+    kpiCards.push({ key: "ingresos", label: tx("home.ingresos_mes"), value: `${kpi.ingresosMes}€`, sub: tx("home.estimacion_mensual"), trend: 12, color: T.metricPositive, icon: "💶" });
+  }
+
+  return (
+    <div style={{ padding: "clamp(24px,4vw,48px) 24px clamp(60px,10vw,96px)", maxWidth: 1220, margin: "0 auto" }}>
+
+      {/* HERO */}
+      <section style={{ display: "grid", alignItems: "center", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,340px),1fr))", gap: "clamp(20px,4vw,48px)", marginBottom: "clamp(28px,4vw,48px)" }}>
+        <div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, color: T.accent, fontWeight: 900, letterSpacing: ".18em", fontSize: ".78rem", textTransform: "uppercase", marginBottom: 16, padding: "7px 12px", border: `1px solid rgba(182,255,0,.22)`, borderRadius: 999, background: "rgba(182,255,0,.07)" }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.accent, boxShadow: `0 0 8px ${T.accent}` }} />
+            Club Pádel 04
+          </div>
+          <h1 style={{ fontFamily: T.fontDisplay, fontSize: "clamp(2.8rem,7vw,5.6rem)", lineHeight: .88, margin: "0 0 18px", letterSpacing: "-.07em" }}>
+            {tx("home.club_operativo")}<br /><span style={{ color: T.accent }}>{tx("home.hero_accent")}</span>
+          </h1>
+          <p style={{ color: T.textDim, fontSize: "clamp(.95rem,1.8vw,1.1rem)", lineHeight: 1.75, maxWidth: 640, margin: "0 0 24px" }}>
+            {tx("home.hero_subtitle")}
+          </p>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Btn onClick={() => navigate("reservas")}>🎾 {tx("home.reservar")}</Btn>
+            <Btn variant="secondary" onClick={() => navigate("torneos")}>🏆 {tx("home.btn_torneos")}</Btn>
+            {canAccess("admin") && <Btn variant="secondary" onClick={() => navigate("admin")}>📊 {tx("home.btn_admin")}</Btn>}
+            {!canAccess("admin") && canAccess("gestion") && <Btn variant="secondary" onClick={() => navigate("gestion")}>🗂️ Gestión</Btn>}
+            {!canAccess("admin") && !canAccess("gestion") && canAccess("ranking") && <Btn variant="secondary" onClick={() => navigate("ranking")}>🏅 Ranking</Btn>}
+          </div>
+        </div>
+
+        {/* CENTRO RÁPIDO DEL CLUB */}
+        <div style={{ borderRadius: 28, border: `1px solid rgba(182,255,0,.22)`, background: `linear-gradient(160deg,rgba(11,17,29,.97),rgba(47,107,255,.1)), radial-gradient(circle at 80% 0%, rgba(182,255,0,.18), transparent 40%)`, padding: "clamp(18px,3vw,28px)", display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Reloj */}
+          <div style={{ textAlign: "center", borderBottom: `1px solid rgba(255,255,255,.08)`, paddingBottom: 14 }}>
+            <div style={{ fontFamily: "monospace", fontSize: "clamp(2rem,5vw,3rem)", fontWeight: 900, color: T.accent, lineHeight: 1, letterSpacing: ".06em" }}>{clk.time}</div>
+            <div style={{ color: T.textDim, fontSize: ".85rem", marginTop: 5 }}>{clk.day}, {clk.date}</div>
+          </div>
+
+          {/* Acciones rápidas */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {quickActions.slice(0, 4).map(action => (
+              <Btn key={action.key} variant={action.variant} onClick={action.onClick} style={{ padding: "10px 12px", fontSize: ".82rem" }}>{action.label}</Btn>
+            ))}
+          </div>
+
+          {/* Estado operativo (roles internos) / ocupación (PLAYER) */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid rgba(255,255,255,.07)`, paddingTop: 12 }}>
+            {isInternalRole ? (
+              <>
+                <span style={{ color: T.textDim, fontSize: ".78rem" }}>{tx("home.estado_operativo")}</span>
+                <FlowStatusBadge status={makeStatus} />
+              </>
+            ) : (
+              <>
+                <span style={{ color: T.textDim, fontSize: ".78rem" }}>{tx("home.ocupacion_media")}</span>
+                <span style={{ color: T.accent, fontWeight: 900, fontSize: ".9rem" }}>{kpi.ocupacionMedia}%</span>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* KPI STRIP */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10, marginBottom: 24 }}>
+        {kpiCards.map(card => (
+          <MetricCard key={card.key} label={card.label} value={card.value} sub={card.sub} trend={card.trend} color={card.color} icon={card.icon} />
+        ))}
+      </div>
+
+      {/* GRÁFICAS HOME */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,300px),1fr))", gap: 14, marginBottom: 24 }}>
+        <ChartCard title={tx("home.reservas_hora")} sub={tx("home.franja_horaria")}>
+          <MiniBarChart data={DEMO_RESERVAS_HOY} height={70} color={T.accent} unit={tx("home.reservas_hoy").toLowerCase()} />
+        </ChartCard>
+        <ChartCard title={tx("home.reservas_7dias")} sub={tx("home.tendencia_semanal")}>
+          <MiniLineChart data={DEMO_RESERVAS_SEMANA} height={70} color={T.accent2} labels={diasLargo} unit="" />
+          <div style={{ display:"flex", justifyContent:"space-between", marginTop:6 }}>
+            {diasCortos.map((d,i) => (
+              <span key={i} style={{ color:T.textDim, fontSize:".65rem" }}>{d}</span>
+            ))}
+          </div>
+        </ChartCard>
+        <ChartCard title={tx("home.ocupacion_pista")} sub={tx("home.porcentaje_uso")}>
+          <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} unit="%" />
+        </ChartCard>
+        {showOpsHealth && (
+          <ChartCard title={tx("home.estado_procesos")} sub={`${MAKE_FLUJOS_COUNTERS.total} ${tx("home.flujos_totales")}`}>
+            <DonutChart size={100} label="Sistema" segments={[
+              { l: tx("home.activos"),      v: MAKE_FLUJOS_COUNTERS.conectados, c: T.accent },
+              { l: tx("home.pausados"),     v: MAKE_FLUJOS_COUNTERS.total - MAKE_FLUJOS_COUNTERS.conectados, c: T.warning },
+            ]} />
+          </ChartCard>
+        )}
+      </div>
+
+      {/* ALERTAS / AVISOS (solo roles internos: un PLAYER no gestiona
+          incidencias ni automatizaciones Make, no debe verlas en su
+          dashboard) */}
+      {isInternalRole && (kpi.makeErrores > 0 || kpi.incidenciasAbiertas > 0) && (
+        <div style={{ borderRadius: 16, border: `1px solid ${T.warning}55`, background: `rgba(255,173,71,.07)`, padding: "12px 16px", marginBottom: 22, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <IconAlertTriangle size={22} color={T.warning} style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: T.warning }}>{tx("home.avisos_activos")}</strong>
+            <div style={{ color: T.textDim, fontSize: ".82rem", marginTop: 3 }}>
+              {kpi.makeErrores > 0 && <span>{kpi.makeErrores} {kpi.makeErrores!==1?tx("home.incidencias_s"):tx("home.incidencia")} · </span>}
+              {kpi.incidenciasAbiertas > 0 && <span>{kpi.incidenciasAbiertas} {kpi.incidenciasAbiertas !== 1 ? tx("home.incidencias_s") : tx("home.incidencia")}</span>}
+            </div>
+          </div>
+          {canAccess("flujos_make") && <Btn variant="secondary" onClick={() => navigate("flujos_make")} style={{ padding: "7px 14px", fontSize: ".8rem" }}>{tx("home.ver_procesos")}</Btn>}
+        </div>
+      )}
+
+      {/* DASHBOARD STAFF: agenda operativa del día (T3 §1) */}
+      {isStaffTier && <StaffAgendaOperativa navigate={navigate} />}
+
+      {/* DASHBOARD SUPPORT: tickets/incidencias (T3 §2) */}
+      {isSupportTier && <SupportTicketsPanel navigate={navigate} />}
+
+      {/* GALERÍA */}
+      <Gallery />
+    </div>
+  );
+}
+
+// Club Pádel 04 · Puerta de login inline para crear/cancelar/reprogramar.
+//
+// Con el gate de rol del Worker activo (CP04_ENFORCE_ROLE_GATES), las 3
+// acciones mutables de /api/reservas exigen un Bearer real verificado por
+// Supabase: ya no basta con un rol demo local. En vez de enviar la petición
+// igualmente (y recibir un 401 opaco) o simular un éxito falso, los 3
+// formularios bloquean el envío ANTES de llamar al Worker y muestran este
+// login inline. Se queda dentro del mismo componente (nunca navega ni
+// desmonta el formulario): los datos no sensibles que el usuario ya
+// escribió (fecha, pista, hora, clave de reserva...) permanecen intactos en
+// el estado de React sin necesidad de guardarlos en ningún sitio. Email y
+// contraseña de este mini-login viven solo en estado local del componente,
+// nunca en localStorage/sessionStorage/URL — authService ya se encarga de
+// persistir únicamente el access_token tras un login correcto.
+function ReservaAuthGate({ message }) {
+  const auth = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function submit(event) {
+    event.preventDefault();
+    if (sending) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setError("Introduce tu email y contraseña.");
+      return;
+    }
+    setSending(true);
+    setError("");
+    const result = await auth.login(cleanEmail, password);
+    setSending(false);
+    if (!result.ok) {
+      setError(result.message || "No se pudo iniciar sesión.");
+      return;
+    }
+    // Éxito: auth.isAuthenticated pasa a true, el formulario que envuelve
+    // este gate deja de mostrarlo (ver condición `!auth.isAuthenticated` en
+    // cada llamador) y conserva sus datos, listo para reintentar el envío.
+    setPassword("");
+  }
+
+  return (
+    <Card style={{ marginBottom: 20, borderColor: `${T.warning}66` }}>
+      <strong style={{ color: T.warning }}>Inicia sesión para continuar</strong>
+      <p style={{ color: T.textDim, marginTop: 6, marginBottom: 16, lineHeight: 1.55 }}>{message}</p>
+      <form onSubmit={submit}>
+        <input
+          type="email"
+          aria-label="Email"
+          placeholder={ltx("login.email_placeholder")}
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          autoComplete="email"
+          disabled={sending}
+        />
+        <div style={{ marginTop: 10 }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            aria-label="Contraseña"
+            placeholder="Contraseña"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            autoComplete="current-password"
+            disabled={sending}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowPassword(v => !v)}
+          style={{ border: "none", background: "transparent", color: T.accent, fontSize: ".82rem", fontWeight: 800, cursor: "pointer", padding: 0, marginTop: 8, textDecoration: "underline", textUnderlineOffset: 3 }}
+        >
+          {showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+        </button>
+        {error && <FieldError>{error}</FieldError>}
+        <Btn type="submit" disabled={sending} style={{ marginTop: 14 }}>
+          {sending ? "Entrando..." : "Iniciar sesión"}
+        </Btn>
+      </form>
+    </Card>
+  );
 }
 
 function Reservas() {
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  const auth = useAuth();
+  // No hace falta sincronizar needsLogin a false con un efecto cuando
+  // auth.isAuthenticated pasa a true: el gate solo se pinta si
+  // `needsLogin && !auth.isAuthenticated` (ver el render más abajo), así
+  // que en cuanto hay sesión real deja de mostrarse sin más estado.
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [step, setStep] = useState(1);
   const [status, setStatus] = useState("pending");
+  const [statusMessage, setStatusMessage] = useState("");
   const [errors, setErrors] = useState({});
   const [court, setCourt] = useState("Pista 1");
+  // ocupadas: claves "fecha|pista|hora" recibidas del backend vía CalendarioDisponibilidad.
+  // Es la misma fuente de verdad que usa el calendario → elimina la divergencia
+  // que permitía seleccionar en el formulario slots marcados como "No disponible".
+  const [ocupadas, setOcupadas] = useState([]);
+  const ocupadasSet = useMemo(() => new Set(ocupadas), [ocupadas]);
   const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
+  const sendingRef = useRef(false);
   const duration = Number(form.duracion_minutos);
   const horaFin = calcTimeEnd(form.hora, duration);
   const price = priceFor(court, duration);
   const payload = useMemo(() => prepareBookingPayload(form, court), [form, court]);
   const sending = status === "sending";
+  // El color por estado ahora lo decide StatusCard (components/states/UiStates.jsx)
+  // a partir de `status`, no un tercer valor por entrada aquí — mismo
+  // estado/lógica, solo se retira el color que ya no se usa en el render.
   const statusMap = {
-    pending: ["Pendiente", "Completa los datos y revisa el resumen antes de confirmar.", T.warning],
-    sending: ["Enviando", "Estamos enviando la solicitud al endpoint seguro de reservas.", T.warning],
-    success: ["Éxito", "Reserva enviada correctamente. Queda pendiente de confirmación por backend.", T.accent],
-    error: ["Error", "No se pudo enviar. Revisa los datos o configura /api/reservas en backend.", T.danger],
+    pending: [tx("status.reserva.pendiente"), tx("status.reserva.pendiente_txt")],
+    sending: [tx("status.reserva.enviando"), tx("status.reserva.enviando_txt")],
+    success: [tx("status.reserva.exito"), tx("status.reserva.exito_txt")],
+    error: [tx("status.reserva.error"), statusMessage || tx("status.reserva.error_txt")],
   };
-  const [statusTitle, statusText, statusColor] = statusMap[status];
+  const [statusTitle, statusText] = statusMap[status];
 
   function updateForm(field, value) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const updated = { ...current, [field]: value };
+      if (field === "hora") {
+        const valid = getAvailableDurationsForHour(value);
+        if (!valid.includes(Number(current.duracion_minutos))) {
+          updated.duracion_minutos = String(valid[0] ?? 60);
+        }
+      }
+      return updated;
+    });
     setErrors((current) => ({ ...current, [field]: undefined }));
+    setStatusMessage("");
     if (status !== "sending") setStatus("pending");
   }
 
   function review() {
-    const nextErrors = validateBooking(form, court);
+    // Comprueba ocupación antes de validateBooking: getSlotStatus no tiene acceso
+    // al inventario del backend, así que este check usa ocupadasSet (misma fuente
+    // que el calendario).
+    if (ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)) {
+      setErrors({ hora: tx("errors.horario_ocupado") });
+      setStatus("error");
+      return;
+    }
+    const nextErrors = validateBooking(form, court, tx);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
       setStatus("error");
@@ -311,83 +2233,6209 @@ function Reservas() {
   }
 
   async function send() {
-    if (sending) return;
-    const nextErrors = validateBooking(form, court);
+    if (sending || sendingRef.current) return;
+    const nextErrors = validateBooking(form, court, tx);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
+      setStatusMessage(tx("errors.datos_incompletos"));
       setStatus("error");
       setStep(1);
       return;
     }
 
+    // Con el gate de rol del Worker activo, crear_reserva exige un Bearer
+    // real: sin sesión, ni se consulta disponibilidad ni se llama al
+    // endpoint — se muestra el login inline (ReservaAuthGate) en vez de
+    // mandar una petición anónima que solo recibiría un 401. El formulario
+    // (paso 2, con todos los datos ya introducidos) permanece tal cual.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setStatusMessage("Inicia sesión para confirmar tu reserva. Tus datos no se pierden.");
+      setStatus("error");
+      return;
+    }
+
+    sendingRef.current = true;
     setStatus("sending");
+    setStatusMessage("");
     try {
-      await sendBooking(payload);
+      const slotKey = `${form.fecha}|${court}|${form.hora}`;
+      const disponibilidad = await fetchDisponibilidad(form.fecha);
+      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+        setStatusMessage(tx("errors.horario_ocupado"));
+        setStatus("error");
+        setStep(1);
+        return;
+      }
+
+      const res = await authFetch(CONFIG.bookingEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local
+      // (deja de mandar un Bearer que el Worker ya rechaza) y se vuelve a
+      // pedir login, sin tocar los datos del formulario ya escritos.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setStatusMessage("Tu sesión ha caducado. Inicia sesión de nuevo para confirmar la reserva.");
+        setStatus("error");
+        return;
+      }
+
+      const data = await readSafeResponse(res);
+      if (!res.ok || data?.ok === false) throw cp04BuildReservationError(data, "booking_request_failed");
+
+      refreshDisponibilidadAfterChange(form.fecha);
       setStatus("success");
       setStep(3);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      setStatusMessage(cp04ReservationErrorMessage(err, tx("errors.reserva_error")));
       setStatus("error");
+    } finally {
+      sendingRef.current = false;
     }
   }
 
   function newBooking() {
     setStep(1);
     setStatus("pending");
+    setStatusMessage("");
     setErrors({});
   }
 
-  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow="Reservas" title="Reservar pista" desc="Formulario preparado para backend seguro. No expone Make ni credenciales en el navegador." /><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step === 1 && <div className="cp04-grid-2"><Card><h3>Datos del jugador</h3><input aria-label="Nombre" placeholder="Nombre" value={form.nombre} onChange={(e) => updateForm("nombre", e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label="Apellidos" placeholder="Apellidos" value={form.apellidos} onChange={(e) => updateForm("apellidos", e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={(e) => updateForm("email", e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={(e) => updateForm("telefono", e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label="Modalidad" value={form.modalidad} onChange={(e) => updateForm("modalidad", e.target.value)}>{BOOKING_MODALITIES.map((m) => <option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label="Nivel" value={form.nivel} onChange={(e) => updateForm("nivel", e.target.value)}>{BOOKING_LEVELS.map((n) => <option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label="Comentarios" placeholder="Comentarios" value={form.comentarios} onChange={(e) => updateForm("comentarios", e.target.value)} /></Card><Card><h3>Fecha, hora y pista</h3><input aria-label="Fecha" type="date" min={todayISO()} value={form.fecha} onChange={(e) => updateForm("fecha", e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label="Hora" value={form.hora} onChange={(e) => updateForm("hora", e.target.value)}>{BOOKING_HOURS.map((h) => <option key={h} value={h}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label="Duración" value={form.duracion_minutos} onChange={(e) => updateForm("duracion_minutos", e.target.value)}>{BOOKING_DURATIONS.map((mins) => <option key={mins} value={mins}>{mins} minutos</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map((c) => <Btn key={c.id} variant={court === c.name ? "primary" : "secondary"} disabled={sending} onClick={() => setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background: T.bg, marginTop: 16 }}>Hora fin: <strong style={{ color: T.accent }}>{horaFin}</strong> · Total: <strong style={{ color: T.accent }}>{price}€</strong></Card><Btn disabled={sending} onClick={review} style={{ width: "100%", marginTop: 16 }}>Ver resumen</Btn></Card></div>}{step === 2 && <Card style={{ maxWidth: 620, margin: "0 auto" }}><h3>Resumen</h3><p style={{ color: T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{payload.reserva.fecha} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color: T.textDim }}>Modalidad: {payload.reserva.modalidad} · Nivel: {payload.reserva.nivel}</p><h2 style={{ color: T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}><Btn variant="secondary" disabled={sending} onClick={() => setStep(1)}>Editar</Btn><Btn disabled={sending} onClick={send}>{sending ? "Enviando..." : "Confirmar"}</Btn></div></Card>}{step === 3 && <Card style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}><h3>Reserva registrada</h3><p style={{ color: T.textDim }}>La confirmación real dependerá del backend y de las integraciones configuradas.</p><Btn onClick={newBooking}>Nueva reserva</Btn></Card>}</div>;
+  // Cuando la fecha o la pista cambia, el calendario refetch y actualiza
+  // ocupadasSet. Si la hora seleccionada queda ocupada en el nuevo contexto,
+  // se restablece automáticamente a la primera franja libre.
+  useEffect(() => {
+    setForm((prev) => {
+      const key = `${prev.fecha}|${court}|${prev.hora}`;
+      if (!ocupadasSet.has(key)) return prev;
+      const fallback = BOOKING_HOURS.find(
+        (h) =>
+          !ocupadasSet.has(`${prev.fecha}|${court}|${h}`) &&
+          getAvailableDurationsForHour(h).length > 0
+      ) ?? BOOKING_HOURS[0];
+      const validDurations = getAvailableDurationsForHour(fallback);
+      return {
+        ...prev,
+        hora: fallback,
+        duracion_minutos: validDurations.includes(Number(prev.duracion_minutos))
+          ? prev.duracion_minutos
+          : String(validDurations[0] ?? 60),
+      };
+    });
+  }, [form.fecha, court, ocupadasSet]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow={tx("reservas.eyebrow")} title={tx("reservas.title")} desc={tx("reservas.desc")} /><CalendarioDisponibilidad
+  initialDate={form.fecha || todayISO()}
+  selectedCourt={court}
+  duration={duration}
+  onDisponibilidadChange={(data) => setOcupadas(data.ocupadas)}
+  onSelectSlot={({ fecha, pista, hora }) => {
+    updateForm("fecha", fecha);
+    updateForm("hora", hora);
+    updateForm("pista", pista);
+    setCourt(pista);
+    setStep(1);
+  }}
+/><StatusCard status={status} title={statusTitle} text={statusText} style={{ marginBottom: 20 }} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para confirmar esta reserva. El resumen que has revisado se mantiene." />}{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label={tx("reservas.email")} placeholder={tx("reservas.email")} type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label={tx("reservas.telefono")} placeholder={tx("reservas.telefono")} value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{tx(`reservas.modalidad.${m}`)}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{tx(`reservas.nivel.${n}`)}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,getAvailableDurationsForHour(h)[0]??duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${h}`)}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{getAvailableDurationsForHour(form.hora).map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)} className={c.id===1?"cp04-fix-white-action-btn cp04-fix-pista-1-btn":undefined}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"||ocupadasSet.has(`${form.fecha}|${court}|${form.hora}`)} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+}
+
+function CancelarReserva({ setCurrent }) {
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  const auth = useAuth();
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [clave, setClave] = useState("");
+  const [confirmado, setConfirmado] = useState(false);
+  const [status, setStatus] = useState("idle");
+  const [error, setError] = useState("");
+  const sendingRef = useRef(false);
+  const sending = status === "sending";
+  const success = status === "success";
+
+  const statusMap = {
+    idle: [tx("status.cancelar.idle"), tx("status.cancelar.idle_txt")],
+    sending: [tx("status.cancelar.enviando"), tx("status.cancelar.enviando_txt")],
+    success: [tx("status.cancelar.exito"), tx("status.cancelar.exito_txt")],
+    error: [tx("status.cancelar.error"), error || tx("status.cancelar.error_txt")],
+  };
+  const [statusTitle, statusText] = statusMap[status];
+
+  function updateClave(value) {
+    setClave(value);
+    setError("");
+    if (status !== "sending") setStatus("idle");
+  }
+
+  function updateConfirmado(value) {
+    setConfirmado(value);
+    setError("");
+    if (status !== "sending") setStatus("idle");
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    if (sending || sendingRef.current) return;
+
+    const claveLimpia = clave.trim();
+    if (!claveLimpia) {
+      setError(tx("errors.clave"));
+      setStatus("error");
+      return;
+    }
+    if (!confirmado) {
+      setError(tx("errors.confirmado_cancelar"));
+      setStatus("error");
+      return;
+    }
+
+    // Cancelar es operación mutable de /api/reservas: con el gate de rol
+    // del Worker activo exige un Bearer real. Sin sesión, no se llama al
+    // endpoint (que solo devolvería 401) — se muestra el login inline; la
+    // clave de reserva y la confirmación ya escritas se mantienen.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setError("Inicia sesión para cancelar esta reserva.");
+      setStatus("error");
+      return;
+    }
+
+    setStatus("sending");
+    setError("");
+    sendingRef.current = true;
+
+    try {
+      // Adjunta el token real de la sesión backend (Supabase) verificada
+      // por el Worker (CP04_ENFORCE_ROLE_GATES).
+      const res = await authFetch(CONFIG.bookingEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accion: "cancelar_reserva",
+          clave_reserva: claveLimpia,
+          jugador: {
+            nombre: "",
+            email: "",
+            telefono: "",
+          },
+          club: "Club Pádel 04",
+          origen: "app_publica_cancelar_reserva",
+        }),
+      });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local y
+      // se vuelve a pedir login, sin perder la clave de reserva escrita.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setError("Tu sesión ha caducado. Inicia sesión de nuevo para cancelar la reserva.");
+        setStatus("error");
+        return;
+      }
+
+      const data = await readSafeResponse(res);
+
+      if (!res.ok || data?.ok === false) {
+        throw cp04BuildReservationError(data, "cancel_request_failed");
+      }
+
+      setClave("");
+      setConfirmado(false);
+      setStatus("success");
+      refreshDisponibilidadAfterChange();
+    } catch (err) {
+      setError(cp04ReservationErrorMessage(err, tx("errors.cancelar_error")));
+      setStatus("error");
+    } finally {
+      sendingRef.current = false;
+    }
+  }
+
+  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} />{needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para cancelar esta reserva. La clave que has introducido se mantiene." />}<StatusCard status={status} title={statusTitle} text={statusText} style={{ marginBottom:20 }} /><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+}
+
+
+function ReprogramarReserva({ setCurrent }) {
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  const auth = useAuth();
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [court, setCourt] = useState("Pista 1");
+  const [form, setForm] = useState({
+    clave_reserva: "",
+    nueva_fecha_reserva: todayISO(),
+    nueva_hora_inicio: "10:00",
+    duracion_minutos: "90",
+    confirmado: false,
+  });
+  const [status, setStatus] = useState("idle");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [errors, setErrors] = useState({});
+  const sendingRef = useRef(false);
+  const sending = status === "sending";
+  const success = status === "success";
+  const duration = Number(form.duracion_minutos);
+  const nuevaHoraFin = calcTimeEnd(form.nueva_hora_inicio, duration);
+  const payload = useMemo(
+    () => prepareReschedulePayload(form, court),
+    [form, court],
+  );
+
+  const statusMap = {
+    idle: [tx("status.reprog.idle"), tx("status.reprog.idle_txt")],
+    sending: [tx("status.reprog.enviando"), tx("status.reprog.enviando_txt")],
+    success: [tx("status.reprog.exito"), statusMessage || tx("status.reprog.exito_txt")],
+    error: [tx("status.reprog.error"), statusMessage || tx("status.reprog.error_txt")],
+  };
+  const [statusTitle, statusText] = statusMap[status];
+
+  function updateForm(field, value) {
+    setForm((current) => {
+      const updated = { ...current, [field]: value };
+      if (field === "nueva_hora_inicio") {
+        const valid = getAvailableDurationsForHour(value);
+        if (!valid.includes(Number(current.duracion_minutos))) {
+          updated.duracion_minutos = String(valid[0] ?? 60);
+        }
+      }
+      return updated;
+    });
+    setErrors((current) => ({ ...current, [field]: undefined }));
+    setStatusMessage("");
+    if (status !== "sending") setStatus("idle");
+  }
+
+  function chooseCourt(value) {
+    setCourt(value);
+    setErrors((current) => ({ ...current, nueva_pista: undefined }));
+    setStatusMessage("");
+    if (status !== "sending") setStatus("idle");
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    if (sending || sendingRef.current) return;
+
+    const nextErrors = validateReschedule(form, court, tx);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      setStatusMessage(tx("errors.reprog_campos"));
+      setStatus("error");
+      return;
+    }
+
+    // Reprogramar es operación mutable de /api/reservas: con el gate de rol
+    // del Worker activo exige un Bearer real. Sin sesión, no se consulta
+    // disponibilidad ni se llama al endpoint (que solo devolvería 401) — se
+    // muestra el login inline; los datos de fecha/hora/pista ya elegidos se
+    // mantienen.
+    if (cp04ShouldBlockAnonymousReservaSubmit(auth)) {
+      setNeedsLogin(true);
+      setStatusMessage("Inicia sesión para reprogramar esta reserva.");
+      setStatus("error");
+      return;
+    }
+
+    sendingRef.current = true;
+    setStatus("sending");
+    setStatusMessage("");
+
+    try {
+      const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
+      const disponibilidad = await fetchDisponibilidad(form.nueva_fecha_reserva);
+
+      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+        setStatusMessage(tx("errors.reprog_ocupado"));
+        setStatus("error");
+        return;
+      }
+
+      // Reprogramar, igual que cancelar, adjunta el token real de la sesión
+      // backend (Supabase) verificada por el Worker.
+      const res = await authFetch(CONFIG.bookingEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // Sesión inválida/caducada en el backend: se limpia la sesión local y
+      // se vuelve a pedir login, sin perder los datos ya elegidos.
+      if (cp04IsSessionExpiredReservaResponse(res)) {
+        await auth.logout({ scope: "local" });
+        setNeedsLogin(true);
+        setStatusMessage("Tu sesión ha caducado. Inicia sesión de nuevo para reprogramar la reserva.");
+        setStatus("error");
+        return;
+      }
+
+      const data = await readSafeResponse(res);
+
+      if (!res.ok || data?.ok === false) {
+        throw cp04BuildReservationError(data, "reschedule_request_failed");
+      }
+
+      let destinationConfirmed = false;
+
+      for (let attempt = 0; attempt < 15; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 2000));
+        const updatedAvailability = await fetchDisponibilidad(
+          form.nueva_fecha_reserva,
+        );
+
+        if ((updatedAvailability.ocupadas || []).includes(slotKey)) {
+          destinationConfirmed = true;
+          break;
+        }
+      }
+
+      if (!destinationConfirmed) {
+        throw new Error("reschedule_not_confirmed");
+      }
+
+      setStatusMessage(
+        `Nueva fecha ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}.`,
+      );
+      setStatus("success");
+      refreshDisponibilidadAfterChange(form.nueva_fecha_reserva);
+      setForm((current) => ({ ...current, confirmado: false }));
+    } catch (err) {
+      setStatusMessage(cp04ReservationErrorMessage(err, tx("errors.reprog_error")));
+      setStatus("error");
+    } finally {
+      sendingRef.current = false;
+    }
+  }
+
+  function resetForm() {
+    setForm({
+      clave_reserva: "",
+      nueva_fecha_reserva: todayISO(),
+      nueva_hora_inicio: "10:00",
+      duracion_minutos: "90",
+      confirmado: false,
+    });
+    setCourt("Pista 1");
+    setErrors({});
+    setStatusMessage("");
+    setStatus("idle");
+  }
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}>
+      <SectionTitle eyebrow={tx("reprog.eyebrow")} title={tx("reprog.title")} desc={tx("reprog.desc")} />
+
+      {needsLogin && cp04ShouldBlockAnonymousReservaSubmit(auth) && (
+        <ReservaAuthGate message="Necesitas iniciar sesión con tu cuenta para reprogramar esta reserva. La fecha, hora y pista ya elegidas se mantienen." />
+      )}
+
+      <StatusCard status={status} title={statusTitle} text={statusText} style={{ marginBottom: 20 }} />
+
+      <CalendarioDisponibilidad
+        initialDate={form.nueva_fecha_reserva}
+        selectedCourt={court}
+        duration={duration}
+        title={tx("reprog.nueva_disponibilidad")}
+        description={tx("reprog.selecciona_franja")}
+        onSelectSlot={({ fecha, pista, hora }) => {
+          updateForm("nueva_fecha_reserva", fecha);
+          updateForm("nueva_hora_inicio", hora);
+          chooseCourt(pista);
+        }}
+      />
+
+      <form onSubmit={submit}>
+        <div className="cp04-grid-2">
+          <Card>
+            <h3 style={{ marginTop: 0 }}>{tx("reprog.clave")}</h3>
+
+            <label htmlFor="reprogramar-clave" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+              {tx("reprog.clave")}
+            </label>
+            <input
+              id="reprogramar-clave"
+              aria-label={tx("reprog.clave")}
+              placeholder={tx("reprog.clave")}
+              value={form.clave_reserva}
+              onChange={(event) => updateForm("clave_reserva", event.target.value)}
+              autoComplete="off"
+              disabled={sending}
+              required
+            />
+            <FieldError>{errors.clave_reserva}</FieldError>
+
+            <div style={{ marginTop: 22 }}>
+              <PanelList
+                items={[
+                  tx("reprog.info1"),
+                  tx("reprog.info2"),
+                  tx("reprog.info3"),
+                  tx("reprog.info4"),
+                ]}
+              />
+            </div>
+          </Card>
+
+          <Card>
+            <h3 style={{ marginTop: 0 }}>{tx("reprog.nueva_fecha")}</h3>
+
+            <label htmlFor="reprogramar-fecha" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+              {tx("reprog.nueva_fecha")}
+            </label>
+            <input
+              id="reprogramar-fecha"
+              aria-label={tx("reprog.nueva_fecha")}
+              type="date"
+              min={todayISO()}
+              value={form.nueva_fecha_reserva}
+              onChange={(event) => updateForm("nueva_fecha_reserva", event.target.value)}
+              disabled={sending}
+              required
+            />
+            <FieldError>{errors.nueva_fecha_reserva}</FieldError>
+
+            <label htmlFor="reprogramar-hora" style={{ display:"block", color:T.textDim, fontWeight:900, margin:"18px 0 8px" }}>
+              {tx("reprog.nueva_hora")}
+            </label>
+            <select
+              id="reprogramar-hora"
+              aria-label={tx("reprog.nueva_hora")}
+              value={form.nueva_hora_inicio}
+              onChange={(event) => updateForm("nueva_hora_inicio", event.target.value)}
+              disabled={sending || isSundayISO(form.nueva_fecha_reserva)}
+            >
+              {BOOKING_HOURS.map((hora) => (
+                <option
+                  key={hora}
+                  value={hora}
+                  disabled={getSlotStatus(form.nueva_fecha_reserva, hora, duration) !== "available"}
+                >
+                  {hora}
+                </option>
+              ))}
+            </select>
+            <FieldError>{errors.nueva_hora_inicio}</FieldError>
+
+            <label htmlFor="reprogramar-duracion" style={{ display:"block", color:T.textDim, fontWeight:900, margin:"18px 0 8px" }}>
+              {tx("reservas.duracion")}
+            </label>
+            <select
+              id="reprogramar-duracion"
+              aria-label={tx("reservas.duracion")}
+              value={form.duracion_minutos}
+              onChange={(event) => updateForm("duracion_minutos", event.target.value)}
+              disabled={sending}
+            >
+              {getAvailableDurationsForHour(form.nueva_hora_inicio).map((minutes) => (
+                <option key={minutes} value={minutes}>{minutes} {tx("reservas.minutos")}</option>
+              ))}
+            </select>
+            <FieldError>{errors.duracion_minutos}</FieldError>
+
+            <div style={{ marginTop: 18 }}>
+              <strong style={{ display:"block", marginBottom:10 }}>{tx("reprog.nueva_pista")}</strong>
+              <div className="cp04-grid-2">
+                {COURTS.map((item) => {
+                  const isSelected = court === item.name;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      disabled={sending}
+                      onClick={() => chooseCourt(item.name)}
+                      className={item.id === 1 ? "cp04-fix-white-action-btn cp04-fix-pista-1-btn" : undefined}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        fontFamily: T.fontDisplay,
+                        fontWeight: 900,
+                        fontSize: "1rem",
+                        cursor: sending ? "not-allowed" : "pointer",
+                        opacity: sending ? .55 : 1,
+                        border: isSelected ? "none" : `1px solid ${T.line}`,
+                        background: isSelected
+                          ? `linear-gradient(135deg, ${T.accent}, ${T.accent2})`
+                          : "rgba(255,255,255,.055)",
+                        color: isSelected ? "#06100a" : T.text,
+                        boxShadow: isSelected ? `0 8px 24px rgba(182,255,0,.25)` : "none",
+                        transition: "all .2s ease",
+                        letterSpacing: "-.01em",
+                      }}
+                    >
+                      {item.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <FieldError>{errors.nueva_pista}</FieldError>
+            </div>
+
+            <Card style={{ background:T.bg, marginTop:18 }}>
+              <div style={{ color:T.textDim, marginBottom:6 }}>{tx("reprog.resumen")}</div>
+              <strong style={{ color: T.accent }}>
+                {formatDateEs(form.nueva_fecha_reserva)} · {form.nueva_hora_inicio}-{nuevaHoraFin} · {court}
+              </strong>
+            </Card>
+
+            <label
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 12,
+                marginTop: 18,
+                color: T.textDim,
+                lineHeight: 1.55,
+                cursor: sending ? "not-allowed" : "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={form.confirmado}
+                onChange={(event) => updateForm("confirmado", event.target.checked)}
+                disabled={sending}
+                style={{
+                  width: "auto",
+                  minHeight: "auto",
+                  marginTop: 4,
+                  accentColor: T.accent,
+                  cursor: sending ? "not-allowed" : "pointer",
+                }}
+              />
+              <span>{tx("reprog.confirmo")}</span>
+            </label>
+            <FieldError>{errors.confirmado}</FieldError>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                marginTop: 24,
+              }}
+            >
+              <Btn
+                type="submit"
+                disabled={
+                  sending ||
+                  getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"
+                }
+                className="cp04-fix-white-action-btn cp04-fix-reprogramar-reserva-btn"
+              >
+                {sending ? tx("reprog.enviando") : tx("reprog.btn")}
+              </Btn>
+              <Btn variant="secondary" disabled={sending} onClick={() => setCurrent("reservas")}>
+                {tx("reprog.volver")}
+              </Btn>
+            </div>
+          </Card>
+        </div>
+      </form>
+
+      {success && (
+        <Card
+          style={{
+            maxWidth: 680,
+            margin: "24px auto 0",
+            textAlign: "center",
+            borderColor: `${T.accent}66`,
+          }}
+        >
+          <h3>Reprogramación enviada correctamente</h3>
+          <p style={{ color: T.textDim, lineHeight: 1.65 }}>
+            Conserva tu clave de reserva. Recibirás un correo con el nuevo horario confirmado.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+            <Btn onClick={resetForm}>Reprogramar otra reserva</Btn>
+            <Btn variant="secondary" onClick={() => setCurrent("reservas")}>
+              Consultar disponibilidad
+            </Btn>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// PASO 07E (2026-07-19): motivos válidos de cierre temporal de pista,
+// compartidos entre el select del formulario y la validación local — deben
+// coincidir exactamente con CIERRE_MOTIVOS_VALIDOS en
+// worker-reservas/src/index.js (misma lista, duplicada deliberadamente para
+// no acoplar el bundle del frontend al código del Worker).
+const CIERRE_PISTA_MOTIVOS = [
+  ["mantenimiento", "Mantenimiento"],
+  ["lluvia", "Lluvia"],
+  ["evento", "Evento"],
+  ["torneo", "Torneo"],
+  ["limpieza", "Limpieza"],
+  ["obra", "Obra"],
+  ["incidencia", "Incidencia"],
+  ["administrativo", "Administrativo"],
+  ["otro", "Otro"],
+];
+
+// PASO 07E (2026-07-19) + PASO 07G (2026-07-19): Cierre Temporal de Pistas
+// — flujo app/API preparado, mismo criterio defensivo que Baja de Jugador
+// (Paso 07C): formulario -> validación local -> authFetch -> nunca
+// confirma el cierre sin response.ok && data.ok !== false, y ni siquiera
+// entonces se afirma "pista cerrada" (el estado enviado y mostrado es
+// siempre "pendiente_confirmacion" — la confirmación real depende del
+// escenario Make 5791133 procesando el cierre en Airtable, fuera de este
+// flujo). Originalmente vivía como card embebido dentro de Gestion(); en
+// el Paso 07G se extrajo a su propio componente de nivel superior para
+// darle un acceso directo en el sidebar ("cierre_pistas") sin duplicar la
+// lógica ni el formulario. Gateado en rbac.js (CP04_ROLE_PERMISSIONS) a
+// STAFF/ADMIN/SUPPORT — PLAYER no lo recibe.
+function CierreTemporalPista() {
+  const auth = useAuth();
+
+  const cierreInitialForm = {
+    pista: "",
+    fecha_inicio: "",
+    hora_inicio: "",
+    fecha_fin: "",
+    hora_fin: "",
+    motivo: "",
+    observaciones: "",
+    notify_players: true,
+  };
+  const [cierreForm, setCierreForm] = useState(cierreInitialForm);
+  const [cierreErrors, setCierreErrors] = useState({});
+  const [cierreSending, setCierreSending] = useState(false);
+  const [cierreSuccess, setCierreSuccess] = useState(false);
+  const [cierreServerError, setCierreServerError] = useState("");
+
+  function updateCierreForm(field, value) {
+    setCierreForm((previous) => ({ ...previous, [field]: value }));
+    setCierreErrors((previous) => ({ ...previous, [field]: "" }));
+    setCierreSuccess(false);
+    setCierreServerError("");
+  }
+
+  function validateCierre() {
+    const nextErrors = {};
+
+    if (!cierreForm.pista) {
+      nextErrors.pista = "Selecciona la pista a cerrar.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cierreForm.fecha_inicio || "")) {
+      nextErrors.fecha_inicio = "Selecciona la fecha de inicio.";
+    }
+    if (!/^\d{2}:\d{2}$/.test(cierreForm.hora_inicio || "")) {
+      nextErrors.hora_inicio = "Selecciona la hora de inicio.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(cierreForm.fecha_fin || "")) {
+      nextErrors.fecha_fin = "Selecciona la fecha de fin.";
+    }
+    if (!/^\d{2}:\d{2}$/.test(cierreForm.hora_fin || "")) {
+      nextErrors.hora_fin = "Selecciona la hora de fin.";
+    }
+    if (
+      !nextErrors.fecha_inicio &&
+      !nextErrors.fecha_fin &&
+      cierreForm.fecha_fin < cierreForm.fecha_inicio
+    ) {
+      nextErrors.fecha_fin = "La fecha de fin no puede ser anterior a la de inicio.";
+    }
+    if (
+      !nextErrors.fecha_inicio &&
+      !nextErrors.fecha_fin &&
+      !nextErrors.hora_inicio &&
+      !nextErrors.hora_fin &&
+      cierreForm.fecha_fin === cierreForm.fecha_inicio &&
+      cierreForm.hora_fin <= cierreForm.hora_inicio
+    ) {
+      nextErrors.hora_fin = "La hora de fin debe ser posterior a la hora de inicio.";
+    }
+    if (!cierreForm.motivo) {
+      nextErrors.motivo = "Selecciona el motivo del cierre.";
+    }
+
+    return nextErrors;
+  }
+
+  // Nunca marca un cierre como confirmado sin respuesta real del backend.
+  // Si el Worker responde 503 "Cierre temporal webhook not configured"
+  // (webhook Make todavía sin configurar, ver worker-reservas/src/index.js
+  // handleCierreTemporalPista), se traduce a un mensaje honesto para
+  // STAFF/ADMIN en vez del texto técnico crudo. Incluso en éxito, el
+  // mensaje mostrado nunca dice "pista cerrada": dice que la solicitud se
+  // envió y queda pendiente de confirmación real.
+  async function submitCierre(event) {
+    event.preventDefault();
+
+    const nextErrors = validateCierre();
+    setCierreErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setCierreSending(true);
+    setCierreServerError("");
+    setCierreSuccess(false);
+
+    try {
+      const response = await authFetch("/api/pistas/cierre-temporal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pista: cierreForm.pista,
+          fecha_inicio: cierreForm.fecha_inicio,
+          hora_inicio: cierreForm.hora_inicio,
+          fecha_fin: cierreForm.fecha_fin,
+          hora_fin: cierreForm.hora_fin,
+          motivo: cierreForm.motivo,
+          observaciones: cierreForm.observaciones.trim(),
+          creado_por: auth.user?.email || "",
+          rol_origen: auth.role || "",
+          notify_players: cierreForm.notify_players === true,
+          origen: "APP_CLUB_PADEL_04",
+          estado: "pendiente_confirmacion",
+          accion: "cierre_temporal_pista",
+        }),
+      });
+
+      const data = await readSafeResponse(response);
+
+      if (!response.ok || data?.ok === false) {
+        if (data?.error === "Cierre temporal webhook not configured") {
+          throw new Error("El cierre temporal de pistas todavía no está configurado en el sistema. Contacta con soporte técnico.");
+        }
+        throw new Error(data?.message || data?.error || "No se pudo enviar la solicitud de cierre temporal.");
+      }
+
+      setCierreSuccess(true);
+      setCierreForm(cierreInitialForm);
+    } catch (error) {
+      setCierreServerError(error?.message || "No se pudo enviar la solicitud de cierre temporal.");
+    } finally {
+      setCierreSending(false);
+    }
+  }
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Gestión de pistas"
+        title="Cierre temporal de pista"
+        desc="Bloquea una pista (o todas) por mantenimiento, lluvia, evento, torneo, limpieza, obra, incidencia o causa administrativa."
+      />
+      <Card style={{ marginBottom: 20 }}>
+        <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+          Esta acción prepara el cierre, pero no se considerará confirmada hasta recibir respuesta real del sistema.
+        </p>
+        <form onSubmit={submitCierre}>
+          <div className="cp04-grid-2">
+            <div>
+              <label htmlFor="cierre-pista">Pista</label>
+              <select id="cierre-pista" value={cierreForm.pista} onChange={e => updateCierreForm("pista", e.target.value)}>
+                <option value="">Seleccionar…</option>
+                <option value="Pista 1">Pista 1</option>
+                <option value="Pista 2">Pista 2</option>
+                <option value="Pista 3">Pista 3</option>
+                <option value="Pista 4">Pista 4</option>
+                <option value="todas">Todas</option>
+              </select>
+              <FieldError>{cierreErrors.pista}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="cierre-motivo">Motivo</label>
+              <select id="cierre-motivo" value={cierreForm.motivo} onChange={e => updateCierreForm("motivo", e.target.value)}>
+                <option value="">Seleccionar…</option>
+                {CIERRE_PISTA_MOTIVOS.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <FieldError>{cierreErrors.motivo}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="cierre-fecha-inicio">Fecha de inicio</label>
+              <input id="cierre-fecha-inicio" type="date" value={cierreForm.fecha_inicio} onChange={e => updateCierreForm("fecha_inicio", e.target.value)} />
+              <FieldError>{cierreErrors.fecha_inicio}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="cierre-hora-inicio">Hora de inicio</label>
+              <input id="cierre-hora-inicio" type="time" value={cierreForm.hora_inicio} onChange={e => updateCierreForm("hora_inicio", e.target.value)} />
+              <FieldError>{cierreErrors.hora_inicio}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="cierre-fecha-fin">Fecha de fin</label>
+              <input id="cierre-fecha-fin" type="date" value={cierreForm.fecha_fin} onChange={e => updateCierreForm("fecha_fin", e.target.value)} />
+              <FieldError>{cierreErrors.fecha_fin}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="cierre-hora-fin">Hora de fin</label>
+              <input id="cierre-hora-fin" type="time" value={cierreForm.hora_fin} onChange={e => updateCierreForm("hora_fin", e.target.value)} />
+              <FieldError>{cierreErrors.hora_fin}</FieldError>
+            </div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <label htmlFor="cierre-observaciones">Observaciones (opcional)</label>
+            <textarea id="cierre-observaciones" value={cierreForm.observaciones} onChange={e => updateCierreForm("observaciones", e.target.value)} rows={3} />
+          </div>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", marginTop: 18 }}>
+            <input type="checkbox" checked={cierreForm.notify_players} onChange={e => updateCierreForm("notify_players", e.target.checked)} />
+            <span>Notificar a los jugadores con reserva en ese horario, si aplica.</span>
+          </label>
+          {cierreServerError && <StatusCard status="error" text={cierreServerError} style={{ marginTop: 16 }} />}
+          {cierreSuccess && (
+            <StatusCard status="success" text="Solicitud de cierre temporal enviada correctamente. No se considera confirmada hasta que el sistema lo confirme." style={{ marginTop: 16 }} />
+          )}
+          <div style={{ marginTop: 22 }}>
+            {/* PASO 07H (2026-07-19): contraste reforzado a petición de QA
+                visual en localhost:5175 — fondo sólido T.accent (en vez del
+                degradado lima->menta por defecto de Btn) más un anillo de
+                sombra oscuro, para que el texto casi-negro se lea con más
+                definición. Solo afecta a este botón (style override local,
+                sin tocar el componente Btn compartido ni otros formularios). */}
+            <Btn
+              type="submit"
+              disabled={cierreSending}
+              style={{
+                width: "100%",
+                background: T.accent,
+                color: "#06100a",
+                fontSize: "1rem",
+                boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+              }}
+            >
+              {cierreSending ? "Enviando…" : "Solicitar cierre temporal de pista"}
+            </Btn>
+          </div>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07N (2026-07-20): módulo visual "Lista de espera" — preparado para
+// integrarse con el escenario Make "📋 Gestión Lista de Espera" (ID
+// 5791113, INTERNAL_OPERATION que ya corre solo en Make cada hora) cuando
+// Airtable esté disponible. A diferencia de Cierre Temporal de Pistas
+// Lista de espera — versión con persistencia local.
+// Los datos se guardan en localStorage (cp04-lista-espera-local-v1) y
+// sobreviven recargas. La lista local NO es la fuente de verdad: se muestra
+// siempre con el aviso "LISTA LOCAL" y persiste hasta que la integración
+// con Make/Airtable esté disponible. Gateado a STAFF/ADMIN/SUPPORT (rbac.js).
+
+const ESTADO_BADGE_STYLES = {
+  pendiente:  { color: T.warning,    label: "Pendiente" },
+  contactado: { color: T.accent2,    label: "Contactado" },
+  promovido:  { color: T.accent,     label: "Promovido" },
+  eliminado:  { color: T.textDim,    label: "Eliminado" },
+};
+
+const EMPTY_FORM = {
+  nombre: "", apellidos: "", email: "", telefono: "",
+  pista_preferida: "", fecha_preferida: "", observaciones: "",
+};
+
+function ListaEspera() {
+  const [entries, setEntries] = useState(() => listaEsperaLoad());
+  const [form, setForm]       = useState(EMPTY_FORM);
+  const [errors, setErrors]   = useState({});
+  const [notice, setNotice]   = useState({ msg: "", ok: true });
+
+  function updateEntries(next) {
+    setEntries(next);
+    listaEsperaSave(next);
+  }
+
+  function updateForm(field, value) {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    setErrors((previous) => ({ ...previous, [field]: "" }));
+  }
+
+  function validate() {
+    const e = {};
+    if (form.nombre.trim().length < 2)   e.nombre    = "Introduce un nombre válido.";
+    if (form.apellidos.trim().length < 2) e.apellidos = "Introduce apellidos válidos.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Introduce un email válido.";
+    if (form.telefono.replace(/\D/g, "").length < 9) e.telefono = "Introduce un teléfono válido.";
+    return e;
+  }
+
+  function handleAdd(event) {
+    event.preventDefault();
+    const e = validate();
+    setErrors(e);
+    if (Object.keys(e).length > 0) return;
+
+    const next = listaEsperaAdd(entries, form);
+    updateEntries(next);
+    setForm(EMPTY_FORM);
+    setNotice({ msg: `Jugador añadido a la LISTA LOCAL (${next.length} en espera). Pendiente de envío real a Airtable.`, ok: true });
+  }
+
+  function handleSetEstado(id, estado) {
+    updateEntries(listaEsperaSetEstado(entries, id, estado));
+    setNotice({ msg: `Estado actualizado a "${ESTADO_BADGE_STYLES[estado]?.label ?? estado}" (LISTA LOCAL).`, ok: true });
+  }
+
+  function handleRemove(id) {
+    updateEntries(listaEsperaRemove(entries, id));
+    setNotice({ msg: "Entrada eliminada de la LISTA LOCAL.", ok: false });
+  }
+
+  const activos = listaEsperaGetActivos(entries);
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Lista de espera"
+        desc="Gestiona jugadores pendientes de plaza o promoción."
+      />
+
+      <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+        ⚠ LISTA LOCAL — Los datos se guardan solo en este dispositivo (localStorage).
+        Pendiente de sincronización con Airtable cuando la integración esté disponible.
+        Nada de lo que hagas aquí se envía a ningún sistema externo.
+      </Card>
+
+      {/* Formulario para añadir */}
+      <Card style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>Añadir jugador a lista de espera</h3>
+        <form onSubmit={handleAdd}>
+          <div className="cp04-grid-2">
+            <div>
+              <label htmlFor="espera-nombre">Nombre</label>
+              <input id="espera-nombre" value={form.nombre} onChange={e => updateForm("nombre", e.target.value)} autoComplete="given-name" />
+              <FieldError>{errors.nombre}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="espera-apellidos">Apellidos</label>
+              <input id="espera-apellidos" value={form.apellidos} onChange={e => updateForm("apellidos", e.target.value)} autoComplete="family-name" />
+              <FieldError>{errors.apellidos}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="espera-email">Email</label>
+              <input id="espera-email" type="email" value={form.email} onChange={e => updateForm("email", e.target.value)} autoComplete="email" />
+              <FieldError>{errors.email}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="espera-telefono">Teléfono</label>
+              <input id="espera-telefono" type="tel" value={form.telefono} onChange={e => updateForm("telefono", e.target.value)} autoComplete="tel" />
+              <FieldError>{errors.telefono}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="espera-pista">Pista preferida (opcional)</label>
+              <select id="espera-pista" value={form.pista_preferida} onChange={e => updateForm("pista_preferida", e.target.value)}>
+                <option value="">Sin preferencia</option>
+                <option value="Pista 1">Pista 1</option>
+                <option value="Pista 2">Pista 2</option>
+                <option value="Pista 3">Pista 3</option>
+                <option value="Pista 4">Pista 4</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="espera-fecha">Fecha preferida (opcional)</label>
+              <input id="espera-fecha" type="date" value={form.fecha_preferida} onChange={e => updateForm("fecha_preferida", e.target.value)} />
+            </div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <label htmlFor="espera-observaciones">Observaciones (opcional)</label>
+            <textarea id="espera-observaciones" value={form.observaciones} onChange={e => updateForm("observaciones", e.target.value)} rows={3} />
+          </div>
+          <div style={{ marginTop: 22 }}>
+            <Btn
+              type="submit"
+              style={{
+                width: "100%", background: T.accent, color: "#06100a",
+                fontSize: "1rem", border: "2px solid rgba(6,16,10,.45)",
+                boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+              }}
+            >
+              Añadir a lista local
+            </Btn>
+          </div>
+        </form>
+      </Card>
+
+      {/* Mensaje de feedback */}
+      {notice.msg && (
+        <Card style={{ marginBottom: 20, borderColor: `${notice.ok ? T.accent : T.warning}66`, color: notice.ok ? T.accent : T.warning, fontSize: ".86rem" }}>
+          {notice.msg}
+        </Card>
+      )}
+
+      {/* Lista de jugadores en espera */}
+      <Card>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+          <h3 style={{ margin: 0 }}>Jugadores en espera</h3>
+          <span style={{ fontSize: ".8rem", color: T.textDim, border: `1px solid ${T.line}`, borderRadius: 999, padding: "4px 10px" }}>
+            LISTA LOCAL · {activos.length} activo{activos.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        {activos.length === 0 ? (
+          <p style={{ color: T.textDim, margin: 0 }}>No hay jugadores en la lista local todavía.</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="cp04-table">
+              <thead>
+                <tr>
+                  <th>Jugador</th>
+                  <th>Contacto</th>
+                  <th>Preferencia</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activos.map((entry) => {
+                  const badge = ESTADO_BADGE_STYLES[entry.estado] ?? ESTADO_BADGE_STYLES.pendiente;
+                  return (
+                    <tr key={entry.id}>
+                      <td>
+                        <strong>{entry.nombre} {entry.apellidos}</strong>
+                        {entry.observaciones && (
+                          <div style={{ color: T.textDim, fontSize: ".78rem", marginTop: 3 }}>{entry.observaciones}</div>
+                        )}
+                      </td>
+                      <td style={{ fontSize: ".84rem" }}>
+                        <div>{entry.email}</div>
+                        <div style={{ color: T.textDim }}>{entry.telefono}</div>
+                      </td>
+                      <td style={{ fontSize: ".84rem" }}>
+                        {entry.pista_preferida || "—"}
+                        {entry.fecha_preferida && <div style={{ color: T.textDim }}>{entry.fecha_preferida}</div>}
+                      </td>
+                      <td>
+                        <span style={{ color: badge.color, fontWeight: 700, fontSize: ".8rem" }}>{badge.label}</span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {entry.estado === "pendiente" && (
+                            <Btn variant="secondary" style={{ padding: "5px 10px", fontSize: ".78rem" }} onClick={() => handleSetEstado(entry.id, "contactado")}>
+                              Contactado
+                            </Btn>
+                          )}
+                          {entry.estado !== "promovido" && entry.estado !== "eliminado" && (
+                            <Btn variant="secondary" style={{ padding: "5px 10px", fontSize: ".78rem" }} onClick={() => handleSetEstado(entry.id, "promovido")}>
+                              Promover
+                            </Btn>
+                          )}
+                          <Btn variant="secondary" style={{ padding: "5px 10px", fontSize: ".78rem", color: T.dangerText }} onClick={() => handleRemove(entry.id)}>
+                            Quitar
+                          </Btn>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): mensaje único y helper compartido para las
+// "acciones preparadas" de los 4 módulos nuevos de este paso — evita
+// repetir la misma lógica de estado/mensaje 4 veces (uno por módulo). Cada
+// botón, al pulsarse, solo actualiza un mensaje local honesto: nunca llama
+// a fetch/authFetch, nunca crea/modifica/elimina nada real.
+const CP04_PREPARADO_MSG =
+  "Acción preparada. Pendiente de conexión real cuando Make/Airtable esté disponible.";
+
+function PreparedActionButtons({ actions }) {
+  const [message, setMessage] = useState("");
+  return (
+    <>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        {actions.map((label) => (
+          <Btn key={label} variant="secondary" onClick={() => setMessage(`${label}: ${CP04_PREPARADO_MSG}`)}>
+            {label}
+          </Btn>
+        ))}
+      </div>
+      {message && (
+        <p style={{ color: T.accent, fontSize: ".86rem", marginTop: 16, marginBottom: 0 }}>{message}</p>
+      )}
+    </>
+  );
+}
+
+// Banner de estado honesto reutilizado por los 4 módulos: mismo patrón
+// visual ya usado en Lista de Espera (Paso 07N) y Cierre Temporal (Paso
+// 07E) para no prometer una integración que no existe todavía.
+function IntegrationStatusBanner({ children }) {
+  return (
+    <Card style={{ marginBottom: 20, borderColor: `${T.warning}66`, color: T.warning, fontSize: ".85rem" }}>
+      {children}
+    </Card>
+  );
+}
+
+// PASO T3 (2026-08-17): "Control QR / Accesos" — panel funcional.
+// Dos sub-flujos: PLAYER genera su QR de reserva; STAFF/ADMIN valida.
+// Endpoints reales: POST /api/qr/generate y POST /api/qr/validate.
+// Make scenarios: Generación QR (6244975) y Control Acceso QR (5291559).
+function ControlQrAccesos() {
+  const qrReservasEndpoint = cp04ReservasEndpoint(import.meta?.env);
+
+  // ── Búsqueda de reserva real (flujo productivo) ──
+  const [lookupEmail, setLookupEmail] = useState(() => {
+    try { return window.localStorage.getItem("cp04-reservas-email") || ""; } catch { return ""; }
+  });
+  const [lookupResults, setLookupResults] = useState([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError]     = useState("");
+  const [lookupDone, setLookupDone]       = useState(false);
+
+  // ── Subpanel Generación QR ──
+  const [genClave, setGenClave]       = useState("");
+  const [genPista, setGenPista]       = useState("Pista 1");
+  const [genFecha, setGenFecha]       = useState("");
+  const [genHora, setGenHora]         = useState("");
+  const [genHoraFin, setGenHoraFin]   = useState("");
+  const [genPlayerId, setGenPlayerId] = useState("");
+  const [genRecordId, setGenRecordId] = useState("");
+  const [genNombre, setGenNombre]     = useState("");
+  const [genEmail, setGenEmail]       = useState("");
+  const [genResult, setGenResult]     = useState(null);
+  const [genLoading, setGenLoading]   = useState(false);
+  const [genError, setGenError]       = useState("");
+  const [genFromReal, setGenFromReal] = useState(false);
+
+  async function handleBuscarReserva(e) {
+    e.preventDefault();
+    const emailLimpio = lookupEmail.trim().toLowerCase();
+    if (!emailLimpio || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
+      setLookupError("Introduce un correo electrónico válido.");
+      return;
+    }
+    setLookupLoading(true);
+    setLookupError("");
+    setLookupResults([]);
+    setLookupDone(false);
+    try {
+      const sep = qrReservasEndpoint.includes("?") ? "&" : "?";
+      const url = `${qrReservasEndpoint}${sep}email=${encodeURIComponent(emailLimpio)}&limit=100&t=${Date.now()}`;
+      const response = await authFetch(url, {
+        method: "GET",
+        headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+      });
+      const data = await readSafeResponse(response);
+      const resultado = data && typeof data === "object" ? data : {};
+      if (!response.ok || resultado.ok !== true) {
+        throw new Error(resultado.error || resultado.message || `Error ${response.status}`);
+      }
+      const lista =
+        Array.isArray(resultado.reservas) ? resultado.reservas
+        : Array.isArray(resultado.records) ? resultado.records
+        : Array.isArray(resultado.data) ? resultado.data
+        : [];
+      const normalizadas = lista
+        .map(normalizarReserva)
+        .filter((r) => r.estado === "confirmada" || r.estado === "reprogramada")
+        .sort((a, b) => {
+          const fa = `${a.fecha}T${a.horaInicio || "00:00"}`;
+          const fb = `${b.fecha}T${b.horaInicio || "00:00"}`;
+          return fb.localeCompare(fa);
+        });
+      setLookupResults(normalizadas);
+      setLookupDone(true);
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : "No se pudieron cargar las reservas.");
+    } finally {
+      setLookupLoading(false);
+    }
+  }
+
+  function handleSeleccionarReserva(reserva) {
+    if (!reserva.horaFin) {
+      setGenError(
+        "Esta reserva no tiene hora_fin en Airtable. No se puede generar QR hasta que Make registre la hora de fin."
+      );
+      return;
+    }
+    setGenClave(reserva.clave || "");
+    setGenPlayerId(reserva.email || "");
+    setGenRecordId(reserva.id || "");
+    setGenNombre(reserva.nombre || "");
+    setGenEmail(reserva.email || "");
+    setGenFecha(reserva.fecha || "");
+    setGenHora(reserva.horaInicio || "");
+    setGenHoraFin(reserva.horaFin);
+    setGenPista(reserva.pista || "Pista 1");
+    setGenError("");
+    setGenResult(null);
+    setGenFromReal(true);
+  }
+
+  async function handleGenerarQr(e) {
+    e.preventDefault();
+    setGenError("");
+    setGenResult(null);
+    if (!genClave || !genPlayerId || !genFecha || !genRecordId || !genNombre || !genEmail || !genHoraFin) {
+      setGenError("Completa todos los campos requeridos.");
+      return;
+    }
+    setGenLoading(true);
+    try {
+      const res = await authFetch("/api/qr/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clave_reserva: genClave,
+          player_id:     genPlayerId,
+          club_id:       "club-padel-04",
+          pista:         genPista,
+          fecha:         genFecha,
+          hora_inicio:   genHora,
+          hora_fin:      genHoraFin,
+          record_id:     genRecordId,
+          nombre:        genNombre,
+          email:         genEmail,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setGenResult(data);
+      } else {
+        setGenError(data.error || "Error al generar QR.");
+      }
+    } catch {
+      setGenError("Error de red al contactar el servidor.");
+    } finally {
+      setGenLoading(false);
+    }
+  }
+
+  // ── Subpanel Validación QR ──
+  const [valClave, setValClave]   = useState("");
+  const [valPista, setValPista]   = useState("Pista 1");
+  const [valStaff, setValStaff]   = useState("");
+  const [valResult, setValResult] = useState(null);
+  const [valLoading, setValLoading] = useState(false);
+  const [valError, setValError]   = useState("");
+
+  async function handleValidarQr(e) {
+    e.preventDefault();
+    setValError("");
+    setValResult(null);
+    if (!valClave || !valStaff) {
+      setValError("Completa todos los campos requeridos.");
+      return;
+    }
+    setValLoading(true);
+    try {
+      const res = await authFetch("/api/qr/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clave_reserva: valClave,
+          pista:         valPista,
+          club_id:       "club-padel-04",
+          staff_id:      valStaff,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setValResult(data);
+      } else {
+        setValError(data.error || "Error al validar QR.");
+      }
+    } catch {
+      setValError("Error de red al contactar el servidor.");
+    } finally {
+      setValLoading(false);
+    }
+  }
+
+  const pistasDisponibles = ["Pista 1", "Pista 2", "Pista 3", "Pista 4"];
+  const decisionColor = valResult
+    ? (valResult.decision === "ALLOW" ? T.accent : T.dangerText)
+    : T.text;
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Seguridad y accesos"
+        title="Control QR / Accesos"
+        desc="Genera y valida códigos QR de acceso para reservas de pistas."
+      />
+
+      {/* Flujo productivo: buscar reserva real → precargar datos */}
+      <Card style={{ marginBottom: 24, borderColor: T.accent + "55" }}>
+        <h3 style={{ marginTop: 0 }}>🔍 Buscar reserva confirmada</h3>
+        <p style={{ color: T.textDim, fontSize: ".87rem", marginTop: 0 }}>
+          Flujo productivo: busca por email del jugador y selecciona la reserva para precargar
+          record_id, nombre, email, hora_fin y demás campos directamente desde Airtable vía Make.
+          Ningún dato se inventa ni hardcodea.
+        </p>
+        <form onSubmit={handleBuscarReserva} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ fontSize: ".87rem", flex: "2 1 220px" }}>
+            Email del jugador
+            <input
+              type="email"
+              value={lookupEmail}
+              onChange={(e) => setLookupEmail(e.target.value)}
+              placeholder="jugador@club.es"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <Btn type="submit" disabled={lookupLoading} variant="secondary">
+            {lookupLoading ? "Buscando…" : "Buscar reservas"}
+          </Btn>
+        </form>
+        {lookupError && (
+          <StatusCard status="error" text={lookupError} style={{ marginTop: 10 }} />
+        )}
+        {lookupDone && lookupResults.length === 0 && !lookupError && (
+          <p style={{ color: T.textDim, fontSize: ".86rem", margin: "10px 0 0" }}>
+            No se encontraron reservas confirmadas para ese email.
+          </p>
+        )}
+        {lookupResults.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <p style={{ fontSize: ".85rem", color: T.textDim, marginBottom: 8 }}>
+              Selecciona la reserva para precargar los datos del QR:
+            </p>
+            {lookupResults.map((r) => (
+              <div
+                key={r.id}
+                onClick={() => handleSeleccionarReserva(r)}
+                style={{ padding: "10px 14px", marginBottom: 8, borderRadius: 8, border: `1px solid ${T.border}`, background: T.cardBg, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}
+              >
+                <div>
+                  <span style={{ fontWeight: 600, fontSize: ".9rem" }}>{r.clave || r.id}</span>
+                  <span style={{ color: T.textDim, fontSize: ".84rem", marginLeft: 12 }}>
+                    {r.fecha} · {r.horaInicio}{r.horaFin ? `–${r.horaFin}` : ""} · {r.pista}
+                  </span>
+                  {!r.horaFin && (
+                    <span style={{ color: T.dangerText, fontSize: ".8rem", marginLeft: 8 }}>⚠ sin hora_fin</span>
+                  )}
+                </div>
+                <span style={{ fontSize: ".82rem", color: T.accent, whiteSpace: "nowrap" }}>Precargar →</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Panel Generación QR */}
+      <Card style={{ marginBottom: 24 }}>
+        <h3 style={{ marginTop: 0 }}>
+          🔑 Generar QR de acceso
+          {genFromReal && (
+            <span style={{ fontSize: ".76rem", color: T.accent, marginLeft: 10, fontWeight: 400 }}>
+              ✓ datos desde reserva real
+            </span>
+          )}
+        </h3>
+        {!genFromReal && (
+          <p style={{ color: T.textDim, fontSize: ".83rem", marginTop: 0, padding: "6px 10px", borderRadius: 6, background: `${T.accent}14`, border: `1px solid ${T.accent}33` }}>
+            ⚠ Entrada manual — usa el buscador anterior para precargar datos reales desde Airtable.
+          </p>
+        )}
+        <p style={{ color: T.textDim, fontSize: ".87rem", marginTop: 8 }}>
+          El QR será procesado por Make y enviado al jugador (WhatsApp/email).
+        </p>
+        <form onSubmit={handleGenerarQr} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label style={{ fontSize: ".87rem" }}>
+            Clave de reserva *
+            <input
+              value={genClave}
+              onChange={(e) => { setGenClave(e.target.value); setGenFromReal(false); }}
+              placeholder="CP04-2026-07-20-PISTA2-09"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <label style={{ fontSize: ".87rem" }}>
+            Player ID (email/usuario) *
+            <input
+              value={genPlayerId}
+              onChange={(e) => setGenPlayerId(e.target.value)}
+              placeholder="jugador@example.com"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <label style={{ fontSize: ".87rem" }}>
+            Record ID Airtable *
+            <input
+              value={genRecordId}
+              onChange={(e) => setGenRecordId(e.target.value)}
+              placeholder="recXXXXXXXXXXXXXX"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label style={{ fontSize: ".87rem", flex: "2 1 200px" }}>
+              Nombre del jugador *
+              <input
+                value={genNombre}
+                onChange={(e) => setGenNombre(e.target.value)}
+                placeholder="Nombre Apellido"
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "2 1 200px" }}>
+              Email del jugador *
+              <input
+                type="email"
+                value={genEmail}
+                onChange={(e) => setGenEmail(e.target.value)}
+                placeholder="jugador@club.es"
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label style={{ fontSize: ".87rem", flex: "1 1 140px" }}>
+              Pista
+              <select
+                value={genPista}
+                onChange={(e) => setGenPista(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              >
+                {pistasDisponibles.map((p) => <option key={p}>{p}</option>)}
+              </select>
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "1 1 140px" }}>
+              Fecha *
+              <input
+                type="date"
+                value={genFecha}
+                onChange={(e) => setGenFecha(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "1 1 100px" }}>
+              Hora inicio *
+              <input
+                type="time"
+                value={genHora}
+                onChange={(e) => setGenHora(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "1 1 100px" }}>
+              Hora fin *
+              <input
+                type="time"
+                value={genHoraFin}
+                onChange={(e) => setGenHoraFin(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+          </div>
+          {genError && (
+            <StatusCard status="error" text={genError} />
+          )}
+          <Btn type="submit" disabled={genLoading} variant="primary">
+            {genLoading ? "Generando…" : "Generar QR de acceso"}
+          </Btn>
+        </form>
+        {genResult && (
+          <div style={{ marginTop: 20, padding: 16, borderRadius: 8, background: `${T.accent}18`, border: `1px solid ${T.accent}44` }}>
+            <StatusCard status="success" title="QR generado — pendiente de confirmación Make" style={{ background: "transparent", border: "none", padding: 0, marginBottom: 8 }} />
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Clave: <strong>{genResult.clave_reserva}</strong></p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Pista: {genResult.pista} · Fecha: {genResult.fecha} · {genResult.hora_inicio}</p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Válido desde: {genResult.valid_from ? new Date(genResult.valid_from).toLocaleString("es-ES") : "—"}</p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Válido hasta: {genResult.valid_until ? new Date(genResult.valid_until).toLocaleString("es-ES") : "—"}</p>
+            <p style={{ fontSize: ".82rem", margin: "8px 0 0", color: T.textDim }}>Make procesará la entrega del QR al jugador según la configuración del club.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Panel Control / Validación QR */}
+      <Card>
+        <h3 style={{ marginTop: 0 }}>🔐 Verificar acceso QR</h3>
+        <p style={{ color: T.textDim, fontSize: ".87rem", marginTop: 0 }}>
+          Introduce la clave de reserva escaneada o tecleada manualmente. Make comprobará el estado real en Airtable.
+        </p>
+        <form onSubmit={handleValidarQr} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label style={{ fontSize: ".87rem" }}>
+            Clave de reserva (del QR) *
+            <input
+              value={valClave}
+              onChange={(e) => setValClave(e.target.value)}
+              placeholder="CP04-2026-07-20-PISTA2-09"
+              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <label style={{ fontSize: ".87rem", flex: "1 1 140px" }}>
+              Pista
+              <select
+                value={valPista}
+                onChange={(e) => setValPista(e.target.value)}
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              >
+                {pistasDisponibles.map((p) => <option key={p}>{p}</option>)}
+              </select>
+            </label>
+            <label style={{ fontSize: ".87rem", flex: "2 1 200px" }}>
+              ID del validador (staff) *
+              <input
+                value={valStaff}
+                onChange={(e) => setValStaff(e.target.value)}
+                placeholder="staff@cp04.es"
+                style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 6, border: `1px solid ${T.border}`, background: T.cardBg, color: T.text, fontSize: ".9rem" }}
+              />
+            </label>
+          </div>
+          {valError && (
+            <StatusCard status="error" text={valError} />
+          )}
+          <Btn type="submit" disabled={valLoading} variant="primary">
+            {valLoading ? "Verificando…" : "Verificar acceso"}
+          </Btn>
+        </form>
+        {valResult && (
+          <div style={{ marginTop: 20, padding: 20, borderRadius: 8, background: valResult.decision === "ALLOW" ? `${T.accent}18` : `${T.dangerText}18`, border: `2px solid ${decisionColor}` }}>
+            <p style={{ color: decisionColor, fontWeight: 800, fontSize: "1.1rem", margin: "0 0 8px" }}>
+              {valResult.decision === "ALLOW" ? "✅ ACCESO PERMITIDO" : "❌ ACCESO DENEGADO"}
+            </p>
+            <p style={{ fontSize: ".87rem", margin: "4px 0", color: T.textDim }}>
+              Motivo: <strong>{valResult.reason}</strong>
+            </p>
+            <p style={{ fontSize: ".84rem", margin: "4px 0", color: T.textDim }}>Pista: {valResult.pista}</p>
+            <p style={{ fontSize: ".82rem", margin: "8px 0 0", color: T.textDim }}>
+              Validado: {new Date(valResult.scanned_at).toLocaleString("es-ES")}
+            </p>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Pistas libres y recordatorios" — agrupa 4
+// escenarios Make de comunicación proactiva a jugadores: "🚨 Alerta
+// Pistas Libres + Flash Promo" (5736472), "🔔 Recordatorio 24h Antes"
+// (4942506), "⚡ Recordatorio 2h Antes" (5736463) y "🚫 Seguimiento
+// No-Show" (5736797). Gateado a STAFF/ADMIN/SUPPORT.
+function PistasLibresRecordatorios() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Pistas libres y recordatorios"
+        desc="Alertas de huecos libres y recordatorios automáticos a jugadores."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🚨 Alerta Pistas Libres + Flash Promo — avisa cuando queda una pista libre de última hora.",
+          "🔔 Recordatorio 24h Antes / ⚡ Recordatorio 2h Antes — recuerdan a un jugador su reserva próxima.",
+          "🚫 Seguimiento No-Show — registra cuando un jugador no se presenta a su reserva.",
+          "Los 4 escenarios ya corren en Make bloqueados por Airtable 429; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Enviar alerta de pista libre", "Enviar recordatorio manual", "Marcar no-show"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Dashboard KPI y NPS" — agrupa 4 escenarios de
+// métricas: "📋 Dashboard Ejecutivo Diario" (5736800), "📊 Panel KPI
+// Semanal" (5736468), "📊 Informe Mensual" (5791119) y "📊 Análisis NPS
+// Semanal" (5811901). Gateado como "admin" (ADMIN+SUPPORT, sin STAFF) —
+// mismo nivel que la sección Admin ya existente.
+//
+// Deliberadamente NO incluye "⭐ Encuesta Post-Partido" (5736466), aunque
+// temáticamente sea de NPS: esa auditoría previa (Paso 07B) encontró un
+// 89% de tasa de error histórica en Make — integrar su UI ahora
+// propagaría un hallazgo roto. Sigue en Grupo E, sin cambios, hasta que
+// se diagnostique dentro de Make (fuera de alcance de este paso).
+function DashboardKpiNps() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Métricas"
+        title="Dashboard KPI y NPS"
+        desc="Indicadores operativos y satisfacción de jugadores."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "📋 Dashboard Ejecutivo Diario / 📊 Panel KPI Semanal / 📊 Informe Mensual — métricas operativas del club.",
+          "📊 Análisis NPS Semanal — satisfacción de jugadores.",
+          "⭐ Encuesta Post-Partido NO se incluye aquí: auditoría previa detectó 89% de tasa de error en Make — no se reactiva hasta que se diagnostique en Make.",
+          "Los escenarios incluidos ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Actualizar dashboard", "Exportar informe"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07O (2026-07-20): "Backups y seguridad" — agrupa 4 escenarios de
+// infraestructura: "🔄 Backup Semanal" (6217724), "🗂️ Backup Plantilla
+// Drive" (6216523), "⚖️ Solicitud GDPR Acceso u Olvido de Datos"
+// (6323457) y "🛡️ Alerta Seguridad Acceso Sospechoso" (6323450). Gateado
+// como "admin" (ADMIN+SUPPORT, sin STAFF).
+// PASO T2 (2026-08-21): "Revisar solicitud GDPR" deja de ser un botón
+// preparado (PreparedActionButtons) y pasa a ser funcional de verdad,
+// reutilizando exactamente los mismos endpoints que Perfil() (POST
+// /api/gdpr/acceso y /api/gdpr/olvido, con `email` explícito porque
+// ADMIN/SUPPORT puede tramitar la solicitud de otro socio). No se crea
+// ninguna tabla/lista de solicitudes nueva: el Worker no tiene ningún
+// AIRTABLE_*_TABLE_ID configurado para eso todavía (ver comentario en
+// handleGdprAcceso/handleGdprOlvido), así que este panel es de consulta
+// puntual por email, no un listado histórico — eso queda documentado como
+// limitación, no fingido.
+function GdprAdminReview() {
+  const [email, setEmail] = useState("");
+  const [accesoLoading, setAccesoLoading] = useState(false);
+  const [accesoResult, setAccesoResult] = useState(null);
+  const [accesoError, setAccesoError] = useState("");
+  const [olvidoLoading, setOlvidoLoading] = useState(false);
+  const [olvidoResult, setOlvidoResult] = useState(null);
+  const [olvidoError, setOlvidoError] = useState("");
+
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  async function consultarAcceso() {
+    setAccesoLoading(true); setAccesoError(""); setAccesoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/acceso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) setAccesoError(data?.message || data?.error || "No se pudo consultar.");
+      else setAccesoResult(data);
+    } catch {
+      setAccesoError("Error de conexión.");
+    } finally {
+      setAccesoLoading(false);
+    }
+  }
+
+  async function registrarOlvido() {
+    setOlvidoLoading(true); setOlvidoError(""); setOlvidoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/olvido", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), confirmar: true, motivo: "Tramitación administrativa desde Backups y seguridad." }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) setOlvidoError(data?.message || data?.error || "No se pudo registrar.");
+      else setOlvidoResult(data);
+    } catch {
+      setOlvidoError("Error de conexión.");
+    } finally {
+      setOlvidoLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${T.line}` }}>
+      <h3 style={{ marginTop: 0, fontSize: "1rem" }}>⚖️ Revisar solicitud GDPR</h3>
+      <p style={{ color: T.textDim, fontSize: ".82rem", marginBottom: 14 }}>
+        Consulta o registra una solicitud GDPR (ACCESO u OLVIDO) por email de socio — distinta de una Baja de Jugador.
+        La ejecución real del olvido (cancelaciones, salida de lista de espera) requiere el runbook administrativo, no este panel.
+      </p>
+      <input
+        type="email"
+        placeholder="email@socio.example"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{ width: "100%", maxWidth: 360, padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.line}`, background: T.surface2, color: T.text, marginBottom: 12 }}
+      />
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Btn variant="secondary" onClick={consultarAcceso} disabled={!emailValido || accesoLoading}>
+          {accesoLoading ? "Consultando…" : "Consultar datos (GDPR_ACCESO)"}
+        </Btn>
+        <Btn variant="danger" onClick={registrarOlvido} disabled={!emailValido || olvidoLoading}>
+          {olvidoLoading ? "Registrando…" : "Registrar solicitud de olvido (GDPR_OLVIDO)"}
+        </Btn>
+      </div>
+
+      {accesoError && <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 10 }}>{accesoError}</div>}
+      {accesoResult && (
+        <div style={{ marginTop: 12, padding: 12, border: `1px solid ${T.line}`, borderRadius: 10, fontSize: ".82rem", lineHeight: 1.6 }}>
+          <div style={{ fontWeight: 700 }}>{accesoResult.tipo} — {accesoResult.titular.email}</div>
+          <div style={{ color: T.textDim }}>Identidad: {accesoResult.datos.identidad.disponible ? "disponible" : `no disponible (${accesoResult.datos.identidad.motivo})`}</div>
+          <div style={{ color: T.textDim }}>Reservas: {accesoResult.datos.reservas.disponible ? `${accesoResult.datos.reservas.registros.length} registro(s)` : `no disponible (${accesoResult.datos.reservas.motivo})`}</div>
+        </div>
+      )}
+
+      {olvidoError && <div style={{ color: T.danger, fontSize: ".82rem", marginTop: 10 }}>{olvidoError}</div>}
+      {olvidoResult && (
+        <div style={{ marginTop: 12, padding: 12, border: `1px solid ${T.line}`, borderRadius: 10, fontSize: ".82rem", lineHeight: 1.6 }}>
+          <div style={{ fontWeight: 700 }}>{olvidoResult.tipo} — {olvidoResult.titular.email} — estado: {olvidoResult.estado}</div>
+          {olvidoResult.dependencias?.reservas_futuras?.verificable && (
+            <div style={{ color: T.textDim }}>Reservas futuras: {olvidoResult.dependencias.reservas_futuras.cantidad}</div>
+          )}
+          <div style={{ color: T.textDim }}>Lista de espera: no verificable en este entorno (requiere revisión manual).</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BackupsSeguridad() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Infraestructura"
+        title="Backups y seguridad"
+        desc="Copias de seguridad y alertas de seguridad del sistema."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de validación real / credenciales externas.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🔄 Backup Semanal / 🗂️ Backup Plantilla Drive — copias de seguridad periódicas.",
+          "⚖️ Solicitud GDPR Acceso u Olvido de Datos — gestión de solicitudes de privacidad (ver panel funcional debajo).",
+          "🛡️ Alerta Seguridad Acceso Sospechoso — aviso de accesos sospechosos.",
+          "Backup Semanal, Backup Plantilla Drive y Alerta Seguridad ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Solicitar backup manual", "Revisar alerta de seguridad"]} />
+        </div>
+        <GdprAdminReview />
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Comunicaciones y ciclo de socio" — agrupa 9
+// escenarios de comunicación proactiva ligada al ciclo de vida del socio:
+// "🔁 Reactivación Inactivos 30d" (5736470), "🎂 Felicitación Cumpleaños"
+// (5811864), "💳 Recordatorio Cuota Mensual" (5791032), "📧 Monitor
+// Prueba Gratuita" (5750308), "❄️ Congelación + Reactivación Membresía"
+// (5812456), "🎁 Bienvenida Nuevo Socio" (5791022), "🔁 Onboarding
+// Secuencial" (5811918), "🎁 Programa de Referidos" (5812297) y "👥
+// Emparejamiento Sin Pareja" (5791128). Gateado a STAFF/ADMIN/SUPPORT
+// (atención al jugador es tarea diaria de STAFF, ver rbac.js).
+function ComunicacionesSocio() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Socios"
+        title="Comunicaciones y ciclo de socio"
+        desc="Avisos y automatizaciones ligadas al ciclo de vida del socio."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Validación real pendiente por disponibilidad de Airtable (429).
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🔁 Reactivación Inactivos 30d / ❄️ Congelación + Reactivación Membresía — recuperan socios inactivos o congelados.",
+          "🎂 Felicitación Cumpleaños / 🎁 Bienvenida Nuevo Socio / 🔁 Onboarding Secuencial — comunicaciones de ciclo de vida.",
+          "💳 Recordatorio Cuota Mensual / 📧 Monitor Prueba Gratuita — recordatorios de facturación y prueba gratuita.",
+          "🎁 Programa de Referidos — invita a socios a recomendar el club.",
+          "👥 Emparejamiento Sin Pareja — conecta jugadores sin compañero de partido.",
+          "Los 9 escenarios ya corren en Make; este panel no los reactiva ni los sustituye.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Enviar comunicación preparada", "Revisar socio inactivo", "Emparejar jugador"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Calendario y disponibilidad" — agrupa "🗓️
+// Sincronización Multi-Calendario" (5735907) y "📈 Predicción Ocupación"
+// (5799041). Gateado a STAFF/ADMIN/SUPPORT (disponibilidad es tarea
+// diaria de STAFF).
+function CalendarioDisponibilidadModulo() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Calendario y disponibilidad"
+        desc="Sincronización de calendarios externos y previsión de ocupación."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de integración real con Google Calendar y validación por Airtable 429.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "🗓️ Sincronización Multi-Calendario — mantiene coherentes las reservas del club con calendarios externos.",
+          "📈 Predicción Ocupación — estima la ocupación futura de las pistas.",
+          "Ambos escenarios ya corren en Make; este panel no los reactiva ni los sustituye ni sincroniza ningún calendario real todavía.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Sincronizar calendario", "Ver previsión de ocupación"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20): "Facturación y pagos" — agrupa "💰 Facturación y
+// Cobro" (5733370), "💳 Pago Confirmado Stripe → Cuota + Recibo"
+// (6323441), "🔄 Dunning Cobro Recurrente Stripe" (6335117) y "💸 Escalado
+// Impagos" (5811888). Gateado como "admin" (ADMIN+SUPPORT, sin STAFF).
+// No existe ningún código de Stripe en esta rama — este panel nunca debe
+// dar a entender que ya hay pagos reales conectados.
+function FacturacionPagos() {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Negocio"
+        title="Facturación y pagos"
+        desc="Cobros, recibos y seguimiento de impagos."
+      />
+      <IntegrationStatusBanner>
+        Preparado visualmente. Pendiente de integración real con Stripe — no ejecuta pagos ni cobros reales todavía.
+      </IntegrationStatusBanner>
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Escenarios relacionados en Make</h3>
+        <PanelList items={[
+          "💰 Facturación y Cobro — genera facturas/cobros de cuotas.",
+          "💳 Pago Confirmado Stripe → Cuota + Recibo — confirma un pago y emite el recibo correspondiente.",
+          "🔄 Dunning Cobro Recurrente Stripe — reintenta cobros recurrentes fallidos.",
+          "💸 Escalado Impagos — escala impagos persistentes.",
+          "Los 4 escenarios ya corren en Make; este panel no los reactiva, no los sustituye y no ejecuta ningún cobro real.",
+        ]} />
+        <div style={{ marginTop: 20 }}>
+          <PreparedActionButtons actions={["Ver estado de facturación", "Reintentar cobro", "Revisar impago"]} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// RBAC V2 (2026-08-27): módulo usuario limpio — solo el chatbot, sin info
+// técnica de Make/secretos/escenarios. Visible a todos los roles (PLAYER incluido).
+function AsistenteIA({ navigate }) {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 700, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Tu asistente"
+        title="Asistente IA"
+        desc="Consulta disponibilidad, gestiona tus reservas y resuelve dudas."
+      />
+      <Card>
+        <h3 style={{ marginTop: 0 }}>💬 Asistente de Club Pádel 04</h3>
+        <p style={{ color: "#555", fontSize: 14, marginBottom: 16 }}>
+          Escribe o envía una nota de voz. Puedo ayudarte con disponibilidad de pistas, consultar o gestionar tus reservas.
+        </p>
+        <ChatbotAsistente onNavigate={navigate} />
+      </Card>
+    </div>
+  );
+}
+
+// PASO 07P (2026-07-20) / Omnicanal (2026-08-27): "Automatizaciones y bots"
+// agrupa los canales externos Make (Telegram, WhatsApp, Tally) y el Asistente
+// Web con detalle técnico. Visible solo para ADMIN y SUPPORT. WhatsApp Business API y Tally siguen
+// sin integración real. Telegram usa el mismo endpoint /api/chat con
+// X-CP04-Bot-Secret (trigger en Make ID 4832095 preparado, sin activar).
+// El asistente web SÍ está conectado al backend omnicanal real.
+function AutomatizacionesBots({ navigate }) {
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle
+        eyebrow="Automatizaciones"
+        title="Asistente y automatizaciones"
+        desc="Asistente de reservas en tiempo real + canales externos."
+      />
+
+      <Card style={{ marginBottom: 24 }}>
+        <h3 style={{ marginTop: 0 }}>💬 Asistente Web (activo)</h3>
+        <p style={{ color: "#555", fontSize: 14, marginBottom: 16 }}>
+          Conectado al backend omnicanal del Worker. Consulta disponibilidad y recibe orientación para gestionar tus reservas.
+        </p>
+        <ChatbotAsistente onNavigate={navigate} />
+      </Card>
+
+      <Card>
+        <h3 style={{ marginTop: 0 }}>Canales externos (en Make)</h3>
+        <PanelList items={[
+          "🤖 Bot IA Reservas Telegram — contrato omnicanal preparado; endpoint /api/chat listo con X-CP04-Bot-Secret. Transcripción de audio: PENDIENTE E2E REAL (requiere Cloudflare AI binding o clave OpenAI Whisper configurada en Worker).",
+          "🎧 Atención Socio WhatsApp FAQ (Make 5799031) — desactivado; mismo contrato omnicanal aplicable.",
+          "🤖 Bot IA Reservas WhatsApp (Make 5798996) — desactivado; misma API /api/chat.",
+          "🎯 Campaña Flash WhatsApp (Make 5791124) — canal independiente, sin chatbot.",
+          "📝 Tally → API Reservas (Make 5747703) — pendiente de integración.",
+        ]} />
+        <p style={{ fontSize: 13, color: "#888", marginTop: 12, marginBottom: 0 }}>
+          Los escenarios de canales externos no se reactivan desde este panel. Para activarlos, configura CHATBOT_BOT_SECRET como Worker secret y habilita el trigger de Telegram en Make.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
+function normalizarReserva(item) {
+  const reserva =
+    item && typeof item === "object" && item.fields
+      ? { ...item.fields, record_id: item.id || item.record_id }
+      : item || {};
+
+  return {
+    id:
+      reserva.record_id ||
+      reserva.id ||
+      reserva.clave_reserva ||
+      `${reserva.fecha_reserva || reserva.fecha || "sin-fecha"}-${
+        reserva.pista || reserva.Pista || "sin-pista"
+      }-${reserva.hora_inicio || reserva.hora || "sin-hora"}`,
+
+    nombre:
+      reserva.nombre ||
+      reserva.Nombre ||
+      reserva.jugador_nombre ||
+      "",
+
+    apellidos:
+      reserva.apellidos ||
+      reserva.Apellidos ||
+      reserva.jugador_apellidos ||
+      "",
+
+    email:
+      reserva.email ||
+      reserva.Email ||
+      "",
+
+    fecha:
+      reserva.fecha_reserva ||
+      reserva.fecha ||
+      reserva.Fecha ||
+      "",
+
+    horaInicio:
+      reserva.hora_inicio ||
+      reserva.hora ||
+      reserva.Hora ||
+      "",
+
+    horaFin:
+      reserva.hora_fin ||
+      "",
+
+    pista:
+      reserva.pista ||
+      reserva.Pista ||
+      "",
+
+    estado: String(
+      reserva.estado_reserva ||
+      reserva.estado ||
+      reserva.Estado ||
+      "sin estado",
+    ).toLowerCase(),
+
+    clave:
+      reserva.clave_reserva ||
+      reserva.clave ||
+      "",
+
+    fechaCancelacion:
+      reserva.fecha_cancelacion ||
+      "",
+
+    eventId:
+      reserva.event_id ||
+      "",
+  };
 }
 
 function Gestion() {
-  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow="Staff / recepción" title="Operativa de reservas" desc="Panel preparado para recepción. Los datos mostrados son demo y deben sustituirse por backend real." /><div className="cp04-grid-3" style={{ marginBottom: 24 }}><Card><h3 style={{ marginTop: 0 }}>Ver reservas</h3><PanelList items={["Listado demo de reservas", "Estados: confirmada, pendiente, completada", "Preparado para filtros por fecha y pista"]} /></Card><Card><h3 style={{ marginTop: 0 }}>Incidencias</h3><PanelList items={["Registro de incidencias pendiente", "Avisos a clientes pendiente", "Seguimiento por staff pendiente"]} /></Card><Card><h3 style={{ marginTop: 0 }}>Disponibilidad</h3><PanelList items={["Consulta por pista pendiente", "Bloqueos manuales pendientes", "Ayuda a clientes en recepción"]} /></Card></div><div style={{ display: "grid", gap: 12 }}>{BOOKINGS.map((b) => <Card key={b.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}><div><strong>{b.player}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{b.id} · {b.court} · {b.date} · {b.time} · demo</div></div><div style={{ display: "flex", alignItems: "center", gap: 12 }}><strong style={{ color: T.accent }}>{b.price}€</strong><Badge status={b.status} /></div></Card>)}</div></div>;
+  const [emailConsulta, setEmailConsulta] = useState(() => {
+    try {
+      return (
+        window.localStorage.getItem("cp04_user_email") ||
+        window.localStorage.getItem("cp04-reservas-email") ||
+        ""
+      );
+    } catch {
+      return "";
+    }
+  });
+  const [reservasReales, setReservasReales] = useState([]);
+  const [cargandoReservas, setCargandoReservas] = useState(false);
+  const [reservasConsultadas, setReservasConsultadas] = useState(false);
+  const [errorReservas, setErrorReservas] = useState("");
+  const [fuenteReservas, setFuenteReservas] = useState("");
+  const [filtroFecha, setFiltroFecha] = useState("");
+  const [filtroPista, setFiltroPista] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
+
+  const reservasEndpoint = cp04ReservasEndpoint(import.meta?.env);
+
+  async function cargarReservas() {
+    const emailLimpio = emailConsulta.trim().toLowerCase();
+
+    if (
+      !emailLimpio ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)
+    ) {
+      setErrorReservas(
+        "Introduce un correo electrónico válido para consultar las reservas.",
+      );
+      return;
+    }
+
+    if (cargandoReservas) return;
+
+    setCargandoReservas(true);
+    setErrorReservas("");
+
+    try {
+      const separador = reservasEndpoint.includes("?") ? "&" : "?";
+
+      const url =
+        `${reservasEndpoint}${separador}` +
+        `email=${encodeURIComponent(emailLimpio)}` +
+        `&limit=100&t=${Date.now()}`;
+
+      // GET /api/reservas ya exige sesión real en el Worker (protegido en una
+      // fase anterior): sin esta cabecera, esta búsqueda devuelve 401.
+      const response = await authFetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      const data = await readSafeResponse(response);
+      const resultado =
+        data && typeof data === "object" ? data : {};
+
+      if (!response.ok || resultado.ok !== true) {
+        throw new Error(
+          resultado.error ||
+          resultado.message ||
+          `No se pudieron consultar las reservas (${response.status}).`,
+        );
+      }
+
+      const listaOriginal = Array.isArray(resultado.reservas)
+        ? resultado.reservas
+        : Array.isArray(resultado.records)
+          ? resultado.records
+          : Array.isArray(resultado.data)
+            ? resultado.data
+            : [];
+
+      const listaNormalizada = listaOriginal
+        .map(normalizarReserva)
+        .sort((a, b) => {
+          const fechaA = `${a.fecha}T${a.horaInicio || "00:00"}`;
+          const fechaB = `${b.fecha}T${b.horaInicio || "00:00"}`;
+          return fechaB.localeCompare(fechaA);
+        });
+
+      setReservasReales(listaNormalizada);
+      setFuenteReservas(resultado.source || "airtable");
+      setReservasConsultadas(true);
+
+      try {
+        window.localStorage.setItem(
+          "cp04-reservas-email",
+          emailLimpio,
+        );
+      } catch {
+        // La consulta ya ha terminado correctamente.
+      }
+    } catch (error) {
+      setReservasReales([]);
+      setReservasConsultadas(true);
+      setFuenteReservas("");
+      setErrorReservas(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron cargar las reservas.",
+      );
+    } finally {
+      setCargandoReservas(false);
+    }
+  }
+
+  const pistasDisponibles = useMemo(
+    () =>
+      [...new Set(
+        reservasReales
+          .map((reserva) => reserva.pista)
+          .filter(Boolean),
+      )].sort(),
+    [reservasReales],
+  );
+
+  const estadosDisponibles = useMemo(
+    () =>
+      [...new Set(
+        reservasReales
+          .map((reserva) => reserva.estado)
+          .filter(Boolean),
+      )].sort(),
+    [reservasReales],
+  );
+
+  const reservasFiltradas = useMemo(
+    () =>
+      reservasReales.filter((reserva) => {
+        const coincideFecha =
+          !filtroFecha || reserva.fecha === filtroFecha;
+
+        const coincidePista =
+          !filtroPista || reserva.pista === filtroPista;
+
+        const coincideEstado =
+          !filtroEstado || reserva.estado === filtroEstado;
+
+        return (
+          coincideFecha &&
+          coincidePista &&
+          coincideEstado
+        );
+      }),
+    [
+      reservasReales,
+      filtroFecha,
+      filtroPista,
+      filtroEstado,
+    ],
+  );
+
+  const resumenReservas = useMemo(() => {
+    const confirmadas = reservasReales.filter(
+      (reserva) =>
+        reserva.estado === "confirmada" ||
+        reserva.estado === "reprogramada",
+    ).length;
+
+    const pendientes = reservasReales.filter(
+      (reserva) => reserva.estado === "pendiente",
+    ).length;
+
+    const canceladas = reservasReales.filter(
+      (reserva) => reserva.estado === "cancelada",
+    ).length;
+
+    return {
+      total: reservasReales.length,
+      confirmadas,
+      pendientes,
+      canceladas,
+    };
+  }, [reservasReales]);
+
+  function colorEstado(estado) {
+    if (
+      estado === "confirmada" ||
+      estado === "reprogramada"
+    ) {
+      return T.accent;
+    }
+
+    if (estado === "pendiente") {
+      return T.warning;
+    }
+
+    if (estado === "cancelada") {
+      return T.danger;
+    }
+
+    return T.textDim;
+  }
+
+  return (
+    <div
+      style={{
+        padding: "42px 24px",
+        maxWidth: 1180,
+        margin: "0 auto",
+      }}
+    >
+      <SectionTitle
+        eyebrow="Reservas"
+        title="Listado real de reservas"
+        desc="Consulta tus reservas."
+      />
+
+      <Card style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>
+          Consultar mis reservas
+        </h3>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "minmax(220px, 1fr) auto",
+            gap: 12,
+            alignItems: "end",
+          }}
+        >
+          <label>
+            <span
+              style={{
+                display: "block",
+                color: T.textDim,
+                marginBottom: 7,
+              }}
+            >
+              Email
+            </span>
+
+            <input
+              aria-label="Correo para consultar reservas"
+              type="email"
+              placeholder="tu-correo@ejemplo.com"
+              value={emailConsulta}
+              autoComplete="email"
+              onChange={(event) => {
+                setEmailConsulta(event.target.value);
+                setErrorReservas("");
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  cargarReservas();
+                }
+              }}
+            />
+          </label>
+
+          <Btn
+            disabled={
+              cargandoReservas ||
+              !emailConsulta.trim()
+            }
+            onClick={cargarReservas}
+            className="cp04-fix-white-action-btn cp04-fix-consultar-reservas-btn"
+          >
+            {cargandoReservas
+              ? "Consultando..."
+              : "Consultar reservas"}
+          </Btn>
+        </div>
+
+        {errorReservas && (
+          <div
+            role="alert"
+            style={{
+              marginTop: 14,
+              color: T.danger,
+            }}
+          >
+            {errorReservas}
+          </div>
+        )}
+      </Card>
+
+      {reservasConsultadas && !errorReservas && (
+        <>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(160px, 1fr))",
+              gap: 12,
+              marginBottom: 20,
+            }}
+          >
+            <Card>
+              <div style={{ color: T.textDim }}>
+                Total
+              </div>
+              <strong
+                style={{
+                  display: "block",
+                  color: T.accent,
+                  fontSize: 28,
+                  marginTop: 7,
+                }}
+              >
+                {resumenReservas.total}
+              </strong>
+            </Card>
+
+            <Card>
+              <div style={{ color: T.textDim }}>
+                Confirmadas
+              </div>
+              <strong
+                style={{
+                  display: "block",
+                  color: T.accent,
+                  fontSize: 28,
+                  marginTop: 7,
+                }}
+              >
+                {resumenReservas.confirmadas}
+              </strong>
+            </Card>
+
+            <Card>
+              <div style={{ color: T.textDim }}>
+                Pendientes
+              </div>
+              <strong
+                style={{
+                  display: "block",
+                  color: T.warning,
+                  fontSize: 28,
+                  marginTop: 7,
+                }}
+              >
+                {resumenReservas.pendientes}
+              </strong>
+            </Card>
+
+            <Card>
+              <div style={{ color: T.textDim }}>
+                Canceladas
+              </div>
+              <strong
+                style={{
+                  display: "block",
+                  color: T.danger,
+                  fontSize: 28,
+                  marginTop: 7,
+                }}
+              >
+                {resumenReservas.canceladas}
+              </strong>
+            </Card>
+          </div>
+
+          <Card style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 12,
+              }}
+            >
+              <label>
+                <span
+                  style={{
+                    display: "block",
+                    color: T.textDim,
+                    marginBottom: 7,
+                  }}
+                >
+                  Fecha
+                </span>
+
+                <input
+                  aria-label="Filtrar reservas por fecha"
+                  type="date"
+                  value={filtroFecha}
+                  onChange={(event) =>
+                    setFiltroFecha(event.target.value)
+                  }
+                />
+              </label>
+
+              <label>
+                <span
+                  style={{
+                    display: "block",
+                    color: T.textDim,
+                    marginBottom: 7,
+                  }}
+                >
+                  Pista
+                </span>
+
+                <select
+                  aria-label="Filtrar reservas por pista"
+                  value={filtroPista}
+                  onChange={(event) =>
+                    setFiltroPista(event.target.value)
+                  }
+                >
+                  <option value="">Todas</option>
+
+                  {pistasDisponibles.map((pista) => (
+                    <option key={pista} value={pista}>
+                      {pista}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span
+                  style={{
+                    display: "block",
+                    color: T.textDim,
+                    marginBottom: 7,
+                  }}
+                >
+                  Estado
+                </span>
+
+                <select
+                  aria-label="Filtrar reservas por estado"
+                  value={filtroEstado}
+                  onChange={(event) =>
+                    setFiltroEstado(event.target.value)
+                  }
+                >
+                  <option value="">Todos</option>
+
+                  {estadosDisponibles.map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                color: T.textDim,
+              }}
+            >
+              Mostrando {reservasFiltradas.length} de{" "}
+              {reservasReales.length} reservas · Fuente:{" "}
+              {fuenteReservas ? "base de datos" : "base de datos"}
+            </div>
+          </Card>
+
+          {reservasFiltradas.length === 0 ? (
+            <Card>
+              <strong>
+                No se encontraron reservas
+              </strong>
+
+              <p
+                style={{
+                  color: T.textDim,
+                  marginBottom: 0,
+                }}
+              >
+                No hay registros que coincidan con los
+                filtros seleccionados.
+              </p>
+            </Card>
+          ) : (
+            <Card>
+              <div className="cp04-table-wrap">
+                <table className="cp04-table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Hora</th>
+                      <th>Pista</th>
+                      <th>Jugador</th>
+                      <th>Estado</th>
+                      <th>Clave</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {reservasFiltradas.map((reserva) => (
+                      <tr key={reserva.id}>
+                        <td>
+                          {reserva.fecha
+                            ? formatDateEs(reserva.fecha)
+                            : "—"}
+                        </td>
+
+                        <td>
+                          {reserva.horaInicio || "—"}
+                          {reserva.horaFin
+                            ? `–${reserva.horaFin}`
+                            : ""}
+                        </td>
+
+                        <td>{reserva.pista || "—"}</td>
+
+                        <td>
+                          {[
+                            reserva.nombre,
+                            reserva.apellidos,
+                          ]
+                            .filter(Boolean)
+                            .join(" ") || "—"}
+                        </td>
+
+                        <td>
+                          <strong
+                            style={{
+                              color: colorEstado(
+                                reserva.estado,
+                              ),
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {reserva.estado}
+                          </strong>
+                        </td>
+
+                        <td>
+                          <code
+                            style={{
+                              color: T.textDim,
+                              overflowWrap: "anywhere",
+                            }}
+                          >
+                            {reserva.clave || "—"}
+                          </code>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+
+// PASO 07I (2026-07-19): Baja de Jugador pasa a tener su propio acceso en
+// el sidebar ("baja_jugador"), además del ya existente "alta_jugador".
+// Ambos apuntan al MISMO componente `AltaJugador()` (nunca se duplicó el
+// formulario ni la lógica del Paso 07C) — `initialModo` solo decide qué
+// pestaña se abre primero según desde qué item del sidebar se navegó. El
+// usuario sigue pudiendo cambiar de pestaña libremente una vez dentro,
+// igual que antes de este paso.
+function AltaJugador({ initialModo = "alta" } = {}) {
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  const initialForm = {
+    nombre: "",
+    apellidos: "",
+    email: "",
+    telefono: "",
+    fecha_nacimiento: "",
+    nivel: "",
+    genero: "",
+    comentarios: "",
+    acepta_condiciones: false,
+  };
+
+  const [form, setForm] = useState(initialForm);
+  const [errors, setErrors] = useState({});
+  const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [serverError, setServerError] = useState("");
+
+  // PASO 07C (2026-07-19): Baja de Jugador + Promoción — misma ruta/gate RBAC
+  // que Alta (STAFF/ADMIN/SUPPORT, ver rbac.js CP04_ROLE_PERMISSIONS), sin
+  // tocar navegación ni permisos. Réplica deliberada del patrón de Alta:
+  // formulario -> validación local -> authFetch -> nunca confirma éxito sin
+  // response.ok && data.ok !== false.
+  const [modo, setModo] = useState(initialModo === "baja" ? "baja" : "alta");
+  const bajaInitialForm = {
+    nombre: "",
+    apellidos: "",
+    email: "",
+    telefono: "",
+    motivo_baja: "",
+    fecha_baja: "",
+    promocionar_siguiente_si_aplica: false,
+    observaciones: "",
+  };
+  const [bajaForm, setBajaForm] = useState(bajaInitialForm);
+  const [bajaErrors, setBajaErrors] = useState({});
+  const [bajaSending, setBajaSending] = useState(false);
+  const [bajaSuccess, setBajaSuccess] = useState(false);
+  const [bajaServerError, setBajaServerError] = useState("");
+
+  function updateBajaForm(field, value) {
+    setBajaForm((previous) => ({ ...previous, [field]: value }));
+    setBajaErrors((previous) => ({ ...previous, [field]: "" }));
+    setBajaSuccess(false);
+    setBajaServerError("");
+  }
+
+  function validateBaja() {
+    const nextErrors = {};
+
+    if (bajaForm.nombre.trim().length < 2) {
+      nextErrors.nombre = "Introduce un nombre válido.";
+    }
+    if (bajaForm.apellidos.trim().length < 2) {
+      nextErrors.apellidos = "Introduce apellidos válidos.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bajaForm.email.trim())) {
+      nextErrors.email = "Introduce un email válido.";
+    }
+    if (bajaForm.telefono.replace(/\D/g, "").length < 9) {
+      nextErrors.telefono = "Introduce un teléfono válido.";
+    }
+    if (!bajaForm.motivo_baja) {
+      nextErrors.motivo_baja = "Selecciona el motivo de la baja.";
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bajaForm.fecha_baja || "")) {
+      nextErrors.fecha_baja = "Selecciona la fecha de baja.";
+    }
+
+    return nextErrors;
+  }
+
+  // No confirma ninguna baja como realizada sin respuesta real del backend
+  // (response.ok && data.ok !== false) — mismo criterio defensivo que Alta.
+  // Si el Worker responde 503 "Baja webhook not configured" (webhook Make
+  // todavía sin configurar, ver worker-reservas/src/index.js
+  // handleBajaJugador), se traduce a un mensaje honesto para STAFF/ADMIN en
+  // vez del texto técnico crudo.
+  async function submitBaja(event) {
+    event.preventDefault();
+
+    const nextErrors = validateBaja();
+    setBajaErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setBajaSending(true);
+    setBajaServerError("");
+    setBajaSuccess(false);
+
+    try {
+      const response = await authFetch("/api/jugadores/baja", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: bajaForm.nombre.trim(),
+          apellidos: bajaForm.apellidos.trim(),
+          email: bajaForm.email.trim().toLowerCase(),
+          telefono: bajaForm.telefono.trim(),
+          motivo_baja: bajaForm.motivo_baja,
+          fecha_baja: bajaForm.fecha_baja,
+          promocionar_siguiente_si_aplica: bajaForm.promocionar_siguiente_si_aplica === true,
+          observaciones: bajaForm.observaciones.trim(),
+          origen: "APP_CLUB_PADEL_04",
+          accion: "baja_jugador",
+        }),
+      });
+
+      const data = await readSafeResponse(response);
+
+      if (!response.ok || data?.ok === false) {
+        if (data?.error === "Baja webhook not configured") {
+          throw new Error("La baja de jugador todavía no está configurada en el sistema. Contacta con soporte técnico.");
+        }
+        if (data?.error === "JUGADOR_NOT_FOUND") {
+          throw new Error("No se encontró ningún jugador con ese email en el sistema.");
+        }
+        if (data?.error === "JUGADOR_YA_INACTIVO") {
+          throw new Error("Este jugador ya figura como dado de baja en el sistema.");
+        }
+        throw new Error(data?.message || data?.error || "No se pudo completar la baja.");
+      }
+
+      setBajaSuccess(true);
+      setBajaForm(bajaInitialForm);
+    } catch (error) {
+      setBajaServerError(error?.message || "No se pudo completar la baja.");
+    } finally {
+      setBajaSending(false);
+    }
+  }
+
+  function updateForm(field, value) {
+    setForm((previous) => ({ ...previous, [field]: value }));
+    setErrors((previous) => ({ ...previous, [field]: "" }));
+    setSuccess(false);
+    setServerError("");
+  }
+
+  function validate() {
+    const nextErrors = {};
+
+    if (form.nombre.trim().length < 2) {
+      nextErrors.nombre = "Introduce un nombre válido.";
+    }
+
+    if (form.apellidos.trim().length < 2) {
+      nextErrors.apellidos = "Introduce apellidos válidos.";
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      nextErrors.email = "Introduce un email válido.";
+    }
+
+    if (form.telefono.replace(/\D/g, "").length < 9) {
+      nextErrors.telefono = "Introduce un teléfono válido.";
+    }
+
+    if (!form.fecha_nacimiento) {
+      nextErrors.fecha_nacimiento = "Selecciona la fecha de nacimiento.";
+    }
+
+    if (!form.nivel) {
+      nextErrors.nivel = "Selecciona el nivel.";
+    }
+
+    if (!form.genero) {
+      nextErrors.genero = "Selecciona el género.";
+    }
+
+    if (!form.acepta_condiciones) {
+      nextErrors.acepta_condiciones = "Debes aceptar las condiciones.";
+    }
+
+    return nextErrors;
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+
+    const nextErrors = validate();
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setSending(true);
+    setServerError("");
+    setSuccess(false);
+
+    try {
+      // Alta de jugador es operación de STAFF/ADMIN/SUPPORT: adjunta el
+      // token real si existe sesión (preparado para CP04_ENFORCE_ROLE_GATES).
+      // request_id: generado en el cliente para idempotencia real (si el
+      // envío se reintenta con el mismo request_id, el backend/Make puede
+      // reconocerlo como la misma solicitud en vez de crear un duplicado).
+      const response = await authFetch("/api/jugadores/alta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: form.nombre.trim(),
+          apellidos: form.apellidos.trim(),
+          email: form.email.trim().toLowerCase(),
+          telefono: form.telefono.trim(),
+          fecha_nacimiento: form.fecha_nacimiento,
+          nivel: form.nivel,
+          genero: form.genero,
+          comentarios: form.comentarios.trim(),
+          acepta_condiciones: form.acepta_condiciones,
+          origen: "app",
+          request_id: crypto.randomUUID(),
+        }),
+      });
+
+      const data = await readSafeResponse(response);
+
+      if (!response.ok || data?.ok === false) {
+        throw new Error(data?.message || data?.error || "No se pudo completar el alta.");
+      }
+
+      setSuccess(true);
+      setForm(initialForm);
+    } catch (error) {
+      setServerError(error?.message || "No se pudo completar el alta.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  // PASO 07J (2026-07-19): el título/subtítulo de la cabecera antes quedaba
+  // fijo en "Alta de jugador" aunque el usuario estuviera en la pestaña de
+  // Baja (entrando desde el sidebar en "baja_jugador", o cambiando de
+  // pestaña manualmente) — confusión visual detectada en validación en
+  // localhost:5175. Se deriva ahora del `modo` activo, igual que ya hacían
+  // los botones de pestaña. Texto de Baja en español literal (sin tx()),
+  // mismo criterio ya documentado en el Paso 07C para el resto de textos
+  // nuevos de esa pestaña.
+  const isBajaMode = modo === "baja";
+  const playerFormTitle = isBajaMode ? "Baja de jugador" : tx("alta.title");
+  const playerFormSubtitle = isBajaMode
+    ? "Solicita la baja de un jugador del club."
+    : tx("alta.desc");
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 900, margin: "0 auto" }}>
+      <SectionTitle eyebrow={tx("alta.eyebrow")} title={playerFormTitle} desc={playerFormSubtitle} />
+      <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
+        <Btn type="button" variant={modo === "alta" ? "primary" : "secondary"} onClick={() => setModo("alta")}>
+          Alta de jugador
+        </Btn>
+        <Btn type="button" variant={modo === "baja" ? "primary" : "secondary"} onClick={() => setModo("baja")}>
+          Baja de jugador
+        </Btn>
+      </div>
+      {modo === "baja" ? (
+        <Card>
+          <p style={{ color: T.textDim, fontSize: ".86rem", marginTop: 0, marginBottom: 18 }}>
+            Solicitar baja de jugador. Esta acción no se confirmará hasta que el sistema responda correctamente.
+          </p>
+          <form onSubmit={submitBaja}>
+            <div className="cp04-grid-2">
+              <div>
+                <label htmlFor="baja-nombre">Nombre</label>
+                <input id="baja-nombre" value={bajaForm.nombre} onChange={e => updateBajaForm("nombre", e.target.value)} autoComplete="given-name" />
+                <FieldError>{bajaErrors.nombre}</FieldError>
+              </div>
+              <div>
+                <label htmlFor="baja-apellidos">Apellidos</label>
+                <input id="baja-apellidos" value={bajaForm.apellidos} onChange={e => updateBajaForm("apellidos", e.target.value)} autoComplete="family-name" />
+                <FieldError>{bajaErrors.apellidos}</FieldError>
+              </div>
+              <div>
+                <label htmlFor="baja-email">Email</label>
+                <input id="baja-email" type="email" value={bajaForm.email} onChange={e => updateBajaForm("email", e.target.value)} autoComplete="email" />
+                <FieldError>{bajaErrors.email}</FieldError>
+              </div>
+              <div>
+                <label htmlFor="baja-telefono">Teléfono</label>
+                <input id="baja-telefono" type="tel" value={bajaForm.telefono} onChange={e => updateBajaForm("telefono", e.target.value)} autoComplete="tel" />
+                <FieldError>{bajaErrors.telefono}</FieldError>
+              </div>
+              <div>
+                <label htmlFor="baja-motivo">Motivo de la baja</label>
+                <select id="baja-motivo" value={bajaForm.motivo_baja} onChange={e => updateBajaForm("motivo_baja", e.target.value)}>
+                  <option value="">Seleccionar…</option>
+                  <option value="Voluntaria">Voluntaria</option>
+                  <option value="Impago">Impago</option>
+                  <option value="Inactividad">Inactividad</option>
+                  <option value="Traslado a otro club">Traslado a otro club</option>
+                  <option value="Otro">Otro</option>
+                </select>
+                <FieldError>{bajaErrors.motivo_baja}</FieldError>
+              </div>
+              <div>
+                <label htmlFor="baja-fecha">Fecha de baja</label>
+                <input id="baja-fecha" type="date" value={bajaForm.fecha_baja} onChange={e => updateBajaForm("fecha_baja", e.target.value)} />
+                <FieldError>{bajaErrors.fecha_baja}</FieldError>
+              </div>
+            </div>
+            <div style={{ marginTop: 18 }}>
+              <label htmlFor="baja-observaciones">Observaciones (opcional)</label>
+              <textarea id="baja-observaciones" value={bajaForm.observaciones} onChange={e => updateBajaForm("observaciones", e.target.value)} rows={4} />
+            </div>
+            <label style={{ display:"flex", gap:10, alignItems:"flex-start", marginTop:18 }}>
+              <input type="checkbox" checked={bajaForm.promocionar_siguiente_si_aplica} onChange={e => updateBajaForm("promocionar_siguiente_si_aplica", e.target.checked)} />
+              <span>Promocionar al siguiente jugador en lista de espera, si aplica.</span>
+            </label>
+            {/* PASO 07N (2026-07-20): nota informativa hacia el nuevo módulo
+                "Lista de espera" del sidebar — no cambia el payload de Baja
+                ni la lógica del checkbox, solo orienta a STAFF/ADMIN/SUPPORT
+                sobre dónde se gestionará la promoción cuando exista
+                integración real. */}
+            <p style={{ color:T.textDim, fontSize:".8rem", marginTop:8, marginBottom:0 }}>
+              La promoción se gestionará desde "Lista de espera" cuando la integración real esté disponible.
+            </p>
+            {bajaServerError && <StatusCard status="error" text={bajaServerError} style={{ marginTop:16 }} />}
+            {bajaSuccess && <StatusCard status="success" text="Solicitud de baja enviada · pendiente de confirmación." style={{ marginTop:16 }} />}
+            <div style={{ marginTop:22 }}>
+              {/* PASO 07J/07K/07L/07M (2026-07-19): refuerzo de contraste +
+                  clase dedicada `cp04-offboarding-submit-button` con CSS de
+                  máxima especificidad (ver cp04-legibility-polish.css) como
+                  red de seguridad definitiva — este botón ya fue capturado
+                  por 3 orígenes distintos de reglas globales "catch-all"
+                  (`button` genérico en 07H/07K, `.cp04-card
+                  [style*="background"]` en 07L, su variante
+                  `cp04-module-admin` en 07M, esta última específica de
+                  SUPPORT por tener "Centro técnico" siempre en su
+                  sidebar). Sin cambios en la lógica de envío ni en el
+                  componente Btn compartido más allá de aceptar
+                  `className` opcional. */}
+              <Btn
+                type="submit"
+                disabled={bajaSending}
+                className="cp04-offboarding-submit-button"
+                style={{
+                  width: "100%",
+                  background: T.accent,
+                  color: "#06100a",
+                  fontSize: "1rem",
+                  border: "2px solid rgba(6,16,10,.45)",
+                  boxShadow: "0 16px 36px rgba(182,255,0,.32), 0 0 0 1px rgba(6,16,10,.45)",
+                }}
+              >
+                {bajaSending ? "Enviando…" : "Solicitar baja de jugador"}
+              </Btn>
+            </div>
+          </form>
+        </Card>
+      ) : (
+      <Card>
+        <form onSubmit={submit}>
+          <div className="cp04-grid-2">
+            <div>
+              <label htmlFor="alta-nombre">{tx("alta.nombre")}</label>
+              <input id="alta-nombre" value={form.nombre} onChange={e => updateForm("nombre", e.target.value)} autoComplete="given-name" />
+              <FieldError>{errors.nombre}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="alta-apellidos">{tx("alta.apellidos")}</label>
+              <input id="alta-apellidos" value={form.apellidos} onChange={e => updateForm("apellidos", e.target.value)} autoComplete="family-name" />
+              <FieldError>{errors.apellidos}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="alta-email">{tx("alta.email")}</label>
+              <input id="alta-email" type="email" value={form.email} onChange={e => updateForm("email", e.target.value)} autoComplete="email" />
+              <FieldError>{errors.email}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="alta-telefono">{tx("alta.telefono")}</label>
+              <input id="alta-telefono" type="tel" value={form.telefono} onChange={e => updateForm("telefono", e.target.value)} autoComplete="tel" />
+              <FieldError>{errors.telefono}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="alta-fecha-nac">{tx("alta.fecha_nac")}</label>
+              <input id="alta-fecha-nac" type="date" value={form.fecha_nacimiento} onChange={e => updateForm("fecha_nacimiento", e.target.value)} />
+              <FieldError>{errors.fecha_nacimiento}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="alta-nivel">{tx("alta.nivel")}</label>
+              <select id="alta-nivel" value={form.nivel} onChange={e => updateForm("nivel", e.target.value)}>
+                <option value="">{tx("alta.seleccionar")}</option>
+                <option value="Iniciación">Iniciación</option>
+                <option value="Básico">Básico</option>
+                <option value="Intermedio">Intermedio</option>
+                <option value="Avanzado">Avanzado</option>
+                <option value="Competición">Competición</option>
+              </select>
+              <FieldError>{errors.nivel}</FieldError>
+            </div>
+            <div>
+              <label htmlFor="alta-genero">{tx("alta.genero")}</label>
+              <select id="alta-genero" value={form.genero} onChange={e => updateForm("genero", e.target.value)}>
+                <option value="">{tx("alta.seleccionar")}</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+                <option value="Prefiero no indicarlo">Prefiero no indicarlo</option>
+              </select>
+              <FieldError>{errors.genero}</FieldError>
+            </div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <label htmlFor="alta-comentarios">{tx("alta.comentarios")}</label>
+            <textarea id="alta-comentarios" value={form.comentarios} onChange={e => updateForm("comentarios", e.target.value)} rows={4} />
+          </div>
+          <label style={{ display:"flex", gap:10, alignItems:"flex-start", marginTop:18 }}>
+            <input type="checkbox" checked={form.acepta_condiciones} onChange={e => updateForm("acepta_condiciones", e.target.checked)} />
+            <span>{tx("alta.acepta")}</span>
+          </label>
+          <FieldError>{errors.acepta_condiciones}</FieldError>
+          {serverError && <StatusCard status="error" text={serverError} style={{ marginTop:16 }} />}
+          {success && <StatusCard status="success" text={tx("alta.exito")} style={{ marginTop:16 }} />}
+          <div style={{ marginTop:22 }}>
+            <Btn type="submit" disabled={sending} className="cp04-fix-white-action-btn cp04-fix-dar-alta-btn">{sending ? tx("alta.registrando") : tx("alta.btn")}</Btn>
+          </div>
+        </form>
+      </Card>
+      )}
+    </div>
+  );
+}
+
+
+
+const TORNEO_DEMO_NAMES = [
+  ["Alejandro Ruiz", "Marcos Pérez"],
+  ["Javier Molina", "Álvaro Sánchez"],
+  ["David Romero", "Pablo Martín"],
+  ["Sergio García", "Daniel Torres"],
+  ["Carlos Navarro", "Hugo Fernández"],
+  ["Miguel López", "Raúl Jiménez"],
+  ["Antonio Moreno", "Iván Castillo"],
+  ["Fran Gómez", "Mario Ortega"],
+  ["Adrián Vega", "Nico Ramos"],
+  ["Lucas Medina", "Diego Santos"],
+  ["Álvaro Domínguez", "Jaime Herrera"],
+  ["Pablo Cruz", "Rubén León"],
+  ["Manuel Prieto", "Óscar Gil"],
+  ["José Márquez", "Víctor Cano"],
+  ["Samuel Nieto", "Héctor Ríos"],
+  ["Bruno Serrano", "Leo Fuentes"],
+];
+
+const TORNEO_STORE = "cp04_torneo_v2";
+const TORNEO_HIST_STORE = "cp04_torneo_hist_v2";
+const FORMAT_MAX = { "16": 8, "32": 16, "64": 32 };
+const MATCH_H = 78;
+const BASE_GAP = 10;
+
+// Date.now() puede repetir el mismo milisegundo entre dos clics rápidos
+// (doble pulsación real u onClick disparado dos veces). Como Date.now()
+// se usaba directamente como id de pareja y como key de React en el
+// historial, esa colisión duplicaba ids/keys en lugar de crear dos
+// entradas distintas. Un contador incremental por módulo garantiza
+// unicidad aunque el reloj no avance entre dos llamadas.
+let torneoIdSeq = 0;
+function torneoUid(prefix) {
+  torneoIdSeq += 1;
+  return `${prefix}${Date.now()}_${torneoIdSeq}`;
+}
+
+function torneoLoadSaved() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TORNEO_STORE) || "null");
+    if (!raw || typeof raw !== "object") return null;
+    const rawPairs = Array.isArray(raw.pairs) ? raw.pairs : [];
+    const rawBracket = Array.isArray(raw.bracket) ? raw.bracket : [];
+    // If bracket items lack 'round' (old format), discard bracket to avoid crash
+    const bracketOk = rawBracket.length === 0 || rawBracket.every(m => typeof m.round === "number");
+    const rawRrMatches = Array.isArray(raw.rrMatches) ? raw.rrMatches : [];
+    const rrMatchesOk = rawRrMatches.length === 0 || rawRrMatches.every(m => typeof m.round === "number");
+    return { ...raw, pairs: rawPairs, bracket: bracketOk ? rawBracket : [], rrMatches: rrMatchesOk ? rawRrMatches : [] };
+  } catch { return null; }
+}
+
+function torneoLoadHist() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TORNEO_HIST_STORE) || "null");
+    if (raw && Array.isArray(raw.snaps) && typeof raw.idx === "number") return raw;
+    return { snaps: [], idx: -1 };
+  } catch { return { snaps: [], idx: -1 }; }
+}
+
+function torneoBuildEmptyPairs(count) {
+  const ts = Date.now();
+  return Array.from({ length: count }, (_, i) => ({
+    id: `p${ts}_${i}`,
+    player1: "",
+    player2: "",
+  }));
+}
+
+function torneoBuildFullBracket(pairs, byeId) {
+  const active = byeId ? pairs.filter(p => p.id !== byeId) : pairs;
+  const r1 = [];
+  for (let i = 0; i < active.length; i += 2) {
+    r1.push({ id: `r1m${Math.floor(i / 2)}`, round: 1, pos: Math.floor(i / 2), pairA: active[i]?.id ?? null, pairB: active[i + 1]?.id ?? null, winner: null, isBye: false });
+  }
+  if (byeId) {
+    r1.push({ id: `byem_${byeId}`, round: 1, pos: r1.length, pairA: byeId, pairB: null, winner: byeId, isBye: true });
+  }
+  const all = [...r1];
+  let prevCount = r1.length;
+  let round = 2;
+  while (prevCount > 1) {
+    const thisCount = Math.ceil(prevCount / 2);
+    for (let i = 0; i < thisCount; i++) {
+      all.push({ id: `r${round}m${i}`, round, pos: i, pairA: null, pairB: null, winner: null, isBye: false });
+    }
+    prevCount = thisCount;
+    round++;
+  }
+  r1.forEach(m => {
+    if (!m.isBye || !m.winner) return;
+    const nPos = Math.floor(m.pos / 2);
+    const isTop = m.pos % 2 === 0;
+    const next = all.find(x => x.round === 2 && x.pos === nPos);
+    if (next) { if (isTop) { next.pairA = m.winner; } else { next.pairB = m.winner; } }
+  });
+  return all;
+}
+
+function torneoGetRoundLabel(rNum, total) {
+  const fromEnd = total - rNum;
+  if (fromEnd === 0) return "Final";
+  if (fromEnd === 1) return "Semifinal";
+  if (fromEnd === 2) return "Cuartos de final";
+  if (fromEnd === 3) return "Octavos de final";
+  if (fromEnd === 4) return "R32";
+  return `Ronda ${rNum}`;
+}
+
+function torneoAdvanceWinner(bracket, matchId, winnerId) {
+  const match = bracket.find(m => m.id === matchId);
+  if (!match) return bracket;
+  const nextR = match.round + 1;
+  const nextPos = Math.floor(match.pos / 2);
+  const isTop = match.pos % 2 === 0;
+  return bracket.map(m => {
+    if (m.id === matchId) return { ...m, winner: winnerId };
+    if (m.round === nextR && m.pos === nextPos) return isTop ? { ...m, pairA: winnerId } : { ...m, pairB: winnerId };
+    return m;
+  });
+}
+
+function torneoGetMatchGap(round) {
+  return Math.pow(2, round - 1) * (MATCH_H + BASE_GAP) - MATCH_H;
+}
+
+function torneoGetRoundPadding(round) {
+  return (Math.pow(2, round - 1) - 1) * (MATCH_H + BASE_GAP) / 2;
+}
+
+function Torneos({ selectedRole } = {}) {
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  // Hallazgo prioritario del Prompt 7: los 4 roles con acceso al módulo
+  // "torneos" veían y podían ejecutar los mismos controles de gestión. La
+  // gestión (crear/editar/eliminar/reordenar/autoasignar/publicar/marcar
+  // ganador/exportar/deshacer) queda reservada a quien tenga el permiso de
+  // acción "tournaments:manage" (ver src/utils/permissions.js); ver el
+  // cuadro, las parejas y la clasificación sigue disponible para todos los
+  // roles que ya podían abrir este módulo — eso no cambia.
+  const canManage = cp04Can(selectedRole, "tournaments:manage");
+  const [hist, setHist] = useState(() => torneoLoadHist());
+
+  const saved = torneoLoadSaved();
+  const [formatMode, setFormatMode] = useState(saved?.formatMode ?? "32");
+  const [customMode, setCustomMode] = useState(saved?.customMode ?? "pairs");
+  const [customInput, setCustomInput] = useState(saved?.customInput ?? "");
+  const [customError, setCustomError] = useState("");
+  const [pairs, setPairs] = useState(() => saved?.pairs ?? []);
+  const [bracket, setBracket] = useState(() => saved?.bracket ?? []);
+  const [byePair, setByePair] = useState(() => saved?.byePair ?? null);
+  const [byeDrawDate, setByeDrawDate] = useState(() => saved?.byeDrawDate ?? null);
+  const [published, setPublished] = useState(() => saved?.published ?? false);
+  // Round Robin (liga: todos contra todos) — motor puro en
+  // src/utils/roundRobin.js. rrMatches es independiente del `bracket` de
+  // eliminación directa: solo se usa cuando formatMode === "roundrobin".
+  const [rrMatches, setRrMatches] = useState(() => saved?.rrMatches ?? []);
+  const [rrScoreDraft, setRrScoreDraft] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ p1: "", p2: "" });
+  const [deleteId, setDeleteId] = useState(null);
+  const [showRanking, setShowRanking] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [noticeErr, setNoticeErr] = useState(false);
+  const [winnerAnim, setWinnerAnim] = useState(null);
+
+  const isRoundRobin = formatMode === "roundrobin";
+  const currentMax = formatMode !== "custom" && !isRoundRobin ? FORMAT_MAX[formatMode] : null;
+
+  const torneoSnapshot = JSON.stringify({
+    formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published, rrMatches,
+  });
+
+  useEffect(() => {
+    localStorage.setItem(TORNEO_STORE, torneoSnapshot);
+  }, [torneoSnapshot]);
+
+  // savedAt es puramente informativo para el indicador "Guardado HH:MM:SS".
+  // Se ajusta durante el render (patrón "Storing information from previous
+  // renders" de React: https://react.dev/reference/react/useState#storing-information-from-previous-renders),
+  // no dentro de un efecto: evita el setState síncrono en efecto sin
+  // necesitar un segundo render encadenado ni dependencias artificiales.
+  const [prevTorneoSnapshot, setPrevTorneoSnapshot] = useState(torneoSnapshot);
+  const [savedAt, setSavedAt] = useState(() => new Date());
+  if (torneoSnapshot !== prevTorneoSnapshot) {
+    setPrevTorneoSnapshot(torneoSnapshot);
+    setSavedAt(new Date());
+  }
+
+  const showNotice = (msg, err = false) => {
+    setNotice(msg); setNoticeErr(err);
+    setTimeout(() => setNotice(""), 4500);
+  };
+
+  const pairLabel = (p) => {
+    if (!p) return "—";
+    if (p.player1 || p.player2) return `${p.player1 || "—"} / ${p.player2 || "—"}`;
+    return "Vacía";
+  };
+
+  const pushHistory = (action) => {
+    try {
+      const snap = {
+        id: torneoUid("h"),
+        ts: new Date().toISOString(),
+        action,
+        s: { formatMode, customMode, customInput, pairs, bracket, byePair, byeDrawDate, published, rrMatches },
+      };
+      const snaps = Array.isArray(hist.snaps) ? hist.snaps : [];
+      const idx = typeof hist.idx === "number" ? hist.idx : -1;
+      const newSnaps = [...snaps.slice(0, idx + 1), snap].slice(-30);
+      const newHist = { snaps: newSnaps, idx: newSnaps.length - 1 };
+      localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
+      setHist(newHist);
+    } catch { /* silent */ }
+  };
+
+  const restoreSnap = (snap) => {
+    if (!snap?.s) return;
+    const s = snap.s;
+    setFormatMode(s.formatMode ?? "32");
+    setCustomMode(s.customMode ?? "pairs");
+    setCustomInput(s.customInput ?? "");
+    setPairs(Array.isArray(s.pairs) ? s.pairs : []);
+    setBracket(Array.isArray(s.bracket) ? s.bracket : []);
+    setByePair(s.byePair ?? null);
+    setByeDrawDate(s.byeDrawDate ?? null);
+    setPublished(s.published ?? false);
+    setRrMatches(Array.isArray(s.rrMatches) ? s.rrMatches : []);
+  };
+
+  const handleUndo = () => {
+    if (!canManage) return;
+    const h = hist;
+    if (h.idx <= 0) return;
+    const ni = h.idx - 1;
+    const newHist = { ...h, idx: ni };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
+    restoreSnap(h.snaps[ni]);
+    setHist(newHist);
+    showNotice(`↩ Deshecho: ${h.snaps[ni].action}`);
+  };
+
+  const handleRedo = () => {
+    if (!canManage) return;
+    const h = hist;
+    if (h.idx >= h.snaps.length - 1) return;
+    const ni = h.idx + 1;
+    const newHist = { ...h, idx: ni };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
+    restoreSnap(h.snaps[ni]);
+    setHist(newHist);
+    showNotice(`↪ Rehecho: ${h.snaps[ni].action}`);
+  };
+
+  const handleRestoreVersion = (idx) => {
+    if (!canManage) return;
+    const h = hist;
+    const snap = h.snaps[idx];
+    if (!snap) return;
+    const newHist = { ...h, idx };
+    localStorage.setItem(TORNEO_HIST_STORE, JSON.stringify(newHist));
+    restoreSnap(snap);
+    setHist(newHist);
+    setShowHistory(false);
+    showNotice(`Versión restaurada: ${snap.action}`);
+  };
+
+  const applyFormat = (fmt) => {
+    if (!canManage) return;
+    pushHistory(`Cambio de formato → ${fmt}`);
+    setFormatMode(fmt); setCustomError(""); setRrMatches([]); setRrScoreDraft({});
+    if (fmt !== "custom" && fmt !== "roundrobin") {
+      const c = FORMAT_MAX[fmt]; const np = torneoBuildEmptyPairs(c);
+      setPairs(np); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false);
+    } else {
+      // "custom" y "roundrobin" comparten el mismo panel de configuración
+      // por número de jugadores/parejas (ver abajo): al cambiar a
+      // cualquiera de los dos se limpian las parejas hasta que se
+      // confirme un número con applyCustom().
+      setPairs([]); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false);
+    }
+  };
+
+  const applyCustom = () => {
+    if (!canManage) return;
+    const raw = parseInt(customInput, 10);
+    if (isNaN(raw) || raw < 1) { setCustomError("Introduce un número válido."); return; }
+    let pc;
+    if (customMode === "players") {
+      if (raw < 2) { setCustomError("Mínimo 2 jugadores."); return; }
+      if (raw % 2 !== 0) { setCustomError("El número de jugadores debe ser par."); return; }
+      if (raw > 64) { setCustomError("Máximo 64 jugadores."); return; }
+      pc = raw / 2;
+    } else {
+      if (raw < 1) { setCustomError("Mínimo 1 pareja."); return; }
+      if (raw > 32) { setCustomError("Máximo 32 parejas."); return; }
+      pc = raw;
+    }
+    setCustomError("");
+    pushHistory(isRoundRobin ? `Round Robin: ${pc} parejas` : `Personalizado: ${pc} parejas`);
+    const np = torneoBuildEmptyPairs(pc);
+    setPairs(np); setBracket([]); setByePair(null); setByeDrawDate(null); setPublished(false); setRrMatches([]); setRrScoreDraft({});
+    showNotice(`Torneo configurado: ${pc} pareja${pc !== 1 ? "s" : ""}.`);
+  };
+
+  const handleGenerateRoundRobin = () => {
+    if (!canManage) return;
+    if (pairs.length < 2) {
+      showNotice("Se necesitan al menos 2 parejas para generar el calendario de Round Robin.", true);
+      return;
+    }
+    const hadResults = rrMatches.some(m => m.played);
+    pushHistory("Generar calendario Round Robin");
+    const matches = buildRoundRobinMatches(pairs);
+    setRrMatches(matches);
+    setRrScoreDraft({});
+    const totalRounds = getRoundRobinTotalRounds(matches);
+    const warn = hadResults ? " Los resultados anteriores se han reiniciado." : "";
+    showNotice(`📅 Calendario generado: ${matches.length} partido${matches.length !== 1 ? "s" : ""} en ${totalRounds} jornada${totalRounds !== 1 ? "s" : ""}.${warn}`, hadResults);
+  };
+
+  const handleRoundRobinScoreChange = (matchId, side, value) => {
+    setRrScoreDraft(d => ({ ...d, [matchId]: { ...d[matchId], [side]: value } }));
+  };
+
+  const handleRoundRobinSaveResult = (match) => {
+    if (!canManage) return;
+    const draft = rrScoreDraft[match.id] || {};
+    const scoreA = parseInt(draft.a ?? match.scoreA, 10);
+    const scoreB = parseInt(draft.b ?? match.scoreB, 10);
+    if (isNaN(scoreA) || isNaN(scoreB) || scoreA < 0 || scoreB < 0) {
+      showNotice("Introduce un resultado válido (números enteros no negativos) para ambas parejas.", true);
+      return;
+    }
+    if (scoreA === scoreB) {
+      showNotice("El resultado no puede ser un empate: el pádel no tiene empates, indica quién ganó.", true);
+      return;
+    }
+    const res = applyRoundRobinResult(rrMatches, match.id, scoreA, scoreB);
+    if (!res.ok) {
+      showNotice("No se ha podido guardar el resultado.", true);
+      return;
+    }
+    pushHistory(match.played ? "Corregir resultado Round Robin" : "Registrar resultado Round Robin");
+    setRrMatches(res.matches);
+    showNotice("✅ Resultado guardado. Clasificación actualizada.");
+  };
+
+  const handleReorder = () => {
+    if (!canManage) return;
+    pushHistory("Reordenar cruces");
+    const shuffled = [...pairs].sort(() => Math.random() - 0.5);
+    let newBye = null; let newByeDate = null;
+    if (shuffled.length % 2 !== 0) {
+      const idx = Math.floor(Math.random() * shuffled.length);
+      newBye = shuffled[idx]; newByeDate = new Date().toISOString();
+    }
+    const nb = torneoBuildFullBracket(shuffled, newBye ? newBye.id : null);
+    setPairs(shuffled); setBracket(nb); setByePair(newBye); setByeDrawDate(newByeDate);
+    if (newBye) showNotice(`🎯 Sorteo: "${pairLabel(newBye)}" pasa directamente (BYE) al haber número impar de parejas.`);
+    else showNotice("✅ Cruces generados. Bracket listo para jugar.");
+  };
+
+  const handleAutoAssign = () => {
+    if (!canManage) return;
+    pushHistory("Autoasignar nombres");
+    const updated = pairs.map((p, i) => {
+      if (p.player1 && p.player2) return p;
+      const d = TORNEO_DEMO_NAMES[i % TORNEO_DEMO_NAMES.length];
+      return { ...p, player1: d[0], player2: d[1] };
+    });
+    setPairs(updated);
+    showNotice("Parejas rellenadas con nombres de ejemplo.");
+  };
+
+  const handleSave = () => {
+    if (!canManage) return;
+    pushHistory("Guardar cuadro");
+    showNotice("💾 Cuadro guardado en este dispositivo.");
+  };
+
+  const handlePublish = () => {
+    if (!canManage) return;
+    const next = !published;
+    pushHistory(next ? "Publicar torneo" : "Despublicar torneo");
+    setPublished(next);
+    showNotice(next ? "📢 Torneo publicado." : "📝 Torneo vuelto a borrador.");
+  };
+
+  const handleAddPair = () => {
+    if (!canManage) return;
+    if (currentMax && pairs.length >= currentMax) { showNotice(`Límite alcanzado: ya hay ${currentMax} parejas.`, true); return; }
+    if (pairs.length >= 32) { showNotice("Límite: máximo 32 parejas.", true); return; }
+    pushHistory("Añadir pareja");
+    const np = { id: torneoUid("p"), player1: "", player2: "" };
+    const upd = [...pairs, np];
+    setPairs(upd);
+    if (upd.length % 2 === 0 && byePair) { setByePair(null); setByeDrawDate(null); }
+  };
+
+  const handleDeletePair = (id) => {
+    if (!canManage) return;
+    pushHistory("Eliminar pareja");
+    const deleted = pairs.find(p => p.id === id);
+    const upd = pairs.filter(p => p.id !== id);
+    let nb = byePair; let nd = byeDrawDate;
+    if (byePair?.id === id || (byePair && upd.length % 2 === 0)) { nb = null; nd = null; }
+    // Cualquier partido donde la pareja eliminada figure como pairA/pairB
+    // se retira del cuadro (incluye las rondas posteriores a las que ya
+    // hubiera avanzado como ganadora): dejar ese partido a medias
+    // mostraría un "ganador" que ya no existe en `pairs`.
+    const affectsBracket = bracket.some(m => (m.pairA === id || m.pairB === id) && (m.winner || m.round > 1));
+    const newBrk = bracket.filter(m => m.pairA !== id && m.pairB !== id);
+    // Round Robin: cualquier partido de la pareja eliminada se retira del
+    // calendario (misma razón que en el bracket de eliminación — no tiene
+    // sentido conservar un partido jugado contra una pareja que ya no
+    // existe en `pairs`).
+    const affectsRoundRobin = rrMatches.some(m => (m.pairA === id || m.pairB === id) && m.played);
+    const newRrMatches = rrMatches.filter(m => m.pairA !== id && m.pairB !== id);
+    setPairs(upd); setBracket(newBrk); setByePair(nb); setByeDrawDate(nd); setDeleteId(null); setRrMatches(newRrMatches);
+    if (affectsBracket) {
+      showNotice(`⚠️ "${pairLabel(deleted)}" tenía resultados en el cuadro: se han invalidado los partidos y rondas posteriores que dependían de ella.`, true);
+    } else if (affectsRoundRobin) {
+      showNotice(`⚠️ "${pairLabel(deleted)}" tenía resultados en el calendario de Round Robin: sus partidos se han retirado de la clasificación.`, true);
+    }
+  };
+
+  const handleEditSave = () => {
+    if (!canManage) return;
+    pushHistory("Editar pareja");
+    const upd = pairs.map(p => p.id === editingId ? { ...p, player1: editForm.p1, player2: editForm.p2 } : p);
+    setPairs(upd); setEditingId(null);
+    showNotice("Pareja actualizada.");
+  };
+
+  const handleMarkWinner = (matchId, winnerId) => {
+    if (!canManage) return;
+    pushHistory("Marcar ganador");
+    const nb = torneoAdvanceWinner(bracket, matchId, winnerId);
+    setBracket(nb);
+    const w = pairs.find(p => p.id === winnerId);
+    if (w) {
+      setWinnerAnim(matchId);
+      setTimeout(() => setWinnerAnim(null), 1400);
+      showNotice(`🏆 ${pairLabel(w)} avanza a la siguiente ronda.`);
+    }
+  };
+
+  const handleExportJSON = () => {
+    if (!canManage) return;
+    // Date.now() aquí es seguro: solo se ejecuta dentro de este manejador de
+    // clic (nunca durante el render), exactamente el mismo patrón ya usado
+    // sin incidentes en handleExportCSV más abajo. El análisis estático del
+    // compilador de React solo llega a marcarlo aquí porque, al añadir más
+    // código a este componente (Round Robin), progresa más a fondo en su
+    // intento de auto-memoizar Torneos; no es un problema real de pureza en
+    // ejecución — un timestamp para el nombre del fichero exportado no
+    // afecta al resultado del render.
+    // eslint-disable-next-line react-hooks/purity
+    const exportTs = Date.now();
+    const data = {
+      nombreTorneo: `Torneo Club Pádel 04 · ${pairs.length} parejas`,
+      numJugadores: pairs.length * 2, numParejas: pairs.length, formato: formatMode,
+      parejas: pairs.map(p => ({ jugador1: p.player1, jugador2: p.player2 })),
+      ranking: isRoundRobin
+        ? rrStandingsSorted.map((s, i) => {
+            const pair = pairs.find(p => p.id === s.pairId);
+            return { pos: i + 1, jugador1: pair?.player1 ?? "", jugador2: pair?.player2 ?? "", jugados: s.played, ganados: s.won, perdidos: s.lost, favor: s.scoreFor, contra: s.scoreAgainst, diferencia: s.diff, puntos: s.points };
+          })
+        : pairs.map((p, i) => ({ pos: i + 1, jugador1: p.player1, jugador2: p.player2 })),
+      bracket: isRoundRobin ? [] : bracket.map(m => {
+        const pA = pairs.find(p => p.id === m.pairA);
+        const pB = m.pairB ? pairs.find(p => p.id === m.pairB) : null;
+        const pW = m.winner ? pairs.find(p => p.id === m.winner) : null;
+        return { ronda: m.round, parejaA: pA ? pairLabel(pA) : "—", parejaB: pB ? pairLabel(pB) : "BYE", ganador: pW ? pairLabel(pW) : "—", esBye: m.isBye };
+      }),
+      calendarioRoundRobin: isRoundRobin ? rrMatches.map(m => {
+        const pA = pairs.find(p => p.id === m.pairA);
+        const pB = pairs.find(p => p.id === m.pairB);
+        return { jornada: m.round, parejaA: pA ? pairLabel(pA) : "—", parejaB: pB ? pairLabel(pB) : "—", resultado: m.played ? `${m.scoreA}-${m.scoreB}` : null };
+      }) : [],
+      campeonRoundRobin: isRoundRobin && rrChampion ? pairLabel(rrChampion) : null,
+      parejaPaseDirecto: byePair ? pairLabel(byePair) : null,
+      fechaSorteo: byeDrawDate,
+      estadoTorneo: published ? "Publicado" : "En curso",
+      fechaExportacion: new Date(exportTs).toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `torneo-cp04-${exportTs}.json`; a.click();
+    URL.revokeObjectURL(url);
+    showNotice("⬇ JSON descargado correctamente.");
+  };
+
+  const handleExportCSV = () => {
+    if (!canManage) return;
+    const lines = ["#,Jugador 1,Jugador 2"];
+    pairs.forEach((p, i) => lines.push(`${i + 1},"${p.player1 || ""}","${p.player2 || ""}"`));
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `parejas-cp04-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    showNotice("⬇ CSV de parejas descargado.");
+  };
+
+  const bracketByRound = {};
+  bracket.forEach(m => { if (!bracketByRound[m.round]) bracketByRound[m.round] = []; bracketByRound[m.round].push(m); });
+  const roundNums = Object.keys(bracketByRound).map(Number).sort((a, b) => a - b);
+  const totalRounds = roundNums.length;
+  const canUndo = hist.idx > 0;
+  const canRedo = hist.idx < (hist.snaps?.length ?? 0) - 1;
+
+  // Round Robin: clasificación derivada de pairs+rrMatches (motor puro en
+  // src/utils/roundRobin.js). Recalcula solo cuando cambia alguna de las
+  // dos, no en cada render.
+  // Derivación simple durante el render, igual que bracketByRound/roundNums
+  // más abajo: el volumen de datos (máx. ~32 parejas) hace innecesaria
+  // cualquier memoización.
+  const rrStandingsSorted = isRoundRobin
+    ? sortRoundRobinStandings(computeRoundRobinStandings(pairs, rrMatches), rrMatches)
+    : [];
+  const rrByRound = {};
+  rrMatches.forEach(m => { if (!rrByRound[m.round]) rrByRound[m.round] = []; rrByRound[m.round].push(m); });
+  const rrRoundNums = Object.keys(rrByRound).map(Number).sort((a, b) => a - b);
+  const rrComplete = isRoundRobin && isRoundRobinComplete(rrMatches);
+  const rrChampion = isRoundRobin ? getRoundRobinChampion(pairs, rrMatches) : null;
+
+  return (
+    <div style={{ padding: "42px 24px", maxWidth: 1240, margin: "0 auto" }}>
+      <style>{`
+        @keyframes cp04WinPulse { 0%{box-shadow:0 0 0 0 rgba(182,255,0,.65)} 60%{box-shadow:0 0 0 14px rgba(182,255,0,0)} 100%{box-shadow:0 0 0 0 rgba(182,255,0,0)} }
+        @keyframes cp04SlideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes cp04FadeOut { from{opacity:1} to{opacity:0} }
+        .cp04-win-anim { animation: cp04WinPulse 1.1s ease !important; }
+        .cp04-slide-notice { animation: cp04SlideIn .22s ease; }
+        .cp04-brk-match { transition: border-color .3s, background .3s, opacity .3s; }
+        .cp04-brk-match:hover { border-color: rgba(182,255,0,.28) !important; }
+      `}</style>
+
+      {/* HEADER */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 18, marginBottom: 30 }}>
+        <div>
+          <div style={{ color:T.accent, fontSize:".72rem", fontWeight:900, letterSpacing:".2em", textTransform:"uppercase", marginBottom:8 }}>{tx("torneos.title")}</div>
+          <h1 style={{ fontFamily:T.fontDisplay, fontSize:"clamp(1.9rem,3.8vw,3rem)", lineHeight:.92, margin:"0 0 8px", letterSpacing:"-.04em" }}>
+            {tx("torneos.bracket").split(" ").slice(0,-1).join(" ")} <span style={{ color:T.accent }}>{tx("torneos.bracket").split(" ").slice(-1)}</span>
+          </h1>
+          <p style={{ color: T.textDim, margin: 0, fontSize: ".9rem" }}>Torneos por jugadores o parejas · Pares e impares · Exportación real</p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+          {published && (
+            <span style={{ background: "linear-gradient(135deg,#b6ff00,#2df5a3)", color: "#061000", fontWeight: 900, padding: "6px 14px", borderRadius: 999, fontSize: ".8rem" }}>✅ Publicado</span>
+          )}
+          {canManage && (
+          <div style={{ display: "flex", gap: 6 }}>
+            <button type="button" onClick={handleUndo} disabled={!canUndo} title="Deshacer (Ctrl+Z)"
+              style={{ border: `1px solid ${canUndo ? "rgba(182,255,0,.35)" : "rgba(255,255,255,.1)"}`, background: "none", color: canUndo ? "#b6ff00" : "rgba(255,255,255,.25)", borderRadius: 10, padding: "6px 12px", cursor: canUndo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
+              ↩ Deshacer
+            </button>
+            <button type="button" onClick={handleRedo} disabled={!canRedo} title="Rehacer"
+              style={{ border: `1px solid ${canRedo ? "rgba(182,255,0,.35)" : "rgba(255,255,255,.1)"}`, background: "none", color: canRedo ? "#b6ff00" : "rgba(255,255,255,.25)", borderRadius: 10, padding: "6px 12px", cursor: canRedo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
+              ↪ Rehacer
+            </button>
+          </div>
+          )}
+          {savedAt && canManage && (
+            <span style={{ color: "rgba(255,255,255,.38)", fontSize: ".7rem" }}>💾 Guardado {savedAt.toLocaleTimeString("es-ES")}</span>
+          )}
+        </div>
+      </div>
+
+      {/* NOTICE */}
+      {notice && (
+        <div className="cp04-slide-notice" style={{ background: noticeErr ? "rgba(255,60,60,.12)" : "rgba(182,255,0,.09)", border: `1px solid ${noticeErr ? "rgba(255,80,80,.5)" : "rgba(182,255,0,.4)"}`, borderRadius: 14, padding: "11px 18px", marginBottom: 20, color: noticeErr ? T.dangerText : "#b6ff00", fontWeight: 700, fontSize: ".9rem" }}>
+          {notice}
+        </div>
+      )}
+
+      {/* SOLO LECTURA: aviso para roles sin permiso de gestión (todos salvo ADMIN) */}
+      {!canManage && (
+        <div style={{ background: "rgba(255,255,255,.04)", border: `1px solid ${T.line}`, borderRadius: 14, padding: "11px 16px", marginBottom: 20, color: T.textDim, fontSize: ".86rem" }}>
+          👁 Estás viendo este torneo en modo solo lectura. Crear, editar, reordenar, publicar y marcar resultados está reservado a Administración.
+        </div>
+      )}
+
+      {/* FORMAT SELECTOR */}
+      {canManage && (
+      <div style={{ marginBottom: 22 }}>
+        <p style={{ color: T.textDim, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 10, fontWeight: 700 }}>Formato del torneo</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {[{ v: "16", l: "16 jug / 8 parejas" }, { v: "32", l: "32 jug / 16 parejas" }, { v: "64", l: "64 jug / 32 parejas" }, { v: "custom", l: "⚙ Personalizado" }, { v: "roundrobin", l: "🔁 Round Robin (liga)" }].map(o => (
+            <button key={o.v} type="button" className={`cp04-format-pill${formatMode === o.v ? " is-active" : ""}`} onClick={() => applyFormat(o.v)}>{o.l}</button>
+          ))}
+        </div>
+      </div>
+      )}
+
+      {/* ROUND ROBIN EXPLICATION */}
+      {isRoundRobin && (
+        <Card style={{ marginBottom: 22 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: "1rem" }}>🔁 Round Robin (liga: todos contra todos)</h3>
+          <p style={{ color: T.textDim, fontSize: ".85rem", lineHeight: 1.6, margin: 0 }}>
+            Cada pareja juega exactamente una vez contra todas las demás. No hay eliminación: la clasificación
+            final se calcula por puntos (3 por partido ganado, 0 por perdido). Con número impar de parejas, una
+            pareja distinta descansa cada jornada de forma rotatoria, sin rival ficticio. Desempates, en orden:
+            puntos → enfrentamiento directo (si aplica) → diferencia de puntos → puntos a favor → orden de entrada.
+          </p>
+        </Card>
+      )}
+
+      {/* CUSTOM FORMAT PANEL (compartido por "custom" y "roundrobin": ambos configuran el número de jugadores/parejas de la misma forma) */}
+      {canManage && (formatMode === "custom" || isRoundRobin) && (
+        <Card style={{ marginBottom: 22 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 14, fontSize: "1rem" }}>{isRoundRobin ? "Configurar Round Robin" : "Formato personalizado"}</h3>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div>
+              <p style={{ color: T.textDim, fontSize: ".8rem", marginBottom: 8, marginTop: 0 }}>Configurar por</p>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button type="button" className={`cp04-format-pill${customMode === "players" ? " is-active" : ""}`} onClick={() => { setCustomMode("players"); setCustomError(""); }}>👤 Jugadores</button>
+                <button type="button" className={`cp04-format-pill${customMode === "pairs" ? " is-active" : ""}`} onClick={() => { setCustomMode("pairs"); setCustomError(""); }}>🎾 Parejas</button>
+              </div>
+            </div>
+            <div>
+              <p style={{ color: T.textDim, fontSize: ".8rem", marginBottom: 8, marginTop: 0 }}>
+                {customMode === "players" ? "Jugadores (par, 2–64)" : "Parejas (1–32, par o impar)"}
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input type="number" value={customInput} onChange={e => { setCustomInput(e.target.value); setCustomError(""); }}
+                  style={{ padding: "9px 13px", borderRadius: 10, border: `1px solid ${customError ? T.dangerBorder : T.line}`, background: "rgba(255,255,255,.06)", color: T.text, width: 120, outline: "none", fontSize: ".9rem" }}
+                  placeholder={customMode === "players" ? "ej: 18" : "ej: 9"} />
+                <button type="button" className="cp04-control-btn primary" onClick={applyCustom} style={{ width: "auto", padding: "9px 18px" }}>Aplicar</button>
+              </div>
+            </div>
+          </div>
+          {customError && <StatusCard status="error" text={customError} style={{ marginTop: 10 }} />}
+          <p style={{ color: T.textDim, fontSize: ".78rem", marginTop: 12, marginBottom: 0, lineHeight: 1.55 }}>
+            {isRoundRobin
+              ? "Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Tras configurar el número, genera el calendario con el botón «📅 Generar calendario» en Controles."
+              : "Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Si el número es impar se sorteará automáticamente un pase directo (BYE)."}
+          </p>
+        </Card>
+      )}
+
+      {/* BYE NOTICE (solo eliminación directa: Round Robin gestiona el descanso por jornada dentro de su propio calendario, no con un BYE fijo) */}
+      {byePair && !isRoundRobin && (
+        <div style={{ background: "rgba(182,255,0,.07)", border: "1px solid rgba(182,255,0,.3)", borderRadius: 14, padding: "11px 16px", marginBottom: 18, display: "flex", gap: 12, alignItems: "flex-start" }}>
+          <span style={{ fontSize: "1.3rem", lineHeight: 1 }}>🎯</span>
+          <div>
+            <strong style={{ color: T.accent, fontSize: ".9rem" }}>Pase directo sorteado</strong>
+            <span style={{ color: "#fff", marginLeft: 8, fontSize: ".9rem" }}>{pairLabel(byePair)}</span>
+            {byeDrawDate && <span style={{ color: T.textDim, fontSize: ".75rem", display: "block", marginTop: 3 }}>{new Date(byeDrawDate).toLocaleString("es-ES")}</span>}
+          </div>
+        </div>
+      )}
+
+      {/* MAIN GRID: pairs + controls */}
+      <div className={canManage ? "cp04-tournament-grid" : ""}>
+
+        {/* Pair list */}
+        <div className="cp04-tournament-panel">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ margin: 0 }}>
+              Parejas{" "}
+              <span style={{ color: T.accent, fontSize: ".85rem", fontWeight: 700 }}>{pairs.length}{currentMax ? `/${currentMax}` : ""}</span>
+            </h3>
+            {canManage && (
+              <button type="button" className="cp04-control-btn primary" onClick={handleAddPair} style={{ width: "auto", padding: "7px 14px", fontSize: ".85rem" }}>＋ Añadir</button>
+            )}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 440, overflowY: "auto", paddingRight: 2 }}>
+            {pairs.length === 0 && (
+              <div style={{ textAlign: "center", padding: "42px 16px", color: T.textDim }}>
+                <div style={{ fontSize: "2rem", marginBottom: 10 }}>🎾</div>
+                <p style={{ margin: 0, lineHeight: 1.6 }}>Sin parejas. Selecciona un formato<br />o configura uno personalizado.</p>
+              </div>
+            )}
+            {pairs.map((pair, i) => (
+              <div key={pair.id} style={{ borderRadius: 10, border: `1px solid ${byePair?.id === pair.id ? "rgba(182,255,0,.42)" : T.line}`, background: byePair?.id === pair.id ? "rgba(182,255,0,.04)" : "rgba(255,255,255,.025)", overflow: "hidden", transition: "border-color .2s" }}>
+                {editingId === pair.id ? (
+                  <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+                    <input value={editForm.p1} onChange={e => setEditForm(f => ({ ...f, p1: e.target.value }))}
+                      placeholder="Jugador 1" autoFocus
+                      style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.07)", color: "#fff", outline: "none", fontSize: ".88rem" }} />
+                    <input value={editForm.p2} onChange={e => setEditForm(f => ({ ...f, p2: e.target.value }))}
+                      placeholder="Jugador 2" onKeyDown={e => e.key === "Enter" && handleEditSave()}
+                      style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.07)", color: "#fff", outline: "none", fontSize: ".88rem" }} />
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button type="button" onClick={handleEditSave} className="cp04-control-btn primary" style={{ width: "auto", padding: "4px 12px", fontSize: ".8rem" }}>Guardar</button>
+                      <button type="button" onClick={() => setEditingId(null)} className="cp04-control-btn" style={{ width: "auto", padding: "4px 12px", fontSize: ".8rem" }}>Cancelar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px" }}>
+                    <span style={{ color: "rgba(255,255,255,.3)", minWidth: 22, fontSize: ".75rem", fontWeight: 700 }}>{i + 1}</span>
+                    <span style={{ flex: 1, fontSize: ".87rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {pair.player1 || pair.player2
+                        ? <><strong style={{ color: "#fff" }}>{pair.player1 || "—"}</strong><span style={{ color: T.textDim }}> / {pair.player2 || "—"}</span></>
+                        : <span style={{ color: "rgba(255,255,255,.28)", fontStyle: "italic" }}>Vacía</span>}
+                      {byePair?.id === pair.id && <span style={{ marginLeft: 6, color: T.accent, fontSize: ".68rem", fontWeight: 800, background: "rgba(182,255,0,.14)", padding: "1px 6px", borderRadius: 4 }}>BYE</span>}
+                    </span>
+                    {canManage && (
+                    <button type="button" title="Editar" onClick={() => { setEditingId(pair.id); setEditForm({ p1: pair.player1, p2: pair.player2 }); }}
+                      style={{ background: "none", border: "none", color: "rgba(255,255,255,.38)", cursor: "pointer", padding: "2px 5px", fontSize: ".82rem" }}>✏️</button>
+                    )}
+                    {canManage && (deleteId === pair.id ? (
+                      <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                        <button type="button" onClick={() => handleDeletePair(pair.id)}
+                          style={{ background: "rgba(220,50,50,.85)", border: "none", color: "#fff", borderRadius: 5, padding: "3px 8px", cursor: "pointer", fontSize: ".75rem", fontWeight: 700 }}>Eliminar</button>
+                        <button type="button" onClick={() => setDeleteId(null)}
+                          style={{ background: "none", border: "none", color: T.textDim, cursor: "pointer", fontSize: ".75rem" }}>✕</button>
+                      </div>
+                    ) : (
+                      <button type="button" title="Eliminar" onClick={() => setDeleteId(pair.id)}
+                        style={{ background: "none", border: "none", color: "rgba(255,100,100,.5)", cursor: "pointer", padding: "2px 5px", fontSize: ".82rem" }}>✕</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Controls sidebar — reservado a quien tenga tournaments:manage (ver canManage) */}
+        {canManage && (
+        <div className="cp04-tournament-side">
+          <div className="cp04-tournament-control">
+            <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: ".95rem" }}>Controles</h3>
+            <div className="cp04-control-list">
+              {isRoundRobin
+                ? <button type="button" className="cp04-control-btn" onClick={handleGenerateRoundRobin}>📅 Generar calendario</button>
+                : <button type="button" className="cp04-control-btn" onClick={handleReorder}>🔀 {tx("torneos.reordenar")}</button>}
+              <button type="button" className="cp04-control-btn" onClick={handleAutoAssign}>👤 {tx("torneos.autoasignar")}</button>
+              <button type="button" className="cp04-control-btn" onClick={handleSave}>💾 {tx("torneos.guardar")}</button>
+              <button type="button" className="cp04-control-btn primary" onClick={handlePublish}>
+                {published ? `📝 ${tx("common.volver")}` : `📢 ${tx("torneos.publicar")}`}
+              </button>
+            </div>
+          </div>
+
+          <div className="cp04-tournament-control">
+            <h3 style={{ marginTop:0, marginBottom:12, fontSize:".95rem" }}>{tx("torneos.exportar")}</h3>
+            <div className="cp04-control-list">
+              <button type="button" className="cp04-control-btn primary" onClick={handleExportJSON}>⬇ JSON completo</button>
+              <button type="button" className="cp04-control-btn" onClick={handleExportCSV}>⬇ CSV parejas</button>
+              <button type="button" className="cp04-control-btn" onClick={() => window.print()}>🖨 Imprimir / PDF</button>
+            </div>
+          </div>
+
+          <div className="cp04-tournament-control">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <h3 style={{ margin: 0, fontSize: ".95rem" }}>Historial</h3>
+              <span style={{ color: T.textDim, fontSize: ".72rem" }}>{hist.snaps.length} versión{hist.snaps.length !== 1 ? "es" : ""}</span>
+            </div>
+            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+              <button type="button" onClick={handleUndo} disabled={!canUndo}
+                style={{ flex: 1, border: `1px solid ${canUndo ? "rgba(182,255,0,.3)" : "rgba(255,255,255,.1)"}`, background: "none", color: canUndo ? "#b6ff00" : "rgba(255,255,255,.22)", borderRadius: 10, padding: "8px 6px", cursor: canUndo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
+                ↩ Deshacer
+              </button>
+              <button type="button" onClick={handleRedo} disabled={!canRedo}
+                style={{ flex: 1, border: `1px solid ${canRedo ? "rgba(182,255,0,.3)" : "rgba(255,255,255,.1)"}`, background: "none", color: canRedo ? "#b6ff00" : "rgba(255,255,255,.22)", borderRadius: 10, padding: "8px 6px", cursor: canRedo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
+                ↪ Rehacer
+              </button>
+            </div>
+            {hist.idx >= 0 && <p style={{ color: T.textDim, fontSize: ".72rem", marginBottom: 8, marginTop: 0 }}>Estado actual: versión {hist.idx + 1} de {hist.snaps.length}</p>}
+            <button type="button" className="cp04-control-btn" onClick={() => setShowHistory(h => !h)} style={{ fontSize: ".8rem" }}>
+              {showHistory ? "▲ Ocultar historial" : "▼ Ver historial completo"}
+            </button>
+            {showHistory && (
+              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4, maxHeight: 210, overflowY: "auto" }}>
+                {hist.snaps.length === 0 && <p style={{ color: T.textDim, fontSize: ".8rem", margin: 0 }}>Aún no hay acciones registradas.</p>}
+                {[...hist.snaps].reverse().map((snap, ri) => {
+                  const realIdx = hist.snaps.length - 1 - ri;
+                  const isCur = realIdx === hist.idx;
+                  return (
+                    <div key={snap.id} style={{ display: "flex", gap: 8, alignItems: "center", padding: "6px 8px", borderRadius: 8, background: isCur ? "rgba(182,255,0,.1)" : "rgba(255,255,255,.03)", border: `1px solid ${isCur ? "rgba(182,255,0,.3)" : "rgba(255,255,255,.07)"}` }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: ".75rem", color: isCur ? T.accent : "#fff", fontWeight: isCur ? 800 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{snap.action}</div>
+                        <div style={{ fontSize: ".66rem", color: T.textDim }}>{new Date(snap.ts).toLocaleString("es-ES")}</div>
+                      </div>
+                      {!isCur && (
+                        <button type="button" onClick={() => handleRestoreVersion(realIdx)}
+                          style={{ border: "1px solid rgba(182,255,0,.3)", background: "none", color: "#b6ff00", borderRadius: 6, padding: "2px 8px", cursor: "pointer", fontSize: ".68rem", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>
+                          Restaurar
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+        )}
+      </div>
+
+      {/* BRACKET (solo eliminación directa; Round Robin usa su propia sección de calendario, más abajo) */}
+      {!isRoundRobin && roundNums.length > 0 && (
+        <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 16 }}>
+            Bracket
+            <span style={{ color: T.accent, fontWeight: 400, fontSize: ".82rem", marginLeft: 10 }}>{pairs.length} parejas · {totalRounds} ronda{totalRounds !== 1 ? "s" : ""}</span>
+          </h3>
+          <div style={{ overflowX: "auto", paddingBottom: 8 }}>
+            <div style={{ display: "flex", gap: 0, minWidth: Math.max(totalRounds * 228, 460) }}>
+              {roundNums.filter(n => !isNaN(n)).map(rNum => {
+                const matches = bracketByRound[rNum] ?? [];
+                const gapPx = torneoGetMatchGap(rNum);
+                const padPx = torneoGetRoundPadding(rNum);
+                const label = torneoGetRoundLabel(rNum, totalRounds);
+                return (
+                  <div key={rNum} style={{ flex: "0 0 220px", paddingRight: 10, paddingLeft: rNum === 1 ? 0 : 2 }}>
+                    <div style={{ color: T.accent, fontWeight: 800, fontSize: ".68rem", textTransform: "uppercase", letterSpacing: ".12em", textAlign: "center", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid rgba(182,255,0,.18)" }}>
+                      {label}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: gapPx, paddingTop: padPx }}>
+                      {matches.map(match => {
+                        const pA = pairs.find(p => p.id === match.pairA);
+                        const pB = match.pairB ? pairs.find(p => p.id === match.pairB) : null;
+                        const isAnim = winnerAnim === match.id;
+                        const isPlayed = !!match.winner;
+                        return (
+                          <div key={match.id}
+                            className={`cp04-brk-match${isAnim ? " cp04-win-anim" : ""}`}
+                            style={{
+                              background: isPlayed ? "rgba(182,255,0,.05)" : "rgba(4,9,20,.72)",
+                              borderRadius: 12,
+                              border: isPlayed ? "1px solid rgba(182,255,0,.35)" : "1px solid rgba(255,255,255,.1)",
+                              padding: "9px 11px",
+                              minHeight: MATCH_H,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 7,
+                            }}>
+                            {match.isBye ? (
+                              <>
+                                <span style={{ fontSize: ".8rem", fontWeight: 700, color: "#fff", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pA ? pairLabel(pA) : "—"}</span>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(182,255,0,.13)", border: "1px solid rgba(182,255,0,.28)", borderRadius: 5, padding: "2px 8px", fontSize: ".68rem", color: T.accent, fontWeight: 800, alignSelf: "flex-start" }}>✅ Pase directo · BYE</span>
+                              </>
+                            ) : (
+                              <>
+                                {/* Pair A row */}
+                                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                                  <span style={{ flex: 1, fontSize: ".78rem", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: match.winner === match.pairA ? 800 : 400, color: match.winner === match.pairA ? T.accent : match.winner ? "rgba(255,255,255,.32)" : "#fff", textDecoration: match.winner && match.winner !== match.pairA ? "line-through" : "none" }}>
+                                    {match.winner === match.pairA && "🏆 "}{pA ? pairLabel(pA) : <em style={{ color: "rgba(255,255,255,.28)" }}>Por definir</em>}
+                                  </span>
+                                  {canManage && !match.winner && pA && pA.player1 && match.pairB && (
+                                    <button type="button" onClick={() => handleMarkWinner(match.id, match.pairA)}
+                                      style={{ background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, borderRadius: 5, padding: "2px 7px", cursor: "pointer", fontSize: ".66rem", fontWeight: 800, flexShrink: 0 }}>
+                                      ✓A
+                                    </button>
+                                  )}
+                                </div>
+                                <div style={{ height: 1, background: "rgba(255,255,255,.07)" }} />
+                                {/* Pair B row */}
+                                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                                  <span style={{ flex: 1, fontSize: ".78rem", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: match.winner === match.pairB ? 800 : 400, color: match.winner === match.pairB ? T.accent : match.winner ? "rgba(255,255,255,.32)" : "#fff", textDecoration: match.winner && match.winner !== match.pairB ? "line-through" : "none" }}>
+                                    {match.winner === match.pairB && "🏆 "}{pB ? pairLabel(pB) : <em style={{ color: "rgba(255,255,255,.28)" }}>Por definir</em>}
+                                  </span>
+                                  {canManage && !match.winner && pB && pB.player1 && match.pairA && (
+                                    <button type="button" onClick={() => handleMarkWinner(match.id, match.pairB)}
+                                      style={{ background: "rgba(182,255,0,.1)", border: "1px solid rgba(182,255,0,.25)", color: T.accent, borderRadius: 5, padding: "2px 7px", cursor: "pointer", fontSize: ".66rem", fontWeight: 800, flexShrink: 0 }}>
+                                      ✓B
+                                    </button>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ROUND ROBIN: calendario por jornadas + registro de resultados */}
+      {isRoundRobin && rrMatches.length > 0 && (
+        <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 16 }}>
+            Calendario Round Robin
+            <span style={{ color: T.accent, fontWeight: 400, fontSize: ".82rem", marginLeft: 10 }}>
+              {pairs.length} parejas · {rrMatches.length} partido{rrMatches.length !== 1 ? "s" : ""} · {rrRoundNums.length} jornada{rrRoundNums.length !== 1 ? "s" : ""}
+            </span>
+          </h3>
+          {rrComplete && rrChampion && (
+            <div style={{ background: "linear-gradient(135deg, rgba(182,255,0,.16), rgba(49,232,159,.10))", border: "1px solid rgba(182,255,0,.4)", borderRadius: 14, padding: "12px 16px", marginBottom: 18, color: "#fff", fontWeight: 800 }}>
+              🏆 Liga completada. Campeón: {pairLabel(rrChampion)}
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {rrRoundNums.map(rNum => {
+              const restingId = getRoundRobinRestingPairId(pairs, rrMatches, rNum);
+              const restingPair = restingId ? pairs.find(p => p.id === restingId) : null;
+              return (
+                <div key={rNum}>
+                  <div style={{ color: T.accent, fontWeight: 800, fontSize: ".72rem", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid rgba(182,255,0,.18)", display: "flex", justifyContent: "space-between" }}>
+                    <span>Jornada {rNum}</span>
+                    {restingPair && <span style={{ color: T.textDim, textTransform: "none", letterSpacing: "normal", fontWeight: 600 }}>😴 Descansa: {pairLabel(restingPair)}</span>}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {rrByRound[rNum].map(match => {
+                      const pA = pairs.find(p => p.id === match.pairA);
+                      const pB = pairs.find(p => p.id === match.pairB);
+                      const draft = rrScoreDraft[match.id] || {};
+                      const draftA = draft.a ?? (match.scoreA ?? "");
+                      const draftB = draft.b ?? (match.scoreB ?? "");
+                      return (
+                        <div key={match.id} style={{ background: match.played ? "rgba(182,255,0,.05)" : "rgba(4,9,20,.72)", border: match.played ? "1px solid rgba(182,255,0,.3)" : `1px solid ${T.line}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                          <span style={{ flex: "1 1 auto", minWidth: 160, fontSize: ".85rem", color: "#fff" }}>
+                            <strong style={{ color: match.played && match.scoreA > match.scoreB ? T.accent : "#fff" }}>{pA ? pairLabel(pA) : "—"}</strong>
+                            <span style={{ color: T.textDim }}> vs </span>
+                            <strong style={{ color: match.played && match.scoreB > match.scoreA ? T.accent : "#fff" }}>{pB ? pairLabel(pB) : "—"}</strong>
+                          </span>
+                          {canManage ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <input type="number" min="0" value={draftA} onChange={e => handleRoundRobinScoreChange(match.id, "a", e.target.value)}
+                                aria-label={`Puntos de ${pairLabel(pA)}`} placeholder="0"
+                                style={{ width: 52, padding: "5px 7px", borderRadius: 8, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.06)", color: "#fff", outline: "none", fontSize: ".82rem" }} />
+                              <span style={{ color: T.textDim }}>–</span>
+                              <input type="number" min="0" value={draftB} onChange={e => handleRoundRobinScoreChange(match.id, "b", e.target.value)}
+                                aria-label={`Puntos de ${pairLabel(pB)}`} placeholder="0"
+                                style={{ width: 52, padding: "5px 7px", borderRadius: 8, border: `1px solid ${T.line}`, background: "rgba(255,255,255,.06)", color: "#fff", outline: "none", fontSize: ".82rem" }} />
+                              <button type="button" className="cp04-control-btn primary" style={{ width: "auto", padding: "5px 12px", fontSize: ".78rem" }} onClick={() => handleRoundRobinSaveResult(match)}>
+                                {match.played ? "Corregir" : "Guardar"}
+                              </button>
+                            </div>
+                          ) : (
+                            match.played
+                              ? <span style={{ color: T.accent, fontWeight: 800, fontSize: ".85rem" }}>{match.scoreA} – {match.scoreB}</span>
+                              : <span style={{ color: "rgba(255,255,255,.3)", fontSize: ".78rem" }}>Pendiente</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* RANKING */}
+      <div className="cp04-tournament-panel" style={{ marginTop: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showRanking ? 14 : 0 }}>
+          <h3 style={{ margin: 0 }}>
+            Ranking
+            <span style={{ color: T.accent, fontWeight: 400, fontSize: ".82rem", marginLeft: 8 }}>{pairs.length} pareja{pairs.length !== 1 ? "s" : ""}</span>
+          </h3>
+          <button type="button" className="cp04-tournament-action" onClick={() => setShowRanking(r => !r)}>
+            {showRanking ? "▲ Ocultar" : `▼ Ver todas (${pairs.length})`}
+          </button>
+        </div>
+        {showRanking && (
+          pairs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "32px 0", color: T.textDim }}>
+              <div style={{ fontSize: "1.5rem", marginBottom: 8 }}>📋</div>
+              <p style={{ margin: 0 }}>Aún no hay parejas configuradas.</p>
+            </div>
+          ) : isRoundRobin ? (
+            <div className="cp04-full-ranking-wrap">
+              <table className="cp04-full-ranking-table">
+                <thead>
+                  <tr><th>#</th><th>Pareja</th><th>PJ</th><th>PG</th><th>PP</th><th>PF</th><th>PC</th><th>Dif</th><th>Pts</th></tr>
+                </thead>
+                <tbody>
+                  {rrStandingsSorted.map((s, i) => {
+                    const pair = pairs.find(p => p.id === s.pairId);
+                    const isChampion = rrComplete && i === 0;
+                    return (
+                      <tr key={s.pairId}>
+                        <td style={{ color: T.textDim, fontSize: ".82rem" }}>{i + 1}{isChampion ? " 🏆" : ""}</td>
+                        <td><strong style={{ color: isChampion ? T.accent : "#fff" }}>{pair ? pairLabel(pair) : "—"}</strong></td>
+                        <td>{s.played}</td>
+                        <td>{s.won}</td>
+                        <td>{s.lost}</td>
+                        <td>{s.scoreFor}</td>
+                        <td>{s.scoreAgainst}</td>
+                        <td style={{ color: s.diff > 0 ? T.accent : s.diff < 0 ? T.dangerText : "inherit" }}>{s.diff > 0 ? `+${s.diff}` : s.diff}</td>
+                        <td><strong>{s.points}</strong></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="cp04-full-ranking-wrap">
+              <table className="cp04-full-ranking-table">
+                <thead>
+                  <tr><th>#</th><th>Jugador 1</th><th>Jugador 2</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                  {pairs.map((pair, i) => {
+                    const match = bracket.find(m => m.pairA === pair.id || m.pairB === pair.id);
+                    const isW = match?.winner === pair.id;
+                    const isL = match?.winner && match.winner !== pair.id;
+                    const isBye = byePair?.id === pair.id;
+                    return (
+                      <tr key={pair.id} style={{ opacity: isL ? .48 : 1, transition: "opacity .3s" }}>
+                        <td style={{ color: T.textDim, fontSize: ".82rem" }}>{i + 1}</td>
+                        <td><strong style={{ color: isW ? T.accent : "#fff" }}>{pair.player1 || <em style={{ color: T.textDim, fontWeight: 400 }}>Sin nombre</em>}</strong></td>
+                        <td style={{ color: isW ? T.accent : "rgba(255,255,255,.75)" }}>{pair.player2 || <em style={{ color: T.textDim }}>Sin nombre</em>}</td>
+                        <td>
+                          {isBye ? <span style={{ background: "rgba(182,255,0,.14)", color: T.accent, fontWeight: 800, padding: "2px 8px", borderRadius: 5, fontSize: ".72rem" }}>BYE</span>
+                            : isW ? <span style={{ background: "rgba(182,255,0,.14)", color: T.accent, fontWeight: 800, padding: "2px 8px", borderRadius: 5, fontSize: ".72rem" }}>✅ Avanza</span>
+                            : isL ? <span style={{ background: "rgba(255,60,60,.1)", color: T.dangerText, fontWeight: 700, padding: "2px 8px", borderRadius: 5, fontSize: ".72rem" }}>Eliminada</span>
+                            : <span style={{ color: "rgba(255,255,255,.3)", fontSize: ".72rem" }}>Pendiente</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+const RANKING_STYLE = `
+@keyframes cp04-fadeUp {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes cp04-scalePulse {
+  0%  { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100%{ transform: scale(1); }
+}
+.cp04-rank-row:hover { background: rgba(182,255,0,.04) !important; transition: background .15s; }
+.cp04-rank-avatar { width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:.72rem; flex-shrink:0; letter-spacing:.01em; }
+.cp04-rank-podio-card { animation: cp04-fadeUp .5s ease both; }
+.cp04-rank-podio-card:nth-child(1){ animation-delay:.05s; }
+.cp04-rank-podio-card:nth-child(2){ animation-delay:.1s; }
+.cp04-rank-podio-card:nth-child(3){ animation-delay:.15s; }
+.cp04-rank-tr { animation: cp04-fadeUp .35s ease both; }
+.cp04-rank-arrow-up { animation: cp04-scalePulse 2s infinite; }
+`;
+
+function RankingAvatar({ name, color = T.accent, size = 34 }) {
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase() || "")
+    .join("");
+  const bg = color + "22";
+  return (
+    <span className="cp04-rank-avatar" style={{ width: size, height: size, background: bg, border: `1.5px solid ${color}55`, color, fontSize: size < 30 ? ".62rem" : ".72rem" }}>
+      {initials}
+    </span>
+  );
+}
+
+function MovArrow({ mov }) {
+  if (mov > 0) return <span className="cp04-rank-arrow-up" style={{ color: T.trendUp, fontWeight: 900, fontSize: ".8rem" }}>▲{mov}</span>;
+  if (mov < 0) return <span style={{ color: T.trendDown, fontWeight: 900, fontSize: ".8rem" }}>▼{Math.abs(mov)}</span>;
+  return <span style={{ color: T.textDim, fontWeight: 700, fontSize: ".8rem" }}>—</span>;
+}
+
+function RachaBadge({ racha }) {
+  if (racha > 0) return <span style={{ color: T.trendUp, fontWeight: 900, fontSize: ".78rem" }}>🔥 +{racha}</span>;
+  if (racha < 0) return <span style={{ color: T.trendDown, fontWeight: 900, fontSize: ".78rem" }}>❄️ {racha}</span>;
+  return <span style={{ color: T.textDim, fontSize: ".78rem" }}>—</span>;
 }
 
 function Ranking() {
-  return <div style={{ padding: "42px 24px" }}><SectionTitle eyebrow="Ranking" title="Ranking ELO" desc="Preparado para resultados reales." /><Card><div className="cp04-table-wrap"><table className="cp04-table"><thead><tr><th>Pos</th><th>Jugador</th><th>ELO</th><th>Categoría</th><th>V</th><th>D</th></tr></thead><tbody>{RANKING.map((p) => <tr key={p.pos}><td>{p.pos}</td><td><strong>{p.name}</strong></td><td style={{ color: T.accent, fontWeight: 900 }}>{p.elo}</td><td>{p.cat}</td><td>{p.wins}</td><td>{p.losses}</td></tr>)}</tbody></table></div></Card></div>;
+  const lang = useLang();
+  const tx = key => t(key, lang);
+
+  const CATS = [
+    { key:"general",    label: tx("ranking.general") },
+    { key:"masculino",  label: tx("ranking.masculino") },
+    { key:"femenino",   label: tx("ranking.femenino") },
+    { key:"mixto",      label: tx("ranking.mixto") },
+    { key:"iniciacion", label: tx("ranking.iniciacion") },
+    { key:"medio",      label: tx("ranking.medio") },
+    { key:"avanzado",   label: tx("ranking.avanzado") },
+  ];
+  const NIVEL_COLORS = { "Avanzado":"#b6ff00", "Medio":T.accent2, "Iniciación":"#a78bfa" };
+
+  const [cat, setCat] = useState("general");
+  const [search, setSearch] = useState("");
+  const [showAll, setShowAll] = useState(false);
+
+  const filtered = RANKING_PRO.filter(p => {
+    const matchCat = cat === "general"
+      ? true
+      : cat === "masculino" ? p.cat === "Masculino"
+      : cat === "femenino"  ? p.cat === "Femenino"
+      : cat === "mixto"     ? p.cat === "Mixto"
+      : cat === "iniciacion"? p.nivel === "Iniciación"
+      : cat === "medio"     ? p.nivel === "Medio"
+      : cat === "avanzado"  ? p.nivel === "Avanzado"
+      : true;
+    const q = search.trim().toLowerCase();
+    const matchSearch = !q || p.pareja.toLowerCase().includes(q) || p.p1.toLowerCase().includes(q) || p.p2.toLowerCase().includes(q);
+    return matchCat && matchSearch;
+  });
+
+  const top3 = filtered.slice(0, 3);
+  const rest = showAll ? filtered.slice(3) : filtered.slice(3, 10);
+  const PODIO_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
+  const PODIO_TROFEOS = ["🏆", "🥈", "🥉"];
+  const PODIO_LABELS = [tx("ranking.campeon"), tx("ranking.subcampeon"), tx("ranking.tercero")];
+
+  return (
+    <div style={{ padding: "clamp(24px,4vw,42px) 24px clamp(40px,8vw,72px)", maxWidth: 1180, margin: "0 auto" }}>
+      <style>{RANKING_STYLE}</style>
+
+      {/* CABECERA */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:16, marginBottom:24 }}>
+        <div>
+          <div style={{ color:T.accent, fontWeight:900, letterSpacing:".18em", fontSize:".74rem", textTransform:"uppercase", marginBottom:8 }}>
+            {tx("ranking.temporada")} 2026
+          </div>
+          <h2 style={{ fontFamily:T.fontDisplay, fontSize:"clamp(2rem,5vw,3.4rem)", lineHeight:.9, margin:"0 0 8px", letterSpacing:"-.05em" }}>
+            {tx("ranking.title")}
+          </h2>
+          <p style={{ color:T.textDim, fontSize:".9rem", margin:0 }}>{tx("ranking.subtitle")}</p>
+        </div>
+        <div style={{ textAlign:"right" }}>
+          <div style={{ color:T.textDim, fontSize:".72rem" }}>{tx("ranking.ultima_act")}</div>
+          <div style={{ color:T.accent, fontWeight:700, fontSize:".82rem" }}>25/06/2026 · 08:00</div>
+          <div style={{ marginTop:6, display:"inline-flex", alignItems:"center", gap:6, background:"rgba(182,255,0,.07)", border:"1px solid rgba(182,255,0,.18)", borderRadius:8, padding:"4px 10px", fontSize:".7rem", color:T.accent, fontWeight:700 }}>
+            <span style={{ width:6, height:6, borderRadius:"50%", background:T.accent, display:"inline-block" }} />
+            {tx("ranking.datos_ejemplo")}
+          </div>
+        </div>
+      </div>
+
+      {/* FILTROS */}
+      <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20, alignItems:"center" }}>
+        <div style={{ flex:1, minWidth:180, maxWidth:280, position:"relative" }}>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={tx("ranking.filtrar")}
+            style={{ width:"100%", paddingLeft:32, background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:10, color:"#fff", fontSize:".82rem", padding:"9px 12px 9px 32px", outline:"none", fontFamily:"inherit", minHeight:"unset" }}
+          />
+          <span style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:T.textDim, fontSize:".9rem", pointerEvents:"none" }}>🔍</span>
+        </div>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          {CATS.map(c => (
+            <button key={c.key} type="button" onClick={() => setCat(c.key)}
+              style={{ background: cat===c.key ? T.accent : "rgba(255,255,255,.06)", color: cat===c.key ? "#06100a" : T.textDim, border: `1px solid ${cat===c.key ? T.accent : "rgba(255,255,255,.12)"}`, borderRadius:8, padding:"6px 13px", cursor:"pointer", fontWeight:900, fontSize:".76rem", fontFamily:"inherit", transition:"all .15s" }}>
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 && (
+        <Card style={{ textAlign:"center", padding:32, marginBottom:20 }}>
+          <div style={{ fontSize:"2rem", marginBottom:8 }}>🔍</div>
+          <div style={{ color:T.textDim }}>{tx("ranking.sin_resultados")}</div>
+        </Card>
+      )}
+
+      {/* PODIO TOP 3 */}
+      {top3.length > 0 && (
+        <div style={{ marginBottom:28 }}>
+          <div style={{ color:T.textDim, fontSize:".72rem", fontWeight:900, letterSpacing:".1em", textTransform:"uppercase", marginBottom:14 }}>{tx("ranking.podio")}</div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(min(100%,260px),1fr))", gap:16 }}>
+            {top3.map((p, i) => {
+              const isChamp = i === 0;
+              const pc = PODIO_COLORS[i] || T.textDim;
+              return (
+                <div key={p.pos} className="cp04-rank-podio-card"
+                  style={{ position:"relative", borderRadius:22, border:`1.5px solid ${pc}${isChamp?"":"55"}`, background: isChamp ? `linear-gradient(160deg,rgba(245,158,11,.12),rgba(11,17,29,.97))` : "linear-gradient(160deg,rgba(11,17,29,.94),rgba(8,13,22,.97))", padding:"22px 20px", overflow:"hidden" }}>
+                  {isChamp && <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${pc},transparent)` }} />}
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+                    <span style={{ fontSize: isChamp ? "2rem" : "1.5rem" }}>{PODIO_TROFEOS[i]}</span>
+                    <span style={{ fontFamily:T.fontDisplay, fontSize:"2.8rem", fontWeight:900, color:pc, lineHeight:1, opacity:.25, letterSpacing:"-.05em" }}>{p.pos}</span>
+                  </div>
+                  <div style={{ fontWeight:900, fontSize:".88rem", color:pc, marginBottom:2 }}>{PODIO_LABELS[i]}</div>
+                  <div style={{ fontFamily:T.fontDisplay, fontWeight:900, fontSize:"clamp(1.1rem,2.5vw,1.45rem)", color:"#fff", lineHeight:1.15, marginBottom:10 }}>{p.pareja}</div>
+                  <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+                    <RankingAvatar name={p.p1} color={pc} size={28} />
+                    <RankingAvatar name={p.p2} color={pc} size={28} />
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:".72rem", color:T.textDim, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.p1}</div>
+                      <div style={{ fontSize:".72rem", color:T.textDim, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.p2}</div>
+                    </div>
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, borderTop:`1px solid rgba(255,255,255,.07)`, paddingTop:12 }}>
+                    <div style={{ textAlign:"center" }}>
+                      <div style={{ fontFamily:T.fontDisplay, fontWeight:900, color:pc, fontSize:"1.25rem" }}>{p.pts}</div>
+                      <div style={{ color:T.textDim, fontSize:".64rem", textTransform:"uppercase", letterSpacing:".06em" }}>{tx("ranking.pts")}</div>
+                    </div>
+                    <div style={{ textAlign:"center" }}>
+                      <div style={{ fontFamily:T.fontDisplay, fontWeight:900, color:T.trendUp, fontSize:"1.25rem" }}>{p.v}</div>
+                      <div style={{ color:T.textDim, fontSize:".64rem", textTransform:"uppercase", letterSpacing:".06em" }}>{tx("ranking.v")}</div>
+                    </div>
+                    <div style={{ textAlign:"center" }}>
+                      <div style={{ fontFamily:T.fontDisplay, fontWeight:900, color:T.accent2, fontSize:"1.25rem" }}><RachaBadge racha={p.racha} /></div>
+                      <div style={{ color:T.textDim, fontSize:".64rem", textTransform:"uppercase", letterSpacing:".06em" }}>{tx("ranking.racha")}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* TABLA COMPLETA */}
+      {filtered.length > 3 && (
+        <Card style={{ padding:0, overflow:"hidden" }}>
+          <div style={{ padding:"16px 20px 12px", borderBottom:`1px solid ${T.line}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span style={{ fontWeight:900, fontSize:".88rem" }}>{tx("ranking.tabla")}</span>
+            <span style={{ color:T.textDim, fontSize:".75rem" }}>{filtered.length} {tx("ranking.pareja").toLowerCase()}s</span>
+          </div>
+          <div className="cp04-table-wrap">
+            <table className="cp04-table" style={{ minWidth:580 }}>
+              <thead>
+                <tr>
+                  <th style={{ width:36 }}>{tx("ranking.pos")}</th>
+                  <th>{tx("ranking.pareja")}</th>
+                  <th style={{ textAlign:"center" }}>{tx("ranking.pts")}</th>
+                  <th style={{ textAlign:"center" }}>{tx("ranking.pj")}</th>
+                  <th style={{ textAlign:"center" }}>{tx("ranking.v")}</th>
+                  <th style={{ textAlign:"center" }}>{tx("ranking.d")}</th>
+                  <th style={{ textAlign:"center" }}>{tx("ranking.racha")}</th>
+                  <th style={{ textAlign:"center", display:"none" }} className="cp04-rank-nivel">{tx("ranking.nivel")}</th>
+                  <th style={{ textAlign:"center" }}>{tx("ranking.mov")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...(top3.length >= 3 ? [] : top3), ...rest].map((p, idx) => {
+                  const nc = NIVEL_COLORS[p.nivel] || T.textDim;
+                  const animDelay = `${idx * 0.04}s`;
+                  return (
+                    <tr key={p.pos} className="cp04-rank-row cp04-rank-tr" style={{ animationDelay: animDelay }}>
+                      <td>
+                        <span style={{ fontFamily:T.fontDisplay, fontWeight:900, color: p.pos<=3 ? PODIO_COLORS[p.pos-1] : T.textDim, fontSize: p.pos<=3 ? "1.1rem" : ".95rem" }}>{p.pos}</span>
+                      </td>
+                      <td>
+                        <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+                          <div style={{ display:"flex", gap:4, flexShrink:0 }}>
+                            <RankingAvatar name={p.p1} color={nc} size={26} />
+                            <RankingAvatar name={p.p2} color={nc} size={26} />
+                          </div>
+                          <div style={{ minWidth:0 }}>
+                            <div style={{ fontWeight:900, fontSize:".84rem", color:"#fff", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.pareja}</div>
+                            <div style={{ color:T.textDim, fontSize:".68rem", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.p1} · {p.p2}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ textAlign:"center" }}>
+                        <span style={{ fontFamily:T.fontDisplay, fontWeight:900, color:T.accent, fontSize:"1rem" }}>{p.pts}</span>
+                      </td>
+                      <td style={{ textAlign:"center", color:T.textDim, fontSize:".84rem" }}>{p.pj}</td>
+                      <td style={{ textAlign:"center", color:T.trendUp, fontWeight:900, fontSize:".84rem" }}>{p.v}</td>
+                      <td style={{ textAlign:"center", color:T.trendDown, fontSize:".84rem" }}>{p.d}</td>
+                      <td style={{ textAlign:"center" }}><RachaBadge racha={p.racha} /></td>
+                      <td style={{ textAlign:"center" }}><MovArrow mov={p.mov} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filtered.length > 13 && (
+            <div style={{ padding:"12px 20px", borderTop:`1px solid ${T.line}`, textAlign:"center" }}>
+              <button type="button" onClick={() => setShowAll(v => !v)}
+                style={{ background:"transparent", border:`1px solid ${T.line}`, color:T.textDim, borderRadius:10, padding:"8px 20px", cursor:"pointer", fontFamily:"inherit", fontWeight:700, fontSize:".82rem" }}>
+                {showAll ? "▲" : "▼"} {showAll ? tx("common.volver") : `${tx("ranking.ver_completo")} (${filtered.length})`}
+              </button>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* LEYENDA */}
+      <div style={{ marginTop:20, display:"flex", gap:16, flexWrap:"wrap", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+          {Object.entries(NIVEL_COLORS).map(([nivel, color]) => (
+            <span key={nivel} style={{ display:"inline-flex", alignItems:"center", gap:5, color:T.textDim, fontSize:".72rem" }}>
+              <span style={{ width:8, height:8, borderRadius:"50%", background:color, display:"inline-block" }} />{nivel}
+            </span>
+          ))}
+        </div>
+        <span style={{ color:T.textDim, fontSize:".7rem", fontStyle:"italic" }}>{tx("ranking.sistema_puntos")}</span>
+      </div>
+    </div>
+  );
 }
 
 function Admin() {
-  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow="Administrador / jefe" title="Panel de dirección" desc="Vista de negocio preparada para permisos de administrador. Métricas demo hasta conectar datos reales. Acceso demo: pendiente de autenticación real." /><AuthStatusPanel compact /><div className="cp04-grid-3" style={{ marginTop: 24 }}><Card><h3 style={{ marginTop: 0 }}>Ingresos demo</h3><strong style={{ color: T.accent, fontSize: 32, fontFamily: T.fontDisplay }}>4820€</strong><p style={{ color: T.textDim, marginTop: 8 }}>Dato de ejemplo, no conectado.</p></Card><Card><h3 style={{ marginTop: 0 }}>Reservas demo</h3><strong style={{ color: T.accent, fontSize: 32, fontFamily: T.fontDisplay }}>268</strong><p style={{ color: T.textDim, marginTop: 8 }}>Pendiente de backend.</p></Card><Card><h3 style={{ marginTop: 0 }}>Ocupación demo</h3><strong style={{ color: T.accent, fontSize: 32, fontFamily: T.fontDisplay }}>87%</strong><p style={{ color: T.textDim, marginTop: 8 }}>Pendiente de cálculo real.</p></Card></div><div className="cp04-grid-2" style={{ marginTop: 24 }}><RolePanel eyebrow="Gestión" title="Pistas y clientes" desc="Módulos preparados para dirección operativa." items={["Gestión de pistas", "Clientes y perfiles", "Histórico de reservas", "Reglas de disponibilidad"]} /><RolePanel eyebrow="Crecimiento" title="Torneos y automatizaciones" desc="Zona preparada para activar procesos cuando exista backend." items={["Torneos", "Ranking y categorías", "Automatizaciones Make", "Pagos futuros"]} /></div><div style={{ marginTop: 24 }}><SectionTitle eyebrow="Automatizaciones" title="Estado de integraciones" desc="Separación entre integraciones preparadas, pendientes de credenciales y pendientes de despliegue." /><IntegrationMatrix compact /></div></div>;
+  useClock(); // se mantiene la llamada: dispara el refresco periódico interno del hook (setInterval), aunque este panel no lea su valor de retorno.
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  const kpi = DEMO_KPI;
+  return (
+    <div style={{ padding: "clamp(24px,4vw,42px) 24px", maxWidth: 1180, margin: "0 auto" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:16, marginBottom:20 }}>
+        <SectionTitle eyebrow={tx("role.ADMIN.label")} title={tx("admin.panel")} desc={tx("admin.metricas")} />
+        <ClockDisplay compact />
+      </div>
+
+      <AuthStatusPanel compact />
+
+      {/* KPI GRID */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10, margin:"18px 0" }}>
+        <MetricCard label={tx("admin.ingr_mes")} value={`${kpi.ingresosMes}€`} sub={tx("home.estimacion_mensual")} trend={12} color={T.accent2} icon="💶" />
+        <MetricCard label={tx("admin.reservas_mes")} value="268" sub={`vs 241 ${tx("admin.vs_mes_anterior")}`} trend={11} icon="🎾" />
+        <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
+        <MetricCard label={tx("admin.socios")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
+        <MetricCard label={tx("admin.procesos")} value={`${MAKE_FLUJOS_COUNTERS.conectados}/${MAKE_FLUJOS_COUNTERS.total}`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
+        <MetricCard label={tx("admin.backup")} value={kpi.ultimoBackup} sub={tx("admin.prox_lunes")} trend={null} color={T.metricPositive} icon="💾" />
+      </div>
+
+      {/* GRÁFICAS ADMIN */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(min(100%,320px),1fr))", gap:16, marginBottom:20 }}>
+        <ChartCard title={tx("admin.graf_hoy")} sub={tx("admin.sub_hoy")} demo>
+          <MiniBarChart data={DEMO_RESERVAS_HOY} height={70} />
+        </ChartCard>
+        <ChartCard title={tx("admin.graf_semana")} sub={tx("admin.sub_semana")} demo>
+          <MiniLineChart data={DEMO_RESERVAS_SEMANA} height={70} color={T.accent2} />
+        </ChartCard>
+        <ChartCard title={tx("admin.graf_pista")} sub={tx("admin.sub_pista")} demo>
+          <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} />
+        </ChartCard>
+      </div>
+
+      <div className="cp04-grid-2" style={{ marginTop:0, marginBottom:20 }}>
+        <RolePanel eyebrow={tx("admin.gestion_eyebrow")} title={tx("admin.gestion_title")} desc={tx("admin.gestion_desc")} items={[tx("admin.gestion_item1"), tx("admin.gestion_item2"), tx("admin.gestion_item3"), tx("admin.gestion_item4")]} />
+        <RolePanel eyebrow={tx("admin.crec_eyebrow")} title={tx("admin.crec_title")} desc={tx("admin.crec_desc")} items={[tx("admin.crec_item1"), tx("admin.crec_item2"), tx("admin.crec_item3"), tx("admin.crec_item4")]} />
+        <RolePanel eyebrow={tx("admin.backup_eyebrow")} title={tx("admin.backup_semana")} desc={tx("admin.backup_desc")} items={[tx("admin.backup_item1"), tx("admin.backup_item2"), tx("admin.backup_item3"), tx("admin.backup_item4")]} />
+      </div>
+
+      <div style={{ marginTop:4 }}>
+        <SectionTitle eyebrow={tx("admin.sistema_eyebrow")} title={tx("admin.integraciones")} desc={tx("admin.integ_desc")} />
+        <IntegrationMatrix compact />
+      </div>
+    </div>
+  );
 }
 
+
+function AuthProductionStatusPanel() {
+  const mode = cp04GetStoredAuthMode();
+  const isDemo = mode === CP04_AUTH_MODES.DEMO || mode === CP04_AUTH_MODES.LOCAL_DEMO;
+
+  return (
+    <Card style={{ marginTop: 24, borderColor: isDemo ? "rgba(255,184,77,.34)" : "rgba(182,255,0,.34)" }}>
+      <h3 style={{ marginTop: 0, color: isDemo ? T.warning : T.accent }}>
+        Estado de autenticación
+      </h3>
+      <p style={{ color: T.textDim, lineHeight: 1.7 }}>
+        La app está preparada para conectar autenticación real mediante backend/Worker.
+        En local puede mantenerse el modo demo para pruebas, pero en producción las secciones sensibles
+        deben validarse desde servidor.
+      </p>
+      <PanelList
+        items={[
+          `Modo actual: ${mode}`,
+          `Secciones protegidas: ${CP04_PROTECTED_SECTIONS.join(", ")}`,
+          "Login real pendiente: /api/auth/login",
+          "Sesión real pendiente: /api/auth/me",
+          "Recuperación real pendiente: /api/auth/forgot-password",
+          "Roles reales pendientes de backend: PLAYER, STAFF, ADMIN, SUPPORT"
+        ]}
+      />
+      <p style={{ color: T.textDim, lineHeight: 1.7, marginBottom: 0 }}>
+        Regla de producción: el frontend solo debe mostrar la interfaz. La autorización final debe decidirla
+        el backend/Worker con sesión válida y rol real.
+      </p>
+    </Card>
+  );
+}
+
+
 function Soporte() {
-  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow="Soporte técnico" title="Operación y seguridad" desc="Panel técnico preparado para rol de soporte. No muestra secretos reales y debe protegerse con autenticación en producción." /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}>Protección requerida en producción</h3><PanelList items={[`Secciones a proteger: ${PROTECTED_SECTIONS.join(", ")}`, "Requiere backend de usuarios", "Requiere proveedor de autenticación", "Requiere permisos server-side, no solo UI", "Riesgo: publicar admin/soporte sin auth expone paneles internos"]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow="Integraciones" title="Estado técnico" desc="Checklist de conexión backend." items={["Worker de reservas preparado", "Make pendiente de secreto privado", "Airtable preparado sin escritura activa", "Stripe/WhatsApp/Calendar pendientes"]} /><RolePanel eyebrow="Observabilidad" title="Logs y errores" desc="Zona reservada para diagnóstico cuando exista backend real." items={["Logs del Worker", "Errores de validación", "Errores de Make/Airtable", "Alertas técnicas futuras"]} /></div><IntegrationMatrix /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>Variables privadas pendientes</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nMAKE_RESERVAS_WEBHOOK=privado_en_worker\nAIRTABLE_API_KEY=privado_en_backend\nAIRTABLE_BASE_ID=privado_en_backend\nAIRTABLE_RESERVAS_TABLE=privado_en_backend\nSTRIPE_SECRET_KEY=privado_en_backend\nSTRIPE_WEBHOOK_SECRET=privado_en_backend\nWHATSAPP_PROVIDER_TOKEN=privado_en_backend\nWHATSAPP_PHONE_NUMBER_ID=privado_en_backend\nGOOGLE_CALENDAR_CREDENTIALS=privado_en_backend\nGOOGLE_DRIVE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación técnica: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.vars_h3")}</span></h3><PanelList items={[tx("soporte.vars_no_names"), tx("soporte.vars_validacion")]} /></Card></div>;
+}
+
+function Perfil({ selectedRole, onClearRole, onOpenTutorial }) {
+  const auth = useAuth();
+  const lang = useLang();
+  const tx = key => t(key, lang);
+  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+
+  // Perfil preparado para backend real.
+  // Actualmente localStorage funciona como fallback local para no romper la demo.
+  // Endpoints recomendados (todavía sin implementar en el Worker):
+  // GET    /api/profile/me
+  // PATCH  /api/profile/me
+  // POST   /api/profile/avatar
+  // DELETE /api/profile/avatar
+  // GET    /api/profile/metrics
+  // Login/registro/recuperación/cambio de contraseña ya NO se referencian
+  // desde aquí: viven centralizados en src/auth/authService.js.
+
+  function saveProfileFallback(key, value) {
+    try {
+      const serialized = typeof value === "string" ? value : JSON.stringify(value);
+      localStorage.setItem(key, serialized);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function saveProfileField(field, value) {
+    // Preparado para backend real. En esta fase solo persiste localmente.
+    // Futuro: PATCH /api/profile/me { [field]: value } (endpoint aún no
+    // implementado en el Worker).
+    const storageMap = {
+      avatar: "cp04_avatar",
+      bio: "cp04_bio",
+      deporte: "cp04_deporte",
+      privacidad: "cp04_privacidad",
+    };
+    const storageKey = storageMap[field];
+    if (!storageKey) return false;
+    return saveProfileFallback(storageKey, value);
+  }
+
+  // Avatar — persiste en localStorage (modo demo)
+  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+  const [avatarSrc, setAvatarSrc] = useState(() => { try { return localStorage.getItem("cp04_avatar") || null; } catch { return null; } });
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarMsg, setAvatarMsg] = useState("");
+  const [avatarError, setAvatarError] = useState("");
+  const [showDelConfirm, setShowDelConfirm] = useState(false);
+
+  // Bio — persiste en localStorage (modo demo)
+  // TODO: GET/PATCH /api/profile/me { bio }
+  const [bio, setBio] = useState(() => { try { return localStorage.getItem("cp04_bio") || ""; } catch { return ""; } });
+  const [bioEdit, setBioEdit] = useState(false);
+  const [bioDraft, setBioDraft] = useState("");
+  const [bioMsg, setBioMsg] = useState("");
+  const BIO_MAX = 220;
+
+  // Datos deportivos — persiste en localStorage (modo demo)
+  // TODO: GET/PATCH /api/profile/me { deporteData }
+  const [deporteData, setDeporteData] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_deporte") || "{}"); } catch { return {}; } });
+  const [deporteEditing, setDeporteEditing] = useState(false);
+  const [deporteDraft, setDeporteDraft] = useState({});
+  const [deporteMsg, setDeporteMsg] = useState("");
+
+  // Privacidad — persiste en localStorage (modo demo)
+  // TODO: GET/PATCH /api/profile/me { privacy }
+  const [privacidad, setPrivacidad] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_privacidad") || "{}"); } catch { return {}; } });
+  const [privMsg, setPrivMsg] = useState("");
+
+  // Derechos GDPR (flujo #9, Make 6323457) — a diferencia del resto de
+  // Perfil() (que persiste en localStorage), estos dos botones sí llaman al
+  // Worker real (POST /api/gdpr/acceso y /api/gdpr/olvido): son los únicos
+  // datos de este componente que existen server-side hoy.
+  const [gdprAccesoLoading, setGdprAccesoLoading] = useState(false);
+  const [gdprAccesoResult, setGdprAccesoResult] = useState(null);
+  const [gdprAccesoError, setGdprAccesoError] = useState("");
+  const [gdprOlvidoConfirming, setGdprOlvidoConfirming] = useState(false);
+  const [gdprOlvidoLoading, setGdprOlvidoLoading] = useState(false);
+  const [gdprOlvidoResult, setGdprOlvidoResult] = useState(null);
+  const [gdprOlvidoError, setGdprOlvidoError] = useState("");
+
+  // Contraseña
+  const [pwdActual, setPwdActual] = useState("");
+  const [pwdNueva, setPwdNueva] = useState("");
+  const [pwdConfirmar, setPwdConfirmar] = useState("");
+  const [pwdMsg, setPwdMsg] = useState("");
+  const [pwdError, setPwdError] = useState("");
+
+  const roleInitials = { PLAYER:"JG", STAFF:"ST", ADMIN:"AD", SUPPORT:"SP" };
+  const initials = roleInitials[selectedRole] || "CP";
+
+  // Completitud del perfil
+  function computeCompleteness() {
+    let s = 0;
+    if (avatarSrc) s += 20;
+    if (bio && bio.trim().length > 10) s += 20;
+    if (deporteData.mano) s += 15;
+    if (deporteData.nivel) s += 15;
+    if (deporteData.disponibilidad) s += 15;
+    if (deporteData.objetivo) s += 15;
+    return Math.min(s, 100);
+  }
+  const completeness = computeCompleteness();
+
+  // Handlers avatar
+  function handleAvatarChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setAvatarError(""); setAvatarMsg("");
+    const allowed = ["image/jpeg","image/png","image/webp","image/gif"];
+    if (!allowed.includes(file.type)) { setAvatarError(tx("perfil.avatar_error_tipo")); return; }
+    if (file.size > 5 * 1024 * 1024) { setAvatarError(tx("perfil.avatar_error_size")); return; }
+    const reader = new FileReader();
+    reader.onload = ev => setAvatarPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+  function handleAvatarSave() {
+    if (!avatarPreview) return;
+    saveProfileField("avatar", avatarPreview);
+    setAvatarSrc(avatarPreview); setAvatarPreview(null);
+    setAvatarMsg(tx("perfil.avatar_guardada"));
+    setTimeout(() => setAvatarMsg(""), 3000);
+  }
+  function handleAvatarDelete() {
+    try {
+      localStorage.removeItem("cp04_avatar");
+    } catch {
+      // localStorage puede lanzar en modo privado/Safari; se limpia igualmente el estado en memoria.
+    }
+    setAvatarSrc(null); setAvatarPreview(null); setShowDelConfirm(false);
+    setAvatarMsg(tx("perfil.avatar_eliminada"));
+    setTimeout(() => setAvatarMsg(""), 3000);
+  }
+
+  // Handlers bio
+  function startBioEdit() { setBioDraft(bio); setBioEdit(true); setBioMsg(""); }
+  function cancelBioEdit() { setBioEdit(false); setBioDraft(""); }
+  function saveBio() {
+    if (!bioDraft.trim() || bioDraft.length > BIO_MAX) return;
+    const saved = bioDraft.trim();
+    setBio(saved); saveProfileField("bio", saved);
+    setBioEdit(false); setBioMsg(tx("perfil.bio_guardada"));
+    setTimeout(() => setBioMsg(""), 3000);
+  }
+
+  // Handlers datos deportivos
+  function startDeporteEdit() { setDeporteDraft({...deporteData}); setDeporteEditing(true); }
+  function cancelDeporteEdit() { setDeporteEditing(false); }
+  function saveDeporte() {
+    const saved = {...deporteDraft};
+    setDeporteData(saved); saveProfileField("deporte", saved);
+    setDeporteEditing(false); setDeporteMsg(tx("perfil.deporte_guardados"));
+    setTimeout(() => setDeporteMsg(""), 3000);
+  }
+
+  // Handlers privacidad
+  function togglePriv(key, defaultOn) {
+    const current = privacidad[key] !== undefined ? privacidad[key] : defaultOn;
+    const updated = { ...privacidad, [key]: !current };
+    setPrivacidad(updated); saveProfileField("privacidad", updated);
+    setPrivMsg(tx("perfil.privacidad_guardada"));
+    setTimeout(() => setPrivMsg(""), 2000);
+  }
+
+  // Handlers GDPR (flujo #9) — llaman al Worker real, nunca simulan éxito.
+  async function handleGdprAcceso() {
+    setGdprAccesoLoading(true);
+    setGdprAccesoError("");
+    setGdprAccesoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/acceso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) {
+        setGdprAccesoError(data?.message || data?.error || "No se pudo obtener tus datos ahora mismo.");
+      } else {
+        setGdprAccesoResult(data);
+      }
+    } catch {
+      setGdprAccesoError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setGdprAccesoLoading(false);
+    }
+  }
+
+  // "Eliminar mis datos" NUNCA es lo mismo que "darme de baja del club" (ver
+  // handleGdprOlvido en el Worker): esto solo registra una solicitud de
+  // olvido para revisión, nunca ejecuta un borrado desde el frontend.
+  async function handleGdprOlvido() {
+    setGdprOlvidoLoading(true);
+    setGdprOlvidoError("");
+    setGdprOlvidoResult(null);
+    try {
+      const response = await authFetch("/api/gdpr/olvido", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmar: true, motivo: "Solicitud del titular desde su perfil." }),
+      });
+      const data = await readSafeResponse(response);
+      if (!response.ok || !data?.ok) {
+        setGdprOlvidoError(data?.message || data?.error || "No se pudo registrar la solicitud ahora mismo.");
+      } else {
+        setGdprOlvidoResult(data);
+      }
+    } catch {
+      setGdprOlvidoError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setGdprOlvidoLoading(false);
+      setGdprOlvidoConfirming(false);
+    }
+  }
+
+  // Handler contraseña
+  async function handleChangePwd(e) {
+    e.preventDefault(); setPwdMsg(""); setPwdError("");
+    if (!pwdActual) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
+
+    const valid = /[A-Z]/.test(pwdNueva) && /[a-z]/.test(pwdNueva) && /[0-9]/.test(pwdNueva) && pwdNueva.length >= 8;
+    if (!valid) { setPwdError(tx("perfil.pwd_error_nueva")); return; }
+    if (pwdNueva !== pwdConfirmar) { setPwdError(tx("perfil.pwd_error_coincide")); return; }
+
+    if (auth.isAuthenticated) {
+      // Sesión backend real: el cambio de contraseña es real (POST
+      // /api/auth/change-password vía authService), no un simulacro.
+      const result = await auth.updatePassword(pwdNueva);
+      if (!result.ok) {
+        setPwdError(result.message || "No se pudo actualizar la contraseña.");
+        return;
+      }
+      setPwdMsg(result.message || "Contraseña actualizada.");
+      setPwdActual(""); setPwdNueva(""); setPwdConfirmar("");
+      return;
+    }
+
+    // Sin sesión backend real (demo): la contraseña "actual" solo se valida
+    // contra la contraseña demo del rol, aislada en demoAuthAdapter. El
+    // éxito queda etiquetado como local (perfil.pwd_guardada) para no
+    // fingir un cambio de contraseña real.
+    const demoCheck = verifyDemoRolePassword(selectedRole, pwdActual);
+    if (!demoCheck.ok) { setPwdError(tx("perfil.pwd_error_vacia")); return; }
+
+    setPwdMsg(tx("perfil.pwd_guardada"));
+    setPwdActual(""); setPwdNueva(""); setPwdConfirmar("");
+  }
+
+  // Métricas demo por rol
+  const demoMetrics = {
+    PLAYER:  { partidos:24, reservas:31, torneos:3,  ranking:12,  actividad:"Alta",     valoracion:4.2, fiabilidad:96, racha:5  },
+    STAFF:   { partidos:8,  reservas:187,torneos:1,  ranking:"—", actividad:"Muy alta", valoracion:4.8, fiabilidad:99, racha:12 },
+    ADMIN:   { partidos:4,  reservas:312,torneos:5,  ranking:"—", actividad:"Alta",     valoracion:5.0, fiabilidad:100,racha:21 },
+    SUPPORT: { partidos:2,  reservas:98, torneos:0,  ranking:"—", actividad:"Media",    valoracion:4.6, fiabilidad:98, racha:7  },
+  };
+  const metrics = demoMetrics[selectedRole] || demoMetrics.PLAYER;
+
+  // Insignias y logros
+  const allBadges = [
+    { id:"puntual",    icon:"⏱️",  label:"Jugador puntual",    desc:"Siempre en hora",          earned:true },
+    { id:"activo",     icon:"🔥",  label:"Participante activo",desc:"Alto nivel de actividad",  earned:metrics.actividad==="Alta"||metrics.actividad==="Muy alta" },
+    { id:"torneo",     icon:"🏆",  label:"Torneo completado",  desc:"Ha participado en torneos",earned:metrics.torneos>0 },
+    { id:"companero",  icon:"🤝",  label:"Buen compañero",     desc:"Valoración alta",          earned:metrics.valoracion>=4.0 },
+    { id:"racha",      icon:"📅",  label:"Racha semanal",      desc:"7+ días activo",           earned:metrics.racha>=7 },
+    { id:"completo",   icon:"✅",  label:"Perfil completo",    desc:"Perfil al 100%",           earned:completeness===100 },
+    { id:"verificado", icon:"🎖️", label:"Nivel verificado",   desc:"Nivel confirmado",         earned:!!deporteData.nivel },
+    { id:"frecuente",  icon:"📌",  label:"Reserva frecuente",  desc:"10+ reservas realizadas",  earned:metrics.reservas>=10 },
+  ];
+
+  // Actividad reciente demo
+  const recentActivity = [
+    { icon:"🎾", desc:"Pista 1 · 10:00 h · 90 min",       fecha:"Hoy" },
+    { icon:"🏆", desc:"Torneo interno · Semifinal",         fecha:"Hace 3 días" },
+    { icon:"🎾", desc:"Pista 3 · 18:00 h · 60 min",       fecha:"Hace 5 días" },
+    { icon:"🔥", desc:"Racha activa de "+metrics.racha+" días", fecha:"Esta semana" },
+  ];
+
+  const isPlayer  = selectedRole === "PLAYER";
+  const isStaff   = selectedRole === "STAFF";
+  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+  const sportLevel = deporteData.nivel || (selectedRole==="ADMIN"?"Directivo":selectedRole==="STAFF"?"Interno":selectedRole==="SUPPORT"?"Técnico":"Sin definir");
+
+  // Estilos reutilizables
+  const cs = { background:T.surface2, borderRadius:20, padding:"22px 24px", border:`1px solid ${T.line}` };
+  const ls = { color:T.textDim, fontWeight:700, fontSize:".8rem", letterSpacing:".06em", textTransform:"uppercase", marginBottom:6, display:"block" };
+  const ss = { background:T.surface3, border:`1px solid ${T.line}`, borderRadius:10, color:T.text, padding:"10px 14px", width:"100%", fontSize:".93rem" };
+  const hs = { margin:0, color:T.accent, fontFamily:T.fontDisplay, fontSize:"1rem", letterSpacing:".04em" };
+  const accentGlow = `0 0 20px ${T.accent}30`;
+
+  const complColor = completeness===100 ? T.accent : completeness>=60 ? T.warning : T.danger;
+  const complLabel = completeness===100 ? "✓ Perfil completo" : `${completeness}% completado`;
+
+  return (
+    <div style={{ padding:"42px 24px", maxWidth:1180, margin:"0 auto" }}>
+
+      {/* ── CABECERA DE PERFIL PREMIUM ── */}
+      <div style={{ background:`linear-gradient(135deg,${T.surface2} 0%,${T.surface3} 100%)`, borderRadius:24, padding:"32px 32px 28px", border:`1px solid ${T.line}`, marginBottom:28, position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", top:0, right:0, width:240, height:240, background:`radial-gradient(circle,${T.accent}15 0%,transparent 70%)`, pointerEvents:"none" }} />
+        <div style={{ display:"flex", alignItems:"flex-start", gap:24, flexWrap:"wrap", position:"relative", zIndex:1 }}>
+
+          {/* Avatar */}
+          <div style={{ position:"relative", flexShrink:0 }}>
+            {avatarSrc
+              ? <img src={avatarSrc} alt="Avatar" style={{ width:96, height:96, borderRadius:"50%", objectFit:"cover", border:`3px solid ${T.accent}`, boxShadow:accentGlow }} />
+              : <div style={{ width:96, height:96, borderRadius:"50%", background:`linear-gradient(135deg,${T.accent}30,${T.primary}40)`, border:`3px solid ${T.accent}55`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"2rem", fontWeight:900, color:T.accent, fontFamily:T.fontDisplay, boxShadow:accentGlow }}>
+                  {initials}
+                </div>
+            }
+            <div style={{ position:"absolute", bottom:3, right:3, width:16, height:16, borderRadius:"50%", background:T.accent, border:`2px solid ${T.surface2}` }} title="Activo" />
+          </div>
+
+          {/* Info principal */}
+          <div style={{ flex:1, minWidth:200 }}>
+            <div style={{ fontSize:".72rem", color:T.accent, fontWeight:800, letterSpacing:".12em", textTransform:"uppercase", marginBottom:4 }}>{roleProfileLabel}</div>
+            <h2 style={{ margin:"0 0 4px", fontSize:"1.5rem", fontFamily:T.fontDisplay, color:T.text, fontWeight:900 }}>
+              {roleLabels[selectedRole] || selectedRole}
+            </h2>
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center", marginTop:8 }}>
+              <span style={{ background:T.surface3, border:`1px solid ${T.line}`, borderRadius:8, padding:"3px 10px", fontSize:".78rem", color:T.textDim }}>
+                Nivel: <strong style={{ color:T.text }}>{sportLevel}</strong>
+              </span>
+              <span style={{ background:`${complColor}18`, border:`1px solid ${complColor}55`, borderRadius:8, padding:"3px 10px", fontSize:".78rem", color:complColor, fontWeight:700 }}>
+                {complLabel}
+              </span>
+            </div>
+            {bio && !bioEdit && (
+              <p style={{ color:T.textDim, fontSize:".86rem", lineHeight:1.6, margin:"12px 0 0", maxWidth:520, fontStyle:"italic" }}>"{bio}"</p>
+            )}
+          </div>
+
+          {/* Barra de completitud */}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:5, minWidth:130, flexShrink:0 }}>
+            <span style={{ color:T.textDim, fontSize:".72rem", fontWeight:700, letterSpacing:".06em", textTransform:"uppercase" }}>{tx("perfil.completitud_titulo")}</span>
+            <div style={{ width:130, height:7, background:T.surface3, borderRadius:8, overflow:"hidden" }}>
+              <div style={{ width:`${completeness}%`, height:"100%", background:`linear-gradient(90deg,${T.primary},${T.accent})`, transition:"width .7s cubic-bezier(.4,0,.2,1)" }} />
+            </div>
+            <span style={{ color:complColor, fontSize:".85rem", fontWeight:800 }}>{completeness}%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── GRID PRINCIPAL ── */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(330px,1fr))", gap:20, marginBottom:20 }}>
+
+        {/* FOTO DE PERFIL */}
+        <div style={cs}>
+          <h3 style={hs}>📷 {tx("perfil.avatar_cambiar")}</h3>
+          <div style={{ display:"flex", flexDirection:"column", gap:12, marginTop:14 }}>
+            {avatarPreview ? (
+              <div style={{ textAlign:"center" }}>
+                <img src={avatarPreview} alt="Vista previa" style={{ width:80, height:80, borderRadius:"50%", objectFit:"cover", border:`2px solid ${T.warning}`, marginBottom:8 }} />
+                <div style={{ color:T.warning, fontSize:".75rem", marginBottom:10 }}>Vista previa — aún no guardada</div>
+                <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
+                  <Btn onClick={handleAvatarSave} style={{ fontSize:".82rem", padding:"7px 18px" }}>Guardar foto</Btn>
+                  <Btn variant="secondary" onClick={() => setAvatarPreview(null)} style={{ fontSize:".82rem", padding:"7px 18px" }}>Descartar</Btn>
+                </div>
+              </div>
+            ) : (
+              <>
+                <label style={{ cursor:"pointer", display:"block" }}>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarChange} style={{ display:"none" }} />
+                  <div
+                    style={{ border:`2px dashed ${T.line}`, borderRadius:14, padding:"18px 14px", textAlign:"center", color:T.textDim, fontSize:".86rem", cursor:"pointer", transition:"border-color .2s,color .2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor=T.accent; e.currentTarget.style.color=T.text; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=T.line; e.currentTarget.style.color=T.textDim; }}
+                  >
+                    📁 Seleccionar imagen &nbsp;·&nbsp; JPG, PNG, WEBP &nbsp;·&nbsp; máx 5 MB
+                  </div>
+                </label>
+                {avatarSrc && !showDelConfirm && (
+                  <Btn variant="secondary" onClick={() => setShowDelConfirm(true)} style={{ fontSize:".82rem" }}>{tx("perfil.avatar_eliminar")}</Btn>
+                )}
+                {showDelConfirm && (
+                  <div style={{ background:`${T.danger}18`, border:`1px solid ${T.danger}55`, borderRadius:12, padding:"12px 14px" }}>
+                    <div style={{ color:T.danger, fontWeight:700, fontSize:".85rem", marginBottom:10 }}>{tx("perfil.avatar_confirmar_del")}</div>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <Btn variant="danger" onClick={handleAvatarDelete} style={{ fontSize:".82rem", padding:"6px 16px" }}>Sí, eliminar</Btn>
+                      <Btn variant="secondary" onClick={() => setShowDelConfirm(false)} style={{ fontSize:".82rem", padding:"6px 16px" }}>Cancelar</Btn>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            {avatarError && <div style={{ color:T.danger, fontWeight:700, fontSize:".83rem" }}>{avatarError}</div>}
+            {avatarMsg  && <div style={{ color:T.accent, fontWeight:700, fontSize:".83rem" }}>{avatarMsg}</div>}
+          </div>
+        </div>
+
+        {/* SESIÓN Y ROL */}
+        <div style={cs}>
+          <h3 style={{ ...hs, display:"flex", alignItems:"center", gap:8 }}><IconBolt size={18} color={T.accent} /> {tx("perfil.sesion")}</h3>
+          <div style={{ display:"flex", flexDirection:"column", gap:10, marginTop:14 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ color:T.textDim, fontSize:".86rem" }}>{tx("perfil.rol_actual")}</span>
+              <span style={{ color:T.accent, background:"rgba(182,255,0,.1)", border:"1px solid rgba(182,255,0,.3)", borderRadius:999, padding:"3px 12px", fontSize:".78rem", fontWeight:900, letterSpacing:".04em" }}>{roleLabels[selectedRole]||selectedRole}</span>
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ color:T.textDim, fontSize:".86rem" }}>{tx("perfil.idioma")}</span>
+              <strong style={{ color:T.text, fontSize:".88rem" }}>{lang && lang.label ? lang.label : "Español"}</strong>
+            </div>
+            <div style={{ borderTop:`1px solid ${T.line}`, paddingTop:12, marginTop:4 }}>
+              <LanguageSelector />
+            </div>
+            {auth.isAuthenticated && (
+              <div style={{
+                marginTop:8,
+                marginBottom:6,
+                padding:"9px 10px",
+                borderRadius:12,
+                border:`1px solid rgba(182,255,0,.28)`,
+                background:"rgba(182,255,0,.07)",
+                color:T.text,
+                fontSize:".78rem",
+                lineHeight:1.45
+              }}>
+                <strong style={{ color:T.accent }}>Autenticación real:</strong> Supabase conectado
+                {auth.user?.email && (
+                  <div style={{ marginTop:6, maxWidth:"100%" }}>
+                    <div style={{ color:T.textDim, fontSize:".72rem", marginBottom:2 }}>
+                      Email:
+                    </div>
+                    <div style={{
+                      color:T.textDim,
+                      fontSize:".72rem",
+                      lineHeight:1.35,
+                      whiteSpace:"normal",
+                      wordBreak:"break-all",
+                      overflowWrap:"anywhere",
+                      maxWidth:"100%"
+                    }}>
+                      {auth.user.email}
+                    </div>
+                  </div>
+                )}
+
+                {auth.user && (() => {
+                  const realRole = auth.role || "";
+                  const realPermissions = Array.isArray(auth.user?.permissions) ? auth.user.permissions : [];
+
+                  return (
+                    <div style={{ marginTop:8, maxWidth:"100%" }}>
+                      {realRole && (
+                        <div style={{ color:T.textDim, fontSize:".72rem", lineHeight:1.35 }}>
+                          <strong style={{ color:T.accent }}>Rol real:</strong> {realRole}
+                        </div>
+                      )}
+
+                      {realPermissions.length > 0 && (
+                        <div style={{ marginTop:5 }}>
+                          <div style={{ color:T.textDim, fontSize:".72rem", marginBottom:4 }}>
+                            Permisos reales:
+                          </div>
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                            {realPermissions.map((permission) => (
+                              <span key={permission} style={{
+                                padding:"3px 6px",
+                                borderRadius:999,
+                                border:"1px solid rgba(182,255,0,.22)",
+                                background:"rgba(0,0,0,.18)",
+                                color:T.textDim,
+                                fontSize:".68rem",
+                                lineHeight:1.2,
+                                maxWidth:"100%",
+                                overflowWrap:"anywhere"
+                              }}>
+                                {permission}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+            <Btn variant="secondary" onClick={onClearRole} style={{ marginTop:8, width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}><IconLogout size={17} /> {tx("perfil.cerrar_sesion")}</Btn>
+            {onOpenTutorial && (
+              <Btn variant="secondary" data-tour="perfil-tutorial-btn" onClick={onOpenTutorial} style={{ marginTop:6, width:"100%", borderColor:"rgba(182,255,0,.32)", color:"#b6ff00" }}>🎯 Ver tutorial rápido</Btn>
+            )}
+          </div>
+        </div>
+
+        {/* PRESENTACIÓN / BIO — jugador y staff */}
+        {(isPlayer || isStaff) && (
+          <div style={cs}>
+            <h3 style={hs}>✍️ {tx("perfil.bio_titulo")}</h3>
+            <div style={{ marginTop:14 }}>
+              {!bioEdit ? (
+                <>
+                  {bio
+                    ? <p style={{ color:T.text, fontSize:".9rem", lineHeight:1.65, margin:"0 0 14px" }}>"{bio}"</p>
+                    : <p style={{ color:T.textDim, fontSize:".84rem", fontStyle:"italic", margin:"0 0 14px", lineHeight:1.6 }}>{tx("perfil.bio_placeholder")}</p>
+                  }
+                  {bioMsg && <div style={{ color:T.accent, fontWeight:700, fontSize:".82rem", marginBottom:8 }}>{bioMsg}</div>}
+                  <Btn onClick={startBioEdit} variant="secondary" style={{ fontSize:".82rem" }}>{tx("perfil.bio_editar")}</Btn>
+                </>
+              ) : (
+                <>
+                  <textarea
+                    value={bioDraft}
+                    onChange={e => setBioDraft(e.target.value.slice(0,BIO_MAX))}
+                    placeholder={tx("perfil.bio_placeholder")}
+                    rows={4}
+                    style={{ width:"100%", background:T.surface3, border:`1px solid ${T.line}`, borderRadius:10, color:T.text, padding:"10px 12px", fontSize:".9rem", resize:"vertical", lineHeight:1.6, boxSizing:"border-box", fontFamily:T.fontBody }}
+                    autoFocus
+                  />
+                  <div style={{ textAlign:"right", fontSize:".75rem", color:bioDraft.length>BIO_MAX*0.9?T.warning:T.textDim, marginTop:4 }}>
+                    {bioDraft.length}/{BIO_MAX} {tx("perfil.bio_chars")}
+                  </div>
+                  <div style={{ display:"flex", gap:8, marginTop:10 }}>
+                    <Btn onClick={saveBio} disabled={!bioDraft.trim()||bioDraft.length>BIO_MAX} style={{ fontSize:".82rem" }}>{tx("perfil.bio_guardar")}</Btn>
+                    <Btn variant="secondary" onClick={cancelBioEdit} style={{ fontSize:".82rem" }}>{tx("perfil.bio_cancelar")}</Btn>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* DATOS DEPORTIVOS — solo jugador */}
+        {isPlayer && (
+          <div style={cs}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+              <h3 style={hs}>🎾 {tx("perfil.deporte_titulo")}</h3>
+              {!deporteEditing && (
+                <Btn variant="secondary" onClick={startDeporteEdit} style={{ fontSize:".78rem", padding:"4px 12px" }}>Editar</Btn>
+              )}
+            </div>
+            {!deporteEditing ? (
+              <div style={{ display:"grid", gap:8 }}>
+                {[
+                  [tx("perfil.deporte_mano"),           deporteData.mano],
+                  [tx("perfil.deporte_posicion"),       deporteData.posicion],
+                  [tx("perfil.deporte_nivel"),          deporteData.nivel],
+                  [tx("perfil.deporte_disponibilidad"), deporteData.disponibilidad],
+                  [tx("perfil.deporte_objetivo"),       deporteData.objetivo],
+                  [tx("perfil.deporte_busqueda"),       deporteData.busqueda],
+                ].map(([label, val]) => (
+                  <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid ${T.line}` }}>
+                    <span style={{ color:T.textDim, fontSize:".82rem" }}>{label}</span>
+                    <strong style={{ color:val?T.text:T.textDim, fontSize:".85rem" }}>{val || "—"}</strong>
+                  </div>
+                ))}
+                {deporteMsg && <div style={{ color:T.accent, fontWeight:700, fontSize:".82rem", marginTop:4 }}>{deporteMsg}</div>}
+              </div>
+            ) : (
+              <div style={{ display:"grid", gap:10 }}>
+                {[
+                  { key:"mano",           label:tx("perfil.deporte_mano"),           opts:["Derecha","Izquierda","Ambas"] },
+                  { key:"posicion",       label:tx("perfil.deporte_posicion"),       opts:["Derecha","Revés","Ambas"] },
+                  { key:"nivel",          label:tx("perfil.deporte_nivel"),          opts:["Iniciación","Intermedio","Avanzado","Competición"] },
+                  { key:"disponibilidad", label:tx("perfil.deporte_disponibilidad"), opts:["Mañanas","Tardes","Noches","Fines de semana","Flexible"] },
+                  { key:"tipo_partida",   label:tx("perfil.deporte_tipo_partida"),   opts:["Amistosa","Competitiva","Torneo","Entrenamiento"] },
+                  { key:"objetivo",       label:tx("perfil.deporte_objetivo"),       opts:["Mejorar nivel","Competir","Jugar socialmente","Encontrar pareja"] },
+                  { key:"busqueda",       label:tx("perfil.deporte_busqueda"),       opts:["Disponible para partidos","No disponible","Solo torneos","Buscando pareja"] },
+                ].map(({ key, label, opts }) => (
+                  <div key={key}>
+                    <label style={ls}>{label}</label>
+                    <select value={deporteDraft[key]||""} onChange={e => setDeporteDraft(p => ({...p,[key]:e.target.value}))} style={ss}>
+                      <option value="">— Sin definir —</option>
+                      {opts.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                ))}
+                <div style={{ display:"flex", gap:8, marginTop:4 }}>
+                  <Btn onClick={saveDeporte} style={{ fontSize:".82rem" }}>{tx("perfil.deporte_guardar")}</Btn>
+                  <Btn variant="secondary" onClick={cancelDeporteEdit} style={{ fontSize:".82rem" }}>{tx("perfil.bio_cancelar")}</Btn>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CAMBIAR CONTRASEÑA */}
+        <div style={cs}>
+          <h3 style={hs}>🔐 {tx("perfil.cambiar_pwd")}</h3>
+          <p style={{ color:T.textDim, fontSize:".8rem", marginBottom:14, lineHeight:1.5, marginTop:10 }}>
+            Modo demo local. En producción se validará desde backend de autenticación segura.
+          </p>
+          <form onSubmit={handleChangePwd} style={{ display:"grid", gap:10 }}>
+            <input type="password" placeholder={tx("perfil.pwd_actual")} value={pwdActual} onChange={e=>setPwdActual(e.target.value)} autoComplete="current-password" />
+            <input type="password" placeholder={tx("perfil.pwd_nueva")} value={pwdNueva} onChange={e=>setPwdNueva(e.target.value)} autoComplete="new-password" />
+            <input type="password" placeholder={tx("perfil.pwd_confirmar")} value={pwdConfirmar} onChange={e=>setPwdConfirmar(e.target.value)} autoComplete="new-password" />
+            {pwdError && <div style={{ color:T.danger, fontWeight:700, fontSize:".85rem" }}>{pwdError}</div>}
+            {pwdMsg   && <div style={{ color:T.accent, fontWeight:700, fontSize:".85rem" }}>{pwdMsg}</div>}
+            <Btn type="submit" style={{ marginTop:4 }}>{tx("perfil.cambiar_pwd")}</Btn>
+          </form>
+        </div>
+      </div>
+
+      {/* ── MÉTRICAS DEPORTIVAS ── */}
+      <div style={{ marginBottom:24 }}>
+        <h3 style={{ color:T.text, fontFamily:T.fontDisplay, fontSize:"1.05rem", marginBottom:14, letterSpacing:".04em" }}>📊 {tx("perfil.metricas_titulo")}</h3>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(145px,1fr))", gap:12 }}>
+          {[
+            { icon:"🎾", label:tx("perfil.metricas_partidos"),  value:metrics.partidos },
+            { icon:"📋", label:tx("perfil.metricas_reservas"),  value:metrics.reservas },
+            { icon:"🏆", label:tx("perfil.metricas_torneos"),   value:metrics.torneos },
+            { icon:"📈", label:tx("perfil.metricas_ranking"),   value:typeof metrics.ranking==="number"?"#"+metrics.ranking:metrics.ranking },
+            { icon:"⚡", label:tx("perfil.metricas_actividad"), value:metrics.actividad },
+            { icon:"⭐", label:tx("perfil.metricas_valoracion"),value:metrics.valoracion+"/5" },
+            { icon:"✅", label:tx("perfil.metricas_fiabilidad"),value:metrics.fiabilidad+"%" },
+            { icon:"🔥", label:tx("perfil.metricas_racha"),     value:metrics.racha+" días" },
+          ].map(({ icon, label, value }) => (
+            <div key={label} style={{ background:T.surface2, border:`1px solid ${T.line}`, borderRadius:16, padding:"16px 14px", textAlign:"center" }}>
+              <div style={{ fontSize:"1.4rem", marginBottom:6 }}>{icon}</div>
+              <div style={{ color:T.text, fontWeight:900, fontSize:"1.1rem", fontFamily:T.fontDisplay }}>{value}</div>
+              <div style={{ color:T.textDim, fontSize:".7rem", marginTop:4, letterSpacing:".03em", lineHeight:1.3 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── MOMENTOS DEL JUGADOR — solo jugador ── */}
+      {isPlayer && (
+        <div style={{ marginBottom:24 }}>
+          <h3 style={{ color:T.text, fontFamily:T.fontDisplay, fontSize:"1.05rem", marginBottom:14, letterSpacing:".04em" }}>🗓️ {tx("perfil.historial_titulo")}</h3>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:12 }}>
+            {recentActivity.map((act, i) => (
+              <div key={i} style={{ background:T.surface2, border:`1px solid ${T.line}`, borderRadius:14, padding:"14px 16px", display:"flex", gap:14, alignItems:"flex-start" }}>
+                <div style={{ fontSize:"1.4rem", flexShrink:0 }}>{act.icon}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ color:T.text, fontSize:".86rem", fontWeight:700, marginBottom:2 }}>{act.desc}</div>
+                  <div style={{ color:T.textDim, fontSize:".74rem" }}>{act.fecha}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── INSIGNIAS Y LOGROS ── */}
+      <div style={{ marginBottom:24 }}>
+        <h3 style={{ color:T.text, fontFamily:T.fontDisplay, fontSize:"1.05rem", marginBottom:14, letterSpacing:".04em" }}>🎖️ {tx("perfil.insignias_titulo")}</h3>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(138px,1fr))", gap:10 }}>
+          {allBadges.map(badge => (
+            <div key={badge.id} style={{ background:badge.earned?`${T.accent}12`:T.surface2, border:`1px solid ${badge.earned?T.accent+"44":T.line}`, borderRadius:14, padding:"14px 12px", textAlign:"center", opacity:badge.earned?1:0.4, transition:"all .2s" }}>
+              <div style={{ fontSize:"1.6rem", marginBottom:6 }}>{badge.icon}</div>
+              <div style={{ color:badge.earned?T.accent:T.textDim, fontWeight:800, fontSize:".77rem", lineHeight:1.35, marginBottom:4 }}>{badge.label}</div>
+              <div style={{ color:T.textDim, fontSize:".68rem", lineHeight:1.4 }}>{badge.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── PRIVACIDAD ── */}
+      <div style={{ marginBottom:24 }}>
+        <div style={cs}>
+          <h3 style={{ ...hs, marginBottom:10 }}>🔒 {tx("perfil.privacidad_config")}</h3>
+          <p style={{ color:T.textDim, fontSize:".82rem", marginBottom:18, lineHeight:1.5 }}>{tx("perfil.privacidad_desc")}</p>
+          <div style={{ display:"grid", gap:10 }}>
+            {[
+              { key:"perfil_visible",  label:tx("perfil.privacidad_perfil_visible"),  def:true  },
+              { key:"mostrar_nivel",   label:tx("perfil.privacidad_nivel"),            def:true  },
+              { key:"mostrar_disp",    label:tx("perfil.privacidad_disponibilidad"),   def:isPlayer },
+              { key:"mostrar_stats",   label:tx("perfil.privacidad_stats"),            def:true  },
+              { key:"invitaciones",    label:tx("perfil.privacidad_invitaciones"),     def:isPlayer },
+              { key:"recomendaciones", label:tx("perfil.privacidad_recomendaciones"), def:isPlayer },
+            ].map(({ key, label, def }) => {
+              const val = privacidad[key] !== undefined ? privacidad[key] : def;
+              return (
+                <div key={key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${T.line}` }}>
+                  <span style={{ color:T.text, fontSize:".86rem" }}>{label}</span>
+                  <button
+                    onClick={() => togglePriv(key, def)}
+                    style={{ background:val?T.accent:T.surface3, border:`1px solid ${val?T.accent:T.line}`, borderRadius:20, width:44, height:24, cursor:"pointer", position:"relative", transition:"all .2s", flexShrink:0 }}
+                    aria-label={label}
+                    type="button"
+                  >
+                    <div style={{ position:"absolute", top:3, left:val?22:3, width:16, height:16, borderRadius:"50%", background:val?T.surface:T.textDim, transition:"left .2s" }} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          {privMsg && <div style={{ color:T.accent, fontWeight:700, fontSize:".82rem", marginTop:12 }}>{privMsg}</div>}
+          <p style={{ color:T.textDim, fontSize:".76rem", lineHeight:1.6, marginTop:16, borderTop:`1px solid ${T.line}`, paddingTop:12 }}>
+            {tx("perfil.info_demo")} En producción real se aplicará política de privacidad completa conforme al RGPD / normativa aplicable.
+          </p>
+        </div>
+      </div>
+
+      {/* ── MIS DERECHOS GDPR (flujo #9, Make 6323457) ── */}
+      <div style={{ marginBottom:24 }}>
+        <div style={cs}>
+          <h3 style={{ ...hs, marginBottom:10, display:"flex", alignItems:"center", gap:8 }}><IconShieldCheck size={20} color={T.accent} /> Mis derechos GDPR</h3>
+          <p style={{ color:T.textDim, fontSize:".82rem", marginBottom:18, lineHeight:1.5 }}>
+            Solicita una copia de tus datos personales o pide su eliminación, conforme al RGPD.
+          </p>
+
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+            <Btn variant="secondary" onClick={handleGdprAcceso} disabled={gdprAccesoLoading}>
+              {gdprAccesoLoading ? "Consultando…" : "Solicitar mis datos"}
+            </Btn>
+            <Btn variant="danger" onClick={() => setGdprOlvidoConfirming(true)} disabled={gdprOlvidoLoading}>
+              Solicitar eliminación de mis datos
+            </Btn>
+          </div>
+
+          {gdprAccesoError && <StatusCard status="error" text={gdprAccesoError} style={{ marginTop:12 }} />}
+          {gdprAccesoResult && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.line}`, borderRadius:12, fontSize:".82rem", lineHeight:1.6 }}>
+              <div style={{ color:T.text, fontWeight:700, marginBottom:6 }}>Datos generados el {new Date(gdprAccesoResult.generado_en).toLocaleString()}</div>
+              <div style={{ color:T.textDim }}>Identidad: {gdprAccesoResult.datos.identidad.disponible ? "disponible" : `no disponible (${gdprAccesoResult.datos.identidad.motivo})`}</div>
+              <div style={{ color:T.textDim }}>Reservas: {gdprAccesoResult.datos.reservas.disponible ? `${gdprAccesoResult.datos.reservas.registros.length} registro(s)` : `no disponible (${gdprAccesoResult.datos.reservas.motivo})`}</div>
+              <div style={{ color:T.textDim }}>Lista de espera / competiciones / logs: no disponibles todavía (fuente no configurada en este entorno).</div>
+              <div style={{ color:T.textDim, fontSize:".74rem", marginTop:8 }}>
+                Registro en Make: {gdprAccesoResult.auditoria.registrado_en_make ? "sí" : `no — ${gdprAccesoResult.auditoria.detalle}`}
+              </div>
+            </div>
+          )}
+
+          {gdprOlvidoConfirming && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.danger}66`, borderRadius:12 }}>
+              <p style={{ color:T.text, fontWeight:700, fontSize:".86rem", marginTop:0, marginBottom:6 }}>
+                ¿Seguro que quieres solicitar la eliminación de tus datos?
+              </p>
+              <p style={{ color:T.textDim, fontSize:".8rem", lineHeight:1.5, marginBottom:14 }}>
+                Esto NO es lo mismo que darte de baja del club. Se registrará tu solicitud para revisión
+                (comprobación de reservas futuras y otras dependencias antes de ejecutar nada) — no se borra nada al instante.
+              </p>
+              <div style={{ display:"flex", gap:10 }}>
+                <Btn variant="danger" onClick={handleGdprOlvido} disabled={gdprOlvidoLoading}>
+                  {gdprOlvidoLoading ? "Enviando…" : "Sí, solicitar eliminación"}
+                </Btn>
+                <Btn variant="secondary" onClick={() => setGdprOlvidoConfirming(false)} disabled={gdprOlvidoLoading}>
+                  Cancelar
+                </Btn>
+              </div>
+            </div>
+          )}
+
+          {gdprOlvidoError && <StatusCard status="error" text={gdprOlvidoError} style={{ marginTop:12 }} />}
+          {gdprOlvidoResult && (
+            <div style={{ marginTop:16, padding:14, border:`1px solid ${T.line}`, borderRadius:12, fontSize:".82rem", lineHeight:1.6 }}>
+              <div style={{ color:T.text, fontWeight:700, marginBottom:6 }}>Solicitud registrada — estado: {gdprOlvidoResult.estado}</div>
+              {gdprOlvidoResult.dependencias?.reservas_futuras?.verificable && (
+                <div style={{ color:T.textDim }}>Reservas futuras detectadas: {gdprOlvidoResult.dependencias.reservas_futuras.cantidad}</div>
+              )}
+              <div style={{ color:T.textDim }}>Lista de espera: no verificable en este entorno (requiere revisión manual).</div>
+              <div style={{ color:T.textDim, fontSize:".74rem", marginTop:8 }}>
+                Registro en Make: {gdprOlvidoResult.auditoria.registrado_en_make ? "sí" : `no — ${gdprOlvidoResult.auditoria.detalle}`}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── NOTIFICACIONES ── */}
+      <div style={cs}>
+        <h3 style={{ ...hs, marginBottom:10 }}>🔔 {tx("perfil.notificaciones")}</h3>
+        <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:14 }}>{tx("perfil.notif_desc")}</p>
+        <div style={{ padding:"12px 16px", border:`1px dashed ${T.line}`, borderRadius:14, color:T.textDim, fontSize:".84rem", lineHeight:1.7 }}>
+          Confirmaciones de reserva &nbsp;·&nbsp; recordatorios de partido &nbsp;·&nbsp; torneos &nbsp;·&nbsp; cambios de horario
+          <div style={{ marginTop:6, fontSize:".75rem", color:T.textDim }}>
+            Preparado para integración con correo y mensajería desde backend real.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+// ============================================================
+// PWA status banners: offline / actualización disponible
+// ============================================================
+// Independientes de auth/rol a propósito: deben poder verse tanto en la
+// pantalla de login como dentro de la app ya autenticada. No leen ni
+// escriben ningún estado de sesión/rol.
+function PwaStatusBanners() {
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+  const [checkingConnection, setCheckingConnection] = useState(false);
+  const [updateRegistration, setUpdateRegistration] = useState(null);
+
+  useEffect(() => {
+    function goOffline() { setIsOffline(true); }
+    function goOnline() { setIsOffline(false); }
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, []);
+
+  useEffect(() => {
+    function onUpdateAvailable(event) { setUpdateRegistration(event.detail?.registration || null); }
+    window.addEventListener("cp04:sw-update-available", onUpdateAvailable);
+    return () => window.removeEventListener("cp04:sw-update-available", onUpdateAvailable);
+  }, []);
+
+  async function retryConnection() {
+    setCheckingConnection(true);
+    try {
+      await fetch("/favicon.svg", { method: "HEAD", cache: "no-store" });
+      setIsOffline(false);
+    } catch {
+      setIsOffline(true);
+    } finally {
+      setCheckingConnection(false);
+    }
+  }
+
+  function applyUpdate() {
+    const waiting = updateRegistration?.waiting;
+    if (!waiting) return;
+    waiting.postMessage({ type: "SKIP_WAITING" });
+    setUpdateRegistration(null);
+  }
+
+  if (!isOffline && !updateRegistration) return null;
+
+  // Prompt 4 (Mejora 2.6, 2026-07-26): el botón interno usaba
+  // background:"rgba(0,0,0,.12)" — sobre el fondo de aviso (T.danger o
+  // T.accent) eso da contraste 4.02:1, justo por debajo del 4.5:1 de
+  // WCAG AA (medido). Quitado el overlay: el texto hereda directamente
+  // el color ya elegido a propósito para cada fondo (>6:1 medido).
+  return (
+    <div style={{ position: "sticky", top: 0, zIndex: 200, display: "flex", flexDirection: "column", gap: 2 }}>
+      {isOffline && (
+        <div role="status" aria-live="polite" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 12, padding: "10px 16px", background: T.danger, color: "#2a0700", fontWeight: 800, fontSize: ".85rem", textAlign: "center" }}>
+          <span>Sin conexión a internet. Algunas funciones pueden no estar disponibles.</span>
+          <button
+            type="button"
+            onClick={retryConnection}
+            disabled={checkingConnection}
+            style={{ minHeight: 36, padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,.3)", background: "transparent", color: "inherit", fontWeight: 800, cursor: checkingConnection ? "wait" : "pointer" }}
+          >
+            {checkingConnection ? "Comprobando…" : "Reintentar"}
+          </button>
+        </div>
+      )}
+      {!isOffline && updateRegistration && (
+        <div role="status" aria-live="polite" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 12, padding: "10px 16px", background: T.accent, color: "#06100a", fontWeight: 800, fontSize: ".85rem", textAlign: "center" }}>
+          <span>Hay una nueva versión de Club Pádel 04 disponible.</span>
+          <button
+            type="button"
+            onClick={applyUpdate}
+            style={{ minHeight: 36, padding: "6px 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,.3)", background: "transparent", color: "inherit", fontWeight: 800, cursor: "pointer" }}
+          >
+            Actualizar ahora
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ClubPadel04SaaSApp() {
+  const auth = useAuth();
   const [current, setCurrent] = useState("inicio");
+  const [selectedRole, setSelectedRole] = useState(() => localStorage.getItem("cp04_role") || "");
+  // Landing comercial premium (auditoría Premium V2, 2026-09-03): antes el
+  // primer contacto era directamente el login. Se enseña solo mientras no
+  // haya rol/sesión y el visitante no haya pulsado ya "Iniciar sesión"/
+  // "Acceso para clubes ya clientes" en esta pestaña — no depende de
+  // localStorage a propósito: cada visita nueva vuelve a ver la landing.
+  const [showLanding, setShowLanding] = useState(true);
+  const [pendingRole, setPendingRole] = useState("");
+  const [rolePassword, setRolePassword] = useState("");
+  const [showRolePassword, setShowRolePassword] = useState(false);
+  const [rememberRole, setRememberRole] = useState(true);
+  const [roleError, setRoleError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tutorialMenuOpen, setTutorialMenuOpen] = useState(false);
+  const [tutorialRevision, setTutorialRevision] = useState(0);
+  const [forgotPwdStep, setForgotPwdStep] = useState("idle");
+  const [forgotPwdEmail, setForgotPwdEmail] = useState("");
+  const [forgotPwdEmailError, setForgotPwdEmailError] = useState("");
+
+  // Recovery callback: token capturado del hash de URL (type=recovery).
+  // NUNCA se persiste en localStorage/sessionStorage.
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [recoveryToken, setRecoveryToken] = useState(null);
+  const [recoveryStep, setRecoveryStep] = useState("form"); // "form"|"loading"|"success"|"error"
+  const [recoveryPwd, setRecoveryPwd] = useState("");
+  const [recoveryPwdConfirm, setRecoveryPwdConfirm] = useState("");
+  const [recoveryError, setRecoveryError] = useState("");
+  const [showRecoveryPwd, setShowRecoveryPwd] = useState(false);
+  const [showRecoveryPwdConfirm, setShowRecoveryPwdConfirm] = useState(false);
+
+  // Login universal preparado para producción.
+  // Mantiene los perfiles demo internos sin obligar a usuarios reales a usar correos fijos.
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
+  const [registerOpen, setRegisterOpen] = useState(() => localStorage.getItem("cp04_register_open") === "true");
+  const [registerName, setRegisterName] = useState(() => localStorage.getItem("cp04_register_name") || "");
+  const [registerEmail, setRegisterEmail] = useState(() => localStorage.getItem("cp04_register_email") || "");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerConfirm, setRegisterConfirm] = useState("");
+  const [registerError, setRegisterError] = useState("");
+  const [registerDone, setRegisterDone] = useState(() => localStorage.getItem("cp04_register_done") === "true");
+
+  // La restauración de sesión real (¿sigue siendo válido el token guardado?)
+  // ya no vive aquí: la posee AuthContext (src/auth/AuthContext.jsx), que la
+  // dispara una sola vez al montar la app completa. Este efecto solo hace de
+  // puente hacia el `selectedRole` heredado que usa el resto del componente
+  // para navegación/menús: si AuthContext confirma una sesión backend real,
+  // reflejamos su rol verificado aquí. Si no hay sesión real (auth.role es
+  // null, incluyendo todo el flujo de login demo), no tocamos selectedRole:
+  // ese caso lo sigue gestionando confirmRoleAccess/clearRole como hasta ahora.
+  //
+  // Excepción documentada a react-hooks/set-state-in-effect: la alternativa
+  // "derivar en render" (sin efecto) rompe selectedRole en el flujo
+  // logout→login con el MISMO rol, porque auth.role no cambia de valor entre
+  // ambos logins y un cálculo derivado no volvería a disparar el bridge —
+  // selectedRole se quedaría vacío tras el logout. El efecto sí lo cubre
+  // porque su dependencia auth.isAuthenticated pasa por false en el logout,
+  // re-disparando el efecto en el siguiente login aunque el rol se repita.
+  // Verificado en sesión 2026-07-29 (revisión P1.3) — evaluado de nuevo en
+  // el cierre técnico global del 2026-07-30 antes de aceptar la excepción.
+  useEffect(() => {
+    if (auth.isAuthenticated && auth.role) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza selectedRole con la sesión backend verificada; ver justificación arriba
+      setSelectedRole(auth.role);
+      setLoginError("");
+    }
+  }, [auth.isAuthenticated, auth.role]);
+
+  // Detecta el callback de recuperación de Supabase Auth al montar la SPA.
+  // Supabase envía el enlace con #access_token=...&type=recovery en el hash.
+  // El token se captura SOLO en estado React — nunca en localStorage/sessionStorage.
+  // El hash se limpia de inmediato con history.replaceState para no dejar
+  // tokens sensibles en la URL visible ni en el historial del navegador.
+  useEffect(() => {
+    const raw = window.location.hash;
+    if (!raw) return;
+
+    const params = new URLSearchParams(raw.slice(1));
+    if (params.get("type") !== "recovery") return;
+
+    const token = params.get("access_token");
+    if (!token) return;
+
+    setRecoveryToken(token);
+    setRecoveryMode(true);
+    setRecoveryStep("form");
+
+    try {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    } catch { /* no bloquear si el entorno no permite replaceState */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- solo ejecuta al montar
+
   const menuButtonRef = useRef(null);
-  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, gestion: <Gestion />, ranking: <Ranking />, admin: <Admin />, soporte: <Soporte /> };
+  const mainContentRef = useRef(null);
+  const modules = { inicio: <Inicio navigate={navigate} selectedRole={selectedRole} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, baja_jugador: <AltaJugador initialModo="baja" />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, cierre_pistas: <CierreTemporalPista />, lista_espera: <ListaEspera />, control_qr: <ControlQrAccesos />, pistas_recordatorios: <PistasLibresRecordatorios />, comunicaciones_socio: <ComunicacionesSocio />, calendario_disponibilidad: <CalendarioDisponibilidadModulo />, torneos: <Torneos selectedRole={selectedRole} />, ranking: <Ranking />, comunidad: <LazyComunidad selectedRole={selectedRole} />, admin: <Admin />, dashboard_kpi: <DashboardKpiNps />, backups_seguridad: <BackupsSeguridad />, facturacion_pagos: <FacturacionPagos />, asistente_ia: <AsistenteIA navigate={navigate} />, automatizaciones_bots: <AutomatizacionesBots navigate={navigate} />, flujos_make: <LazyCentroTecnico selectedRole={selectedRole} />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+  // Defensa en profundidad: aunque navigate() ya filtra por permisos, el
+  // render nunca debe confiar únicamente en que `current` llegó por esa vía.
+  // Si en el futuro algo hace setCurrent() directo a una sección protegida,
+  // esto la bloquea igualmente en el último paso antes de pintar en pantalla.
+  const safeCurrentSection = cp04CanAccessSection(selectedRole, current)
+    ? current
+    : cp04GetSafeStartSection(selectedRole);
+  const previousSectionRef = useRef(safeCurrentSection);
+  useEffect(() => {
+    if (previousSectionRef.current === safeCurrentSection) return undefined;
+    previousSectionRef.current = safeCurrentSection;
+    const frame = window.requestAnimationFrame(() => {
+      if (!document.querySelector('[role="dialog"][aria-modal="true"]')) mainContentRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [safeCurrentSection]);
+
+  // Estado de pantalla (rol/módulo activo -> clases y fondo del body) —
+  // única fuente de verdad, ver src/utils/screenState.js. Sustituye a los
+  // antiguos internal-background-detector.js / role-background-detector.js,
+  // que escaneaban document.body.innerText en español y fallaban en
+  // idiomas cuya traducción no contuviera esas palabras exactas (ver
+  // docs/mejora-2-visual-identity-audit-20260724/14-*.md). Aquí depende
+  // solo de selectedRole/safeCurrentSection, nunca del idioma activo.
+  useEffect(() => {
+    // Bug real detectado en QA visual (2026-09-04): la landing comercial
+    // (T3) se enseña con selectedRole aún vacío — el mismo estado que antes
+    // SOLO alcanzaba la pantalla de login/selector de rol. Sin este `if`,
+    // heredaba "cp04-role-screen-active" (fondo decorativo Torcal + la
+    // regla `h1,h1+p{display:none}` de torcal-role-background.css,
+    // pensada para el login, no para la landing): tapaba el hero completo
+    // y ocultaba el titular. La landing no necesita ningún fondo/clase de
+    // rol — se le aplica el estado "neutro" (los 3 flags a false), que ya
+    // limpia clases e imagen de fondo sin tocar el CSS ni el resto de
+    // pantallas.
+    if (showLanding && !selectedRole) {
+      cp04ApplyScreenState({ roleScreenActive: false, moduleScreenActive: false, roleId: null, moduleId: null, moduleCategory: null });
+      return;
+    }
+    const screenState = cp04ComputeScreenState({ selectedRole, moduleId: safeCurrentSection });
+    cp04ApplyScreenState(screenState);
+  }, [selectedRole, safeCurrentSection, showLanding]);
+
+  // Las contraseñas demo ya no viven aquí: están aisladas en
+  // src/auth/demoAuthAdapter.js, gateadas por isDemoAuthAllowed() (solo
+  // desarrollo). Este objeto solo guarda las etiquetas de UI del selector
+  // de rol, que no son sensibles.
+  const roleConfig = {
+    PLAYER: {
+      label: "Jugador / cliente",
+      desc: "Reservar pistas, consultar reservas y ranking.",
+      start: "inicio",
+    },
+    STAFF: {
+      label: "Staff / recepción",
+      desc: "Gestión diaria de reservas, altas y atención al jugador.",
+      start: "gestion",
+    },
+    ADMIN: {
+      label: "Administrador / jefe",
+      desc: "Panel de dirección, métricas y control operativo.",
+      start: "admin",
+    },
+    SUPPORT: {
+      label: "Soporte técnico",
+      desc: "Zona técnica, integraciones y diagnóstico interno.",
+      start: "soporte",
+    },
+  };
+
+  function selectRole(roleId) {
+    setPendingRole(roleId);
+    setRolePassword("");
+    setShowRolePassword(false);
+    setRoleError("");
+  }
+
+  function confirmRoleAccess(event) {
+    event.preventDefault();
+
+    const role = roleConfig[pendingRole];
+    if (!role) {
+      setRoleError("Selecciona un rol válido.");
+      return;
+    }
+
+    // La verificación de contraseña demo vive en demoAuthAdapter, aislada y
+    // gateada a solo-desarrollo: en un build de producción esto se deniega
+    // aunque la contraseña sea correcta (fail-closed, no fallback silencioso
+    // a demo).
+    const demoAuth = verifyDemoRolePassword(pendingRole, rolePassword);
+    if (!demoAuth.ok) {
+      setRoleError(demoAuth.message || "Contraseña incorrecta para este rol.");
+      return;
+    }
+
+    if (rememberRole) {
+      localStorage.setItem("cp04_role", pendingRole);
+    } else {
+      localStorage.removeItem("cp04_role");
+    }
+    setSelectedRole(pendingRole);
+    setCurrent(role.start || "inicio");
+    setPendingRole("");
+    setRolePassword("");
+    setShowRolePassword(false);
+    setRoleError("");
+  }
+
+  function clearRole() {
+    // auth.logout() ya limpia la sesión backend real (token/user/rol,
+    // best-effort contra /api/auth/logout) a través de authService. Esto de
+    // aquí solo limpia lo que sigue siendo estado local de la demo/UI:
+    // el rol demo elegido (cp04_role, cuando no vino de un login real) y los
+    // formularios en curso. Ningún permiso del siguiente usuario puede
+    // heredar nada de esto: todo queda a cero.
+    localStorage.removeItem("cp04_role");
+
+    setSelectedRole("");
+    setPendingRole("");
+    setRolePassword("");
+    setRoleError("");
+    setShowRolePassword(false);
+    setLoginEmail("");
+    setLoginPassword("");
+    setShowLoginPassword(false);
+    setLoginError("");
+    setMobileMenuOpen(false);
+
+    auth.logout().catch(() => {});
+  }
+
+
+  async function handleUniversalLogin(event) {
+    event.preventDefault();
+
+    const cleanEmail = loginEmail.trim().toLowerCase();
+    const cleanPassword = loginPassword.trim();
+
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      setLoginError("Introduce un correo electrónico válido.");
+      return;
+    }
+
+    if (cleanPassword.length < 4) {
+      setLoginError("Introduce una contraseña válida.");
+      return;
+    }
+
+    try {
+      setLoginError("");
+
+      // Toda la lógica de red/token/rol vive ahora en authService a través
+      // de AuthContext: el rol SOLO puede venir del backend autenticado
+      // (auth.login nunca deriva un rol de patrones en el email).
+      const result = await auth.login(cleanEmail, cleanPassword);
+
+      if (!result.ok) {
+        setLoginError(result.message || "No se pudo iniciar sesión.");
+        return;
+      }
+
+      setSelectedRole(cp04NormalizeRole(result.role));
+      setLoginError("");
+      setLoginPassword("");
+      setMobileMenuOpen(false);
+    } catch (error) {
+      console.error("CP04_LOGIN_FRONTEND_ERROR", error);
+      setLoginError(`No se pudo completar el inicio de sesión. Detalle: ${error?.message || "error desconocido"}`);
+    }
+  }
+
+  async function handleRegisterSubmit(event) {
+    event?.preventDefault?.();
+
+    const cleanName = registerName.trim();
+    const cleanEmail = registerEmail.trim().toLowerCase();
+    const cleanPassword = registerPassword.trim();
+    const cleanConfirm = registerConfirm.trim();
+
+    if (cleanName.length < 2) {
+      setRegisterError("Introduce tu nombre.");
+      return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      setRegisterError("Introduce un correo electrónico válido.");
+      return;
+    }
+
+    if (cleanPassword.length < 8) {
+      setRegisterError("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+
+    if (cleanPassword !== cleanConfirm) {
+      setRegisterError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    try {
+      setRegisterError("");
+      setRegisterDone(false);
+
+      // Misma capa que login/logout/cambio de contraseña: la red, el
+      // manejo de errores y la estructura de respuesta viven en
+      // authService, no en App.jsx.
+      const result = await auth.register({ name: cleanName, email: cleanEmail, password: cleanPassword });
+
+      if (!result.ok) {
+        setRegisterError(result.message || "No se pudo crear la cuenta.");
+        return;
+      }
+
+      localStorage.setItem("cp04_register_open", "true");
+      localStorage.setItem("cp04_register_done", "true");
+      setRegisterDone(true);
+      setLoginEmail(cleanEmail);
+      localStorage.setItem("cp04_register_name", cleanName);
+      localStorage.setItem("cp04_register_email", cleanEmail);
+      setRegisterPassword("");
+      setRegisterConfirm("");
+    } catch (error) {
+      console.error("CP04_REGISTER_FRONTEND_ERROR", error);
+      setRegisterError(`No se pudo completar el registro. Detalle: ${error?.message || "error desconocido"}`);
+    }
+  }
+
+  function openRegister() {
+    localStorage.setItem("cp04_register_open", "true");
+    localStorage.setItem("cp04_register_done", "false");
+    setRegisterOpen(true);
+    setRegisterDone(false);
+    setRegisterError("");
+
+    const savedName = localStorage.getItem("cp04_register_name") || "";
+    const savedEmail = localStorage.getItem("cp04_register_email") || loginEmail || "";
+
+    setRegisterName(savedName);
+    setRegisterEmail(savedEmail);
+    setRegisterPassword("");
+    setRegisterConfirm("");
+  }
+
+  function closeRegister() {
+    localStorage.setItem("cp04_register_open", "false");
+    localStorage.setItem("cp04_register_done", "false");
+    setRegisterOpen(false);
+    setRegisterDone(false);
+    setRegisterError("");
+    setRegisterPassword("");
+    setRegisterConfirm("");
+  }
+
+  function openForgotPwd() {
+    setForgotPwdStep("form");
+    setForgotPwdEmail("");
+    setForgotPwdEmailError("");
+  }
+
+  function closeForgotPwd() {
+    setForgotPwdStep("idle");
+    setForgotPwdEmail("");
+    setForgotPwdEmailError("");
+  }
+
+  async function handleForgotPwdSubmit(e) {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(forgotPwdEmail.trim())) {
+      setForgotPwdEmailError("Introduce un email válido.");
+      return;
+    }
+
+    setForgotPwdStep("loading");
+
+    // Llamada real a auth.recoverPassword (POST /api/auth/forgot-password).
+    // Tres casos distintos que deben mostrarse de forma diferente:
+    // - ok:false + networkError:true → fallo de red (no implica proveedor no configurado)
+    // - ok:true + authReady:true    → Supabase activo, email enviado (neutro anti-enumeration)
+    // - ok:true + authReady:false   → backend_stub, proveedor no configurado (no se envió nada)
+    const result = await auth.recoverPassword(forgotPwdEmail.trim().toLowerCase());
+
+    if (!result.ok) {
+      // Fallo de red o error de cliente: volvemos al formulario con el mensaje.
+      setForgotPwdEmailError(result.message || "No se pudo contactar con el servidor.");
+      setForgotPwdStep("form");
+    } else if (result.authReady) {
+      // Supabase configurado: respuesta neutra (no revela si el email existe).
+      setForgotPwdStep("sent");
+    } else {
+      // auth_ready:false explícito del backend: proveedor no configurado.
+      setForgotPwdStep("unavailable");
+    }
+  }
 
   useEffect(() => {
     if (!mobileMenuOpen) return undefined;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.querySelector("#cp04-mobile-menu button")?.focus();
-
-    function handleKeyDown(event) {
-      if (event.key === "Escape") {
-        setMobileMenuOpen(false);
-        menuButtonRef.current?.focus();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return attachNavigationDialog({
+      panel: document.getElementById("cp04-mobile-menu"),
+      trigger: menuButtonRef.current,
+      background: [
+        mainContentRef.current,
+        document.querySelector(".cp04-mobilebar"),
+        document.querySelector(".cp04-skip-link"),
+        document.querySelector(".cp04-navigation-status"),
+      ],
+      onClose: () => setMobileMenuOpen(false),
+    });
   }, [mobileMenuOpen]);
 
   function navigate(section) {
-    setCurrent(section);
+    const safeRole = cp04NormalizeRole(selectedRole);
+    const safeSection = String(section || "inicio").trim();
+
+    if (!cp04CanAccessSection(safeRole, safeSection)) {
+      setCurrent(cp04GetSafeStartSection(safeRole));
+      setMobileMenuOpen(false);
+      return;
+    }
+
+    setCurrent(safeSection);
     setMobileMenuOpen(false);
   }
 
-  return <><style>{globalStyles}</style><div className="cp04-mobilebar"><div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: T.accent }} /><strong style={{ fontFamily: T.fontDisplay }}>CLUB PÁDEL 04</strong></div><button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Abrir menú de navegación" aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>Menú</button></div>{mobileMenuOpen && <button className="cp04-overlay" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Cerrar menú de navegación" />}<div className="cp04-layout"><Sidebar current={current} mobileOpen={mobileMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} /><main className="cp04-main">{modules[current]}</main></div></>;
+
+  async function handleRecoverySubmit(e) {
+    e.preventDefault();
+    setRecoveryError("");
+
+    const valid = /[A-Z]/.test(recoveryPwd) && /[a-z]/.test(recoveryPwd) && /[0-9]/.test(recoveryPwd) && recoveryPwd.length >= 8;
+    if (!valid) { setRecoveryError("Mínimo 8 caracteres, mayúscula, minúscula y número."); return; }
+    if (recoveryPwd !== recoveryPwdConfirm) { setRecoveryError("Las contraseñas no coinciden."); return; }
+    if (!recoveryToken) { setRecoveryError("Token de recuperación no disponible. Solicita de nuevo el enlace."); return; }
+
+    setRecoveryStep("loading");
+
+    const result = await auth.updatePasswordWithToken(recoveryPwd, recoveryToken);
+
+    if (!result.ok) {
+      setRecoveryError(result.message || "No se pudo actualizar la contraseña.");
+      setRecoveryStep("error");
+      return;
+    }
+
+    // Token consumido: borrar de memoria inmediatamente
+    setRecoveryToken(null);
+    setRecoveryStep("success");
+  }
+
+  function handleRecoveryCancel() {
+    setRecoveryMode(false);
+    setRecoveryToken(null);
+    setRecoveryStep("form");
+    setRecoveryPwd("");
+    setRecoveryPwdConfirm("");
+    setRecoveryError("");
+    setShowRecoveryPwd(false);
+    setShowRecoveryPwdConfirm(false);
+  }
+
+  const loginClock = useClock();
+  const loginLang = useLang();
+  const ltx = key => t(key, loginLang);
+
+  if (recoveryMode) {
+    return (
+      <>
+        <style>{globalStyles}</style>
+        <PwaStatusBanners />
+        <main style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:`radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), ${T.bg}`, color:T.text }}>
+          <section style={{ width:"min(520px, 100%)", border:`1px solid ${T.line}`, borderRadius:34, padding:"clamp(24px, 4vw, 42px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
+            <div style={{ color:T.accent, fontSize:".78rem", letterSpacing:".22em", textTransform:"uppercase", fontWeight:900, marginBottom:18 }}>
+              Club Pádel 04
+            </div>
+            <h1 style={{ fontFamily:T.fontDisplay, fontSize:"clamp(1.8rem, 5vw, 2.8rem)", lineHeight:"1.1", letterSpacing:"-.04em", margin:"0 0 8px" }}>
+              Nueva contraseña
+            </h1>
+            <p style={{ color:T.textDim, marginTop:0, marginBottom:24, lineHeight:1.6, fontSize:".95rem" }}>
+              Introduce y confirma la nueva contraseña para tu cuenta.
+            </p>
+
+            {recoveryStep === "success" ? (
+              <>
+                <StatusCard status="success" title="Contraseña actualizada correctamente." style={{ marginBottom:16, border:"none", background:"transparent", padding:0 }} />
+                <p style={{ color:T.textDim, marginBottom:24, lineHeight:1.6 }}>Ya puedes iniciar sesión con tu nueva contraseña.</p>
+                <button type="button" onClick={handleRecoveryCancel} style={{ padding:"13px 22px", borderRadius:14, border:`1px solid ${T.line}`, background:"transparent", color:T.text, fontWeight:800, cursor:"pointer", fontSize:"1rem" }}>
+                  Ir al inicio de sesión
+                </button>
+              </>
+            ) : (
+              <form onSubmit={handleRecoverySubmit} style={{ display:"grid", gap:12 }}>
+                <div style={{ position:"relative" }}>
+                  <input
+                    type={showRecoveryPwd ? "text" : "password"}
+                    value={recoveryPwd}
+                    onChange={e => { setRecoveryPwd(e.target.value); setRecoveryError(""); }}
+                    placeholder="Nueva contraseña"
+                    autoComplete="new-password"
+                    autoFocus
+                    disabled={recoveryStep === "loading"}
+                    style={{ width:"100%", padding:"14px 48px 14px 16px", borderRadius:14, border:`1px solid ${recoveryError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", boxSizing:"border-box" }}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showRecoveryPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    onClick={() => setShowRecoveryPwd(v => !v)}
+                    disabled={recoveryStep === "loading"}
+                    style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:T.textDim, cursor:"pointer", padding:4, display:"flex", alignItems:"center", lineHeight:1 }}
+                  >
+                    {showRecoveryPwd ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <div style={{ position:"relative" }}>
+                  <input
+                    type={showRecoveryPwdConfirm ? "text" : "password"}
+                    value={recoveryPwdConfirm}
+                    onChange={e => { setRecoveryPwdConfirm(e.target.value); setRecoveryError(""); }}
+                    placeholder="Confirmar nueva contraseña"
+                    autoComplete="new-password"
+                    disabled={recoveryStep === "loading"}
+                    style={{ width:"100%", padding:"14px 48px 14px 16px", borderRadius:14, border:`1px solid ${recoveryError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", boxSizing:"border-box" }}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showRecoveryPwdConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    onClick={() => setShowRecoveryPwdConfirm(v => !v)}
+                    disabled={recoveryStep === "loading"}
+                    style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:T.textDim, cursor:"pointer", padding:4, display:"flex", alignItems:"center", lineHeight:1 }}
+                  >
+                    {showRecoveryPwdConfirm ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {recoveryError && <StatusCard status="error" text={recoveryError} />}
+                <p style={{ color:T.textDim, fontSize:".82rem", margin:"0", lineHeight:1.5 }}>
+                  Mínimo 8 caracteres, mayúscula, minúscula y número.
+                </p>
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:4 }}>
+                  <button
+                    type="submit"
+                    disabled={recoveryStep === "loading"}
+                    style={{ padding:"13px 22px", borderRadius:14, border:"none", background:T.accent, color:"#ffffff", fontWeight:900, cursor:recoveryStep === "loading" ? "wait" : "pointer", fontSize:"1rem", opacity:recoveryStep === "loading" ? 0.7 : 1 }}
+                  >
+                    {recoveryStep === "loading" ? "Actualizando…" : "Establecer contraseña"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRecoveryCancel}
+                    disabled={recoveryStep === "loading"}
+                    style={{ padding:"13px 22px", borderRadius:14, border:`1px solid ${T.line}`, background:"transparent", color:T.text, fontWeight:800, cursor:recoveryStep === "loading" ? "not-allowed" : "pointer", fontSize:"1rem" }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
+        </main>
+      </>
+    );
+  }
+
+  if (!selectedRole && showLanding) {
+    return <Landing onEnterLogin={() => setShowLanding(false)} />;
+  }
+
+  if (!selectedRole) {
+    const roleLabels = {
+      PLAYER:  { label: ltx("role.PLAYER.label"),  desc: ltx("role.PLAYER.desc")  },
+      STAFF:   { label: ltx("role.STAFF.label"),   desc: ltx("role.STAFF.desc")   },
+      ADMIN:   { label: ltx("role.ADMIN.label"),   desc: ltx("role.ADMIN.desc")   },
+      SUPPORT: { label: ltx("role.SUPPORT.label"), desc: ltx("role.SUPPORT.desc") },
+    };
+    return (
+      <>
+        <style>{globalStyles}</style>
+        <PwaStatusBanners />
+        <main className="cp04-access-root saas-experience" style={{ minHeight:"100vh", display:"grid", placeItems:"center", padding:"42px 24px", background:"radial-gradient(circle at 20% 10%, rgba(182,255,0,.18), transparent 32%), radial-gradient(circle at 80% 20%, rgba(47,107,255,.16), transparent 34%), #050910", color:"white" }}>
+          <AccessShell className="cp04-access-shell" aria-label={`${ltx("login.real_access")} · Club Pádel 04`} style={{ width:"min(1080px, 100%)", border:"1px solid rgba(255,255,255,.12)", borderRadius:34, padding:"clamp(24px, 4vw, 48px)", background:"linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))", boxShadow:"0 24px 90px rgba(0,0,0,.45)" }}>
+            <div className="cp04-access-topbar" style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:12, marginBottom:18 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowLanding(true)}
+                  style={{ background:"transparent", border:"none", color:T.textDim, fontSize:".78rem", cursor:"pointer", padding:0, display:"flex", alignItems:"center", gap:4, textDecoration:"underline", textUnderlineOffset:3 }}
+                >
+                  ← {ltx("login.back")}
+                </button>
+                <div style={{ color:T.accent, fontSize:".78rem", letterSpacing:".22em", textTransform:"uppercase", fontWeight:900 }}>
+                  {ltx("login.sesion_label")}
+                </div>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                <div style={{ minWidth:180, maxWidth:220 }}><LanguageSelector /></div>
+                <div style={{ fontFamily:"monospace", textAlign:"right" }}>
+                  <div style={{ color:T.accent, fontWeight:900, fontSize:"1.15rem", letterSpacing:".05em" }}>{loginClock.time}</div>
+                  <div style={{ color:T.textDim, fontSize:".72rem", marginTop:2 }}>{loginClock.day}, {loginClock.date}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="cp04-access-intro saas-entrance">
+            <h1 style={{ fontFamily:T.fontDisplay, fontSize:"clamp(2.6rem, 7vw, 5.8rem)", lineHeight:".9", letterSpacing:"-.07em", margin:"0 0 20px" }}>
+              Club Pádel <span style={{ color:T.accent }}>04</span>
+            </h1>
+
+            <p style={{ color:T.textDim, maxWidth:760, lineHeight:1.7, fontSize:"clamp(1rem, 2vw, 1.18rem)", marginBottom:34 }}>
+              {ltx("login.subtitle")}
+            </p>
+            <a className="cp04-access-shortcut" href="#cp04-real-access">{ltx("login.real_heading")} <span aria-hidden="true"> ↗</span></a>
+            </div>
+      <div className="cp04-access-flow" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:22, marginBottom:26 }}>
+        <form id="cp04-real-access" className="cp04-access-real" aria-label="Acceso real con correo" tabIndex={-1} onSubmit={handleUniversalLogin} style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(5,10,18,.72)" }}>
+          <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+            {ltx("login.real_access")}
+          </div>
+          <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+            {ltx("login.real_heading")}
+          </strong>
+          <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.55 }}>
+            {ltx("login.real_desc")}
+          </p>
+          <input
+            type="email"
+            value={loginEmail}
+            aria-label={ltx("login.email")}
+            onChange={e => setLoginEmail(e.target.value)}
+            placeholder={ltx("login.email_placeholder")}
+            autoComplete="email"
+            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+          />
+          <input
+            type={showLoginPassword ? "text" : "password"}
+            value={loginPassword}
+            aria-label="Contraseña del acceso real"
+            onChange={e => setLoginPassword(e.target.value)}
+            placeholder={ltx("login.password")}
+            autoComplete="current-password"
+            style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${loginError ? T.dangerBorder : T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+          />
+
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(v => !v)}
+                  style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                >
+                  {showLoginPassword ? ltx("login.hide_password") : ltx("login.show_password")}
+                </button>
+                <button
+                    type="button"
+                    onClick={openRegister}
+                    style={{ border:"none", background:"transparent", color:T.accent, fontSize:".86rem", fontWeight:800, cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                  >
+                    {ltx("login.create_account")}
+                  </button>
+                  <button
+                  type="button"
+                  onClick={openForgotPwd}
+                  style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}
+                >
+                  {ltx("login.olvide_pwd")}
+                </button>
+              </div>
+          {loginError && <div style={{ color:T.dangerText, marginBottom:12, fontWeight:800 }}>{loginError}</div>}
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"center" }}>
+            {/* PASO 07K (2026-07-19): clase cp04-login-submit-btn añadida
+                para poder forzar su contraste en torcal-role-background.css
+                — esta pantalla activa `body.cp04-role-screen-active`, cuya
+                regla genérica de fondo (`button { background-color:
+                rgba(5,10,18,.22) !important; background-image: none
+                !important }`) anulaba el fondo lima de este botón vía
+                `!important`, dejándolo casi invisible. El estilo inline de
+                abajo no puede ganarle a un `!important` de hoja de
+                estilos, por eso la corrección real vive en el CSS. */}
+            <button type="submit" className="cp04-menu-button cp04-login-submit-btn" style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#071000", fontWeight:900 }}>
+              {ltx("login.sign_in")}
+            </button>
+
+          </div>
+
+              {registerOpen && (
+                <div style={{ marginTop:18, padding:18, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+                  {!registerDone ? (
+                    <div>
+                      <strong style={{ display:"block", marginBottom:6 }}>Crear cuenta</strong>
+                      <p style={{ color:T.textDim, marginTop:0, marginBottom:14, lineHeight:1.55, fontSize:".9rem" }}>
+                        {ltx("login.create_desc")}
+                      </p>
+
+                      <input
+                        type="text"
+                        value={registerName}
+                        onChange={e => { setRegisterName(e.target.value); localStorage.setItem("cp04_register_name", e.target.value); setRegisterError(""); }}
+                        placeholder={ltx("login.full_name")}
+                        autoComplete="name"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="email"
+                        value={registerEmail}
+                        onChange={e => { setRegisterEmail(e.target.value); localStorage.setItem("cp04_register_email", e.target.value); setRegisterError(""); }}
+                        placeholder="Correo electrónico"
+                        autoComplete="email"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="password"
+                        value={registerPassword}
+                        onChange={e => { setRegisterPassword(e.target.value); setRegisterError(""); }}
+                        placeholder="Contraseña"
+                        autoComplete="new-password"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      <input
+                        type="password"
+                        value={registerConfirm}
+                        onChange={e => { setRegisterConfirm(e.target.value); setRegisterError(""); }}
+                        placeholder="Confirmar contraseña"
+                        autoComplete="new-password"
+                        style={{ width:"100%", padding:"12px 14px", borderRadius:14, border:`1px solid ${registerError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:8 }}
+                      />
+
+                      {registerError && <div style={{ color:T.dangerText, marginBottom:10, fontWeight:800, fontSize:".86rem" }}>{registerError}</div>}
+
+                      <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                        <button type="button" onClick={handleRegisterSubmit} className="cp04-menu-button cp04-login-submit-btn" style={{ background:T.accent, color:"#071000", fontWeight:900 }}>
+                          {ltx("login.create_account")}
+                        </button>
+                        <button type="button" className="cp04-menu-button" onClick={closeRegister} style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                          Volver
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ color:T.accent, fontSize:"1.4rem", marginBottom:8 }}>✓</div>
+                      <strong style={{ display:"block", marginBottom:8 }}>{ltx("login.account_created")}</strong>
+                      <p style={{ color:T.textDim, lineHeight:1.55, marginTop:0, fontSize:".9rem" }}>
+                        {ltx("login.account_ready")}
+                      </p>
+                      <button type="button" className="cp04-menu-button" onClick={closeRegister}>
+                        Volver al inicio de sesión
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+<p style={{ color:T.textDim, marginTop:14, marginBottom:0, fontSize:".84rem", lineHeight:1.45 }}>
+            {ltx("login.secure_access")}
+          </p>
+        </form>
+
+        <div className="cp04-access-demo-intro" style={{ padding:22, border:`1px solid ${T.line}`, borderRadius:24, background:"rgba(0,0,0,.28)" }}>
+          <div style={{ color:T.accent, fontWeight:900, letterSpacing:".08em", fontSize:".78rem", marginBottom:8 }}>
+            {ltx("login.demo_eyebrow")}
+          </div>
+          <strong style={{ display:"block", fontSize:"1.15rem", marginBottom:8 }}>
+            {ltx("login.demo_title")}
+          </strong>
+          <p style={{ color:T.textDim, marginTop:0, marginBottom:0, lineHeight:1.55 }}>
+            {ltx("login.demo_desc")}
+          </p>
+        </div>
+      </div>
+
+
+            <div id="cp04-demo-options" className="cp04-grid-2 cp04-access-roles" role="group" aria-label={ltx("login.demo_aria")} data-reveal>
+              {Object.keys(roleConfig).map((roleId, roleIndex) => {
+                const rl = roleLabels[roleId] || roleConfig[roleId];
+                return (
+                  <button key={roleId} type="button" aria-pressed={pendingRole === roleId} aria-controls="cp04-demo-panel" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
+                    style={{ "--reveal-index": roleIndex, textAlign:"left", border:`1px solid ${T.line}`, borderRadius:24, padding:22, background:"rgba(5,10,18,.72)", color:T.text, cursor:"pointer", minHeight:122 }}>
+                    <div className={roleId==="PLAYER" ? "cp04-role-player-id" : undefined} style={{ color: roleId==="PLAYER" ? "#b6ff00" : T.accent, fontWeight:900, letterSpacing:".12em", fontSize:".78rem", marginBottom:8 }}>{roleId}</div>
+                    <strong style={{ display:"block", fontSize:"1.1rem", marginBottom:8 }}>{rl.label}</strong>
+                    <span className="cp04-access-role-icon" aria-hidden="true">{roleId === "PLAYER" ? <IconUsers size={20} /> : roleId === "STAFF" ? <IconCalendar size={20} /> : roleId === "ADMIN" ? <IconShieldCheck size={20} /> : <IconWrench size={20} />}</span>
+                    {pendingRole === roleId && <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            <AnimatedDisclosure open={Boolean(pendingRole)} id="cp04-demo-panel" returnFocusSelector="#cp04-demo-options button">
+            {pendingRole && (
+              <form className="cp04-access-demo-form" aria-label="Acceso de demostración" onSubmit={confirmRoleAccess} style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+                <strong style={{ display:"block", marginBottom:8 }}>
+                  {ltx("login.acceder_como")} {roleLabels[pendingRole]?.label || roleConfig[pendingRole]?.label}
+                </strong>
+                <p style={{ color:T.textDim, marginTop:0, marginBottom:14 }}>{ltx("login.intro_pwd")}</p>
+                <input
+                  type={showRolePassword ? "text" : "password"}
+                  value={rolePassword}
+                  aria-label={ltx("login.demo_password_aria")}
+                  onChange={e => setRolePassword(e.target.value)}
+                  placeholder={ltx("login.password")}
+                  autoFocus
+                  style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${roleError?T.dangerBorder:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+                />
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                  <button type="button" onClick={() => setShowRolePassword(v => !v)}
+                    style={{ border:"none", background:"transparent", color:T.accent, fontWeight:900, cursor:"pointer", padding:0 }}>
+                    {showRolePassword ? ltx("login.ocultar_pwd") : ltx("login.ver_pwd")}
+                  </button>
+                  <button type="button" onClick={openForgotPwd}
+                    style={{ border:"none", background:"transparent", color:T.textDim, fontSize:".84rem", cursor:"pointer", padding:0, textDecoration:"underline", textUnderlineOffset:3 }}>
+                    {ltx("login.olvide_pwd")}
+                  </button>
+                </div>
+                <label style={{ display:"flex", alignItems:"center", gap:10, color:T.textDim, marginBottom:12, cursor:"pointer", userSelect:"none" }}>
+                  <input type="checkbox" checked={rememberRole} onChange={e => setRememberRole(e.target.checked)} style={{ width:18, height:18, accentColor:T.accent }} />
+                  {ltx("login.guardar_sesion")}
+                </label>
+                {roleError && <div style={{ color:T.dangerText, marginBottom:12, fontWeight:800 }}>{roleError}</div>}
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                  <button type="submit" className="cp04-menu-button cp04-login-entrar-white-btn"
+                    style={{ width:"auto", borderColor:"rgba(182,255,0,.5)", background:T.accent, color:"#ffffff", fontWeight:900 }}>
+                    {ltx("login.entrar")}
+                  </button>
+                  <button type="button" className="cp04-menu-button"
+                    onClick={() => { setPendingRole(""); setRolePassword(""); setRoleError(""); }}
+                    style={{ width:"auto" }}>
+                    {ltx("login.cancelar")}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            </AnimatedDisclosure>
+            {forgotPwdStep !== "idle" && (
+              <div className="cp04-access-recovery" style={{ marginTop:28, padding:22, border:`1px solid ${T.line}`, borderRadius:22, background:"rgba(0,0,0,.28)" }}>
+                {forgotPwdStep === "form" && (
+                  <>
+                    <strong style={{ display:"block", marginBottom:6 }}>{ltx("login.recuperar_title")}</strong>
+                    <p style={{ color:T.textDim, marginTop:0, marginBottom:16, lineHeight:1.6, fontSize:".92rem" }}>{ltx("login.recuperar_desc")}</p>
+                    <form onSubmit={handleForgotPwdSubmit}>
+                      <input
+                        type="email"
+                        value={forgotPwdEmail}
+                        onChange={e => { setForgotPwdEmail(e.target.value); setForgotPwdEmailError(""); }}
+                        placeholder={ltx("login.recuperar_email")}
+                        autoFocus
+                        style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:`1px solid ${forgotPwdEmailError?T.danger:T.line}`, background:"rgba(255,255,255,.06)", color:T.text, outline:"none", marginBottom:10 }}
+                      />
+                      {forgotPwdEmailError && <StatusCard status="error" text={forgotPwdEmailError} style={{ marginBottom:10 }} />}
+                      <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
+                        <button type="submit" className="cp04-menu-button cp04-login-entrar-white-btn"
+                          style={{ background:T.accent, color:"#ffffff", fontWeight:900 }}>
+                          {ltx("login.recuperar_btn")}
+                        </button>
+                        <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+                          style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                          {ltx("login.recuperar_volver")}
+                        </button>
+                      </div>
+                    </form>
+                  </>
+                )}
+                {forgotPwdStep === "loading" && (
+                  <LoadingInline label={ltx("login.recuperar_cargando")} />
+                )}
+                {forgotPwdStep === "sent" && (
+                  <>
+                    <StatusCard status="success" title={ltx("login.recuperar_title")} style={{ marginBottom:18, border:"none", background:"transparent", padding:0 }} />
+                    <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_enviado")}</p>
+                    <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+                      style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                      {ltx("login.recuperar_volver")}
+                    </button>
+                  </>
+                )}
+                {forgotPwdStep === "unavailable" && (
+                  <>
+                    <StatusCard status="warning" title={ltx("login.recuperar_title")} style={{ marginBottom:18, border:"none", background:"transparent", padding:0 }} />
+                    <p style={{ color:T.textDim, lineHeight:1.6, marginBottom:18, fontSize:".92rem" }}>{ltx("login.recuperar_no_disponible")}</p>
+                    <button type="button" className="cp04-menu-button" onClick={closeForgotPwd}
+                      style={{ background:"transparent", border:`1px solid ${T.line}` }}>
+                      {ltx("login.recuperar_volver")}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            <p className="cp04-access-legal" style={{ color:T.textDim, marginTop:24, fontSize:".9rem" }}>
+              {ltx("login.legal")}
+            </p>
+          </AccessShell>
+        </main>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <style>{globalStyles}</style>
+      <style>{GALLERY_REAL_IMAGE_STYLES}</style>
+      <style>{GALLERY_FORCE_STYLES}</style>
+      <div className="cp04-navigation-status"><PwaStatusBanners /></div>
+      <a className="cp04-skip-link" href="#cp04-main-content">{ltx("home.skip_to_content")}</a>
+      <div className="cp04-mobilebar">
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ width:10, height:10, borderRadius:"50%", background:T.accent }} />
+          <strong style={{ fontFamily:T.fontDisplay }}>CLUB PÁDEL 04</strong>
+        </div>
+        <ClockDisplay compact />
+        <button ref={menuButtonRef} className="cp04-menu-button" type="button" onClick={() => setMobileMenuOpen(true)} aria-label={ltx("aria.open_nav")} aria-controls="cp04-mobile-menu" aria-expanded={mobileMenuOpen}>{ltx("nav.abrir_menu")}</button>
+      </div>
+      {mobileMenuOpen && <button className="cp04-overlay" type="button" tabIndex={-1} onClick={() => setMobileMenuOpen(false)} aria-label={ltx("aria.close_nav")} />}
+      <div className="cp04-layout">
+        <Sidebar current={safeCurrentSection} selectedRole={selectedRole} onClearRole={clearRole} mobileOpen={mobileMenuOpen} mobileModal={!tutorialMenuOpen} onNavigate={navigate} onClose={() => setMobileMenuOpen(false)} />
+        <main ref={mainContentRef} id="cp04-main-content" className="cp04-main" data-tour="main-content" data-section={safeCurrentSection} aria-label={ltx("aria.main_content")} tabIndex={-1}>
+          {safeCurrentSection !== "inicio" && (
+            <button className="cp04-menu-button cp04-navigation-return" type="button" onClick={() => navigate("inicio")}>
+              <IconHome size={18} /> {ltx("nav.inicio")}
+            </button>
+          )}
+          <LazyLoadBoundary label="Cargando módulo...">
+            {modules[safeCurrentSection] || modules.inicio}
+          </LazyLoadBoundary>
+        </main>
+      </div>
+      <Suspense fallback={null}>
+        <LazyCP04GuidedTutorial
+          selectedRole={selectedRole}
+          onNavigate={navigate}
+          openRevision={tutorialRevision}
+          onSetMobileMenuOpen={(open) => {
+            setTutorialMenuOpen(open);
+            setMobileMenuOpen(open);
+          }}
+        />
+      </Suspense>
+    </>
+  );
 }

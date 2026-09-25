@@ -1,0 +1,7 @@
+src/components/lazy/lazySections.js:1:import { lazy } from "react";
+src/components/lazy/lazySections.js:3:export const LazySectionShell = lazy(() => import("./LazySectionShell.jsx"));
+src/components/lazy/lazySections.js:5:export const lazySectionsAudit32 = {
+src/components/lazy/LazySectionShell.jsx:1:export default function LazySectionShell({ title = "Sección", subtitle = "Carga diferida preparada.", children }) {
+src/components/lazy/LazySectionShell.jsx:3:    <section className="cp04-lazy-section-shell">
+src/components/lazy/LazySectionShell.jsx:4:      <div className="cp04-lazy-section-shell__header">
+src/components/lazy/LazySectionShell.jsx:10:        <div className="cp04-lazy-section-shell__content">{children}</div>

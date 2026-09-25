@@ -1,0 +1,275 @@
+// Paso 11 · Fase 9 — Catálogo de automatizaciones candidatas.
+//
+// Cada entrada usa una capacidad ya existente en
+// automations/capabilityMap.js (GENERIC_AUTOMATION_CAPABILITIES) — este
+// catálogo NUNCA inventa capacidades nuevas ni crea escenarios reales de
+// Make/Airtable/Stripe/WhatsApp: solo describe, para cada capacidad, una
+// automatización de ejemplo con su trigger/condiciones/acciones y una
+// implementación recomendada (que puede ser "manual").
+
+export const AUTOMATION_CATALOG = Object.freeze([
+  {
+    id: "alta_cliente_bienvenida",
+    capability: "alta_cliente",
+    label: "Alta de cliente y mensaje de bienvenida",
+    trigger: "cliente_creado",
+    conditions: ["cliente nuevo (primer registro)"],
+    actions: ["enviar mensaje de bienvenida", "crear ficha de cliente"],
+    dataNeeded: ["nombre", "canal de contacto"],
+    errorHandling: "reintentar envío de bienvenida hasta 3 veces; si falla, marcar para revisión manual",
+    idempotency: "clave idempotente = id de cliente; no reenvía bienvenida si ya se envió",
+    logs: ["cliente_id", "canal", "resultado"],
+    priority: "media",
+    qualitativeROI: "mejora la primera impresión y reduce altas manuales",
+    recommendedImplementation: "backend",
+    futureIntegration: "email",
+    testData: { clienteId: "demo-cliente-001", canal: "email" },
+    requiredModules: ["clientes"],
+  },
+  {
+    id: "confirmacion_reserva",
+    capability: "confirmacion",
+    label: "Confirmación automática de reserva/cita",
+    trigger: "cita_creada",
+    conditions: ["cita en estado pendiente de confirmar"],
+    actions: ["enviar confirmación al cliente", "marcar cita como confirmada"],
+    dataNeeded: ["fecha/hora de la cita", "canal de contacto"],
+    errorHandling: "si el canal falla, reintentar con canal alternativo; si no hay alternativa, alertar a recepción",
+    idempotency: "clave idempotente = id de cita; una sola confirmación por cita",
+    logs: ["cita_id", "canal", "resultado"],
+    priority: "alta",
+    qualitativeROI: "reduce llamadas manuales de confirmación",
+    recommendedImplementation: "worker",
+    futureIntegration: "messaging",
+    testData: { citaId: "demo-cita-001" },
+    requiredModules: ["citas"],
+  },
+  {
+    id: "recordatorio_24h",
+    capability: "recordatorio",
+    label: "Recordatorio 24 horas antes de la cita",
+    trigger: "24h_antes_de_cita",
+    conditions: ["cita confirmada", "no cancelada"],
+    actions: ["enviar recordatorio al cliente"],
+    dataNeeded: ["fecha/hora de la cita", "canal de contacto"],
+    errorHandling: "si falla el envío, un solo reintento; sin bloquear el resto de recordatorios del lote",
+    idempotency: "clave idempotente = id de cita + ventana 24h; no se repite",
+    logs: ["cita_id", "ventana", "resultado"],
+    priority: "alta",
+    qualitativeROI: "reduce no-shows de forma significativa",
+    recommendedImplementation: "worker",
+    futureIntegration: "messaging",
+    testData: { citaId: "demo-cita-001", ventana: "24h" },
+    requiredModules: ["citas"],
+  },
+  {
+    id: "recordatorio_2h",
+    capability: "recordatorio",
+    label: "Recordatorio 2 horas antes de la cita",
+    trigger: "2h_antes_de_cita",
+    conditions: ["cita confirmada", "no cancelada"],
+    actions: ["enviar recordatorio corto al cliente"],
+    dataNeeded: ["fecha/hora de la cita", "canal de contacto"],
+    errorHandling: "un solo intento; ventana de tiempo corta no permite reintentos largos",
+    idempotency: "clave idempotente = id de cita + ventana 2h; no se repite",
+    logs: ["cita_id", "ventana", "resultado"],
+    priority: "media",
+    qualitativeROI: "reduce no-shows de última hora",
+    recommendedImplementation: "worker",
+    futureIntegration: "messaging",
+    testData: { citaId: "demo-cita-001", ventana: "2h" },
+    requiredModules: ["citas"],
+  },
+  {
+    id: "cancelacion_notificada",
+    capability: "cancelacion",
+    label: "Notificación de cancelación",
+    trigger: "cita_cancelada",
+    conditions: ["cancelación registrada"],
+    actions: ["notificar al cliente", "liberar el recurso/profesional en la agenda"],
+    dataNeeded: ["id de cita", "motivo (opcional)"],
+    errorHandling: "si la notificación falla, la liberación del recurso ocurre igualmente (no bloqueante)",
+    idempotency: "clave idempotente = id de cita; una sola notificación por cancelación",
+    logs: ["cita_id", "resultado"],
+    priority: "media",
+    qualitativeROI: "evita huecos de agenda sin visibilidad",
+    recommendedImplementation: "backend",
+    futureIntegration: "messaging",
+    testData: { citaId: "demo-cita-002" },
+    requiredModules: ["citas"],
+  },
+  {
+    id: "recuperacion_abandono",
+    capability: "recuperacion",
+    label: "Recuperación de reserva abandonada",
+    trigger: "reserva_iniciada_no_completada",
+    conditions: ["han pasado más de 30 minutos sin completar la reserva"],
+    actions: ["enviar recordatorio para completar la reserva"],
+    dataNeeded: ["id de intento de reserva", "canal de contacto"],
+    errorHandling: "máximo 1 recordatorio por intento abandonado",
+    idempotency: "clave idempotente = id de intento; no se repite",
+    logs: ["intento_id", "resultado"],
+    priority: "baja",
+    qualitativeROI: "recupera una parte de las reservas abandonadas",
+    recommendedImplementation: "make",
+    futureIntegration: "automation",
+    testData: { intentoId: "demo-intento-001" },
+    requiredModules: ["citas"],
+  },
+  {
+    id: "no_show_seguimiento",
+    capability: "seguimiento",
+    label: "Seguimiento tras no-show",
+    trigger: "cita_marcada_no_show",
+    conditions: ["cliente no se presentó"],
+    actions: ["registrar incidencia de no-show", "enviar mensaje de seguimiento"],
+    dataNeeded: ["id de cita"],
+    errorHandling: "si falla el mensaje, la incidencia queda registrada igualmente",
+    idempotency: "clave idempotente = id de cita; un solo registro de no-show",
+    logs: ["cita_id", "resultado"],
+    priority: "media",
+    qualitativeROI: "visibilidad de ausencias recurrentes",
+    recommendedImplementation: "backend",
+    futureIntegration: "messaging",
+    testData: { citaId: "demo-cita-003" },
+    requiredModules: ["citas"],
+  },
+  {
+    id: "solicitud_resena",
+    capability: "encuesta",
+    label: "Solicitud de reseña/encuesta tras el servicio",
+    trigger: "servicio_completado",
+    conditions: ["servicio marcado como completado"],
+    actions: ["enviar encuesta o solicitud de reseña"],
+    dataNeeded: ["id de cita/servicio", "canal de contacto"],
+    errorHandling: "un solo intento; no bloqueante",
+    idempotency: "clave idempotente = id de cita/servicio",
+    logs: ["referencia_id", "resultado"],
+    priority: "baja",
+    qualitativeROI: "mejora reputación online de forma progresiva",
+    recommendedImplementation: "make",
+    futureIntegration: "messaging",
+    testData: { referenciaId: "demo-servicio-001" },
+    requiredModules: ["servicios"],
+  },
+  {
+    id: "seguimiento_comercial_lead",
+    capability: "seguimiento",
+    label: "Seguimiento comercial de leads",
+    trigger: "lead_creado",
+    conditions: ["lead sin respuesta tras N días"],
+    actions: ["notificar a comercial/administración", "registrar intento de contacto"],
+    dataNeeded: ["id de lead", "fecha de creación"],
+    errorHandling: "reintento manual si falla la notificación interna",
+    idempotency: "clave idempotente = id de lead + día de seguimiento",
+    logs: ["lead_id", "resultado"],
+    priority: "media",
+    qualitativeROI: "menos leads perdidos por falta de seguimiento",
+    recommendedImplementation: "manual",
+    futureIntegration: "dataRepository",
+    testData: { leadId: "demo-lead-001" },
+    requiredModules: ["leads"],
+  },
+  {
+    id: "factura_pendiente_aviso",
+    capability: "impago",
+    label: "Aviso de factura pendiente",
+    trigger: "factura_vencida",
+    conditions: ["factura no pagada tras la fecha de vencimiento"],
+    actions: ["enviar aviso de pago pendiente"],
+    dataNeeded: ["id de factura", "importe", "canal de contacto"],
+    errorHandling: "máximo 2 avisos espaciados; nunca más de 1 por día",
+    idempotency: "clave idempotente = id de factura + número de aviso",
+    logs: ["factura_id", "aviso_numero", "resultado"],
+    priority: "alta",
+    qualitativeROI: "reduce impagos por olvido",
+    recommendedImplementation: "worker",
+    futureIntegration: "payments",
+    testData: { facturaId: "demo-factura-001" },
+    requiredModules: ["facturacion"],
+  },
+  {
+    id: "reactivacion_cliente_inactivo",
+    capability: "fidelizacion",
+    label: "Reactivación de clientes inactivos",
+    trigger: "cliente_sin_actividad_90_dias",
+    conditions: ["sin cita ni compra en 90 días"],
+    actions: ["enviar oferta o recordatorio de reactivación"],
+    dataNeeded: ["id de cliente", "fecha de última actividad"],
+    errorHandling: "un solo intento por ciclo de reactivación (p. ej. trimestral)",
+    idempotency: "clave idempotente = id de cliente + ciclo",
+    logs: ["cliente_id", "resultado"],
+    priority: "baja",
+    qualitativeROI: "recupera parte de la base de clientes inactiva",
+    recommendedImplementation: "make",
+    futureIntegration: "email",
+    testData: { clienteId: "demo-cliente-002" },
+    requiredModules: ["clientes"],
+  },
+  {
+    id: "backup_periodico",
+    capability: "backup",
+    label: "Copia de seguridad periódica",
+    trigger: "programado_diario",
+    conditions: [],
+    actions: ["generar copia de seguridad de los datos del negocio"],
+    dataNeeded: [],
+    errorHandling: "si falla, alertar y reintentar en el siguiente ciclo programado",
+    idempotency: "una copia por ciclo programado; no se solapan",
+    logs: ["fecha", "resultado", "tamaño"],
+    priority: "alta",
+    qualitativeROI: "reduce riesgo de pérdida de datos",
+    recommendedImplementation: "serverless",
+    futureIntegration: "fileStorage",
+    testData: { fecha: "2026-07-21" },
+    requiredModules: ["backups"],
+  },
+  {
+    id: "alerta_error_sistema",
+    capability: "alerta",
+    label: "Alerta ante error de sistema",
+    trigger: "error_critico_detectado",
+    conditions: ["error clasificado como crítico"],
+    actions: ["notificar a soporte/administración"],
+    dataNeeded: ["tipo de error", "contexto"],
+    errorHandling: "no debe fallar en cascada: si la notificación falla, se registra en logs igualmente",
+    idempotency: "clave idempotente = id de incidencia; evita alertas duplicadas para el mismo error",
+    logs: ["incidencia_id", "tipo", "resultado"],
+    priority: "alta",
+    qualitativeROI: "reduce tiempo de detección de incidentes",
+    recommendedImplementation: "backend",
+    futureIntegration: "messaging",
+    testData: { incidenciaId: "demo-incidencia-001" },
+    requiredModules: ["soporte"],
+  },
+]);
+
+export const AUTOMATION_IDS = Object.freeze(AUTOMATION_CATALOG.map((a) => a.id));
+
+/**
+ * Recomienda automatizaciones candidatas: una entrada del catálogo se
+ * propone si (a) el sector la sugiere por capacidad (automationHints) y
+ * (b) los módulos que requiere están habilitados o sugeridos. Deduplica
+ * por id (nunca puede aparecer dos veces la misma automatización) y
+ * ordena por prioridad (alta > media > baja) para que la salida sea
+ * determinista y legible.
+ * @param {{id: string, status: string}[]} resolvedModules
+ * @param {object} sectorPreset
+ */
+export function recommendAutomations(resolvedModules, sectorPreset) {
+  const enabledOrSuggested = new Set(resolvedModules.filter((m) => m.status === "enabled" || m.status === "suggested").map((m) => m.id));
+  const priorityRank = { alta: 0, media: 1, baja: 2 };
+
+  const candidates = AUTOMATION_CATALOG.filter((a) => sectorPreset.automationHints.includes(a.capability)).filter((a) => a.requiredModules.every((m) => enabledOrSuggested.has(m)));
+
+  const seen = new Set();
+  const deduped = [];
+  for (const candidate of candidates) {
+    if (seen.has(candidate.id)) continue;
+    seen.add(candidate.id);
+    deduped.push(candidate);
+  }
+
+  deduped.sort((a, b) => (priorityRank[a.priority] ?? 3) - (priorityRank[b.priority] ?? 3) || a.id.localeCompare(b.id));
+  return deduped;
+}

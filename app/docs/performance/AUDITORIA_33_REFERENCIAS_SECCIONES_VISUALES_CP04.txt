@@ -1,0 +1,363 @@
+src/App.jsx:11:const GALLERY_REAL_IMAGE_STYLES = `
+src/App.jsx:12:  .cp04-gallery-card,
+src/App.jsx:13:  .cp04-gallery-main,
+src/App.jsx:14:  .cp04-gallery-side {
+src/App.jsx:22:  .cp04-gallery-card img,
+src/App.jsx:23:  .cp04-gallery-main img,
+src/App.jsx:24:  .cp04-gallery-side img {
+src/App.jsx:77:const GALLERY = [
+src/App.jsx:82:    src: "/optimized/gallery/cp04/pistas.webp?v=cp04FotosSeparadasFinal2",
+src/App.jsx:88:    src: "/optimized/gallery/cp04/recepcion.webp?v=cp04FotosSeparadasFinal2",
+src/App.jsx:94:    src: "/optimized/gallery/cp04/cafeteria.webp?v=cp04FotosSeparadasFinal2",
+src/App.jsx:100:    src: "/optimized/gallery/cp04/torneos.webp?v=cp04FotosSeparadasFinal2",
+src/App.jsx:106:    src: "/optimized/gallery/cp04/instalaciones.webp?v=cp04FotosSeparadasFinal2",
+src/App.jsx:164:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+src/App.jsx:165:  { id: "SUPPORT", label: "Soporte técnico", access: "Protegido", sections: "Soporte", permissions: ["Ver estado técnico", "Revisar configuración de conexiones", "Consultar registros del sistema", "Auditar integraciones"] },
+src/App.jsx:168:const PROTECTED_SECTIONS = ["Gestión", "Admin", "Soporte"];
+src/App.jsx:202:  .cp04-gallery { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: stretch; }
+src/App.jsx:203:  .cp04-gallery-side { display: grid; grid-template-columns: 1fr; gap: 20px; }
+src/App.jsx:204:  .cp04-gallery-item { min-height: 230px; border-radius: 28px; overflow: hidden; position: relative; border: 1px solid ${T.line}; background: radial-gradient(circle at 20% 18%, rgba(182,255,0,.26), transparent 28%), linear-gradient(135deg, rgba(47,107,255,.18), rgba(17,26,43,.96)); }
+src/App.jsx:205:  .cp04-gallery-item.featured { min-height: 480px; }
+src/App.jsx:206:  .cp04-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+src/App.jsx:207:  .cp04-gallery-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(182,255,0,.18), rgba(47,107,255,.12)), repeating-linear-gradient(90deg, rgba(255,255,255,.10) 0 1px, transparent 1px 34px); }
+src/App.jsx:208:  .cp04-gallery-caption { position: absolute; left: 18px; right: 18px; bottom: 18px; padding: 14px 16px; border-radius: 18px; background: rgba(5,8,13,.74); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(14px); }
+src/App.jsx:210:  @media (max-width: 980px) { .cp04-layout { grid-template-columns: 1fr; padding-top: 66px; } .cp04-mobilebar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${T.line}; background: rgba(7,10,14,.88); backdrop-filter: blur(18px); } .cp04-menu-button { background: linear-gradient(135deg, ${T.accent}, ${T.accent2}); color: #06100a; border: 0; border-radius: 14px; padding: 10px 14px; font-family: ${T.fontDisplay}; font-weight: 900; cursor: pointer; } .cp04-sidebar-close { display: block; } .cp04-sidebar { position: fixed; z-index: 80; inset: 0 auto 0 0; width: min(88vw, 340px); height: 100dvh; visibility: hidden; transform: translateX(-105%); transition: transform .22s ease, visibility .22s ease; border-right: 1px solid ${T.line}; border-bottom: 0; box-shadow: 24px 0 80px rgba(0,0,0,.45); } .cp04-sidebar[data-open="true"] { visibility: visible; transform: translateX(0); } .cp04-overlay { display: block; position: fixed; z-index: 70; inset: 0; background: rgba(0,0,0,.62); border: 0; padding: 0; cursor: pointer; } .cp04-grid-2, .cp04-grid-3, .cp04-gallery { grid-template-columns: 1fr; } .cp04-gallery-item.featured { min-height: 340px; } }
+src/App.jsx:211:  @media (max-width: 640px) { .cp04-card { border-radius: 22px; padding: 19px; } .cp04-table th, .cp04-table td { padding: 13px 14px; } .cp04-gallery-item, .cp04-gallery-item.featured { min-height: 245px; border-radius: 22px; } }
+src/App.jsx:215:const GALLERY_FORCE_STYLES = `
+src/App.jsx:216:.cp04-gallery-card {
+src/App.jsx:224:.cp04-gallery-card img,
+src/App.jsx:225:.cp04-gallery-img {
+src/App.jsx:235:.cp04-gallery-card::before {
+src/App.jsx:239:.cp04-gallery-card .cp04-gallery-label,
+src/App.jsx:240:.cp04-gallery-label {
+src/App.jsx:252:.cp04-gallery-label strong {
+src/App.jsx:259:.cp04-gallery-label span {
+src/App.jsx:787:function GalleryItem({ item, featured = false }) {
+src/App.jsx:788:  return <div className={`cp04-gallery-item${featured ? " featured" : ""}`}>{item.src ? <img src={item.src} alt={`${item.title} de Club Pádel 04`} loading="lazy" /> : <div className="cp04-gallery-fallback" aria-hidden="true" />}<div className="cp04-gallery-caption"><strong style={{ display: "block", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>{item.title}</strong><span style={{ color: T.textDim, fontSize: ".88rem" }}>{item.src ? "" : item.label}</span></div></div>;
+src/App.jsx:791:function Gallery() {
+src/App.jsx:794:  const [featured, ...rest] = GALLERY;
+src/App.jsx:795:  return <section style={{ marginTop: 42 }}><SectionTitle eyebrow={tx("home.galeria_eyebrow")} title={tx("home.galeria")} desc={tx("home.galeria_desc")} /><div className="cp04-gallery"><GalleryItem item={featured} featured /><div className="cp04-gallery-side">{rest.map((item) => <GalleryItem key={item.key} item={item} />)}</div></div></section>;
+src/App.jsx:1559:    "categoria": "Soporte Técnico",
+src/App.jsx:1694:    "categoria": "Soporte Técnico",
+src/App.jsx:1696:    "funcion": "Recibe incidencias críticas de Make y avisa al administrador.",
+src/App.jsx:1711:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1726:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1741:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1756:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1771:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1786:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:1816:    "funcion": "Escenario oficial actual de Make (apagado) conectado al Centro técnico de Club Pádel 04.",
+src/App.jsx:2178:  "admin",
+src/App.jsx:2186:  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+src/App.jsx:2187:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"]
+src/App.jsx:2192:  if (["PLAYER", "STAFF", "ADMIN", "SUPPORT"].includes(value)) return value;
+src/App.jsx:2230:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Soporte",
+src/App.jsx:2240:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+src/App.jsx:2241:    "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
+src/App.jsx:2245:    "role.ADMIN.label":"Administrador / jefe","role.ADMIN.desc":"Panel de dirección, métricas y control operativo.",
+src/App.jsx:2246:    "role.SUPPORT.label":"Soporte técnico","role.SUPPORT.desc":"Zona técnica, integraciones y diagnóstico interno.",
+src/App.jsx:2262:    "home.hero_subtitle":"SaaS separado por roles: jugador, recepción, administración y soporte.",
+src/App.jsx:2263:    "home.btn_torneos":"Torneos","home.btn_admin":"Admin",
+src/App.jsx:2265:    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver soporte",
+src/App.jsx:2266:    "home.galeria":"Galería del club",
+src/App.jsx:2269:    "admin.panel":"Panel de dirección","admin.metricas":"Métricas globales del club.",
+src/App.jsx:2270:    "admin.reservas_mes":"Reservas mes","admin.ocupacion":"Ocupación media",
+src/App.jsx:2271:    "admin.socios":"Socios activos","admin.procesos":"Procesos activos",
+src/App.jsx:2272:    "admin.backup":"Último backup","admin.ingr_mes":"Ingresos mes",
+src/App.jsx:2273:    "admin.vs_mes_anterior":"vs mes anterior","admin.prox_lunes":"Próximo: lunes 07:00",
+src/App.jsx:2274:    "admin.graf_hoy":"Reservas por hora — hoy","admin.graf_semana":"Evolución semanal",
+src/App.jsx:2275:    "admin.graf_pista":"Ocupación por pista","admin.sub_hoy":"Franja horaria · demo",
+src/App.jsx:2276:    "admin.sub_semana":"Reservas últimos 7 días · demo","admin.sub_pista":"Porcentaje de uso · demo",
+src/App.jsx:2277:    "admin.backup_semana":"Backup semanal","admin.integraciones":"Estado de integraciones",
+src/App.jsx:2278:    "admin.integ_desc":"Preparadas, pendientes de credenciales o pendientes de despliegue.",
+src/App.jsx:2279:    "soporte.title":"Soporte técnico","soporte.desc":"Control técnico de la aplicación.",
+src/App.jsx:2282:    "flujos.title":"Centro técnico","flujos.desc":"Estado de automatizaciones del sistema.",
+src/App.jsx:2376:    "home.galeria_eyebrow":"Galería","home.galeria_desc":"Galería visual del club.","home.sistema":"Sistema",
+src/App.jsx:2400:    "admin.gestion_eyebrow":"Gestión","admin.gestion_title":"Pistas y clientes",
+src/App.jsx:2401:    "admin.gestion_desc":"Módulos preparados para dirección operativa.",
+src/App.jsx:2402:    "admin.gestion_item1":"Gestión de pistas","admin.gestion_item2":"Clientes y perfiles",
+src/App.jsx:2403:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Reglas de disponibilidad",
+src/App.jsx:2404:    "admin.crec_eyebrow":"Crecimiento","admin.crec_title":"Torneos y procesos",
+src/App.jsx:2405:    "admin.crec_desc":"Zona preparada para activar procesos cuando exista backend.",
+src/App.jsx:2406:    "admin.crec_item1":"Torneos","admin.crec_item2":"Ranking y categorías",
+src/App.jsx:2407:    "admin.crec_item3":"Sistema de clasificación","admin.crec_item4":"Pagos futuros",
+src/App.jsx:2408:    "admin.backup_eyebrow":"Sistema activo","admin.backup_desc":"Copia automática de reservas y socios activos.",
+src/App.jsx:2409:    "admin.backup_item1":"Programación: lunes 07:00","admin.backup_item2":"Origen: Base de datos",
+src/App.jsx:2410:    "admin.backup_item3":"Destino: Almacenamiento","admin.backup_item4":"Confirmación: Notificaciones",
+src/App.jsx:2411:    "admin.sistema_eyebrow":"Sistema","admin.exito_label":"Éxito:",
+src/App.jsx:2416:    "soporte.estado_tec_eyebrow":"Estado de integraciones","soporte.estado_tec_title":"Estado técnico",
+src/App.jsx:2432:    "nav.admin":"Admin","nav.flujos_make":"Tech centre","nav.soporte":"Support",
+src/App.jsx:2443:    "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
+src/App.jsx:2447:    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Management panel, metrics and operational control.",
+src/App.jsx:2464:    "home.hero_subtitle":"SaaS by roles: player, reception, administration and support.",
+src/App.jsx:2465:    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+src/App.jsx:2467:    "home.ver_admin":"View admin","home.ver_soporte":"View support",
+src/App.jsx:2468:    "home.galeria":"Club gallery",
+src/App.jsx:2471:    "admin.panel":"Management panel","admin.metricas":"Club global metrics.",
+src/App.jsx:2472:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+src/App.jsx:2473:    "admin.socios":"Active members","admin.procesos":"Active processes",
+src/App.jsx:2474:    "admin.backup":"Last backup","admin.ingr_mes":"Monthly revenue",
+src/App.jsx:2475:    "admin.vs_mes_anterior":"vs previous month","admin.prox_lunes":"Next: Monday 07:00",
+src/App.jsx:2476:    "admin.graf_hoy":"Bookings by hour — today","admin.graf_semana":"Weekly evolution",
+src/App.jsx:2477:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+src/App.jsx:2478:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+src/App.jsx:2479:    "admin.backup_semana":"Weekly backup","admin.integraciones":"Integration status",
+src/App.jsx:2480:    "admin.integ_desc":"Ready, pending credentials or pending deployment.",
+src/App.jsx:2578:    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
+src/App.jsx:2602:    "admin.gestion_eyebrow":"Management","admin.gestion_title":"Courts and clients",
+src/App.jsx:2603:    "admin.gestion_desc":"Modules ready for operational management.",
+src/App.jsx:2604:    "admin.gestion_item1":"Court management","admin.gestion_item2":"Clients and profiles",
+src/App.jsx:2605:    "admin.gestion_item3":"Booking history","admin.gestion_item4":"Availability rules",
+src/App.jsx:2606:    "admin.crec_eyebrow":"Growth","admin.crec_title":"Tournaments and processes",
+src/App.jsx:2607:    "admin.crec_desc":"Area ready to activate processes when backend is available.",
+src/App.jsx:2608:    "admin.crec_item1":"Tournaments","admin.crec_item2":"Ranking and categories",
+src/App.jsx:2609:    "admin.crec_item3":"Classification system","admin.crec_item4":"Future payments",
+src/App.jsx:2610:    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
+src/App.jsx:2611:    "admin.backup_item1":"Schedule: Monday 07:00","admin.backup_item2":"Source: Database",
+src/App.jsx:2612:    "admin.backup_item3":"Destination: Storage","admin.backup_item4":"Confirmation: Notifications",
+src/App.jsx:2613:    "admin.sistema_eyebrow":"System","admin.exito_label":"Success:",
+src/App.jsx:2634:    "nav.admin":"Admin","nav.flujos_make":"Tech center","nav.soporte":"Support",
+src/App.jsx:2649:    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Dashboard, metrics and operational control.",
+src/App.jsx:2666:    "home.hero_subtitle":"SaaS by roles: player, front desk, administration and support.",
+src/App.jsx:2667:    "home.btn_torneos":"Tournaments","home.btn_admin":"Admin",
+src/App.jsx:2669:    "home.ver_admin":"View admin","home.ver_soporte":"View support",
+src/App.jsx:2670:    "home.galeria":"Club gallery",
+src/App.jsx:2673:    "admin.panel":"Management panel","admin.metricas":"Club global metrics.",
+src/App.jsx:2674:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+src/App.jsx:2675:    "admin.socios":"Active members","admin.procesos":"Active processes",
+src/App.jsx:2676:    "admin.backup":"Last backup","admin.ingr_mes":"Monthly revenue",
+src/App.jsx:2677:    "admin.vs_mes_anterior":"vs previous month","admin.prox_lunes":"Next: Monday 07:00",
+src/App.jsx:2678:    "admin.graf_hoy":"Bookings by hour — today","admin.graf_semana":"Weekly evolution",
+src/App.jsx:2679:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+src/App.jsx:2680:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+src/App.jsx:2681:    "admin.backup_semana":"Weekly backup","admin.integraciones":"Integration status",
+src/App.jsx:2682:    "admin.integ_desc":"Ready, pending credentials or pending deployment.",
+src/App.jsx:2780:    "home.galeria_eyebrow":"Gallery","home.galeria_desc":"Visual gallery of the club.","home.sistema":"System",
+src/App.jsx:2804:    "admin.gestion_eyebrow":"Management","admin.gestion_title":"Courts and clients",
+src/App.jsx:2805:    "admin.gestion_desc":"Modules ready for operational management.",
+src/App.jsx:2806:    "admin.gestion_item1":"Court management","admin.gestion_item2":"Clients and profiles",
+src/App.jsx:2807:    "admin.gestion_item3":"Booking history","admin.gestion_item4":"Availability rules",
+src/App.jsx:2808:    "admin.crec_eyebrow":"Growth","admin.crec_title":"Tournaments and processes",
+src/App.jsx:2809:    "admin.crec_desc":"Area ready to activate processes when backend is available.",
+src/App.jsx:2810:    "admin.crec_item1":"Tournaments","admin.crec_item2":"Ranking and categories",
+src/App.jsx:2811:    "admin.crec_item3":"Classification system","admin.crec_item4":"Future payments",
+src/App.jsx:2812:    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
+src/App.jsx:2813:    "admin.backup_item1":"Schedule: Monday 07:00","admin.backup_item2":"Source: Database",
+src/App.jsx:2814:    "admin.backup_item3":"Destination: Storage","admin.backup_item4":"Confirmation: Notifications",
+src/App.jsx:2815:    "admin.sistema_eyebrow":"System","admin.exito_label":"Success:",
+src/App.jsx:2836:    "nav.admin":"Admin","nav.flujos_make":"Centre technique","nav.soporte":"Support",
+src/App.jsx:2851:    "role.ADMIN.label":"Administrateur","role.ADMIN.desc":"Tableau de bord, métriques et contrôle opérationnel.",
+src/App.jsx:2868:    "home.hero_subtitle":"SaaS par rôles: joueur, accueil, administration et support.",
+src/App.jsx:2869:    "home.btn_torneos":"Tournois","home.btn_admin":"Admin",
+src/App.jsx:2871:    "home.ver_admin":"Voir admin","home.ver_soporte":"Voir support",
+src/App.jsx:2872:    "home.galeria":"Galerie du club",
+src/App.jsx:2874:    "admin.panel":"Tableau de bord","admin.metricas":"Métriques globales du club.",
+src/App.jsx:2875:    "admin.reservas_mes":"Réservations du mois","admin.ocupacion":"Occupation moy.",
+src/App.jsx:2876:    "admin.socios":"Membres actifs","admin.procesos":"Processus actifs",
+src/App.jsx:2877:    "admin.backup":"Dernier backup","admin.ingr_mes":"Revenus du mois",
+src/App.jsx:2878:    "admin.vs_mes_anterior":"vs mois précédent","admin.prox_lunes":"Prochain: lundi 07:00",
+src/App.jsx:2879:    "admin.graf_hoy":"Réservations par heure — auj.","admin.graf_semana":"Évolution hebdomadaire",
+src/App.jsx:2880:    "admin.graf_pista":"Occupation par court","admin.sub_hoy":"Créneau · démo",
+src/App.jsx:2881:    "admin.sub_semana":"Réservations 7 jours · démo","admin.sub_pista":"% utilisation · démo",
+src/App.jsx:2882:    "admin.backup_semana":"Backup hebdomadaire","admin.integraciones":"État des intégrations",
+src/App.jsx:2883:    "admin.integ_desc":"Prêtes, en attente de credentials ou de déploiement.",
+src/App.jsx:2978:    "home.galeria_eyebrow":"Galerie","home.galeria_desc":"Galerie visuelle du club.","home.sistema":"Système",
+src/App.jsx:3002:    "admin.gestion_eyebrow":"Gestion","admin.gestion_title":"Terrains et clients",
+src/App.jsx:3003:    "admin.gestion_desc":"Modules prêts pour la gestion opérationnelle.",
+src/App.jsx:3004:    "admin.gestion_item1":"Gestion des terrains","admin.gestion_item2":"Clients et profils",
+src/App.jsx:3005:    "admin.gestion_item3":"Historique des réservations","admin.gestion_item4":"Règles de disponibilité",
+src/App.jsx:3006:    "admin.crec_eyebrow":"Croissance","admin.crec_title":"Tournois et processus",
+src/App.jsx:3007:    "admin.crec_desc":"Zone prête à activer des processus quand le backend sera disponible.",
+src/App.jsx:3008:    "admin.crec_item1":"Tournois","admin.crec_item2":"Classement et catégories",
+src/App.jsx:3009:    "admin.crec_item3":"Système de classement","admin.crec_item4":"Paiements futurs",
+src/App.jsx:3010:    "admin.backup_eyebrow":"Système actif","admin.backup_desc":"Sauvegarde automatique des réservations et membres actifs.",
+src/App.jsx:3011:    "admin.backup_item1":"Planification : lundi 07:00","admin.backup_item2":"Source : Base de données",
+src/App.jsx:3012:    "admin.backup_item3":"Destination : Stockage","admin.backup_item4":"Confirmation : Notifications",
+src/App.jsx:3013:    "admin.sistema_eyebrow":"Système","admin.exito_label":"Succès :",
+src/App.jsx:3034:    "nav.admin":"Admin","nav.flujos_make":"Centro tecnico","nav.soporte":"Supporto",
+src/App.jsx:3049:    "role.ADMIN.label":"Amministratore","role.ADMIN.desc":"Pannello di gestione, metriche e controllo operativo.",
+src/App.jsx:3067:    "home.btn_torneos":"Tornei","home.btn_admin":"Admin",
+src/App.jsx:3069:    "home.ver_admin":"Vedi admin","home.ver_soporte":"Vedi supporto",
+src/App.jsx:3070:    "home.galeria":"Galleria del club",
+src/App.jsx:3072:    "admin.panel":"Pannello di gestione","admin.metricas":"Metriche globali del club.",
+src/App.jsx:3073:    "admin.reservas_mes":"Prenotazioni mensili","admin.ocupacion":"Occupazione media",
+src/App.jsx:3074:    "admin.socios":"Soci attivi","admin.procesos":"Processi attivi",
+src/App.jsx:3075:    "admin.backup":"Ultimo backup","admin.ingr_mes":"Entrate mensili",
+src/App.jsx:3076:    "admin.vs_mes_anterior":"vs mese precedente","admin.prox_lunes":"Prossimo: lunedì 07:00",
+src/App.jsx:3077:    "admin.graf_hoy":"Prenotazioni per ora — oggi","admin.graf_semana":"Evoluzione settimanale",
+src/App.jsx:3078:    "admin.graf_pista":"Occupazione per campo","admin.sub_hoy":"Fascia oraria · demo",
+src/App.jsx:3079:    "admin.sub_semana":"Prenotazioni 7 giorni · demo","admin.sub_pista":"% utilizzo · demo",
+src/App.jsx:3080:    "admin.backup_semana":"Backup settimanale","admin.integraciones":"Stato integrazioni",
+src/App.jsx:3081:    "admin.integ_desc":"Pronte, in attesa di credenziali o di distribuzione.",
+src/App.jsx:3084:    "flujos.title":"Centro tecnico","flujos.desc":"Stato delle automazioni del sistema.",
+src/App.jsx:3176:    "home.galeria_eyebrow":"Galleria","home.galeria_desc":"Galleria visiva del club.","home.sistema":"Sistema",
+src/App.jsx:3200:    "admin.gestion_eyebrow":"Gestione","admin.gestion_title":"Campi e clienti",
+src/App.jsx:3201:    "admin.gestion_desc":"Moduli pronti per la gestione operativa.",
+src/App.jsx:3202:    "admin.gestion_item1":"Gestione campi","admin.gestion_item2":"Clienti e profili",
+src/App.jsx:3203:    "admin.gestion_item3":"Storico prenotazioni","admin.gestion_item4":"Regole di disponibilità",
+src/App.jsx:3204:    "admin.crec_eyebrow":"Crescita","admin.crec_title":"Tornei e processi",
+src/App.jsx:3205:    "admin.crec_desc":"Area pronta ad attivare processi quando il backend sarà disponibile.",
+src/App.jsx:3206:    "admin.crec_item1":"Tornei","admin.crec_item2":"Classifica e categorie",
+src/App.jsx:3207:    "admin.crec_item3":"Sistema di classificazione","admin.crec_item4":"Pagamenti futuri",
+src/App.jsx:3208:    "admin.backup_eyebrow":"Sistema attivo","admin.backup_desc":"Backup automatico di prenotazioni e soci attivi.",
+src/App.jsx:3209:    "admin.backup_item1":"Programmazione: lunedì 07:00","admin.backup_item2":"Origine: Database",
+src/App.jsx:3210:    "admin.backup_item3":"Destinazione: Archiviazione","admin.backup_item4":"Conferma: Notifiche",
+src/App.jsx:3211:    "admin.sistema_eyebrow":"Sistema","admin.exito_label":"Successo:",
+src/App.jsx:3232:    "nav.admin":"Admin","nav.flujos_make":"Centro técnico","nav.soporte":"Suporte",
+src/App.jsx:3247:    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controlo operacional.",
+src/App.jsx:3264:    "home.hero_subtitle":"SaaS por funções: jogador, receção, administração e suporte.",
+src/App.jsx:3265:    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
+src/App.jsx:3267:    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver suporte",
+src/App.jsx:3268:    "home.galeria":"Galeria do clube",
+src/App.jsx:3270:    "admin.panel":"Painel de gestão","admin.metricas":"Métricas globais do clube.",
+src/App.jsx:3271:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+src/App.jsx:3272:    "admin.socios":"Sócios ativos","admin.procesos":"Processos ativos",
+src/App.jsx:3273:    "admin.backup":"Último backup","admin.ingr_mes":"Receitas do mês",
+src/App.jsx:3274:    "admin.vs_mes_anterior":"vs mês anterior","admin.prox_lunes":"Próximo: segunda 07:00",
+src/App.jsx:3275:    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
+src/App.jsx:3276:    "admin.graf_pista":"Ocupação por campo","admin.sub_hoy":"Faixa horária · demo",
+src/App.jsx:3277:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+src/App.jsx:3278:    "admin.backup_semana":"Backup semanal","admin.integraciones":"Estado das integrações",
+src/App.jsx:3279:    "admin.integ_desc":"Prontas, pendentes de credenciais ou de implementação.",
+src/App.jsx:3282:    "flujos.title":"Centro técnico","flujos.desc":"Estado das automatizações do sistema.",
+src/App.jsx:3374:    "home.galeria_eyebrow":"Galeria","home.galeria_desc":"Galeria visual do clube.","home.sistema":"Sistema",
+src/App.jsx:3398:    "admin.gestion_eyebrow":"Gestão","admin.gestion_title":"Campos e clientes",
+src/App.jsx:3399:    "admin.gestion_desc":"Módulos preparados para gestão operacional.",
+src/App.jsx:3400:    "admin.gestion_item1":"Gestão de campos","admin.gestion_item2":"Clientes e perfis",
+src/App.jsx:3401:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+src/App.jsx:3402:    "admin.crec_eyebrow":"Crescimento","admin.crec_title":"Torneios e processos",
+src/App.jsx:3403:    "admin.crec_desc":"Zona preparada para ativar processos quando existir backend.",
+src/App.jsx:3404:    "admin.crec_item1":"Torneios","admin.crec_item2":"Classificação e categorias",
+src/App.jsx:3405:    "admin.crec_item3":"Sistema de classificação","admin.crec_item4":"Pagamentos futuros",
+src/App.jsx:3406:    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
+src/App.jsx:3407:    "admin.backup_item1":"Programação: segunda 07:00","admin.backup_item2":"Origem: Base de dados",
+src/App.jsx:3408:    "admin.backup_item3":"Destino: Armazenamento","admin.backup_item4":"Confirmação: Notificações",
+src/App.jsx:3409:    "admin.sistema_eyebrow":"Sistema","admin.exito_label":"Sucesso:",
+src/App.jsx:3430:    "nav.admin":"Admin","nav.flujos_make":"Central técnica","nav.soporte":"Suporte",
+src/App.jsx:3445:    "role.ADMIN.label":"Administrador","role.ADMIN.desc":"Painel de gestão, métricas e controle operacional.",
+src/App.jsx:3462:    "home.hero_subtitle":"SaaS por perfis: jogador, recepção, administração e suporte.",
+src/App.jsx:3463:    "home.btn_torneos":"Torneios","home.btn_admin":"Admin",
+src/App.jsx:3465:    "home.ver_admin":"Ver admin","home.ver_soporte":"Ver suporte",
+src/App.jsx:3466:    "home.galeria":"Galeria do clube",
+src/App.jsx:3468:    "admin.panel":"Painel de gestão","admin.metricas":"Métricas globais do clube.",
+src/App.jsx:3469:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+src/App.jsx:3470:    "admin.socios":"Sócios ativos","admin.procesos":"Processos ativos",
+src/App.jsx:3471:    "admin.backup":"Último backup","admin.ingr_mes":"Receita do mês",
+src/App.jsx:3472:    "admin.vs_mes_anterior":"vs mês anterior","admin.prox_lunes":"Próximo: segunda 07:00",
+src/App.jsx:3473:    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
+src/App.jsx:3474:    "admin.graf_pista":"Ocupação por quadra","admin.sub_hoy":"Faixa horária · demo",
+src/App.jsx:3475:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+src/App.jsx:3476:    "admin.backup_semana":"Backup semanal","admin.integraciones":"Status das integrações",
+src/App.jsx:3477:    "admin.integ_desc":"Prontas, pendentes de credenciais ou de implantação.",
+src/App.jsx:3572:    "home.galeria_eyebrow":"Galeria","home.galeria_desc":"Galeria visual do clube.","home.sistema":"Sistema",
+src/App.jsx:3596:    "admin.gestion_eyebrow":"Gestão","admin.gestion_title":"Quadras e clientes",
+src/App.jsx:3597:    "admin.gestion_desc":"Módulos preparados para gestão operacional.",
+src/App.jsx:3598:    "admin.gestion_item1":"Gestão de quadras","admin.gestion_item2":"Clientes e perfis",
+src/App.jsx:3599:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+src/App.jsx:3600:    "admin.crec_eyebrow":"Crescimento","admin.crec_title":"Torneios e processos",
+src/App.jsx:3601:    "admin.crec_desc":"Zona preparada para ativar processos quando existir backend.",
+src/App.jsx:3602:    "admin.crec_item1":"Torneios","admin.crec_item2":"Ranking e categorias",
+src/App.jsx:3603:    "admin.crec_item3":"Sistema de classificação","admin.crec_item4":"Pagamentos futuros",
+src/App.jsx:3604:    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
+src/App.jsx:3605:    "admin.backup_item1":"Programação: segunda 07:00","admin.backup_item2":"Origem: Banco de dados",
+src/App.jsx:3606:    "admin.backup_item3":"Destino: Armazenamento","admin.backup_item4":"Confirmação: Notificações",
+src/App.jsx:3607:    "admin.sistema_eyebrow":"Sistema","admin.exito_label":"Sucesso:",
+src/App.jsx:3628:    "nav.admin":"Admin","nav.flujos_make":"Technisches Zentrum","nav.soporte":"Support",
+src/App.jsx:3643:    "role.ADMIN.label":"Administrator","role.ADMIN.desc":"Verwaltungspanel, Metriken und Betriebskontrolle.",
+src/App.jsx:3661:    "home.btn_torneos":"Turniere","home.btn_admin":"Admin",
+src/App.jsx:3663:    "home.ver_admin":"Admin anzeigen","home.ver_soporte":"Support anzeigen",
+src/App.jsx:3664:    "home.galeria":"Club-Galerie",
+src/App.jsx:3666:    "admin.panel":"Verwaltungspanel","admin.metricas":"Globale Club-Metriken.",
+src/App.jsx:3667:    "admin.reservas_mes":"Monatliche Buchungen","admin.ocupacion":"Durchschn. Auslastung",
+src/App.jsx:3668:    "admin.socios":"Aktive Mitglieder","admin.procesos":"Aktive Prozesse",
+src/App.jsx:3669:    "admin.backup":"Letztes Backup","admin.ingr_mes":"Monatseinnahmen",
+src/App.jsx:3670:    "admin.vs_mes_anterior":"vs Vormonat","admin.prox_lunes":"Nächstes: Montag 07:00",
+src/App.jsx:3671:    "admin.graf_hoy":"Buchungen pro Stunde — heute","admin.graf_semana":"Wöchentliche Entwicklung",
+src/App.jsx:3672:    "admin.graf_pista":"Auslastung je Platz","admin.sub_hoy":"Zeitfenster · Demo",
+src/App.jsx:3673:    "admin.sub_semana":"Buchungen 7 Tage · Demo","admin.sub_pista":"% Nutzung · Demo",
+src/App.jsx:3674:    "admin.backup_semana":"Wöchentliches Backup","admin.integraciones":"Integrationsstatus",
+src/App.jsx:3675:    "admin.integ_desc":"Bereit, ausstehende Anmeldedaten oder Bereitstellung.",
+src/App.jsx:3770:    "home.galeria_eyebrow":"Galerie","home.galeria_desc":"Bildergalerie des Clubs.","home.sistema":"System",
+src/App.jsx:3794:    "admin.gestion_eyebrow":"Verwaltung","admin.gestion_title":"Plätze und Kunden",
+src/App.jsx:3795:    "admin.gestion_desc":"Module für die Betriebsleitung bereit.",
+src/App.jsx:3796:    "admin.gestion_item1":"Platzverwaltung","admin.gestion_item2":"Kunden und Profile",
+src/App.jsx:3797:    "admin.gestion_item3":"Buchungsverlauf","admin.gestion_item4":"Verfügbarkeitsregeln",
+src/App.jsx:3798:    "admin.crec_eyebrow":"Wachstum","admin.crec_title":"Turniere und Prozesse",
+src/App.jsx:3799:    "admin.crec_desc":"Bereich bereit, Prozesse zu aktivieren, wenn Backend verfügbar ist.",
+src/App.jsx:3800:    "admin.crec_item1":"Turniere","admin.crec_item2":"Rangliste und Kategorien",
+src/App.jsx:3801:    "admin.crec_item3":"Klassifizierungssystem","admin.crec_item4":"Zukünftige Zahlungen",
+src/App.jsx:3802:    "admin.backup_eyebrow":"Aktives System","admin.backup_desc":"Automatische Sicherung von Buchungen und aktiven Mitgliedern.",
+src/App.jsx:3803:    "admin.backup_item1":"Planung: Montag 07:00","admin.backup_item2":"Quelle: Datenbank",
+src/App.jsx:3804:    "admin.backup_item3":"Ziel: Speicher","admin.backup_item4":"Bestätigung: Benachrichtigungen",
+src/App.jsx:3805:    "admin.sistema_eyebrow":"System","admin.exito_label":"Erfolg:",
+src/App.jsx:3971:    ["torneos","nav.torneos","🏆"],["ranking","nav.ranking","🏅"],["admin","nav.admin","📊"],
+src/App.jsx:3977:    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
+src/App.jsx:3978:    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+src/App.jsx:4051:            <Btn variant="secondary" onClick={() => setCurrent("admin")}>📊 {tx("home.btn_admin")}</Btn>
+src/App.jsx:4129:      {/* GALERÍA */}
+src/App.jsx:4130:      <Gallery />
+src/App.jsx:6529:function Admin() {
+src/App.jsx:6537:        <SectionTitle eyebrow={tx("role.ADMIN.label")} title={tx("admin.panel")} desc={tx("admin.metricas")} />
+src/App.jsx:6545:        <MetricCard label={tx("admin.ingr_mes")} value={`${kpi.ingresosMes}€`} sub={tx("home.estimacion_mensual")} trend={12} color={T.accent2} icon="💶" />
+src/App.jsx:6546:        <MetricCard label={tx("admin.reservas_mes")} value="268" sub={`vs 241 ${tx("admin.vs_mes_anterior")}`} trend={11} icon="🎾" />
+src/App.jsx:6547:        <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
+src/App.jsx:6548:        <MetricCard label={tx("admin.socios")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
+src/App.jsx:6549:        <MetricCard label={tx("admin.procesos")} value={`${kpi.makeActivos}/43`} sub={`${tx("admin.exito_label")} ${kpi.tasaExitoMake}%`} trend={null} color={T.accent} icon="⚡" />
+src/App.jsx:6550:        <MetricCard label={tx("admin.backup")} value={kpi.ultimoBackup} sub={tx("admin.prox_lunes")} trend={null} color="#34d399" icon="💾" />
+src/App.jsx:6553:      {/* GRÁFICAS ADMIN */}
+src/App.jsx:6555:        <ChartCard title={tx("admin.graf_hoy")} sub={tx("admin.sub_hoy")} demo>
+src/App.jsx:6558:        <ChartCard title={tx("admin.graf_semana")} sub={tx("admin.sub_semana")} demo>
+src/App.jsx:6561:        <ChartCard title={tx("admin.graf_pista")} sub={tx("admin.sub_pista")} demo>
+src/App.jsx:6567:        <RolePanel eyebrow={tx("admin.gestion_eyebrow")} title={tx("admin.gestion_title")} desc={tx("admin.gestion_desc")} items={[tx("admin.gestion_item1"), tx("admin.gestion_item2"), tx("admin.gestion_item3"), tx("admin.gestion_item4")]} />
+src/App.jsx:6568:        <RolePanel eyebrow={tx("admin.crec_eyebrow")} title={tx("admin.crec_title")} desc={tx("admin.crec_desc")} items={[tx("admin.crec_item1"), tx("admin.crec_item2"), tx("admin.crec_item3"), tx("admin.crec_item4")]} />
+src/App.jsx:6569:        <RolePanel eyebrow={tx("admin.backup_eyebrow")} title={tx("admin.backup_semana")} desc={tx("admin.backup_desc")} items={[tx("admin.backup_item1"), tx("admin.backup_item2"), tx("admin.backup_item3"), tx("admin.backup_item4")]} />
+src/App.jsx:6573:        <SectionTitle eyebrow={tx("admin.sistema_eyebrow")} title={tx("admin.integraciones")} desc={tx("admin.integ_desc")} />
+src/App.jsx:6602:          "Roles reales pendientes de backend: PLAYER, STAFF, ADMIN, SUPPORT"
+src/App.jsx:6623:  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+src/App.jsx:6624:  const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
+src/App.jsx:6706:  const roleInitials = { PLAYER:"JG", STAFF:"ST", ADMIN:"AD", SUPPORT:"SP" };
+src/App.jsx:6795:    ADMIN:   { partidos:4,  reservas:312,torneos:5,  ranking:"—", actividad:"Alta",     valoracion:5.0, fiabilidad:100,racha:21 },
+src/App.jsx:6822:  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+src/App.jsx:6823:  const sportLevel = deporteData.nivel || (selectedRole==="ADMIN"?"Directivo":selectedRole==="STAFF"?"Interno":selectedRole==="SUPPORT"?"Técnico":"Sin definir");
+src/App.jsx:7186:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} /> };
+src/App.jsx:7201:    ADMIN: {
+src/App.jsx:7202:      label: "Administrador / jefe",
+src/App.jsx:7203:      desc: "Panel de dirección, métricas y control operativo.",
+src/App.jsx:7204:      start: "admin",
+src/App.jsx:7205:      password: "admin04",
+src/App.jsx:7208:      label: "Soporte técnico",
+src/App.jsx:7266:    if (clean.includes("admin") || clean.includes("jefe")) return "ADMIN";
+src/App.jsx:7366:      ADMIN:   { label: ltx("role.ADMIN.label"),   desc: ltx("role.ADMIN.desc")   },
+src/App.jsx:7444:            Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.
+src/App.jsx:7562:      <style>{GALLERY_REAL_IMAGE_STYLES}</style>
+src/App.jsx:7563:      <style>{GALLERY_FORCE_STYLES}</style>
+src/components/README.md:8:2. Componentes de galería.
+src/components/ClubGallery.jsx:1:import { cp04GalleryAssets } from "../data/visualAssets.js";
+src/components/ClubGallery.jsx:3:export default function ClubGallery() {
+src/components/ClubGallery.jsx:4:  const featured = cp04GalleryAssets?.[0];
+src/components/ClubGallery.jsx:5:  const sideItems = cp04GalleryAssets?.slice(1) || [];
+src/components/ClubGallery.jsx:8:    <section className="cp04-gallery-module" aria-label="Galería del club">
+src/components/ClubGallery.jsx:9:      <div className="section-kicker">GALERÍA</div>
+src/components/ClubGallery.jsx:10:      <h2>Galería del club</h2>
+src/components/ClubGallery.jsx:11:      <p>Galería visual del club.</p>
+src/components/ClubGallery.jsx:13:      <div className="cp04-gallery-grid">
+src/components/ClubGallery.jsx:15:          <article className="cp04-gallery-card cp04-gallery-card-featured">
+src/components/ClubGallery.jsx:17:            <div className="cp04-gallery-caption">{featured.title}</div>
+src/components/ClubGallery.jsx:21:        <div className="cp04-gallery-side">
+src/components/ClubGallery.jsx:23:            <article className="cp04-gallery-card" key={item.id}>
+src/components/ClubGallery.jsx:25:              <div className="cp04-gallery-caption">{item.title}</div>
+src/data/performancePlan.js:9:    "galería",
+src/data/performancePlan.js:10:    "centro técnico",
+src/data/performancePlan.js:14:    "admin",
+src/data/visualAssets.js:3:  admin: "/optimized/images/admin-technical-bg.webp",
+src/data/visualAssets.js:8:export const cp04GalleryAssets = [
+src/data/visualAssets.js:12:    src: "/optimized/gallery/cp04/pistas.webp",
+src/data/visualAssets.js:13:    original: "/gallery/cp04/pistas.jpg"
+src/data/visualAssets.js:18:    src: "/optimized/gallery/cp04/recepcion.webp",
+src/data/visualAssets.js:19:    original: "/gallery/cp04/recepcion.jpg"
+src/data/visualAssets.js:24:    src: "/optimized/gallery/cp04/cafeteria.webp",
+src/data/visualAssets.js:25:    original: "/gallery/cp04/cafeteria.jpg"
+src/data/visualAssets.js:30:    src: "/optimized/gallery/cp04/torneos.webp",
+src/data/visualAssets.js:31:    original: "/gallery/cp04/torneos.jpg"
+src/data/visualAssets.js:36:    src: "/optimized/gallery/cp04/instalaciones.webp",
+src/data/visualAssets.js:37:    original: "/gallery/cp04/instalaciones.jpg"

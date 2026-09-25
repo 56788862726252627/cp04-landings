@@ -1,0 +1,5 @@
+OK: dist existe
+OK: dist/index.html existe
+OK: dist/assets existe
+OK: paquete preview existe
+OK: preview/index.html existe

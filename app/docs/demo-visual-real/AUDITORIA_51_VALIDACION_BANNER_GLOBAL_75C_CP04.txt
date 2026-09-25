@@ -1,0 +1,4 @@
+src/styles/demo-safe.css:114:body::before {
+src/styles/demo-safe.css:115:  content: "MODO DEMO SEGURO · Acciones simuladas: no modifica reservas reales, pagos reales ni datos de producción";
+src/styles/demo-safe.css:142:  body::before {
+src/main.jsx:5:import "./styles/demo-safe.css";

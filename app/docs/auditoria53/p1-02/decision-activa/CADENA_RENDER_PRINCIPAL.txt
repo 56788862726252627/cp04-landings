@@ -1,0 +1,4 @@
+src/main.jsx:2:import { createRoot } from 'react-dom/client'
+src/main.jsx:4:import App from './App.jsx'
+src/main.jsx:6:createRoot(document.getElementById('root')).render(
+src/main.jsx:8:    <App />

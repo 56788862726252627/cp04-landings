@@ -1,0 +1,59 @@
+362:  const duration = Number(form.duracion_minutos);
+363:  const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
+371:  if (!form.fecha) errors.fecha = _t("errors.fecha");
+373:  else if (isSundayISO(form.fecha)) errors.fecha = _t("errors.fecha_domingo");
+374:  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = _t("errors.hora");
+377:    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+390:  const duration = Number(form.duracion_minutos);
+391:  const horaFin = calcTimeEnd(form.hora, duration);
+405:      fecha: form.fecha,
+406:      hora: form.hora,
+422:  const duration = Number(form.duracion_minutos);
+469:  const duration = Number(form.duracion_minutos);
+4318:  const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
+4320:  const duration = Number(form.duracion_minutos);
+4321:  const horaFin = calcTimeEnd(form.hora, duration);
+4333:  function updateForm(field, value) {
+4334:    setForm((current) => ({ ...current, [field]: value }));
+4366:      const slotKey = `${form.fecha}|${court}|${form.hora}`;
+4367:      const disponibilidad = await fetchDisponibilidad(form.fecha);
+4376:      refreshDisponibilidadAfterChange(form.fecha);
+4395:  initialDate={form.fecha || todayISO()}
+4399:    updateForm("fecha", fecha);
+4400:    updateForm("hora", hora);
+4401:    updateForm("pista", pista);
+4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+4501:  const [form, setForm] = useState({
+4514:  const duration = Number(form.duracion_minutos);
+4529:  function updateForm(field, value) {
+4530:    setForm((current) => ({ ...current, [field]: value }));
+4605:      setForm((current) => ({ ...current, confirmado: false }));
+4614:  function resetForm() {
+4615:    setForm({
+4650:          updateForm("nueva_fecha_reserva", fecha);
+4651:          updateForm("nueva_hora_inicio", hora);
+4669:              onChange={(event) => updateForm("clave_reserva", event.target.value)}
+4700:              onChange={(event) => updateForm("nueva_fecha_reserva", event.target.value)}
+4713:              onChange={(event) => updateForm("nueva_hora_inicio", event.target.value)}
+4734:              value={form.duracion_minutos}
+4735:              onChange={(event) => updateForm("duracion_minutos", event.target.value)}
+4802:                onChange={(event) => updateForm("confirmado", event.target.checked)}
+4852:            <Btn onClick={resetForm}>Reprogramar otra reserva</Btn>
+5511:  const [form, setForm] = useState(initialForm);
+5517:  function updateForm(field, value) {
+5518:    setForm((previous) => ({ ...previous, [field]: value }));
+5543:    if (!form.fecha_nacimiento) {
+5583:          fecha_nacimiento: form.fecha_nacimiento,
+5599:      setForm(initialForm);
+5615:              <input value={form.nombre} onChange={e => updateForm("nombre", e.target.value)} autoComplete="given-name" />
+5620:              <input value={form.apellidos} onChange={e => updateForm("apellidos", e.target.value)} autoComplete="family-name" />
+5625:              <input type="email" value={form.email} onChange={e => updateForm("email", e.target.value)} autoComplete="email" />
+5630:              <input type="tel" value={form.telefono} onChange={e => updateForm("telefono", e.target.value)} autoComplete="tel" />
+5635:              <input type="date" value={form.fecha_nacimiento} onChange={e => updateForm("fecha_nacimiento", e.target.value)} />
+5640:              <select value={form.nivel} onChange={e => updateForm("nivel", e.target.value)}>
+5652:              <select value={form.genero} onChange={e => updateForm("genero", e.target.value)}>
+5664:            <textarea value={form.comentarios} onChange={e => updateForm("comentarios", e.target.value)} rows={4} />
+5667:            <input type="checkbox" checked={form.acepta_condiciones} onChange={e => updateForm("acepta_condiciones", e.target.checked)} />
+5808:  const [formatMode, setFormatMode] = useState(saved?.formatMode ?? "32");
+5870:    setFormatMode(s.formatMode ?? "32");
+5916:    setFormatMode(fmt); setCustomError("");

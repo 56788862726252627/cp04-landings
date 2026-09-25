@@ -1,0 +1,4 @@
+OK: index.html preparado
+OK: _redirects preparado
+OK: assets preparados
+OK: ZIP preparado

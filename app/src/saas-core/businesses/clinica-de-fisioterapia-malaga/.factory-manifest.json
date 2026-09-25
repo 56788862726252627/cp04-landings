@@ -1,0 +1,79 @@
+{
+  "businessId": "clinica-de-fisioterapia-malaga",
+  "schemaVersion": 1,
+  "lastRunAt": "2026-07-21T15:03:55.784Z",
+  "files": {
+    "business.blueprint.json": {
+      "hash": "e9c94c16600f9c020462ce0328321312603b7c79315adc8a7e22d0af797d3bef",
+      "generatedBy": "one-prompt-factory"
+    },
+    "tenant.config.json": {
+      "hash": "1cd2b3c26dfd61cba2ebe22a7687d34c74e9e68af11a217e42495edc4b28850e",
+      "generatedBy": "one-prompt-factory"
+    },
+    "env.example": {
+      "hash": "f369c45e0c2386c4ee11a93d9f3953bd8517644f31d871cbd1dfd81810f6d862",
+      "generatedBy": "one-prompt-factory"
+    },
+    "branding/tokens.json": {
+      "hash": "2fe6af73d58c480b316c5e9c63de31fdc777046692800d670b7d67ab29555d0f",
+      "generatedBy": "one-prompt-factory"
+    },
+    "branding/tokens.css": {
+      "hash": "1a7c2864448d81ee7d6bca31cb5b989b6a870e3146e88b38ffaeb209dfef0956",
+      "generatedBy": "one-prompt-factory"
+    },
+    "branding/pending-assets.json": {
+      "hash": "8e7b2e81faa1798f241814baf292cb0fe43ade3664d1cb22234b32f6c4219b3d",
+      "generatedBy": "one-prompt-factory"
+    },
+    "landing/landing.config.json": {
+      "hash": "0b024bb75dfe53ec6f1c00dd2cd316534cabbd7fa5e9f4a02f5cdec781f6e173",
+      "generatedBy": "one-prompt-factory"
+    },
+    "landing/index.html": {
+      "hash": "0c5566671806b3238320335fd2c84e890c92d128c5b327418ce6fba5c03de82d",
+      "generatedBy": "one-prompt-factory"
+    },
+    "pwa/pwa.config.json": {
+      "hash": "dcda4c13cb94ddebf008203c38ae4698ce8f6d9ec7ba0c9c9286dc6fd8cf90ef",
+      "generatedBy": "one-prompt-factory"
+    },
+    "demo-data/dataset.json": {
+      "hash": "7176b632c6aa1053681eeee4b13675e40791b0d9bb373b62113787f5cc4d4276",
+      "generatedBy": "one-prompt-factory"
+    },
+    "mockups/manifest.json": {
+      "hash": "8596c2e964631e6f0903f9041f752e9803bc0a7168c3d9f7a2f706894c02eecf",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/README.md": {
+      "hash": "fdb73a620a351c43ca556bd7c2d84d486b1ea2e74c6258724bd40fbc83e68141",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/guia-rapida.md": {
+      "hash": "83338e911017d4ac2be8fdb1790e9f27bc51e46bd68834b77c17fe08d588103a",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/onboarding.md": {
+      "hash": "147bc2fc9c4c35e5d8e18848e958f535a437e8340107ae4c1bbc68c8b6c35a6f",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/checklist-tecnico.md": {
+      "hash": "1f251c3556da2ddab47b8e130bd6cab27699345a392c4be994420051e9baea4f",
+      "generatedBy": "one-prompt-factory"
+    },
+    "docs/checklist-comercial.md": {
+      "hash": "16ad181e9d77d5251cc73de2dd5d3298a1dfa1899b1ce55d386eab072d24192f",
+      "generatedBy": "one-prompt-factory"
+    },
+    "report.md": {
+      "hash": "c336776ba4a7091f08953a4b9cc6e3f1acab2cd30fcae940ca154203ca59f558",
+      "generatedBy": "one-prompt-factory"
+    },
+    "report.json": {
+      "hash": "018ed18536c515715648833f86817cbbc107270e50fcf5e3e4ca183818a233de",
+      "generatedBy": "one-prompt-factory"
+    }
+  }
+}

@@ -1,0 +1,104 @@
+122:const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
+210:  .cp04-gallery-fallback { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(182,255,0,.18), rgba(47,107,255,.12)), repeating-linear-gradient(90deg, rgba(255,255,255,.10) 0 1px, transparent 1px 34px); }
+347:  return "available";
+520:  } catch {
+556:  const [ocupadas, setOcupadas] = useState([]);
+561:  const ocupadasSet = useMemo(() => new Set(ocupadas), [ocupadas]);
+568:      setOcupadas([]);
+575:      setOcupadas([]);
+588:        setOcupadas([]);
+594:      setOcupadas(data.ocupadas || []);
+597:    } catch {
+600:      setOcupadas([]);
+697:                  : `${BOOKING_HOURS.filter((hora) => ocupadasSet.has(`${fecha}|${pista}|${hora}`)).length} ocupadas`}
+704:                const ocupada = ocupadasSet.has(clave);
+716:                      ? "No disponible"
+719:                        : "Libre";
+791:  return <div className={`cp04-gallery-item${featured ? " featured" : ""}`}>{item.src ? <img src={item.src} alt={`${item.title} de Club Pádel 04`} loading="lazy" /> : <div className="cp04-gallery-fallback" aria-hidden="true" />}<div className="cp04-gallery-caption"><strong style={{ display: "block", fontFamily: T.fontDisplay, letterSpacing: "-.03em" }}>{item.title}</strong><span style={{ color: T.textDim, fontSize: ".88rem" }}>{item.src ? "" : item.label}</span></div></div>;
+825:    } catch { return "es-ES"; }
+850:    } catch {
+861:  } catch { return { time:"--:--:--", date:"--/--/----", day:"--", full:"--", hour:0 }; }
+1045:          <div key={i} style={{ display:"flex", alignItems:"center", gap:8, cursor:"default" }}
+1070:        <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:10, alignItems:"center", cursor:"default" }}
+1198:    "nombre": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+1199:    "nombre_final": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+1204:    "funcion": "Detecta huecos libres y prepara alertas o promociones flash.",
+1205:    "blueprint": "workflows/27-alerta-pistas-libres-flash-promo/final/Alerta_Pistas_Libres_Flash_Promo_Padel_04_DEFINITIVO.blueprint.json",
+1474:    "funcion": "Gestiona lista de espera y promociona jugadores cuando queda una pista libre.",
+2128:  } catch {
+2139:const _defaultLang = LANGUAGES_RAW.find(l => l.code === "es-ES");
+2144:    if (!raw) return _defaultLang;
+2147:  } catch {}
+2148:  return _defaultLang;
+2152:  _globalLang = lang || _defaultLang;
+2153:  try { localStorage.setItem("cp04_language", JSON.stringify(_globalLang)); } catch {}
+2160:    function handler(e) { setLang(e.detail?.lang || _defaultLang); }
+2222:  } catch {
+2297:    "reservas.resumen":"Resumen","reservas.disponible":"Disponible","reservas.no_disponible":"No disponible",
+2372:    "errors.horario_ocupado":"Ese horario acaba de ocuparse. Elige otro hueco libre.",
+2376:    "errors.reprog_ocupado":"Ese horario acaba de ocuparse. Selecciona otra franja libre.",
+2499:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+2564:    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
+2589:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+2610:    "admin.crec_desc":"Area ready to activate processes when backend is available.",
+2628:    "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
+2701:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+2766:    "errors.hora":"Please select an available time.","errors.duracion":"Please select a valid duration.",
+2791:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+2812:    "admin.crec_desc":"Area ready to activate processes when backend is available.",
+2830:    "soporte.obs_desc":"Reserved area for diagnostics when real backend is available.",
+3834:  } catch { return key; }
+4318:  const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
+4368:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+4379:    } catch {
+4382:    } finally {
+4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+4439:    event.preventDefault();
+4485:    } catch {
+4488:    } finally {
+4544:    event.preventDefault();
+4564:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+4590:        if ((updatedAvailability.ocupadas || []).includes(slotKey)) {
+4606:    } catch {
+4609:    } finally {
+4720:                  disabled={getSlotStatus(form.nueva_fecha_reserva, hora, duration) !== "available"}
+4826:                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+4887:    } catch {
+5038:      } catch {
+5041:    } catch (error) {
+5050:    } finally {
+5563:    event.preventDefault();
+5600:    } catch (error) {
+5602:    } finally {
+5718:  } catch { return null; }
+5726:  } catch { return { snaps: [], idx: -1 }; }
+5864:    } catch { /* silent */ }
+6088:              style={{ border: `1px solid ${canUndo ? "rgba(182,255,0,.35)" : "rgba(255,255,255,.1)"}`, background: "none", color: canUndo ? "#b6ff00" : "rgba(255,255,255,.25)", borderRadius: 10, padding: "6px 12px", cursor: canUndo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
+6092:              style={{ border: `1px solid ${canRedo ? "rgba(182,255,0,.35)" : "rgba(255,255,255,.1)"}`, background: "none", color: canRedo ? "#b6ff00" : "rgba(255,255,255,.25)", borderRadius: 10, padding: "6px 12px", cursor: canRedo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
+6256:                style={{ flex: 1, border: `1px solid ${canUndo ? "rgba(182,255,0,.3)" : "rgba(255,255,255,.1)"}`, background: "none", color: canUndo ? "#b6ff00" : "rgba(255,255,255,.22)", borderRadius: 10, padding: "8px 6px", cursor: canUndo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
+6260:                style={{ flex: 1, border: `1px solid ${canRedo ? "rgba(182,255,0,.3)" : "rgba(255,255,255,.1)"}`, background: "none", color: canRedo ? "#b6ff00" : "rgba(255,255,255,.22)", borderRadius: 10, padding: "8px 6px", cursor: canRedo ? "pointer" : "default", fontWeight: 700, fontSize: ".8rem" }}>
+6802:  // Actualmente localStorage funciona como fallback local para no romper la demo.
+6820:  function saveProfileFallback(key, value) {
+6825:    } catch {
+6846:    return saveProfileFallback(storageKey, value);
+6851:  const [avatarSrc, setAvatarSrc] = useState(() => { try { return localStorage.getItem("cp04_avatar") || null; } catch { return null; } });
+6859:  const [bio, setBio] = useState(() => { try { return localStorage.getItem("cp04_bio") || ""; } catch { return ""; } });
+6867:  const [deporteData, setDeporteData] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_deporte") || "{}"); } catch { return {}; } });
+6874:  const [privacidad, setPrivacidad] = useState(() => { try { return JSON.parse(localStorage.getItem("cp04_privacidad") || "{}"); } catch { return {}; } });
+6920:    try { localStorage.removeItem("cp04_avatar"); } catch {}
+6948:  function togglePriv(key, defaultOn) {
+6949:    const current = privacidad[key] !== undefined ? privacidad[key] : defaultOn;
+6958:    e.preventDefault(); setPwdMsg(""); setPwdError("");
+7160:                  } catch {
+7283:                  { key:"busqueda",       label:tx("perfil.deporte_busqueda"),       opts:["Disponible para partidos","No disponible","Solo torneos","Buscando pareja"] },
+7428:export default function ClubPadel04SaaSApp() {
+7476:        const data = await res.json().catch(() => ({}));
+7500:      } catch (error) {
+7551:    event.preventDefault();
+7611:    event.preventDefault();
+7635:      const data = await res.json().catch(() => ({}));
+7673:    } catch (error) {
+7680:    event?.preventDefault?.();
+7717:      const data = await res.json().catch(() => ({}));
+7732:    } catch (error) {
+7777:    e.preventDefault();

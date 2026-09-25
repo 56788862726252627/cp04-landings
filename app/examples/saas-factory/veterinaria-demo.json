@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "businessId": "veterinaria-demo-factory",
+  "tenantId": "veterinaria-demo-factory",
+  "commercialName": "Veterinaria Demo Factory",
+  "legalName": "Veterinaria Demo Factory S.L. (ficticia)",
+  "sector": "veterinary",
+  "subsector": "clinica-generalista",
+  "country": "ES",
+  "timezone": "Europe/Madrid",
+  "locale": "es-ES",
+  "currencies": ["EUR"],
+  "publicInfo": {
+    "shortDescription": "Clínica veterinaria ficticia de demostración de la fábrica SaaS: consultas, vacunación y revisiones.",
+    "website": "https://veterinaria-demo-factory.example",
+    "email": "hola@veterinaria-demo-factory.example",
+    "address": { "city": "Antequera", "region": "Andalucía", "country": "ES" }
+  },
+  "branding": {
+    "logoRef": "assets/logo-placeholder.svg",
+    "colors": { "primary": "#2f7d5a", "accent": "#f2a154", "bg": "#ffffff", "surface": "#f3f8f5", "text": "#0c1420" },
+    "fonts": { "display": "'Poppins', sans-serif", "body": "'Inter', sans-serif" },
+    "tone": "cercano-profesional"
+  },
+  "plan": "starter",
+  "modules": [
+    "inicio", "citas", "clientes", "pagos", "automatizaciones", "soporte", "informes", "configuracion",
+    "agenda", "profesionales", "recursos", "servicios", "documentos"
+  ],
+  "services": [
+    { "name": "Consulta general", "durationMinutes": 30, "priceHint": 30 },
+    { "name": "Vacunación", "durationMinutes": 20, "priceHint": 25 },
+    { "name": "Revisión periódica", "durationMinutes": 30, "priceHint": 28 }
+  ],
+  "professionals": [
+    { "name": "Dra. Carmen Ortiz (ficticia)", "role": "veterinario", "functions": ["consulta-general", "vacunacion"] }
+  ],
+  "resources": [
+    { "name": "Sala de consulta 1", "kind": "sala" }
+  ],
+  "schedules": {
+    "enabled": true,
+    "weekdays": { "open": "09:30", "close": "20:00" },
+    "saturday": { "open": "10:00", "close": "13:00" },
+    "sunday": null
+  },
+  "locations": [
+    { "name": "Veterinaria Demo Factory — Único centro", "city": "Antequera" }
+  ],
+  "automations": ["alta_cliente", "confirmacion", "recordatorio", "encuesta", "documento", "pago"],
+  "aiCapabilities": ["demo_data_generation", "landing_copy_draft"],
+  "integrations": {
+    "automation": { "status": "not_configured", "envVars": ["MAKE_WEBHOOK_URL"] },
+    "dataRepository": { "status": "not_configured", "envVars": ["AIRTABLE_API_KEY", "AIRTABLE_BASE_ID"] },
+    "payments": { "status": "not_configured", "envVars": ["STRIPE_SECRET_KEY"] },
+    "messaging": { "status": "not_configured", "envVars": ["WHATSAPP_BUSINESS_TOKEN"] },
+    "calendar": { "status": "not_configured", "envVars": ["GOOGLE_CALENDAR_CLIENT_ID"] }
+  },
+  "pwa": {
+    "shortName": "Veterinaria Demo",
+    "themeColor": "#2f7d5a",
+    "backgroundColor": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "startUrl": "/"
+  },
+  "landingPage": {
+    "sectionsEnabled": ["header", "hero", "valueProposition", "benefits", "services", "howItWorks", "testimonials", "faq", "cta", "contact", "footer"],
+    "ctaLabel": "Pedir cita",
+    "ctaHref": "#contacto"
+  },
+  "demoData": { "enabled": true, "seed": "veterinaria-demo-factory", "sizes": { "customers": 14, "professionals": 1, "appointments": 18, "incidents": 2 } },
+  "flags": {},
+  "limits": { "maxUsers": 10, "maxLocations": 1 },
+  "privacy": { "regulatedSector": true, "sensitiveDataCategories": ["salud_o_legal_placeholder"] },
+  "manualSteps": [
+    "Revisión normativa veterinaria antes de producción",
+    "Sustituir logotipo/branding placeholder por assets reales"
+  ],
+  "generationMeta": {
+    "generatedBy": "saas-factory:demo-fase12",
+    "sourceInstruction": "Crear una solución SaaS para una clínica veterinaria de demostración, con un veterinario, agenda, propietarios de mascotas y vacunación.",
+    "notes": "Caso de prueba 3/3 (PROMPT AGENCIA IA 2/7, Fase 9/12): negocio demo ficticio, sin datos reales, sin conexión a proveedores. Ejecutar SIEMPRE en dry-run."
+  }
+}

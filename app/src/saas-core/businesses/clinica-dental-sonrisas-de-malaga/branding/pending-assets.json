@@ -1,0 +1,110 @@
+{
+  "businessId": "clinica-dental-sonrisas-de-malaga",
+  "generatedAt": null,
+  "note": "Ningún binario se genera en este paso. Contrato + fixtures preparados para un generador visual futuro (Fase 13).",
+  "assets": [
+    {
+      "id": "favicon_ico",
+      "label": "favicon.ico",
+      "status": "not_implemented"
+    },
+    {
+      "id": "icon_16",
+      "label": "icon-16.png",
+      "status": "not_implemented",
+      "sizePx": 16
+    },
+    {
+      "id": "icon_32",
+      "label": "icon-32.png",
+      "status": "not_implemented",
+      "sizePx": 32
+    },
+    {
+      "id": "icon_48",
+      "label": "icon-48.png",
+      "status": "not_implemented",
+      "sizePx": 48
+    },
+    {
+      "id": "icon_72",
+      "label": "icon-72.png",
+      "status": "not_implemented",
+      "sizePx": 72
+    },
+    {
+      "id": "icon_96",
+      "label": "icon-96.png",
+      "status": "not_implemented",
+      "sizePx": 96
+    },
+    {
+      "id": "icon_128",
+      "label": "icon-128.png",
+      "status": "not_implemented",
+      "sizePx": 128
+    },
+    {
+      "id": "icon_144",
+      "label": "icon-144.png",
+      "status": "not_implemented",
+      "sizePx": 144
+    },
+    {
+      "id": "icon_152",
+      "label": "icon-152.png",
+      "status": "not_implemented",
+      "sizePx": 152
+    },
+    {
+      "id": "icon_180",
+      "label": "icon-180.png",
+      "status": "not_implemented",
+      "sizePx": 180
+    },
+    {
+      "id": "icon_192",
+      "label": "icon-192.png",
+      "status": "not_implemented",
+      "sizePx": 192
+    },
+    {
+      "id": "icon_256",
+      "label": "icon-256.png",
+      "status": "not_implemented",
+      "sizePx": 256
+    },
+    {
+      "id": "icon_384",
+      "label": "icon-384.png",
+      "status": "not_implemented",
+      "sizePx": 384
+    },
+    {
+      "id": "icon_512",
+      "label": "icon-512.png",
+      "status": "not_implemented",
+      "sizePx": 512
+    },
+    {
+      "id": "apple_touch_icon",
+      "label": "apple-touch-icon.png (180x180)",
+      "status": "not_implemented"
+    },
+    {
+      "id": "maskable_icon_192",
+      "label": "maskable-icon-192.png",
+      "status": "not_implemented"
+    },
+    {
+      "id": "maskable_icon_512",
+      "label": "maskable-icon-512.png",
+      "status": "not_implemented"
+    },
+    {
+      "id": "manifest_webmanifest",
+      "label": "manifest.webmanifest",
+      "status": "not_implemented"
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+src/App.jsx:47: * - No contiene webhooks reales de Make.
+src/App.jsx:49: * - un endpoint seguro propio: /api/reservas.
+src/App.jsx:51: *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
+src/App.jsx:75:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+src/App.jsx:486:  const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx:511:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+src/App.jsx:527:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+src/App.jsx:1122:// Los datos de Make deben venir de un endpoint propio o webhook,
+src/App.jsx:1865:      {/* TODO producción: alimentar este dashboard desde backend/proxy seguro (Make API o webhook propio). NUNCA llamar Make API con clave privada desde el frontend. */}
+src/App.jsx:2170:   El backend/Worker debe ser la autoridad final en producción. */
+src/App.jsx:2421:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx:2427:    "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
+src/App.jsx:2623:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx:2629:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx:2825:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx:2831:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx:3023:    "soporte.worker_item":"Worker de réservations prêt",
+src/App.jsx:3029:    "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
+src/App.jsx:3221:    "soporte.worker_item":"Worker prenotazioni pronto",
+src/App.jsx:3227:    "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
+src/App.jsx:3419:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx:3425:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx:3617:    "soporte.worker_item":"Worker de reservas pronto",
+src/App.jsx:3623:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx:3815:    "soporte.worker_item":"Buchungs-Worker bereit",
+src/App.jsx:3821:    "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
+src/App.jsx:4459:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx:4570:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx:4876:    "/api/reservas";
+src/App.jsx:4993:      const response = await fetch(url, {
+src/App.jsx:5575:      const response = await fetch("/api/jugadores/alta", {
+src/App.jsx:6766:        La app está preparada para conectar autenticación real mediante backend/Worker.
+src/App.jsx:6782:        el backend/Worker con sesión válida y rol real.
+src/App.jsx:6792:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+src/App.jsx:6833:    // await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+src/App.jsx:6850:  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+src/App.jsx:7469:        const res = await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+src/App.jsx:7629:      const res = await fetch("/api/auth/login", {
+src/App.jsx:7711:      const res = await fetch("/api/auth/register", {
+src/data/performancePlan.js:20:    "worker",
+src/data/demoSafeDataset.js:7: * webhooks reales ni escrituras reales en bases de datos.
+src/data/demoSafeDataset.js:83:  realWebhooks: "disabled",
+src/utils/README.md:5:No mover aquí lógica crítica de reservas, auth, pagos o Worker sin pruebas E2E.
+src/components/lazy/lazySections.js:13:    "worker",
+src/components/lazy/lazyGallery.js:15:    "worker",
+src/components/CP04GuidedTutorial.jsx:229:      body: "Configuración de automatizaciones, webhooks y flujos internos. Zona de diagnóstico técnico.",
+src/styles/demo-safe.css:16: * - Esto NO activa webhooks reales.
+src/App.jsx.before-demo-realista-1782613193244.backup:46: * - No contiene webhooks reales de Make.
+src/App.jsx.before-demo-realista-1782613193244.backup:48: * - un endpoint seguro propio: /api/reservas.
+src/App.jsx.before-demo-realista-1782613193244.backup:50: *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
+src/App.jsx.before-demo-realista-1782613193244.backup:74:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+src/App.jsx.before-demo-realista-1782613193244.backup:485:  const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.before-demo-realista-1782613193244.backup:510:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+src/App.jsx.before-demo-realista-1782613193244.backup:526:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+src/App.jsx.before-demo-realista-1782613193244.backup:1121:// Los datos de Make deben venir de un endpoint propio o webhook,
+src/App.jsx.before-demo-realista-1782613193244.backup:1864:      {/* TODO producción: alimentar este dashboard desde backend/proxy seguro (Make API o webhook propio). NUNCA llamar Make API con clave privada desde el frontend. */}
+src/App.jsx.before-demo-realista-1782613193244.backup:2169:   El backend/Worker debe ser la autoridad final en producción. */
+src/App.jsx.before-demo-realista-1782613193244.backup:2420:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx.before-demo-realista-1782613193244.backup:2426:    "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
+src/App.jsx.before-demo-realista-1782613193244.backup:2622:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx.before-demo-realista-1782613193244.backup:2628:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx.before-demo-realista-1782613193244.backup:2824:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx.before-demo-realista-1782613193244.backup:2830:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx.before-demo-realista-1782613193244.backup:3022:    "soporte.worker_item":"Worker de réservations prêt",
+src/App.jsx.before-demo-realista-1782613193244.backup:3028:    "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
+src/App.jsx.before-demo-realista-1782613193244.backup:3220:    "soporte.worker_item":"Worker prenotazioni pronto",
+src/App.jsx.before-demo-realista-1782613193244.backup:3226:    "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
+src/App.jsx.before-demo-realista-1782613193244.backup:3418:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx.before-demo-realista-1782613193244.backup:3424:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx.before-demo-realista-1782613193244.backup:3616:    "soporte.worker_item":"Worker de reservas pronto",
+src/App.jsx.before-demo-realista-1782613193244.backup:3622:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx.before-demo-realista-1782613193244.backup:3814:    "soporte.worker_item":"Buchungs-Worker bereit",
+src/App.jsx.before-demo-realista-1782613193244.backup:3820:    "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
+src/App.jsx.before-demo-realista-1782613193244.backup:4286:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.before-demo-realista-1782613193244.backup:4397:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.before-demo-realista-1782613193244.backup:4703:    "/api/reservas";
+src/App.jsx.before-demo-realista-1782613193244.backup:4820:      const response = await fetch(url, {
+src/App.jsx.before-demo-realista-1782613193244.backup:5402:      const response = await fetch("/api/jugadores/alta", {
+src/App.jsx.before-demo-realista-1782613193244.backup:6593:        La app está preparada para conectar autenticación real mediante backend/Worker.
+src/App.jsx.before-demo-realista-1782613193244.backup:6609:        el backend/Worker con sesión válida y rol real.
+src/App.jsx.before-demo-realista-1782613193244.backup:6619:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+src/App.jsx.before-demo-realista-1782613193244.backup:6657:    // await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+src/App.jsx.before-demo-realista-1782613193244.backup:6674:  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+src/App.jsx.bak-auditoria28-linea6642:47: * - No contiene webhooks reales de Make.
+src/App.jsx.bak-auditoria28-linea6642:49: * - un endpoint seguro propio: /api/reservas.
+src/App.jsx.bak-auditoria28-linea6642:51: *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
+src/App.jsx.bak-auditoria28-linea6642:75:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+src/App.jsx.bak-auditoria28-linea6642:486:  const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.bak-auditoria28-linea6642:511:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+src/App.jsx.bak-auditoria28-linea6642:527:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+src/App.jsx.bak-auditoria28-linea6642:1122:// Los datos de Make deben venir de un endpoint propio o webhook,
+src/App.jsx.bak-auditoria28-linea6642:1865:      {/* TODO producción: alimentar este dashboard desde backend/proxy seguro (Make API o webhook propio). NUNCA llamar Make API con clave privada desde el frontend. */}
+src/App.jsx.bak-auditoria28-linea6642:2170:   El backend/Worker debe ser la autoridad final en producción. */
+src/App.jsx.bak-auditoria28-linea6642:2421:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx.bak-auditoria28-linea6642:2427:    "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
+src/App.jsx.bak-auditoria28-linea6642:2623:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx.bak-auditoria28-linea6642:2629:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx.bak-auditoria28-linea6642:2825:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx.bak-auditoria28-linea6642:2831:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx.bak-auditoria28-linea6642:3023:    "soporte.worker_item":"Worker de réservations prêt",
+src/App.jsx.bak-auditoria28-linea6642:3029:    "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
+src/App.jsx.bak-auditoria28-linea6642:3221:    "soporte.worker_item":"Worker prenotazioni pronto",
+src/App.jsx.bak-auditoria28-linea6642:3227:    "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
+src/App.jsx.bak-auditoria28-linea6642:3419:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx.bak-auditoria28-linea6642:3425:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx.bak-auditoria28-linea6642:3617:    "soporte.worker_item":"Worker de reservas pronto",
+src/App.jsx.bak-auditoria28-linea6642:3623:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx.bak-auditoria28-linea6642:3815:    "soporte.worker_item":"Buchungs-Worker bereit",
+src/App.jsx.bak-auditoria28-linea6642:3821:    "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
+src/App.jsx.bak-auditoria28-linea6642:4287:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.bak-auditoria28-linea6642:4398:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.bak-auditoria28-linea6642:4704:    "/api/reservas";
+src/App.jsx.bak-auditoria28-linea6642:4821:      const response = await fetch(url, {
+src/App.jsx.bak-auditoria28-linea6642:5403:      const response = await fetch("/api/jugadores/alta", {
+src/App.jsx.bak-auditoria28-linea6642:6594:        La app está preparada para conectar autenticación real mediante backend/Worker.
+src/App.jsx.bak-auditoria28-linea6642:6610:        el backend/Worker con sesión válida y rol real.
+src/App.jsx.bak-auditoria28-linea6642:6620:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+src/App.jsx.bak-auditoria28-linea6642:6682:    // await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+src/App.jsx.bak-auditoria28-linea6642:6699:  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+src/App.jsx.bak-auditoria28-linea6642:7358:        const res = await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+src/App.jsx.bak-auditoria28-linea6642:7518:      const res = await fetch("/api/auth/login", {
+src/App.jsx.bak-auditoria28-linea6642:7600:      const res = await fetch("/api/auth/register", {
+src/App.jsx.bak-auditoria28-cierre-huerfano:47: * - No contiene webhooks reales de Make.
+src/App.jsx.bak-auditoria28-cierre-huerfano:49: * - un endpoint seguro propio: /api/reservas.
+src/App.jsx.bak-auditoria28-cierre-huerfano:51: *   server action, Cloudflare Worker o API route usando variables de entorno privadas.
+src/App.jsx.bak-auditoria28-cierre-huerfano:75:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+src/App.jsx.bak-auditoria28-cierre-huerfano:486:  const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.bak-auditoria28-cierre-huerfano:511:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+src/App.jsx.bak-auditoria28-cierre-huerfano:527:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+src/App.jsx.bak-auditoria28-cierre-huerfano:1122:// Los datos de Make deben venir de un endpoint propio o webhook,
+src/App.jsx.bak-auditoria28-cierre-huerfano:1865:      {/* TODO producción: alimentar este dashboard desde backend/proxy seguro (Make API o webhook propio). NUNCA llamar Make API con clave privada desde el frontend. */}
+src/App.jsx.bak-auditoria28-cierre-huerfano:2170:   El backend/Worker debe ser la autoridad final en producción. */
+src/App.jsx.bak-auditoria28-cierre-huerfano:2421:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx.bak-auditoria28-cierre-huerfano:2427:    "soporte.logs_worker":"Logs del Worker","soporte.logs_validaciones":"Validaciones",
+src/App.jsx.bak-auditoria28-cierre-huerfano:2623:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx.bak-auditoria28-cierre-huerfano:2629:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx.bak-auditoria28-cierre-huerfano:2825:    "soporte.worker_item":"Booking worker ready",
+src/App.jsx.bak-auditoria28-cierre-huerfano:2831:    "soporte.logs_worker":"Worker logs","soporte.logs_validaciones":"Validations",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3023:    "soporte.worker_item":"Worker de réservations prêt",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3029:    "soporte.logs_worker":"Logs du Worker","soporte.logs_validaciones":"Validations",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3221:    "soporte.worker_item":"Worker prenotazioni pronto",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3227:    "soporte.logs_worker":"Log del Worker","soporte.logs_validaciones":"Validazioni",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3419:    "soporte.worker_item":"Worker de reservas preparado",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3425:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3617:    "soporte.worker_item":"Worker de reservas pronto",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3623:    "soporte.logs_worker":"Logs do Worker","soporte.logs_validaciones":"Validações",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3815:    "soporte.worker_item":"Buchungs-Worker bereit",
+src/App.jsx.bak-auditoria28-cierre-huerfano:3821:    "soporte.logs_worker":"Worker-Logs","soporte.logs_validaciones":"Validierungen",
+src/App.jsx.bak-auditoria28-cierre-huerfano:4287:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.bak-auditoria28-cierre-huerfano:4398:      const res = await fetch(CONFIG.bookingEndpoint, {
+src/App.jsx.bak-auditoria28-cierre-huerfano:4704:    "/api/reservas";
+src/App.jsx.bak-auditoria28-cierre-huerfano:4821:      const response = await fetch(url, {
+src/App.jsx.bak-auditoria28-cierre-huerfano:5403:      const response = await fetch("/api/jugadores/alta", {
+src/App.jsx.bak-auditoria28-cierre-huerfano:6594:        La app está preparada para conectar autenticación real mediante backend/Worker.
+src/App.jsx.bak-auditoria28-cierre-huerfano:6610:        el backend/Worker con sesión válida y rol real.
+src/App.jsx.bak-auditoria28-cierre-huerfano:6620:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+src/App.jsx.bak-auditoria28-cierre-huerfano:6681:    // await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+src/App.jsx.bak-auditoria28-cierre-huerfano:6698:  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+src/App.jsx.bak-auditoria28-cierre-huerfano:7357:        const res = await fetch(PROFILE_BACKEND_ENDPOINTS.me, {
+src/App.jsx.bak-auditoria28-cierre-huerfano:7517:      const res = await fetch("/api/auth/login", {
+src/App.jsx.bak-auditoria28-cierre-huerfano:7599:      const res = await fetch("/api/auth/register", {
+src/internal-background-detector.js:54:    text.includes('webhooks') ||

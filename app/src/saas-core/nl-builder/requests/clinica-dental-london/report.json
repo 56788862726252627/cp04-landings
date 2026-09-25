@@ -1,0 +1,60 @@
+{
+  "businessId": "clinica-dental-london",
+  "blueprint": {
+    "businessId": "clinica-dental-london",
+    "sector": "dental",
+    "commercialName": "Clínica Dental London"
+  },
+  "filesCreated": [],
+  "filesUpdated": [],
+  "filesPreserved": [],
+  "modulesActivated": [
+    "autenticacion",
+    "clientes",
+    "citas",
+    "pagos",
+    "facturacion",
+    "documentos",
+    "servicios",
+    "profesionales",
+    "soporte",
+    "configuracion",
+    "landing"
+  ],
+  "modulesDiscarded": [],
+  "automationsSelected": [
+    "confirmacion",
+    "recordatorio",
+    "cancelacion",
+    "seguimiento",
+    "encuesta"
+  ],
+  "integrationsDeclared": [
+    "messaging",
+    "payments"
+  ],
+  "demoDataSummary": {
+    "note": "no generado (requiere --execute)"
+  },
+  "reuse": {
+    "note": "100% del catálogo genérico de Paso 09/10; 0 archivos centrales modificados por este negocio"
+  },
+  "manualSteps": [
+    "datos de salud sujetos a normativa reforzada (expedientes clínicos)",
+    "Confirmar antes de producción: ¿Cuántos profesionales o miembros del equipo trabajarán en el negocio?"
+  ],
+  "risks": [
+    "datos de salud sujetos a normativa reforzada (expedientes clínicos)"
+  ],
+  "limitations": [
+    "Análisis únicamente: pasa --execute para materializar el tenant real."
+  ],
+  "durationMs": 45,
+  "compatibility": {
+    "note": "ver app/docs/paso-10-one-prompt-factory/"
+  },
+  "idempotent": false,
+  "dryRun": false,
+  "nextStep": "Ejecutar de nuevo con --execute para generar el tenant, o revisar manualSteps/ambigüedades primero.",
+  "generatedAt": null
+}

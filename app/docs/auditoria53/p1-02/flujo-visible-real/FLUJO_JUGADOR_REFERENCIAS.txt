@@ -1,0 +1,1033 @@
+49: * - un endpoint seguro propio: /api/reservas.
+75:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+82:    key: "pistas",
+83:    title: "Pistas",
+84:    label: "Pistas Club Pádel 04",
+85:    src: "/optimized/gallery/cp04/pistas.webp?v=cp04FotosSeparadasFinal2",
+114:  { id: 1, name: "Pista 1", type: "Cristal Pro", price60: 10, price90: 18, price120: 24 },
+115:  { id: 2, name: "Pista 2", type: "Cristal Pro", price60: 10, price90: 18, price120: 24 },
+116:  { id: 3, name: "Pista 3", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
+117:  { id: 4, name: "Pista 4", type: "Cristal Central", price60: 12, price90: 20, price120: 26 },
+120:const BOOKING_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+121:const BOOKING_DURATIONS = [60, 90, 120];
+122:const BOOKING_MODALITIES = ["libre", "partido", "clase", "torneo"];
+123:const BOOKING_LEVELS = ["iniciacion", "intermedio", "avanzado", "competicion"];
+125:const BOOKINGS = [
+126:  { id: "DEMO-001", player: "Reserva demo 1", court: "Pista 1", date: "2026-06-10", time: "10:00", status: "confirmed", price: 18 },
+127:  { id: "DEMO-002", player: "Reserva demo 2", court: "Pista 3", date: "2026-06-10", time: "12:00", status: "pending", price: 12 },
+128:  { id: "DEMO-003", player: "Reserva demo 3", court: "Pista 2", date: "2026-06-09", time: "18:00", status: "completed", price: 18 },
+132:  { pos: 1, name: "Jugador demo 1", elo: 3.85, cat: "Demo", wins: 12, losses: 3 },
+133:  { pos: 2, name: "Jugador demo 2", elo: 3.72, cat: "Demo", wins: 10, losses: 4 },
+134:  { pos: 3, name: "Jugador demo 3", elo: 3.61, cat: "Demo", wins: 9, losses: 5 },
+156:  { name: "Automatización de procesos", status: "Activo", detail: "Canal interno seguro configurado", flow: "Reservas → Procesos → Base de datos" },
+158:  { name: "Pagos", status: "Listo para conexión", detail: "Reservas, bonos, membresías y torneos", flow: "Sistema → Pagos" },
+160:  { name: "Calendario", status: "Listo para conexión", detail: "Reservas, disponibilidad y eventos", flow: "Sistema → Calendario" },
+165:  { id: "PLAYER", label: "Jugador / cliente", access: "Activo", sections: "Inicio, Reservas, Ranking", permissions: ["Crear solicitud de reserva", "Consultar ranking del club", "Ver participación en torneos"] },
+166:  { id: "STAFF", label: "Staff / recepción", access: "Activo", sections: "Gestión", permissions: ["Ver reservas", "Consultar disponibilidad", "Gestionar incidencias", "Ayudar a clientes"] },
+167:  { id: "ADMIN", label: "Administrador / jefe", access: "Protegido", sections: "Admin", permissions: ["Ver métricas del club", "Gestionar pistas y clientes", "Configurar torneos", "Revisar procesos y automatizaciones"] },
+331:function getSlotStatus(fecha, hora, duration = 90) {
+332:  if (!fecha || !hora) return "invalid";
+333:  if (isSundayISO(fecha)) return "closed";
+334:  if (isPastDateISO(fecha)) return "past";
+339:  if (fecha === todayISO() && startMinutes <= madridCurrentMinutes()) {
+360:function validateBooking(form, courtName, tx) {
+363:  const selectedDate = form.fecha ? new Date(`${form.fecha}T00:00:00`) : null;
+371:  if (!form.fecha) errors.fecha = _t("errors.fecha");
+372:  else if (selectedDate < today) errors.fecha = _t("errors.fecha_pasado");
+373:  else if (isSundayISO(form.fecha)) errors.fecha = _t("errors.fecha_domingo");
+374:  if (!BOOKING_HOURS.includes(form.hora)) errors.hora = _t("errors.hora");
+375:  if (!BOOKING_DURATIONS.includes(duration)) errors.duracion_minutos = _t("errors.duracion");
+376:  if (!errors.fecha && !errors.hora && !errors.duracion_minutos) {
+377:    const slotStatus = getSlotStatus(form.fecha, form.hora, duration);
+380:    if (slotStatus === "closed") errors.fecha = _t("errors.fecha_domingo");
+382:  if (!COURTS.some((court) => court.name === courtName)) errors.pista = _t("errors.pista");
+383:  if (!BOOKING_MODALITIES.includes(form.modalidad)) errors.modalidad = _t("errors.modalidad");
+384:  if (!BOOKING_LEVELS.includes(form.nivel)) errors.nivel = _t("errors.nivel");
+389:function prepareBookingPayload(form, courtName) {
+395:    accion: "crear_reserva",
+398:    jugador: {
+404:    reserva: {
+405:      fecha: form.fecha,
+409:      pista: courtName,
+421:  const cleanKey = form.clave_reserva.trim();
+423:  const selectedDate = form.nueva_fecha_reserva
+424:    ? new Date(`${form.nueva_fecha_reserva}T00:00:00`)
+429:    errors.clave_reserva = _t("errors.clave");
+431:    errors.clave_reserva = _t("errors.clave_incompleta");
+434:  if (!form.nueva_fecha_reserva) {
+435:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha");
+437:    errors.nueva_fecha_reserva = _t("errors.nueva_fecha_pasado");
+438:  } else if (isSundayISO(form.nueva_fecha_reserva)) {
+439:    errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+442:  if (!BOOKING_HOURS.includes(form.nueva_hora_inicio)) {
+446:  if (!BOOKING_DURATIONS.includes(duration)) {
+450:  if (!errors.nueva_fecha_reserva && !errors.nueva_hora_inicio && !errors.duracion_minutos) {
+451:    const slotStatus = getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration);
+454:    if (slotStatus === "closed") errors.nueva_fecha_reserva = _t("errors.fecha_domingo");
+458:    errors.nueva_pista = _t("errors.pista");
+473:    accion: "reprogramar_reserva",
+474:    clave_reserva: form.clave_reserva.trim(),
+475:    nueva_fecha_reserva: form.nueva_fecha_reserva,
+478:    nueva_pista: courtName,
+479:    pista_nueva: courtName,
+481:    origen: "app_publica_reprogramar_reserva",
+485:async function sendBooking(payload) {
+486:  const res = await fetch(CONFIG.bookingEndpoint, {
+493:  if (!res.ok || data?.ok === false) throw new Error("booking_request_failed");
+511:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+512:const DISPONIBILIDAD_UPDATE_EVENT = "cp04:disponibilidad-actualizar";
+525:async function fetchDisponibilidad(fecha) {
+526:  const params = new URLSearchParams({ fecha, t: String(Date.now()) });
+527:  const res = await fetch(`${DISPONIBILIDAD_ENDPOINT}?${params.toString()}`);
+537:function emitDisponibilidadUpdate(fecha) {
+538:  window.dispatchEvent(new CustomEvent(DISPONIBILIDAD_UPDATE_EVENT, { detail: { fecha } }));
+541:function refreshDisponibilidadAfterChange(fecha) {
+542:  emitDisponibilidadUpdate(fecha);
+543:  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 1500);
+544:  window.setTimeout(() => emitDisponibilidadUpdate(fecha), 4000);
+547:function CalendarioDisponibilidad({
+552:  title = "Calendario de disponibilidad",
+553:  description = "Elige fecha, hora y pista disponibles.",
+555:  const [fecha, setFecha] = useState(initialDate || todayISO());
+562:  const pistas = COURTS.map((c) => c.name);
+564:  const consultarDisponibilidad = useCallback(async (fechaConsulta) => {
+565:    if (!fechaConsulta) return;
+567:    if (isSundayISO(fechaConsulta)) {
+570:      setMensaje("Club cerrado los domingos · no se admiten reservas durante todo el día.");
+574:    if (isPastDateISO(fechaConsulta)) {
+577:      setMensaje("La fecha seleccionada ya ha pasado.");
+585:      const data = await fetchDisponibilidad(fechaConsulta);
+596:      setMensaje(`Disponibilidad actualizada · ${data.total || 0} slot(s) ocupado(s)`);
+599:      setMensaje("No se pudo actualizar la disponibilidad. Inténtalo de nuevo.");
+605:    const timer = window.setTimeout(() => consultarDisponibilidad(fecha), 0);
+607:  }, [consultarDisponibilidad, fecha]);
+613:        setFecha(initialDate);
+621:    function handleDisponibilidadUpdate(event) {
+622:      const fechaEvento = event.detail?.fecha;
+623:      if (fechaEvento && fechaEvento !== fecha) {
+624:        setFecha(fechaEvento);
+625:        consultarDisponibilidad(fechaEvento);
+628:      consultarDisponibilidad(fecha);
+631:    window.addEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+634:      window.removeEventListener(DISPONIBILIDAD_UPDATE_EVENT, handleDisponibilidadUpdate);
+636:  }, [consultarDisponibilidad, fecha]);
+638:  const cambiarFecha = (value) => {
+639:    setFecha(value);
+640:    consultarDisponibilidad(value);
+655:            aria-label="Fecha disponibilidad"
+658:            value={fecha}
+659:            onChange={(e) => cambiarFecha(e.target.value)}
+672:            onClick={() => consultarDisponibilidad(fecha)}
+690:        {pistas.map((pista) => (
+691:          <div key={pista} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 14, background: "rgba(255,255,255,.035)" }}>
+693:              <strong style={{ color: pista === selectedCourt ? T.accent : T.text }}>{pista}</strong>
+695:                {isSundayISO(fecha)
+697:                  : `${BOOKING_HOURS.filter((hora) => ocupadasSet.has(`${fecha}|${pista}|${hora}`)).length} ocupadas`}
+702:              {BOOKING_HOURS.map((hora) => {
+703:                const clave = `${fecha}|${pista}|${hora}`;
+705:                const slotStatus = getSlotStatus(fecha, hora, duration);
+708:                const fueraHorario = slotStatus === "outside_hours";
+709:                const bloqueada = cerrada || pasada || fueraHorario;
+715:                    : fueraHorario
+721:                const borderColor = cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent;
+722:                const background = cerrada || fueraHorario
+735:                      onSelectSlot({ fecha, pista, hora });
+742:                      color: cerrada || fueraHorario ? T.warning : danger ? T.danger : T.accent,
+750:                    <small style={{ color: cerrada || fueraHorario ? T.warning : danger ? T.danger : T.textDim }}>
+929:function MiniBarChart({ data, height = 60, color, label, unit = "reservas" }) {
+1132:const DEMO_RESERVAS_HOY = [
+1138:const DEMO_RESERVAS_SEMANA = [12, 18, 24, 19, 27, 31, 22];
+1140:const DEMO_OCUPACION_PISTAS = [
+1141:  { l:"Pista 1", v:87, c:"#b6ff00" },
+1142:  { l:"Pista 2", v:72, c:"#20e3b2" },
+1143:  { l:"Pista 3", v:65, c:"#2f6bff" },
+1144:  { l:"Pista 4", v:91, c:"#ffad47" },
+1148:  reservasHoy: 12,
+1149:  reservasSemana: 68,
+1151:  jugadoresActivos: 143,
+1152:  nuevosJugadores: 8,
+1169:  { l:"Reservas", v:9, c:"#2f6bff" },
+1170:  { l:"Jugadores", v:6, c:"#20e3b2" },
+1182:  { l:"API Reservas", v:892, c:"#2f6bff" },
+1183:  { l:"Alta Jugador", v:634, c:"#20e3b2" },
+1184:  { l:"Alerta Pistas", v:521, c:"#b6ff00" },
+1198:    "nombre": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+1199:    "nombre_final": "🚨 Alerta Pistas Libres + Flash Promo · Club Pádel 04 · DEFINITIVO",
+1205:    "blueprint": "workflows/27-alerta-pistas-libres-flash-promo/final/Alerta_Pistas_Libres_Flash_Promo_Padel_04_DEFINITIVO.blueprint.json",
+1213:    "nombre": "🎾 Alta de Jugador · Club Pádel 04 · CORREGIDO FINAL",
+1214:    "nombre_final": "🎾 Alta de Jugador · Club Pádel 04 · CORREGIDO FINAL",
+1217:    "categoria": "Jugadores",
+1219:    "funcion": "Registra nuevos jugadores y envía confirmación.",
+1220:    "blueprint": "workflows/02-alta-jugador/final/Alta_de_Jugador_Club_Padel_04_CORREGIDO_FINAL.blueprint.json",
+1243:    "nombre": "📡 API Reservas Club Pádel 04 · FINAL V2 · Crear + Cancelar + Ocupación",
+1244:    "nombre_final": "📡 API Reservas Club Pádel 04 · FINAL V2 · Crear + Cancelar + Ocupación",
+1247:    "categoria": "Reservas",
+1249:    "funcion": "Gestiona reservas desde la app.",
+1250:    "blueprint": "workflows/01-api-reservas/final/API_Reservas_Club_Padel_04_FINAL_V2_Crear_Cancelar_Ocupacion.blueprint.json",
+1264:    "funcion": "Backup semanal de reservas y socios.",
+1273:    "nombre": "❌ Baja de Jugador + Promoción Automática · Pádel 04 · DEFINITIVO",
+1274:    "nombre_final": "❌ Baja de Jugador + Promoción Automática · Pádel 04 · DEFINITIVO",
+1277:    "categoria": "Jugadores",
+1279:    "funcion": "Gestiona baja de jugador y activa promoción automática si corresponde.",
+1280:    "blueprint": "workflows/20-baja-jugador-promocion-automatica/final/Baja_de_Jugador_Promocion_Automatica_Padel_04_DEFINITIVO.blueprint.json",
+1292:    "categoria": "Jugadores",
+1303:    "nombre": "💬 Chatbot Web Reservas Sin Tally · Pádel 04",
+1304:    "nombre_final": "💬 Chatbot Web Reservas Sin Tally · Pádel 04",
+1307:    "categoria": "Reservas",
+1310:    "blueprint": "workflows/08-chatbot-web-reservas-sin-tally-padel-04/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+1318:    "nombre": "🏟️ Cierre Temporal de Pistas · Pádel 04 · DEFINITIVO",
+1319:    "nombre_final": "🏟️ Cierre Temporal de Pistas · Pádel 04 · DEFINITIVO",
+1322:    "categoria": "Reservas",
+1324:    "funcion": "Bloquea pistas temporalmente por mantenimiento, clima u otras incidencias.",
+1325:    "blueprint": "workflows/19-cierre-temporal-pistas/final/Cierre_Temporal_de_Pistas_Padel_04_DEFINITIVO.blueprint.json",
+1339:    "funcion": "Confirma inscripciones de jugadores a torneos y envía email.",
+1408:    "nombre": "👥 Emparejamiento Jugadores Sin Pareja · Pádel 04 · DEFINITIVO",
+1409:    "nombre_final": "👥 Emparejamiento Jugadores Sin Pareja · Pádel 04 · DEFINITIVO",
+1414:    "funcion": "Detecta jugadores sin pareja y propone emparejamientos adecuados.",
+1415:    "blueprint": "workflows/26-emparejamiento-jugadores-sin-pareja/final/Emparejamiento_Jugadores_Sin_Pareja_Padel_04_DEFINITIVO.blueprint.json",
+1442:    "categoria": "Jugadores",
+1453:    "nombre": "🔑 Generación QR Acceso · Reserva Confirmada · Club Pádel 04 · CANDIDATO",
+1454:    "nombre_final": "🔑 Generación QR Acceso · Reserva Confirmada · Club Pádel 04 · CANDIDATO",
+1459:    "funcion": "Genera QR de acceso para reserva confirmada, envía email y actualiza Airtable.",
+1460:    "blueprint": "workflows/06-generacion-qr-acceso/final/Generacion_QR_Acceso_Reserva_Confirmada_Club_Padel_04_DEFINITIVO.blueprint.json",
+1468:    "nombre": "📋 Gestión Lista de Espera Reservas · Pádel 04 · DEFINITIVO",
+1469:    "nombre_final": "📋 Gestión Lista de Espera Reservas · Pádel 04 · DEFINITIVO",
+1472:    "categoria": "Reservas",
+1474:    "funcion": "Gestiona lista de espera y promociona jugadores cuando queda una pista libre.",
+1475:    "blueprint": "workflows/18-gestion-lista-espera-reservas/final/Gestion_Lista_de_Espera_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+1592:    "categoria": "Jugadores",
+1607:    "categoria": "Jugadores",
+1624:    "funcion": "Envía recordatorio automático 24 horas antes de la reserva.",
+1669:    "funcion": "Detecta ausencias, registra no-shows y prepara seguimiento del jugador.",
+1678:    "nombre": "🗓️ Sincronización Multi-Calendario · Pádel 04",
+1679:    "nombre_final": "🗓️ Sincronización Multi-Calendario · Pádel 04",
+1682:    "categoria": "Reservas",
+1684:    "funcion": "Sincroniza reservas confirmadas con Google Calendar y Airtable.",
+1685:    "blueprint": "workflows/08-sincronizacion-multi-calendario/final/Sincronizacion_Multi_Calendario_Padel_04_DEFINITIVO.blueprint.json",
+1712:    "categoria": "Jugadores",
+1723:    "nombre": "🤖 Bot IA Reservas · Telegram · Pádel 04 · DEFINITIVO",
+1724:    "nombre_final": "🤖 Bot IA Reservas · Telegram · Pádel 04 · DEFINITIVO",
+1727:    "categoria": "Reservas",
+1730:    "blueprint": "workflows/36-bot-ia-reservas-telegram-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+1738:    "nombre": "🤖 Bot IA Reservas · WhatsApp · Pádel 04 · DEFINITIVO",
+1739:    "nombre_final": "🤖 Bot IA Reservas · WhatsApp · Pádel 04 · DEFINITIVO",
+1742:    "categoria": "Reservas",
+1745:    "blueprint": "workflows/37-bot-ia-reservas-whatsapp-padel-04-definitivo/final/PENDIENTE_SINCRONIZAR_BLUEPRINT.json",
+1804:    "funcion": "Envía recordatorio automático 2 horas antes de la reserva.",
+1828:    "nombre": "📝 Tally → API Reservas · Pádel 04",
+1829:    "nombre_final": "📝 Tally → API Reservas · Pádel 04",
+1832:    "categoria": "Reservas",
+1834:    "funcion": "Flujo heredado para transición Tally hacia API de reservas.",
+1835:    "blueprint": "workflows/14-tally-api-reservas/final/Tally_API_Reservas_Padel_04_DEFINITIVO.blueprint.json",
+1923:            { n:"API Reservas", s:"ok" }, { n:"Alta Jugador", s:"ok" }, { n:"Backup Semanal", s:"ok" },
+1924:            { n:"Alerta Pistas", s:"ok" }, { n:"NPS Semanal", s:"warn" }, { n:"Recordatorio Pago", s:"error" },
+1999:  // Recomendados (padel/sport/reservas context)
+2187:  PLAYER: ["inicio", "reservas", "torneos", "ranking", "perfil"],
+2188:  STAFF: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "perfil"],
+2189:  ADMIN: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "perfil"],
+2190:  SUPPORT: ["inicio", "reservas", "alta_jugador", "reprogramar", "cancelar", "gestion", "torneos", "ranking", "admin", "flujos_make", "soporte", "perfil"],
+2195:  if (["PLAYER", "STAFF", "ADMIN", "SUPPORT"].includes(value)) return value;
+2196:  return "PLAYER";
+2206:  return (CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER).includes(safeSection);
+2211:  const allowed = CP04_ROLE_PERMISSIONS[safeRole] || CP04_ROLE_PERMISSIONS.PLAYER;
+2230:    "nav.inicio":"Inicio","nav.reservar":"Reservar","nav.alta_jugador":"Alta de jugador",
+2231:    "nav.reprogramar":"Reprogramar reserva","nav.cancelar":"Cancelar reserva",
+2232:    "nav.gestion":"Reservas","nav.torneos":"Torneos","nav.ranking":"Ranking",
+2243:    "perfil.title":"Perfil y ajustes","perfil.eyebrow":"Mi cuenta","perfil.sesion":"Sesión activa","perfil.rol_actual":"Rol actual","perfil.cerrar_sesion":"Cerrar sesión","perfil.cambiar_pwd":"Cambiar contraseña","perfil.pwd_actual":"Contraseña actual","perfil.pwd_nueva":"Nueva contraseña","perfil.pwd_confirmar":"Confirmar nueva contraseña","perfil.pwd_guardada":"Contraseña actualizada (modo demo local).","perfil.pwd_error_vacia":"Introduce la contraseña actual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, mayúscula, minúscula y número.","perfil.pwd_error_coincide":"Las contraseñas no coinciden.","perfil.idioma":"Idioma de la interfaz","perfil.info_demo":"Perfil en modo local. Los datos se guardan únicamente en este dispositivo.","perfil.privacidad":"Privacidad","perfil.privacidad_desc":"En producción real, los datos personales se gestionarán conforme al RGPD.","perfil.notificaciones":"Notificaciones","perfil.notif_desc":"Preparado para notificaciones por correo y mensajería en producción.","perfil.avatar_cambiar":"Cambiar foto de perfil","perfil.avatar_eliminar":"Eliminar foto","perfil.avatar_confirmar_del":"¿Eliminar tu foto de perfil?","perfil.avatar_guardada":"Foto actualizada.","perfil.avatar_eliminada":"Foto eliminada.","perfil.avatar_error_tipo":"Solo imágenes (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"Tu presentación","perfil.bio_placeholder":"Cuéntanos algo sobre tu juego, nivel o disponibilidad...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Presentación guardada.","perfil.bio_editar":"Editar presentación","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Datos deportivos","perfil.deporte_guardar":"Guardar datos","perfil.deporte_guardados":"Datos guardados.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posición preferida","perfil.deporte_nivel":"Nivel de juego","perfil.deporte_disponibilidad":"Disponibilidad habitual","perfil.deporte_tipo_partida":"Tipo de partida","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de búsqueda","perfil.metricas_titulo":"Mi actividad","perfil.metricas_partidos":"Partidos jugados","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneos disputados","perfil.metricas_ranking":"Ranking actual","perfil.metricas_actividad":"Nivel de actividad","perfil.metricas_valoracion":"Valoración deportiva","perfil.metricas_fiabilidad":"Fiabilidad","perfil.metricas_racha":"Racha activa","perfil.historial_titulo":"Momentos del jugador","perfil.insignias_titulo":"Logros del jugador","perfil.privacidad_config":"Configuración de privacidad","perfil.privacidad_guardada":"Privacidad actualizada.","perfil.privacidad_perfil_visible":"Perfil visible para otros jugadores","perfil.privacidad_nivel":"Mostrar nivel de juego","perfil.privacidad_disponibilidad":"Mostrar disponibilidad","perfil.privacidad_stats":"Mostrar estadísticas","perfil.privacidad_invitaciones":"Permitir invitaciones a partidos","perfil.privacidad_recomendaciones":"Permitir recomendaciones de pareja","perfil.completitud_titulo":"Completitud del perfil","nav.perfil":"Perfil y ajustes",
+2244:    "login.subtitle":"Selecciona cómo quieres entrar a la aplicación. Cada rol tendrá una experiencia orientada a sus permisos: jugador, recepción, administrador o soporte técnico.",
+2246:    "role.PLAYER.label":"Jugador / cliente","role.PLAYER.desc":"Reservar pistas, consultar reservas y ranking.",
+2247:    "role.STAFF.label":"Staff / recepción","role.STAFF.desc":"Gestión diaria de reservas, altas y atención al jugador.",
+2250:    "home.reservas_hoy":"Reservas hoy","home.ocupacion_media":"Ocupación media",
+2253:    "home.estado_operativo":"Estado operativo","home.reservar":"Reservar",
+2256:    "home.vs_ayer":"vs ayer","home.pistas_activas":"4 pistas activas",
+2262:    "home.reservas_hora":"Reservas por hora — hoy","home.reservas_7dias":"Reservas últimos 7 días",
+2263:    "home.ocupacion_pista":"Ocupación por pista","home.estado_procesos":"Estado de procesos",
+2265:    "home.hero_subtitle":"SaaS separado por roles: jugador, recepción, administración y soporte.",
+2267:    "home.ir_reservas":"Ir a reservas","home.ver_gestion":"Ver gestión",
+2273:    "admin.reservas_mes":"Reservas mes","admin.ocupacion":"Ocupación media",
+2277:    "admin.graf_hoy":"Reservas por hora — hoy","admin.graf_semana":"Evolución semanal",
+2278:    "admin.graf_pista":"Ocupación por pista","admin.sub_hoy":"Franja horaria · demo",
+2279:    "admin.sub_semana":"Reservas últimos 7 días · demo","admin.sub_pista":"Porcentaje de uso · demo",
+2291:    "torneos.jugadores":"Jugadores","torneos.parejas":"Parejas","torneos.ganador":"Ganador",
+2295:    "reservas.nueva":"Nueva reserva","reservas.fecha":"Fecha","reservas.hora":"Hora",
+2296:    "reservas.pista":"Pista","reservas.duracion":"Duración","reservas.confirmar":"Confirmar reserva",
+2297:    "reservas.resumen":"Resumen","reservas.disponible":"Disponible","reservas.no_disponible":"No disponible",
+2298:    "reprog.clave":"Clave de reserva","reprog.nueva_fecha":"Nueva fecha",
+2299:    "reprog.nueva_hora":"Nueva hora de inicio","reprog.nueva_pista":"Nueva pista",
+2300:    "reprog.resumen":"Resumen del cambio","reprog.confirmo":"Confirmo que quiero trasladar esta reserva",
+2301:    "reprog.btn":"Reprogramar reserva","reprog.volver":"Volver a Reservas",
+2303:    "ranking.title":"Ranking","ranking.subtitle":"Clasificación general de jugadores y parejas",
+2305:    "ranking.pts":"Pts","ranking.pareja":"Pareja","ranking.jugadores":"Jugadores",
+2308:    "ranking.filtrar":"Buscar jugador o pareja...","ranking.general":"General",
+2322:    "alta.title":"Alta de jugador","alta.eyebrow":"Jugadores","alta.desc":"Añade un jugador al club.",
+2324:    "alta.fecha_nac":"Fecha de nacimiento","alta.nivel":"Nivel","alta.genero":"Género",
+2327:    "alta.exito":"✅ Jugador registrado correctamente.","alta.registrando":"Registrando...","alta.btn":"Dar de alta",
+2328:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicita la cancelación de una reserva.",
+2329:    "cancelar.clave":"Clave de reserva","cancelar.clave_ph":"Introduce tu clave de reserva",
+2330:    "cancelar.confirmo_check":"Confirmo que quiero solicitar la cancelación de esta reserva.",
+2331:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Volver a Reservas",
+2333:    "reservas.title":"Reservar pista","reservas.eyebrow":"Reservas","reservas.desc":"Reserva tu pista en segundos.",
+2334:    "reservas.datos_jugador":"Datos del jugador","reservas.fecha_pista":"Fecha, hora y pista",
+2335:    "reservas.hora_fin":"Hora fin","reservas.total":"Total","reservas.ver_resumen":"Ver resumen",
+2336:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
+2337:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nueva reserva",
+2338:    "reservas.nombre":"Nombre","reservas.apellidos":"Apellidos","reservas.modalidad":"Modalidad",
+2339:    "reservas.nivel_form":"Nivel","reservas.comentarios":"Comentarios","reservas.minutos":"minutos",
+2340:    "reservas.confirmacion_desc":"La confirmación real dependerá del backend y de las integraciones configuradas.",
+2341:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Cambia la fecha u horario de tu reserva.",
+2346:    "status.reserva.pendiente":"Pendiente","status.reserva.pendiente_txt":"Revisa los datos antes de confirmar.",
+2347:    "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
+2348:    "status.reserva.exito":"Éxito","status.reserva.exito_txt":"Reserva enviada correctamente. La disponibilidad se está actualizando.",
+2349:    "status.reserva.error":"Error","status.reserva.error_txt":"No se pudo completar la reserva. Revisa los datos e inténtalo de nuevo.",
+2350:    "status.cancelar.idle":"Pendiente","status.cancelar.idle_txt":"Confirma la cancelación de tu reserva.",
+2351:    "status.cancelar.enviando":"Enviando","status.cancelar.enviando_txt":"Estamos enviando la solicitud al servicio seguro de reservas.",
+2354:    "status.reprog.idle":"Pendiente","status.reprog.idle_txt":"Elige una nueva fecha u horario.",
+2355:    "status.reprog.enviando":"Reprogramando","status.reprog.enviando_txt":"Estamos comprobando la disponibilidad y actualizando tu reserva.",
+2356:    "status.reprog.exito":"Reserva reprogramada","status.reprog.exito_txt":"La reserva se ha actualizado correctamente.",
+2360:    "errors.fecha":"Selecciona una fecha.","errors.fecha_pasado":"La fecha no puede ser anterior a hoy.",
+2361:    "errors.fecha_domingo":"El club está cerrado los domingos.",
+2364:    "errors.hora_cierre":"La reserva terminaría después del cierre del club.",
+2365:    "errors.pista":"Selecciona una pista válida.","errors.modalidad":"Selecciona una modalidad válida.",
+2367:    "errors.clave":"Introduce la clave de reserva.","errors.clave_incompleta":"La clave de reserva parece incompleta.",
+2368:    "errors.nueva_fecha":"Selecciona la nueva fecha.","errors.nueva_fecha_pasado":"La nueva fecha no puede ser anterior a hoy.",
+2369:    "errors.confirmado_reprog":"Confirma que quieres reprogramar la reserva.",
+2372:    "errors.horario_ocupado":"Ese horario acaba de ocuparse. Elige otro hueco libre.",
+2373:    "errors.reserva_error":"No se pudo completar la reserva. Inténtalo de nuevo en unos segundos.",
+2376:    "errors.reprog_ocupado":"Ese horario acaba de ocuparse. Selecciona otra franja libre.",
+2382:    "cancelar.info3":"Puedes volver al calendario cuando quieras.",
+2383:    "reprog.info1":"La clave identifica la reserva que quieres cambiar.",
+2387:    "reprog.nueva_disponibilidad":"Nueva disponibilidad","reprog.selecciona_franja":"Selecciona una nueva franja disponible.",
+2403:    "admin.gestion_eyebrow":"Gestión","admin.gestion_title":"Pistas y clientes",
+2405:    "admin.gestion_item1":"Gestión de pistas","admin.gestion_item2":"Clientes y perfiles",
+2406:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Reglas de disponibilidad",
+2411:    "admin.backup_eyebrow":"Sistema activo","admin.backup_desc":"Copia automática de reservas y socios activos.",
+2421:    "soporte.worker_item":"Worker de reservas preparado",
+2426:    "soporte.obs_desc":"Zona reservada para diagnóstico cuando exista backend real.",
+2432:    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+2433:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+2434:    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+2445:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2446:    "login.subtitle":"Select how you want to enter the application. Each role has an experience tailored to its permissions: player, reception, administrator or technical support.",
+2448:    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, check bookings and ranking.",
+2449:    "role.STAFF.label":"Staff / reception","role.STAFF.desc":"Daily management of bookings, sign-ups and player assistance.",
+2452:    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+2455:    "home.estado_operativo":"Operational status","home.reservar":"Book",
+2458:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2464:    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+2465:    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+2467:    "home.hero_subtitle":"SaaS by roles: player, reception, administration and support.",
+2469:    "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
+2475:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+2479:    "admin.graf_hoy":"Bookings by hour — today","admin.graf_semana":"Weekly evolution",
+2480:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+2481:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+2493:    "torneos.jugadores":"Players","torneos.parejas":"Pairs","torneos.ganador":"Winner",
+2497:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+2498:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+2499:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+2500:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+2501:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+2502:    "reprog.resumen":"Change summary","reprog.confirmo":"I confirm I want to reschedule this booking",
+2503:    "reprog.btn":"Reschedule booking","reprog.volver":"Back to bookings",
+2505:    "ranking.title":"Ranking","ranking.subtitle":"General ranking of players and pairs",
+2507:    "ranking.pts":"Pts","ranking.pareja":"Pair","ranking.jugadores":"Players",
+2510:    "ranking.filtrar":"Search player or pair...","ranking.general":"General",
+2524:    "alta.title":"Player registration","alta.eyebrow":"Players","alta.desc":"Add a player to the club.",
+2526:    "alta.fecha_nac":"Date of birth","alta.nivel":"Level","alta.genero":"Gender",
+2529:    "alta.exito":"✅ Player registered successfully.","alta.registrando":"Registering...","alta.btn":"Register player",
+2530:    "cancelar.title":"Cancel booking","cancelar.eyebrow":"Bookings","cancelar.desc":"Request cancellation of a booking.",
+2531:    "cancelar.clave":"Booking key","cancelar.clave_ph":"Enter your booking key",
+2532:    "cancelar.confirmo_check":"I confirm I want to request cancellation of this booking.",
+2533:    "cancelar.btn":"Cancel booking","cancelar.enviando":"Sending...","cancelar.volver_reservas":"Back to bookings",
+2535:    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
+2536:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+2537:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+2538:    "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
+2539:    "reservas.registrada":"Booking registered","reservas.nueva_btn":"New booking",
+2540:    "reservas.nombre":"First name","reservas.apellidos":"Surname","reservas.modalidad":"Mode",
+2541:    "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
+2542:    "reservas.confirmacion_desc":"Real confirmation depends on the backend and configured integrations.",
+2543:    "reprog.title":"Reschedule booking","reprog.eyebrow":"Bookings","reprog.desc":"Change the date or time of your booking.",
+2548:    "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
+2549:    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
+2550:    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+2551:    "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
+2552:    "status.cancelar.idle":"Pending","status.cancelar.idle_txt":"Confirm the cancellation of your booking.",
+2557:    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
+2558:    "status.reprog.exito":"Booking rescheduled","status.reprog.exito_txt":"Your booking has been updated successfully.",
+2562:    "errors.fecha":"Please select a date.","errors.fecha_pasado":"The date cannot be in the past.",
+2563:    "errors.fecha_domingo":"The club is closed on Sundays.",
+2566:    "errors.hora_cierre":"The booking would end after club closing time.",
+2567:    "errors.pista":"Please select a valid court.","errors.modalidad":"Please select a valid mode.",
+2569:    "errors.clave":"Please enter the booking key.","errors.clave_incompleta":"The booking key seems incomplete.",
+2570:    "errors.nueva_fecha":"Please select the new date.","errors.nueva_fecha_pasado":"The new date cannot be in the past.",
+2571:    "errors.confirmado_reprog":"Please confirm you want to reschedule the booking.",
+2574:    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
+2575:    "errors.reserva_error":"Could not complete the booking. Please try again in a few seconds.",
+2584:    "cancelar.info3":"You can return to the calendar whenever you like.",
+2585:    "reprog.info1":"The key identifies the booking you want to change.",
+2589:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+2608:    "admin.gestion_item3":"Booking history","admin.gestion_item4":"Availability rules",
+2613:    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
+2623:    "soporte.worker_item":"Booking worker ready",
+2634:    "nav.inicio":"Home","nav.reservar":"Book","nav.alta_jugador":"Player registration",
+2635:    "nav.reprogramar":"Reschedule","nav.cancelar":"Cancel booking",
+2636:    "nav.gestion":"Bookings","nav.torneos":"Tournaments","nav.ranking":"Ranking",
+2647:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+2650:    "role.PLAYER.label":"Player / client","role.PLAYER.desc":"Book courts, view bookings and ranking.",
+2651:    "role.STAFF.label":"Staff / front desk","role.STAFF.desc":"Daily management of bookings and player assistance.",
+2654:    "home.reservas_hoy":"Bookings today","home.ocupacion_media":"Avg. occupancy",
+2657:    "home.estado_operativo":"System status","home.reservar":"Book",
+2660:    "home.vs_ayer":"vs yesterday","home.pistas_activas":"4 active courts",
+2666:    "home.reservas_hora":"Bookings by hour — today","home.reservas_7dias":"Bookings last 7 days",
+2667:    "home.ocupacion_pista":"Court occupancy","home.estado_procesos":"Process status",
+2669:    "home.hero_subtitle":"SaaS by roles: player, front desk, administration and support.",
+2671:    "home.ir_reservas":"Go to bookings","home.ver_gestion":"Manage bookings",
+2677:    "admin.reservas_mes":"Monthly bookings","admin.ocupacion":"Avg. occupancy",
+2681:    "admin.graf_hoy":"Bookings by hour — today","admin.graf_semana":"Weekly evolution",
+2682:    "admin.graf_pista":"Court occupancy","admin.sub_hoy":"Time slot · demo",
+2683:    "admin.sub_semana":"Bookings last 7 days · demo","admin.sub_pista":"Usage % · demo",
+2695:    "torneos.jugadores":"Players","torneos.parejas":"Pairs","torneos.ganador":"Winner",
+2699:    "reservas.nueva":"New booking","reservas.fecha":"Date","reservas.hora":"Time",
+2700:    "reservas.pista":"Court","reservas.duracion":"Duration","reservas.confirmar":"Confirm booking",
+2701:    "reservas.resumen":"Summary","reservas.disponible":"Available","reservas.no_disponible":"Unavailable",
+2702:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+2703:    "reprog.nueva_hora":"New start time","reprog.nueva_pista":"New court",
+2704:    "reprog.resumen":"Change summary","reprog.confirmo":"I confirm I want to reschedule this booking",
+2705:    "reprog.btn":"Reschedule booking","reprog.volver":"Back to bookings",
+2707:    "ranking.title":"Ranking","ranking.subtitle":"General ranking of players and pairs",
+2709:    "ranking.pts":"Pts","ranking.pareja":"Pair","ranking.jugadores":"Players",
+2712:    "ranking.filtrar":"Search player or pair...","ranking.general":"General",
+2726:    "alta.title":"Player registration","alta.eyebrow":"Players","alta.desc":"Add a player to the club.",
+2728:    "alta.fecha_nac":"Date of birth","alta.nivel":"Level","alta.genero":"Gender",
+2731:    "alta.exito":"✅ Player registered successfully.","alta.registrando":"Registering...","alta.btn":"Register player",
+2732:    "cancelar.title":"Cancel booking","cancelar.eyebrow":"Bookings","cancelar.desc":"Request cancellation of a booking.",
+2733:    "cancelar.clave":"Booking key","cancelar.clave_ph":"Enter your booking key",
+2734:    "cancelar.confirmo_check":"I confirm I want to cancel this booking.",
+2735:    "cancelar.btn":"Cancel booking","cancelar.enviando":"Sending...","cancelar.volver_reservas":"Back to bookings",
+2737:    "reservas.title":"Book a court","reservas.eyebrow":"Bookings","reservas.desc":"Book your court in seconds.",
+2738:    "reservas.datos_jugador":"Player details","reservas.fecha_pista":"Date, time and court",
+2739:    "reservas.hora_fin":"End time","reservas.total":"Total","reservas.ver_resumen":"Review",
+2740:    "reservas.editar":"Edit","reservas.confirmar_btn":"Confirm","reservas.enviando":"Sending...",
+2741:    "reservas.registrada":"Booking confirmed","reservas.nueva_btn":"New booking",
+2742:    "reservas.nombre":"First name","reservas.apellidos":"Last name","reservas.modalidad":"Mode",
+2743:    "reservas.nivel_form":"Level","reservas.comentarios":"Comments","reservas.minutos":"minutes",
+2744:    "reservas.confirmacion_desc":"Confirmation depends on the backend and configured integrations.",
+2745:    "reprog.title":"Reschedule booking","reprog.eyebrow":"Bookings","reprog.desc":"Change the date or time of your booking.",
+2750:    "status.reserva.pendiente":"Pending","status.reserva.pendiente_txt":"Review your details before confirming.",
+2751:    "status.reserva.enviando":"Sending","status.reserva.enviando_txt":"We are sending your booking request.",
+2752:    "status.reserva.exito":"Success","status.reserva.exito_txt":"Booking sent successfully. Availability is being updated.",
+2753:    "status.reserva.error":"Error","status.reserva.error_txt":"Could not complete the booking. Check your details and try again.",
+2754:    "status.cancelar.idle":"Pending","status.cancelar.idle_txt":"Confirm the cancellation of your booking.",
+2759:    "status.reprog.enviando":"Rescheduling","status.reprog.enviando_txt":"Checking availability and updating your booking.",
+2760:    "status.reprog.exito":"Booking rescheduled","status.reprog.exito_txt":"Your booking has been updated successfully.",
+2764:    "errors.fecha":"Please select a date.","errors.fecha_pasado":"The date cannot be in the past.",
+2765:    "errors.fecha_domingo":"The club is closed on Sundays.",
+2768:    "errors.hora_cierre":"The booking would end after club closing time.",
+2769:    "errors.pista":"Please select a valid court.","errors.modalidad":"Please select a valid mode.",
+2771:    "errors.clave":"Please enter the booking key.","errors.clave_incompleta":"The booking key seems incomplete.",
+2772:    "errors.nueva_fecha":"Please select the new date.","errors.nueva_fecha_pasado":"The new date cannot be in the past.",
+2773:    "errors.confirmado_reprog":"Please confirm you want to reschedule the booking.",
+2776:    "errors.horario_ocupado":"That slot has just been taken. Please choose another.",
+2777:    "errors.reserva_error":"Could not complete the booking. Please try again in a few seconds.",
+2786:    "cancelar.info3":"You can return to the calendar whenever you like.",
+2787:    "reprog.info1":"The key identifies the booking you want to change.",
+2791:    "reprog.nueva_disponibilidad":"New availability","reprog.selecciona_franja":"Select a new available slot.",
+2810:    "admin.gestion_item3":"Booking history","admin.gestion_item4":"Availability rules",
+2815:    "admin.backup_eyebrow":"Active system","admin.backup_desc":"Automatic backup of bookings and active members.",
+2825:    "soporte.worker_item":"Booking worker ready",
+2836:    "nav.inicio":"Accueil","nav.reservar":"Réserver","nav.alta_jugador":"Inscription joueur",
+2849:    "perfil.title":"Profil et paramètres","perfil.eyebrow":"Mon compte","perfil.sesion":"Session active","perfil.rol_actual":"Rôle actuel","perfil.cerrar_sesion":"Déconnexion","perfil.cambiar_pwd":"Changer le mot de passe","perfil.pwd_actual":"Mot de passe actuel","perfil.pwd_nueva":"Nouveau mot de passe","perfil.pwd_confirmar":"Confirmer le nouveau mot de passe","perfil.pwd_guardada":"Mot de passe mis à jour (mode démo local).","perfil.pwd_error_vacia":"Saisissez le mot de passe actuel.","perfil.pwd_error_nueva":"8 caractères minimum, majuscule, minuscule et chiffre.","perfil.pwd_error_coincide":"Les mots de passe ne correspondent pas.","perfil.idioma":"Langue de l'interface","perfil.info_demo":"Profil en mode local. Les données sont sauvegardées uniquement sur cet appareil.","perfil.privacidad":"Confidentialité","perfil.privacidad_desc":"En production, les données personnelles seront traitées conformément au RGPD.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Prêt pour les notifications par e-mail et messagerie en production.","perfil.avatar_cambiar":"Changer la photo de profil","perfil.avatar_eliminar":"Supprimer la photo","perfil.avatar_confirmar_del":"Supprimer votre photo de profil ?","perfil.avatar_guardada":"Photo mise à jour.","perfil.avatar_eliminada":"Photo supprimée.","perfil.avatar_error_tipo":"Images uniquement (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 Mo.","perfil.bio_titulo":"Votre présentation","perfil.bio_placeholder":"Parlez-nous de votre jeu, niveau ou disponibilité...","perfil.bio_guardar":"Enregistrer","perfil.bio_cancelar":"Annuler","perfil.bio_guardada":"Présentation enregistrée.","perfil.bio_editar":"Modifier la présentation","perfil.bio_chars":"caractères","perfil.deporte_titulo":"Profil sportif","perfil.deporte_guardar":"Enregistrer les données","perfil.deporte_guardados":"Données sportives enregistrées.","perfil.deporte_mano":"Main dominante","perfil.deporte_posicion":"Position préférée","perfil.deporte_nivel":"Niveau de jeu","perfil.deporte_disponibilidad":"Disponibilité habituelle","perfil.deporte_tipo_partida":"Type de match","perfil.deporte_objetivo":"Objectif principal","perfil.deporte_busqueda":"Statut de recherche","perfil.metricas_titulo":"Mon activité","perfil.metricas_partidos":"Matchs joués","perfil.metricas_reservas":"Réservations effectuées","perfil.metricas_torneos":"Tournois disputés","perfil.metricas_ranking":"Classement actuel","perfil.metricas_actividad":"Niveau d'activité","perfil.metricas_valoracion":"Évaluation sportive","perfil.metricas_fiabilidad":"Fiabilité","perfil.metricas_racha":"Série active","perfil.historial_titulo":"Moments du joueur","perfil.insignias_titulo":"Réussites du joueur","perfil.privacidad_config":"Paramètres de confidentialité","perfil.privacidad_guardada":"Confidentialité mise à jour.","perfil.privacidad_perfil_visible":"Profil visible pour les autres joueurs","perfil.privacidad_nivel":"Afficher le niveau","perfil.privacidad_disponibilidad":"Afficher la disponibilité","perfil.privacidad_stats":"Afficher les statistiques","perfil.privacidad_invitaciones":"Autoriser les invitations","perfil.privacidad_recomendaciones":"Autoriser les recommandations","perfil.completitud_titulo":"Complétude du profil","nav.perfil":"Profil et paramètres",
+2852:    "role.PLAYER.label":"Joueur / client","role.PLAYER.desc":"Réserver des courts, consulter les réservations et le classement.",
+2856:    "home.reservas_hoy":"Réservations auj.","home.ocupacion_media":"Occupation moy.",
+2859:    "home.estado_operativo":"État opérationnel","home.reservar":"Réserver",
+2862:    "home.vs_ayer":"vs hier","home.pistas_activas":"4 courts actifs",
+2868:    "home.reservas_hora":"Réservations par heure — auj.","home.reservas_7dias":"Réservations 7 derniers jours",
+2869:    "home.ocupacion_pista":"Occupation par court","home.estado_procesos":"État des processus",
+2873:    "home.ir_reservas":"Aller aux réservations","home.ver_gestion":"Gérer réservations",
+2878:    "admin.reservas_mes":"Réservations du mois","admin.ocupacion":"Occupation moy.",
+2883:    "admin.graf_pista":"Occupation par court","admin.sub_hoy":"Créneau · démo",
+2884:    "admin.sub_semana":"Réservations 7 jours · démo","admin.sub_pista":"% utilisation · démo",
+2893:    "torneos.tercer_puesto":"3e place","torneos.jugadores":"Joueurs","torneos.parejas":"Paires",
+2897:    "reservas.nueva":"Nouvelle réservation","reservas.fecha":"Date","reservas.hora":"Heure",
+2898:    "reservas.pista":"Court","reservas.duracion":"Durée","reservas.confirmar":"Confirmer réservation",
+2899:    "reservas.resumen":"Résumé","reservas.disponible":"Disponible","reservas.no_disponible":"Indisponible",
+2900:    "reprog.clave":"Clé de réservation","reprog.nueva_fecha":"Nouvelle date",
+2901:    "reprog.nueva_hora":"Nouvelle heure de début","reprog.nueva_pista":"Nouveau court",
+2907:    "ranking.pts":"Pts","ranking.pareja":"Paire","ranking.jugadores":"Joueurs",
+2926:    "alta.fecha_nac":"Date de naissance","alta.nivel":"Niveau","alta.genero":"Genre",
+2933:    "cancelar.btn":"Annuler la réservation","cancelar.enviando":"Envoi en cours...","cancelar.volver_reservas":"Retour aux réservations",
+2935:    "reservas.title":"Réserver un terrain","reservas.eyebrow":"Réservations","reservas.desc":"Réservez votre terrain en quelques secondes.",
+2936:    "reservas.datos_jugador":"Données du joueur","reservas.fecha_pista":"Date, heure et terrain",
+2937:    "reservas.hora_fin":"Heure de fin","reservas.total":"Total","reservas.ver_resumen":"Voir le résumé",
+2938:    "reservas.editar":"Modifier","reservas.confirmar_btn":"Confirmer","reservas.enviando":"Envoi...",
+2939:    "reservas.registrada":"Réservation enregistrée","reservas.nueva_btn":"Nouvelle réservation",
+2940:    "reservas.nombre":"Prénom","reservas.apellidos":"Nom","reservas.modalidad":"Mode",
+2941:    "reservas.nivel_form":"Niveau","reservas.comentarios":"Commentaires","reservas.minutos":"minutes",
+2942:    "reservas.confirmacion_desc":"La confirmation dépend du backend et des intégrations configurées.",
+2948:    "status.reserva.pendiente":"En attente","status.reserva.pendiente_txt":"Vérifiez vos données avant de confirmer.",
+2949:    "status.reserva.enviando":"Envoi","status.reserva.enviando_txt":"Nous envoyons votre demande de réservation.",
+2950:    "status.reserva.exito":"Succès","status.reserva.exito_txt":"Réservation envoyée avec succès. La disponibilité est mise à jour.",
+2951:    "status.reserva.error":"Erreur","status.reserva.error_txt":"Impossible de finaliser la réservation. Vérifiez les données et réessayez.",
+2962:    "errors.fecha":"Veuillez sélectionner une date.","errors.fecha_pasado":"La date ne peut pas être dans le passé.",
+2963:    "errors.fecha_domingo":"Le club est fermé le dimanche.",
+2967:    "errors.pista":"Veuillez sélectionner un terrain valide.","errors.modalidad":"Veuillez sélectionner un mode valide.",
+2970:    "errors.nueva_fecha":"Veuillez sélectionner la nouvelle date.","errors.nueva_fecha_pasado":"La nouvelle date ne peut pas être dans le passé.",
+2974:    "errors.horario_ocupado":"Ce créneau vient d'être pris. Veuillez en choisir un autre.",
+2975:    "errors.reserva_error":"Impossible de finaliser la réservation. Réessayez dans quelques secondes.",
+2989:    "reprog.nueva_disponibilidad":"Nouvelle disponibilité","reprog.selecciona_franja":"Sélectionnez un nouveau créneau disponible.",
+3034:    "nav.inicio":"Inizio","nav.reservar":"Prenota","nav.alta_jugador":"Iscrizione giocatore",
+3047:    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
+3050:    "role.PLAYER.label":"Giocatore / cliente","role.PLAYER.desc":"Prenota campi, consulta prenotazioni e classifica.",
+3054:    "home.reservas_hoy":"Prenotazioni oggi","home.ocupacion_media":"Occupazione media",
+3057:    "home.estado_operativo":"Stato operativo","home.reservar":"Prenota",
+3060:    "home.vs_ayer":"vs ieri","home.pistas_activas":"4 campi attivi",
+3066:    "home.reservas_hora":"Prenotazioni per ora — oggi","home.reservas_7dias":"Prenotazioni ultimi 7 giorni",
+3067:    "home.ocupacion_pista":"Occupazione per campo","home.estado_procesos":"Stato processi",
+3071:    "home.ir_reservas":"Vai alle prenotazioni","home.ver_gestion":"Gestisci prenotazioni",
+3076:    "admin.reservas_mes":"Prenotazioni mensili","admin.ocupacion":"Occupazione media",
+3081:    "admin.graf_pista":"Occupazione per campo","admin.sub_hoy":"Fascia oraria · demo",
+3082:    "admin.sub_semana":"Prenotazioni 7 giorni · demo","admin.sub_pista":"% utilizzo · demo",
+3091:    "torneos.tercer_puesto":"3° posto","torneos.jugadores":"Giocatori","torneos.parejas":"Coppie",
+3095:    "reservas.nueva":"Nuova prenotazione","reservas.fecha":"Data","reservas.hora":"Ora",
+3096:    "reservas.pista":"Campo","reservas.duracion":"Durata","reservas.confirmar":"Conferma prenotazione",
+3097:    "reservas.resumen":"Riepilogo","reservas.disponible":"Disponibile","reservas.no_disponible":"Non disponibile",
+3098:    "reprog.clave":"Chiave prenotazione","reprog.nueva_fecha":"Nuova data",
+3099:    "reprog.nueva_hora":"Nuovo orario di inizio","reprog.nueva_pista":"Nuovo campo",
+3105:    "ranking.pts":"Pts","ranking.pareja":"Coppia","ranking.jugadores":"Giocatori",
+3124:    "alta.fecha_nac":"Data di nascita","alta.nivel":"Livello","alta.genero":"Genere",
+3131:    "cancelar.btn":"Cancella prenotazione","cancelar.enviando":"Invio...","cancelar.volver_reservas":"Torna alle prenotazioni",
+3133:    "reservas.title":"Prenota un campo","reservas.eyebrow":"Prenotazioni","reservas.desc":"Prenota il tuo campo in pochi secondi.",
+3134:    "reservas.datos_jugador":"Dati del giocatore","reservas.fecha_pista":"Data, ora e campo",
+3135:    "reservas.hora_fin":"Ora di fine","reservas.total":"Totale","reservas.ver_resumen":"Vedi riepilogo",
+3136:    "reservas.editar":"Modifica","reservas.confirmar_btn":"Conferma","reservas.enviando":"Invio...",
+3137:    "reservas.registrada":"Prenotazione registrata","reservas.nueva_btn":"Nuova prenotazione",
+3138:    "reservas.nombre":"Nome","reservas.apellidos":"Cognome","reservas.modalidad":"Modalità",
+3139:    "reservas.nivel_form":"Livello","reservas.comentarios":"Commenti","reservas.minutos":"minuti",
+3140:    "reservas.confirmacion_desc":"La conferma dipende dal backend e dalle integrazioni configurate.",
+3146:    "status.reserva.pendiente":"In attesa","status.reserva.pendiente_txt":"Controlla i dati prima di confermare.",
+3147:    "status.reserva.enviando":"Invio","status.reserva.enviando_txt":"Stiamo inviando la tua richiesta di prenotazione.",
+3148:    "status.reserva.exito":"Successo","status.reserva.exito_txt":"Prenotazione inviata con successo. La disponibilità viene aggiornata.",
+3149:    "status.reserva.error":"Errore","status.reserva.error_txt":"Impossibile completare la prenotazione. Controlla i dati e riprova.",
+3160:    "errors.fecha":"Seleziona una data.","errors.fecha_pasado":"La data non può essere nel passato.",
+3161:    "errors.fecha_domingo":"Il club è chiuso la domenica.",
+3165:    "errors.pista":"Seleziona un campo valido.","errors.modalidad":"Seleziona una modalità valida.",
+3168:    "errors.nueva_fecha":"Seleziona la nuova data.","errors.nueva_fecha_pasado":"La nuova data non può essere nel passato.",
+3172:    "errors.horario_ocupado":"Quella fascia oraria è appena stata occupata. Scegline un'altra.",
+3173:    "errors.reserva_error":"Impossibile completare la prenotazione. Riprova tra qualche secondo.",
+3182:    "cancelar.info3":"Puoi tornare al calendario quando vuoi.",
+3187:    "reprog.nueva_disponibilidad":"Nuova disponibilità","reprog.selecciona_franja":"Seleziona una nuova fascia disponibile.",
+3232:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Registo de jogador",
+3233:    "nav.reprogramar":"Reagendar","nav.cancelar":"Cancelar reserva",
+3234:    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Classificação",
+3236:    "nav.cerrar_sesion":"Terminar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
+3245:    "perfil.title":"Perfil e definições","perfil.eyebrow":"A minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Função atual","perfil.cerrar_sesion":"Terminar sessão","perfil.cambiar_pwd":"Alterar palavra-passe","perfil.pwd_actual":"Palavra-passe atual","perfil.pwd_nueva":"Nova palavra-passe","perfil.pwd_confirmar":"Confirmar nova palavra-passe","perfil.pwd_guardada":"Palavra-passe atualizada (modo demo local).","perfil.pwd_error_vacia":"Introduza a palavra-passe atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As palavras-passe não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são guardados apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão geridos em conformidade com o RGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Guardar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação guardada.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil desportivo","perfil.deporte_guardar":"Guardar dados","perfil.deporte_guardados":"Dados desportivos guardados.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Estado de pesquisa","perfil.metricas_titulo":"A minha atividade","perfil.metricas_partidos":"Jogos disputados","perfil.metricas_reservas":"Reservas efetuadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Classificação atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação desportiva","perfil.metricas_fiabilidad":"Fiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Definições de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para jogos","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e definições",
+3248:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar campos, consultar reservas e classificação.",
+3249:    "role.STAFF.label":"Staff / receção","role.STAFF.desc":"Gestão diária de reservas e assistência a jogadores.",
+3252:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+3255:    "home.estado_operativo":"Estado operacional","home.reservar":"Reservar",
+3258:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 campos ativos",
+3264:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+3265:    "home.ocupacion_pista":"Ocupação por campo","home.estado_procesos":"Estado dos processos",
+3269:    "home.ir_reservas":"Ir para reservas","home.ver_gestion":"Gerir reservas",
+3274:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+3278:    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
+3279:    "admin.graf_pista":"Ocupação por campo","admin.sub_hoy":"Faixa horária · demo",
+3280:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+3289:    "torneos.tercer_puesto":"3.º lugar","torneos.jugadores":"Jogadores","torneos.parejas":"Pares",
+3293:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Hora",
+3294:    "reservas.pista":"Campo","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+3295:    "reservas.resumen":"Resumo","reservas.disponible":"Disponível","reservas.no_disponible":"Indisponível",
+3296:    "reprog.clave":"Chave de reserva","reprog.nueva_fecha":"Nova data",
+3297:    "reprog.nueva_hora":"Nova hora de início","reprog.nueva_pista":"Novo campo",
+3298:    "reprog.resumen":"Resumo da alteração","reprog.confirmo":"Confirmo que quero reagendar esta reserva",
+3299:    "reprog.btn":"Reagendar reserva","reprog.volver":"Voltar às reservas",
+3303:    "ranking.pts":"Pts","ranking.pareja":"Par","ranking.jugadores":"Jogadores",
+3322:    "alta.fecha_nac":"Data de nascimento","alta.nivel":"Nível","alta.genero":"Género",
+3326:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+3327:    "cancelar.clave":"Código de reserva","cancelar.clave_ph":"Introduza o seu código de reserva",
+3328:    "cancelar.confirmo_check":"Confirmo que quero cancelar esta reserva.",
+3329:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"A enviar...","cancelar.volver_reservas":"Voltar às reservas",
+3331:    "reservas.title":"Reservar campo","reservas.eyebrow":"Reservas","reservas.desc":"Reserve o seu campo em segundos.",
+3332:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e campo",
+3333:    "reservas.hora_fin":"Hora de fim","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+3334:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"A enviar...",
+3335:    "reservas.registrada":"Reserva registada","reservas.nueva_btn":"Nova reserva",
+3336:    "reservas.nombre":"Nome","reservas.apellidos":"Apelido","reservas.modalidad":"Modalidade",
+3337:    "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
+3338:    "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
+3339:    "reprog.title":"Reprogramar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou hora da sua reserva.",
+3344:    "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Reveja os dados antes de confirmar.",
+3345:    "status.reserva.enviando":"A enviar","status.reserva.enviando_txt":"Estamos a enviar o seu pedido de reserva.",
+3346:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está a ser atualizada.",
+3347:    "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
+3348:    "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
+3353:    "status.reprog.enviando":"A reagendar","status.reprog.enviando_txt":"A verificar disponibilidade e a atualizar a sua reserva.",
+3354:    "status.reprog.exito":"Reserva reagendada","status.reprog.exito_txt":"A sua reserva foi atualizada com sucesso.",
+3358:    "errors.fecha":"Selecione uma data.","errors.fecha_pasado":"A data não pode ser anterior a hoje.",
+3359:    "errors.fecha_domingo":"O clube está fechado aos domingos.",
+3362:    "errors.hora_cierre":"A reserva terminaria depois do encerramento do clube.",
+3363:    "errors.pista":"Selecione um campo válido.","errors.modalidad":"Selecione uma modalidade válida.",
+3365:    "errors.clave":"Introduza o código de reserva.","errors.clave_incompleta":"O código de reserva parece incompleto.",
+3366:    "errors.nueva_fecha":"Selecione a nova data.","errors.nueva_fecha_pasado":"A nova data não pode ser anterior a hoje.",
+3367:    "errors.confirmado_reprog":"Confirme que pretende reagendar a reserva.",
+3370:    "errors.horario_ocupado":"Esse horário acabou de ser ocupado. Escolha outro.",
+3371:    "errors.reserva_error":"Não foi possível completar a reserva. Tente novamente em alguns segundos.",
+3381:    "reprog.info1":"O código identifica a reserva que pretende alterar.",
+3385:    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
+3404:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+3409:    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
+3419:    "soporte.worker_item":"Worker de reservas preparado",
+3424:    "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
+3430:    "nav.inicio":"Início","nav.reservar":"Reservar","nav.alta_jugador":"Cadastro de jogador",
+3431:    "nav.reprogramar":"Remarcar","nav.cancelar":"Cancelar reserva",
+3432:    "nav.gestion":"Reservas","nav.torneos":"Torneios","nav.ranking":"Ranking",
+3434:    "nav.cerrar_sesion":"Encerrar sessão","nav.saas_label":"SaaS seguro","nav.cerrar_menu":"Fechar","nav.abrir_menu":"Menu",
+3443:    "perfil.title":"Perfil e configurações","perfil.eyebrow":"Minha conta","perfil.sesion":"Sessão ativa","perfil.rol_actual":"Papel atual","perfil.cerrar_sesion":"Sair","perfil.cambiar_pwd":"Alterar senha","perfil.pwd_actual":"Senha atual","perfil.pwd_nueva":"Nova senha","perfil.pwd_confirmar":"Confirmar nova senha","perfil.pwd_guardada":"Senha atualizada (modo demo local).","perfil.pwd_error_vacia":"Insira a senha atual.","perfil.pwd_error_nueva":"Mínimo 8 caracteres, maiúscula, minúscula e número.","perfil.pwd_error_coincide":"As senhas não coincidem.","perfil.idioma":"Idioma da interface","perfil.info_demo":"Perfil em modo local. Os dados são salvos apenas neste dispositivo.","perfil.privacidad":"Privacidade","perfil.privacidad_desc":"Em produção, os dados pessoais serão gerenciados em conformidade com a LGPD.","perfil.notificaciones":"Notificações","perfil.notif_desc":"Preparado para notificações por e-mail e mensagens em produção.","perfil.avatar_cambiar":"Alterar foto de perfil","perfil.avatar_eliminar":"Remover foto","perfil.avatar_confirmar_del":"Remover a sua foto de perfil?","perfil.avatar_guardada":"Foto atualizada.","perfil.avatar_eliminada":"Foto removida.","perfil.avatar_error_tipo":"Apenas imagens (JPG, PNG, WEBP).","perfil.avatar_error_size":"Máximo 5 MB.","perfil.bio_titulo":"A sua apresentação","perfil.bio_placeholder":"Fale-nos do seu jogo, nível ou disponibilidade...","perfil.bio_guardar":"Salvar","perfil.bio_cancelar":"Cancelar","perfil.bio_guardada":"Apresentação salva.","perfil.bio_editar":"Editar apresentação","perfil.bio_chars":"caracteres","perfil.deporte_titulo":"Perfil esportivo","perfil.deporte_guardar":"Salvar dados","perfil.deporte_guardados":"Dados esportivos salvos.","perfil.deporte_mano":"Mão dominante","perfil.deporte_posicion":"Posição preferida","perfil.deporte_nivel":"Nível de jogo","perfil.deporte_disponibilidad":"Disponibilidade habitual","perfil.deporte_tipo_partida":"Tipo de jogo","perfil.deporte_objetivo":"Objetivo principal","perfil.deporte_busqueda":"Status de busca","perfil.metricas_titulo":"Minha atividade","perfil.metricas_partidos":"Partidas jogadas","perfil.metricas_reservas":"Reservas realizadas","perfil.metricas_torneos":"Torneios disputados","perfil.metricas_ranking":"Ranking atual","perfil.metricas_actividad":"Nível de atividade","perfil.metricas_valoracion":"Avaliação esportiva","perfil.metricas_fiabilidad":"Confiabilidade","perfil.metricas_racha":"Sequência ativa","perfil.historial_titulo":"Momentos do jogador","perfil.insignias_titulo":"Conquistas do jogador","perfil.privacidad_config":"Configurações de privacidade","perfil.privacidad_guardada":"Privacidade atualizada.","perfil.privacidad_perfil_visible":"Perfil visível para outros jogadores","perfil.privacidad_nivel":"Mostrar nível de jogo","perfil.privacidad_disponibilidad":"Mostrar disponibilidade","perfil.privacidad_stats":"Mostrar estatísticas","perfil.privacidad_invitaciones":"Permitir convites para partidas","perfil.privacidad_recomendaciones":"Permitir recomendações de parceiro","perfil.completitud_titulo":"Completude do perfil","nav.perfil":"Perfil e configurações",
+3446:    "role.PLAYER.label":"Jogador / cliente","role.PLAYER.desc":"Reservar quadras, consultar reservas e ranking.",
+3447:    "role.STAFF.label":"Staff / recepção","role.STAFF.desc":"Gestão diária de reservas e atendimento aos jogadores.",
+3450:    "home.reservas_hoy":"Reservas hoje","home.ocupacion_media":"Ocupação média",
+3453:    "home.estado_operativo":"Status operacional","home.reservar":"Reservar",
+3456:    "home.vs_ayer":"vs ontem","home.pistas_activas":"4 quadras ativas",
+3462:    "home.reservas_hora":"Reservas por hora — hoje","home.reservas_7dias":"Reservas últimos 7 dias",
+3463:    "home.ocupacion_pista":"Ocupação por quadra","home.estado_procesos":"Status dos processos",
+3467:    "home.ir_reservas":"Ir para reservas","home.ver_gestion":"Gerenciar reservas",
+3472:    "admin.reservas_mes":"Reservas do mês","admin.ocupacion":"Ocupação média",
+3476:    "admin.graf_hoy":"Reservas por hora — hoje","admin.graf_semana":"Evolução semanal",
+3477:    "admin.graf_pista":"Ocupação por quadra","admin.sub_hoy":"Faixa horária · demo",
+3478:    "admin.sub_semana":"Reservas 7 dias · demo","admin.sub_pista":"% utilização · demo",
+3487:    "torneos.tercer_puesto":"3.º lugar","torneos.jugadores":"Jogadores","torneos.parejas":"Duplas",
+3491:    "reservas.nueva":"Nova reserva","reservas.fecha":"Data","reservas.hora":"Horário",
+3492:    "reservas.pista":"Quadra","reservas.duracion":"Duração","reservas.confirmar":"Confirmar reserva",
+3493:    "reservas.resumen":"Resumo","reservas.disponible":"Disponível","reservas.no_disponible":"Indisponível",
+3494:    "reprog.clave":"Código da reserva","reprog.nueva_fecha":"Nova data",
+3495:    "reprog.nueva_hora":"Novo horário de início","reprog.nueva_pista":"Nova quadra",
+3496:    "reprog.resumen":"Resumo da alteração","reprog.confirmo":"Confirmo que quero remarcar esta reserva",
+3497:    "reprog.btn":"Remarcar reserva","reprog.volver":"Voltar às reservas",
+3501:    "ranking.pts":"Pts","ranking.pareja":"Dupla","ranking.jugadores":"Jogadores",
+3520:    "alta.fecha_nac":"Data de nascimento","alta.nivel":"Nível","alta.genero":"Gênero",
+3524:    "cancelar.title":"Cancelar reserva","cancelar.eyebrow":"Reservas","cancelar.desc":"Solicitar o cancelamento de uma reserva.",
+3525:    "cancelar.clave":"Código de reserva","cancelar.clave_ph":"Digite o código da sua reserva",
+3526:    "cancelar.confirmo_check":"Confirmo que quero cancelar esta reserva.",
+3527:    "cancelar.btn":"Cancelar reserva","cancelar.enviando":"Enviando...","cancelar.volver_reservas":"Voltar para reservas",
+3529:    "reservas.title":"Reservar quadra","reservas.eyebrow":"Reservas","reservas.desc":"Reserve sua quadra em segundos.",
+3530:    "reservas.datos_jugador":"Dados do jogador","reservas.fecha_pista":"Data, hora e quadra",
+3531:    "reservas.hora_fin":"Horário de término","reservas.total":"Total","reservas.ver_resumen":"Ver resumo",
+3532:    "reservas.editar":"Editar","reservas.confirmar_btn":"Confirmar","reservas.enviando":"Enviando...",
+3533:    "reservas.registrada":"Reserva registrada","reservas.nueva_btn":"Nova reserva",
+3534:    "reservas.nombre":"Nome","reservas.apellidos":"Sobrenome","reservas.modalidad":"Modalidade",
+3535:    "reservas.nivel_form":"Nível","reservas.comentarios":"Comentários","reservas.minutos":"minutos",
+3536:    "reservas.confirmacion_desc":"A confirmação depende do backend e das integrações configuradas.",
+3537:    "reprog.title":"Reagendar reserva","reprog.eyebrow":"Reservas","reprog.desc":"Altere a data ou horário da sua reserva.",
+3542:    "status.reserva.pendiente":"Pendente","status.reserva.pendiente_txt":"Revise os dados antes de confirmar.",
+3543:    "status.reserva.enviando":"Enviando","status.reserva.enviando_txt":"Estamos enviando a sua solicitação de reserva.",
+3544:    "status.reserva.exito":"Sucesso","status.reserva.exito_txt":"Reserva enviada com sucesso. A disponibilidade está sendo atualizada.",
+3545:    "status.reserva.error":"Erro","status.reserva.error_txt":"Não foi possível completar a reserva. Verifique os dados e tente novamente.",
+3546:    "status.cancelar.idle":"Pendente","status.cancelar.idle_txt":"Confirme o cancelamento da sua reserva.",
+3551:    "status.reprog.enviando":"Remarcando","status.reprog.enviando_txt":"Verificando disponibilidade e atualizando sua reserva.",
+3552:    "status.reprog.exito":"Reserva remarcada","status.reprog.exito_txt":"Sua reserva foi atualizada com sucesso.",
+3556:    "errors.fecha":"Selecione uma data.","errors.fecha_pasado":"A data não pode ser anterior a hoje.",
+3557:    "errors.fecha_domingo":"O clube está fechado aos domingos.",
+3560:    "errors.hora_cierre":"A reserva terminaria depois do fechamento do clube.",
+3561:    "errors.pista":"Selecione uma quadra válida.","errors.modalidad":"Selecione uma modalidade válida.",
+3563:    "errors.clave":"Informe o código da reserva.","errors.clave_incompleta":"O código da reserva parece incompleto.",
+3564:    "errors.nueva_fecha":"Selecione a nova data.","errors.nueva_fecha_pasado":"A nova data não pode ser anterior a hoje.",
+3565:    "errors.confirmado_reprog":"Confirme que deseja remarcar a reserva.",
+3568:    "errors.horario_ocupado":"Esse horário acabou de ser ocupado. Escolha outro.",
+3569:    "errors.reserva_error":"Não foi possível completar a reserva. Tente novamente em alguns segundos.",
+3579:    "reprog.info1":"O código identifica a reserva que você quer alterar.",
+3583:    "reprog.nueva_disponibilidad":"Nova disponibilidade","reprog.selecciona_franja":"Selecione uma nova faixa disponível.",
+3602:    "admin.gestion_item3":"Histórico de reservas","admin.gestion_item4":"Regras de disponibilidade",
+3607:    "admin.backup_eyebrow":"Sistema ativo","admin.backup_desc":"Cópia automática de reservas e sócios ativos.",
+3617:    "soporte.worker_item":"Worker de reservas pronto",
+3622:    "soporte.obs_desc":"Zona reservada para diagnóstico quando existir backend real.",
+3628:    "nav.inicio":"Start","nav.reservar":"Buchen","nav.alta_jugador":"Spieler registrieren",
+3641:    "perfil.title":"Profil und Einstellungen","perfil.eyebrow":"Mein Konto","perfil.sesion":"Aktive Sitzung","perfil.rol_actual":"Aktuelle Rolle","perfil.cerrar_sesion":"Abmelden","perfil.cambiar_pwd":"Passwort ändern","perfil.pwd_actual":"Aktuelles Passwort","perfil.pwd_nueva":"Neues Passwort","perfil.pwd_confirmar":"Neues Passwort bestätigen","perfil.pwd_guardada":"Passwort aktualisiert (lokaler Demo-Modus).","perfil.pwd_error_vacia":"Bitte aktuelles Passwort eingeben.","perfil.pwd_error_nueva":"Mindestens 8 Zeichen, Groß-, Kleinbuchstabe und Zahl.","perfil.pwd_error_coincide":"Passwörter stimmen nicht überein.","perfil.idioma":"Schnittstellensprache","perfil.info_demo":"Profil im lokalen Modus. Daten werden nur auf diesem Gerät gespeichert.","perfil.privacidad":"Datenschutz","perfil.privacidad_desc":"Im Produktionsbetrieb werden persönliche Daten DSGVO-konform verarbeitet.","perfil.notificaciones":"Benachrichtigungen","perfil.notif_desc":"Bereit für E-Mail- und Messaging-Benachrichtigungen im Produktionsbetrieb.","perfil.avatar_cambiar":"Profilbild ändern","perfil.avatar_eliminar":"Foto entfernen","perfil.avatar_confirmar_del":"Profilbild entfernen?","perfil.avatar_guardada":"Foto aktualisiert.","perfil.avatar_eliminada":"Foto entfernt.","perfil.avatar_error_tipo":"Nur Bilder (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximal 5 MB.","perfil.bio_titulo":"Deine Vorstellung","perfil.bio_placeholder":"Erzähl uns von deinem Spiel, Niveau oder Verfügbarkeit...","perfil.bio_guardar":"Speichern","perfil.bio_cancelar":"Abbrechen","perfil.bio_guardada":"Vorstellung gespeichert.","perfil.bio_editar":"Vorstellung bearbeiten","perfil.bio_chars":"Zeichen","perfil.deporte_titulo":"Sportliches Profil","perfil.deporte_guardar":"Daten speichern","perfil.deporte_guardados":"Sportdaten gespeichert.","perfil.deporte_mano":"Dominante Hand","perfil.deporte_posicion":"Bevorzugte Position","perfil.deporte_nivel":"Spielniveau","perfil.deporte_disponibilidad":"Übliche Verfügbarkeit","perfil.deporte_tipo_partida":"Spieltyp","perfil.deporte_objetivo":"Hauptziel","perfil.deporte_busqueda":"Suchstatus","perfil.metricas_titulo":"Meine Aktivität","perfil.metricas_partidos":"Gespielte Partien","perfil.metricas_reservas":"Buchungen","perfil.metricas_torneos":"Turniere","perfil.metricas_ranking":"Aktuelles Ranking","perfil.metricas_actividad":"Aktivitätsniveau","perfil.metricas_valoracion":"Sportliche Bewertung","perfil.metricas_fiabilidad":"Zuverlässigkeit","perfil.metricas_racha":"Aktive Serie","perfil.historial_titulo":"Spielermomente","perfil.insignias_titulo":"Spielererfolge","perfil.privacidad_config":"Datenschutzeinstellungen","perfil.privacidad_guardada":"Datenschutz aktualisiert.","perfil.privacidad_perfil_visible":"Profil für andere Spieler sichtbar","perfil.privacidad_nivel":"Spielniveau anzeigen","perfil.privacidad_disponibilidad":"Verfügbarkeit anzeigen","perfil.privacidad_stats":"Statistiken anzeigen","perfil.privacidad_invitaciones":"Spieleinladungen erlauben","perfil.privacidad_recomendaciones":"Partnerempfehlungen erlauben","perfil.completitud_titulo":"Profilvollständigkeit","nav.perfil":"Profil und Einstellungen",
+3644:    "role.PLAYER.label":"Spieler / Kunde","role.PLAYER.desc":"Plätze buchen, Buchungen und Rangliste einsehen.",
+3648:    "home.reservas_hoy":"Buchungen heute","home.ocupacion_media":"Durchschn. Auslastung",
+3651:    "home.estado_operativo":"Betriebsstatus","home.reservar":"Buchen",
+3654:    "home.vs_ayer":"vs gestern","home.pistas_activas":"4 aktive Plätze",
+3660:    "home.reservas_hora":"Buchungen pro Stunde — heute","home.reservas_7dias":"Buchungen letzte 7 Tage",
+3661:    "home.ocupacion_pista":"Auslastung je Platz","home.estado_procesos":"Prozessstatus",
+3665:    "home.ir_reservas":"Zu Buchungen","home.ver_gestion":"Buchungen verwalten",
+3670:    "admin.reservas_mes":"Monatliche Buchungen","admin.ocupacion":"Durchschn. Auslastung",
+3675:    "admin.graf_pista":"Auslastung je Platz","admin.sub_hoy":"Zeitfenster · Demo",
+3676:    "admin.sub_semana":"Buchungen 7 Tage · Demo","admin.sub_pista":"% Nutzung · Demo",
+3685:    "torneos.tercer_puesto":"3. Platz","torneos.jugadores":"Spieler","torneos.parejas":"Paare",
+3689:    "reservas.nueva":"Neue Buchung","reservas.fecha":"Datum","reservas.hora":"Uhrzeit",
+3690:    "reservas.pista":"Platz","reservas.duracion":"Dauer","reservas.confirmar":"Buchung bestätigen",
+3691:    "reservas.resumen":"Zusammenfassung","reservas.disponible":"Verfügbar","reservas.no_disponible":"Nicht verfügbar",
+3692:    "reprog.clave":"Buchungsschlüssel","reprog.nueva_fecha":"Neues Datum",
+3693:    "reprog.nueva_hora":"Neue Startzeit","reprog.nueva_pista":"Neuer Platz",
+3699:    "ranking.pts":"Pkt","ranking.pareja":"Paar","ranking.jugadores":"Spieler",
+3718:    "alta.fecha_nac":"Geburtsdatum","alta.nivel":"Niveau","alta.genero":"Geschlecht",
+3725:    "cancelar.btn":"Buchung stornieren","cancelar.enviando":"Wird gesendet...","cancelar.volver_reservas":"Zurück zu Buchungen",
+3727:    "reservas.title":"Platz buchen","reservas.eyebrow":"Buchungen","reservas.desc":"Buchen Sie Ihren Platz in Sekunden.",
+3728:    "reservas.datos_jugador":"Spielerdaten","reservas.fecha_pista":"Datum, Uhrzeit und Platz",
+3729:    "reservas.hora_fin":"Endzeit","reservas.total":"Gesamt","reservas.ver_resumen":"Zusammenfassung",
+3730:    "reservas.editar":"Bearbeiten","reservas.confirmar_btn":"Bestätigen","reservas.enviando":"Wird gesendet...",
+3731:    "reservas.registrada":"Buchung registriert","reservas.nueva_btn":"Neue Buchung",
+3732:    "reservas.nombre":"Vorname","reservas.apellidos":"Nachname","reservas.modalidad":"Modus",
+3733:    "reservas.nivel_form":"Niveau","reservas.comentarios":"Kommentare","reservas.minutos":"Minuten",
+3734:    "reservas.confirmacion_desc":"Die Bestätigung hängt vom Backend und den konfigurierten Integrationen ab.",
+3740:    "status.reserva.pendiente":"Ausstehend","status.reserva.pendiente_txt":"Überprüfen Sie Ihre Daten vor der Bestätigung.",
+3741:    "status.reserva.enviando":"Wird gesendet","status.reserva.enviando_txt":"Wir senden Ihre Buchungsanfrage.",
+3742:    "status.reserva.exito":"Erfolg","status.reserva.exito_txt":"Buchung erfolgreich gesendet. Die Verfügbarkeit wird aktualisiert.",
+3743:    "status.reserva.error":"Fehler","status.reserva.error_txt":"Buchung konnte nicht abgeschlossen werden. Überprüfen Sie die Daten und versuchen Sie es erneut.",
+3754:    "errors.fecha":"Bitte wählen Sie ein Datum.","errors.fecha_pasado":"Das Datum darf nicht in der Vergangenheit liegen.",
+3755:    "errors.fecha_domingo":"Der Club ist sonntags geschlossen.",
+3759:    "errors.pista":"Bitte wählen Sie einen gültigen Platz.","errors.modalidad":"Bitte wählen Sie einen gültigen Modus.",
+3762:    "errors.nueva_fecha":"Bitte wählen Sie das neue Datum.","errors.nueva_fecha_pasado":"Das neue Datum darf nicht in der Vergangenheit liegen.",
+3766:    "errors.horario_ocupado":"Dieses Zeitfenster wurde gerade belegt. Bitte wählen Sie ein anderes.",
+3767:    "errors.reserva_error":"Buchung konnte nicht abgeschlossen werden. Versuchen Sie es in einigen Sekunden erneut.",
+3781:    "reprog.nueva_disponibilidad":"Neue Verfügbarkeit","reprog.selecciona_franja":"Wählen Sie ein neues verfügbares Zeitfenster.",
+3972:    ["inicio","nav.inicio","🏠"],["reservas","nav.reservar","🎾"],["alta_jugador","nav.alta_jugador","👤"],
+3978:    PLAYER: ["inicio","reservas","torneos","ranking","perfil"],
+3979:    STAFF: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","perfil"],
+3980:    ADMIN: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","perfil"],
+3981:    SUPPORT: ["inicio","reservas","alta_jugador","reprogramar","cancelar","gestion","torneos","ranking","admin","flujos_make","soporte","perfil"],
+3983:  const allowedMenu = menuByRole[selectedRole] || menuByRole.PLAYER;
+4224:            <Btn onClick={() => setCurrent("reservas")} style={{ color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
+4240:            <Btn onClick={() => setCurrent("reservas")} style={{ padding: "10px 12px", fontSize: ".82rem", color: "#fff" }}>🎾 {tx("home.reservar")}</Btn>
+4243:            <Btn variant="secondary" onClick={() => setCurrent("alta_jugador")} style={{ padding: "10px 12px", fontSize: ".82rem" }}>👤 {tx("home.alta")}</Btn>
+4256:        <MetricCard label={tx("home.reservas_hoy")} value={kpi.reservasHoy} sub={`vs 10 ${tx("home.vs_ayer")}`} trend={20} icon="🎾" />
+4257:        <MetricCard label={tx("home.ocupacion_media")} value={kpi.ocupacionMedia+"%"} sub={tx("home.pistas_activas")} trend={4} color={T.accent2} icon="🏟" />
+4258:        <MetricCard label={tx("home.socios_activos")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
+4266:        <ChartCard title={tx("home.reservas_hora")} sub={tx("home.franja_horaria")}>
+4267:          <MiniBarChart data={DEMO_RESERVAS_HOY} height={70} color={T.accent} unit={tx("home.reservas_hoy").toLowerCase()} />
+4269:        <ChartCard title={tx("home.reservas_7dias")} sub={tx("home.tendencia_semanal")}>
+4270:          <MiniLineChart data={DEMO_RESERVAS_SEMANA} height={70} color={T.accent2} labels={diasLargo} unit="" />
+4277:        <ChartCard title={tx("home.ocupacion_pista")} sub={tx("home.porcentaje_uso")}>
+4278:          <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} unit="%" />
+4310:function Reservas() {
+4317:  const [court, setCourt] = useState("Pista 1");
+4318:  const [form, setForm] = useState({ nombre: "", apellidos: "", email: "", telefono: "", fecha: "", hora: "10:00", duracion_minutos: "90", modalidad: "libre", nivel: "intermedio", comentarios: "" });
+4323:  const payload = useMemo(() => prepareBookingPayload(form, court), [form, court]);
+4326:    pending: [tx("status.reserva.pendiente"), tx("status.reserva.pendiente_txt"), T.warning],
+4327:    sending: [tx("status.reserva.enviando"), tx("status.reserva.enviando_txt"), T.warning],
+4328:    success: [tx("status.reserva.exito"), tx("status.reserva.exito_txt"), T.accent],
+4329:    error: [tx("status.reserva.error"), statusMessage || tx("status.reserva.error_txt"), T.danger],
+4341:    const nextErrors = validateBooking(form, court, tx);
+4353:    const nextErrors = validateBooking(form, court, tx);
+4366:      const slotKey = `${form.fecha}|${court}|${form.hora}`;
+4367:      const disponibilidad = await fetchDisponibilidad(form.fecha);
+4368:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+4369:        setStatusMessage(tx("errors.horario_ocupado"));
+4375:      await sendBooking(payload);
+4376:      refreshDisponibilidadAfterChange(form.fecha);
+4380:      setStatusMessage(tx("errors.reserva_error"));
+4387:  function newBooking() {
+4394:  return <div style={{ padding: "42px 24px", maxWidth: 1040, margin: "0 auto" }}><SectionTitle eyebrow={tx("reservas.eyebrow")} title={tx("reservas.title")} desc={tx("reservas.desc")} /><CalendarioDisponibilidad
+4395:  initialDate={form.fecha || todayISO()}
+4398:  onSelectSlot={({ fecha, pista, hora }) => {
+4399:    updateForm("fecha", fecha);
+4401:    updateForm("pista", pista);
+4402:    setCourt(pista);
+4405:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+4408:function CancelarReserva({ setCurrent }) {
+4459:      const res = await fetch(CONFIG.bookingEndpoint, {
+4463:          accion: "cancelar_reserva",
+4464:          clave_reserva: claveLimpia,
+4465:          jugador: {
+4471:          origen: "app_publica_cancelar_reserva",
+4484:      refreshDisponibilidadAfterChange();
+4493:  return <div style={{ padding:"42px 24px", maxWidth:940, margin:"0 auto" }}><SectionTitle eyebrow={tx("cancelar.eyebrow")} title={tx("cancelar.title")} desc={tx("cancelar.desc")} /><Card style={{ marginBottom:20, borderColor:statusColor, color:statusColor }}><strong>{statusTitle}</strong><div style={{ color:T.textDim, marginTop:6 }}>{statusText}</div></Card><form onSubmit={submit}><div className="cp04-grid-2"><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.title")}</h3><label style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }} htmlFor="clave-reserva">{tx("cancelar.clave")}</label><input id="clave-reserva" aria-label={tx("cancelar.clave")} placeholder={tx("cancelar.clave_ph")} value={clave} onChange={e => updateClave(e.target.value)} autoComplete="off" disabled={sending} required /><FieldError>{status==="error"&&!clave.trim()?tx("cancelar.clave"):undefined}</FieldError><label style={{ display:"flex", alignItems:"flex-start", gap:12, marginTop:18, color:T.textDim, lineHeight:1.55, cursor:sending?"not-allowed":"pointer" }}><input type="checkbox" checked={confirmado} onChange={e => updateConfirmado(e.target.checked)} disabled={sending} style={{ width:"auto", minHeight:"auto", marginTop:4, accentColor:T.accent, cursor:sending?"not-allowed":"pointer" }} /><span>{tx("cancelar.confirmo_check")}</span></label>{status==="error"&&error&&<FieldError>{error}</FieldError>}<div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:24 }}><Btn type="submit" variant="danger" disabled={sending}>{sending?tx("cancelar.enviando"):tx("cancelar.btn")}</Btn>{success&&<Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn>}</div></Card><Card><h3 style={{ marginTop:0 }}>{tx("cancelar.que_ocurre")}</h3><PanelList items={[tx("cancelar.info1"), tx("cancelar.info2"), tx("cancelar.info3")]} />{!success&&<div style={{ marginTop:24 }}><Btn variant="secondary" onClick={()=>setCurrent("reservas")}>{tx("cancelar.volver_reservas")}</Btn></div>}</Card></div></form></div>;
+4497:function ReprogramarReserva({ setCurrent }) {
+4500:  const [court, setCourt] = useState("Pista 1");
+4502:    clave_reserva: "",
+4503:    nueva_fecha_reserva: todayISO(),
+4538:    setErrors((current) => ({ ...current, nueva_pista: undefined }));
+4561:      const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
+4562:      const disponibilidad = await fetchDisponibilidad(form.nueva_fecha_reserva);
+4564:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+4570:      const res = await fetch(CONFIG.bookingEndpoint, {
+4586:        const updatedAvailability = await fetchDisponibilidad(
+4587:          form.nueva_fecha_reserva,
+4601:        `Nueva fecha ${form.nueva_fecha_reserva} · ${form.nueva_hora_inicio}-${nuevaHoraFin} · ${court}.`,
+4604:      refreshDisponibilidadAfterChange(form.nueva_fecha_reserva);
+4616:      clave_reserva: "",
+4617:      nueva_fecha_reserva: todayISO(),
+4622:    setCourt("Pista 1");
+4643:      <CalendarioDisponibilidad
+4644:        initialDate={form.nueva_fecha_reserva}
+4647:        title={tx("reprog.nueva_disponibilidad")}
+4649:        onSelectSlot={({ fecha, pista, hora }) => {
+4650:          updateForm("nueva_fecha_reserva", fecha);
+4652:          chooseCourt(pista);
+4668:              value={form.clave_reserva}
+4669:              onChange={(event) => updateForm("clave_reserva", event.target.value)}
+4674:            <FieldError>{errors.clave_reserva}</FieldError>
+4689:            <h3 style={{ marginTop: 0 }}>{tx("reprog.nueva_fecha")}</h3>
+4691:            <label htmlFor="reprogramar-fecha" style={{ display:"block", color:T.textDim, fontWeight:900, marginBottom:8 }}>
+4692:              {tx("reprog.nueva_fecha")}
+4695:              id="reprogramar-fecha"
+4696:              aria-label={tx("reprog.nueva_fecha")}
+4699:              value={form.nueva_fecha_reserva}
+4700:              onChange={(event) => updateForm("nueva_fecha_reserva", event.target.value)}
+4704:            <FieldError>{errors.nueva_fecha_reserva}</FieldError>
+4714:              disabled={sending || isSundayISO(form.nueva_fecha_reserva)}
+4716:              {BOOKING_HOURS.map((hora) => (
+4720:                  disabled={getSlotStatus(form.nueva_fecha_reserva, hora, duration) !== "available"}
+4729:              {tx("reservas.duracion")}
+4733:              aria-label={tx("reservas.duracion")}
+4738:              {BOOKING_DURATIONS.map((minutes) => (
+4739:                <option key={minutes} value={minutes}>{minutes} {tx("reservas.minutos")}</option>
+4745:              <strong style={{ display:"block", marginBottom:10 }}>{tx("reprog.nueva_pista")}</strong>
+4778:              <FieldError>{errors.nueva_pista}</FieldError>
+4784:                {formatDateEs(form.nueva_fecha_reserva)} · {form.nueva_hora_inicio}-{nuevaHoraFin} · {court}
+4826:                disabled={sending || getSlotStatus(form.nueva_fecha_reserva, form.nueva_hora_inicio, duration) !== "available"}
+4830:              <Btn variant="secondary" disabled={sending} onClick={() => setCurrent("reservas")}>
+4849:            Conserva tu clave de reserva. Recibirás un correo con el nuevo horario confirmado.
+4852:            <Btn onClick={resetForm}>Reprogramar otra reserva</Btn>
+4853:            <Btn variant="secondary" onClick={() => setCurrent("reservas")}>
+4854:              Consultar disponibilidad
+4865:  const [reservasReales, setReservasReales] = useState([]);
+4866:  const [cargandoReservas, setCargandoReservas] = useState(false);
+4867:  const [reservasConsultadas, setReservasConsultadas] = useState(false);
+4868:  const [errorReservas, setErrorReservas] = useState("");
+4869:  const [fuenteReservas, setFuenteReservas] = useState("");
+4870:  const [filtroFecha, setFiltroFecha] = useState("");
+4871:  const [filtroPista, setFiltroPista] = useState("");
+4874:  const reservasEndpoint =
+4875:    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
+4876:    "/api/reservas";
+4882:        window.localStorage.getItem("cp04-reservas-email");
+4892:  function normalizarReserva(item) {
+4893:    const reserva =
+4900:        reserva.record_id ||
+4901:        reserva.id ||
+4902:        reserva.clave_reserva ||
+4903:        `${reserva.fecha_reserva || reserva.fecha || "sin-fecha"}-${
+4904:          reserva.pista || reserva.Pista || "sin-pista"
+4905:        }-${reserva.hora_inicio || reserva.hora || "sin-hora"}`,
+4908:        reserva.nombre ||
+4909:        reserva.Nombre ||
+4910:        reserva.jugador_nombre ||
+4914:        reserva.apellidos ||
+4915:        reserva.Apellidos ||
+4916:        reserva.jugador_apellidos ||
+4920:        reserva.email ||
+4921:        reserva.Email ||
+4924:      fecha:
+4925:        reserva.fecha_reserva ||
+4926:        reserva.fecha ||
+4927:        reserva.Fecha ||
+4931:        reserva.hora_inicio ||
+4932:        reserva.hora ||
+4933:        reserva.Hora ||
+4937:        reserva.hora_fin ||
+4940:      pista:
+4941:        reserva.pista ||
+4942:        reserva.Pista ||
+4946:        reserva.estado_reserva ||
+4947:        reserva.estado ||
+4948:        reserva.Estado ||
+4953:        reserva.clave_reserva ||
+4954:        reserva.clave ||
+4957:      fechaCancelacion:
+4958:        reserva.fecha_cancelacion ||
+4962:        reserva.event_id ||
+4967:  async function cargarReservas() {
+4974:      setErrorReservas(
+4975:        "Introduce un correo electrónico válido para consultar las reservas.",
+4980:    if (cargandoReservas) return;
+4982:    setCargandoReservas(true);
+4983:    setErrorReservas("");
+4986:      const separador = reservasEndpoint.includes("?") ? "&" : "?";
+4989:        `${reservasEndpoint}${separador}` +
+5009:          `No se pudieron consultar las reservas (${response.status}).`,
+5013:      const listaOriginal = Array.isArray(resultado.reservas)
+5014:        ? resultado.reservas
+5022:        .map(normalizarReserva)
+5024:          const fechaA = `${a.fecha}T${a.horaInicio || "00:00"}`;
+5025:          const fechaB = `${b.fecha}T${b.horaInicio || "00:00"}`;
+5026:          return fechaB.localeCompare(fechaA);
+5029:      setReservasReales(listaNormalizada);
+5030:      setFuenteReservas(resultado.source || "airtable");
+5031:      setReservasConsultadas(true);
+5035:          "cp04-reservas-email",
+5042:      setReservasReales([]);
+5043:      setReservasConsultadas(true);
+5044:      setFuenteReservas("");
+5045:      setErrorReservas(
+5048:          : "No se pudieron cargar las reservas.",
+5051:      setCargandoReservas(false);
+5055:  const pistasDisponibles = useMemo(
+5058:        reservasReales
+5059:          .map((reserva) => reserva.pista)
+5062:    [reservasReales],
+5068:        reservasReales
+5069:          .map((reserva) => reserva.estado)
+5072:    [reservasReales],
+5075:  const reservasFiltradas = useMemo(
+5077:      reservasReales.filter((reserva) => {
+5078:        const coincideFecha =
+5079:          !filtroFecha || reserva.fecha === filtroFecha;
+5081:        const coincidePista =
+5082:          !filtroPista || reserva.pista === filtroPista;
+5085:          !filtroEstado || reserva.estado === filtroEstado;
+5088:          coincideFecha &&
+5089:          coincidePista &&
+5094:      reservasReales,
+5095:      filtroFecha,
+5096:      filtroPista,
+5101:  const resumenReservas = useMemo(() => {
+5102:    const confirmadas = reservasReales.filter(
+5103:      (reserva) =>
+5104:        reserva.estado === "confirmada" ||
+5105:        reserva.estado === "reprogramada",
+5108:    const pendientes = reservasReales.filter(
+5109:      (reserva) => reserva.estado === "pendiente",
+5112:    const canceladas = reservasReales.filter(
+5113:      (reserva) => reserva.estado === "cancelada",
+5117:      total: reservasReales.length,
+5122:  }, [reservasReales]);
+5152:        eyebrow="Reservas"
+5153:        title="Listado real de reservas"
+5154:        desc="Consulta tus reservas."
+5159:          Consultar mis reservas
+5183:              aria-label="Correo para consultar reservas"
+5190:                setErrorReservas("");
+5194:                  cargarReservas();
+5202:              cargandoReservas ||
+5205:            onClick={cargarReservas}
+5207:            {cargandoReservas
+5209:              : "Consultar reservas"}
+5213:        {errorReservas && (
+5221:            {errorReservas}
+5226:      {reservasConsultadas && !errorReservas && (
+5249:                {resumenReservas.total}
+5265:                {resumenReservas.confirmadas}
+5281:                {resumenReservas.pendientes}
+5297:                {resumenReservas.canceladas}
+5319:                  Fecha
+5323:                  aria-label="Filtrar reservas por fecha"
+5325:                  value={filtroFecha}
+5327:                    setFiltroFecha(event.target.value)
+5340:                  Pista
+5344:                  aria-label="Filtrar reservas por pista"
+5345:                  value={filtroPista}
+5347:                    setFiltroPista(event.target.value)
+5352:                  {pistasDisponibles.map((pista) => (
+5353:                    <option key={pista} value={pista}>
+5354:                      {pista}
+5372:                  aria-label="Filtrar reservas por estado"
+5395:              Mostrando {reservasFiltradas.length} de{" "}
+5396:              {reservasReales.length} reservas · Fuente:{" "}
+5397:              {fuenteReservas ? "base de datos" : "base de datos"}
+5401:          {reservasFiltradas.length === 0 ? (
+5404:                No se encontraron reservas
+5423:                      <th>Fecha</th>
+5425:                      <th>Pista</th>
+5426:                      <th>Jugador</th>
+5433:                    {reservasFiltradas.map((reserva) => (
+5434:                      <tr key={reserva.id}>
+5436:                          {reserva.fecha
+5437:                            ? formatDateEs(reserva.fecha)
+5442:                          {reserva.horaInicio || "—"}
+5443:                          {reserva.horaFin
+5444:                            ? `–${reserva.horaFin}`
+5448:                        <td>{reserva.pista || "—"}</td>
+5452:                            reserva.nombre,
+5453:                            reserva.apellidos,
+5463:                                reserva.estado,
+5468:                            {reserva.estado}
+5479:                            {reserva.clave || "—"}
+5496:function AltaJugador() {
+5504:    fecha_nacimiento: "",
+5543:    if (!form.fecha_nacimiento) {
+5544:      nextErrors.fecha_nacimiento = "Selecciona la fecha de nacimiento.";
+5575:      const response = await fetch("/api/jugadores/alta", {
+5583:          fecha_nacimiento: form.fecha_nacimiento,
+5634:              <label>{tx("alta.fecha_nac")}</label>
+5635:              <input type="date" value={form.fecha_nacimiento} onChange={e => updateForm("fecha_nacimiento", e.target.value)} />
+5636:              <FieldError>{errors.fecha_nacimiento}</FieldError>
+5733:    player1: "",
+5734:    player2: "",
+5843:    if (p.player1 || p.player2) return `${p.player1 || "—"} / ${p.player2 || "—"}`;
+5927:    if (customMode === "players") {
+5928:      if (raw < 2) { setCustomError("Mínimo 2 jugadores."); return; }
+5929:      if (raw % 2 !== 0) { setCustomError("El número de jugadores debe ser par."); return; }
+5930:      if (raw > 64) { setCustomError("Máximo 64 jugadores."); return; }
+5961:      if (p.player1 && p.player2) return p;
+5963:      return { ...p, player1: d[0], player2: d[1] };
+5985:    const np = { id: `p${Date.now()}`, player1: "", player2: "" };
+6002:    const upd = pairs.map(p => p.id === editingId ? { ...p, player1: editForm.p1, player2: editForm.p2 } : p);
+6022:      numJugadores: pairs.length * 2, numParejas: pairs.length, formato: formatMode,
+6023:      parejas: pairs.map(p => ({ jugador1: p.player1, jugador2: p.player2 })),
+6024:      ranking: pairs.map((p, i) => ({ pos: i + 1, jugador1: p.player1, jugador2: p.player2 })),
+6032:      fechaSorteo: byeDrawDate,
+6034:      fechaExportacion: new Date().toISOString(),
+6044:    const lines = ["#,Jugador 1,Jugador 2"];
+6045:    pairs.forEach((p, i) => lines.push(`${i + 1},"${p.player1 || ""}","${p.player2 || ""}"`));
+6080:          <p style={{ color: T.textDim, margin: 0, fontSize: ".9rem" }}>Torneos por jugadores o parejas · Pares e impares · Exportación real</p>
+6127:                <button type="button" className={`cp04-format-pill${customMode === "players" ? " is-active" : ""}`} onClick={() => { setCustomMode("players"); setCustomError(""); }}>👤 Jugadores</button>
+6133:                {customMode === "players" ? "Jugadores (par, 2–64)" : "Parejas (1–32, par o impar)"}
+6138:                  placeholder={customMode === "players" ? "ej: 18" : "ej: 9"} />
+6145:            Jugadores: solo pares (2–64). Parejas: 1–32, par o impar. Si el número es impar se sorteará automáticamente un pase directo (BYE).
+6187:                      placeholder="Jugador 1" autoFocus
+6190:                      placeholder="Jugador 2" onKeyDown={e => e.key === "Enter" && handleEditSave()}
+6201:                      {pair.player1 || pair.player2
+6202:                        ? <><strong style={{ color: "#fff" }}>{pair.player1 || "—"}</strong><span style={{ color: T.textDim }}> / {pair.player2 || "—"}</span></>
+6206:                    <button type="button" title="Editar" onClick={() => { setEditingId(pair.id); setEditForm({ p1: pair.player1, p2: pair.player2 }); }}
+6346:                                  {!match.winner && pA && pA.player1 && match.pairB && (
+6359:                                  {!match.winner && pB && pB.player1 && match.pairA && (
+6401:                  <tr><th>#</th><th>Jugador 1</th><th>Jugador 2</th><th>Estado</th></tr>
+6412:                        <td><strong style={{ color: isW ? T.accent : "#fff" }}>{pair.player1 || <em style={{ color: T.textDim, fontWeight: 400 }}>Sin nombre</em>}</strong></td>
+6413:                        <td style={{ color: isW ? T.accent : "rgba(255,255,255,.75)" }}>{pair.player2 || <em style={{ color: T.textDim }}>Sin nombre</em>}</td>
+6721:        <MetricCard label={tx("admin.reservas_mes")} value="268" sub={`vs 241 ${tx("admin.vs_mes_anterior")}`} trend={11} icon="🎾" />
+6722:        <MetricCard label={tx("admin.ocupacion")} value={`${kpi.ocupacionMedia}%`} sub={tx("home.pistas_activas")} trend={4} color={T.accent} icon="🏟" />
+6723:        <MetricCard label={tx("admin.socios")} value={kpi.jugadoresActivos} sub={`+${kpi.nuevosJugadores} ${tx("home.este_mes")}`} trend={6} color="#a78bfa" icon="👤" />
+6731:          <MiniBarChart data={DEMO_RESERVAS_HOY} height={70} />
+6734:          <MiniLineChart data={DEMO_RESERVAS_SEMANA} height={70} color={T.accent2} />
+6736:        <ChartCard title={tx("admin.graf_pista")} sub={tx("admin.sub_pista")} demo>
+6737:          <HorizontalBarChart data={DEMO_OCUPACION_PISTAS} />
+6777:          "Roles reales pendientes de backend: PLAYER, STAFF, ADMIN, SUPPORT"
+6792:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+6798:  const roleLabels = { PLAYER:"Jugador / cliente", STAFF:"Staff / recepción", ADMIN:"Administrador / jefe", SUPPORT:"Soporte técnico" };
+6799:  const demoPwds = { PLAYER:"jugador04", STAFF:"staff04", ADMIN:"admin04", SUPPORT:"soporte04" };
+6884:  const roleInitials = { PLAYER:"JG", STAFF:"ST", ADMIN:"AD", SUPPORT:"SP" };
+6894:    if (deporteData.disponibilidad) s += 15;
+6971:    PLAYER:  { partidos:24, reservas:31, torneos:3,  ranking:12,  actividad:"Alta",     valoracion:4.2, fiabilidad:96, racha:5  },
+6972:    STAFF:   { partidos:8,  reservas:187,torneos:1,  ranking:"—", actividad:"Muy alta", valoracion:4.8, fiabilidad:99, racha:12 },
+6973:    ADMIN:   { partidos:4,  reservas:312,torneos:5,  ranking:"—", actividad:"Alta",     valoracion:5.0, fiabilidad:100,racha:21 },
+6974:    SUPPORT: { partidos:2,  reservas:98, torneos:0,  ranking:"—", actividad:"Media",    valoracion:4.6, fiabilidad:98, racha:7  },
+6976:  const metrics = demoMetrics[selectedRole] || demoMetrics.PLAYER;
+6980:    { id:"puntual",    icon:"⏱️",  label:"Jugador puntual",    desc:"Siempre en hora",          earned:true },
+6987:    { id:"frecuente",  icon:"📌",  label:"Reserva frecuente",  desc:"10+ reservas realizadas",  earned:metrics.reservas>=10 },
+6992:    { icon:"🎾", desc:"Pista 1 · 10:00 h · 90 min",       fecha:"Hoy" },
+6993:    { icon:"🏆", desc:"Torneo interno · Semifinal",         fecha:"Hace 3 días" },
+6994:    { icon:"🎾", desc:"Pista 3 · 18:00 h · 60 min",       fecha:"Hace 5 días" },
+6995:    { icon:"🔥", desc:"Racha activa de "+metrics.racha+" días", fecha:"Esta semana" },
+6998:  const isPlayer  = selectedRole === "PLAYER";
+7000:  const roleProfileLabel = { PLAYER:"Jugador", STAFF:"Staff · Recepción", ADMIN:"Administración", SUPPORT:"Soporte técnico" }[selectedRole] || "Usuario";
+7211:        {/* PRESENTACIÓN / BIO — jugador y staff */}
+7212:        {(isPlayer || isStaff) && (
+7248:        {/* DATOS DEPORTIVOS — solo jugador */}
+7249:        {isPlayer && (
+7263:                  [tx("perfil.deporte_disponibilidad"), deporteData.disponibilidad],
+7280:                  { key:"disponibilidad", label:tx("perfil.deporte_disponibilidad"), opts:["Mañanas","Tardes","Noches","Fines de semana","Flexible"] },
+7325:            { icon:"📋", label:tx("perfil.metricas_reservas"),  value:metrics.reservas },
+7342:      {/* ── MOMENTOS DEL JUGADOR — solo jugador ── */}
+7343:      {isPlayer && (
+7352:                  <div style={{ color:T.textDim, fontSize:".74rem" }}>{act.fecha}</div>
+7383:              { key:"mostrar_disp",    label:tx("perfil.privacidad_disponibilidad"),   def:isPlayer },
+7385:              { key:"invitaciones",    label:tx("perfil.privacidad_invitaciones"),     def:isPlayer },
+7386:              { key:"recomendaciones", label:tx("perfil.privacidad_recomendaciones"), def:isPlayer },
+7416:          Confirmaciones de reserva &nbsp;·&nbsp; recordatorios de partido &nbsp;·&nbsp; torneos &nbsp;·&nbsp; cambios de horario
+7486:        const restoredRole = cp04NormalizeRole(data.role || user.role || localStorage.getItem("cp04_role") || "PLAYER");
+7514:  const modules = { inicio: <Inicio setCurrent={setCurrent} />, reservas: <Reservas />, alta_jugador: <AltaJugador />, reprogramar: <ReprogramarReserva setCurrent={setCurrent} />, cancelar: <CancelarReserva setCurrent={setCurrent} />, gestion: <Gestion />, torneos: <Torneos />, ranking: <Ranking />, admin: <Admin />, flujos_make: <FlujosMake />, soporte: <Soporte />, perfil: <Perfil selectedRole={selectedRole} onClearRole={clearRole} onOpenTutorial={() => setTutorialRevision((v) => v + 1)} /> };
+7517:    PLAYER: {
+7518:      label: "Jugador / cliente",
+7519:      desc: "Reservar pistas, consultar reservas y ranking.",
+7521:      password: "jugador04",
+7525:      desc: "Gestión diaria de reservas, altas y atención al jugador.",
+7606:    // Por defecto, cualquier usuario real entra como jugador/cliente hasta que el backend asigne rol.
+7607:    return "PLAYER";
+7714:        body: JSON.stringify({ email: cleanEmail, password: cleanPassword, name: cleanName, role: "PLAYER" }),
+7828:      PLAYER:  { label: ltx("role.PLAYER.label"),  desc: ltx("role.PLAYER.desc")  },
+7924:                        Crea tu acceso como jugador para reservar pistas, consultar actividad y gestionar tu perfil.
+8002:            Acceso reservado para pruebas del editor: jugador, staff, administrador y soporte técnico.
+8012:                  <button key={roleId} type="button" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
+8014:                    <div className={roleId==="PLAYER" ? "cp04-role-player-id" : undefined} style={{ color: roleId==="PLAYER" ? "#b6ff00" : T.accent, fontWeight:900, letterSpacing:".12em", fontSize:".78rem", marginBottom:8 }}>{roleId}</div>
+8016:                    <span className={roleId==="PLAYER" ? "cp04-role-player-desc" : undefined} style={{ color: roleId==="PLAYER" ? "rgba(226,232,240,.48)" : T.textDim, lineHeight:1.5 }}>{rl.desc}</span>

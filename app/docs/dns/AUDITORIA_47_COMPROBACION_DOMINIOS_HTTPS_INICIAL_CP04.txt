@@ -1,0 +1,9 @@
+## Dominio SaaS: clubpadel04.com
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0curl: (6) Could not resolve host: clubpadel04.com
+
+## Dominio app: app.clubpadel04.com
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0curl: (6) Could not resolve host: app.clubpadel04.com

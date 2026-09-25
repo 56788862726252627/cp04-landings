@@ -1,0 +1,178 @@
+{
+  "manifestVersion": 1,
+  "projectId": "demo_clinica-de-fisioterapia-malaga-demo",
+  "projectName": "Clínica De Fisioterapia Málaga (demo)",
+  "generatedAt": "2026-07-27T19:27:27.250Z",
+  "version": 1,
+  "itemCount": 21,
+  "items": [
+    {
+      "id": "contrato_contrato-demo.md",
+      "deliverableType": "contrato",
+      "format": "markdown",
+      "path": "contratos/contrato-demo.md",
+      "status": "validated",
+      "checksum": "fe89a4f9d2339664c1c3375783189dcb92d36e2650c24ee3d656ca0650fffc3e"
+    },
+    {
+      "id": "propuesta_comercial_propuesta-comercial.html",
+      "deliverableType": "propuesta_comercial",
+      "format": "html",
+      "path": "marketing/propuesta-comercial.html",
+      "status": "validated",
+      "checksum": "4e4d3b56c260a51fac6a9bda62ec480c5a2af428aa68c12c11fce8ce1fe4669b"
+    },
+    {
+      "id": "informe_informe.md",
+      "deliverableType": "informe",
+      "format": "markdown",
+      "path": "informes/informe.md",
+      "status": "validated",
+      "checksum": "1278f844e207ec092ae19cafd64c5664015bcaa45febc7541b8244cfeb7ef72b"
+    },
+    {
+      "id": "documentacion_tecnica_documentacion-tecnica.md",
+      "deliverableType": "documentacion_tecnica",
+      "format": "markdown",
+      "path": "documentacion/documentacion-tecnica.md",
+      "status": "validated",
+      "checksum": "3166387d4ee8e3ba2b4990e70e76dddd522b961a4dde87e3590078d18338493c"
+    },
+    {
+      "id": "documentacion_comercial_documentacion-comercial.md",
+      "deliverableType": "documentacion_comercial",
+      "format": "markdown",
+      "path": "documentacion/documentacion-comercial.md",
+      "status": "validated",
+      "checksum": "2ad50fafba5764ee3728ef67b02665e0c3d1b7be58293750357d6d3559b35a6e"
+    },
+    {
+      "id": "presentacion_presentacion.html",
+      "deliverableType": "presentacion",
+      "format": "html",
+      "path": "presentaciones/presentacion.html",
+      "status": "validated",
+      "checksum": "bf4b0fa3d008b6a3dbef3b60a8c27a5f8d75fba5eb774ed972306ff9b474ffcc"
+    },
+    {
+      "id": "logotipo_logo.svg",
+      "deliverableType": "logotipo",
+      "format": "svg",
+      "path": "logos/logo.svg",
+      "status": "validated",
+      "checksum": "9e44a008224153dc4a8785a2bf63eea31a2ae5973f6a7c0b1c25cc0dac990a85"
+    },
+    {
+      "id": "icono_icono.svg",
+      "deliverableType": "icono",
+      "format": "svg",
+      "path": "iconos/icono.svg",
+      "status": "validated",
+      "checksum": "99358c049cb37745b24695f2c1ddd9f5dfecf39cd5c045f1b809db99a5a166f4"
+    },
+    {
+      "id": "fondo_fondo.svg",
+      "deliverableType": "fondo",
+      "format": "svg",
+      "path": "fondos/fondo.svg",
+      "status": "validated",
+      "checksum": "3f1aaad5f3aa968f032e4ec947af7a1a8be3ab5ca3dc21101f73ba23c13c070c"
+    },
+    {
+      "id": "banner_banner.svg",
+      "deliverableType": "banner",
+      "format": "svg",
+      "path": "marketing/banner.svg",
+      "status": "validated",
+      "checksum": "247f88f96d477a69499ffe05fc9d52546dd05cd7104bea862bb4c3dca116ad27"
+    },
+    {
+      "id": "mockup_preview_movil-android-vertical",
+      "deliverableType": "mockup_preview",
+      "format": "svg",
+      "path": "mockups/preview-movil-android-vertical.svg",
+      "status": "validated",
+      "checksum": "1fe61edd7f8a06890c1d03e8193ef5b315955d4854a9f04e8664b5f15a2c7285"
+    },
+    {
+      "id": "mockup_preview_movil-ios-vertical",
+      "deliverableType": "mockup_preview",
+      "format": "svg",
+      "path": "mockups/preview-movil-ios-vertical.svg",
+      "status": "validated",
+      "checksum": "7d701baee38765876ec5f81c77833af05c8554b5cb57b21b18c09ffc60dd6754"
+    },
+    {
+      "id": "mockup_preview_tablet-android-horizontal",
+      "deliverableType": "mockup_preview",
+      "format": "svg",
+      "path": "mockups/preview-tablet-android-horizontal.svg",
+      "status": "validated",
+      "checksum": "0b06035880c2eee7f43057d298172c816d05f9dca713efbf9a8dcccb7e8cb432"
+    },
+    {
+      "id": "mockup_preview_ipad-horizontal",
+      "deliverableType": "mockup_preview",
+      "format": "svg",
+      "path": "mockups/preview-ipad-horizontal.svg",
+      "status": "validated",
+      "checksum": "d17e5afb52609e9c1439c08ed83e226bee7d5ac86dabfd5752b70ba0f73cf608"
+    },
+    {
+      "id": "mockup_preview_escritorio-windows",
+      "deliverableType": "mockup_preview",
+      "format": "svg",
+      "path": "mockups/preview-escritorio-windows.svg",
+      "status": "validated",
+      "checksum": "ebf4b9fca7e9aa60dd4e38f915f3eb922ada63f747d12b2e87e89c03f8094ac5"
+    },
+    {
+      "id": "mockup_preview_escritorio-macos",
+      "deliverableType": "mockup_preview",
+      "format": "svg",
+      "path": "mockups/preview-escritorio-macos.svg",
+      "status": "validated",
+      "checksum": "a893da2c6b898ad3b7b912dba207356275c320a6c8117df29b2873c2cc4917e3"
+    },
+    {
+      "id": "mockup_preview_escritorio-linux",
+      "deliverableType": "mockup_preview",
+      "format": "svg",
+      "path": "mockups/preview-escritorio-linux.svg",
+      "status": "validated",
+      "checksum": "91f98b264963ea2b91fd86a9cfc2812a5bfb84e075647d6d6a9cf38e5cceb691"
+    },
+    {
+      "id": "mockup_preview_web-pwa-responsive",
+      "deliverableType": "mockup_preview",
+      "format": "svg",
+      "path": "mockups/preview-web-pwa-responsive.svg",
+      "status": "validated",
+      "checksum": "d99dc9c40803b221d025b299666cc87f91fd06ceec218aab7020b7865a2376a1"
+    },
+    {
+      "id": "mockup_specs_package",
+      "deliverableType": "mockup_metadata_package",
+      "format": "markdown",
+      "path": "mockups/especificaciones.json",
+      "status": "validated",
+      "checksum": "c67ebb49e0113145cbf413de1684b890c918715f9f14beadb28d3520a27fa312"
+    },
+    {
+      "id": "mockup_gallery",
+      "deliverableType": "mockup_gallery",
+      "format": "html",
+      "path": "mockups/galeria.html",
+      "status": "validated",
+      "checksum": "f4e148830da7d7caf869f5e923aca7e8e84058fea798d29887605cc9d0bd2f22"
+    },
+    {
+      "id": "deliverables_catalog",
+      "deliverableType": "catalogo_entregables",
+      "format": "markdown",
+      "path": "manifest/catalogo.json",
+      "status": "validated",
+      "checksum": "6e72617a1e528428eb7bc44ac7124668d9f6009c5e2dc8472cffa6bb58afd079"
+    }
+  ]
+}

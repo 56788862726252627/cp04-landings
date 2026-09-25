@@ -1,0 +1,3 @@
+OK: dist existe
+OK: dist/index.html existe
+OK: dist/assets existe

@@ -1,0 +1,299 @@
+src/App.jsx:46: * - No contiene webhooks reales de Make.
+src/App.jsx:47: * - No contiene API keys, tokens ni credenciales.
+src/App.jsx:48: * - un endpoint seguro propio: /api/reservas.
+src/App.jsx:49: * - La integración con Make/Airtable/Stripe debe hacerse en backend, Edge Function,
+src/App.jsx:74:  bookingEndpoint: import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT || "/api/reservas",
+src/App.jsx:75:  contactEmail: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_EMAIL || "Pendiente de configurar",
+src/App.jsx:76:  contactPhone: import.meta?.env?.VITE_CP04_PUBLIC_CONTACT_PHONE || "Pendiente de configurar",
+src/App.jsx:81:    key: "pistas",
+src/App.jsx:87:    key: "recepcion",
+src/App.jsx:93:    key: "cafeteria",
+src/App.jsx:99:    key: "torneos",
+src/App.jsx:105:    key: "instalaciones",
+src/App.jsx:420:  const cleanKey = form.clave_reserva.trim();
+src/App.jsx:427:  if (!cleanKey) {
+src/App.jsx:429:  } else if (cleanKey.length < 8) {
+src/App.jsx:510:const DISPONIBILIDAD_ENDPOINT = "/api/disponibilidad";
+src/App.jsx:690:          <div key={pista} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 14, background: "rgba(255,255,255,.035)" }}>
+src/App.jsx:729:                    key={clave}
+src/App.jsx:770:  const tx = key => t(key, lang);
+src/App.jsx:782:  return <div style={{ display: "grid", gap: 10 }}>{items.map((item) => <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, color: T.textDim, lineHeight: 1.55 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: T.accent, marginTop: 8, flex: "0 0 auto" }} /><span>{item}</span></div>)}</div>;
+src/App.jsx:795:  const tx = key => t(key, lang);
+src/App.jsx:797:  return <section style={{ marginTop: 42 }}><SectionTitle eyebrow={tx("home.galeria_eyebrow")} title={tx("home.galeria")} desc={tx("home.galeria_desc")} /><div className="cp04-gallery"><GalleryItem item={featured} featured /><div className="cp04-gallery-side">{rest.map((item) => <GalleryItem key={item.key} item={item} />)}</div></div></section>;
+src/App.jsx:802:  return <div style={{ display: "grid", gap: 12 }}>{INTEGRATIONS.map((item) => <Card key={item.name} style={{ padding: compact ? 18 : 22 }}><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}><div><h3 style={{ margin: 0, fontFamily: T.fontDisplay, letterSpacing: "-.035em" }}>{item.name}</h3><p style={{ color: T.textDim, marginTop: 8, lineHeight: 1.6 }}>{item.detail}</p></div><span className="cp04-badge" style={{ color: colorFor(item.status), border: `1px solid ${colorFor(item.status)}55`, borderRadius: 999, padding: "7px 11px", fontWeight: 900, fontSize: ".74rem", whiteSpace: "nowrap" }}>{item.status}</span></div>{!compact && <p style={{ color: T.textDim, marginTop: 12, lineHeight: 1.6 }}>Flujo: <code>{item.flow}</code></p>}</Card>)}</div>;
+src/App.jsx:807:  const tx = key => t(key, lang);
+src/App.jsx:808:  return <Card><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 18 }}><div><h3 style={{ margin: 0, fontFamily: T.fontDisplay, letterSpacing: "-.04em" }}>{tx("auth.roles_title")}</h3><p style={{ color: T.textDim, lineHeight: 1.65, marginTop: 8 }}>{tx("auth.pending_desc")}</p></div><span className="cp04-badge" style={{ color: T.warning, border: `1px solid ${T.warning}55`, borderRadius: 999, padding: "7px 11px", fontWeight: 900, fontSize: ".74rem", whiteSpace: "nowrap" }}>{tx("auth.pending_badge")}</span></div><div className={compact ? undefined : "cp04-grid-2"} style={compact ? { display: "grid", gap: 12 } : undefined}>{ROLES.map((role) => <div key={role.id} style={{ border: `1px solid ${T.line}`, borderRadius: 18, padding: 16, background: "rgba(255,255,255,.035)" }}><div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><strong style={{ color: T.accent }}>{role.id}</strong><span style={{ color: T.warning, fontSize: ".82rem", fontWeight: 900 }}>{role.access}</span></div><div style={{ marginTop: 8, fontWeight: 900 }}>{role.label}</div><div style={{ color: T.textDim, marginTop: 6, lineHeight: 1.55 }}>{tx("auth.secciones")} {role.sections}</div>{!compact && <PanelList items={role.permissions} />}</div>)}</div></Card>;
+src/App.jsx:952:            <g key={i} onMouseEnter={() => setTip({ l: d.l, v: d.v, px: pxPct })} onTouchStart={() => setTip({ l: d.l, v: d.v, px: pxPct })}>
+src/App.jsx:996:          <circle key={i} cx={p.x} cy={p.y} r={tip?.l === p.l ? 4 : 2.5} fill={col} opacity={tip?.l === p.l ? 1 : .6}
+src/App.jsx:1034:            <path key={i} d={arc.d} fill="none" stroke={arc.c || T.accent} strokeWidth={tip?.l === arc.l ? stroke + 3 : stroke}
+src/App.jsx:1044:          <div key={i} style={{ display:"flex", alignItems:"center", gap:8, cursor:"default" }}
+src/App.jsx:1069:        <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:10, alignItems:"center", cursor:"default" }}
+src/App.jsx:1121:// Los datos de Make deben venir de un endpoint propio o webhook,
+src/App.jsx:1126:  airtable: "prepared",
+src/App.jsx:1127:  stripe: "prepared",
+src/App.jsx:1458:    "funcion": "Genera QR de acceso para reserva confirmada, envía email y actualiza Airtable.",
+src/App.jsx:1683:    "funcion": "Sincroniza reservas confirmadas con Google Calendar y Airtable.",
+src/App.jsx:1844:  const tx = key => t(key, lang);
+src/App.jsx:1864:      {/* TODO producción: alimentar este dashboard desde backend/proxy seguro (Make API o webhook propio). NUNCA llamar Make API con clave privada desde el frontend. */}
+src/App.jsx:1896:            {["0h","6h","12h","18h","23h"].map(h => <span key={h} style={{ color:T.textDim, fontSize:".62rem" }}>{h}</span>)}
+src/App.jsx:1925:            <div key={f.n} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid rgba(255,255,255,.05)` }}>
+src/App.jsx:1939:              <button key={c} type="button" onClick={() => setCatFilter(c)}
+src/App.jsx:1959:                  <tr key={flow.id}>
+src/App.jsx:2097:  { code: "tr-TR", label: "Türkçe", country: "Türkiye", countryEs: "Turquía", countryEn: "Turkey", flag: "🇹🇷", recommended: false, aliases: ["Türkçe","Turco","Turkish","Türkiye","Turquía","Turkey","TR","tr","tr-TR","🇹🇷","turco","turkish","turquia","turkey"] },
+src/App.jsx:2235:    "login.password":"Contraseña","login.ver_pwd":"👁️ Ver contraseña","login.ocultar_pwd":"🙈 Ocultar contraseña",
+src/App.jsx:2241:    "login.olvide_pwd":"¿Has olvidado tu contraseña?","login.recuperar_title":"Recuperar acceso","login.recuperar_desc":"Introduce tu correo electrónico y, si la cuenta existe, recibirás instrucciones para restablecer el acceso.","login.recuperar_email":"Correo electrónico","login.recuperar_btn":"Enviar instrucciones","login.recuperar_enviado":"Si esa dirección está registrada en el sistema, recibirás instrucciones en breve. Revisa también la carpeta de spam.","login.recuperar_volver":"Volver al inicio de sesión","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+src/App.jsx:2421:    "soporte.make_item":"Automatizaciones pendientes de secreto privado",
+src/App.jsx:2422:    "soporte.airtable_item":"Base de datos preparada sin escritura activa",
+src/App.jsx:2423:    "soporte.stripe_item":"Pagos y mensajería pendientes de configuración",
+src/App.jsx:2437:    "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
+src/App.jsx:2439:    "login.intro_pwd":"Enter the password assigned to this role.",
+src/App.jsx:2440:    "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
+src/App.jsx:2442:    "login.legal":"Local access protected by password. Session can be saved on this device only. For production, credentials must be validated from secure backend.",
+src/App.jsx:2443:    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+src/App.jsx:2444:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with GDPR.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+src/App.jsx:2499:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+src/App.jsx:2530:    "cancelar.clave":"Booking key","cancelar.clave_ph":"Enter your booking key",
+src/App.jsx:2554:    "status.cancelar.error":"Could not send","status.cancelar.error_txt":"Check the key and try again.",
+src/App.jsx:2568:    "errors.clave":"Please enter the booking key.","errors.clave_incompleta":"The booking key seems incomplete.",
+src/App.jsx:2575:    "errors.cancelar_error":"Could not send the request. Check the key and try again.",
+src/App.jsx:2578:    "errors.reprog_error":"Could not complete the reschedule. Check the key and try again.",
+src/App.jsx:2584:    "reprog.info1":"The key identifies the booking you want to change.",
+src/App.jsx:2585:    "reprog.info2":"The same key is kept after rescheduling.",
+src/App.jsx:2623:    "soporte.make_item":"Automations pending private secret",
+src/App.jsx:2624:    "soporte.airtable_item":"Database ready without active writes",
+src/App.jsx:2625:    "soporte.stripe_item":"Payments and messaging pending configuration",
+src/App.jsx:2639:    "login.password":"Password","login.ver_pwd":"👁️ Show password","login.ocultar_pwd":"🙈 Hide password",
+src/App.jsx:2641:    "login.intro_pwd":"Enter the password assigned to this role.",
+src/App.jsx:2642:    "login.error_rol":"Please select a valid role.","login.error_pwd":"Incorrect password for this role.",
+src/App.jsx:2644:    "login.legal":"Local access protected by password. Session can be saved on this device only.",
+src/App.jsx:2645:    "login.olvide_pwd":"Forgot your password?","login.recuperar_title":"Recover access","login.recuperar_desc":"Enter your email address and, if the account exists, you will receive instructions to reset your access.","login.recuperar_email":"Email address","login.recuperar_btn":"Send instructions","login.recuperar_enviado":"If that address is registered in the system, you will receive instructions shortly. Also check your spam folder.","login.recuperar_volver":"Back to login","login.recuperar_preparado":"Ready for endpoint: /api/auth/forgot-password",
+src/App.jsx:2646:    "perfil.title":"Profile & settings","perfil.eyebrow":"My account","perfil.sesion":"Active session","perfil.rol_actual":"Current role","perfil.cerrar_sesion":"Log out","perfil.cambiar_pwd":"Change password","perfil.pwd_actual":"Current password","perfil.pwd_nueva":"New password","perfil.pwd_confirmar":"Confirm new password","perfil.pwd_guardada":"Password updated (local demo mode).","perfil.pwd_error_vacia":"Enter current password.","perfil.pwd_error_nueva":"Minimum 8 characters, uppercase, lowercase and number.","perfil.pwd_error_coincide":"Passwords do not match.","perfil.idioma":"Interface language","perfil.info_demo":"Profile in local mode. Data is saved on this device only.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In production, personal data will be managed in compliance with applicable privacy law.","perfil.notificaciones":"Notifications","perfil.notif_desc":"Ready for email and messaging notifications in production.","perfil.avatar_cambiar":"Change profile photo","perfil.avatar_eliminar":"Remove photo","perfil.avatar_confirmar_del":"Remove your profile photo?","perfil.avatar_guardada":"Photo updated.","perfil.avatar_eliminada":"Photo removed.","perfil.avatar_error_tipo":"Images only (JPG, PNG, WEBP).","perfil.avatar_error_size":"Maximum 5 MB.","perfil.bio_titulo":"Your introduction","perfil.bio_placeholder":"Tell us about your game, level or availability...","perfil.bio_guardar":"Save","perfil.bio_cancelar":"Cancel","perfil.bio_guardada":"Introduction saved.","perfil.bio_editar":"Edit introduction","perfil.bio_chars":"characters","perfil.deporte_titulo":"Sports profile","perfil.deporte_guardar":"Save data","perfil.deporte_guardados":"Sports data saved.","perfil.deporte_mano":"Dominant hand","perfil.deporte_posicion":"Preferred position","perfil.deporte_nivel":"Skill level","perfil.deporte_disponibilidad":"Usual availability","perfil.deporte_tipo_partida":"Match type","perfil.deporte_objetivo":"Main goal","perfil.deporte_busqueda":"Search status","perfil.metricas_titulo":"My activity","perfil.metricas_partidos":"Matches played","perfil.metricas_reservas":"Bookings made","perfil.metricas_torneos":"Tournaments played","perfil.metricas_ranking":"Current ranking","perfil.metricas_actividad":"Activity level","perfil.metricas_valoracion":"Sports rating","perfil.metricas_fiabilidad":"Reliability","perfil.metricas_racha":"Active streak","perfil.historial_titulo":"Player moments","perfil.insignias_titulo":"Player achievements","perfil.privacidad_config":"Privacy settings","perfil.privacidad_guardada":"Privacy updated.","perfil.privacidad_perfil_visible":"Profile visible to other players","perfil.privacidad_nivel":"Show skill level","perfil.privacidad_disponibilidad":"Show availability","perfil.privacidad_stats":"Show statistics","perfil.privacidad_invitaciones":"Allow match invitations","perfil.privacidad_recomendaciones":"Allow partner recommendations","perfil.completitud_titulo":"Profile completeness","nav.perfil":"Profile & settings",
+src/App.jsx:2701:    "reprog.clave":"Booking key","reprog.nueva_fecha":"New date",
+src/App.jsx:2732:    "cancelar.clave":"Booking key","cancelar.clave_ph":"Enter your booking key",
+src/App.jsx:2756:    "status.cancelar.error":"Could not send","status.cancelar.error_txt":"Check the key and try again.",
+src/App.jsx:2770:    "errors.clave":"Please enter the booking key.","errors.clave_incompleta":"The booking key seems incomplete.",
+src/App.jsx:2777:    "errors.cancelar_error":"Could not send the request. Check the key and try again.",
+src/App.jsx:2780:    "errors.reprog_error":"Could not complete the reschedule. Check the key and try again.",
+src/App.jsx:2786:    "reprog.info1":"The key identifies the booking you want to change.",
+src/App.jsx:2787:    "reprog.info2":"The same key is kept after rescheduling.",
+src/App.jsx:2825:    "soporte.make_item":"Automations pending private secret",
+src/App.jsx:2826:    "soporte.airtable_item":"Database ready without active writes",
+src/App.jsx:2827:    "soporte.stripe_item":"Payments and messaging pending configuration",
+src/App.jsx:2841:    "login.password":"Mot de passe","login.ver_pwd":"👁️ Voir le mot de passe","login.ocultar_pwd":"🙈 Masquer",
+src/App.jsx:2847:    "login.olvide_pwd":"Mot de passe oublié ?","login.recuperar_title":"Récupérer l'accès","login.recuperar_desc":"Saisissez votre adresse e-mail et, si le compte existe, vous recevrez des instructions pour réinitialiser l'accès.","login.recuperar_email":"Adresse e-mail","login.recuperar_btn":"Envoyer les instructions","login.recuperar_enviado":"Si cette adresse est enregistrée dans le système, vous recevrez des instructions prochainement. Vérifiez aussi vos spams.","login.recuperar_volver":"Retour à la connexion","login.recuperar_preparado":"Prêt pour l'endpoint : /api/auth/forgot-password",
+src/App.jsx:3023:    "soporte.make_item":"Automatisations en attente de secret privé",
+src/App.jsx:3024:    "soporte.airtable_item":"Base de données prête sans écriture active",
+src/App.jsx:3025:    "soporte.stripe_item":"Paiements et messagerie en attente de configuration",
+src/App.jsx:3039:    "login.password":"Password","login.ver_pwd":"👁️ Mostra password","login.ocultar_pwd":"🙈 Nascondi",
+src/App.jsx:3041:    "login.intro_pwd":"Inserisci la password assegnata a questo ruolo.",
+src/App.jsx:3042:    "login.error_rol":"Seleziona un ruolo valido.","login.error_pwd":"Password errata per questo ruolo.",
+src/App.jsx:3044:    "login.legal":"Accesso locale protetto da password. Sessione salvabile solo su questo dispositivo.",
+src/App.jsx:3045:    "login.olvide_pwd":"Hai dimenticato la password?","login.recuperar_title":"Recupera l'accesso","login.recuperar_desc":"Inserisci il tuo indirizzo e-mail e, se l'account esiste, riceverai le istruzioni per reimpostare l'accesso.","login.recuperar_email":"Indirizzo e-mail","login.recuperar_btn":"Invia istruzioni","login.recuperar_enviado":"Se quell'indirizzo è registrato nel sistema, riceverai le istruzioni a breve. Controlla anche la cartella spam.","login.recuperar_volver":"Torna al login","login.recuperar_preparado":"Pronto per l'endpoint: /api/auth/forgot-password",
+src/App.jsx:3046:    "perfil.title":"Profilo e impostazioni","perfil.eyebrow":"Il mio account","perfil.sesion":"Sessione attiva","perfil.rol_actual":"Ruolo attuale","perfil.cerrar_sesion":"Disconnetti","perfil.cambiar_pwd":"Cambia password","perfil.pwd_actual":"Password attuale","perfil.pwd_nueva":"Nuova password","perfil.pwd_confirmar":"Conferma nuova password","perfil.pwd_guardada":"Password aggiornata (modalità demo locale).","perfil.pwd_error_vacia":"Inserisci la password attuale.","perfil.pwd_error_nueva":"Minimo 8 caratteri, maiuscola, minuscola e numero.","perfil.pwd_error_coincide":"Le password non corrispondono.","perfil.idioma":"Lingua dell'interfaccia","perfil.info_demo":"Profilo in modalità locale. I dati vengono salvati solo su questo dispositivo.","perfil.privacidad":"Privacy","perfil.privacidad_desc":"In produzione, i dati personali saranno gestiti in conformità al GDPR.","perfil.notificaciones":"Notifiche","perfil.notif_desc":"Pronto per notifiche via e-mail e messaggistica in produzione.","perfil.avatar_cambiar":"Cambia foto profilo","perfil.avatar_eliminar":"Rimuovi foto","perfil.avatar_confirmar_del":"Rimuovere la foto del profilo?","perfil.avatar_guardada":"Foto aggiornata.","perfil.avatar_eliminada":"Foto rimossa.","perfil.avatar_error_tipo":"Solo immagini (JPG, PNG, WEBP).","perfil.avatar_error_size":"Massimo 5 MB.","perfil.bio_titulo":"La tua presentazione","perfil.bio_placeholder":"Raccontaci del tuo gioco, livello o disponibilità...","perfil.bio_guardar":"Salva","perfil.bio_cancelar":"Annulla","perfil.bio_guardada":"Presentazione salvata.","perfil.bio_editar":"Modifica presentazione","perfil.bio_chars":"caratteri","perfil.deporte_titulo":"Profilo sportivo","perfil.deporte_guardar":"Salva dati","perfil.deporte_guardados":"Dati sportivi salvati.","perfil.deporte_mano":"Mano dominante","perfil.deporte_posicion":"Posizione preferita","perfil.deporte_nivel":"Livello di gioco","perfil.deporte_disponibilidad":"Disponibilità abituale","perfil.deporte_tipo_partida":"Tipo di partita","perfil.deporte_objetivo":"Obiettivo principale","perfil.deporte_busqueda":"Stato di ricerca","perfil.metricas_titulo":"La mia attività","perfil.metricas_partidos":"Partite giocate","perfil.metricas_reservas":"Prenotazioni effettuate","perfil.metricas_torneos":"Tornei disputati","perfil.metricas_ranking":"Classifica attuale","perfil.metricas_actividad":"Livello di attività","perfil.metricas_valoracion":"Valutazione sportiva","perfil.metricas_fiabilidad":"Affidabilità","perfil.metricas_racha":"Serie attiva","perfil.historial_titulo":"Momenti del giocatore","perfil.insignias_titulo":"Risultati del giocatore","perfil.privacidad_config":"Impostazioni privacy","perfil.privacidad_guardada":"Privacy aggiornata.","perfil.privacidad_perfil_visible":"Profilo visibile agli altri giocatori","perfil.privacidad_nivel":"Mostra livello di gioco","perfil.privacidad_disponibilidad":"Mostra disponibilità","perfil.privacidad_stats":"Mostra statistiche","perfil.privacidad_invitaciones":"Consenti inviti a partite","perfil.privacidad_recomendaciones":"Consenti raccomandazioni","perfil.completitud_titulo":"Completezza del profilo","nav.perfil":"Profilo e impostazioni",
+src/App.jsx:3222:    "soporte.airtable_item":"Database pronto senza scritture attive",
+src/App.jsx:3223:    "soporte.stripe_item":"Pagamenti e messaggistica in attesa di configurazione",
+src/App.jsx:3237:    "login.password":"Palavra-passe","login.ver_pwd":"👁️ Ver palavra-passe","login.ocultar_pwd":"🙈 Ocultar",
+src/App.jsx:3243:    "login.olvide_pwd":"Esqueceu a palavra-passe?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Introduza o seu e-mail e, se a conta existir, receberá instruções para repor o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver registado no sistema, receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao início de sessão","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+src/App.jsx:3420:    "soporte.airtable_item":"Base de dados preparada sem escrita ativa",
+src/App.jsx:3421:    "soporte.stripe_item":"Pagamentos e mensagens pendentes de configuração",
+src/App.jsx:3435:    "login.password":"Senha","login.ver_pwd":"👁️ Mostrar senha","login.ocultar_pwd":"🙈 Ocultar",
+src/App.jsx:3441:    "login.olvide_pwd":"Esqueceu a senha?","login.recuperar_title":"Recuperar acesso","login.recuperar_desc":"Insira seu e-mail e, se a conta existir, você receberá instruções para redefinir o acesso.","login.recuperar_email":"Endereço de e-mail","login.recuperar_btn":"Enviar instruções","login.recuperar_enviado":"Se esse endereço estiver cadastrado no sistema, você receberá instruções em breve. Verifique também a pasta de spam.","login.recuperar_volver":"Voltar ao login","login.recuperar_preparado":"Preparado para endpoint: /api/auth/forgot-password",
+src/App.jsx:3618:    "soporte.airtable_item":"Banco de dados preparado sem escritas ativas",
+src/App.jsx:3619:    "soporte.stripe_item":"Pagamentos e mensagens pendentes de configuração",
+src/App.jsx:3633:    "login.password":"Passwort","login.ver_pwd":"👁️ Passwort anzeigen","login.ocultar_pwd":"🙈 Ausblenden",
+src/App.jsx:3639:    "login.olvide_pwd":"Passwort vergessen?","login.recuperar_title":"Zugang wiederherstellen","login.recuperar_desc":"Geben Sie Ihre E-Mail-Adresse ein und, wenn das Konto existiert, erhalten Sie Anweisungen zur Zurücksetzung.","login.recuperar_email":"E-Mail-Adresse","login.recuperar_btn":"Anweisungen senden","login.recuperar_enviado":"Wenn diese Adresse im System registriert ist, erhalten Sie in Kürze Anweisungen. Prüfen Sie auch Ihren Spam-Ordner.","login.recuperar_volver":"Zurück zum Login","login.recuperar_preparado":"Bereit für Endpunkt: /api/auth/forgot-password",
+src/App.jsx:3816:    "soporte.airtable_item":"Datenbank bereit ohne aktive Schreibvorgänge",
+src/App.jsx:3817:    "soporte.stripe_item":"Zahlungen und Messaging ausstehend",
+src/App.jsx:3826:function t(key, lang) {
+src/App.jsx:3830:    const dict = TRANSLATIONS[code] || TRANSLATIONS[Object.keys(TRANSLATIONS).find(k => k.startsWith(base))] || {};
+src/App.jsx:3832:    return dict[key] ?? esDict[key] ?? key;
+src/App.jsx:3833:  } catch { return key; }
+src/App.jsx:3842:  const ltx = key => t(key, lang);
+src/App.jsx:3852:    function onKey(e) { if (e.key === "Escape") setOpen(false); }
+src/App.jsx:3853:    window.addEventListener("keydown", onKey);
+src/App.jsx:3854:    return () => window.removeEventListener("keydown", onKey);
+src/App.jsx:3925:                    {filteredRecommended.map(lang => <LangOption key={lang.code} lang={lang} selected={selected} onSelect={selectLang} />)}
+src/App.jsx:3931:                    {filteredAll.map(lang => <LangOption key={lang.code} lang={lang} selected={selected} onSelect={selectLang} />)}
+src/App.jsx:3969:  const tx = key => t(key, lang);
+src/App.jsx:3970:  const navKeys = [
+src/App.jsx:3983:  const visibleItems = navKeys.filter(([id]) => allowedMenu.includes(id));
+src/App.jsx:3998:        {visibleItems.map(([id, key, icon]) => {
+src/App.jsx:3999:          const label = tx(key);
+src/App.jsx:4001:            <button key={id} onClick={() => onNavigate(id)} aria-current={current === id ? "page" : undefined}
+src/App.jsx:4027:  const tx = key => t(key, lang);
+src/App.jsx:4100:              <span key={i} style={{ color:T.textDim, fontSize:".65rem" }}>{d}</span>
+src/App.jsx:4139:  const tx = key => t(key, lang);
+src/App.jsx:4170:    if (Object.keys(nextErrors).length > 0) {
+src/App.jsx:4182:    if (Object.keys(nextErrors).length > 0) {
+src/App.jsx:4193:      const slotKey = `${form.fecha}|${court}|${form.hora}`;
+src/App.jsx:4195:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+src/App.jsx:4232:/><Card style={{ marginBottom: 20, borderColor: statusColor, color: statusColor }}><strong>{statusTitle}</strong><div style={{ color: T.textDim, marginTop: 6 }}>{statusText}</div></Card>{step===1&&<div className="cp04-grid-2"><Card><h3>{tx("reservas.datos_jugador")}</h3><input aria-label={tx("reservas.nombre")} placeholder={tx("reservas.nombre")} value={form.nombre} onChange={e=>updateForm("nombre",e.target.value)} autoComplete="given-name" /><FieldError>{errors.nombre}</FieldError><br /><input aria-label={tx("reservas.apellidos")} placeholder={tx("reservas.apellidos")} value={form.apellidos} onChange={e=>updateForm("apellidos",e.target.value)} autoComplete="family-name" /><FieldError>{errors.apellidos}</FieldError><br /><input aria-label="Email" placeholder="Email" type="email" value={form.email} onChange={e=>updateForm("email",e.target.value)} autoComplete="email" /><FieldError>{errors.email}</FieldError><br /><input aria-label="Teléfono" placeholder="Teléfono" value={form.telefono} onChange={e=>updateForm("telefono",e.target.value)} autoComplete="tel" /><FieldError>{errors.telefono}</FieldError><br /><select aria-label={tx("reservas.modalidad")} value={form.modalidad} onChange={e=>updateForm("modalidad",e.target.value)}>{BOOKING_MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}</select><FieldError>{errors.modalidad}</FieldError><br /><select aria-label={tx("reservas.nivel_form")} value={form.nivel} onChange={e=>updateForm("nivel",e.target.value)}>{BOOKING_LEVELS.map(n=><option key={n} value={n}>{n}</option>)}</select><FieldError>{errors.nivel}</FieldError><br /><textarea aria-label={tx("reservas.comentarios")} placeholder={tx("reservas.comentarios")} value={form.comentarios} onChange={e=>updateForm("comentarios",e.target.value)} /></Card><Card><h3>{tx("reservas.fecha_pista")}</h3><input aria-label={tx("reservas.fecha")} type="date" min={todayISO()} value={form.fecha} onChange={e=>updateForm("fecha",e.target.value)} /><FieldError>{errors.fecha}</FieldError><br /><select aria-label={tx("reservas.hora")} value={form.hora} onChange={e=>updateForm("hora",e.target.value)} disabled={isSundayISO(form.fecha)}>{BOOKING_HOURS.map(h=><option key={h} value={h} disabled={getSlotStatus(form.fecha,h,duration)!=="available"}>{h}</option>)}</select><FieldError>{errors.hora}</FieldError><br /><select aria-label={tx("reservas.duracion")} value={form.duracion_minutos} onChange={e=>updateForm("duracion_minutos",e.target.value)}>{BOOKING_DURATIONS.map(mins=><option key={mins} value={mins}>{mins} {tx("reservas.minutos")}</option>)}</select><FieldError>{errors.duracion_minutos}</FieldError><br /><div className="cp04-grid-2">{COURTS.map(c=><Btn key={c.id} variant={court===c.name?"primary":"secondary"} disabled={sending} onClick={()=>setCourt(c.name)}>{c.name}</Btn>)}</div><FieldError>{errors.pista}</FieldError><Card style={{ background:T.bg, marginTop:16 }}>{tx("reservas.hora_fin")}: <strong style={{ color:T.accent }}>{horaFin}</strong> · {tx("reservas.total")}: <strong style={{ color:T.accent }}>{price}€</strong></Card><Btn disabled={sending||getSlotStatus(form.fecha,form.hora,duration)!=="available"} onClick={review} style={{ width:"100%", marginTop:16 }}>{tx("reservas.ver_resumen")}</Btn></Card></div>}{step===2&&<Card style={{ maxWidth:620, margin:"0 auto" }}><h3>{tx("reservas.resumen")}</h3><p style={{ color:T.textDim }}>{payload.jugador.nombre} {payload.jugador.apellidos} · {payload.jugador.email} · {payload.jugador.telefono}</p><p>{formatDateEs(payload.reserva.fecha)} · {payload.reserva.hora}-{payload.reserva.hora_fin} · {payload.reserva.pista} · {payload.reserva.duracion_minutos} min</p><p style={{ color:T.textDim }}>{tx("reservas.modalidad")}: {payload.reserva.modalidad} · {tx("reservas.nivel_form")}: {payload.reserva.nivel}</p><h2 style={{ color:T.accent }}>{payload.reserva.precio_total}€</h2><div style={{ display:"flex", gap:12, flexWrap:"wrap" }}><Btn variant="secondary" disabled={sending} onClick={()=>setStep(1)}>{tx("reservas.editar")}</Btn><Btn disabled={sending} onClick={send}>{sending?tx("reservas.enviando"):tx("reservas.confirmar_btn")}</Btn></div></Card>}{step===3&&<Card style={{ maxWidth:560, margin:"0 auto", textAlign:"center" }}><h3>{tx("reservas.registrada")}</h3><p style={{ color:T.textDim }}>{tx("reservas.confirmacion_desc")}</p><Btn onClick={newBooking}>{tx("reservas.nueva_btn")}</Btn></Card>}</div>;
+src/App.jsx:4237:  const tx = key => t(key, lang);
+src/App.jsx:4326:  const tx = key => t(key, lang);
+src/App.jsx:4377:    if (Object.keys(nextErrors).length > 0) {
+src/App.jsx:4388:      const slotKey = `${form.nueva_fecha_reserva}|${court}|${form.nueva_hora_inicio}`;
+src/App.jsx:4391:      if ((disponibilidad.ocupadas || []).includes(slotKey)) {
+src/App.jsx:4417:        if ((updatedAvailability.ocupadas || []).includes(slotKey)) {
+src/App.jsx:4545:                  key={hora}
+src/App.jsx:4566:                <option key={minutes} value={minutes}>{minutes} {tx("reservas.minutos")}</option>
+src/App.jsx:4578:                      key={item.id}
+src/App.jsx:4702:    import.meta?.env?.VITE_CP04_PUBLIC_BOOKING_ENDPOINT ||
+src/App.jsx:4703:    "/api/reservas";
+src/App.jsx:4857:      setFuenteReservas(resultado.source || "airtable");
+src/App.jsx:5019:              onKeyDown={(event) => {
+src/App.jsx:5020:                if (event.key === "Enter") {
+src/App.jsx:5180:                    <option key={pista} value={pista}>
+src/App.jsx:5208:                    <option key={estado} value={estado}>
+src/App.jsx:5261:                      <tr key={reserva.id}>
+src/App.jsx:5325:  const tx = key => t(key, lang);
+src/App.jsx:5395:    if (Object.keys(nextErrors).length > 0) return;
+src/App.jsx:5402:      const response = await fetch("/api/jugadores/alta", {
+src/App.jsx:5628:  const tx = key => t(key, lang);
+src/App.jsx:5882:  const roundNums = Object.keys(bracketByRound).map(Number).sort((a, b) => a - b);
+src/App.jsx:5891:        @keyframes cp04WinPulse { 0%{box-shadow:0 0 0 0 rgba(182,255,0,.65)} 60%{box-shadow:0 0 0 14px rgba(182,255,0,0)} 100%{box-shadow:0 0 0 0 rgba(182,255,0,0)} }
+src/App.jsx:5892:        @keyframes cp04SlideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+src/App.jsx:5893:        @keyframes cp04FadeOut { from{opacity:1} to{opacity:0} }
+src/App.jsx:5941:            <button key={o.v} type="button" className={`cp04-format-pill${formatMode === o.v ? " is-active" : ""}`} onClick={() => applyFormat(o.v)}>{o.l}</button>
+src/App.jsx:6010:              <div key={pair.id} style={{ borderRadius: 10, border: `1px solid ${byePair?.id === pair.id ? "rgba(182,255,0,.42)" : T.line}`, background: byePair?.id === pair.id ? "rgba(182,255,0,.04)" : "rgba(255,255,255,.025)", overflow: "hidden", transition: "border-color .2s" }}>
+src/App.jsx:6017:                      placeholder="Jugador 2" onKeyDown={e => e.key === "Enter" && handleEditSave()}
+src/App.jsx:6102:                    <div key={snap.id} style={{ display: "flex", gap: 8, alignItems: "center", padding: "6px 8px", borderRadius: 8, background: isCur ? "rgba(182,255,0,.1)" : "rgba(255,255,255,.03)", border: `1px solid ${isCur ? "rgba(182,255,0,.3)" : "rgba(255,255,255,.07)"}` }}>
+src/App.jsx:6137:                  <div key={rNum} style={{ flex: "0 0 220px", paddingRight: 10, paddingLeft: rNum === 1 ? 0 : 2 }}>
+src/App.jsx:6149:                          <div key={match.id}
+src/App.jsx:6237:                      <tr key={pair.id} style={{ opacity: isL ? .48 : 1, transition: "opacity .3s" }}>
+src/App.jsx:6261:@keyframes cp04-fadeUp {
+src/App.jsx:6265:@keyframes cp04-scalePulse {
+src/App.jsx:6309:  const tx = key => t(key, lang);
+src/App.jsx:6312:    { key:"general",    label: tx("ranking.general") },
+src/App.jsx:6313:    { key:"masculino",  label: tx("ranking.masculino") },
+src/App.jsx:6314:    { key:"femenino",   label: tx("ranking.femenino") },
+src/App.jsx:6315:    { key:"mixto",      label: tx("ranking.mixto") },
+src/App.jsx:6316:    { key:"iniciacion", label: tx("ranking.iniciacion") },
+src/App.jsx:6317:    { key:"medio",      label: tx("ranking.medio") },
+src/App.jsx:6318:    { key:"avanzado",   label: tx("ranking.avanzado") },
+src/App.jsx:6386:            <button key={c.key} type="button" onClick={() => setCat(c.key)}
+src/App.jsx:6387:              style={{ background: cat===c.key ? T.accent : "rgba(255,255,255,.06)", color: cat===c.key ? "#06100a" : T.textDim, border: `1px solid ${cat===c.key ? T.accent : "rgba(255,255,255,.12)"}`, borderRadius:8, padding:"6px 13px", cursor:"pointer", fontWeight:900, fontSize:".76rem", fontFamily:"inherit", transition:"all .15s" }}>
+src/App.jsx:6410:                <div key={p.pos} className="cp04-rank-podio-card"
+src/App.jsx:6475:                    <tr key={p.pos} className="cp04-rank-row cp04-rank-tr" style={{ animationDelay: animDelay }}>
+src/App.jsx:6520:            <span key={nivel} style={{ display:"inline-flex", alignItems:"center", gap:5, color:T.textDim, fontSize:".72rem" }}>
+src/App.jsx:6534:  const tx = key => t(key, lang);
+src/App.jsx:6601:          "Login real pendiente: /api/auth/login",
+src/App.jsx:6602:          "Sesión real pendiente: /api/auth/me",
+src/App.jsx:6603:          "Recuperación real pendiente: /api/auth/forgot-password",
+src/App.jsx:6618:  const tx = key => t(key, lang);
+src/App.jsx:6619:  return <div style={{ padding: "42px 24px", maxWidth: 1180, margin: "0 auto" }}><SectionTitle eyebrow={tx("soporte.eyebrow")} title={tx("soporte.title")} desc={tx("soporte.desc")} /><AuthStatusPanel /><Card style={{ marginTop: 24, marginBottom: 24 }}><h3 style={{ marginTop: 0 }}><span style={{ color: T.accent }}>{tx("soporte.proteccion_h3")}</span></h3><PanelList items={[`${tx("auth.secciones")} ${PROTECTED_SECTIONS.join(", ")}`, tx("soporte.proteccion"), tx("soporte.estado_tec_desc"), tx("soporte.worker_item")]} /></Card><div className="cp04-grid-2" style={{ marginBottom: 24 }}><RolePanel eyebrow={tx("soporte.estado_tec_eyebrow")} title={tx("soporte.estado_tec_title")} desc={tx("soporte.estado_tec_desc")} items={[tx("soporte.worker_item"), tx("soporte.make_item"), tx("soporte.airtable_item"), tx("soporte.stripe_item")]} /><RolePanel eyebrow={tx("soporte.obs_eyebrow")} title={tx("soporte.obs_title")} desc={tx("soporte.obs_desc")} items={[tx("soporte.logs_worker"), tx("soporte.logs_validaciones"), tx("soporte.logs_errores"), tx("soporte.logs_alertas")]} /></div><IntegrationMatrix /><AuthProductionStatusPanel /><Card style={{ marginTop: 24 }}><h3 style={{ marginTop: 0 }}>{tx("soporte.vars_h3")}</h3><pre style={{ overflow: "auto", color: T.textDim, background: "rgba(5,8,13,.72)", padding: 18, borderRadius: 16, border: `1px solid ${T.line}` }}>{`ALLOWED_ORIGIN=privado_en_worker\nRESERVAS_WEBHOOK=privado_en_worker\nDB_API_KEY=privado_en_backend\nDB_BASE_ID=privado_en_backend\nDB_RESERVAS_TABLE=privado_en_backend\nPAGOS_CLAVE_PRIVADA=solo_backend\nPAGOS_FIRMA_WEBHOOK=solo_backend\nMESSAGING_PROVIDER_TOKEN=privado_en_backend\nMESSAGING_PHONE_NUMBER_ID=privado_en_backend\nCALENDAR_CREDENTIALS=privado_en_backend\nSTORAGE_CREDENTIALS=privado_en_backend\nAUTH_PROVIDER=privado_en_backend\nAUTH_ISSUER_URL=privado_en_backend\nAUTH_AUDIENCE=privado_en_backend\nVITE_CP04_PUBLIC_BOOKING_ENDPOINT=/api/reservas`}</pre><p style={{ color: T.textDim, lineHeight: 1.6 }}>Documentación: <code>docs/backend-reservas.md</code>, <code>docs/integraciones.md</code> y <code>docs/auth-roles.md</code>. El frontend solo debe recibir variables públicas <code>VITE_</code>.</p></Card></div>;
+src/App.jsx:6624:  const tx = key => t(key, lang);
+src/App.jsx:6631:  // GET    /api/profile/me
+src/App.jsx:6632:  // PATCH  /api/profile/me
+src/App.jsx:6633:  // POST   /api/profile/avatar
+src/App.jsx:6634:  // DELETE /api/profile/avatar
+src/App.jsx:6635:  // GET    /api/profile/metrics
+src/App.jsx:6636:  // POST   /api/auth/change-password
+src/App.jsx:6638:    me: "/api/profile/me",
+src/App.jsx:6639:    avatar: "/api/profile/avatar",
+src/App.jsx:6640:    metrics: "/api/profile/metrics",
+src/App.jsx:6641:    changePassword: "/api/auth/change-password",
+src/App.jsx:6644:  function saveProfileFallback(key, value) {
+src/App.jsx:6647:      localStorage.setItem(key, serialized);
+src/App.jsx:6668:    const storageKey = storageMap[field];
+src/App.jsx:6669:    if (!storageKey) return false;
+src/App.jsx:6670:    return saveProfileFallback(storageKey, value);
+src/App.jsx:6674:  // TODO: GET/POST/DELETE /api/profile/avatar — integrar con Supabase Storage, Cloudflare R2 o Airtable Attachments
+src/App.jsx:6682:  // TODO: GET/PATCH /api/profile/me { bio }
+src/App.jsx:6690:  // TODO: GET/PATCH /api/profile/me { deporteData }
+src/App.jsx:6697:  // TODO: GET/PATCH /api/profile/me { privacy }
+src/App.jsx:6772:  function togglePriv(key, defaultOn) {
+src/App.jsx:6773:    const current = privacidad[key] !== undefined ? privacidad[key] : defaultOn;
+src/App.jsx:6774:    const updated = { ...privacidad, [key]: !current };
+src/App.jsx:6790:    // TODO: POST /api/auth/change-password
+src/App.jsx:7008:                  <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 0", borderBottom:`1px solid ${T.line}` }}>
+src/App.jsx:7018:                  { key:"mano",           label:tx("perfil.deporte_mano"),           opts:["Derecha","Izquierda","Ambas"] },
+src/App.jsx:7019:                  { key:"posicion",       label:tx("perfil.deporte_posicion"),       opts:["Derecha","Revés","Ambas"] },
+src/App.jsx:7020:                  { key:"nivel",          label:tx("perfil.deporte_nivel"),          opts:["Iniciación","Intermedio","Avanzado","Competición"] },
+src/App.jsx:7021:                  { key:"disponibilidad", label:tx("perfil.deporte_disponibilidad"), opts:["Mañanas","Tardes","Noches","Fines de semana","Flexible"] },
+src/App.jsx:7022:                  { key:"tipo_partida",   label:tx("perfil.deporte_tipo_partida"),   opts:["Amistosa","Competitiva","Torneo","Entrenamiento"] },
+src/App.jsx:7023:                  { key:"objetivo",       label:tx("perfil.deporte_objetivo"),       opts:["Mejorar nivel","Competir","Jugar socialmente","Encontrar pareja"] },
+src/App.jsx:7024:                  { key:"busqueda",       label:tx("perfil.deporte_busqueda"),       opts:["Disponible para partidos","No disponible","Solo torneos","Buscando pareja"] },
+src/App.jsx:7025:                ].map(({ key, label, opts }) => (
+src/App.jsx:7026:                  <div key={key}>
+src/App.jsx:7028:                    <select value={deporteDraft[key]||""} onChange={e => setDeporteDraft(p => ({...p,[key]:e.target.value}))} style={ss}>
+src/App.jsx:7030:                      {opts.map(o => <option key={o} value={o}>{o}</option>)}
+src/App.jsx:7050:            <input type="password" placeholder={tx("perfil.pwd_actual")} value={pwdActual} onChange={e=>setPwdActual(e.target.value)} autoComplete="current-password" />
+src/App.jsx:7051:            <input type="password" placeholder={tx("perfil.pwd_nueva")} value={pwdNueva} onChange={e=>setPwdNueva(e.target.value)} autoComplete="new-password" />
+src/App.jsx:7052:            <input type="password" placeholder={tx("perfil.pwd_confirmar")} value={pwdConfirmar} onChange={e=>setPwdConfirmar(e.target.value)} autoComplete="new-password" />
+src/App.jsx:7074:            <div key={label} style={{ background:T.surface2, border:`1px solid ${T.line}`, borderRadius:16, padding:"16px 14px", textAlign:"center" }}>
+src/App.jsx:7089:              <div key={i} style={{ background:T.surface2, border:`1px solid ${T.line}`, borderRadius:14, padding:"14px 16px", display:"flex", gap:14, alignItems:"flex-start" }}>
+src/App.jsx:7106:            <div key={badge.id} style={{ background:badge.earned?`${T.accent}12`:T.surface2, border:`1px solid ${badge.earned?T.accent+"44":T.line}`, borderRadius:14, padding:"14px 12px", textAlign:"center", opacity:badge.earned?1:0.4, transition:"all .2s" }}>
+src/App.jsx:7122:              { key:"perfil_visible",  label:tx("perfil.privacidad_perfil_visible"),  def:true  },
+src/App.jsx:7123:              { key:"mostrar_nivel",   label:tx("perfil.privacidad_nivel"),            def:true  },
+src/App.jsx:7124:              { key:"mostrar_disp",    label:tx("perfil.privacidad_disponibilidad"),   def:isPlayer },
+src/App.jsx:7125:              { key:"mostrar_stats",   label:tx("perfil.privacidad_stats"),            def:true  },
+src/App.jsx:7126:              { key:"invitaciones",    label:tx("perfil.privacidad_invitaciones"),     def:isPlayer },
+src/App.jsx:7127:              { key:"recomendaciones", label:tx("perfil.privacidad_recomendaciones"), def:isPlayer },
+src/App.jsx:7128:            ].map(({ key, label, def }) => {
+src/App.jsx:7129:              const val = privacidad[key] !== undefined ? privacidad[key] : def;
+src/App.jsx:7131:                <div key={key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${T.line}` }}>
+src/App.jsx:7134:                    onClick={() => togglePriv(key, def)}
+src/App.jsx:7173:  const [rolePassword, setRolePassword] = useState("");
+src/App.jsx:7174:  const [showRolePassword, setShowRolePassword] = useState(false);
+src/App.jsx:7185:  const [loginPassword, setLoginPassword] = useState("");
+src/App.jsx:7195:      password: "jugador04",
+src/App.jsx:7201:      password: "staff04",
+src/App.jsx:7207:      password: "admin04",
+src/App.jsx:7213:      password: "soporte04",
+src/App.jsx:7219:    setRolePassword("");
+src/App.jsx:7220:    setShowRolePassword(false);
+src/App.jsx:7233:    if (rolePassword.trim() !== role.password) {
+src/App.jsx:7246:    setRolePassword("");
+src/App.jsx:7247:    setShowRolePassword(false);
+src/App.jsx:7255:    setRolePassword("");
+src/App.jsx:7256:    setShowRolePassword(false);
+src/App.jsx:7279:    const cleanPassword = loginPassword.trim();
+src/App.jsx:7286:    if (cleanPassword.length < 4) {
+src/App.jsx:7299:    setLoginPassword("");
+src/App.jsx:7330:    function handleKeyDown(event) {
+src/App.jsx:7331:      if (event.key === "Escape") {
+src/App.jsx:7337:    window.addEventListener("keydown", handleKeyDown);
+src/App.jsx:7341:      window.removeEventListener("keydown", handleKeyDown);
+src/App.jsx:7362:  const ltx = key => t(key, loginLang);
+src/App.jsx:7417:            type="password"
+src/App.jsx:7418:            value={loginPassword}
+src/App.jsx:7419:            onChange={e => setLoginPassword(e.target.value)}
+src/App.jsx:7420:            placeholder={ltx("login.password")}
+src/App.jsx:7421:            autoComplete="current-password"
+src/App.jsx:7434:            Preparado para conectar con backend real: /api/auth/login, /api/auth/register y /api/auth/forgot-password.
+src/App.jsx:7453:              {Object.keys(roleConfig).map((roleId) => {
+src/App.jsx:7456:                  <button key={roleId} type="button" className={roleId==="PLAYER" ? "cp04-player-role-card" : undefined} onClick={() => selectRole(roleId)}
+src/App.jsx:7473:                  type={showRolePassword ? "text" : "password"}
+src/App.jsx:7474:                  value={rolePassword}
+src/App.jsx:7475:                  onChange={e => setRolePassword(e.target.value)}
+src/App.jsx:7476:                  placeholder={ltx("login.password")}
+src/App.jsx:7481:                  <button type="button" onClick={() => setShowRolePassword(v => !v)}
+src/App.jsx:7483:                    {showRolePassword ? ltx("login.ocultar_pwd") : ltx("login.ver_pwd")}
+src/App.jsx:7501:                    onClick={() => { setPendingRole(""); setRolePassword(""); setRoleError(""); }}
+src/data/README.md:8:- configuraciones no secretas
+src/data/README.md:11:No guardar aquí secretos, tokens, URLs privadas ni credenciales.
+src/data/performancePlan.js:22:    "airtable",
+src/data/visualAssets.js:46:  note: "Datos visuales extraídos como preparación modular. No contiene secretos."
+src/components/ClubGallery.jsx:23:            <article className="cp04-gallery-card" key={item.id}>
+src/components/lazy/lazySections.js:15:    "airtable",
+src/components/lazy/lazySections.js:16:    "supabase",
+src/components/lazy/lazySections.js:19:    "secrets"
+src/components/lazy/lazyGallery.js:17:    "airtable",
+src/components/lazy/lazyGallery.js:18:    "supabase",
+src/components/lazy/lazyGallery.js:19:    "stripe",
+src/components/lazy/lazyGallery.js:21:    "secrets"
+src/internal-background-detector.js:54:    text.includes('webhooks') ||
+src/tournament-pairs-local-fix.js:3:  - Sin tocar reservas, auth, Airtable, Make ni APIs.
+src/tournament-pairs-local-fix.js:12:  const STORAGE_KEY = "cp04_tournament_pairs_state_v1";
+src/tournament-pairs-local-fix.js:22:      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+src/tournament-pairs-local-fix.js:30:    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+src/tournament-pairs-local-fix.js:401:          <p>Clasificación completa para ${state.players} jugadores / ${maxPairs()} parejas. Datos demo preparados para sustituirse después por Airtable/API.</p>
+src/tournament-custom-real-fix.js:2:  const STORE_KEY = "cp04_tournament_custom_real_v1";
+src/tournament-custom-real-fix.js:3:  const BYE_KEY = "cp04_tournament_random_bye_v1";
+src/tournament-custom-real-fix.js:14:      return JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+src/tournament-custom-real-fix.js:21:    localStorage.setItem(STORE_KEY, JSON.stringify(next));
+src/tournament-custom-real-fix.js:460:        BYE_KEY,
+src/tournament-custom-real-fix.js:523:        <article><strong>Airtable/API</strong><span>Estructura preparada</span></article>
+src/tournament-custom-real-fix.js:525:        <article><strong>Stripe</strong><span>Inscripciones futuras preparadas</span></article>
+package.json:22:    "eslint-plugin-react-hooks": "^7.1.1",
+vite.config.js:10:        target: 'https://cp04-reservas-proxy.eduardorodriguezrodriguez24.workers.dev',

@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "tenantId": "peluqueria-estilo-urbano",
+  "slug": "peluqueria-estilo-urbano",
+  "legalName": "Peluquería Estilo Urbano",
+  "displayName": "Peluquería Estilo Urbano",
+  "businessType": "beauty-salon",
+  "sector": "hair-salon",
+  "locale": "es-ES",
+  "timezone": "Europe/Madrid",
+  "currency": "EUR",
+  "country": "ES",
+  "branding": {
+    "colors": {
+      "accent": "#2f6bff"
+    }
+  },
+  "roles": [
+    "CLIENT",
+    "STAFF",
+    "ADMIN",
+    "SUPPORT"
+  ],
+  "permissions": {
+    "CLIENT": [
+      "inicio",
+      "citas",
+      "servicios",
+      "pagos"
+    ],
+    "STAFF": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "servicios",
+      "recursos",
+      "pagos",
+      "soporte"
+    ],
+    "ADMIN": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "servicios",
+      "recursos",
+      "pagos",
+      "automatizaciones",
+      "campanas",
+      "soporte",
+      "informes",
+      "configuracion"
+    ],
+    "SUPPORT": [
+      "inicio",
+      "agenda",
+      "citas",
+      "clientes",
+      "profesionales",
+      "servicios",
+      "recursos",
+      "pagos",
+      "automatizaciones",
+      "campanas",
+      "soporte",
+      "informes",
+      "configuracion"
+    ]
+  },
+  "modulesEnabled": [
+    "inicio",
+    "citas",
+    "clientes",
+    "pagos",
+    "automatizaciones",
+    "soporte",
+    "informes",
+    "configuracion",
+    "agenda",
+    "profesionales",
+    "recursos",
+    "servicios",
+    "campanas"
+  ],
+  "terminologyOverrides": {
+    "customer": {
+      "singular": "cliente",
+      "plural": "clientes",
+      "short": "Cliente"
+    },
+    "resource": {
+      "singular": "cabina",
+      "plural": "cabinas",
+      "short": "Cabina"
+    },
+    "appointment": {
+      "singular": "cita",
+      "plural": "citas",
+      "short": "Cita"
+    },
+    "staff": {
+      "singular": "peluquero/a",
+      "plural": "peluqueros/as",
+      "short": "Peluquero/a"
+    },
+    "event": {
+      "singular": "campaña",
+      "plural": "campañas",
+      "short": "Campaña"
+    },
+    "progress": {
+      "singular": "historial de visitas",
+      "plural": "historiales de visitas",
+      "short": "Historial"
+    },
+    "organization": {
+      "singular": "peluquería",
+      "plural": "peluquerías",
+      "short": "Peluquería"
+    }
+  },
+  "integrations": {
+    "automation": {
+      "status": "not_configured",
+      "envVars": [
+        "MAKE_WEBHOOK_URL"
+      ]
+    },
+    "dataRepository": {
+      "status": "not_configured",
+      "envVars": [
+        "AIRTABLE_API_KEY",
+        "AIRTABLE_BASE_ID"
+      ]
+    },
+    "payments": {
+      "status": "not_configured",
+      "envVars": [
+        "STRIPE_SECRET_KEY"
+      ]
+    },
+    "messaging": {
+      "status": "not_configured",
+      "envVars": [
+        "WHATSAPP_BUSINESS_TOKEN"
+      ]
+    }
+  },
+  "policies": {
+    "privacyReviewRequired": false,
+    "regulatedSector": false,
+    "sensitiveDataCategories": []
+  },
+  "demoData": {
+    "enabled": true,
+    "source": "preset:hair-salon"
+  },
+  "flags": {},
+  "meta": {
+    "templateId": "beauty-salon",
+    "presetId": "hair-salon",
+    "isDefaultTenant": false,
+    "generatedBy": "tenant:create"
+  }
+}
