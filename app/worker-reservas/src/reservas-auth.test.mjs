@@ -13,6 +13,14 @@ import worker, {
 // enrutado según la URL (api.airtable.com / auth/v1/user / webhook de Make),
 // siempre restaurado en `finally`. Ningún token/URL/email es real.
 
+// Genera una fecha futura que no sea domingo, idéntico al patrón de
+// validate-payload.test.mjs para que los fixtures nunca caduquen.
+function futureNonSundayISO(daysAhead = 30) {
+  const d = new Date(Date.now() + daysAhead * 24 * 60 * 60 * 1000);
+  while (d.getUTCDay() === 0) d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 async function withFakeFetch(impl, run) {
   const original = globalThis.fetch;
   globalThis.fetch = impl;
@@ -118,7 +126,7 @@ function crearReservaBody(overrides = {}) {
     accion: "crear_reserva",
     jugador: { nombre: "QA Auth", apellidos: "Test", email: "player@example.test", telefono: "600000002" },
     reserva: {
-      fecha: "2026-09-21",
+      fecha: futureNonSundayISO(),
       pista: "Pista 1",
       hora: "08:00",
       hora_fin: "09:00",
@@ -241,7 +249,7 @@ test("crear_reserva: STAFF autenticado puede crear en nombre de un jugador aunqu
 test("crear_reserva: dos solicitudes idénticas autenticadas como el mismo PLAYER -> la segunda es 409 IDEMPOTENT_DUPLICATE, sin segundo reenvío a Make", async () => {
   resetAll();
   const calls = [];
-  const body = crearReservaBody({ reserva: { ...crearReservaBody().reserva, fecha: "2026-09-22" } });
+  const body = crearReservaBody({ reserva: { ...crearReservaBody().reserva, fecha: futureNonSundayISO(32) } });
 
   await withFakeFetch(
     routedFetch({ supabaseImpl: async () => supabaseUser({ email: "player@example.test", role: "PLAYER" }), calls }),
@@ -455,7 +463,8 @@ test("Regresión: cancelar_reserva duplicado idéntico (mismo PLAYER dueño) -> 
 
 test("Regresión: crear_reserva de PLAYER contra un slot ya ocupado -> 409 SLOT_ALREADY_BOOKED (revalidación de disponibilidad sigue activa con el gate)", async () => {
   resetAll();
-  const body = crearReservaBody({ reserva: { ...crearReservaBody().reserva, fecha: "2026-09-23", pista: "Pista 3", hora: "09:00" } });
+  const fechaSlot = futureNonSundayISO(34);
+  const body = crearReservaBody({ reserva: { ...crearReservaBody().reserva, fecha: fechaSlot, pista: "Pista 3", hora: "09:00" } });
 
   await withFakeFetch(
     routedFetch({
@@ -463,7 +472,7 @@ test("Regresión: crear_reserva de PLAYER contra un slot ya ocupado -> 409 SLOT_
       airtableDisponibilidadImpl: async () => ({
         ok: true,
         json: async () => ({
-          records: [{ fields: { clave_slot: "2026-09-23|Pista 3|09:00", estado_reserva: "confirmada" } }],
+          records: [{ fields: { clave_slot: `${fechaSlot}|Pista 3|09:00`, estado_reserva: "confirmada" } }],
         }),
       }),
       makeImpl: async () => { throw new Error("no debería llamar a Make: el slot ya está ocupado"); },
@@ -480,7 +489,7 @@ test("Regresión: crear_reserva de PLAYER contra un slot ya ocupado -> 409 SLOT_
 
 test("Regresión: Make rechaza el reenvío (502) para un PLAYER autenticado creando su propia reserva -> 502, mensaje sin detalle interno", async () => {
   resetAll();
-  const body = crearReservaBody({ reserva: { ...crearReservaBody().reserva, fecha: "2026-09-24" } });
+  const body = crearReservaBody({ reserva: { ...crearReservaBody().reserva, fecha: futureNonSundayISO(36) } });
 
   await withFakeFetch(
     routedFetch({
