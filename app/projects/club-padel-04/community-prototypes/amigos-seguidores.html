@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Prototipo — Amigos y seguidores · Comunidad Pádel 04</title>
+<link rel="stylesheet" href="community-prototypes.css" />
+</head>
+<body>
+
+<div class="prototype-banner">
+  ⚠️ PROTOTIPO NO INTEGRADO — datos ficticios, sin conexión a backend real, sin App.jsx. Ver <code>AMIGOS_SEGUIDORES_CONEXIONES_COMUNIDAD_PADEL_04.md</code>.
+</div>
+
+<main class="app-shell" aria-label="Prototipo de amigos y seguidores de Comunidad Pádel 04">
+
+  <!-- ================= CABECERA ================= -->
+  <header class="community-header">
+    <h1>Amigos</h1>
+    <span class="badge"><span class="dot" aria-hidden="true"></span>Club Pádel 04 (demo)</span>
+  </header>
+
+  <div class="privacy-banner" role="note">
+    <span class="icon" aria-hidden="true">🔒</span>
+    <span>Tu lista de amigos solo es visible para ti. <a href="#privacidad">Gestionar privacidad</a></span>
+  </div>
+
+  <!-- ================= TABS ================= -->
+  <nav class="tab-row" aria-label="Cambiar entre amigos, seguidores y seguidos">
+    <button class="tab" aria-selected="true">Amigos</button>
+    <button class="tab" aria-selected="false">Seguidores <span class="badge" style="margin-left:4px;">Fase 2</span></button>
+    <button class="tab" aria-selected="false">Siguiendo <span class="badge" style="margin-left:4px;">Fase 2</span></button>
+  </nav>
+
+  <!-- ================= SOLICITUDES PENDIENTES ================= -->
+  <h2 class="section-label">Solicitudes pendientes (1)</h2>
+  <section class="player-list" aria-label="Solicitudes de amistad pendientes">
+    <article class="player-row">
+      <div class="avatar" aria-hidden="true">J5</div>
+      <div class="player-row-info">
+        <div class="name">Jugador Demo 5</div>
+        <div class="meta">Quiere ser tu amigo · nivel intermedio</div>
+      </div>
+      <div class="player-row-actions">
+        <button class="btn btn-primary">Aceptar</button>
+        <button class="btn btn-secondary">Rechazar</button>
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= SOLICITUDES ENVIADAS ================= -->
+  <h2 class="section-label">Solicitudes enviadas (1)</h2>
+  <section class="player-list" aria-label="Solicitudes de amistad enviadas">
+    <article class="player-row">
+      <div class="avatar" aria-hidden="true">J6</div>
+      <div class="player-row-info">
+        <div class="name">Jugador Demo 6</div>
+        <div class="meta">Pendiente de respuesta</div>
+      </div>
+      <div class="player-row-actions">
+        <button class="btn btn-secondary">Cancelar</button>
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= LISTA DE AMIGOS ================= -->
+  <h2 class="section-label">Tus amigos (3)</h2>
+  <section class="player-list" aria-label="Lista de amigos">
+
+    <article class="player-row">
+      <div class="avatar" aria-hidden="true">A1</div>
+      <div class="player-row-info">
+        <div class="name">Jugador A</div>
+        <div class="meta">Nivel intermedio · Club Pádel 04 (demo)</div>
+      </div>
+      <div class="player-row-actions">
+        <button class="btn btn-secondary">Invitar a partido</button>
+        <button class="kebab-btn" aria-label="Más acciones sobre Jugador A">⋯</button>
+      </div>
+    </article>
+
+    <article class="player-row">
+      <div class="avatar" aria-hidden="true">A2</div>
+      <div class="player-row-info">
+        <div class="name">Jugador B</div>
+        <div class="meta">Nivel avanzado · Club Pádel 04 (demo)</div>
+      </div>
+      <div class="player-row-actions">
+        <button class="btn btn-secondary">Invitar a partido</button>
+        <button class="kebab-btn" aria-label="Más acciones sobre Jugador B">⋯</button>
+      </div>
+    </article>
+
+    <article class="player-row">
+      <div class="avatar" aria-hidden="true">A3</div>
+      <div class="player-row-info">
+        <div class="name">Jugador C</div>
+        <div class="meta">Nivel iniciación · Club Pádel 04 (demo)</div>
+      </div>
+      <div class="player-row-actions">
+        <button class="btn btn-secondary">Invitar a partido</button>
+        <button class="kebab-btn" aria-label="Más acciones sobre Jugador C">⋯</button>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- ================= SUGERENCIAS ================= -->
+  <h2 class="section-label">Quizás conozcas <span class="badge">Fase 2</span></h2>
+  <section class="player-list" aria-label="Conexiones sugeridas">
+    <article class="player-row">
+      <div class="avatar" aria-hidden="true">S1</div>
+      <div class="player-row-info">
+        <div class="name">Jugador Demo 7</div>
+        <div class="meta">2 amigos en común · Club Pádel 04 (demo)</div>
+      </div>
+      <div class="player-row-actions">
+        <button class="btn btn-primary">Añadir amigo</button>
+        <button class="dismiss-btn" aria-label="Ocultar esta sugerencia">×</button>
+      </div>
+    </article>
+    <article class="player-row">
+      <div class="avatar" aria-hidden="true">S2</div>
+      <div class="player-row-info">
+        <div class="name">Jugador Demo 8</div>
+        <div class="meta">Mismo nivel · Club Pádel 04 (demo)</div>
+      </div>
+      <div class="player-row-actions">
+        <button class="btn btn-primary">Añadir amigo</button>
+        <button class="dismiss-btn" aria-label="Ocultar esta sugerencia">×</button>
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= ESTADO: SIN CONSENTIMIENTO ================= -->
+  <section aria-label="Estado sin consentimiento social" style="border-top:1px solid var(--line);">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:8px 16px 0;">— Vista alternativa: usuario sin "social_layer_opt_in" activo —</p>
+    <div class="consent-gate">
+      <div class="icon" aria-hidden="true">🔒</div>
+      <h2 style="margin:0 0 8px; font-size:16px;">Activa tu comunidad</h2>
+      <p style="color:var(--text-dim); font-size:13px; margin:0 0 16px;">Activa tu comunidad para conectar con otros jugadores.</p>
+      <button class="btn btn-primary" style="width:100%;">Activar comunidad</button>
+    </div>
+  </section>
+
+  <!-- ================= ESTADO: PERFIL PRIVADO ================= -->
+  <section aria-label="Estado de perfil con privacidad restrictiva" style="border-top:1px solid var(--line);">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:8px 16px 0;">— Vista alternativa: perfil de un jugador con privacidad restrictiva —</p>
+    <div class="empty-state">
+      <div class="icon" aria-hidden="true">🔒</div>
+      <h2>Este jugador mantiene su actividad privada</h2>
+      <p>Puedes enviarle una solicitud de amistad para ver más.</p>
+      <button class="btn btn-secondary">Añadir amigo</button>
+    </div>
+  </section>
+
+  <!-- ================= ESTADO: SIN CONEXIONES ================= -->
+  <section aria-label="Estado sin conexiones" style="border-top:1px solid var(--line);">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:8px 16px 0;">— Vista alternativa: jugador recién activado, sin amigos todavía —</p>
+    <div class="empty-state">
+      <div class="icon" aria-hidden="true">👋</div>
+      <h2>Todavía no tienes amigos aquí</h2>
+      <p>Explora el feed de tu club para empezar.</p>
+      <button class="btn btn-primary">Ir al feed</button>
+    </div>
+  </section>
+
+  <!-- ================= MOCK: REPORTAR / BLOQUEAR ================= -->
+  <section aria-label="Ejemplo de menú de acciones sobre un amigo (mock estático)" style="border-top:1px solid var(--line); padding:16px 0 32px;">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:0 16px 12px;">— Mock estático del menú "⋯" de un jugador —</p>
+    <div class="modal-box" style="margin:0 16px; max-width:220px; padding:8px;">
+      <button class="btn btn-secondary" style="width:100%; text-align:left; margin-bottom:6px;">Reportar</button>
+      <button class="btn btn-danger" style="width:100%; text-align:left; margin-bottom:6px;">Bloquear</button>
+      <button class="btn btn-text" style="width:100%; text-align:left;">Eliminar amigo</button>
+    </div>
+  </section>
+
+  <div class="privacy-note" id="privacidad">
+    Prototipo visual de Club Pádel 04 — Amigos y seguidores. No copia diseño, marca ni código de terceros. Ningún dato de esta página es real. Bloquear a alguien deshace cualquier amistad o seguimiento existente.
+  </div>
+
+</main>
+
+</body>
+</html>

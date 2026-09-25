@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Prototipo — Feed social · Comunidad Pádel 04</title>
+<link rel="stylesheet" href="community-prototypes.css" />
+</head>
+<body>
+
+<div class="prototype-banner">
+  ⚠️ PROTOTIPO NO INTEGRADO — datos ficticios, sin conexión a backend real, sin App.jsx. Ver <code>PROTOTIPO_FEED_SOCIAL_COMUNIDAD_PADEL_04.md</code>.
+</div>
+
+<main class="app-shell" aria-label="Prototipo de feed social de Comunidad Pádel 04">
+
+  <!-- ================= CABECERA DE COMUNIDAD ================= -->
+  <header class="community-header">
+    <h1>Comunidad</h1>
+    <label class="visually-hidden" for="context-select">Seleccionar club/contexto</label>
+    <select id="context-select" class="context-select">
+      <option>Club Pádel 04 (demo)</option>
+      <option>Mis amigos</option>
+    </select>
+  </header>
+
+  <!-- ================= FILTROS ================= -->
+  <nav class="filter-row" aria-label="Filtros del feed">
+    <button class="chip" aria-pressed="true">Todo</button>
+    <button class="chip" aria-pressed="false">Club</button>
+    <button class="chip" aria-pressed="false">Amigos</button>
+    <button class="chip" aria-pressed="false">Partidos</button>
+    <button class="chip" aria-pressed="false">Eventos</button>
+  </nav>
+
+  <!-- ================= BANNER DE PRIVACIDAD ================= -->
+  <div class="privacy-banner" role="note">
+    <span class="icon" aria-hidden="true">🔒</span>
+    <span>Tu perfil social está en modo privado por defecto. <a href="#privacidad">Gestionar privacidad</a></span>
+  </div>
+
+  <!-- ================= CTAs PRINCIPALES ================= -->
+  <div class="cta-row">
+    <button class="btn btn-primary">+ Crear publicación</button>
+    <button class="btn btn-secondary">Buscar partido</button>
+  </div>
+
+  <!-- ================= LISTADO DE PUBLICACIONES ================= -->
+  <section class="feed-list" aria-label="Publicaciones de la comunidad">
+
+    <!-- Publicación oficial del club (STAFF/ADMIN) -->
+    <article class="post-card official-card">
+      <div class="post-header">
+        <div class="avatar" aria-hidden="true">CP</div>
+        <div class="post-author">
+          <div class="name">Club Pádel 04 <span class="badge"><span class="dot" aria-hidden="true"></span>Oficial</span></div>
+          <div class="meta">Hace 2 horas</div>
+        </div>
+        <button class="kebab-btn" aria-label="Más acciones sobre esta publicación">⋯</button>
+      </div>
+      <div class="post-body">
+        Este sábado abrimos inscripción para la clínica de nivel iniciación. Plazas limitadas, apúntate desde "Eventos".
+      </div>
+      <div class="post-actions">
+        <button class="post-action" aria-label="Reaccionar a esta publicación">👍 12</button>
+        <button class="post-action" aria-label="Comentar esta publicación">💬 3</button>
+        <button class="post-action" aria-label="Reportar esta publicación">Reportar</button>
+      </div>
+    </article>
+
+    <!-- Publicación de un jugador con foto -->
+    <article class="post-card">
+      <div class="post-header">
+        <div class="avatar" aria-hidden="true">J1</div>
+        <div class="post-author">
+          <div class="name">Jugador Demo 1</div>
+          <div class="meta">Hace 4 horas · visible para amigos</div>
+        </div>
+        <button class="kebab-btn" aria-label="Más acciones sobre esta publicación">⋯</button>
+      </div>
+      <div class="post-body">¡Buen partido esta mañana! Repetimos la semana que viene.</div>
+      <div class="post-image-placeholder">Imagen ficticia de ejemplo (sin foto real)</div>
+      <div class="post-actions">
+        <button class="post-action" aria-label="Reaccionar a esta publicación">👍 5</button>
+        <button class="post-action" aria-label="Comentar esta publicación">💬 1</button>
+        <button class="post-action" aria-label="Reportar esta publicación">Reportar</button>
+      </div>
+    </article>
+
+    <!-- Actividad de sistema: partido abierto -->
+    <article class="post-card system-card">
+      <div class="post-header">
+        <div class="avatar" aria-hidden="true">J2</div>
+        <div class="post-author">
+          <div class="name">Jugador Demo 2 <span class="badge"><span class="dot" aria-hidden="true"></span>Partido abierto</span></div>
+          <div class="meta">Busca rival · Sábado 18:00 · Pista 3 (demo)</div>
+        </div>
+        <button class="kebab-btn" aria-label="Más acciones sobre esta actividad">⋯</button>
+      </div>
+      <div class="post-body">2 de 4 plazas ocupadas · Nivel intermedio-avanzado</div>
+      <div class="post-actions">
+        <button class="post-action" aria-label="Unirme a este partido abierto">🎾 Unirme</button>
+        <button class="post-action" aria-label="Ver detalle del partido">Ver detalle</button>
+        <button class="post-action" aria-label="Reportar esta actividad">Reportar</button>
+      </div>
+    </article>
+
+    <!-- Actividad de sistema: evento -->
+    <article class="post-card system-card">
+      <div class="post-header">
+        <div class="avatar" aria-hidden="true">CP</div>
+        <div class="post-author">
+          <div class="name">Club Pádel 04 <span class="badge"><span class="dot" aria-hidden="true"></span>Evento</span></div>
+          <div class="meta">Liga interna · Empieza el 20 de julio (demo)</div>
+        </div>
+        <button class="kebab-btn" aria-label="Más acciones sobre este evento">⋯</button>
+      </div>
+      <div class="post-body">8 jugadores inscritos de 16 plazas.</div>
+      <div class="post-actions">
+        <button class="post-action" aria-label="Inscribirme a este evento">Inscribirme</button>
+        <button class="post-action" aria-label="Reportar este evento">Reportar</button>
+      </div>
+    </article>
+
+    <!-- Contenido retirado por moderación (estado ilustrativo) -->
+    <article class="post-card" aria-label="Publicación retirada por moderación">
+      <div class="post-header">
+        <div class="avatar" aria-hidden="true">·</div>
+        <div class="post-author">
+          <div class="name">Contenido no disponible</div>
+          <div class="meta"><span class="badge badge-warning">Retirado por moderación</span></div>
+        </div>
+      </div>
+      <div class="post-body" style="color:var(--text-dim);">Este contenido fue revisado por el equipo de moderación del club y ya no está visible.</div>
+    </article>
+
+  </section>
+
+  <!-- ================= ESTADO: SIN CONSENTIMIENTO ================= -->
+  <section aria-label="Estado sin consentimiento social" style="border-top:1px solid var(--line); padding-top:8px;">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:0 16px;">— Vista alternativa: usuario sin "social_layer_opt_in" activo —</p>
+    <div class="consent-gate">
+      <div class="icon" aria-hidden="true">🔒</div>
+      <h2 style="margin:0 0 8px; font-size:16px;">Activa tu comunidad</h2>
+      <p style="color:var(--text-dim); font-size:13px; margin:0 0 16px;">Además de reservar pista, puedes conectar con otros jugadores del club cuando tú quieras. Es 100% opcional.</p>
+      <button class="btn btn-primary" style="width:100%;">Activar comunidad</button>
+    </div>
+  </section>
+
+  <!-- ================= ESTADO: FEED VACÍO ================= -->
+  <section aria-label="Estado de feed vacío" style="border-top:1px solid var(--line);">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:8px 16px 0;">— Vista alternativa: club sin actividad reciente —</p>
+    <div class="empty-state">
+      <div class="icon" aria-hidden="true">🎾</div>
+      <h2>Todavía no hay actividad</h2>
+      <p>Sé el primero en publicar o crear un partido abierto en tu club.</p>
+      <button class="btn btn-primary">+ Crear publicación</button>
+    </div>
+  </section>
+
+  <!-- ================= MOCK: MODAL DE REPORTE (estático, no interactivo) ================= -->
+  <section aria-label="Ejemplo de modal de reporte (mock estático)" style="border-top:1px solid var(--line); padding:16px 0 32px;">
+    <p style="text-align:center; font-size:11px; color:var(--text-dim); padding:0 16px 12px;">— Mock estático del modal de reporte (sin envío real) —</p>
+    <div class="modal-box" style="margin:0 16px; border-radius:var(--radius-lg);" role="dialog" aria-label="Reportar contenido (mock)">
+      <h3>Reportar publicación</h3>
+      <p>Cuéntanos qué ha pasado. Tu identidad no se compartirá con la persona reportada.</p>
+      <label class="visually-hidden" for="report-reason">Motivo del reporte</label>
+      <select id="report-reason" class="context-select" style="width:100%; margin-bottom:14px;">
+        <option>Contenido inapropiado</option>
+        <option>Spam</option>
+        <option>Acoso</option>
+        <option>Perfil falso</option>
+        <option>Otro</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" style="flex:1;">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1;">Enviar reporte (mock)</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="privacy-note" id="privacidad">
+    Prototipo visual de Club Pádel 04 — Comunidad. No copia diseño, marca ni código de terceros. Ningún dato de esta página es real.
+  </div>
+
+</main>
+
+</body>
+</html>

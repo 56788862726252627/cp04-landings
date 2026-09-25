@@ -1,0 +1,103 @@
+// Generado por Fábrica SaaS · Generator v1
+// Fuente: manifest del cliente "Clínica Estética Demo"
+// NO EDITAR MANUALMENTE — regenerar con: npm run factory:generate
+// Datos ficticios. No conectado a sistemas reales.
+
+export const RUNTIME_CONFIG = {
+  "cliente": "Clínica Estética Demo",
+  "vertical": "estetica",
+  "modo_demo": true,
+  "branding": {
+    "nombre_visible": "Clínica Estética Demo",
+    "inicial": "E",
+    "estilo": "moderno, elegante, cercano, aspiracional",
+    "copiar_marca_real": false
+  },
+  "modulos": [
+    "chatbot_ia",
+    "crm",
+    "reservas",
+    "recuperacion_leads",
+    "dashboard"
+  ],
+  "sedes": [
+    {
+      "id": "principal",
+      "nombre": "Centro Principal",
+      "horario": "L-V 10:00-20:00 · S 10:00-14:00"
+    },
+    {
+      "id": "salon_norte",
+      "nombre": "Salón Norte",
+      "horario": "L-V 09:00-19:00"
+    }
+  ],
+  "roles": [
+    "admin",
+    "recepcion",
+    "esteticista"
+  ],
+  "vertical_config": {
+    "intenciones": [
+      "consulta_inicial",
+      "depilacion_laser",
+      "tratamiento_facial",
+      "reduccion_corporal",
+      "eliminacion_manchas",
+      "lifting_sin_cirugia",
+      "precio_pack",
+      "cambio_cancelacion"
+    ],
+    "seguridad_clinica": {
+      "diagnostico": false,
+      "prescripcion": false,
+      "consejo_medico": false,
+      "promesa_resultado": false,
+      "consentimiento_demo": true,
+      "derivar_a_dermatologo_si_sensible": true
+    },
+    "campanas": true,
+    "seguimiento_sesiones": true
+  },
+  "integraciones": {
+    "reales": false,
+    "email": false,
+    "whatsapp": false,
+    "sms": false,
+    "hubspot": false,
+    "calendario": false,
+    "pagos": false
+  },
+  "mock": {
+    "obligatorio": true,
+    "clientes": 5,
+    "sesiones": true,
+    "crm": true,
+    "metricas": true,
+    "campanas": true,
+    "seguimiento": true
+  },
+  "casos_demo": [
+    "consulta_inicial_con_pack",
+    "depilacion_laser_con_zona",
+    "lifting_sin_cirugia",
+    "caso_sensible_manchas_derivacion",
+    "cambio_cancelacion_flujo_corto",
+    "precio_pack_flujo_corto",
+    "abandono_recuperacion",
+    "campana_activa"
+  ],
+  "calidad": {
+    "responsive": [
+      "mobile",
+      "tablet",
+      "desktop"
+    ],
+    "tests": true,
+    "build": true,
+    "lint": true,
+    "no_secretos": true,
+    "no_deploy": true,
+    "no_contacto_externo": true
+  }
+};

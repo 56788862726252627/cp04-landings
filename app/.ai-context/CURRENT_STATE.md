@@ -1,6 +1,6 @@
 # Estado actual · cp04-landings/app
 
-Última actualización: 2026-08-26 · Claude Code (Terminal) · sesión de cierre y merge del Context Hub a main.
+Última actualización: 2026-08-28 · Claude Code (Terminal) · checkpoint Fábrica SaaS v1 post-merge PR #81.
 
 Ver `PROJECTS/*.md` para el detalle de cada proyecto. Esta página es el resumen
 de una sola pantalla.
@@ -41,12 +41,28 @@ Certeza: VERIFICADO DIRECTAMENTE (2026-08-26).
 
 Certeza: VERIFICADO DIRECTAMENTE (`git log`, 2026-08-26).
 
+## Fábrica SaaS v1 — Último merge en main
+
+| Campo | Valor |
+|---|---|
+| **Fecha** | 2026-08-28 |
+| **PR** | #81 (`agency/fabrica-saas-prototipos-v1-20260828`) — mergeado |
+| **Merge SHA** | `1b190201111f77d9b04879fa782d8df02f692ebf` |
+| **Vertical** | dental · `clinica-dental-demo` |
+| **Tests** | 59/59 PASS · lint PASS · build PASS |
+| **Secretos** | NO |
+| **Deploy** | NO |
+| **Rama activa** | `agency/fabrica-saas-v1.1-fisioterapia-20260828` (en worktree `/root/cp04-fabrica-saas-prototipos`) |
+
+Certeza: VERIFICADO DIRECTAMENTE (2026-08-28).
+
 ## Proyectos activos
 
 | Proyecto | Estado resumido | Detalle |
 |---|---|---|
 | **Club Pádel 04** | Producto en curso; reservas, auth, QR, GDPR y recuperación de contraseña con commits recientes de cierre a producción real | `PROJECTS/club-padel-04.md` |
 | **Agencia IA / Fábrica** | `factory-cli` y `src/saas-core` con scripts `business:*` y `agency:*` operativos localmente (CLI); BPMN Maestro documentado como Artifact externo (no vive en el repo) | `PROJECTS/agencia-ia.md` |
+| **Fábrica SaaS · Prototipos** | v1 mergeada (PR #81); vertical dental 59/59 tests; v1.1 fisioterapia en curso en worktree aislado | `PROJECTS/fabrica-saas-prototipos-v1.md` |
 | **Bot de Trading** | Sin archivos ni commits localizados en este repo; existe solo como vertical objetivo mencionada por el usuario | `PROJECTS/bot-trading.md` — **PENDIENTE DE SINCRONIZAR** |
 
 ## Integraciones externas mencionadas en el repo (sin verificar acceso real desde esta sesión)
@@ -68,6 +84,10 @@ vivo (nada: no hay credenciales cargadas en esta sesión).
   el archivo al buscar).
 
 ## Siguiente paso sugerido
+
+Continuar Fábrica SaaS v1.1 en la rama `agency/fabrica-saas-v1.1-fisioterapia-20260828`
+(worktree `/root/cp04-fabrica-saas-prototipos`): implementar vertical fisioterapia
+reutilizando CORE sin duplicar lógica dental, demostrar arquitectura multisector.
 
 Mantener este Context Hub actualizado en cada sesión material (ver
 `README.md` § Cómo debe usarse) antes de iniciar trabajo nuevo sobre

@@ -1,0 +1,138 @@
+/**
+ * Agency Product Catalog
+ * Defines what the agency sells: SaaS platforms, automations, AI agents, services.
+ * Single source of truth — no hardcoding in logic files.
+ */
+
+export const PRODUCT_CATALOG_VERSION = '1.0.0';
+
+export const PRODUCT_CATALOG = Object.freeze([
+  {
+    id:                 'saas-local-pro',
+    name:               'SaaS Local Profesional',
+    description:        'Aplicación web completa con módulos de gestión, reservas, roles y dashboard. Desplegada en Cloudflare Pages. Diseño premium adaptado a sector y marca.',
+    targetCustomer:     'Negocio local con necesidades de gestión de clientes, citas o flujos operativos.',
+    problemSolved:      'Elimina el papel y las llamadas. Centraliza operaciones y cliente en una plataforma propia.',
+    included:           ['Landing de captación', 'SaaS con módulos acordados', 'Sistema de roles', 'Dashboard KPIs', 'Diseño premium', 'Despliegue en Cloudflare Pages', 'QA funcional'],
+    excluded:           ['Contenido real de marketing', 'Fotografía', 'Gestión de redes sociales', 'Integración con ERP externo no especificado'],
+    dependencies:       ['hosting', 'supabase', 'domain'],
+    deliveryType:       'DEPLOY_CLOUDFLARE_PAGES',
+    estimatedComplexity:'MEDIUM_HIGH',
+    recurringCostImpact:'MAINTENANCE_PLAN_REQUIRED',
+    thirdPartyCostImpact:'supabase, cloudflare, domain',
+    commercialNotes:    'El precio varía según módulos, automatizaciones e integraciones. Ver pricingEngine.',
+  },
+  {
+    id:                 'landing-comercial',
+    name:               'Landing / Web Comercial',
+    description:        'Página web de captación de alta conversión. Incluye hero, servicios, testimonios, CTA y formulario.',
+    targetCustomer:     'Cualquier negocio que necesite presencia web con conversión.',
+    problemSolved:      'Presencia profesional en web con captación activa de leads.',
+    included:           ['1 landing en español', 'Diseño premium', 'Formulario de contacto', 'Responsive', 'Despliegue'],
+    excluded:           ['SEO avanzado', 'Blog', 'E-commerce', 'Multiidioma'],
+    dependencies:       ['domain', 'hosting'],
+    deliveryType:       'DEPLOY_CLOUDFLARE_PAGES',
+    estimatedComplexity:'LOW_MEDIUM',
+    recurringCostImpact:'HOSTING_ONLY',
+    thirdPartyCostImpact:'cloudflare, domain',
+    commercialNotes:    'Incluido como parte de SaaS Pro. Vendible de forma independiente.',
+  },
+  {
+    id:                 'automatizacion-negocio',
+    name:               'Automatización de Negocio',
+    description:        'Flujos de trabajo en Make (Integromat) para confirmaciones, recordatorios, reportes y comunicaciones.',
+    targetCustomer:     'Negocio que quiere eliminar tareas repetitivas y mejorar la comunicación con clientes.',
+    problemSolved:      'Automatiza confirmaciones, recordatorios y flujos sin intervención manual.',
+    included:           ['Diseño del flujo', 'Configuración en Make', 'Test en sandbox', 'Documentación del escenario'],
+    excluded:           ['Subscripción Make', 'Webhooks fuera del scope acordado', 'Mantenimiento futuro sin contrato'],
+    dependencies:       ['make_subscription', 'email_smtp'],
+    deliveryType:       'MAKE_SCENARIO_DECLARATIVE',
+    estimatedComplexity:'LOW_MEDIUM',
+    recurringCostImpact:'MAKE_SUBSCRIPTION_CLIENT',
+    thirdPartyCostImpact:'make, smtp',
+    commercialNotes:    'Precio por escenario o pack. Ver addons.',
+  },
+  {
+    id:                 'agente-ia',
+    name:               'Agente IA',
+    description:        'Chatbot / asistente IA para atención, reservas o consultas. Integrado en el SaaS o canal externo.',
+    targetCustomer:     'Negocio que recibe muchas consultas repetitivas o quiere automatizar la primera atención.',
+    problemSolved:      'Responde 24/7, cualifica leads, ayuda con reservas y libera tiempo del equipo.',
+    included:           ['Configuración del agente', 'Prompts base', 'Integración en SaaS', 'Safety rules por sector', 'Test funcional'],
+    excluded:           ['API de producción AI (cliente la contrata)', 'Entrenamiento fine-tuning', 'Voz'],
+    dependencies:       ['anthropic_api_key', 'saas-local-pro'],
+    deliveryType:       'AI_AGENT_CONFIGURED',
+    estimatedComplexity:'MEDIUM',
+    recurringCostImpact:'AI_TOKENS_CLIENT_USAGE',
+    thirdPartyCostImpact:'anthropic_api',
+    commercialNotes:    'En demo mode usa stubs. Producción requiere API key del cliente.',
+  },
+  {
+    id:                 'integracion-custom',
+    name:               'Integración Custom',
+    description:        'Conexión del SaaS con sistema externo específico del cliente (ERP, CRM, TPV, etc.).',
+    targetCustomer:     'Negocio que ya usa herramientas y quiere conectarlas al nuevo SaaS.',
+    problemSolved:      'Elimina doble entrada de datos y sincroniza información entre sistemas.',
+    included:           ['Análisis de API externa', 'Adaptador de integración', 'Test de sincronización', 'Documentación'],
+    excluded:           ['Soporte del sistema externo', 'Cambios en el sistema externo'],
+    dependencies:       ['external_api_credentials', 'saas-local-pro'],
+    deliveryType:       'INTEGRATION_ADAPTER',
+    estimatedComplexity:'HIGH',
+    recurringCostImpact:'MAINTENANCE_REQUIRED',
+    thirdPartyCostImpact:'external_api_costs',
+    commercialNotes:    'Presupuesto bajo consulta. Requiere análisis previo de la API externa.',
+  },
+  {
+    id:                 'mantenimiento',
+    name:               'Mantenimiento y Soporte',
+    description:        'Servicio mensual de mantenimiento: correcciones, actualizaciones de seguridad y soporte técnico.',
+    targetCustomer:     'Cualquier cliente con un SaaS o web entregado.',
+    problemSolved:      'Garantiza funcionamiento, seguridad y disponibilidad del producto entregado.',
+    included:           ['Corrección de bugs reportados', 'Actualizaciones de seguridad', 'Soporte por canal acordado', 'Revisión mensual'],
+    excluded:           ['Funcionalidad nueva no acordada', 'Migración de datos', 'Cambios de diseño mayores'],
+    dependencies:       ['saas-local-pro'],
+    deliveryType:       'SERVICE_ONGOING',
+    estimatedComplexity:'VARIABLE',
+    recurringCostImpact:'MONTHLY_RECURRING',
+    thirdPartyCostImpact:'none',
+    commercialNotes:    'Ver MAINTENANCE_PLANS para niveles y precios.',
+  },
+  {
+    id:                 'expansion',
+    name:               'Expansión / Mejora',
+    description:        'Añadir módulos, funcionalidades o integraciones al SaaS existente tras la entrega inicial.',
+    targetCustomer:     'Cliente existente que quiere crecer.',
+    problemSolved:      'Permite escalar el SaaS según crece el negocio sin partir de cero.',
+    included:           ['Análisis de impacto', 'Desarrollo del nuevo módulo', 'Test', 'Deploy'],
+    excluded:           ['Refactor completo de arquitectura', 'Cambio de stack'],
+    dependencies:       ['existing_saas', 'maintenance_contract'],
+    deliveryType:       'INCREMENTAL_DEPLOY',
+    estimatedComplexity:'VARIABLE',
+    recurringCostImpact:'POTENTIAL_MAINTENANCE_INCREASE',
+    thirdPartyCostImpact:'may increase supabase/make tier',
+    commercialNotes:    'Se presupuesta como addon. Ver addons catalog.',
+  },
+  {
+    id:                 'servicios-opcionales',
+    name:               'Servicios Opcionales',
+    description:        'Formación, contenido, SEO, branding premium y servicios de acompañamiento.',
+    targetCustomer:     'Clientes que quieren apoyo más allá del SaaS.',
+    problemSolved:      'Acelera la adopción y maximiza el retorno del SaaS.',
+    included:           ['Según addon contratado'],
+    excluded:           ['Todo lo no especificado'],
+    dependencies:       ['client_availability'],
+    deliveryType:       'SERVICE_ONE_TIME',
+    estimatedComplexity:'VARIABLE',
+    recurringCostImpact:'NONE_OR_MINIMAL',
+    thirdPartyCostImpact:'variable',
+    commercialNotes:    'Cada servicio opcional se presupuesta individualmente.',
+  },
+]);
+
+export function getProductById(id) {
+  return PRODUCT_CATALOG.find(p => p.id === id) ?? null;
+}
+
+export function listProductIds() {
+  return PRODUCT_CATALOG.map(p => p.id);
+}

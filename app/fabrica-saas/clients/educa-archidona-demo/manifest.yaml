@@ -1,0 +1,170 @@
+# Manifest V1.8 — EducaArchidona · Plataforma Educativa Demo
+# Demo comercial. Datos 100% ficticios. NO producción.
+# Normativa base: Decretos 101/102/103/2023 (BOJA 90, 15 mayo 2023) — verificado
+# Referencias: IES Archidona (sin atribución de oferta no verificada)
+
+version: "1.8"
+vertical: education
+
+# ── Branding ──────────────────────────────────────────────────────────────────
+
+branding:
+  nombre: "EducaArchidona"
+  nombre_visible: "EducaArchidona · Plataforma Educativa"
+  tagline: "Aprende más, avanza mejor"
+  tagline_largo: "Una plataforma educativa completa para Primaria, ESO y Bachillerato. Seguimiento, tutor IA y contenidos adaptados a cada etapa."
+  primaryColor: "#1d4ed8"
+  secondaryColor: "#16a34a"
+  accentColor: "#f59e0b"
+  bgColor: "#eff6ff"
+  favicon: null
+  logo: null
+  dominio: "educa-archidona-demo.local"
+
+# ── V1.7: Experience config ───────────────────────────────────────────────────
+
+experience:
+  preset: fresh
+  motion: medium
+  transitions: true
+  scrollEffects:
+    - fade-in
+    - slide-up
+    - stagger-reveal
+    - counter-on-visible
+    - progress-on-scroll
+  interactions:
+    - card-hover-elevation
+    - animated-metrics
+    - expandable-cards
+    - progress-ring
+    - animated-timeline
+    - video-lazy
+
+# ── Education V1.8 ────────────────────────────────────────────────────────────
+
+education:
+
+  regulatory_base:
+    primaria: "Decreto 101/2023 + Orden 30 mayo 2023"
+    eso: "Decreto 102/2023 + Orden 30 mayo 2023"
+    bachillerato: "Decreto 103/2023 + Orden 30 mayo 2023"
+    comunidad: "Andalucía"
+    verification_date: "2026-08-29"
+
+  stages:
+    - id: primaria
+      nombre: "Primaria"
+      cursos: [1, 2, 3, 4, 5, 6]
+      normativa: "Decreto 101/2023"
+      status: LEGAL
+
+    - id: eso
+      nombre: "ESO"
+      cursos: [1, 2, 3, 4]
+      normativa: "Decreto 102/2023"
+      status: LEGAL
+
+    - id: bachillerato
+      nombre: "Bachillerato"
+      cursos: [1, 2]
+      normativa: "Decreto 103/2023"
+      status: LEGAL
+      modalidades:
+        - id: ciencias
+          nombre: "Ciencias y Tecnología"
+          verification: "VERIFIED — IES Luis Barahona de Soto (micole.net, 2026)"
+        - id: humanidades
+          nombre: "Humanidades y Ciencias Sociales"
+          verification: "VERIFIED — IES Luis Barahona de Soto (micole.net, 2026)"
+
+  roles:
+    - alumno
+    - profesor
+    - familia
+    - tutor
+    - admin
+
+  features:
+    lesson_engine: true
+    video_engine: true
+    exercise_engine: true
+    quiz_engine: true
+    progress_engine: true
+    gamification: true
+    ai_tutor: demo
+    family_portal: true
+    teacher_dashboard: true
+    calendar: true
+    child_safety: true
+
+  safety:
+    age_aware: true
+    no_real_data: true
+    no_ai_real: true
+    tutor_transparency: true
+    parental_control: demo
+
+# ── Módulos de la demo ────────────────────────────────────────────────────────
+
+modules:
+  - id: landing
+    nombre: "Inicio"
+    icon: "🎓"
+    roles: [all]
+
+  - id: dashboard_alumno
+    nombre: "Mi Aula"
+    icon: "📊"
+    roles: [alumno]
+
+  - id: clases
+    nombre: "Clases"
+    icon: "📚"
+    roles: [alumno, profesor]
+
+  - id: ejercicios
+    nombre: "Ejercicios"
+    icon: "✏️"
+    roles: [alumno]
+
+  - id: progreso
+    nombre: "Progreso"
+    icon: "📈"
+    roles: [alumno, familia, tutor]
+
+  - id: tutor_ia
+    nombre: "Tutor IA"
+    icon: "🤖"
+    roles: [alumno]
+
+  - id: calendario
+    nombre: "Calendario"
+    icon: "📅"
+    roles: [alumno, familia, profesor]
+
+  - id: dashboard_profesor
+    nombre: "Mi Grupo"
+    icon: "👩‍🏫"
+    roles: [profesor]
+
+  - id: dashboard_familia
+    nombre: "Familia"
+    icon: "👨‍👩‍👧"
+    roles: [familia]
+
+  - id: admin
+    nombre: "Admin"
+    icon: "⚙️"
+    roles: [admin]
+
+# ── Safety & Compliance ───────────────────────────────────────────────────────
+
+compliance:
+  demo_only: true
+  no_real_student_data: true
+  no_real_health_data: true
+  no_production_automations: true
+  no_real_payments: true
+  privacy_doc: "fabrica-saas/docs/education/EDUCATION_CHILD_PRIVACY_ARCHITECTURE.md"
+  ai_safety_doc: "fabrica-saas/docs/education/EDUCATION_AI_SAFETY_POLICY.md"

@@ -1,0 +1,85 @@
+cliente: "Clínica Fisioterapia Demo"
+vertical: fisioterapia
+modo_demo: true
+
+branding:
+  nombre_visible: "Clínica Fisioterapia Demo"
+  inicial: "F"
+  estilo: "sanitario moderno, cercano, profesional"
+  copiar_marca_real: false
+
+modulos:
+  - chatbot_ia
+  - crm
+  - reservas
+  - recuperacion_leads
+  - dashboard
+
+sedes:
+  - id: principal
+    nombre: "Centro Principal"
+    horario: "L-V 09:00-20:00"
+  - id: norte
+    nombre: "Centro Norte"
+    horario: "L-V 10:00-19:00"
+  - id: domicilio
+    nombre: "Servicio a domicilio"
+    horario: "L-V 09:00-18:00"
+
+roles:
+  - admin
+  - recepcion
+  - fisioterapeuta
+
+vertical_config:
+  intenciones:
+    - primera_valoracion
+    - dolor_lumbar
+    - rehabilitacion_deportiva
+    - postoperatorio
+    - suelo_pelvico
+    - precio_bonos
+    - cambio_cancelacion
+  seguridad_clinica:
+    diagnostico: false
+    prescripcion: false
+    consejo_medico: false
+    promesa_resultado: false
+    derivar_a_profesional_si_sensible: true
+
+integraciones:
+  reales: false
+  email: false
+  whatsapp: false
+  sms: false
+  hubspot: false
+  calendario: false
+  pagos: false
+
+mock:
+  obligatorio: true
+  pacientes: 5
+  sesiones: true
+  crm: true
+  metricas: true
+
+casos_demo:
+  - primera_valoracion
+  - dolor_lumbar_sin_diagnostico
+  - rehabilitacion_deportiva
+  - fuera_de_horario
+  - caso_sensible_bandera_roja
+  - abandono_sin_reserva
+  - recuperacion_lead
+
+calidad:
+  responsive:
+    - mobile
+    - tablet
+    - desktop
+  tests: true
+  build: true
+  lint: true
+  no_secretos: true
+  no_deploy: true
+  no_contacto_externo: true

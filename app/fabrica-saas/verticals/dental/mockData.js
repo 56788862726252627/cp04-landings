@@ -1,0 +1,155 @@
+/**
+ * VERTICAL · Dental · Datos ficticios
+ * Todos los datos son inventados para demo interna.
+ * No representan personas, clínicas, citas, correos ni casos reales.
+ * Ningún dato se envía a ningún sistema externo.
+ */
+
+export const MOCK_PACIENTES = [
+  {
+    id: 'p001',
+    nombre: 'Ana Martínez López',
+    email: 'ana.m@demo.ficticio',
+    telefono: '600 000 001',
+    sede: 'Sede Centro',
+    tratamiento: 'Implante inferior',
+    estado: 'cita_agendada',
+    estado_label: 'Cita agendada',
+    estado_color: 'green',
+    valor_estimado: '2.400 €',
+    origen: 'Web propia',
+    prioridad: 'alta',
+    prioridad_color: 'red',
+    fecha_contacto: '10 ago 2026',
+    proxima_accion: 'Enviar presupuesto detallado',
+  },
+  {
+    id: 'p002',
+    nombre: 'Carlos Ruiz Moreno',
+    email: 'carlos.r@demo.ficticio',
+    telefono: '600 000 002',
+    sede: 'Sede Norte',
+    tratamiento: 'Ortodoncia invisible',
+    estado: 'en_seguimiento',
+    estado_label: 'En seguimiento',
+    estado_color: 'blue',
+    valor_estimado: '2.800 €',
+    origen: 'Referido',
+    prioridad: 'media',
+    prioridad_color: 'yellow',
+    fecha_contacto: '12 ago 2026',
+    proxima_accion: 'Llamada de seguimiento',
+  },
+  {
+    id: 'p003',
+    nombre: 'Lucía Fernández Gil',
+    email: 'lucia.f@demo.ficticio',
+    telefono: '600 000 003',
+    sede: 'Sede Playa',
+    tratamiento: 'Blanqueamiento + carillas',
+    estado: 'pendiente',
+    estado_label: 'Pendiente',
+    estado_color: 'yellow',
+    valor_estimado: '1.200 €',
+    origen: 'Instagram',
+    prioridad: 'media',
+    prioridad_color: 'yellow',
+    fecha_contacto: '14 ago 2026',
+    proxima_accion: 'Confirmar cita de valoración',
+  },
+  {
+    id: 'p004',
+    nombre: 'Pedro Sánchez Díaz',
+    email: 'pedro.s@demo.ficticio',
+    telefono: '600 000 004',
+    sede: 'Sede Centro',
+    tratamiento: 'Primera visita',
+    estado: 'nuevo',
+    estado_label: 'Nuevo',
+    estado_color: 'indigo',
+    valor_estimado: '–',
+    origen: 'Google Ads',
+    prioridad: 'baja',
+    prioridad_color: 'gray',
+    fecha_contacto: '15 ago 2026',
+    proxima_accion: 'Agendar primera visita gratuita',
+  },
+  {
+    id: 'p005',
+    nombre: 'María García Torres',
+    email: 'maria.g@demo.ficticio',
+    telefono: '600 000 005',
+    sede: 'Sede Norte',
+    tratamiento: 'Cirugía periodontal',
+    estado: 'perdido',
+    estado_label: 'Perdido',
+    estado_color: 'red',
+    valor_estimado: '900 €',
+    origen: 'Web propia',
+    prioridad: 'baja',
+    prioridad_color: 'gray',
+    fecha_contacto: '08 ago 2026',
+    proxima_accion: 'Activar recuperación automática',
+  },
+];
+
+export const MOCK_METRICAS = {
+  consultas_mes: 47,
+  precalificadas_pct: 68,
+  con_cita_pct: 43,
+  oportunidades_recuperadas: 8,
+  valor_pipeline: '24.600 €',
+  por_origen: [
+    { origen: 'Web propia',   pct: 38 },
+    { origen: 'Google Ads',   pct: 27 },
+    { origen: 'Instagram',    pct: 19 },
+    { origen: 'Referidos',    pct: 16 },
+  ],
+  por_tratamiento: [
+    { tratamiento: 'Implantes',      pct: 29 },
+    { tratamiento: 'Ortodoncia',     pct: 25 },
+    { tratamiento: 'Estética',       pct: 21 },
+    { tratamiento: 'Primera visita', pct: 16 },
+    { tratamiento: 'Otros',          pct: 9 },
+  ],
+  por_sede: [
+    { sede: 'Sede Centro', pct: 45 },
+    { sede: 'Sede Norte',  pct: 32 },
+    { sede: 'Sede Playa',  pct: 23 },
+  ],
+};
+
+export const MOCK_LEADS_ABANDONO = [
+  {
+    id: 'la001',
+    nombre: 'Usuario anónimo #4821 (ficticio)',
+    tratamiento: 'Implante unitario',
+    paso_abandono: 'Selección de sede — no completó el formulario',
+    fecha: '20 ago 2026',
+    estado_recuperacion: 'en_proceso',
+    secuencia: [
+      { paso: 1, tipo: 'Email', asunto: 'Tu consulta está guardada', delay: 'Inmediato', estado: 'simulado' },
+      { paso: 2, tipo: 'Recordatorio', asunto: 'Tus huecos siguen disponibles (24h)', delay: '24 h', estado: 'simulado' },
+      { paso: 3, tipo: 'Oferta', asunto: 'Primera valoración gratuita esta semana', delay: '72 h', estado: 'pendiente' },
+    ],
+  },
+  {
+    id: 'la002',
+    nombre: 'Usuario anónimo #3914 (ficticio)',
+    tratamiento: 'Ortodoncia invisible',
+    paso_abandono: 'Selección de franja horaria — no finalizó',
+    fecha: '21 ago 2026',
+    estado_recuperacion: 'recuperado',
+    secuencia: [
+      { paso: 1, tipo: 'Notificación', asunto: '¿Te ayudamos a elegir horario?', delay: 'Inmediato', estado: 'simulado' },
+      { paso: 2, tipo: 'Email', asunto: 'Hemos reservado un hueco para ti', delay: '12 h', estado: 'simulado' },
+      { paso: 3, tipo: 'Seguimiento', asunto: 'Seguimiento manual del equipo', delay: '5 días', estado: 'simulado' },
+    ],
+  },
+];
+
+export const MOCK_SLOTS = [
+  { id: 'sl001', fecha: 'Mañana, 29 ago', hora: '10:00', sede: 'Sede Centro', disponible: true },
+  { id: 'sl002', fecha: 'Mañana, 29 ago', hora: '11:30', sede: 'Sede Norte',  disponible: true },
+  { id: 'sl003', fecha: 'Dom, 30 ago',    hora: '09:30', sede: 'Sede Centro', disponible: true },
+];

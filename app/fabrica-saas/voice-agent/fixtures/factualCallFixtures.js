@@ -1,0 +1,50 @@
+// Factual Call Fixtures — ADV-11 (grounded facts)
+
+export const FACTUAL_CALL_FIXTURES = Object.freeze([
+  {
+    id:            'fact-hours-01',
+    scenario:      'Hours question with verified fact',
+    userText:      '¿Cuál es vuestro horario?',
+    expectedIntent:'INFORMATION',
+    facts:          Object.freeze({ opening_hours: 'Lunes a viernes 9:00–22:00, sábados 9:00–20:00' }),
+    expectedGrounded: true,
+    isReal: false,
+  },
+  {
+    id:            'fact-price-01',
+    scenario:      'Price question with verified fact',
+    userText:      '¿Cuánto cuesta una pista de pádel?',
+    expectedIntent:'PRICE',
+    facts:          Object.freeze({ price_range: '10–18€ / hora' }),
+    expectedGrounded: true,
+    isReal: false,
+  },
+  {
+    id:            'fact-services-01',
+    scenario:      'Services question with verified facts',
+    userText:      '¿Qué servicios ofrecéis?',
+    expectedIntent:'INFORMATION',
+    facts:          Object.freeze({ services: ['pádel', 'clases', 'torneos', 'tienda'] }),
+    expectedGrounded: true,
+    isReal: false,
+  },
+  {
+    id:            'fact-location-01',
+    scenario:      'Location question',
+    userText:      '¿Dónde estáis?',
+    expectedIntent:'INFORMATION',
+    facts:          Object.freeze({ address: 'Calle Ejemplo 1, Archidona' }),
+    expectedGrounded: true,
+    isReal: false,
+  },
+  {
+    id:            'fact-no-data-01',
+    scenario:      'Question with no verified fact — honest unknown',
+    userText:      '¿Tenéis servicio de fisioterapia?',
+    expectedIntent:'INFORMATION',
+    facts:          Object.freeze({}),
+    expectedGrounded: false,
+    expectedHonestUnknown: true,
+    isReal: false,
+  },
+]);

@@ -1,0 +1,15 @@
+# Agency CRM Tasks — ADV-09
+
+## Task Types
+
+RESEARCH / QUALIFY / PREPARE_DISCOVERY / PREPARE_PROPOSAL / SEND_PROPOSAL / FOLLOW_UP / SCHEDULE_MEETING / PREPARE_DEMO / AWAIT_RESPONSE / NEGOTIATE / LOG_OUTCOME / HANDOFF / REVIEW / OTHER
+
+## Task Status Flow
+
+TODO → IN_PROGRESS → DONE (or CANCELLED)
+
+Overdue detection: `getTaskStatusCurrent()` returns OVERDUE if `dueAt` is past and task is not DONE/CANCELLED.
+
+## Priority Levels
+
+URGENT → HIGH → MEDIUM → LOW

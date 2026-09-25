@@ -1,0 +1,112 @@
+# Factory CI — ADV-02 CI/CD Automatizado
+# Reusable pipeline: test · lint · build · secret-scan · quality-gate
+# Triggers: PR to main, push to main (factory paths only)
+# NO_REAL_DEPLOY. Release requires human approval.
+
+name: Factory CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/fabrica-saas/**'
+      - 'app/src/**'
+      - 'app/package*.json'
+      - '.github/workflows/factory-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'app/fabrica-saas/**'
+      - 'app/src/**'
+      - 'app/package*.json'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  WORKING_DIR: app
+
+jobs:
+  # ─── STAGE 1: Secret Quick Scan (fail-fast) ────────────────────────────────
+  secret-scan:
+    name: Secret Quick Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect critical secret patterns
+        run: |
+          set +e
+          FOUND=$(grep -rn --include="*.js" --include="*.mjs" --include="*.ts" \
+            -E "(sk_live_[A-Za-z0-9]{20,}|whsec_[A-Za-z0-9]{20,}|-----BEGIN (RSA |EC )?PRIVATE KEY-----)" \
+            app/fabrica-saas/ app/src/ 2>/dev/null \
+            | grep -v "\.test\." | grep -v "fixture" | grep -v "scenario" | grep -v "Pattern" | grep -v "pattern")
+          set -e
+          if [ -n "$FOUND" ]; then
+            echo "CRITICAL: Secret pattern detected:"
+            echo "$FOUND" | sed 's/=.*/=[REDACTED]/'
+            exit 1
+          fi
+          echo "Secret scan: PASS — no critical patterns in source files"
+
+  # ─── STAGE 2–4: Install · Test · Lint · Build ──────────────────────────────
+  ci:
+    name: Test · Lint · Build
+    needs: [secret-scan]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Run test suite
+        run: node --test fabrica-saas/generator/tests/*.test.mjs
+        # Note: 1 pre-existing fail (vitest/v2-paso-a-gates) is documented — not introduced by CI
+
+      - name: Lint
+        run: npm run lint -- --quiet
+
+      - name: Build
+        run: npm run build
+
+      - name: Validate artifact
+        run: |
+          if [ ! -f dist/index.html ]; then
+            echo "FAIL: dist/index.html not found in build output"
+            exit 1
+          fi
+          echo "Artifact PASS: dist/index.html found"
+          echo "Build size:"
+          du -sh dist/ 2>/dev/null || true
+
+  # ─── STAGE 5: Quality Gate ──────────────────────────────────────────────────
+  quality-gate:
+    name: Quality Gate
+    needs: [ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All P0 checks passed
+        run: |
+          echo "Quality Gate: PASS"
+          echo "  ✓ secret-scan"
+          echo "  ✓ tests"
+          echo "  ✓ lint"
+          echo "  ✓ build"
+          echo "  ✓ artifact"
+          echo ""
+          echo "Release readiness: HUMAN_REVIEW required."
+          echo "NO_AUTO_DEPLOY enforced."

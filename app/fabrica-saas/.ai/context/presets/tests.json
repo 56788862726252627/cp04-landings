@@ -1,0 +1,21 @@
+{
+  "output": {
+    "filePath": "fabrica-saas/.ai/context/generated/tests.xml",
+    "style": "xml",
+    "compress": true,
+    "showLineNumbers": true,
+    "headerText": "FABRICA SAAS — Tests Context — all test files"
+  },
+  "include": [
+    "fabrica-saas/generator/tests/**/*.mjs",
+    "fabrica-saas/generator/tests/**/*.test.mjs"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "node_modules/**",
+      "**/.env*"
+    ]
+  }
+}

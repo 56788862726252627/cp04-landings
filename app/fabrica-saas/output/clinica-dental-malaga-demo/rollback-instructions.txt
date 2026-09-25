@@ -1,0 +1,15 @@
+# ═══════════════════════════════════════════════════════════
+# ROLLBACK — Cloudflare Pages
+# [MANUAL_BOUNDARY] Requiere: CLOUDFLARE_API_TOKEN
+# ═══════════════════════════════════════════════════════════
+
+# Opción A — Vía Cloudflare Dashboard (recomendado):
+#  1. Ve a: Cloudflare Dashboard → Pages → clinica-dental-malaga-demo → Deployments
+#  2. Encuentra el deployment previo
+#  3. Haz clic en "Rollback to this deployment"
+
+# Opción B — Vía CLI (requiere deployment ID del deployment anterior):
+#  wrangler pages deployment rollback --project-name clinica-dental-malaga-demo <previous-deployment-id>
+
+# Post-rollback — verificar:
+#  curl https://<domain>/api/health

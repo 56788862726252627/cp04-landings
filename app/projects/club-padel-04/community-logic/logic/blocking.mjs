@@ -3,9 +3,7 @@
 // ningún MatchInvite/Friendship/Follow puede crearse entre usuarios
 // bloqueados, en ninguna dirección. Doble barrera: listado + creación.
 
-// crypto.randomUUID() global (Web Crypto API), no "node:crypto": ver nota
-// equivalente en entities/store.mjs — imprescindible para que este módulo
-// funcione también en un bundle de navegador (Vite), no solo en Node.
+import { randomUUID } from "node:crypto";
 import { appendAudit } from "../entities/store.mjs";
 
 /** true si existe un Friendship(status=blocked) entre las dos partes, en cualquier dirección. */
@@ -48,7 +46,7 @@ export function blockUser(store, { clubId, blockerId, blockedId }) {
   );
 
   const record = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     clubId,
     requesterId: blockerId,
     addresseeId: blockedId,

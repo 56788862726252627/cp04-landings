@@ -1,0 +1,13 @@
+# ADV-11 Turn Management
+
+## VoiceTurnManager
+States: INITIALIZING → USER_SPEAKING → AGENT_SPEAKING → INTERRUPTED → WAITING → THINKING → TOOL_CALL → TRANSFER
+
+## BargeInPolicy
+- 3 barge-in actions: STOP, CONTINUE, ACKNOWLEDGE_AND_CONTINUE
+- 4 triggers: TOPIC_CHANGE, CORRECTION, URGENT, AFFIRMATION_ONLY
+
+## CallStateMachine
+11 states: INITIALIZING → GREETING → LISTENING → THINKING → SPEAKING → TOOL_CALL → CONFIRMATION → HANDOFF → CLOSING → ENDED → FAILED
+
+Transitions enforced strictly — invalid transitions return ok:false.

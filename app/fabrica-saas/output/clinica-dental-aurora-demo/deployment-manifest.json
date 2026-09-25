@@ -1,0 +1,51 @@
+{
+  "_version": "v1.3",
+  "_generatedAt": "2026-08-29T06:46:30.432Z",
+  "_generator": "Fábrica SaaS V1.3 · generate-deployment.mjs",
+  "_ficticio": true,
+  "client": {
+    "slug": "clinica-dental-aurora-demo",
+    "name": "Clínica Dental Aurora (Demo)",
+    "vertical": "dental",
+    "email": "contacto@demo.ficticio"
+  },
+  "deployment": {
+    "mode": "demo",
+    "entryHtml": "clinica-dental-aurora-demo.html",
+    "outputDir": "fabrica-saas/output/clinica-dental-aurora-demo/",
+    "buildCmd": "npm run build",
+    "previewCmd": "npm run dev -- --port 5175"
+  },
+  "runtime": {
+    "authMode": "mock",
+    "apiBaseUrl": "NOT_CONFIGURED",
+    "domain": "NOT_CONFIGURED",
+    "reales": false
+  },
+  "modules": [
+    "chatbot_ia",
+    "crm",
+    "reservas",
+    "recuperacion_leads",
+    "dashboard",
+    "auth",
+    "rbac",
+    "logs",
+    "analytics"
+  ],
+  "checklist": {
+    "schema_valid": true,
+    "files_generated": true,
+    "vite_registered": true,
+    "no_real_credentials": true,
+    "no_personal_data": true,
+    "staging_ready": false,
+    "production_ready": false
+  },
+  "required_env_vars": [
+    "VITE_AUTH_MODE",
+    "VITE_AUTH_DOMAIN",
+    "VITE_AUTH_CLIENT_ID",
+    "VITE_ANALYTICS_DSN"
+  ]
+}

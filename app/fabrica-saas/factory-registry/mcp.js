@@ -1,0 +1,40 @@
+// Factory Registry — MCP Layer (ADV-12)
+
+export const MCP_REGISTRY = Object.freeze({
+  layer:   'MCP',
+  version: '1.0.0',
+  modules: Object.freeze({
+    core:       6,
+    registry:   1,
+    discovery:  1,
+    selection:  1,
+    validation: 4,
+    policies:  11,
+    auth:       2,
+    execution:  3,
+    planning:   2,
+    workflow:   1,
+    health:     1,
+    bridges:   10,
+    quality:    2,
+    config:     2,
+    fixtures:   5,
+  }),
+  totalModules: 52,
+  fixtures: Object.freeze({
+    servers:  6,
+    tools:    30,
+    goodCases: 6,
+    failureCases: 13,
+    workflowCases: 4,
+  }),
+  guardrails: Object.freeze({
+    NO_REAL_MCP_CREDENTIALS: 'SI',
+    NO_REAL_EXTERNAL_WRITE:  'SI',
+    NO_REAL_SPEND:           'SI',
+    NO_REAL_SECRETS:         'SI',
+    FACTORY_AGENCY_SCOPE_ONLY: 'SI',
+  }),
+  bridges: Object.freeze(['ADV-01', 'ADV-03', 'ADV-04', 'ADV-08', 'ADV-09', 'ADV-10', 'ADV-10b', 'ADV-11', 'Make', 'AI-Router']),
+  isReal: false,
+});

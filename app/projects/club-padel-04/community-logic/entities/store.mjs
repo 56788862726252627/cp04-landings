@@ -6,6 +6,8 @@
 // Ningún dato de este módulo es real. Ninguna función de este módulo conecta
 // a Supabase, Make, Airtable, Stripe, WhatsApp ni a ningún servicio externo.
 
+import { randomUUID } from "node:crypto";
+
 /** Crea un almacén en memoria vacío con un array por entidad. */
 export function createEmptyStore() {
   return {
@@ -31,13 +33,8 @@ export function createEmptyStore() {
   };
 }
 
-// crypto.randomUUID() global (Web Crypto API): disponible sin import tanto
-// en Node 19+ como en cualquier navegador moderno — a diferencia de
-// `import { randomUUID } from "node:crypto"` (built-in de Node que Vite no
-// puede resolver para un bundle de navegador, sin polyfill configurado).
-// Mismo generador de UUID v4, ningún cambio de comportamiento.
 function id() {
-  return crypto.randomUUID();
+  return randomUUID();
 }
 
 function now() {

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es" data-vertical="veterinary" data-profile="WARM_HUMANIST" data-surface="WARM_LAYERED">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clínica Veterinaria Nexo — Tu veterinario de confianza</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #0d9488;
+      --primary-dark: #0f766e;
+      --accent: #f59e0b;
+      --surface: #f0fdfa;
+      --surface-card: #ffffff;
+      --border: #ccfbf1;
+      --text: #134e4a;
+      --text-muted: #5eead4;
+      --heading-font: 'Nunito', system-ui, sans-serif;
+      --body-font: 'Open Sans', system-ui, sans-serif;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      --shadow-card: 0 4px 12px rgba(13,148,136,.08);
+    }
+    body {
+      font-family: var(--body-font);
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* Skip link */
+    .skip-link {
+      position: absolute; top: -100px; left: 1rem;
+      background: var(--primary); color: white;
+      padding: .5rem 1rem; border-radius: var(--radius-full);
+      font-weight: 600; transition: top .2s;
+      z-index: 9999;
+    }
+    .skip-link:focus { top: 1rem; }
+
+    /* NAV */
+    nav[role="navigation"] {
+      background: #ffffff;
+      border-bottom: 2px solid var(--border);
+      padding: 0 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand {
+      font-family: var(--heading-font);
+      font-size: 1.25rem; font-weight: 800;
+      color: var(--primary);
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .nav-brand::before { content: '🐾'; font-size: 1.5rem; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-weight: 600; font-size: .9375rem;
+      color: var(--text); padding: .25rem 0;
+      border-bottom: 2px solid transparent;
+      transition: border-color .15s, color .15s;
+    }
+    .nav-links a:hover { color: var(--primary); border-color: var(--primary); }
+    .nav-cta {
+      background: var(--primary); color: white;
+      border: none; border-radius: var(--radius-full);
+      padding: .625rem 1.5rem; font-weight: 700;
+      font-size: .9375rem; cursor: pointer;
+      transition: background .15s;
+    }
+    .nav-cta:hover { background: var(--primary-dark); }
+    .nav-hamburger {
+      display: none;
+      background: none; border: 2px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: .5rem; cursor: pointer;
+      color: var(--primary); font-size: 1.25rem;
+      min-width: 44px; min-height: 44px;
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #a7f3d0 100%);
+      padding: 4rem 1.5rem 3rem;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent); color: #78350f;
+      font-size: .75rem; font-weight: 700;
+      padding: .25rem .75rem; border-radius: var(--radius-full);
+      margin-bottom: 1rem; letter-spacing: .05em; text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: var(--heading-font);
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800; line-height: 1.15;
+      color: #134e4a; margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.125rem; color: #0f766e;
+      max-width: 540px; margin: 0 auto 2rem;
+    }
+    .hero-ctas { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--primary); color: white;
+      border: none; border-radius: var(--radius-full);
+      padding: .875rem 2rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .15s, transform .1s;
+      min-height: 44px;
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-secondary {
+      background: white; color: var(--primary);
+      border: 2px solid var(--primary); border-radius: var(--radius-full);
+      padding: .875rem 2rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .15s;
+      min-height: 44px;
+    }
+    .btn-secondary:hover { background: var(--surface); }
+
+    /* TRUST BAR */
+    .trust-bar {
+      background: white; border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .875rem; font-weight: 600; color: var(--text);
+    }
+    .trust-icon { color: var(--primary); font-size: 1.25rem; }
+
+    /* SERVICES */
+    main { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+    .section { padding: 4rem 0; }
+    .section-title {
+      font-family: var(--heading-font);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 800; color: #134e4a;
+      margin-bottom: .5rem;
+    }
+    .section-subtitle { font-size: 1rem; color: #0f766e; margin-bottom: 2.5rem; }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .service-card {
+      background: var(--surface-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-card);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .service-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(13,148,136,.12); }
+    .service-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .service-card h3 {
+      font-family: var(--heading-font);
+      font-size: 1.125rem; font-weight: 700;
+      color: #134e4a; margin-bottom: .5rem;
+    }
+    .service-card p { font-size: .875rem; color: #0f766e; }
+
+    /* TEAM */
+    .team-section { background: white; padding: 4rem 1.5rem; }
+    .team-inner { max-width: 1200px; margin: 0 auto; }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem; margin-top: 2.5rem;
+    }
+    .team-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg); padding: 1.5rem;
+      text-align: center; border: 1px solid var(--border);
+    }
+    .team-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      margin: 0 auto 1rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; color: white; font-weight: 800;
+    }
+    .team-card h4 { font-family: var(--heading-font); font-weight: 700; margin-bottom: .25rem; }
+    .team-card p { font-size: .8125rem; color: #0f766e; }
+
+    /* CONTACT FORM */
+    .contact-section { padding: 4rem 0; }
+    .form-card {
+      background: white; border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg); padding: 2rem;
+      max-width: 560px; box-shadow: var(--shadow-card);
+    }
+    .form-title {
+      font-family: var(--heading-font);
+      font-size: 1.5rem; font-weight: 800;
+      color: #134e4a; margin-bottom: 1.5rem;
+    }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label {
+      display: block; font-size: .875rem; font-weight: 600;
+      color: #134e4a; margin-bottom: .375rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; border: 1.5px solid var(--border);
+      border-radius: var(--radius-md); padding: .75rem 1rem;
+      font-family: var(--body-font); font-size: 1rem;
+      color: var(--text); background: var(--surface);
+      transition: border-color .15s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13,148,136,.15);
+    }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    .form-submit {
+      width: 100%; background: var(--primary); color: white;
+      border: none; border-radius: var(--radius-full);
+      padding: .875rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .15s;
+      min-height: 44px;
+    }
+    .form-submit:hover { background: var(--primary-dark); }
+    .form-success { display: none; background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: var(--radius-md); padding: 1rem; color: #166534; font-weight: 600; text-align: center; }
+    .form-success.visible { display: block; }
+
+    /* FOOTER */
+    footer {
+      background: #134e4a; color: #ccfbf1;
+      padding: 2.5rem 1.5rem; text-align: center;
+    }
+    .footer-brand {
+      font-family: var(--heading-font);
+      font-size: 1.25rem; font-weight: 800;
+      color: white; margin-bottom: 1rem;
+    }
+    .footer-links {
+      display: flex; justify-content: center; gap: 1.5rem;
+      list-style: none; flex-wrap: wrap; margin-bottom: 1.5rem;
+    }
+    .footer-links a { color: #a7f3d0; font-size: .875rem; }
+    .footer-links a:hover { color: white; }
+    .footer-copy { font-size: .75rem; color: #5eead4; }
+
+    /* MOBILE */
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-top: 1.5px solid var(--border);
+      padding: .5rem 0; z-index: 200;
+    }
+    .mobile-nav-items {
+      display: flex; justify-content: space-around;
+      list-style: none;
+    }
+    .mobile-nav-items button {
+      display: flex; flex-direction: column; align-items: center; gap: .25rem;
+      background: none; border: none; cursor: pointer;
+      font-size: .625rem; font-weight: 600;
+      color: var(--text); min-width: 44px; min-height: 44px;
+      padding: .25rem;
+    }
+    .mobile-nav-items .icon { font-size: 1.25rem; }
+    .mobile-nav-items button.active { color: var(--primary); }
+
+    /* MENU MÓVIL */
+    .mobile-menu {
+      display: none;
+      position: fixed; top: 64px; left: 0; right: 0;
+      background: white; border-bottom: 1.5px solid var(--border);
+      padding: 1rem 1.5rem; z-index: 99;
+    }
+    .mobile-menu.open { display: block; }
+    .mobile-menu ul { list-style: none; }
+    .mobile-menu ul li a { display: block; padding: .75rem 0; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border); }
+
+    @media (max-width: 767px) {
+      .nav-links, .nav-cta { display: none; }
+      .nav-hamburger { display: flex; align-items: center; justify-content: center; }
+      .mobile-nav { display: block; }
+      body { padding-bottom: 60px; }
+      .hero { padding: 2.5rem 1rem; }
+      .hero h1 { font-size: 1.75rem; }
+      .services-grid { grid-template-columns: 1fr; }
+      .hero-ctas { flex-direction: column; align-items: stretch; padding: 0 1rem; }
+    }
+    @media (max-width: 400px) {
+      .trust-bar { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+  <!-- NAV -->
+  <nav role="navigation" aria-label="Navegación principal">
+    <div class="nav-brand" aria-label="Clínica Veterinaria Nexo - Inicio">Nexo Vet</div>
+    <ul class="nav-links">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#equipo">Equipo</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'})">Reservar cita</button>
+    <button class="nav-hamburger" aria-expanded="false" aria-label="Abrir menú" id="hamburger" onclick="toggleMenu()">☰</button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu" role="dialog" aria-label="Menú de navegación">
+    <ul>
+      <li><a href="#servicios" onclick="closeMenu()">Servicios</a></li>
+      <li><a href="#equipo" onclick="closeMenu()">Equipo</a></li>
+      <li><a href="#contacto" onclick="closeMenu()">Reservar cita</a></li>
+    </ul>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-badge">Veterinarios de confianza · Desde 2010</div>
+    <h1 id="hero-heading">El cuidado que tu mascota merece, cerca de casa</h1>
+    <p>Consultas, vacunaciones, urgencias y seguimiento personalizado para perros, gatos y animales exóticos.</p>
+    <div class="hero-ctas">
+      <button class="btn-primary" onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'})">Reservar cita ahora</button>
+      <button class="btn-secondary" onclick="document.getElementById('servicios').scrollIntoView({behavior:'smooth'})">Ver servicios</button>
+    </div>
+  </section>
+
+  <!-- TRUST BAR -->
+  <div class="trust-bar" role="complementary" aria-label="Nuestras garantías">
+    <div class="trust-item"><span class="trust-icon">✓</span> Colegiados y titulados</div>
+    <div class="trust-item"><span class="trust-icon">⭐</span> +500 familias atendidas</div>
+    <div class="trust-item"><span class="trust-icon">📍</span> Atención local y cercana</div>
+    <div class="trust-item"><span class="trust-icon">🕐</span> Urgencias 24h</div>
+  </div>
+
+  <!-- MAIN -->
+  <main id="main-content">
+    <!-- SERVICIOS -->
+    <section class="section" id="servicios" aria-labelledby="services-heading">
+      <h2 class="section-title" id="services-heading">Nuestros servicios</h2>
+      <p class="section-subtitle">Todo lo que tu mascota necesita en un solo lugar</p>
+      <div class="services-grid" role="list">
+        <article class="service-card" role="listitem">
+          <div class="service-icon" aria-hidden="true">🩺</div>
+          <h3>Consulta general</h3>
+          <p>Revisión completa y diagnóstico personalizado para tu mascota.</p>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-icon" aria-hidden="true">💉</div>
+          <h3>Vacunaciones</h3>
+          <p>Plan de vacunación adaptado a la edad y estilo de vida de tu animal.</p>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-icon" aria-hidden="true">🔬</div>
+          <h3>Diagnóstico y análisis</h3>
+          <p>Laboratorio propio para resultados rápidos y fiables.</p>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-icon" aria-hidden="true">🦷</div>
+          <h3>Odontología veterinaria</h3>
+          <p>Limpieza y cuidado dental profesional para prevenir problemas graves.</p>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-icon" aria-hidden="true">🚑</div>
+          <h3>Urgencias 24h</h3>
+          <p>Atención de emergencias las 24 horas del día, todos los días del año.</p>
+        </article>
+        <article class="service-card" role="listitem">
+          <div class="service-icon" aria-hidden="true">✂️</div>
+          <h3>Peluquería canina</h3>
+          <p>Cuidado estético profesional para que tu mascota siempre esté perfecta.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- TEAM -->
+    <section class="team-section" id="equipo" aria-labelledby="team-heading">
+      <div class="team-inner">
+        <h2 class="section-title" id="team-heading">Nuestro equipo</h2>
+        <p class="section-subtitle">Veterinarios colegiados con vocación y experiencia</p>
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">MG</div>
+            <h4>Dra. María García</h4>
+            <p>Medicina interna y urgencias</p>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">JR</div>
+            <h4>Dr. Javier Ruiz</h4>
+            <p>Cirugía y traumatología</p>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">LL</div>
+            <h4>Dra. Laura López</h4>
+            <p>Dermatología y nutrición</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact-section" id="contacto" aria-labelledby="contact-heading">
+      <h2 class="section-title" id="contact-heading">Reservar cita</h2>
+      <p class="section-subtitle" style="margin-bottom:2rem">Te llamamos en menos de 2 horas</p>
+      <div class="form-card">
+        <h3 class="form-title">Solicitar cita</h3>
+        <form id="contactForm" novalidate>
+          <div class="form-group">
+            <label for="nombre">Tu nombre</label>
+            <input type="text" id="nombre" name="nombre" placeholder="Ana García" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input type="tel" id="telefono" name="telefono" placeholder="612 345 678" required autocomplete="tel">
+          </div>
+          <div class="form-group">
+            <label for="mascota">Nombre de la mascota</label>
+            <input type="text" id="mascota" name="mascota" placeholder="Coco" required>
+          </div>
+          <div class="form-group">
+            <label for="especie">Especie</label>
+            <select id="especie" name="especie" required>
+              <option value="">Selecciona</option>
+              <option value="perro">Perro</option>
+              <option value="gato">Gato</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="motivo">Motivo de la consulta</label>
+            <textarea id="motivo" name="motivo" placeholder="Describe brevemente el motivo de la visita..."></textarea>
+          </div>
+          <button type="submit" class="form-submit">Solicitar cita</button>
+        </form>
+        <div class="form-success" id="formSuccess" role="status" aria-live="polite">
+          ✓ Solicitud recibida. Te llamamos en menos de 2 horas.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MOBILE NAV -->
+  <nav class="mobile-nav" aria-label="Navegación móvil">
+    <ul class="mobile-nav-items">
+      <li><button class="active"><span class="icon" aria-hidden="true">🏠</span>Inicio</button></li>
+      <li><button onclick="document.getElementById('servicios').scrollIntoView({behavior:'smooth'})"><span class="icon" aria-hidden="true">🩺</span>Servicios</button></li>
+      <li><button onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'})"><span class="icon" aria-hidden="true">📅</span>Reservar</button></li>
+      <li><button onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'})"><span class="icon" aria-hidden="true">📞</span>Contacto</button></li>
+    </ul>
+  </nav>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">🐾 Clínica Veterinaria Nexo</div>
+    <ul class="footer-links">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#equipo">Equipo</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+      <li><a href="#">Privacidad</a></li>
+    </ul>
+    <p class="footer-copy">© 2026 Clínica Veterinaria Nexo · Datos ficticios — isReal: false</p>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const btn = document.getElementById('hamburger');
+      const isOpen = menu.classList.contains('open');
+      menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', !isOpen);
+    }
+    function closeMenu() {
+      document.getElementById('mobileMenu').classList.remove('open');
+      document.getElementById('hamburger').setAttribute('aria-expanded', 'false');
+    }
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      this.style.display = 'none';
+      document.getElementById('formSuccess').classList.add('visible');
+    });
+  </script>
+</body>
+</html>

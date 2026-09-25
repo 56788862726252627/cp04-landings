@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Clínica Veterinaria Nexo — Cuidado experto para tus mascotas">
+  <title>Clínica Veterinaria Nexo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-primary: #2563eb;
+      --color-primary-dark: #1d4ed8;
+      --color-text: #1e293b;
+      --color-muted: #64748b;
+      --color-bg: #f8fafc;
+      --color-white: #ffffff;
+      --color-border: #e2e8f0;
+    }
+    body { font-family: system-ui, sans-serif; color: var(--color-text); background: var(--color-bg); }
+
+    /* Navigation */
+    nav { background: var(--color-white); border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 10; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 1rem; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { font-size: 1.25rem; font-weight: 700; color: var(--color-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--color-text); font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a:focus { color: var(--color-primary); }
+    .hamburger { display: none; background: none; border: none; cursor: pointer; font-size: 1.5rem; padding: 0.5rem; }
+
+    /* Hero */
+    .hero { background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); padding: 5rem 1rem; text-align: center; }
+    .hero-inner { max-width: 800px; margin: 0 auto; }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; color: var(--color-text); margin-bottom: 1rem; line-height: 1.2; }
+    .hero p { font-size: 1.125rem; color: var(--color-muted); margin-bottom: 2rem; }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    /* Buttons */
+    .btn-primary { background: var(--color-primary); color: var(--color-white); padding: 0.875rem 1.75rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; font-size: 1rem; transition: background 0.2s; display: inline-block; }
+    .btn-primary:hover { background: var(--color-primary-dark); }
+    .btn-primary:focus { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+    .btn-secondary { background: transparent; color: var(--color-primary); padding: 0.875rem 1.75rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none; border: 2px solid var(--color-primary); cursor: pointer; font-size: 1rem; transition: all 0.2s; display: inline-block; }
+    .btn-secondary:hover { background: var(--color-primary); color: var(--color-white); }
+
+    /* Sections */
+    section { padding: 4rem 1rem; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-title { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; text-align: center; margin-bottom: 0.75rem; }
+    .section-subtitle { color: var(--color-muted); text-align: center; margin-bottom: 3rem; }
+
+    /* Services */
+    #servicios { background: var(--color-white); }
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .service-card { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.5rem; transition: box-shadow 0.2s; }
+    .service-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .service-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .service-card h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .service-card p { color: var(--color-muted); font-size: 0.9375rem; line-height: 1.6; }
+
+    /* Team */
+    #equipo { background: var(--color-bg); }
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+    .team-card { background: var(--color-white); border-radius: 0.75rem; padding: 1.5rem; text-align: center; border: 1px solid var(--color-border); }
+    .team-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--color-primary); color: white; font-size: 2rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+    .team-card h3 { font-weight: 600; margin-bottom: 0.25rem; }
+    .team-card p { color: var(--color-muted); font-size: 0.875rem; }
+
+    /* Contact */
+    #contacto { background: var(--color-white); }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    .contact-info h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+    .contact-info p { color: var(--color-muted); margin-bottom: 0.5rem; line-height: 1.6; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: 0.375rem; font-size: 0.9375rem; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--color-border);
+      border-radius: 0.5rem; font-size: 1rem; background: var(--color-bg); transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+    #form-success { display: none; padding: 1rem; background: #dcfce7; border-radius: 0.5rem; color: #166534; margin-top: 1rem; }
+    #form-success.visible { display: block; }
+
+    /* Footer */
+    footer { background: var(--color-text); color: var(--color-white); padding: 3rem 1rem 1.5rem; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+    .footer-col h4 { font-weight: 600; margin-bottom: 0.75rem; }
+    .footer-col p, .footer-col a { color: #94a3b8; font-size: 0.875rem; line-height: 1.8; text-decoration: none; display: block; }
+    .footer-col a:hover { color: var(--color-white); }
+    .footer-bottom { border-top: 1px solid #334155; padding-top: 1.5rem; color: #64748b; font-size: 0.875rem; text-align: center; }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .nav-links { display: none; position: absolute; top: 64px; left: 0; right: 0; background: var(--color-white); flex-direction: column; padding: 1rem; border-bottom: 1px solid var(--color-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+      .nav-links.open { display: flex; }
+      .hamburger { display: block; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .hero { padding: 3rem 1rem; }
+    }
+
+    /* Skip link */
+    .skip-link { position: absolute; top: -40px; left: 1rem; background: var(--color-primary); color: white; padding: 0.5rem 1rem; border-radius: 0 0 0.5rem 0.5rem; text-decoration: none; font-weight: 600; z-index: 100; transition: top 0.2s; }
+    .skip-link:focus { top: 0; }
+  </style>
+</head>
+<body>
+
+  <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+  <nav role="navigation" aria-label="Navegación principal">
+    <div class="nav-inner">
+      <a href="/" class="logo" aria-label="Clínica Veterinaria Nexo - Inicio">
+        🐾 Nexo Vet
+      </a>
+      <button class="hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-menu" onclick="toggleMenu(this)">☰</button>
+      <ul class="nav-links" id="nav-menu" role="list">
+        <li><a href="#servicios">Servicios</a></li>
+        <li><a href="#equipo">Equipo</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+        <li><a href="#contacto" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.9rem;">Cita Online</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="main-content">
+
+    <!-- Hero -->
+    <section class="hero" data-section="hero">
+      <div class="hero-inner">
+        <h1>Cuidamos a tu mascota<br>como si fuera nuestra</h1>
+        <p>Clínica veterinaria de referencia en Archidona. Más de 15 años de experiencia, tecnología de vanguardia y un equipo apasionado por los animales.</p>
+        <div class="hero-actions">
+          <a href="#contacto" class="btn-primary" data-cta="hero-primary">Pedir Cita</a>
+          <a href="#servicios" class="btn-secondary" data-cta="hero-secondary">Ver Servicios</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services -->
+    <section id="servicios" data-section="servicios">
+      <div class="section-inner">
+        <h2 class="section-title">Nuestros Servicios</h2>
+        <p class="section-subtitle">Atención integral para perros, gatos y pequeños animales</p>
+        <div class="services-grid">
+          <article class="service-card">
+            <div class="service-icon" aria-hidden="true">🩺</div>
+            <h3>Consulta General</h3>
+            <p>Revisiones preventivas, diagnóstico y seguimiento de tu mascota por veterinarios especializados.</p>
+          </article>
+          <article class="service-card">
+            <div class="service-icon" aria-hidden="true">💉</div>
+            <h3>Vacunación y Desparasitación</h3>
+            <p>Protocolos actualizados de vacunación adaptados a las necesidades de cada animal.</p>
+          </article>
+          <article class="service-card">
+            <div class="service-icon" aria-hidden="true">🔬</div>
+            <h3>Análisis y Diagnóstico</h3>
+            <p>Laboratorio propio para resultados rápidos. Ecografía, radiología digital y análisis de sangre.</p>
+          </article>
+          <article class="service-card">
+            <div class="service-icon" aria-hidden="true">🏥</div>
+            <h3>Cirugía</h3>
+            <p>Quirófano equipado con tecnología moderna. Cirugías de tejidos blandos y ortopédicas.</p>
+          </article>
+          <article class="service-card">
+            <div class="service-icon" aria-hidden="true">✂️</div>
+            <h3>Peluquería y Estética</h3>
+            <p>Baño, corte y arreglo profesional. Tu mascota siempre impecable y bien cuidada.</p>
+          </article>
+          <article class="service-card">
+            <div class="service-icon" aria-hidden="true">🛏️</div>
+            <h3>Hospitalización</h3>
+            <p>Unidad de hospitalización con monitorización continua. Tu mascota en las mejores manos.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team -->
+    <section id="equipo" data-section="equipo">
+      <div class="section-inner">
+        <h2 class="section-title">Nuestro Equipo</h2>
+        <p class="section-subtitle">Profesionales apasionados por el bienestar animal</p>
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">👩‍⚕️</div>
+            <h3>Dra. María González</h3>
+            <p>Veterinaria especialista en medicina interna</p>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">👨‍⚕️</div>
+            <h3>Dr. Carlos Ruiz</h3>
+            <p>Cirujano veterinario con 12 años de experiencia</p>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">👩‍⚕️</div>
+            <h3>Dra. Laura Pérez</h3>
+            <p>Especialista en dermatología y nutrición</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contacto" data-section="contacto">
+      <div class="section-inner">
+        <h2 class="section-title">Contacto</h2>
+        <p class="section-subtitle">Estamos aquí para ayudarte</p>
+        <div class="contact-grid">
+          <div class="contact-info">
+            <h3>Información de contacto</h3>
+            <p>📍 Calle Principal 42, Archidona, Málaga</p>
+            <p>📞 952 123 456</p>
+            <p>✉️ info@nexovet.es</p>
+            <p>🕐 Lun–Vie: 9:00–20:00 | Sáb: 9:00–14:00</p>
+            <p style="margin-top:1rem; font-size:0.875rem; color:#64748b;">Urgencias 24h disponibles</p>
+          </div>
+          <div>
+            <form id="form-contacto" data-form="contacto" novalidate>
+              <div class="form-group">
+                <label for="nombre">Nombre completo *</label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre" autocomplete="name">
+              </div>
+              <div class="form-group">
+                <label for="email">Correo electrónico *</label>
+                <input type="email" id="email" name="email" required placeholder="tu@email.com" autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label for="telefono">Teléfono</label>
+                <input type="tel" id="telefono" name="telefono" placeholder="600 000 000" autocomplete="tel">
+              </div>
+              <div class="form-group">
+                <label for="mascota">Tipo de mascota</label>
+                <select id="mascota" name="mascota">
+                  <option value="">Selecciona...</option>
+                  <option value="perro">Perro</option>
+                  <option value="gato">Gato</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="mensaje">Mensaje *</label>
+                <textarea id="mensaje" name="mensaje" required placeholder="Cuéntanos en qué podemos ayudarte"></textarea>
+              </div>
+              <button type="submit" class="btn-primary" style="width:100%">Enviar Mensaje</button>
+              <div id="form-success" role="alert" aria-live="polite">
+                ✅ ¡Gracias! Hemos recibido tu mensaje. Te contactaremos pronto.
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>🐾 Nexo Vet</h4>
+          <p>Tu clínica veterinaria de confianza en Archidona desde 2009.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Servicios</h4>
+          <a href="#servicios">Consulta general</a>
+          <a href="#servicios">Vacunación</a>
+          <a href="#servicios">Cirugía</a>
+          <a href="#servicios">Análisis</a>
+        </div>
+        <div class="footer-col">
+          <h4>Contacto</h4>
+          <p>C/ Principal 42, Archidona</p>
+          <p>952 123 456</p>
+          <p>info@nexovet.es</p>
+        </div>
+        <div class="footer-col">
+          <h4>Horario</h4>
+          <p>Lun–Vie: 9:00–20:00</p>
+          <p>Sábado: 9:00–14:00</p>
+          <p>Urgencias: 24h</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Clínica Veterinaria Nexo. Fixture de demostración — isReal: false</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu(btn) {
+      const menu = document.getElementById('nav-menu');
+      const isOpen = menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen);
+      btn.textContent = isOpen ? '✕' : '☰';
+      btn.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+    }
+
+    // Form submission
+    document.getElementById('form-contacto').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const nombre  = this.nombre.value.trim();
+      const email   = this.email.value.trim();
+      const mensaje = this.mensaje.value.trim();
+      if (!nombre || !email || !mensaje) return;
+      document.getElementById('form-success').classList.add('visible');
+      this.reset();
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener('click', function(e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth' });
+          target.focus?.();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

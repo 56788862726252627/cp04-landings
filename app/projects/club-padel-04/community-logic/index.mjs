@@ -12,4 +12,3 @@ export * from "./logic/feed.mjs";
 export * from "./logic/moderation.mjs";
 export * from "./logic/open-matches.mjs";
 export * from "./logic/permissions.mjs";
-export * from "./logic/notifications.mjs";

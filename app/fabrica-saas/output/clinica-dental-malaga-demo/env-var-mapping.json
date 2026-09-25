@@ -1,0 +1,26 @@
+[
+  {
+    "name": "VITE_API_BASE_URL",
+    "scope": "vite_public",
+    "description": "URL del Worker CF o API backend",
+    "command": "wrangler pages env add production VITE_API_BASE_URL <value>",
+    "cfScope": "pages_env",
+    "manual": true
+  },
+  {
+    "name": "AIRTABLE_API_KEY",
+    "scope": "worker_secret",
+    "description": "Clave API de Airtable (solo Worker)",
+    "command": "wrangler secret put AIRTABLE_API_KEY",
+    "cfScope": "worker_secret",
+    "manual": true
+  },
+  {
+    "name": "AIRTABLE_BASE_ID",
+    "scope": "worker_secret",
+    "description": "Base ID de Airtable (solo Worker)",
+    "command": "wrangler secret put AIRTABLE_BASE_ID",
+    "cfScope": "worker_secret",
+    "manual": true
+  }
+]

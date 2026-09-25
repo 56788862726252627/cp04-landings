@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es" data-vertical="legal" data-profile="SERIF_AUTHORITY" data-surface="NEUTRAL_MINIMAL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LexNova Abogados — Asesoría jurídica de confianza</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1e293b;
+      --primary-light: #334155;
+      --accent: #64748b;
+      --accent-light: #94a3b8;
+      --gold: #b45309;
+      --surface: #f8fafc;
+      --surface-card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --heading-font: 'Georgia', 'Times New Roman', serif;
+      --body-font: 'Georgia', serif;
+      --mono-font: 'Courier Prime', monospace;
+      --radius-sm: 2px;
+      --radius-md: 4px;
+      --shadow-card: 0 1px 4px rgba(30,41,59,.08);
+    }
+    body {
+      font-family: var(--body-font);
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Skip link */
+    .skip-link {
+      position: absolute; top: -100px; left: 1rem;
+      background: var(--primary); color: white;
+      padding: .5rem 1rem; border-radius: var(--radius-md);
+      font-weight: 700; transition: top .2s; z-index: 9999;
+    }
+    .skip-link:focus { top: 1rem; }
+
+    /* TOP BAR */
+    .topbar {
+      background: var(--primary); color: #e2e8f0;
+      padding: .4rem 2rem; font-size: .75rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .topbar-contact { display: flex; gap: 1.5rem; }
+    .topbar a { color: #cbd5e1; font-size: .75rem; }
+    .topbar a:hover { color: white; text-decoration: none; }
+
+    /* NAV */
+    nav[role="navigation"] {
+      background: #ffffff;
+      border-bottom: 2px solid var(--primary);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 72px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand {
+      font-family: var(--heading-font);
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--primary); letter-spacing: -.02em;
+    }
+    .nav-brand span { color: var(--gold); }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--heading-font);
+      font-size: .9375rem; font-weight: 700;
+      color: var(--primary); letter-spacing: .01em;
+      padding-bottom: 4px; border-bottom: 2px solid transparent;
+      transition: border-color .15s;
+    }
+    .nav-links a:hover { border-color: var(--gold); text-decoration: none; }
+    .nav-cta {
+      background: var(--primary); color: white;
+      border: 2px solid var(--primary); border-radius: var(--radius-md);
+      padding: .625rem 1.5rem; font-family: var(--heading-font);
+      font-size: .875rem; font-weight: 700; cursor: pointer;
+      transition: background .15s; letter-spacing: .03em;
+      min-height: 44px;
+    }
+    .nav-cta:hover { background: var(--primary-light); }
+    .nav-hamburger {
+      display: none;
+      background: none; border: 1px solid var(--primary);
+      border-radius: var(--radius-sm); padding: .5rem;
+      cursor: pointer; font-size: 1.25rem; color: var(--primary);
+      min-width: 44px; min-height: 44px; align-items: center; justify-content: center;
+    }
+
+    /* HERO — no image, information-first */
+    .hero {
+      background: var(--primary);
+      color: white; padding: 4rem 2rem;
+    }
+    .hero-inner { max-width: 900px; }
+    .hero-tag {
+      font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--accent-light);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-family: var(--heading-font);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700; line-height: 1.2;
+      color: white; margin-bottom: 1.25rem;
+    }
+    .hero p {
+      font-size: 1.0625rem; color: #cbd5e1;
+      max-width: 600px; margin-bottom: 2rem; line-height: 1.7;
+    }
+    .hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary-legal {
+      background: var(--gold); color: white;
+      border: 2px solid var(--gold); border-radius: var(--radius-md);
+      padding: .875rem 2rem; font-family: var(--heading-font);
+      font-size: .9375rem; font-weight: 700; cursor: pointer;
+      transition: background .15s; min-height: 44px;
+    }
+    .btn-primary-legal:hover { background: #92400e; border-color: #92400e; }
+    .btn-secondary-legal {
+      background: transparent; color: #e2e8f0;
+      border: 2px solid #475569; border-radius: var(--radius-md);
+      padding: .875rem 2rem; font-family: var(--heading-font);
+      font-size: .9375rem; font-weight: 700; cursor: pointer;
+      transition: border-color .15s; min-height: 44px;
+    }
+    .btn-secondary-legal:hover { border-color: white; }
+
+    /* CREDENTIALS BAR */
+    .credentials-bar {
+      background: #f1f5f9; border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex; gap: 2.5rem; flex-wrap: wrap; justify-content: center;
+    }
+    .cred-item {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .8125rem; font-weight: 700; color: var(--primary);
+      letter-spacing: .02em;
+    }
+    .cred-mark { color: var(--gold); font-weight: 900; }
+
+    /* AREAS */
+    main { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+    .section { padding: 4rem 0; }
+    .section-header { border-left: 4px solid var(--gold); padding-left: 1rem; margin-bottom: 2.5rem; }
+    .section-title {
+      font-family: var(--heading-font);
+      font-size: clamp(1.375rem, 2.5vw, 1.875rem);
+      font-weight: 700; color: var(--primary);
+    }
+    .section-subtitle { font-size: .9375rem; color: var(--text-muted); margin-top: .25rem; }
+    .areas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+    .area-card {
+      background: white; border: 1px solid var(--border);
+      border-top: 3px solid var(--primary);
+      border-radius: var(--radius-sm);
+      padding: 1.5rem; box-shadow: var(--shadow-card);
+    }
+    .area-number {
+      font-family: var(--mono-font); font-size: .75rem;
+      font-weight: 700; color: var(--gold); letter-spacing: .05em;
+      margin-bottom: .75rem; text-transform: uppercase;
+    }
+    .area-card h3 {
+      font-family: var(--heading-font);
+      font-size: 1.0625rem; font-weight: 700;
+      color: var(--primary); margin-bottom: .5rem;
+    }
+    .area-card p { font-size: .875rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* TEAM */
+    .team-section { background: white; padding: 4rem 2rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .team-inner { max-width: 1100px; margin: 0 auto; }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem; margin-top: 2.5rem;
+    }
+    .team-card {
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 1.5rem; background: var(--surface);
+    }
+    .team-initials {
+      width: 48px; height: 48px; background: var(--primary);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; color: white; font-family: var(--heading-font);
+      font-weight: 700; font-size: 1rem; margin-bottom: 1rem;
+    }
+    .team-card h4 { font-family: var(--heading-font); font-weight: 700; color: var(--primary); margin-bottom: .25rem; }
+    .team-card .specialty { font-size: .8125rem; color: var(--gold); font-weight: 700; letter-spacing: .02em; }
+    .team-card .bio { font-size: .8125rem; color: var(--text-muted); margin-top: .5rem; }
+
+    /* CONTACT */
+    .contact-section { padding: 4rem 0; }
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1.2fr; gap: 3rem;
+      align-items: start;
+    }
+    .contact-info h3 {
+      font-family: var(--heading-font);
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--primary); margin-bottom: 1.25rem;
+    }
+    .contact-data { list-style: none; }
+    .contact-data li {
+      padding: .75rem 0; border-bottom: 1px solid var(--border);
+      font-size: .9375rem; display: flex; align-items: flex-start; gap: .75rem;
+    }
+    .contact-data strong { color: var(--primary); min-width: 90px; display: block; }
+    .form-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 2rem;
+      box-shadow: var(--shadow-card);
+    }
+    .form-title {
+      font-family: var(--heading-font);
+      font-size: 1.25rem; font-weight: 700; color: var(--primary);
+      margin-bottom: .25rem;
+    }
+    .form-sub { font-size: .8125rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: .8125rem; font-weight: 700; color: var(--primary); margin-bottom: .375rem; letter-spacing: .02em; text-transform: uppercase; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: .75rem 1rem;
+      font-family: var(--body-font); font-size: .9375rem;
+      color: var(--text); background: var(--surface);
+      transition: border-color .15s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(30,41,59,.15);
+    }
+    .form-group textarea { min-height: 90px; resize: vertical; }
+    .form-submit {
+      width: 100%; background: var(--primary); color: white;
+      border: none; border-radius: var(--radius-md);
+      padding: .875rem; font-family: var(--heading-font);
+      font-size: .9375rem; font-weight: 700; cursor: pointer;
+      transition: background .15s; min-height: 44px; letter-spacing: .02em;
+    }
+    .form-submit:hover { background: var(--primary-light); }
+    .form-disclaimer { font-size: .75rem; color: var(--text-muted); margin-top: .75rem; line-height: 1.5; }
+    .form-success { display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); padding: 1rem; color: #166534; font-size: .875rem; }
+    .form-success.visible { display: block; }
+
+    /* FOOTER */
+    footer {
+      background: var(--primary); color: #94a3b8;
+      padding: 3rem 2rem; margin-top: 2rem;
+    }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-brand {
+      font-family: var(--heading-font);
+      font-size: 1.25rem; font-weight: 700; color: white;
+      margin-bottom: .25rem;
+    }
+    .footer-brand span { color: var(--gold); }
+    .footer-tagline { font-size: .8125rem; color: #64748b; margin-bottom: 2rem; }
+    .footer-links {
+      display: flex; gap: 1.5rem; list-style: none;
+      flex-wrap: wrap; margin-bottom: 2rem;
+    }
+    .footer-links a { color: #94a3b8; font-size: .8125rem; }
+    .footer-links a:hover { color: white; text-decoration: none; }
+    .footer-copy { font-size: .75rem; color: #475569; }
+
+    /* MOBILE */
+    .mobile-menu-legal {
+      display: none; position: fixed; top: 72px; left: 0; right: 0;
+      background: var(--primary); z-index: 99;
+      padding: 1rem 2rem; border-bottom: 2px solid var(--gold);
+    }
+    .mobile-menu-legal.open { display: block; }
+    .mobile-menu-legal ul { list-style: none; }
+    .mobile-menu-legal ul li a { display: block; padding: .75rem 0; color: white; font-family: var(--heading-font); border-bottom: 1px solid #334155; }
+
+    @media (max-width: 900px) {
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 767px) {
+      .nav-links, .nav-cta { display: none; }
+      .nav-hamburger { display: flex; }
+      .topbar-contact { display: none; }
+      .hero { padding: 2.5rem 1.5rem; }
+      .areas-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: 1fr; }
+      .credentials-bar { flex-direction: column; align-items: center; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Ir al contenido principal</a>
+
+  <!-- TOP BAR -->
+  <div class="topbar" role="complementary">
+    <span>LexNova Abogados · Madrid</span>
+    <div class="topbar-contact">
+      <a href="#">📞 91 000 00 00</a>
+      <a href="#">✉ info@lexnova-demo.es</a>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav role="navigation" aria-label="Navegación principal">
+    <div class="nav-brand"><span>Lex</span>Nova Abogados</div>
+    <ul class="nav-links">
+      <li><a href="#areas">Áreas de práctica</a></li>
+      <li><a href="#equipo">El equipo</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'})">Primera consulta</button>
+    <button class="nav-hamburger" aria-expanded="false" aria-label="Abrir menú" id="hamburger" onclick="toggleMenu()">☰</button>
+  </nav>
+
+  <div class="mobile-menu-legal" id="mobileMenu">
+    <ul>
+      <li><a href="#areas" onclick="closeMenu()">Áreas de práctica</a></li>
+      <li><a href="#equipo" onclick="closeMenu()">El equipo</a></li>
+      <li><a href="#contacto" onclick="closeMenu()">Contacto</a></li>
+    </ul>
+  </div>
+
+  <!-- HERO — información densa, sin imagen -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-inner">
+      <div class="hero-tag">Bufete de abogados · 25 años de experiencia</div>
+      <h1 id="hero-heading">Protección jurídica rigurosa para empresas y particulares</h1>
+      <p>Asesoría legal especializada en derecho mercantil, laboral y civil. Soluciones precisas con la discreción y seriedad que merece tu caso.</p>
+      <div class="hero-ctas">
+        <button class="btn-primary-legal" onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'})">Consulta gratuita</button>
+        <button class="btn-secondary-legal" onclick="document.getElementById('areas').scrollIntoView({behavior:'smooth'})">Áreas de práctica</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREDENTIALS -->
+  <div class="credentials-bar" role="complementary" aria-label="Credenciales profesionales">
+    <div class="cred-item"><span class="cred-mark">■</span> Colegio de Abogados de Madrid</div>
+    <div class="cred-item"><span class="cred-mark">■</span> 25 años de ejercicio</div>
+    <div class="cred-item"><span class="cred-mark">■</span> Política de confidencialidad estricta</div>
+    <div class="cred-item"><span class="cred-mark">■</span> Sin compromiso inicial</div>
+  </div>
+
+  <!-- MAIN -->
+  <main id="main-content">
+    <!-- AREAS -->
+    <section class="section" id="areas" aria-labelledby="areas-heading">
+      <div class="section-header">
+        <h2 class="section-title" id="areas-heading">Áreas de práctica</h2>
+        <p class="section-subtitle">Especialización jurídica al más alto nivel</p>
+      </div>
+      <div class="areas-grid" role="list">
+        <article class="area-card" role="listitem">
+          <div class="area-number">Área 01</div>
+          <h3>Derecho Mercantil</h3>
+          <p>Constitución de sociedades, contratos comerciales, fusiones y adquisiciones, responsabilidad de administradores.</p>
+        </article>
+        <article class="area-card" role="listitem">
+          <div class="area-number">Área 02</div>
+          <h3>Derecho Laboral</h3>
+          <p>Negociación colectiva, EREs, despidos, conflictos laborales y asesoría a empresas y trabajadores.</p>
+        </article>
+        <article class="area-card" role="listitem">
+          <div class="area-number">Área 03</div>
+          <h3>Derecho Civil</h3>
+          <p>Contratos, herencias, familia, propiedad horizontal y reclamaciones patrimoniales.</p>
+        </article>
+        <article class="area-card" role="listitem">
+          <div class="area-number">Área 04</div>
+          <h3>Derecho Concursal</h3>
+          <p>Procedimientos de insolvencia, reestructuraciones y protección de acreedores.</p>
+        </article>
+        <article class="area-card" role="listitem">
+          <div class="area-number">Área 05</div>
+          <h3>Protección de Datos</h3>
+          <p>Adecuación al RGPD, auditorías de cumplimiento y gestión de brechas de seguridad.</p>
+        </article>
+        <article class="area-card" role="listitem">
+          <div class="area-number">Área 06</div>
+          <h3>Derecho Inmobiliario</h3>
+          <p>Compraventa, arrendamientos, urbanismo y reclamaciones ante la administración.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- TEAM -->
+  <section class="team-section" id="equipo" aria-labelledby="team-heading">
+    <div class="team-inner">
+      <div class="section-header">
+        <h2 class="section-title" id="team-heading">El equipo</h2>
+        <p class="section-subtitle">Abogados colegiados con dilatada experiencia</p>
+      </div>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-initials" aria-hidden="true">JM</div>
+          <h4>Javier Moreno</h4>
+          <div class="specialty">Socio director · Derecho mercantil</div>
+          <p class="bio">25 años de experiencia en derecho corporativo y M&A.</p>
+        </div>
+        <div class="team-card">
+          <div class="team-initials" aria-hidden="true">ES</div>
+          <h4>Elena Sanz</h4>
+          <div class="specialty">Socia · Derecho laboral</div>
+          <p class="bio">Especialista en conflictos colectivos y negociación sindical.</p>
+        </div>
+        <div class="team-card">
+          <div class="team-initials" aria-hidden="true">RP</div>
+          <h4>Rafael Peña</h4>
+          <div class="specialty">Asociado · Derecho civil</div>
+          <p class="bio">Herencias, familia y contratos civiles complejos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <main>
+  <section class="contact-section" id="contacto" aria-labelledby="contact-heading">
+    <div class="section-header">
+      <h2 class="section-title" id="contact-heading">Primera consulta</h2>
+      <p class="section-subtitle">Sin compromiso. Respondemos en 24 horas hábiles.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <h3>Información de contacto</h3>
+        <ul class="contact-data">
+          <li><strong>Dirección</strong> Paseo de la Castellana, 100 · Madrid (ficticio)</li>
+          <li><strong>Teléfono</strong> 91 000 00 00 (ficticio)</li>
+          <li><strong>Email</strong> info@lexnova-demo.es (ficticio)</li>
+          <li><strong>Horario</strong> L–V 9:00–19:00</li>
+        </ul>
+      </div>
+      <div class="form-card">
+        <h3 class="form-title">Solicitar consulta</h3>
+        <p class="form-sub">Complete el formulario y le contactaremos en 24 horas hábiles.</p>
+        <form id="contactForm" novalidate>
+          <div class="form-group">
+            <label for="nombre">Nombre completo</label>
+            <input type="text" id="nombre" name="nombre" placeholder="Juan García López" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="empresa">Empresa (si aplica)</label>
+            <input type="text" id="empresa" name="empresa" placeholder="Empresa S.L." autocomplete="organization">
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono de contacto</label>
+            <input type="tel" id="telefono" name="telefono" placeholder="612 345 678" required autocomplete="tel">
+          </div>
+          <div class="form-group">
+            <label for="area">Área de consulta</label>
+            <select id="area" name="area" required>
+              <option value="">Seleccione área</option>
+              <option value="mercantil">Derecho Mercantil</option>
+              <option value="laboral">Derecho Laboral</option>
+              <option value="civil">Derecho Civil</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="consulta">Descripción del asunto</label>
+            <textarea id="consulta" name="consulta" placeholder="Describa brevemente el asunto jurídico..." required></textarea>
+          </div>
+          <button type="submit" class="form-submit">Solicitar consulta gratuita</button>
+          <p class="form-disclaimer">Sus datos serán tratados con estricta confidencialidad. Datos ficticios — isReal: false.</p>
+        </form>
+        <div class="form-success" id="formSuccess" role="status" aria-live="polite">
+          Solicitud recibida. Nos pondremos en contacto en el plazo de 24 horas hábiles.
+        </div>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand"><span>Lex</span>Nova Abogados</div>
+      <p class="footer-tagline">Asesoría jurídica rigurosa desde 2001 · Madrid</p>
+      <ul class="footer-links">
+        <li><a href="#areas">Áreas de práctica</a></li>
+        <li><a href="#equipo">El equipo</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+        <li><a href="#">Política de privacidad</a></li>
+        <li><a href="#">Aviso legal</a></li>
+      </ul>
+      <p class="footer-copy">© 2026 LexNova Abogados · Datos ficticios — isReal: false</p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const btn = document.getElementById('hamburger');
+      const isOpen = menu.classList.contains('open');
+      menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', !isOpen);
+    }
+    function closeMenu() {
+      document.getElementById('mobileMenu').classList.remove('open');
+      document.getElementById('hamburger').setAttribute('aria-expanded', 'false');
+    }
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      this.style.display = 'none';
+      document.getElementById('formSuccess').classList.add('visible');
+    });
+  </script>
+</body>
+</html>

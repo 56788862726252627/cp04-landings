@@ -1,0 +1,12 @@
+{
+  "ready": false,
+  "blockers": [
+    "production guard: modo_demo debe ser false",
+    "production guard: integraciones.reales debe ser true",
+    "production guard: domain no configurado",
+    "production guard: apiBaseUrl no configurada",
+    "email @demo.ficticio no permitido en producción"
+  ],
+  "warnings": [],
+  "checkedAt": "2026-08-29T06:46:30.432Z"
+}

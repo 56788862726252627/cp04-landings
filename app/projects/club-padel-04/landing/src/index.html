@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Club Pádel 04 · Sistema inteligente de reservas para clubes de pádel</title>
+<meta name="description" content="Automatiza reservas, jugadores, torneos, ranking y gestión interna de tu club de pádel con Club Pádel 04. Demo funcional preparada, no un prototipo." />
+
+<!-- Vista previa social (Open Graph / Twitter Card). Ruta relativa: convertir a URL absoluta
+     cuando exista dominio real, y validar el resultado en un validador externo (Facebook Sharing
+     Debugger, Twitter Card Validator) antes de publicar — ver README §4. -->
+<meta property="og:title" content="Club Pádel 04 · Sistema inteligente de reservas para clubes de pádel" />
+<meta property="og:description" content="Automatiza reservas, jugadores, torneos, ranking y gestión interna de tu club de pádel. Demo funcional preparada, no un prototipo." />
+<meta property="og:image" content="../assets/images/og-image.jpg" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Club Pádel 04 · Sistema inteligente de reservas para clubes de pádel" />
+<meta name="twitter:description" content="Automatiza reservas, jugadores, torneos, ranking y gestión interna de tu club de pádel. Demo funcional preparada, no un prototipo." />
+<meta name="twitter:image" content="../assets/images/og-image.jpg" />
+
+<link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="nav__inner container">
+    <a class="nav__brand" href="#top">
+      <img src="../assets/images/favicon.svg" alt="" class="nav__logo" width="32" height="32" />
+      <span>Club Pádel 04</span>
+    </a>
+    <nav class="nav__links" id="navLinks">
+      <a href="#solucion">Producto</a>
+      <a href="#proceso">Cómo funciona</a>
+      <a href="#precios">Precios</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav__cta">
+      <a class="btn btn--primary btn--sm" href="#contacto">Solicitar demo</a>
+    </div>
+    <button class="nav__toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero__bg"></div>
+    <div class="hero__overlay"></div>
+    <div class="container hero__content">
+      <span class="badge">Demo funcional preparada</span>
+      <h1>Sistema inteligente de reservas para clubes de pádel</h1>
+      <p class="hero__subtitle">
+        Automatiza reservas, jugadores, torneos, ranking y gestión interna desde una app moderna,
+        preparada para implantarse tras diagnóstico — no un prototipo ni una promesa a futuro.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary btn--lg" href="#contacto">Solicitar demo</a>
+        <a class="btn btn--secondary btn--lg" href="#solucion">Ver cómo funciona</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEMA -->
+  <section class="section" id="problema">
+    <div class="container">
+      <span class="eyebrow">El problema</span>
+      <h2>Tu club merece algo mejor que un grupo de WhatsApp</h2>
+      <p class="section__intro">
+        La mayoría de clubes y polideportivos gestionan hoy sus reservas de forma manual.
+        Y eso tiene un coste que casi nunca se mide.
+      </p>
+      <div class="grid grid--4">
+        <div class="card card--icon">
+          <div class="icon icon--danger">💬</div>
+          <h3>Reservas por WhatsApp y llamadas</h3>
+          <p>Mensajes cruzados, confirmaciones que se pierden, nadie sabe qué pista está realmente libre.</p>
+        </div>
+        <div class="card card--icon">
+          <div class="icon icon--danger">📋</div>
+          <h3>Excel y agenda en papel</h3>
+          <p>Sin trazabilidad, sin histórico, sin forma de saber quién reserva, cuándo y con qué frecuencia.</p>
+        </div>
+        <div class="card card--icon">
+          <div class="icon icon--danger">⚠️</div>
+          <h3>Reservas duplicadas</h3>
+          <p>Dos personas reservan la misma pista a la misma hora porque nadie tiene visibilidad en tiempo real.</p>
+        </div>
+        <div class="card card--icon">
+          <div class="icon icon--danger">📉</div>
+          <h3>Cero visibilidad para el club</h3>
+          <p>Sin datos claros de ocupación ni forma de organizar torneos o ranking de manera ordenada.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOLUCION -->
+  <section class="section section--surface" id="solucion">
+    <div class="container">
+      <span class="eyebrow">La solución</span>
+      <h2>Todo tu club, en un solo sistema</h2>
+      <p class="section__intro">
+        Club Pádel 04 centraliza reservas, jugadores, empleados, administración, torneos, ranking y
+        soporte en una sola aplicación pensada para instalaciones deportivas reales — desde un club
+        privado hasta un polideportivo municipal.
+      </p>
+      <div class="grid grid--4 grid--modules">
+        <div class="module"><span class="module__dot"></span>Reservas organizadas desde móvil y ordenador</div>
+        <div class="module"><span class="module__dot"></span>Alta y gestión de jugadores</div>
+        <div class="module"><span class="module__dot"></span>Torneos con cuadro de eliminatorias</div>
+        <div class="module"><span class="module__dot"></span>Ranking de jugadores</div>
+        <div class="module"><span class="module__dot"></span>Panel de administración por roles</div>
+        <div class="module"><span class="module__dot"></span>Centro técnico y soporte</div>
+        <div class="module"><span class="module__dot"></span>Gestión de empleados</div>
+        <div class="module"><span class="module__dot"></span>Métricas de uso y ocupación</div>
+      </div>
+
+      <div class="gallery-pending">
+        <span class="gallery-pending__icon" aria-hidden="true">&#128247;</span>
+        <div>
+          <h3>Galería pendiente de fotos reales del club</h3>
+          <p>
+            Todavía no tenemos fotografías propias y distintas de las pistas, la recepción y los torneos
+            listas para publicar. En vez de mostrar imágenes repetidas o de stock, preferimos dejar este
+            espacio honesto hasta incorporar fotografía real verificada del club.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENEFICIOS -->
+  <section class="section" id="beneficios">
+    <div class="container">
+      <span class="eyebrow">Beneficios</span>
+      <h2>Pensado para las tres personas que realmente usan un club</h2>
+      <div class="grid grid--3">
+        <div class="card">
+          <h3>Para propietarios</h3>
+          <ul class="checklist">
+            <li>Más control sobre la ocupación real de las instalaciones.</li>
+            <li>Menos errores de doble reserva y confusión de horarios.</li>
+            <li>Información clara y centralizada, sin depender de varios canales.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Para empleados</h3>
+          <ul class="checklist">
+            <li>Menos llamadas y mensajes repetitivos que atender.</li>
+            <li>Panel sencillo para gestionar reservas y jugadores.</li>
+            <li>Menos tiempo perdido en gestión manual del calendario.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Para jugadores</h3>
+          <ul class="checklist">
+            <li>Reservas rápidas desde el móvil, sin depender de llamadas.</li>
+            <li>Acceso a torneos y ranking de forma ordenada.</li>
+            <li>Perfil propio y experiencia moderna, sin coste adicional.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTORIDAD TECNICA -->
+  <section class="section section--surface" id="tecnico">
+    <div class="container">
+      <span class="eyebrow">Cómo está construido</span>
+      <h2>Software serio, no una plantilla genérica</h2>
+      <p class="section__intro">
+        No es una app improvisada: es la misma tecnología con la que ya opera un club real cada
+        semana, con acceso por cuenta y rol, roles diferenciados por persona y copias de seguridad periódicas.
+      </p>
+      <div class="grid grid--4">
+        <div class="card card--icon">
+          <div class="icon">🔐</div>
+          <h3>Acceso por cuenta y rol</h3>
+          <p>Cada usuario accede con su propia cuenta y su propio rol.</p>
+        </div>
+        <div class="card card--icon">
+          <div class="icon">🧩</div>
+          <h3>Roles diferenciados</h3>
+          <p>Jugador, personal y administración ven exactamente lo que necesitan, nada más.</p>
+        </div>
+        <div class="card card--icon">
+          <div class="icon">🛡️</div>
+          <h3>Base preparada para copias y control de cambios</h3>
+          <p>El trabajo del club queda protegido frente a errores o pérdidas de datos.</p>
+        </div>
+        <div class="card card--icon">
+          <div class="icon">👁️</div>
+          <h3>Demo real disponible</h3>
+          <p>Puedes probarlo tú mismo antes de decidir nada.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CASO BASE -->
+  <section class="section" id="caso-base">
+    <div class="container container--narrow">
+      <span class="eyebrow">Caso real</span>
+      <h2>El caso real detrás de este sistema</h2>
+      <p class="section__intro">
+        Club Pádel 04 nace como el primer caso real de implantación de este sistema: un club de
+        pádel en pleno funcionamiento, en el entorno del Torcal de Antequera, que usa esta misma
+        aplicación para gestionar sus pistas, jugadores, torneos y ranking. Lo que ves en la demo
+        es exactamente lo que ya funciona ahí — no una versión reducida ni una maqueta.
+      </p>
+    </div>
+  </section>
+
+  <!-- PROCESO -->
+  <section class="section section--surface" id="proceso">
+    <div class="container">
+      <span class="eyebrow">Proceso de trabajo</span>
+      <h2>Cómo se implanta, paso a paso</h2>
+      <div class="timeline">
+        <div class="timeline__step">
+          <div class="timeline__number">1</div>
+          <h3>Preparación y ajuste inicial</h3>
+          <p>≈1 semana · Revisión de las necesidades concretas del club o instalación.</p>
+        </div>
+        <div class="timeline__step">
+          <div class="timeline__number">2</div>
+          <h3>Configuración y validación</h3>
+          <p>≈1 semana · Ajuste del sistema a la realidad del club (pistas, horarios, personal).</p>
+        </div>
+        <div class="timeline__step">
+          <div class="timeline__number">3</div>
+          <h3>Demo y formación</h3>
+          <p>≈1 semana · Demostración práctica y formación al personal que va a usarlo.</p>
+        </div>
+        <div class="timeline__step">
+          <div class="timeline__number">4</div>
+          <h3>Puesta en marcha controlada</h3>
+          <p>≈1 semana · Arranque real, con soporte cercano durante los primeros días.</p>
+        </div>
+      </div>
+      <p class="section__note">Duración estimada total: 4 semanas. El calendario puede ajustarse según la disponibilidad de cada club.</p>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section class="section" id="demo">
+    <div class="container container--narrow">
+      <div class="demo-card">
+        <span class="eyebrow">Pruébalo tú mismo</span>
+        <h2>No es una promesa, es una demo real</h2>
+        <p>
+          Accede a una demo interactiva con datos ficticios, sin ningún pago real ni riesgo para tu
+          información. Es el mismo sistema, en un entorno seguro pensado para que lo pruebes con calma.
+        </p>
+        <a class="btn btn--primary btn--lg" href="#contacto">Acceder a la demo</a>
+        <span class="demo-card__note">Demo segura · Datos de ejemplo · Sin compromiso</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRECIOS -->
+  <section class="section section--surface" id="precios">
+    <div class="container">
+      <span class="eyebrow">Precios</span>
+      <h2>Precio claro, sin sorpresas</h2>
+      <p class="section__intro">
+        Cada club es distinto, por eso el precio final se ajusta tras un diagnóstico breve y
+        gratuito. Estas son las condiciones de referencia actuales:
+      </p>
+      <div class="grid grid--2 grid--pricing">
+        <div class="price-card price-card--featured">
+          <span class="badge badge--accent">Precio de lanzamiento</span>
+          <h3>Plan Piloto</h3>
+          <div class="price-card__amount">2.700 € <span>+ IVA implantación</span></div>
+          <div class="price-card__amount price-card__amount--sub">250 €/mes <span>+ IVA mantenimiento</span></div>
+          <ul class="checklist">
+            <li>App completa de reservas</li>
+            <li>Panel de gestión</li>
+            <li>Torneos y ranking</li>
+            <li>Soporte de puesta en marcha</li>
+            <li>0 € de coste para jugadores</li>
+          </ul>
+          <p class="price-card__condition">Precio especial de lanzamiento para las primeras implantaciones de una zona, mientras dure el cupo de piloto.</p>
+          <a class="btn btn--primary" href="#contacto">Solicitar mi diagnóstico gratuito</a>
+        </div>
+        <div class="price-card">
+          <h3>Plan Estándar</h3>
+          <div class="price-card__amount">Desde 3.500 € <span>+ IVA implantación</span></div>
+          <div class="price-card__amount price-card__amount--sub">Desde 350 €/mes <span>+ IVA mantenimiento</span></div>
+          <ul class="checklist">
+            <li>Todo lo del plan Piloto</li>
+            <li>Soporte estándar continuado</li>
+            <li>0 € de coste para jugadores</li>
+          </ul>
+          <p class="price-card__condition">Aplicable una vez agotado el cupo de precio piloto de la zona.</p>
+          <a class="btn btn--secondary" href="#contacto">Hablar con el equipo</a>
+        </div>
+      </div>
+      <p class="section__note">
+        El precio piloto no es el precio estándar del servicio: es una condición especial y
+        limitada para las primeras instalaciones que adopten el sistema. Proyectos multisede o de
+        mayor escala se presupuestan de forma personalizada tras el diagnóstico.
+      </p>
+    </div>
+  </section>
+
+  <!-- TRANSPARENCIA -->
+  <section class="section" id="transparencia">
+    <div class="container">
+      <span class="eyebrow">Transparencia</span>
+      <h2>Qué incluye hoy, qué no incluye todavía</h2>
+      <div class="grid grid--2 grid--transparency">
+        <div class="card">
+          <h3>Incluye hoy</h3>
+          <ul class="checklist checklist--yes">
+            <li>Reservas organizadas, móvil y ordenador</li>
+            <li>Acceso diferenciado jugador / personal</li>
+            <li>Panel de gestión completo</li>
+            <li>Perfil de jugador, torneos y ranking</li>
+            <li>Adaptación visual básica (logo y colores)</li>
+            <li>Formación inicial y soporte de puesta en marcha</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>No incluye todavía</h3>
+          <ul class="checklist checklist--no">
+            <li>Pagos online reales dentro de la aplicación</li>
+            <li>Mensajería tipo WhatsApp Business integrada</li>
+            <li>Gestión multisede (varias instalaciones a la vez)</li>
+            <li>Funcionalidades no acordadas en el alcance inicial</li>
+          </ul>
+        </div>
+      </div>
+      <p class="section__note">Todo lo anterior puede incorporarse en fases posteriores, presupuestado de forma independiente, una vez validado el sistema.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section section--surface" id="faq">
+    <div class="container container--narrow">
+      <span class="eyebrow">Preguntas frecuentes</span>
+      <h2>Todo lo que necesitas saber</h2>
+      <div class="accordion" id="accordion">
+        <div class="accordion__item">
+          <button class="accordion__trigger" aria-expanded="false">¿Puedo probarlo antes de contratar? <span>+</span></button>
+          <div class="accordion__panel"><p>Sí. Puedes acceder a una demo interactiva con datos ficticios antes de tomar ninguna decisión.</p></div>
+        </div>
+        <div class="accordion__item">
+          <button class="accordion__trigger" aria-expanded="false">¿Incluye pagos online para los jugadores? <span>+</span></button>
+          <div class="accordion__panel"><p>No todavía. La primera fase no incluye cobro online dentro de la aplicación; el uso es gratuito para el jugador. Esta función podrá incorporarse en fases posteriores.</p></div>
+        </div>
+        <div class="accordion__item">
+          <button class="accordion__trigger" aria-expanded="false">¿Incluye avisos por WhatsApp? <span>+</span></button>
+          <div class="accordion__panel"><p>No todavía. La mensajería tipo WhatsApp Business no forma parte de la fase inicial, pero está contemplada como posible ampliación futura.</p></div>
+        </div>
+        <div class="accordion__item">
+          <button class="accordion__trigger" aria-expanded="false">¿Cuánto tarda la implantación? <span>+</span></button>
+          <div class="accordion__panel"><p>Alrededor de 4 semanas desde el inicio, repartidas en preparación, configuración, demo/formación y puesta en marcha. El plazo puede variar según la disponibilidad de cada club.</p></div>
+        </div>
+        <div class="accordion__item">
+          <button class="accordion__trigger" aria-expanded="false">¿Qué pasa con mis datos actuales (Excel, agendas, listados)? <span>+</span></button>
+          <div class="accordion__panel"><p>Se pueden incorporar al nuevo sistema durante la fase de configuración inicial. Lo revisamos caso a caso durante el diagnóstico previo.</p></div>
+        </div>
+        <div class="accordion__item">
+          <button class="accordion__trigger" aria-expanded="false">¿Hay compromiso de permanencia? <span>+</span></button>
+          <div class="accordion__panel"><p>Las condiciones concretas de permanencia y cancelación se acuerdan por escrito antes de la implantación, según cada caso. Nuestro equipo te las explica con claridad durante el diagnóstico, sin letra pequeña.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL + CONTACTO -->
+  <section class="section cta-final" id="contacto">
+    <div class="container container--narrow">
+      <h2>¿Listo para dejar de gestionar tu club a mano?</h2>
+      <p>Solicita tu diagnóstico gratuito. Sin compromiso, sin presión, con respuesta clara sobre qué encaja para tu club.</p>
+
+      <form class="form" id="contactForm">
+        <div class="form__row">
+          <label>Nombre y apellidos*<input type="text" name="nombre" required /></label>
+          <label>Nombre del club/instalación*<input type="text" name="club" required /></label>
+        </div>
+        <div class="form__row">
+          <label>Número de pistas*<input type="number" name="pistas" min="1" required /></label>
+          <label>Ciudad o localidad*<input type="text" name="ciudad" required /></label>
+        </div>
+        <div class="form__row">
+          <label>¿Cómo gestionáis hoy las reservas?*
+            <select name="sistema_actual" required>
+              <option value="">Selecciona una opción</option>
+              <option>WhatsApp</option>
+              <option>Excel</option>
+              <option>Otro software</option>
+              <option>Ninguno</option>
+            </select>
+          </label>
+          <label>¿Cuándo os gustaría tenerlo funcionando?*
+            <select name="urgencia" required>
+              <option value="">Selecciona una opción</option>
+              <option>Lo antes posible</option>
+              <option>En 1-3 meses</option>
+              <option>Solo estoy explorando</option>
+            </select>
+          </label>
+        </div>
+        <div class="form__row">
+          <label>Email*<input type="email" name="email" required /></label>
+          <label>Teléfono*<input type="tel" name="telefono" required /></label>
+        </div>
+        <label class="form__full">Comentario adicional (opcional)<textarea name="comentario" rows="3"></textarea></label>
+
+        <button type="submit" class="btn btn--primary btn--lg" disabled>Solicitar demo</button>
+        <p class="form__note">
+          Solicitud preparada para diagnóstico. La conexión definitiva del formulario se activa en la
+          fase de implantación. No conectamos ningún pago ni compartimos tus datos con terceros.
+        </p>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div class="footer__brand">
+      <img src="../assets/images/favicon.svg" alt="" width="28" height="28" />
+      <span>Club Pádel 04</span>
+    </div>
+    <nav class="footer__links">
+      <a href="#solucion">Producto</a>
+      <a href="#precios">Precios</a>
+      <a href="#faq">FAQ</a>
+      <a href="#demo">Demo</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <p class="footer__legal">
+      Club Pádel 04 es un sistema de gestión deportiva desarrollado y mantenido por un equipo
+      especializado en digitalización de instalaciones deportivas y municipales. No garantizamos
+      resultados ni ingresos: te mostramos exactamente qué hace el sistema hoy, en una demo real,
+      para que decidas con información clara.
+    </p>
+  </div>
+</footer>
+
+<script src="./main.js"></script>
+</body>
+</html>

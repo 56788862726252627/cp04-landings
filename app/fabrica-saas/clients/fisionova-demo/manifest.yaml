@@ -1,0 +1,171 @@
+# Manifest V1.7 — FisioNova · Clínica de Fisioterapia
+# Cliente demo comercial. Datos 100% ficticios.
+# Generado: Fábrica SaaS V1.7 · Dynamic Experience Engine
+# NO producción. NO datos reales. NO integraciones reales.
+
+version: "1.7"
+vertical: physio
+
+# ── Branding ──────────────────────────────────────────────────────────────────
+
+branding:
+  nombre: "FisioNova"
+  nombre_visible: "FisioNova · Clínica de Fisioterapia"
+  tagline: "Muévete mejor, vive sin dolor"
+  tagline_largo: "Fisioterapia deportiva, rehabilitación y terapia manual para recuperarte y rendir al máximo"
+  primaryColor: "#4338ca"
+  secondaryColor: "#059669"
+  accentColor: "#7c3aed"
+  bgColor: "#eef2ff"
+  favicon: null
+  logo: null
+  dominio: "fisionova-demo.local"
+
+# ── V1.7: Experience config ───────────────────────────────────────────────────
+
+experience:
+  preset: calm
+  motion: low
+  transitions: true
+  scrollEffects:
+    - fade-in
+    - slide-up
+    - stagger-reveal
+    - counter-on-visible
+    - progress-on-scroll
+  interactions:
+    - card-hover-elevation
+    - animated-metrics
+    - expandable-cards
+    - before-after-slider
+    - interactive-timeline
+    - animated-progress
+    - interactive-calendar
+    - tooltips
+    - cta-feedback
+    - animated-counters
+  animatedMetrics: true
+  reducedMotion: auto
+
+# ── V1.7: Video config ────────────────────────────────────────────────────────
+
+video:
+  autoplay: false
+  muted: true
+  mobileEnabled: false
+  lazyLoad: true
+  hero:
+    autoplay: false
+    controls: true
+    preload: metadata
+    poster: null
+  services:
+    autoplay: false
+    controls: true
+    preload: metadata
+  exercises:
+    autoplay: false
+    controls: true
+    loop: false
+  explainer:
+    autoplay: false
+    controls: true
+    preload: metadata
+  ambient:
+    autoplay: false
+    muted: true
+    mobileEnabled: false
+
+# ── V1.7: Secciones dinámicas ─────────────────────────────────────────────────
+
+dynamicSections:
+  - type: metric-row
+    trigger: on-view
+    behavior: animate-count
+  - type: before-after
+    trigger: on-view
+    behavior: drag-to-reveal
+  - type: timeline
+    trigger: on-scroll
+    behavior: stagger-reveal
+  - type: filterable-grid
+    trigger: on-interaction
+    behavior: filter-fade
+  - type: testimonials
+    trigger: on-view
+    behavior: stagger-reveal
+  - type: faq-accordion
+    trigger: immediate
+    behavior: expand-on-click
+
+# ── V1.6 compat fields ────────────────────────────────────────────────────────
+
+ai:
+  routing: TIER2_CONTEXT
+  localModel: "qwen2.5-coder:1.5b"
+  contextProfile: client
+
+design:
+  vertical: physio
+  density: comfortable
+  radius: lg
+  typography: sans
+  style: modern-medical
+
+media:
+  hero: null
+  gallery: []
+  team: []
+
+components:
+  variantSet: premium
+
+# ── Negocio ───────────────────────────────────────────────────────────────────
+
+negocio:
+  tipo: clinica-fisioterapia
+  descripcion: >
+    FisioNova es una clínica de fisioterapia de referencia especializada en
+    fisioterapia deportiva, rehabilitación postoperatoria y terapia manual
+    avanzada. Demo comercial interno — datos 100% ficticios.
+  especialidades:
+    - fisioterapia-deportiva
+    - rehabilitacion
+    - terapia-manual
+    - ejercicio-terapeutico
+    - readaptacion-lesiones
+    - suelo-pelvico
+    - fisioterapia-neurologica
+    - dolor-cronico
+  modulos:
+    - inicio
+    - agenda
+    - pacientes
+    - tratamientos
+    - profesionales
+    - evolucion
+    - ejercicios
+    - presupuestos
+    - leads
+    - dashboard
+    - asistente-ia
+  horario: "Lunes–Viernes 8:00–21:00 · Sábados 9:00–15:00"
+  ubicacion: "Demo City, España (datos ficticios)"
+  sedes: 2
+  contacto:
+    telefono: "+34 900 000 000 (demo)"
+    email: "hola@fisionova-demo.local"
+    whatsapp: "+34 600 000 000 (demo)"
+  metricas:
+    - valor: 1200
+      unidad: "+"
+      etiqueta: "Pacientes recuperados"
+    - valor: 98
+      unidad: "%"
+      etiqueta: "Tasa de recuperación"
+    - valor: 8
+      unidad: " años"
+      etiqueta: "De experiencia clínica"
+    - valor: 4.9
+      unidad: "/5"
+      etiqueta: "Valoración media"

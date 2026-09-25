@@ -1,0 +1,22 @@
+{
+  "version": "v1.4",
+  "generatedAt": "2026-08-29T06:46:30.431Z",
+  "clientId": "clinica-dental-aurora-demo",
+  "vertical": "dental",
+  "environment": "production",
+  "factory": "fabrica-saas-v1.4",
+  "modules": [
+    "chatbot_ia",
+    "crm",
+    "reservas",
+    "recuperacion_leads",
+    "dashboard",
+    "auth",
+    "rbac",
+    "logs",
+    "analytics"
+  ],
+  "domain": "NOT_CONFIGURED",
+  "productionReady": false,
+  "_ficticio": true
+}
